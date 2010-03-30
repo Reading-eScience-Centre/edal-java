@@ -46,7 +46,6 @@
             <plugin>
                 <!-- Sets the source version to 1.5 -->
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.0.2</version>
                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
@@ -75,7 +74,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <aggregate>true</aggregate>
-                    <!-- These links really belong in the child POMs but if 
+                    <!-- These links really belong in the child POMs but if
                     we put them there, they don't seem to get picked up when
                     building the javadoc for the aggregated project.  Therefore
                     if the versions of any of the dependencies change these
@@ -151,6 +150,7 @@
     <modules>
         <!-- Note that these are relative directory paths, not artifactIds! -->
         <module>core</module>
+        <module>util</module>
         <!--<module>impl</module>
         <module>en3</module>-->
     </modules>
