@@ -36,6 +36,13 @@ public interface Feature
     public String getDescription();
 
     /**
+     * Gets the calendar system used to interpret dates and times relating to
+     * this feature.
+     * @return
+     */
+    public CalendarSystem getCalendarSystem();
+
+    /**
      * Gets a list of identifiers for all the members of this Feature.  These
      * identifiers are only used internally and are not generally displayed to
      * users.
