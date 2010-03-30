@@ -4,7 +4,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.jcsml</groupId>
+    <groupId>org.edal</groupId>
     <version>0.1.0-SNAPSHOT</version>
     <artifactId>edal</artifactId>
     <name>Environmental Data Abstraction Library</name>
@@ -18,7 +18,7 @@
     </organization>
     <licenses>
         <license>
-            <url>licence.txt</url>
+            <url>http://edal-java.googlecode.com/hg/licence.txt</url>
             <name>Modified BSD licence</name>
             <comments>Permits redistribution and use in source and binary form
             provided that the copyright notice is retained (see licence for
