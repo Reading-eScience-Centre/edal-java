@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package org.edal;
+package uk.ac.rdg.resc.edal;
 
 import java.net.URI;
 

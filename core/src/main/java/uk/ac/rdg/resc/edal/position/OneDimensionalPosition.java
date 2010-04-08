@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 The University of Reading
+ * Copyright (c) 2010 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,66 +26,33 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.edal;
+package uk.ac.rdg.resc.edal.position;
 
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * A two-dimensional {@link DirectPosition} that describes a point as longitude
- * and latitude using the WGS84 datum.
+ * A direct position within a one-dimensional coordinate reference system
  * @author Jon
  */
-public interface LonLatPosition extends HorizontalPosition {
-
-    /**
-     * Returns the longitude, in the range [-180:180] degrees.
-     * @return the longitude, in the range [-180:180] degrees.
-     */
-    @Override public double getX();
-
-    /**
-     * Returns the geodetic latitude in degrees.
-     * @return the geodetic latitude in degrees.
-     */
-    @Override public double getY();
-
-    /**
-     * Returns the longitude, in the range [-180:180] degrees.
-     * @return the longitude, in the range [-180:180] degrees.
-     */
-    public double getLongitude();
-
-    /**
-     * Returns the geodetic latitude in degrees.
-     * @return the geodetic latitude in degrees.
-     */
-    public double getLatitude();
-
-    /**
-     * Returns a two-dimensional coordinate reference system for longitude and
-     * latitude using the WGS84 datum ({@literal i.e.} "CRS:84").
-     * The first coordinate in the CRS is the longitude, the second is the
-     * geodetic latitude.
-     * @return a two-dimensional coordinate reference system for longitude and
-     * latitude using the WGS84 datum.
-     */
+public interface OneDimensionalPosition extends DirectPosition {
+    
+    /** Returns a one-dimensional coordinate reference system */
     @Override public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
+    /** Returns 1 */
+    @Override public int getDimension();
+
     /**
-     * Returns an array of two coordinates: the first coordinate
-     * is the longitude (in the range [-180:180] and the second coordinate is
-     * the geodetic latitude.
+     * Returns an array with a single element containing the coordinate value
      */
     @Override public double[] getCoordinate();
 
     /**
      * Returns the ordinate at the specified dimension.
-     * @param dimension - The dimension in the range 0 to 1 (inclusive)
-     * @return The coordinate at the specified dimension (index = 0 gives the
-     * longitude in the range [-180,180], index = 1 gives the geodetic latitude).
-     * @throws IndexOutOfBoundsException if {@code index < 0 || index > 1}
+     * @param dimension - The dimension: must be 0
+     * @return The coordinate at the specified dimension
+     * @throws IndexOutOfBoundsException if {@code index != 0}
      */
     @Override public double getOrdinate(int index);
-
 }

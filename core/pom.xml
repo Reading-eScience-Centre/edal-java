@@ -4,7 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>edal</artifactId>
-        <groupId>org.edal</groupId>
+        <groupId>uk.ac.rdg.resc</groupId>
+        <relativePath>..</relativePath>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
     <artifactId>edal-core</artifactId>
@@ -27,4 +28,5 @@
         </repository>
     </repositories>
 </project>
+
 

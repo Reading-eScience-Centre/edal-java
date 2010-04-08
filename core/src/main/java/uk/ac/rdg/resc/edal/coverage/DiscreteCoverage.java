@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 The University of Reading
+ * Copyright (c) 2010 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,43 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.edal;
+package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
- * FeatureCollections contain a single feature type.
- * @todo Access control?
- * @todo Dictionaries of phenomena and units?
- * @todo Define a subclass that allows features in the collection to be found
- * using spatio-temporal searches.
+ * <p>A {@link Coverage} whose domain consists of a finite number of domain
+ * objects, each of which is associated with a single record of measurement
+ * values.</p>
+ * @param <DO> The type of domain object
  * @author Jon
  */
-public interface FeatureCollection<F extends Feature> extends Iterable<F> {
+public interface DiscreteCoverage<DO> extends Coverage {
 
     /**
-     * Identifier for this collection.  Unique within its context (e.g. within
-     * a catalogue of feature collections), but not necessarily globally unique.
+     * Gets the list of objects that comprise this coverage's domain
+     * @return the list of objects that comprise this coverage's domain
      */
-    public String getId();
+    public List<DO> getDomain();
 
     /**
-     * Human-readable name for this collection (not necessarily unique)
-     */
-    public String getName();
-
-    /**
-     * Returns the set of Feature identifiers within this collection
+     * Gets the list of objects that comprise this coverage's range.  There
+     * will be one entry in the list for each domain object, in the same order.
+     * Each list entry is a Map of {@link #getMemberNames() member name} to
+     * data values.
      * @return
      */
-    public Set<String> getFeatureIds();
+    public List<Map<String, ?>> getRange();
 
     /**
-     * Gets the feature with the given ID.
-     * @param id The ID of the feature within this collection.
-     * @return
-     * @throws NullPointerException if {@code id == null}
-     * @throws IllegalArgumentException if {@code id} is not a valid feature id
+     * Gets the value of this coverage associated with the given domain object.
+     * @todo Check that there are no conflicts in the case that the domain object
+     * is a subclass of DirectPosition.
      */
-    public F getFeatureById(String id);
+    public Map<String, ?> evaluate(DO domainObject, Collection<String> memberNames);
 
-    /**
-     * Gets the runtime class of the features within this collection.
-     * @return
-     */
-    public Class<F> getFeatureType();
+    public Object evaluate(DO domainObject, String memberName);
+
 }
