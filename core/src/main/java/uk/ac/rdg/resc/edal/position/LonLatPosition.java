@@ -34,6 +34,9 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 /**
  * A two-dimensional {@link DirectPosition} that describes a point as longitude
  * and latitude using the WGS84 datum.
+ * @todo Maybe this interface could handle the case where latitude was the first
+ * coordinate?  I.e. getLongitude() and getLatitude() would correspond with
+ * different ordinate indices.
  * @author Jon
  */
 public interface LonLatPosition extends HorizontalPosition {

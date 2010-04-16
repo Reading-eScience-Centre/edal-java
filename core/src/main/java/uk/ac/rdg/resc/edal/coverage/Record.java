@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2008 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,17 +28,26 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
-
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * Essentially a Map of member names to data values (Objects).  The member names
+ * are defined by the associated {@link RecordType}'s {@link RecordType#getMemberNames()}.
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
-{
-
-    @Override
-    public ProfileDomain getDomain();
+public interface Record {
+    
+    /**
+     * This is called locate() in GeoAPI - I don't know why (presumably this
+     * reflects the standard, but it seems like an odd name).  The {@link Class}
+     * of the returned value shall match the class returned by
+     * {@link RecordType#getClass(java.lang.String)}.
+     * @param memberName The name of a member of this record as provided by
+     * {@link RecordType#getMemberNames()}.
+     * @return the value of the given member
+     * @throws IllegalArgumentException if {@code memberName} is not a valid
+     * member name
+     */
+    public Object getValue(String memberName);
+    
+    public RecordType getRecordType();
 
 }

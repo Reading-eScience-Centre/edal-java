@@ -26,19 +26,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
-
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * A two-dimensional grid whose coordinate values are equally-spaced along each
+ * axis, and whose axes in real space are aligned with the axes
+ * in grid space.
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
-{
+public interface RegularGrid extends RectilinearGrid {
 
+    /** {@code index} must be 0 or 1. */
     @Override
-    public ProfileDomain getDomain();
+    public RegularAxis getAxis(int index);
 
 }

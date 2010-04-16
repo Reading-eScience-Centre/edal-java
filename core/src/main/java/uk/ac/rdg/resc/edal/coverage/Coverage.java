@@ -55,6 +55,8 @@ public interface Coverage {
      */
     public Set<String> getMemberNames();
 
+    public RecordType getRangeType();
+
     /**
      * Returns the data type of the given coverage member.
      * @param memberName The identifier of the coverage member.
@@ -105,7 +107,7 @@ public interface Coverage {
      * in coverage) or "fit" the point to the CRS (e.g. by ignoring dimensions
      * that aren't represented in the coverage)?
      */
-    public Map<String, ?> evaluate(DirectPosition pos, Collection<String> memberNames);
+    public Record evaluate(DirectPosition pos, Collection<String> memberNames);
 
     public Object evaluate(DirectPosition pos, String memberName);
 

@@ -26,19 +26,26 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.domain;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import java.util.List;
+import org.opengis.geometry.DirectPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * A trajectory is simply a list of direct positions.
+ * @param <DP> The type of direct position (e.g. we may wish to constrain the
+ * trajectory to the horizontal plane, in which case the direct positions may be
+ * {@link HorizontalPosition}s.
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
+public interface TrajectoryDomain<DP extends DirectPosition>
 {
 
-    @Override
-    public ProfileDomain getDomain();
+    /**
+     * Returns the {@link List} of direct positions that comprise the trajectory's
+     * domain
+     */
+    public List<DP> getDomainObjects();
 
 }

@@ -26,19 +26,22 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.feature;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.coverage.DiscreteGridPointCoverage;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * A timeseries of gridded fields
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
-{
+public interface GridSeriesFeature extends Feature {
 
+    /**
+     * @todo Do we need a GridSeriesCoverage that inherits from
+     * DiscreteGridPointCoverage, as in the CSML user's manual?
+     * @return
+     */
     @Override
-    public ProfileDomain getDomain();
+    public DiscreteGridPointCoverage getCoverage();
 
 }

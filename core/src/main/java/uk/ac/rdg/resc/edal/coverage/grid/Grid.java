@@ -26,19 +26,39 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import java.util.List;
+import org.opengis.coverage.grid.GridEnvelope;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * A description of a multidimensional grid with integer coordinates.
  * @author Jon
+ * @todo implement Iterable&lt;GridCoordinates&gt;?  Would be nice to be able
+ * to do {@code for (GridCoordinates coords : grid) ...}.
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
+public interface Grid
 {
 
-    @Override
-    public ProfileDomain getDomain();
+    /**
+     * Returns a list containing the names of the grid axes.
+     * @return a list containing the names of the grid axes.
+     */
+    public List<String> getAxisNames();
 
+    public GridEnvelope getExtent();
+
+    /**
+     * Returns the dimensionality of the grid. This will be the same as
+     * {@link #getAxisNames()}.size() and {@link #getExtent()}.getDimension().
+     * @return the dimensionality of the grid.
+     */
+    public int getDimension();
+
+    /**
+     * Returns the number of grid points in the grid.
+     * @return the number of grid points in the grid.
+     */
+    public int getSize();
 }

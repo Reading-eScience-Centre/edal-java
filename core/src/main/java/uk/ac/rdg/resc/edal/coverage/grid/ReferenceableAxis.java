@@ -26,52 +26,49 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.coverage.domain.Domain;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * <p>A {@link Coverage} whose domain consists of a finite number of domain
- * objects, each of which is associated with a single record of measurement
- * values.</p>
- * @param <DO> The type of domain object
+ * <p>A one-dimensional axis of a Grid, which maps between integer indices along
+ * the axis and real-world coordinates.  It is essentially a one-dimensional
+ * special case of a {@link ReferenceableGrid}, although this interface cannot
+ * inherit from ReferenceableGrid because ReferenceableGrids by definition have
+ * two dimensions or more.</p>
+ * @param <T> the type of the coordinate values
  * @author Jon
  */
-public interface DiscreteCoverage<DO> extends Coverage {
+public interface ReferenceableAxis<T> {
 
     /**
-     * Gets the list of objects that comprise this coverage's domain, together
-     * with their coordinate reference system.
-     * @return the list of objects that comprise this coverage's domain
+     * The coordinate values along the axis, in a defined order.  Maps from
+     * integer indices to coordinate axes.  Note that the inverse mapping can be
+     * found using the {@code indexOf()} method or by
+     * {@link Collections#binarySearch(java.util.List, java.lang.Object)}, but
+     * convenience methods are provided in this interface, which might be more
+     * efficient in some cases.
+     * @return the coordinate values along the axis.
      */
-    public Domain<DO> getDomain();
+    public List<T> getCoordinateValues();
+
+    public T getCoordinateValue(int index);
+
+    public int getCoordinateIndex(T value);
+
+    // public int getNearestCoordinateIndex(int value);
+
+    /** Returns the number of coordinate values on this axis */
+    public int getSize();
 
     /**
-     * Gets the list of objects that comprise this coverage's range.  There
-     * will be one entry in the list for each domain object, in the same order.
-     * @return
+     * Returns the {@link CoordinateReferenceSystem} to which the points on the
+     * axis are referenced.
+     * @return the {@link CoordinateReferenceSystem} to which the points on the
+     * axis are referenced.
      */
-    public List<Record> getValues();
-    
-    public List<?> getValues(String memberName);
-
-    /**
-     * Gets all the domain-object/record pairs
-     * @return
-     */
-    public List<Map.Entry<DO, Record>> list();
-
-    /**
-     * Gets the value of this coverage associated with the given domain object.
-     * @todo Check that there are no conflicts in the case that the domain object
-     * is a subclass of DirectPosition.
-     */
-    public Record evaluate(DO domainObject, Collection<String> memberNames);
-
-    public Object evaluate(DO domainObject, String memberName);
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
 }

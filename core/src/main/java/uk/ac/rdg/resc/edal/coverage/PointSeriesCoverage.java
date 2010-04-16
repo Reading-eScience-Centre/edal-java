@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.List;
 import org.opengis.referencing.crs.TemporalCRS;
 
 /**
@@ -44,11 +43,5 @@ public interface PointSeriesCoverage extends DiscreteCoverage<Double> {
      */
     @Override
     public TemporalCRS getCoordinateReferenceSystem();
-
-    /**
-     * Gets the list of time coordinate values in this Coverage's
-     * {@link #getCoordinateReferenceSystem() temporal CRS}.
-     */
-    public List<Double> getDomain();
 
 }

@@ -26,19 +26,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * A two-dimensional {@link ReferenceableGrid} in the horizontal plane.
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
+public interface HorizontalGrid extends ReferenceableGrid<HorizontalPosition>
 {
 
+    /**
+     * Returns a two-dimensional horizontal coordinate reference system.
+     * @return a two-dimensional horizontal coordinate reference system.
+     */
     @Override
-    public ProfileDomain getDomain();
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
+    /** Returns 2 */
+    @Override
+    public int getDimension();
+    
 }

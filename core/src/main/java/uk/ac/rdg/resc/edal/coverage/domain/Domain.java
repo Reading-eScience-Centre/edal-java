@@ -26,19 +26,33 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.domain;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import java.util.List;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * A geospatial/temporal domain: defines the set of points for which a {@link DiscreteCoverage}
+ * is defined.  The domain is comprised of a set of unique domain objects in a
+ * defined order.  The domain therefore has the semantics of both a {@link Set}
+ * and a {@link List} of domain objects.
+ * @param <DO> The type of the domain object
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
+public interface Domain<DO>
 {
+    /**
+     * Gets the coordinate reference system to which objects in this domain are
+     * referenced.  Returns null if the domain objects cannot be referenced
+     * to an external coordinate reference system.
+     * @return the coordinate reference system to which objects in this domain are
+     * referenced, or null if the domain objects are not externally referenced.
+     */
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
-    @Override
-    public ProfileDomain getDomain();
+    /**
+     * Returns the {@link List} of domain objects that comprise this domain.
+     */
+    public List<DO> getDomainObjects();
 
 }

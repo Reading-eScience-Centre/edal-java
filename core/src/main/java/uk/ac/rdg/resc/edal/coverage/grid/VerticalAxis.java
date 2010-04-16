@@ -26,19 +26,24 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import org.opengis.referencing.crs.VerticalCRS;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * <p>A vertical grid axis, which uses double-precision numbers to record
+ * coordinate values.</p>
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
-{
+public interface VerticalAxis extends ReferenceableAxis<Double> {
 
+    /**
+     * Returns the {@link VerticalCRS} to which the points on the
+     * axis are referenced.
+     * @return the {@link VerticalCRS} to which the points on the
+     * axis are referenced.
+     */
     @Override
-    public ProfileDomain getDomain();
+    public VerticalCRS getCoordinateReferenceSystem();
 
 }

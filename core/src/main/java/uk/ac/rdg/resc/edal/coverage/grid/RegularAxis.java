@@ -26,19 +26,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
-
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
+ * spaced.</p>
+ * @param <T> the type of the coordinate values
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
-{
+public interface RegularAxis extends ReferenceableAxis<Double> {
 
-    @Override
-    public ProfileDomain getDomain();
+    /** Gets the spacing between coordinate values */
+    public double getCoordinateSpacing();
 
 }

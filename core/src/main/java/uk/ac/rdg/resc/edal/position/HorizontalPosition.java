@@ -33,6 +33,9 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * Defines the position of a point in the horizontal plane.
+ * @todo May cause confusion for lat-lon coordinate systems (i.e. those with
+ * latitude first).  In this case getX() would return latitude, which is
+ * counterintuitive.  Do we actually need this interface at all?
  * @author Jon
  */
 public interface HorizontalPosition extends DirectPosition {

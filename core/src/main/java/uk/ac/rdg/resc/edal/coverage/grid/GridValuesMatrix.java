@@ -26,19 +26,40 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import java.util.List;
+import uk.ac.rdg.resc.edal.coverage.Record;
+import uk.ac.rdg.resc.edal.coverage.RecordType;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * A {@link Grid} that contains values.
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
-{
+public interface GridValuesMatrix extends Grid {
 
-    @Override
-    public ProfileDomain getDomain();
+    /**
+     * <p>Returns a sequence of N feature attribute value records where N is the
+     * number of grid points within the section of the grid specified by the
+     * {@link #getExtent() extent}.</p>
+     * <p>Note that this List does not have to exist as a purely in-memory
+     * object.  For large grids it may be more efficient to implement a List
+     * that wraps other storage.</p>
+     * @return a sequence of N feature attribute values.
+     * @see GridValuesMatrix#getValues()
+     */
+    public List<Record> getValues();
+
+    public List<Record> getValues(List<GridCoordinates> coords);
+
+    /** @todo Do we need this?  */
+    public RecordType getRangeType();
+
+    /**
+     * @todo Does this belong in the Grid class, or in the relevant Coverage class?
+     * We need to retrieve the list of valid member names from the Coverage so
+     * it would be handy to have a link somewhere.
+     */
+    public List<?> getValues(String memberName);
 
 }

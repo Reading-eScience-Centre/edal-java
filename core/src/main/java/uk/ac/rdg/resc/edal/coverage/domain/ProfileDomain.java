@@ -26,19 +26,48 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.domain;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
+import java.util.List;
+import org.opengis.referencing.crs.VerticalCRS;
+import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * The domain of a {@link ProfileCoverage}: a set of vertical positions
+ * @param <DO> The type of the domain object
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
+public interface ProfileDomain extends Domain<VerticalPosition>
 {
+    /**
+     * Returns the vertical coordinate reference system used to reference
+     * the coordinate values.
+     * @return
+     */
+    public VerticalCRS getCoordinateReferenceSystem();
 
-    @Override
-    public ProfileDomain getDomain();
+    /**
+     * Returns a view of this domain as a list of vertical coordinate values
+     * in the domain's {@link #getCoordinateReferenceSystem() CRS}.
+     * @return
+     */
+    public List<Double> getCoordinateValues();
+
+}
+
+class ProfileDomainImpl implements ProfileDomain {
+
+    public VerticalCRS getCoordinateReferenceSystem() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public List<Double> getCoordinateValues() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public List<VerticalPosition> getDomainObjects() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 }

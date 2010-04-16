@@ -26,19 +26,28 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ * A {@link HorizontalGrid} whose axes in real space are aligned with the axes
+ * in grid space.  Therefore the axes of the grid are separable.
+ * @todo Do the axes in the grid and the CRS have to be in the same order?
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
-{
+public interface RectilinearGrid extends HorizontalGrid {
 
+    /** {@code index} must be 0 or 1. */
+    public ReferenceableAxis getAxis(int index);
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The number of dimensions in this coordinate reference system must
+     * match the {@link #getDimension() number of dimensions in the grid}.</p>
+     */
     @Override
-    public ProfileDomain getDomain();
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
 }

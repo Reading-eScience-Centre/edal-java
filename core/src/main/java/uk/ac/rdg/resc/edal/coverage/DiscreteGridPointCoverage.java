@@ -25,20 +25,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package uk.ac.rdg.resc.edal.coverage;
 
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.coverage.grid.Grid;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
+import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
+import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableGrid;
 
 /**
- * <p>A Coverage that contains values for a vertical profile of data</p>
+ *
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCoverage<VerticalPosition>
-{
+public interface DiscreteGridPointCoverage extends DiscreteCoverage<GridCoordinates> {
 
+    /**
+     * Returns the {@link Grid} object that forms the domain of this coverage.
+     * This object must also implement {@link GridValuesMatrix}.
+     * @return the {@link Grid} object that forms the domain of this coverage.
+     */
     @Override
-    public ProfileDomain getDomain();
+    public ReferenceableGrid getDomain();
+
+    /** getValues() will re-use the GridValueMatrix's getValues() method */
+
+    /**
+     * Returns the {@link CoordinateReferenceSystem} to which the points in the
+     * {@link #getGrid() grid} can be referenced.  This must match the Grid's
+     * own {@link ReferenceableGrid#getCoordinateReferenceSystem() coordinate reference
+     * system}.
+     * @return the {@link CoordinateReferenceSystem} to which the points in the
+     * {@link #getGrid() grid} can be referenced.
+     */
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
 }
