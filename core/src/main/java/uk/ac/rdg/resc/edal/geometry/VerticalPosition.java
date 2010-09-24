@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2009 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,23 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.geometry;
+
+import org.opengis.referencing.crs.VerticalCRS;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * Defines the position of a point in time
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface VerticalPosition extends OneDimensionalPosition {
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+    /** Returns the vertical coordinate of this position, equivalent to getOrdinate(0) */
+    public double getZ();
+
+    /**
+     * Returns a temporal coordinate reference system.
+     * @return a temporal coordinate reference system.
+     */
+    @Override public VerticalCRS getCoordinateReferenceSystem();
 
 }

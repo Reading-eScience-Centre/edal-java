@@ -28,36 +28,23 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
-import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.TemporalAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import java.util.List;
+import uk.ac.rdg.resc.edal.coverage.DiscretePointCoverage;
 
 /**
- * <p>The domain of a {@link GridSeriesCoverage}.  It is modelled as a composition
- * of a horizontal gridded domain and optional vertical and temporal axes.  This
- * restricts the use of this interface to cases in which the vertical and temporal
- * axes are everywhere orthogonal to the horizontal grid.</p>
- *
- * <p>Note that it would be possible to model the domain as a four-dimensional
- * {@link ReferenceableGrid}, but this would introduce significant complications
- * mapping from four-dimensional grid points to real-world points, particularly
- * taking into account all the possibilities of different axis ordering.</p>
+ * <p>A {@link DiscreteDomain} that consists of a finite number of infinitesimal
+ * points.  The domain objects are therefore of the same type as the object
+ * used to identify positions within the domain.  This is the domain of a
+ * {@link DiscretePointCoverage}.</p>
+ * <p>A typical implementation might use
+ * {@link #getDomainObjects()}{@link List#contains(java.lang.Object) .contains()}
+ * to implement the {@link #contains(java.lang.Object)} operation, and
+ * {@link #getDomainObjects()}{@link List#indexOf(java.lang.Object) .indexOf()}
+ * to implement {@link #findIndexOf(java.lang.Object)}.</p>
+ * @param <P> The type of the domain object and the objects used to define
+ * positions within the domain
  * @author Jon
  */
-public interface GridSeriesDomain
+public interface DiscretePointDomain<P> extends DiscreteDomain<P, P>
 {
-
-    public HorizontalGrid getHorizontalGrid();
-
-    public VerticalAxis getVerticalAxis();
-
-    public TemporalAxis getTemporalAxis();
-
-    /**
-     * Returns the total number of points in the domain, i.e. the product of
-     * the sizes of the horizontal grid and the temporal and vertical axes
-     */
-    public int getSize();
-
 }

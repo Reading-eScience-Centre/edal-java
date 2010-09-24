@@ -29,25 +29,38 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import java.util.List;
-import org.opengis.coverage.grid.GridEnvelope;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * A description of a multidimensional grid with integer coordinates.
  * @author Jon
  * @todo implement Iterable&lt;GridCoordinates&gt;?  Would be nice to be able
- * to do {@code for (GridCoordinates coords : grid) ...}.
+ * to do {@code for (GridCoordinates coords : grid) ...}.  This method could
+ * also be available on the GridEnvelope implementation.
  */
 public interface Grid
 {
 
     /**
-     * Returns a list containing the names of the grid axes.
+     * Returns a list containing the names of the grid axes.  The order of these
+     * names matches the order of elements in this Grid's {@link GridCoordinates}
+     * and {@link #getGridExtent() grid envelope}.
      * @return a list containing the names of the grid axes.
      */
     public List<String> getAxisNames();
 
-    public GridEnvelope getExtent();
+    /**
+     * Returns the extent of the grid in integer coordinates.
+     * @return
+     */
+    public GridExtent getGridExtent();
+
+    /**
+     * Returns a list of the grid points that comprise this grid.  If this is not a
+     * {@link ReferenceableGrid}, the footprint of each grid point will be null.
+     * @return a list of the grid points that comprise this grid
+     * @todo Define the ordering
+     */
+    public List<GridPoint> getGridPoints();
 
     /**
      * Returns the dimensionality of the grid. This will be the same as
@@ -59,6 +72,7 @@ public interface Grid
     /**
      * Returns the number of grid points in the grid.
      * @return the number of grid points in the grid.
+     * @todo should return a long?
      */
     public int getSize();
 }

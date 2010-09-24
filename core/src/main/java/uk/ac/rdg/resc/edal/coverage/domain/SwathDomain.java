@@ -26,30 +26,39 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.phenomenon;
+package uk.ac.rdg.resc.edal.coverage.domain;
 
-import uk.ac.rdg.resc.edal.Vocabulary;
-import uk.ac.rdg.resc.edal.VocabularyTerm;
+import java.util.List;
+import org.joda.time.Chronology;
+import org.opengis.geometry.DirectPosition;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.coverage.SwathCoverage;
 
 /**
- * Describes a measured quantity, {@literal e.g.} sea water potential temperature.
+ * The domain of a {@link SwathCoverage}: a set of ground pixels.
  * @author Jon
+ * @todo Replace DirectPosition with a type that can identify a horizontal position
+ * and a time instant.
  */
-public interface Phenomenon extends VocabularyTerm {
+public interface SwathDomain extends DiscreteDomain<DirectPosition, GroundPixel>
+{
+    /**
+     * Returns the {@link Chronology} used to reference the time values of the
+     * ground pixels.
+     */
+    public Chronology getChronology();
 
     /**
-     * Gets the standard name of this phenomenon, unique within the
-     * {@link #getVocabulary() vocabulary}.
-     * @return
+     * Returns the coordinate reference system used to reference the horizontal
+     * polygons in the ground pixels.
      */
-    @Override
-    public String getId();
+    public CoordinateReferenceSystem getHorizontalCrs();
 
     /**
-     * Gets the vocabulary to which this term belongs.
-     * @return
+     * Returns the list of ground pixels that comprise this swath's domain.  The
+     * pixels are referenced to the
      */
     @Override
-    public Vocabulary<Phenomenon> getVocabulary();
+    public List<GroundPixel> getDomainObjects();
 
 }

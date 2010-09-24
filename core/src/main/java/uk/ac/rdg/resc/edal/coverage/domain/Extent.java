@@ -26,16 +26,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.coverage.domain;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * <p>The extent of a {@link Domain}, defined in terms of its low and high values.</p>
+ * <p>Subclasses must implement a method that returns a value that gives the
+ * coordinate reference system to which the positions are referenced.  Such a
+ * method is not defined in this top-level interface because subclasses might use
+ * very different types of object to define the CRS.</p>
+ * @param <P> The type of object used to identify positions within this extent
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface Extent<P>
+{
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+    public P getLow();
+
+    public P getHigh();
+
+    /**
+     * Return true if the given position is contained within this Extent.
+     */
+    public boolean contains(P position);
 
 }

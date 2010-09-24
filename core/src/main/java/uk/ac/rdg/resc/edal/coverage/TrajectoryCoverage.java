@@ -26,24 +26,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.coverage;
 
-import org.opengis.referencing.crs.VerticalCRS;
+import uk.ac.rdg.resc.edal.coverage.domain.TrajectoryDomain;
+import uk.ac.rdg.resc.edal.geometry.SpatioTemporalPoint;
 
 /**
- * <p>A vertical grid axis, which uses double-precision numbers to record
- * coordinate values.</p>
+ * A {@link DiscretePointCoverage} that represents a trajectory, i.e. a list
+ * of positions in space and time.
  * @author Jon
  */
-public interface VerticalAxis extends ReferenceableAxis<Double> {
+public interface TrajectoryCoverage extends DiscretePointCoverage<SpatioTemporalPoint> {
 
-    /**
-     * Returns the {@link VerticalCRS} to which the points on the
-     * axis are referenced.
-     * @return the {@link VerticalCRS} to which the points on the
-     * axis are referenced.
-     */
     @Override
-    public VerticalCRS getCoordinateReferenceSystem();
+    public TrajectoryDomain getDomain();
 
 }

@@ -26,16 +26,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.coverage;
+
+import uk.ac.rdg.resc.edal.coverage.domain.DiscretePointDomain;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * <p>A {@link DiscreteCoverage} whose domain objects are infinitesmal points
+ * (positions) in space or time.  Therefore the objects used to query for data
+ * values (in the evaluate() method) are of the same type of the domain objects.</p>
+ * @param <P> The type of the domain object, which is the same as the type of the
+ * object used to identify a position within the domain.
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
-
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
-
+public interface DiscretePointCoverage<P> extends DiscreteCoverage<P, P>
+{
+    @Override
+    public DiscretePointDomain getDomain();
 }

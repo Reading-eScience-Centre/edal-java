@@ -28,14 +28,12 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-/**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
- * @author Jon
- */
-public interface RegularAxis extends ReferenceableAxis {
+import org.opengis.coverage.grid.GridEnvelope;
+import uk.ac.rdg.resc.edal.coverage.domain.Extent;
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+/**
+ * The extent of a {@link Grid} expressed in terms of {@link GridCoordinates}.
+ */
+public interface GridExtent extends Extent<GridCoordinates>, GridEnvelope {
 
 }

@@ -27,37 +27,17 @@
  */
 package uk.ac.rdg.resc.edal.coverage;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.coverage.grid.Grid;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
-import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
+import uk.ac.rdg.resc.edal.coverage.grid.GridPoint;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableGrid;
 
+
 /**
- *
+ * A {@link DiscreteCoverage} whose values are arranged on a grid.
  * @author Jon
  */
-public interface DiscreteGridPointCoverage extends DiscreteCoverage<GridCoordinates> {
+public interface DiscreteGridPointCoverage<P> extends DiscreteCoverage<P, GridPoint> {
 
-    /**
-     * Returns the {@link Grid} object that forms the domain of this coverage.
-     * This object must also implement {@link GridValuesMatrix}.
-     * @return the {@link Grid} object that forms the domain of this coverage.
-     */
     @Override
-    public ReferenceableGrid getDomain();
-
-    /** getValues() will re-use the GridValueMatrix's getValues() method */
-
-    /**
-     * Returns the {@link CoordinateReferenceSystem} to which the points in the
-     * {@link #getGrid() grid} can be referenced.  This must match the Grid's
-     * own {@link ReferenceableGrid#getCoordinateReferenceSystem() coordinate reference
-     * system}.
-     * @return the {@link CoordinateReferenceSystem} to which the points in the
-     * {@link #getGrid() grid} can be referenced.
-     */
-    @Override
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    public ReferenceableGrid<P> getDomain();
 
 }

@@ -31,7 +31,7 @@ package uk.ac.rdg.resc.edal.coverage;
 import java.util.Set;
 import javax.measure.unit.Unit;
 import org.opengis.util.TypeName;
-import uk.ac.rdg.resc.edal.phenomenon.Phenomenon;
+import uk.ac.rdg.resc.edal.Phenomenon;
 
 /**
  * Describes the content of a Coverage's {@link Record}s.  A Record consists of
@@ -42,25 +42,27 @@ import uk.ac.rdg.resc.edal.phenomenon.Phenomenon;
 public interface RecordType {
     
     /**
-     * Returns a Set of unique identifiers for all the members of this coverage
-     * ({@literal e.g.} {"temperature", "salinity", "chlorophyll"}.  These
+     * Returns a Set of unique identifiers for all the fields of this record type
+     * ({@literal e.g.} {"temperature", "salinity", "chlorophyll"}).  These
      * identifiers are not usually revealed externally, but are used as internal
      * keys for properties and data values.  Must not return null (return the
-     * empty set if this record type really has no members).
+     * empty set if this record type really has no fields, which would be very
+     * unusual).
+     * @return a Set of unique identifiers for all the fields of this record type
      * @return
      */
-    public Set<String> getMemberNames();
+    public Set<String> getFieldNames();
     
     /**
      * Gets the runtime class of a member.
      * Here {@link Class} replaces GeoAPI's use of {@link TypeName}.
-     * @param memberName
+     * @param fieldName
      * @return The runtime class of the member
      * @throws NullPointerException if {@code memberName == null}
      * @throws IllegalArgumentException if the memberName is not present in
-     * {@link #getMemberNames()}.
+     * {@link #getFieldNames()}.
      */
-    public Class<?> getClass(String memberName);
+    public Class<?> getClass(String fieldName);
 
     /**
      * Returns the Phenomenon object corresponding to the given member name.
@@ -68,13 +70,13 @@ public interface RecordType {
      * @return the Phenomenon object corresponding to the given member name.
      * @throws NullPointerException if {@code memberName == null}
      * @throws IllegalArgumentException if the memberName is not present in
-     * {@link #getMemberNames()}.
+     * {@link #getFieldNames()}.
      */
     public Phenomenon getParameter(String memberName);
 
     /**
      * Returns the units of measure of the given record member as a String.
-     * @param memberName The name of the record member.
+     * @param fieldName The name of the record member.
      * @return the units of measure of the give record member
      * @todo Should we specify that the String must be parseable by Udunits?
      * @todo What if the member inherently has no units (e.g. a quality flag)?
@@ -84,8 +86,8 @@ public interface RecordType {
      * "kg/kg" or similar?
      * @throws NullPointerException if {@code memberName == null}
      * @throws IllegalArgumentException if the memberName is not present in
-     * {@link #getMemberNames()}.
+     * {@link #getFieldNames()}.
      */
-    public Unit getUnitsOfMeasure(String memberName);
+    public Unit getUnitsOfMeasure(String fieldName);
 
 }

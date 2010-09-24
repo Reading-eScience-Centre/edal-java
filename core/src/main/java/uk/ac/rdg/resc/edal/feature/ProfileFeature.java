@@ -28,15 +28,15 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.TemporalPosition;
+import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
 
 /**
  * A vertical profile measurement.
  * @author Jon
  */
-public interface ProfileFeature extends Feature {
+public interface ProfileFeature extends Feature<Double> {
 
     /**
      * Gets the horizontal location of this profile feature.
@@ -48,7 +48,7 @@ public interface ProfileFeature extends Feature {
      * Gets the temporal location of this profile feature.
      * @return the temporal location of this profile feature.
      */
-    public TemporalPosition getTemporalPosition();
+    public DateTime getDateTime();
 
     @Override
     public ProfileCoverage getCoverage();

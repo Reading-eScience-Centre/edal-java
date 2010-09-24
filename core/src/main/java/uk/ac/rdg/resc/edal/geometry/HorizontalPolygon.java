@@ -26,33 +26,39 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.position;
+package uk.ac.rdg.resc.edal.geometry;
 
-import org.opengis.geometry.DirectPosition;
+import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * A direct position within a one-dimensional coordinate reference system
+ * A polygon in the horizontal plane, defined by a list of vertices in a given
+ * coordinate reference system.
  * @author Jon
+ * @todo add a contains() method?
  */
-public interface OneDimensionalPosition extends DirectPosition {
-    
-    /** Returns a one-dimensional coordinate reference system */
-    @Override public CoordinateReferenceSystem getCoordinateReferenceSystem();
-
-    /** Returns 1 */
-    @Override public int getDimension();
+public interface HorizontalPolygon {
 
     /**
-     * Returns an array with a single element containing the coordinate value
+     * Returns the two-dimensional horizontal coordinate reference system to
+     * which the {@link #getVertices() vertices} are referenced.
+     * @return the two-dimensional horizontal coordinate reference system to
+     * which the vertices are referenced.
      */
-    @Override public double[] getCoordinate();
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
     /**
-     * Returns the ordinate at the specified dimension.
-     * @param dimension - The dimension: must be 0
-     * @return The coordinate at the specified dimension
-     * @throws IndexOutOfBoundsException if {@code index != 0}
+     * Returns the list of vertices that define this polygon in the horizontal
+     * plane.  The coordinates of the vertices are defined in this object's
+     * {@link #getCoordinateReferenceSystem() coordinate reference system}.  The
+     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
+     * as this object, but they may not have a non-null CRS that is different from
+     * that of this object.
+     * @return the list of vertices that define this polygon in the horizontal
+     * plane.
+     * @todo define whether the polygon is closed, and whether there is a particular
+     * order (clockwise or anticlockwise) to the vertices.
      */
-    @Override public double getOrdinate(int index);
+    public List<HorizontalPosition> getVertices();
+
 }

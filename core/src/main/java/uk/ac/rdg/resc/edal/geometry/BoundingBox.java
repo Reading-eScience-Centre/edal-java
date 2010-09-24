@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 The University of Reading
+ * Copyright (c) 2010 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.position;
+package uk.ac.rdg.resc.edal.geometry;
 
-import org.opengis.referencing.crs.VerticalCRS;
+import org.opengis.geometry.Envelope;
 
 /**
- * Defines the position of a point in time
+ * A bounding box in the horizontal plane.  Extends {@link Envelope} by providing
+ * convenience methods for accessing minimum and maximum x and y values
  * @author Jon
  */
-public interface VerticalPosition extends OneDimensionalPosition {
+public interface BoundingBox extends Envelope {
 
-    /** Returns the vertical coordinate of this position, equivalent to getOrdinate(0) */
-    public double getZ();
+    /** Gets the minimum ordinate along the first axis */
+    public double getMinX();
 
-    /**
-     * Returns a temporal coordinate reference system.
-     * @return a temporal coordinate reference system.
-     */
-    @Override public VerticalCRS getCoordinateReferenceSystem();
+    /** Gets the maximum ordinate along the first axis */
+    public double getMaxX();
+
+    /** Gets the minimum ordinate along the second axis */
+    public double getMinY();
+
+    /** Gets the maximum ordinate along the second axis */
+    public double getMaxY();
 
 }

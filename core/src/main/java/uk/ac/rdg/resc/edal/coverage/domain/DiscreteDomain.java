@@ -26,24 +26,44 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.coverage.domain;
 
-import org.opengis.referencing.crs.TemporalCRS;
+import java.util.List;
+import java.util.Set;
+import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 
 /**
- * <p>A grid axis representing time, which uses double-precision numbers to record
- * coordinate values in a temporal CRS.</p>
+ * A {@link Domain} that consists of a finite number of discrete objects.
+ * {@link DiscreteCoverage}s use this type of domain.
+ * @param <P> The type of object used to identify positions within this domain
+ * @param <DO> The type of the domain object
  * @author Jon
  */
-public interface TemporalAxis extends ReferenceableAxis<Double> {
+public interface DiscreteDomain<P, DO> extends Domain<P>
+{
 
     /**
-     * Returns the {@link TemporalCRS} to which the points on the
-     * axis are referenced.
-     * @return the {@link TemporalCRS} to which the points on the
-     * axis are referenced.
+     * Returns the {@link List} of domain objects that comprise this domain.
+     * The domain objects are in a defined order, hence we use a {@link List};
+     * however, the domain objects will also each be unique, so the returned list
+     * will also have the semantics of a {@link Set}.  (It is impossible in Java
+     * to define an object that correctly implements both the List and Set
+     * interfaces simultaneously.)
      */
-    @Override
-    public TemporalCRS getCoordinateReferenceSystem();
+    public List<DO> getDomainObjects();
+
+    /**
+     * Returns the index of the domain object in the {@link #getDomainObjects()
+     * list of domain objects} that contains the given position, or -1 if the
+     * position is outside the domain.
+     */
+    public int findIndexOf(P position);
+
+    /**
+     * Returns the number of domain objects in the domain (equivalent to
+     * {@link #getDomainObjects()}.size()).
+     * @return the number of domain objects in the domain
+     */
+    public int size();
 
 }

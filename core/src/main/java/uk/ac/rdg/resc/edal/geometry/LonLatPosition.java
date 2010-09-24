@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.position;
+package uk.ac.rdg.resc.edal.geometry;
 
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -37,6 +37,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * @todo Maybe this interface could handle the case where latitude was the first
  * coordinate?  I.e. getLongitude() and getLatitude() would correspond with
  * different ordinate indices.
+ * @todo Allow for lon and lat on different datums?
  * @author Jon
  */
 public interface LonLatPosition extends HorizontalPosition {

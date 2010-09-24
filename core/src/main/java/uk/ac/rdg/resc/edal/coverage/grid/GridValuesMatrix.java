@@ -34,6 +34,9 @@ import uk.ac.rdg.resc.edal.coverage.RecordType;
 
 /**
  * A {@link Grid} that contains values.
+ * @todo What exception should be thrown if data are requested for a grid point
+ * that is outside the grid envelope?
+ * @todo should extend Collection%lt;Record&gt;?
  * @author Jon
  */
 public interface GridValuesMatrix extends Grid {
@@ -44,22 +47,29 @@ public interface GridValuesMatrix extends Grid {
      * {@link #getExtent() extent}.</p>
      * <p>Note that this List does not have to exist as a purely in-memory
      * object.  For large grids it may be more efficient to implement a List
-     * that wraps other storage.</p>
+     * that wraps other storage, or generates values dynamically.</p>
      * @return a sequence of N feature attribute values.
-     * @see GridValuesMatrix#getValues()
+     * @see #getValues(java.util.List)
+     * @see #getOffset(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates)
      */
     public List<Record> getValues();
-
-    public List<Record> getValues(List<GridCoordinates> coords);
-
-    /** @todo Do we need this?  */
-    public RecordType getRangeType();
 
     /**
      * @todo Does this belong in the Grid class, or in the relevant Coverage class?
      * We need to retrieve the list of valid member names from the Coverage so
-     * it would be handy to have a link somewhere.
+     * it would be handy to have a link somewhere (this is the RecordType below I guess).
      */
     public List<?> getValues(String memberName);
+
+    /**
+     * Gets the offset of the given grid point within the
+     * {@link #getValues() list of data records}.
+     * @param coords The coordinates of the grid point
+     * @return the offset of the given grid point within the
+     * {@link #getValues() list of data records}.
+     */
+    public int getOffset(GridCoordinates coords);
+
+    public RecordType getRangeType();
 
 }

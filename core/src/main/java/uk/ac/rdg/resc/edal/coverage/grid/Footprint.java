@@ -28,14 +28,21 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-/**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
- * @author Jon
- */
-public interface RegularAxis extends ReferenceableAxis {
+import uk.ac.rdg.resc.edal.geometry.HorizontalPolygon;
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+/**
+ * The spatiotemporal domain of a single {@link GridPoint}, composed of a polygon
+ * in horizontal space and a vertical and a temporal extent.
+ * @author Jon
+ * @todo Could this be reused as a GroundPixel?
+ */
+public interface Footprint {
+
+    /**
+     * Returns the polygon that describes this footprint in the horizontal plane.
+     * In a quadrilateral grid this polygon will have four vertices.
+     * @return the polygon that describes this footprint in the horizontal plane.
+     */
+    public HorizontalPolygon getHorizontalPolygon();
 
 }

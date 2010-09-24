@@ -26,16 +26,29 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.coverage.domain;
+
+import org.joda.time.DateTime;
+import uk.ac.rdg.resc.edal.geometry.HorizontalPolygon;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * A part of a {@link SwathDomain}, consisting of a polygon in the horizontal
+ * plane and a time instant.
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface GroundPixel {
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+    /**
+     * Returns the time instant at which the ground pixel was observed
+     * @return the time instant at which the ground pixel was observed, or
+     * null if no time information is associated with the ground pixel.
+     */
+    public DateTime getDateTime();
+
+    /**
+     * Returns the polygon defining this ground pixel in the horizontal plane.
+     * @return the polygon defining this ground pixel in the horizontal plane.
+     */
+    public HorizontalPolygon getHorizontalPolygon();
 
 }

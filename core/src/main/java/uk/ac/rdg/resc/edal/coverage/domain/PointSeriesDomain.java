@@ -26,16 +26,30 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.coverage.domain;
+
+import java.util.List;
+import org.joda.time.Chronology;
+import org.joda.time.DateTime;
+import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * The domain of a {@link PointSeriesCoverage}: a set of time instants.
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface PointSeriesDomain extends DiscretePointDomain<DateTime>
+{
+    /**
+     * Returns the {@link Chronology} used to reference the time instants.
+     */
+    public Chronology getChronology();
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+    /**
+     * Returns the list of time coordinate values that comprise this domain,
+     * in the domain's {@link #getChronology() chronology}.  The values will be
+     * in ascending order of time.
+     */
+    @Override
+    public List<DateTime> getDomainObjects();
 
 }

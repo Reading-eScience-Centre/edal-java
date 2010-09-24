@@ -29,13 +29,25 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * A GridPoint associates a set of grid coordinates with its sample space in an
+ * external coordinate reference system.
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface GridPoint {
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+    /** Returns the coordinates of this grid point within the grid */
+    public GridCoordinates getGridCoordinates();
+
+    /**
+     * Returns the sample space of this grid point in an external coordinate
+     * reference system.
+     * @return the sample space of this grid point in an external coordinate
+     * reference system.
+     * @todo Create a return type
+     */
+    public Footprint getSampleSpace();
+
+    /** Returns the {@link Grid} of which this GridPoint is a part */
+    public Grid getGrid();
 
 }

@@ -28,31 +28,31 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
-import java.util.List;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.coverage.Coverage;
 
 /**
- * A geospatial/temporal domain: defines the set of points for which a {@link DiscreteCoverage}
- * is defined.  The domain is comprised of a set of unique domain objects in a
- * defined order.  The domain therefore has the semantics of both a {@link Set}
- * and a {@link List} of domain objects.
- * @param <DO> The type of the domain object
+ * <p>A geospatial/temporal domain: defines the set of positions for which a
+ * {@link Coverage} is defined.</p>
+ * <p>Subclasses must implement a method that returns a value that gives the
+ * coordinate reference system to which the positions are referenced.  Such a
+ * method is not defined in this top-level interface because subclasses might use
+ * very different types of object to define the CRS.  This CRS must match
+ * the CRS of the {@link #getExtent() extent}.</p>
+ * @param <P> The type of object used to identify positions within this domain
  * @author Jon
  */
-public interface Domain<DO>
+public interface Domain<P>
 {
     /**
-     * Gets the coordinate reference system to which objects in this domain are
-     * referenced.  Returns null if the domain objects cannot be referenced
-     * to an external coordinate reference system.
-     * @return the coordinate reference system to which objects in this domain are
-     * referenced, or null if the domain objects are not externally referenced.
+     * Returns true if the given position is contained within this domain.
      */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    public boolean contains(P position);
 
     /**
-     * Returns the {@link List} of domain objects that comprise this domain.
+     * Returns the extent of this domain.  This is the bounding box that
+     * contains all positions within the domain.  Note that there may be
+     * positions within the extent that are not considered part of the domain.
      */
-    public List<DO> getDomainObjects();
+    public Extent<P> getExtent();
 
 }

@@ -28,8 +28,13 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
+import java.util.List;
+import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.coverage.domain.DiscretePointDomain;
+import uk.ac.rdg.resc.edal.coverage.domain.Extent;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
 
 /**
  * A two-dimensional {@link ReferenceableGrid} in the horizontal plane.
@@ -37,16 +42,53 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  */
 public interface HorizontalGrid extends ReferenceableGrid<HorizontalPosition>
 {
+    /**
+     * <p>Transforms a grid coordinates to a direct position.  The returned
+     * position's {@link DirectPosition#getCoordinateReferenceSystem() coordinate
+     * reference system} will match the {@link #getCoordinateReferenceSystem()
+     * coordinate reference system associated with this object}.</p>
+     *
+     * <p>This is a convenience method, which is exactly equivalent to calling
+     * {@link #transformCoordinates(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates)}
+     * with grid coordinates [i,j]</p>
+     * @param i The i coordinate within the grid
+     * @param j The j coordinate within the grid
+     * @return the "real world" coordinates, or null if the grid coordinates are
+     * not contained within the {@link #getGridExtent() envelope of the grid}.
+     */
+    public HorizontalPosition transformCoordinates(int i, int j);
 
     /**
      * Returns a two-dimensional horizontal coordinate reference system.
      * @return a two-dimensional horizontal coordinate reference system.
      */
-    @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
     /** Returns 2 */
     @Override
     public int getDimension();
     
+    /**
+     * Finds the nearest (two-dimensional) grid point to the given position.
+     * @return the nearest grid point to the given position, or null if the
+     * position is outside the {@link BoundingBox bounding box} of the grid.
+     */
+    public GridCoordinates findNearestGridPoint(HorizontalPosition pos);
+        
+    /**
+     * Finds the nearest grid points to each of the positions in the given list
+     * in a single operation.  The results of this method will be exactly
+     * equivalent to calling {@link #findNearestGridPoint(uk.ac.rdg.resc.edal.position.HorizontalPosition)}
+     * for each point within the domain.  The order of the grid coordinates in
+     * the returned list will be the same as the order of the positions within
+     * the domain.
+     */
+    public List<GridCoordinates> findNearestGridPoints(DiscretePointDomain<HorizontalPosition> positions);
+
+    /**
+     * Gets the 2D bounding box of the grid in the grid's
+     * {@link #getCoordinateReferenceSystem() coordinate reference system}.
+     */
+    @Override
+    public Extent<HorizontalPosition> getExtent();
 }

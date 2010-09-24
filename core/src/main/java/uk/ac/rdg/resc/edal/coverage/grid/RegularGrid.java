@@ -30,13 +30,27 @@ package uk.ac.rdg.resc.edal.coverage.grid;
 
 /**
  * A two-dimensional grid whose coordinate values are equally-spaced along each
- * axis, and whose axes in real space are aligned with the axes
- * in grid space.
+ * axis, and whose axes in real space are aligned with the axes in grid space.
+ * @todo Should this be called a RectifiedGrid in line with ISO19123?
  * @author Jon
  */
 public interface RegularGrid extends RectilinearGrid {
 
-    /** {@code index} must be 0 or 1. */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RegularAxis getXAxis();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RegularAxis getYAxis();
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public RegularAxis getAxis(int index);
 

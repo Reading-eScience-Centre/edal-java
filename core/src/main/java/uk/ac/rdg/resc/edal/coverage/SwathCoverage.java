@@ -26,16 +26,22 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.coverage;
+
+import uk.ac.rdg.resc.edal.coverage.domain.GroundPixel;
+import org.opengis.geometry.DirectPosition;
+import uk.ac.rdg.resc.edal.coverage.domain.SwathDomain;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * A {@link DiscreteCoverage} that represents a swath measurement, i.e. a collection
+ * of {@link GroundPixel}s swept out over a period of time.
+ * @todo Swaths might also be represented as a grid, each of which has a footprint
+ * equivalent to a GroundPixel.  Represent this as a subclass?
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface SwathCoverage extends DiscreteCoverage<DirectPosition, GroundPixel> {
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+    @Override
+    public SwathDomain getDomain();
 
 }

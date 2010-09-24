@@ -26,16 +26,30 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal;
+
+import uk.ac.rdg.resc.edal.Vocabulary;
+import uk.ac.rdg.resc.edal.VocabularyTerm;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * Describes a measured quantity, {@literal e.g.} sea water potential temperature.
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface Phenomenon extends VocabularyTerm {
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+    /**
+     * Gets the standard name of this phenomenon, unique within the
+     * {@link #getVocabulary() vocabulary}.
+     * @return
+     */
+    @Override
+    public String getId();
+
+    /**
+     * Gets the vocabulary to which this term belongs.
+     * @return
+     */
+    @Override
+    public Vocabulary<Phenomenon> getVocabulary();
 
 }

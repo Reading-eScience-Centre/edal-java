@@ -28,15 +28,16 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
 
 /**
  * A measurement of a time series at a point
  * @author Jon
  */
-public interface PointSeriesFeature extends Feature {
+public interface PointSeriesFeature extends Feature<DateTime> {
 
     /**
      * Gets the horizontal location of this profile feature.

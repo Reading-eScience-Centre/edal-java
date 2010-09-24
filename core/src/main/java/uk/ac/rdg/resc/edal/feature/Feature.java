@@ -28,15 +28,16 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
-import uk.ac.rdg.resc.edal.CalendarSystem;
 import uk.ac.rdg.resc.edal.coverage.Coverage;
 
 /**
  * <p>Superclass for all CSML FeatureTypes.</p>
  * @author Jon
  * @todo How best to represent metadata?
+ * @param <P> The type of object used to identify positions within the {@link
+ * #getCoverage() coverage}'s {@link Domain}.
  */
-public interface Feature 
+public interface Feature<P>
 {
     
     /**
@@ -67,12 +68,5 @@ public interface Feature
     /**
      * Gets the measurement values
      */
-    public Coverage getCoverage();
-
-    /**
-     * Gets the calendar system used to interpret dates and times relating to
-     * this feature.
-     * @return
-     */
-    public CalendarSystem getCalendarSystem();
+    public Coverage<P> getCoverage();
 }

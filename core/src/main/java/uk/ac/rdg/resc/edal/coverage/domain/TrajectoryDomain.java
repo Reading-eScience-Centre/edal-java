@@ -29,23 +29,43 @@
 package uk.ac.rdg.resc.edal.coverage.domain;
 
 import java.util.List;
-import org.opengis.geometry.DirectPosition;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import org.joda.time.Chronology;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.VerticalCRS;
+import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
+import uk.ac.rdg.resc.edal.geometry.SpatioTemporalPoint;
 
 /**
- * A trajectory is simply a list of direct positions.
- * @param <DP> The type of direct position (e.g. we may wish to constrain the
- * trajectory to the horizontal plane, in which case the direct positions may be
- * {@link HorizontalPosition}s.
+ * The domain of a {@link TrajectoryCoverage}: a set of positions in space and
+ * time.
  * @author Jon
  */
-public interface TrajectoryDomain<DP extends DirectPosition>
+public interface TrajectoryDomain extends DiscretePointDomain<SpatioTemporalPoint>
 {
+    /**
+     * The positions in space and time that comprise the domain, in ascending
+     * order of time.
+     */
+    @Override
+    public List<SpatioTemporalPoint> getDomainObjects();
 
     /**
-     * Returns the {@link List} of direct positions that comprise the trajectory's
-     * domain
+     * Returns the vertical coordinate reference system used to reference
+     * the {@link #getDomainObjects() positions}.
      */
-    public List<DP> getDomainObjects();
+    public VerticalCRS getVerticalCrs();
+
+    /**
+     * Returns the horizontal coordinate reference system used to reference
+     * the {@link #getDomainObjects() positions}.
+     */
+    public CoordinateReferenceSystem getHorizontalCrs();
+
+    /**
+     * Returns the Chronology used to reference the temporal components of the
+     * {@link #getDomainObjects() positions}.
+     * @return
+     */
+    public Chronology getChronology();
 
 }

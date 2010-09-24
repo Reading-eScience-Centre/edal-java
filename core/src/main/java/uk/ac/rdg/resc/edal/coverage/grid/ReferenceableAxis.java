@@ -28,47 +28,90 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import java.util.Collections;
 import java.util.List;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
+import uk.ac.rdg.resc.edal.coverage.domain.DiscretePointDomain;
+import uk.ac.rdg.resc.edal.coverage.domain.Extent;
 
 /**
  * <p>A one-dimensional axis of a Grid, which maps between integer indices along
- * the axis and real-world coordinates.  It is essentially a one-dimensional
- * special case of a {@link ReferenceableGrid}, although this interface cannot
- * inherit from ReferenceableGrid because ReferenceableGrids by definition have
- * two dimensions or more.</p>
- * @param <T> the type of the coordinate values
+ * the axis and real-world coordinates.  It is in spirit a one-dimensional
+ * special case of a {@link ReferenceableGrid}.</p>
+ * <p>Coordinate values along the axis must either increase or decrease
+ * monotonically.</p>
+ * @param <P> The type of object used to identify positions on this axis
  * @author Jon
  */
-public interface ReferenceableAxis<T> {
+public interface ReferenceableAxis<P> extends DiscretePointDomain<P> {
 
     /**
-     * The coordinate values along the axis, in a defined order.  Maps from
-     * integer indices to coordinate axes.  Note that the inverse mapping can be
-     * found using the {@code indexOf()} method or by
-     * {@link Collections#binarySearch(java.util.List, java.lang.Object)}, but
-     * convenience methods are provided in this interface, which might be more
-     * efficient in some cases.
+     * The name of the axis.
+     */
+    public String getName();
+
+    /**
+     * <p>The coordinate values along the axis, in ascending order.  Maps from
+     * integer indices to coordinate values.  Note that the inverse mapping can be
+     * found using the {@code indexOf()} method, although this method does not
+     * take into account the wrapping of longitude values in a longitude axis:
+     * use {@link #getCoordinateIndex(double)} or
+     * {@link #getNearestCoordinateIndex(double)} for this.</p>
+     * <p>The coordinate values must vary monotonically, i.e. either always
+     * increasing or always decreasing.</p>
      * @return the coordinate values along the axis.
      */
-    public List<T> getCoordinateValues();
-
-    public T getCoordinateValue(int index);
-
-    public int getCoordinateIndex(T value);
-
-    // public int getNearestCoordinateIndex(int value);
-
-    /** Returns the number of coordinate values on this axis */
-    public int getSize();
+    public List<Double> getCoordinateValues();
 
     /**
-     * Returns the {@link CoordinateReferenceSystem} to which the points on the
-     * axis are referenced.
-     * @return the {@link CoordinateReferenceSystem} to which the points on the
+     * Gets the coordinate value at the given index.
+     * @param index The index of the required coordinate value
+     * @return the coordinate value at the given index
+     * @throws IndexOutOfBoundsException if {@code index &lt; 0} or
+     * {@code index &gt;= getSize()}
+     */
+    public P getCoordinateValue(int index);
+
+    /**
+     * Gets the number of coordinate values on this axis, always at least 1.
+     * @return the number of coordinate values on this axis
+     */
+    @Override
+    public int size();
+
+    /**
+     * Finds the index of the given coordinate value.  If this is a longitude
+     * axis, this method will handle the case of longitude values wrapping,
+     * therefore values of -180 and +180 are treated as equivalent by this method,
+     * irrespective of the values in {@link #getCoordinateValues()}.
+     * @param value
+     * @return the index of the given coordinate value, or -1 if not found.
+     */
+    @Override
+    public int findIndexOf(P position);
+
+    /**
+     * <p>Finds the nearest coordinate index to the given value. If this is a longitude
+     * axis, this method will handle the case of longitude values wrapping.
+     * So values of -180 and +180 are treated as equivalent by this method,
+     * irrespective of the values in {@link #getCoordinateValues()}.</p>
+     * @return the nearest coordinate index to the given value, or -1 if the
+     * value is outside the {@link #getExtent() extent} of this axis.
+     */
+    public int findNearestIndexOf(P position);
+
+    /**
+     * <p>Gets the extent of this axis, which may be wider than the minimum and
+     * maximum coordinate values.</p>
+     */
+    @Override
+    public Extent<P> getExtent();
+
+    /**
+     * Returns the {@link CoordinateSystemAxis} to which the points on the
+     * axis are referenced.  May be null if unknown.
+     * @return the {@link CoordinateSystemAxis} to which the points on the
      * axis are referenced.
      */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    public CoordinateSystemAxis getCoordinateSystemAxis();
 
 }

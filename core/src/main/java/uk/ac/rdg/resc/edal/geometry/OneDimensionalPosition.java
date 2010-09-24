@@ -26,23 +26,33 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.position;
+package uk.ac.rdg.resc.edal.geometry;
 
-import org.opengis.referencing.crs.TemporalCRS;
+import org.opengis.geometry.DirectPosition;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * Defines the position of a point in time
+ * A direct position within a one-dimensional coordinate reference system
  * @author Jon
  */
-public interface TemporalPosition extends OneDimensionalPosition {
+public interface OneDimensionalPosition extends DirectPosition {
+    
+    /** Returns a one-dimensional coordinate reference system */
+    @Override public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
-    /** Returns the time coordinate of this position, equivalent to getOrdinate(0) */
-    public double getT();
+    /** Returns 1 */
+    @Override public int getDimension();
 
     /**
-     * Returns a temporal coordinate reference system.
-     * @return a temporal coordinate reference system.
+     * Returns an array with a single element containing the coordinate value
      */
-    @Override public TemporalCRS getCoordinateReferenceSystem();
+    @Override public double[] getCoordinate();
 
+    /**
+     * Returns the ordinate at the specified dimension.
+     * @param dimension - The dimension: must be 0
+     * @return The coordinate at the specified dimension
+     * @throws IndexOutOfBoundsException if {@code index != 0}
+     */
+    @Override public double getOrdinate(int index);
 }

@@ -28,9 +28,8 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import org.opengis.geometry.DirectPosition;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.coverage.domain.Domain;
+import java.util.List;
+import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
 
 /**
  * <p>A {@link Grid} whose points are referenceable to an external coordinate
@@ -41,41 +40,55 @@ import uk.ac.rdg.resc.edal.coverage.domain.Domain;
  * perfectly possible to have a two-dimensional grid that samples points from a
  * three-dimensional coordinate system (e.g. a 2D vertical grid in a latitude-longitude-depth
  * coordinate system).</p>
+ *
+ * <p>The ordering of grid coordinates with respect to real-world coordinates
+ * is not defined, since in general the axes of the grid will have no
+ * necessary relation to the axes of the real-world coordinate system.
+ * Implementations must ensure that they use consistent ordering, which is also
+ * respected in the methods of {@link GridValuesMatrix} if this is inherited.
+ * (This behaviour is refined in the @link RectilinearGrid} subclass.)</p>
+ *
+ * <p>Subclasses must implement a method that returns a coordinate reference system
+ * (or semantically equivalent object) that is used to reference the positions
+ * returned by {@link #transformCoordinates(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates)}.</p>
+ *
+ * @param <P> The type of object used to identify real-world positions within
+ * this grid
  * @author Jon
+ * @todo define getExtent()
  */
-public interface ReferenceableGrid<DP extends DirectPosition> extends Grid, Domain<DP> {
+public interface ReferenceableGrid<P> extends Grid, DiscreteDomain<P, GridPoint> {
 
     /**
-     * Transforms a grid coordinates to a direct position.  The returned
-     * position's {@link DirectPosition#getCoordinateReferenceSystem() coordinate
-     * reference system} will match the {@link #getCoordinateReferenceSystem()
-     * coordinate reference system associated with this object}.
+     * Transforms a grid coordinates to a real-world position.  The returned
+     * position is referenced to this Grid's coordinate reference system.
      * @param coords The grid coordinates to transform.
-     * @return the "real world" coordinates.
-     * @todo What to return if coords is not within the grid?  Null? Or throw a
-     * runtime exception (users could check in advance that the coords are within
-     * the grid using the extent)?
+     * @return the "real world" coordinates, or null if the grid coordinates are
+     * not contained within the {@link #getGridExtent() envelope of the grid}.
+     * @throws IllegalArgumentException if the dimension of the grid coordinates
+     * does not match the {@link #getDimension() dimension of the grid}.
      */
-    public DP transformCoordinates(GridCoordinates coords);
+    public P transformCoordinates(GridCoordinates coords);
 
     /**
-     * Transforms from a direct position to the grid coordinates of the
-     * corresponding grid point.
+     * Transforms from a real-world position to the grid coordinates of the
+     * corresponding grid point.  No interpolation is performed, i.e. the passed
+     * position must exactly match a grid point.  (WATCH!  Standard actually
+     * defines nearest-neighbour interpolation for this method, which seems suspect.)
      * @param pos - The "real world" coordinates to transform.
      * @return The coordinates of the corresponding grid point, or null if there
      * is no grid point that corresponds with the direct position.
-     * @see ReferenceableGrid#inverseTransformCoordinates(org.opengis.geometry.DirectPosition)
      */
-    public GridCoordinates inverseTransformCoordinates(DP pos);
+    public GridCoordinates inverseTransformCoordinates(P pos);
 
     /**
-     * Returns the {@link CoordinateReferenceSystem} to which the points in the
-     * grid can be referenced.  The {@link #transformCoordinates(org.opengis.coverage.grid.GridCoordinates)}
-     * operation will return {@link DirectPosition}s in this CRS.
-     * @return the {@link CoordinateReferenceSystem} to which the points in the
-     * grid can be referenced.
+     * Returns the list of GridPoints that comprise this grid.  Each GridPoint
+     * has a {@link Footprint} that defines its extent in an external coordinate
+     * reference system.
+     * @return
+     * @todo Define the order of iteration of the list with respect to the grid
      */
     @Override
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    public List<GridPoint> getDomainObjects();
 
 }

@@ -28,36 +28,54 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import uk.ac.rdg.resc.edal.coverage.domain.Domain;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
+import uk.ac.rdg.resc.edal.coverage.grid.GridPoint;
 
 /**
  * <p>A {@link Coverage} whose domain consists of a finite number of domain
- * objects, each of which is associated with a single record of measurement
+ * objects, each of which is associated with a single {@link Record} of measurement
  * values.</p>
+ * <p>A DiscreteCoverage is therefore rather like a Map of domain objects to
+ * records.  It would be tempting to specify an asMap() method in this interface,
+ * but this would not work well for some subclasses, such as the
+ * {@link DiscreteGridPointCoverage}, in which the domain objects are {@link
+ * GridPoint}s, which are hard for clients to generate.</p>
+ * @param <P> The type of object used to identify positions within the domain.
  * @param <DO> The type of domain object
  * @author Jon
  */
-public interface DiscreteCoverage<DO> extends Coverage {
+public interface DiscreteCoverage<P, DO> extends Coverage<P>
+{
 
-    /**
-     * Gets the list of objects that comprise this coverage's domain, together
-     * with their coordinate reference system.
-     * @return the list of objects that comprise this coverage's domain
-     */
-    public Domain<DO> getDomain();
+    @Override
+    public DiscreteDomain<P, DO> getDomain();
 
     /**
      * Gets the list of objects that comprise this coverage's range.  There
      * will be one entry in the list for each domain object, in the same order.
-     * @return
+     * @return the list of objects that comprise this coverage's range.
      */
-    public List<Record> getValues();
-    
-    public List<?> getValues(String memberName);
+    public List<Record> getRange();
+
+    /**
+     * Gets the list of values for a particular field.  The type of the objects
+     * in the returned list must match the runtime class of the field in question,
+     * as given by {@link #getRangeType()}.{@link RecordType#getClass(java.lang.String)}.
+     * There will be one entry in the list for each domain object, in the same order.
+     * @return the list of values for a particular field.
+     * @throws IllegalArgumentException if {@code fieldName} is not a valid field
+     * name for this coverage.
+     */
+    public List<?> getRange(String fieldName);
+
+    /**
+     * Returns the domain object and its associated Record corresponding with
+     * the given position, or null if the position is outside the coverage's
+     * domain.
+     */
+    public Map.Entry<DO, Record> locate(P position);
 
     /**
      * Gets all the domain-object/record pairs
@@ -66,12 +84,10 @@ public interface DiscreteCoverage<DO> extends Coverage {
     public List<Map.Entry<DO, Record>> list();
 
     /**
-     * Gets the value of this coverage associated with the given domain object.
-     * @todo Check that there are no conflicts in the case that the domain object
-     * is a subclass of DirectPosition.
+     * Gets the number of distinct values in this coverage.  (Equivalent to
+     * {@code getDomain().size()}.)
+     * @return the number of distinct values in this coverage.
      */
-    public Record evaluate(DO domainObject, Collection<String> memberNames);
-
-    public Object evaluate(DO domainObject, String memberName);
+    public int size();
 
 }

@@ -29,86 +29,43 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import org.opengis.geometry.DirectPosition;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.phenomenon.Phenomenon;
+import uk.ac.rdg.resc.edal.coverage.domain.Domain;
 
 /**
- * <p>A Coverage is a data structure that holds measurement values.  It is
- * a function that maps positions within its domain to data values.</p>
+ * <p>A Coverage associates positions with its {@link #getDomain() domain}
+ * to values (its <i>range</i>).  It is essentially a function.</p>
+ * @param <P> The type of object used to identify positions within the coverage's domain.
+ * This may be a spatial, temporal, or combined spatiotemporal position.
  * @author Jon
  */
-public interface Coverage {
-
-    /** @todo getExtent() */
+public interface Coverage<P>
+{
 
     /**
-     * The identifiers of the members of this coverage.  These are internal IDs
-     * that are not usually exposed to user interfaces.  For example, if this
-     * Coverage contains temperature and salinity data, the member names might
-     * be "TMP" and "SAL".  These values are used as keys in other methods in
-     * this class, such as {@link #getDataType(java.lang.String)}.
-     * @return the identifiers of the members of this coverage
+     * Returns an object that describes the values that are returned by this
+     * coverage.
+     * @return an object that describes the values that are returned by this
+     * coverage.
      */
-    public Set<String> getMemberNames();
-
     public RecordType getRangeType();
 
     /**
-     * Returns the data type of the given coverage member.
-     * @param memberName The identifier of the coverage member.
-     * @return the data type of the given coverage member.
-     * @throws IllegalArgumentException if {@code memberName} is not a member
-     * of the {@link #getMemberNames() set of member names}.
+     * Returns an object that describes the domain of the coverage.
      */
-    public Class<?> getDataType(String memberName);
+    public Domain<P> getDomain();
 
     /**
-     * Returns the phenomenon represented by the given coverage member.
-     * @param memberName The identifier of the coverage member.
-     * @return the phenomenon represented by the given coverage member.
-     * @throws IllegalArgumentException if {@code memberName} is not a member
-     * of the {@link #getMemberNames() set of member names}.
+     * This calculates and returns the value of the coverage
+     * for a point in space and/or time.
+     * @param position an indicator of the position within this coverage's domain
+     * @param fieldNames a List of for which the coverage is to be evaluated
+     * (each of these must be represented in the {@link #getRangeType() range type}.
+     * If this is null, this method returns a Record containing values for all
+     * fields.  If this is non-null but empty this method returns an empty
+     * record.
+     * @return A Record containing the values of the requested fields, or null
+     * if the coverage is not defined at the given position.
      */
-    public Phenomenon getPhenomenon(String memberName);
-
-    /**
-     * Returns the {@link CoordinateReferenceSystem CRS} used to register
-     * information spatially and temporally.
-     * @return
-     */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
-
-    /**
-     * <p>Returns a set of records of feature attribute values for the specified
-     * direct position. The parameter list is a sequence of feature attribute
-     * names each of which identifies a field of the range type. If list is null,
-     * the operation shall return a value for every field of the range type.
-     * Otherwise, it shall return a value for each field included in list.</p>
-     * <p>Note that typically the returned Set will only contain a single Record.</p>
-     * <p>If the direct position passed is not in the domain of the coverage, then
-     * this method returns an empty set (<b>Note:</b> this is different behaviour
-     * from the {@link org.opengis.coverage.Coverage#evaluate(org.opengis.geometry.DirectPosition, java.util.Collection)
-     * GeoAPI version of this method}).</p>
-     * @param pos The position at which the coverage is to be evaluated
-     * @param memberNames the feature attribute names to return in the Records.
-     * @throws IllegalArgumentException if any of the passed feature attribute
-     * names do not appear in this Coverage's {@link #getRangeType() record type}.
-     * @throws CannotEvaluateException if the quantity cannot be evaluated.
-     * @see org.opengis.coverage.Coverage#evaluate(org.opengis.geometry.DirectPosition, java.util.Collection)
-     * @see Collections#emptySet()
-     * @todo what if we pass a DP that doesn't even belong in the
-     * {@link #getCoordinateReferenceSystem() CRS}?  For example, one with the
-     * wrong dimensionality, or that is simply outside the CRS's validity?  Do
-     * we throw a runtime exception (programmer error), the empty set (point not
-     * in coverage) or "fit" the point to the CRS (e.g. by ignoring dimensions
-     * that aren't represented in the coverage)?
-     */
-    public Record evaluate(DirectPosition pos, Collection<String> memberNames);
-
-    public Object evaluate(DirectPosition pos, String memberName);
+    public Record evaluate(P position, Collection<String> fieldNames);
 
 }

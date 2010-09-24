@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2009 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,26 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.geometry;
+
+import org.joda.time.DateTime;
+import org.opengis.geometry.DirectPosition;
 
 /**
- * <p>A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.</p>
+ * <p>Defines the position of a point in space and time.  This does not inherit
+ * from {@link DirectPosition} because it is more convenient to express times
+ * as {@link DateTime}s than as coordinates in a temporal CRS.  Therefore this
+ * interface <i>composes</i> horizontal, vertical and temporal positions.</p>
+ * <p>Strictly speaking, in some coordinate reference systems it is not legal
+ * to separate horizontal and vertical positions.  However we allow this here
+ * for convenience</p>
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface SpatioTemporalPoint {
 
-    /** Gets the spacing between coordinate values, might be negative. */
-    public double getCoordinateSpacing();
+    /**
+     * Return the time instant, or null if this point contains no time information.
+     */
+    public DateTime getDateTime();
 
 }
