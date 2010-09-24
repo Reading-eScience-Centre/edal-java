@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.edal.util;
+package uk.ac.rdg.resc.edal.time;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTimeConstants;
@@ -43,13 +43,11 @@ import org.joda.time.field.PreciseDurationField;
 import org.joda.time.field.ZeroIsMaxDateTimeField;
 
 /**
- * <p>A Chronology in which each year has exactly 360 days of 12 equal months
- * ({@literal i.e.} each month has exactly 30 days).  This calendar system is
- * used in many climate simulations.  There are no leap years.</p>
- * <p>In this Chronology, a millisecond instant of zero corresponds with
- * 1970-01-01T00:00:00.000Z and a year has a fixed number of milliseconds
- * (1000*60*60*24*360).</p>
- * <p>There is no concept of an era in this calendar, so all durations and fields
+ * <p>A Chronology in which every year has the same number of days.  Such calendar
+ * systems are used in many climate simulations.</p>
+ * <p>In these Chronologies, a millisecond instant of zero corresponds with
+ * 1970-01-01T00:00:00.000Z and a year has a fixed number of milliseconds.</p>
+ * <p>There is no concept of an era in these Chronologies, so all durations and fields
  * relating to this concept are not supported.  Additionally, the concept of a
  * "weekyear" (the year that "owns" a given week) is not implemented.</p>
  * <p>Instances of this class can only be created in {@link DateTimeZone#UTC}.
@@ -60,7 +58,7 @@ import org.joda.time.field.ZeroIsMaxDateTimeField;
  * @author Jon Blower
  * @see http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.4/cf-conventions.html#calendar
  */
-public final class ThreeSixtyDayChronology extends BaseChronology {
+abstract class FixedYearLengthChronology extends BaseChronology {
 
     ///// DURATIONS /////
 
@@ -71,27 +69,23 @@ public final class ThreeSixtyDayChronology extends BaseChronology {
 
     private static final DurationField minuteDuration =
         new PreciseDurationField(DurationFieldType.minutes(), DateTimeConstants.MILLIS_PER_MINUTE);
-    
+
     private static final DurationField hourDuration =
         new PreciseDurationField(DurationFieldType.hours(), DateTimeConstants.MILLIS_PER_HOUR);
-    
+
     private static final DurationField halfdayDuration =
         new PreciseDurationField(DurationFieldType.halfdays(), 12 * DateTimeConstants.MILLIS_PER_HOUR);
-    
+
     private static final DurationField dayDuration =
         new PreciseDurationField(DurationFieldType.days(), 2 * halfdayDuration.getUnitMillis());
 
     private static final DurationField weekDuration =
         new PreciseDurationField(DurationFieldType.weeks(), 7 * dayDuration.getUnitMillis());
-    
-    private static final DurationField monthDuration =
-        new PreciseDurationField(DurationFieldType.months(), 30 * dayDuration.getUnitMillis());
-    
-    private static final DurationField yearDuration =
-        new PreciseDurationField(DurationFieldType.years(), 12 * monthDuration.getUnitMillis());
-    
-    private static final DurationField centuryDuration =
-        new PreciseDurationField(DurationFieldType.years(), 100 * yearDuration.getUnitMillis());
+
+    // We don't know the length of the year or century until we know how many
+    // days there are in a year
+    private final DurationField yearDuration;
+    private final DurationField centuryDuration;
 
 
     ///// DATE-TIME FIELDS /////
@@ -132,56 +126,24 @@ public final class ThreeSixtyDayChronology extends BaseChronology {
     private static final DateTimeField dayOfWeek =
         new PreciseDateTimeField(DateTimeFieldType.dayOfWeek(), dayDuration, weekDuration);
 
-    /**
-     * A DateTimeField whose values start at 1 instead of 0
-     * @todo should we use composition instead of inheritance?
-     */
-    private static final class OneBasedPreciseDateTimeField extends PreciseDateTimeField {
+    // We don't know the length of the year or century until we know how many
+    // days there are in a year
+    private final DateTimeField dayOfYear;
+    private final DateTimeField yearOfCentury;
+    private final DateTimeField year;
 
-        public OneBasedPreciseDateTimeField(DateTimeFieldType fieldType, DurationField unit, DurationField range) {
-            super(fieldType, unit, range);
+    private final int daysInYear;
+    
+    private static final class YearField extends PreciseDurationDateTimeField {
+
+        public YearField(DurationField yearDuration) {
+            super(DateTimeFieldType.year(), yearDuration);
         }
-
-        @Override public int getMinimumValue() { return super.getMinimumValue() + 1; }
-        @Override public int getMaximumValue() { return super.getMaximumValue() + 1; }
-
-        @Override public int get(long instant) {
-            return super.get(instant) + 1;
-        }
-
-        // We don't need to override set() because set() calls get() to figure
-        // out the offset from the current value of this field.  E.g. if we
-        // want to set the month to 2 (February), we first figure out what the
-        // instant's current month is: this month number will be one-based, so
-        // we will automatically calculate the correct offset in ms from this
-        // month.
-    }
-
-    /** Deals with the fact that dayOfMonth is between 1 and 30 inclusive */
-    private static final DateTimeField dayOfMonth =
-        new OneBasedPreciseDateTimeField(DateTimeFieldType.dayOfMonth(), dayDuration, monthDuration);
-
-    private static final DateTimeField dayOfYear =
-        new OneBasedPreciseDateTimeField(DateTimeFieldType.dayOfYear(), dayDuration, yearDuration);
-
-    private static final DateTimeField monthOfYear =
-        new OneBasedPreciseDateTimeField(DateTimeFieldType.monthOfYear(), monthDuration, yearDuration);
-
-    private static final DateTimeField yearOfCentury =
-        new PreciseDateTimeField(DateTimeFieldType.yearOfCentury(), yearDuration, centuryDuration);
-
-    // Use PreciseDurationDateTimeField for day, month and year - all have
-    // constant offsets (1, 1, and 1970), but different min and max values.
-    // Years don't need the RangeDurationField, but days and months might.
-    // Do we need to use this for dayOfWeek too?
-
-    private static final DateTimeField year =
-        new PreciseDurationDateTimeField(DateTimeFieldType.year(), yearDuration) {
 
         @Override
         public int get(long instant) {
             // We need to use Math.floor() to deal with negative instants
-            return (int)Math.floor(instant * 1.0 / yearDuration.getUnitMillis()) + 1970;
+            return (int)Math.floor(instant * 1.0 / this.getDurationField().getUnitMillis()) + 1970;
         }
 
         /** Returns null: the field has no range */
@@ -196,131 +158,133 @@ public final class ThreeSixtyDayChronology extends BaseChronology {
         // encoded
         public int getMaximumValue() { return this.get(Long.MAX_VALUE) - 1; }
     };
-    
-    
+
+
     ///// CONSTRUCTORS AND FACTORIES /////
 
-    private static final ThreeSixtyDayChronology INSTANCE_UTC =
-        new ThreeSixtyDayChronology();
+    /**
+     * @param daysInYear The number of days in each year
+     */
+    protected FixedYearLengthChronology(int daysInYear) {
+        this.daysInYear = daysInYear;
 
-    /** Private constructor to prevent direct instantiation */
-    private ThreeSixtyDayChronology() {}
+        this.yearDuration = new PreciseDurationField(DurationFieldType.years(),
+                daysInYear * dayDuration.getUnitMillis());
+        this.centuryDuration = new PreciseDurationField(DurationFieldType.centuries(),
+                100 * yearDuration.getUnitMillis());
 
-    /** Gets an instance of this Chronology in the UTC time zone */
-    public static ThreeSixtyDayChronology getInstanceUTC() {
-        return INSTANCE_UTC;
+        this.dayOfYear = new OneBasedPreciseDateTimeField(DateTimeFieldType.dayOfYear(),
+                dayDuration, this.yearDuration);
+        this.yearOfCentury =  new PreciseDateTimeField(DateTimeFieldType.yearOfCentury(),
+                this.yearDuration, this.centuryDuration);
+        this.year = new YearField(this.yearDuration);
     }
-    
+
     ///// DURATION ACCESSORS /////
 
     @Override
-    public DurationField millis() { return millisecondDuration; }
+    public final DurationField millis() { return millisecondDuration; }
 
     @Override
-    public DurationField seconds() { return secondDuration; }
+    public final DurationField seconds() { return secondDuration; }
 
     @Override
-    public DurationField minutes() { return minuteDuration; }
+    public final DurationField minutes() { return minuteDuration; }
 
     @Override
-    public DurationField hours() { return hourDuration; }
+    public final DurationField hours() { return hourDuration; }
 
     @Override
-    public DurationField halfdays() { return halfdayDuration; }
+    public final DurationField halfdays() { return halfdayDuration; }
 
     /** Each day has exactly the same length: there is no daylight saving */
     @Override
-    public DurationField days() { return dayDuration; }
+    public final DurationField days() { return dayDuration; }
 
     /** Each week has 7 days */
     @Override
-    public DurationField weeks() { return weekDuration; }
-
-    /** Each month has exactly 30 days */
-    @Override
-    public DurationField months() { return monthDuration; }
-
-    /** Each year has exactly 360 days */
-    @Override
-    public DurationField years() { return yearDuration; }
+    public final DurationField weeks() { return weekDuration; }
 
     @Override
-    public DurationField centuries() { return centuryDuration; }
+    public abstract DurationField months();
+
+    @Override
+    public final DurationField years() { return this.yearDuration; }
+
+    @Override
+    public final DurationField centuries() { return this.centuryDuration; }
 
 
 
     ///// DATE-TIME FIELD ACCESSORS /////
 
     @Override
-    public DateTimeField millisOfSecond() { return millisOfSecond; }
+    public final DateTimeField millisOfSecond() { return millisOfSecond; }
 
     @Override
-    public DateTimeField millisOfDay() { return millisOfDay; }
+    public final DateTimeField millisOfDay() { return millisOfDay; }
 
     @Override
-    public DateTimeField secondOfMinute() { return secondOfMinute; }
+    public final DateTimeField secondOfMinute() { return secondOfMinute; }
 
     @Override
-    public DateTimeField secondOfDay() { return secondOfDay; }
+    public final DateTimeField secondOfDay() { return secondOfDay; }
 
     @Override
-    public DateTimeField minuteOfHour() { return minuteOfHour; }
+    public final DateTimeField minuteOfHour() { return minuteOfHour; }
 
     @Override
-    public DateTimeField minuteOfDay() { return minuteOfDay; }
+    public final DateTimeField minuteOfDay() { return minuteOfDay; }
 
     @Override
-    public DateTimeField hourOfDay() { return hourOfDay; }
+    public final DateTimeField hourOfDay() { return hourOfDay; }
 
     @Override
-    public DateTimeField hourOfHalfday() { return hourOfHalfday; }
+    public final DateTimeField hourOfHalfday() { return hourOfHalfday; }
 
     @Override
-    public DateTimeField halfdayOfDay() { return halfdayOfDay; }
+    public final DateTimeField halfdayOfDay() { return halfdayOfDay; }
 
     @Override
-    public DateTimeField clockhourOfDay() { return clockhourOfDay; }
+    public final DateTimeField clockhourOfDay() { return clockhourOfDay; }
 
     @Override
-    public DateTimeField clockhourOfHalfday() { return clockhourOfHalfday; }
+    public final DateTimeField clockhourOfHalfday() { return clockhourOfHalfday; }
 
     @Override
-    public DateTimeField dayOfWeek() { return dayOfWeek; }
+    public final DateTimeField dayOfWeek() { return dayOfWeek; }
 
     @Override
-    public DateTimeField dayOfMonth() { return dayOfMonth; }
+    public abstract DateTimeField dayOfMonth();
 
     @Override
-    public DateTimeField dayOfYear() { return dayOfYear;}
+    public final DateTimeField dayOfYear() { return dayOfYear;}
 
     @Override
-    public DateTimeField monthOfYear() { return monthOfYear; }
+    public abstract DateTimeField monthOfYear();
 
     @Override
-    public DateTimeField year() { return year; }
+    public final DateTimeField year() { return year; }
 
     @Override
-    public DateTimeField yearOfCentury() { return yearOfCentury; }
+    public final DateTimeField yearOfCentury() { return yearOfCentury; }
 
-
+    /** Returns the number of days in the year */
+    final int getDaysInYear() { return this.daysInYear; }
 
     /** Always returns UTC */
     @Override
-    public DateTimeZone getZone() { return DateTimeZone.UTC; }
-
-    @Override
-    public Chronology withUTC() { return INSTANCE_UTC; }
+    public final DateTimeZone getZone() { return DateTimeZone.UTC; }
 
     /** Throws UnsupportedOperationException unless the time zone is UTC */
     @Override
-    public Chronology withZone(DateTimeZone zone) {
-        if (zone.equals(DateTimeZone.UTC)) return INSTANCE_UTC;
+    public final Chronology withZone(DateTimeZone zone) {
+        if (zone.equals(DateTimeZone.UTC)) return this.withUTC();
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /** Returns this object */
     @Override
-    public String toString() {
-        return "360-day Chronology in UTC";
-    }
+    public final Chronology withUTC() { return this; }
 
 }
