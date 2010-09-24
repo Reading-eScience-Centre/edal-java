@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- POM for core module -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>edal</artifactId>
+        <groupId>uk.ac.rdg.resc</groupId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+    <artifactId>edal-cdm</artifactId>
+    <packaging>jar</packaging>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>EDAL interface to the Unidata Common Data Model</name>
+    <dependencies>
+        <dependency>
+            <groupId>org.edal</groupId>
+            <artifactId>edal-core</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>ucar.unidata</groupId>
+            <artifactId>netcdf</artifactId>
+            <version>4.1</version>
+        </dependency>
+    </dependencies>
+    <repositories>
+        <repository>
+            <id>EDAL</id>
+            <name>EDAL's repository of JARs</name>
+            <url>http://edal-java.googlecode.com/hg/repository/</url>
+        </repository>
+    </repositories>
+</project>
