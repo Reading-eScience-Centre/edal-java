@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import org.opengis.coverage.grid.GridEnvelope;
-import uk.ac.rdg.resc.edal.coverage.domain.Extent;
+import uk.ac.rdg.resc.edal.Extent;
 
 /**
  * The extent of a {@link Grid} expressed in terms of {@link GridCoordinates}.

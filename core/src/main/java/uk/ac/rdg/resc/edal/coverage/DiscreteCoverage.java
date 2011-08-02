@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,26 +29,23 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.List;
-import java.util.Map;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.coverage.grid.GridPoint;
 
 /**
  * <p>A {@link Coverage} whose domain consists of a finite number of domain
- * objects, each of which is associated with a single {@link Record} of measurement
- * values.</p>
+ * objects, each of which is associated with a single measurement value.</p>
  * <p>A DiscreteCoverage is therefore rather like a Map of domain objects to
- * records.  It would be tempting to specify an asMap() method in this interface,
- * but this would not work well for some subclasses, such as the
- * {@link DiscreteGridPointCoverage}, in which the domain objects are {@link
- * GridPoint}s, which are hard for clients to generate.</p>
- * @param <P> The type of object used to identify positions within the domain.
+ * records.</p>
+ * @param <P> The type of object used to identify positions within the coverage's domain.
+ * This may be a spatial, temporal, or combined spatiotemporal position.
  * @param <DO> The type of domain object
+ * @param <R> The type of the value returned by the coverage
  * @author Jon
  */
-public interface DiscreteCoverage<P, DO> extends Coverage<P>
+public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R>
 {
 
+    /** {@inheritDoc} */
     @Override
     public DiscreteDomain<P, DO> getDomain();
 
@@ -57,36 +54,31 @@ public interface DiscreteCoverage<P, DO> extends Coverage<P>
      * will be one entry in the list for each domain object, in the same order.
      * @return the list of objects that comprise this coverage's range.
      */
-    public List<Record> getRange();
+    public List<R> getValues();
 
     /**
-     * Gets the list of values for a particular field.  The type of the objects
-     * in the returned list must match the runtime class of the field in question,
-     * as given by {@link #getRangeType()}.{@link RecordType#getClass(java.lang.String)}.
-     * There will be one entry in the list for each domain object, in the same order.
-     * @return the list of values for a particular field.
-     * @throws IllegalArgumentException if {@code fieldName} is not a valid field
-     * name for this coverage.
-     */
-    public List<?> getRange(String fieldName);
-
-    /**
-     * Returns the domain object and its associated Record corresponding with
+     * <p>Returns the domain object and its associated value corresponding with
+     * the given position.</p>
+     * <p>The name of this method is taken from the ISO19123 standard.</p>
+     * @param position The position within the coverage's domain
+     * @return the domain object and its associated value corresponding with
      * the given position, or null if the position is outside the coverage's
      * domain.
      */
-    public Map.Entry<DO, Record> locate(P position);
+    public DomainObjectValuePair<DO, R> locate(P position);
 
     /**
-     * Gets all the domain-object/record pairs
-     * @return
+     * <p>Gets all the domain-object/record pairs in the coverage</p>
+     * <p>The name of this method is taken from the ISO19123 standard.</p>
+     * @return all the domain-object/record pairs in the coverage
      */
-    public List<Map.Entry<DO, Record>> list();
+    public List<DomainObjectValuePair<DO, R>> list();
 
     /**
      * Gets the number of distinct values in this coverage.  (Equivalent to
      * {@code getDomain().size()}.)
      * @return the number of distinct values in this coverage.
+     * @todo Do we need this?
      */
     public int size();
 

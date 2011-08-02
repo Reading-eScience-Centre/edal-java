@@ -28,35 +28,18 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.Collection;
-import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
+import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
- * <p>A Coverage that contains values for a timeseries of data at a fixed point</p>
+ * <p>A Coverage that contains values for a timeseries of data at a fixed point
+ * in space.  We model this as a {@link CompoundCoverage} since usually instruments
+ * record many values at the same time.</p>
  * @author Jon
  */
-public interface PointSeriesCoverage extends DiscretePointCoverage<DateTime>
+public interface PointSeriesCoverage extends DiscretePointCoverage<TimePosition, Record>, CompoundCoverage<TimePosition>
 {
 
-    public PointSeriesDomain getDomain();
-
-    /**
-     * Returns the value of the coverage at the given DateTime.
-     * @param dateTime The time instant at which the coverage is to be evaluated.
-     * This does not necessarily have to be expressed in the same Chronology as
-     * this coverage's domain, but it must be possible to convert between this
-     * dateTime's chronology and that of the coverage, otherwise <i>what will happen?</i>.
-     * @param fieldNames The fields for which the coverage is to be evaluated.
-     * If {@code fieldNames} is null, this method returns a Record containing
-     * values for all fields.  If {@code fieldNames} is non-null but empty, this
-     * method returns an empty record.
-     * @return a {@link Record} containing the values of the given fields at the
-     * given position, or null if this coverage is not defined at the given
-     * position.
-     * @todo check the behaviour if the coverage is not defined at the position.
-     */
-    @Override
-    public Record evaluate(DateTime dateTime, Collection<String> fieldNames);
+    @Override public PointSeriesDomain getDomain();
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2009 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.geometry;
 
-import uk.ac.rdg.resc.edal.geometry.HorizontalPolygon;
+import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
- * The spatiotemporal domain of a single {@link GridPoint}, composed of a polygon
- * in horizontal space and a vertical and a temporal extent.
+ * <p>Defines the position of a point in four-dimensional space and time.</p>
  * @author Jon
- * @todo Could this be reused as a GroundPixel?
  */
-public interface Footprint {
+public interface GeoPosition {
 
-    /**
-     * Returns the polygon that describes this footprint in the horizontal plane.
-     * In a quadrilateral grid this polygon will have four vertices.
-     * @return the polygon that describes this footprint in the horizontal plane.
-     */
-    public HorizontalPolygon getHorizontalPolygon();
+    public HorizontalPosition getHorizontalPosition();
+    public VerticalPosition getVerticalPosition();
+    public TimePosition getTimePosition();
 
 }

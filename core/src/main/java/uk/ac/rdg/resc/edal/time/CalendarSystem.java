@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,27 +26,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.domain;
+package uk.ac.rdg.resc.edal.time;
 
 /**
- * <p>The extent of a {@link Domain}, defined in terms of its low and high values.</p>
- * <p>Subclasses must implement a method that returns a value that gives the
- * coordinate reference system to which the positions are referenced.  Such a
- * method is not defined in this top-level interface because subclasses might use
- * very different types of object to define the CRS.</p>
- * @param <P> The type of object used to identify positions within this extent
+ * Calendar system used to interpret dates and times.
  * @author Jon
  */
-public interface Extent<P>
-{
+public enum CalendarSystem {
 
-    public P getLow();
+    CAL_ISO_8601,
 
-    public P getHigh();
+    CAL_360_DAY,
 
-    /**
-     * Return true if the given position is contained within this Extent.
-     */
-    public boolean contains(P position);
+    CAL_365_DAY,
+
+    CAL_366_DAY;
 
 }

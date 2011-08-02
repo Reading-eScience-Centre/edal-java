@@ -28,27 +28,20 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
-import java.util.List;
 import org.opengis.referencing.crs.VerticalCRS;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
+import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
 
 /**
  * The domain of a {@link ProfileCoverage}: a set of vertical positions.
  * @author Jon
  */
-public interface ProfileDomain extends DiscretePointDomain<Double>
+public interface ProfileDomain extends DiscretePointDomain<VerticalPosition>
 {
     /**
      * Returns the vertical coordinate reference system used to reference
      * the coordinate values.
      */
     public VerticalCRS getVerticalCrs();
-
-    /**
-     * Returns the list of vertical coordinate values that comprise this domain,
-     * in the domain's {@link #getVerticalCrs() vertical CRS}.
-     */
-    @Override
-    public List<Double> getDomainObjects();
 
 }

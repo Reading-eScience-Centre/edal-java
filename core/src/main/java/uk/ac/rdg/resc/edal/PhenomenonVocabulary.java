@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.domain;
-
-import uk.ac.rdg.resc.edal.coverage.Coverage;
+package uk.ac.rdg.resc.edal;
 
 /**
- * <p>A geospatial/temporal domain: defines the set of positions for which a
- * {@link Coverage} is defined.</p>
- * <p>Subclasses must implement a method that returns a value that gives the
- * coordinate reference system to which the positions are referenced.  Such a
- * method is not defined in this top-level interface because subclasses might use
- * very different types of object to define the CRS.  This CRS must match
- * the CRS of the {@link #getExtent() extent}.</p>
- * @param <P> The type of object used to identify positions within this domain
+ * Enumeration of vocabularies for {@link Phenomenon}s.
  * @author Jon
  */
-public interface Domain<P>
+public enum PhenomenonVocabulary
 {
     /**
-     * Returns true if the given position is contained within this domain.
+     * The Climate and Forecast standard names
+     * @see http://cfconventions.org/
      */
-    public boolean contains(P position);
+    CLIMATE_AND_FORECAST,
 
-    /**
-     * Returns the extent of this domain.  This is the bounding box that
-     * contains all positions within the domain.  Note that there may be
-     * positions within the extent that are not considered part of the domain.
-     */
-    public Extent<P> getExtent();
-
+    /** Unknown phenomenon vocabulary */
+    UNKNOWN;
 }

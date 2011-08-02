@@ -29,25 +29,24 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 /**
- * Essentially a Map of member names to data values (Objects).  The member names
- * are defined by the associated {@link RecordType}'s {@link RecordType#getMemberNames()}.
+ * Contains the data values returned by a {@link CompoundCoverage}.
  * @author Jon
  */
 public interface Record {
     
     /**
-     * This is called locate() in GeoAPI - I don't know why (presumably this
-     * reflects the standard, but it seems like an odd name).  The {@link Class}
-     * of the returned value shall match the class returned by
-     * {@link RecordType#getClass(java.lang.String)}.
+     * <p>Gets the value of the given coverage member..</p>
+     * <p>This is called locate() in GeoAPI - I don't know why (presumably this
+     * reflects the standard, but it seems like an odd name).</p>
      * @param memberName The name of a member of this record as provided by
-     * {@link RecordType#getMemberNames()}.
-     * @return the value of the given member
+     * the Coverage's {@link CompoundCoverage#getMemberNames() set of member
+     * names}.
+     * @return the value of the given member. The runtime type of the
+     * value is given by the {@link RangeMetadata} object associated with the
+     * parent Coverage.
      * @throws IllegalArgumentException if {@code memberName} is not a valid
      * member name
      */
     public Object getValue(String memberName);
-    
-    public RecordType getRecordType();
 
 }

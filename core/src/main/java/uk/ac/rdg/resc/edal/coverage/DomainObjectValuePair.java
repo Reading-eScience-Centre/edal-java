@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,19 +25,29 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package uk.ac.rdg.resc.edal.coverage;
 
-import uk.ac.rdg.resc.edal.coverage.grid.GridPoint;
-import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableGrid;
-
-
 /**
- * A {@link DiscreteCoverage} whose values are arranged on a grid.
+ * <p>Associates a domain object with its value in a {@link DiscreteCoverage}.</p>
+ * @param <DO> The type of domain object
+ * @param <R> The type of the value
  * @author Jon
  */
-public interface DiscreteGridPointCoverage<P> extends DiscreteCoverage<P, GridPoint> {
+public interface DomainObjectValuePair<DO, R>
+{
 
-    @Override
-    public ReferenceableGrid<P> getDomain();
+    /**
+     * Returns the domain object from the {@link DiscreteCoverage}'s domain.
+     * @return the domain object from the {@link DiscreteCoverage}'s domain.
+     */
+    public DO getDomainObject();
+
+
+    /**
+     * Returns the value from the {@link DiscreteCoverage}'s range.
+     * @return the value from the {@link DiscreteCoverage}'s range.
+     */
+    public R getValue();
 
 }

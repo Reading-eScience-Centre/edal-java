@@ -29,8 +29,8 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import uk.ac.rdg.resc.edal.coverage.domain.GroundPixel;
-import org.opengis.geometry.DirectPosition;
 import uk.ac.rdg.resc.edal.coverage.domain.SwathDomain;
+import uk.ac.rdg.resc.edal.geometry.GeoPosition;
 
 /**
  * A {@link DiscreteCoverage} that represents a swath measurement, i.e. a collection
@@ -39,7 +39,7 @@ import uk.ac.rdg.resc.edal.coverage.domain.SwathDomain;
  * equivalent to a GroundPixel.  Represent this as a subclass?
  * @author Jon
  */
-public interface SwathCoverage extends DiscreteCoverage<DirectPosition, GroundPixel> {
+public interface SwathCoverage extends DiscreteCoverage<GeoPosition, GroundPixel, Record>, CompoundCoverage<GeoPosition>{
 
     @Override
     public SwathDomain getDomain();

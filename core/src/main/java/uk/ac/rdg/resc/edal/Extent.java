@@ -26,33 +26,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.feature;
+package uk.ac.rdg.resc.edal;
 
-import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
-import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.Domain;
 
 /**
- * A measurement of a time series at a point
+ * <p>Defines a contiguous domain that is defined by "low" and "high" values.
+ * Any value between or including these values is considered part of the domain.</p>
+ * @param <P> The type of object used to identify positions within this extent.
+ * @todo Would Range be a better name here?
  * @author Jon
  */
-public interface PointSeriesFeature extends Feature<TimePosition, Record> {
+public interface Extent<P extends Comparable<? super P>> extends Domain<P>
+{
+    public P getLow();
 
-    /**
-     * Gets the horizontal location of this point series feature.
-     * @return the horizontal location of this point series feature.
-     */
-    public HorizontalPosition getHorizontalPosition();
-
-    /**
-     * Gets the vertical location of this point series feature.
-     * @return the vertical location of this point series feature.
-     */
-    public VerticalPosition getVerticalPosition();
-
-    @Override
-    public PointSeriesCoverage getCoverage();
-
+    public P getHigh();
 }

@@ -26,20 +26,24 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal;
-
-import java.net.URI;
+package uk.ac.rdg.resc.edal.coverage;
 
 /**
- * A resource that is identified by a Uniform Resource Identifier.
+ * <p>A SimpleCoverage returns only one value ({@literal i.e.} not a collection
+ * of values) for each point within its domain.</p>
+ *
+ * @param <P> The type of object used to identify positions within the coverage's domain.
+ * This may be a spatial, temporal, or combined spatiotemporal position.
+ * @param <R> The type of the value returned by the coverage
  * @author Jon
  */
-public interface IdentifiedResource {
-
+public interface SimpleCoverage<P, R> extends Coverage<P, R>
+{
     /**
-     * Gets the Uniform Resource Identifier that identifies this resource.
-     * @return the Uniform Resource Identifier that identifies this resource.
+     * Returns a description of the values returned by the coverage (including
+     * their units, runtime type and the phenomenon they represent).  The runtime
+     * type returned by the RangeMetadata object must match {@link #getRangeType()}.
+     * @return a description of the values returned by the coverage.
      */
-    public URI getUri();
-
+    public RangeMetadata getRangeMetadata();
 }

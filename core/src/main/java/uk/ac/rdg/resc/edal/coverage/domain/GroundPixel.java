@@ -28,8 +28,8 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
-import org.joda.time.DateTime;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPolygon;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
  * A part of a {@link SwathDomain}, consisting of a polygon in the horizontal
@@ -43,12 +43,12 @@ public interface GroundPixel {
      * @return the time instant at which the ground pixel was observed, or
      * null if no time information is associated with the ground pixel.
      */
-    public DateTime getDateTime();
+    public TimePosition getDateTime();
 
     /**
      * Returns the polygon defining this ground pixel in the horizontal plane.
      * @return the polygon defining this ground pixel in the horizontal plane.
      */
-    public HorizontalPolygon getHorizontalPolygon();
+    public Polygon getPolygon();
 
 }

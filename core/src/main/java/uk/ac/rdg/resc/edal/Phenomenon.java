@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,28 +28,38 @@
 
 package uk.ac.rdg.resc.edal;
 
-import uk.ac.rdg.resc.edal.Vocabulary;
-import uk.ac.rdg.resc.edal.VocabularyTerm;
-
 /**
- * Describes a measured quantity, {@literal e.g.} sea water potential temperature.
+ * <p>Simple immutable class consisting of a string and vocabulary that
+ * acts as a namespace for the string.  Instances of this class are created
+ * through the static factory methods, which give the possibility in future to
+ * cache instances of this class, saving object creation and garbage collection.</p>
  * @author Jon
  */
-public interface Phenomenon extends VocabularyTerm {
+public final class Phenomenon
+{
 
-    /**
-     * Gets the standard name of this phenomenon, unique within the
-     * {@link #getVocabulary() vocabulary}.
-     * @return
-     */
-    @Override
-    public String getId();
+    private final String stdName;
+    private final PhenomenonVocabulary phenomVocab;
 
-    /**
-     * Gets the vocabulary to which this term belongs.
-     * @return
-     */
-    @Override
-    public Vocabulary<Phenomenon> getVocabulary();
+    private Phenomenon(String stdName, PhenomenonVocabulary phenomVocab)
+    {
+        this.stdName = stdName;
+        this.phenomVocab = phenomVocab;
+    }
+
+    /** Gets an instance of a phenomenon with the given standard name in the given vocabulary. */
+    public static Phenomenon getPhenomenon(String stdName, PhenomenonVocabulary phenomVocab)
+    {
+        return new Phenomenon(stdName, phenomVocab);
+    }
+
+    /** Gets an instance of a phenomenon with the given standard name in an unknown vocabulary. */
+    public static Phenomenon getPhenomenon(String stdName)
+    {
+        return getPhenomenon(stdName, PhenomenonVocabulary.UNKNOWN);
+    }
+
+    public String getStandardName() { return this.stdName; }
+    public PhenomenonVocabulary getVocabulary() { return this.phenomVocab; }
 
 }

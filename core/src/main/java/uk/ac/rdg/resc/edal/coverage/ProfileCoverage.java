@@ -28,33 +28,16 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.Collection;
 import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
+import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
 
 /**
  * <p>A Coverage that contains values for a vertical profile of data</p>
  * @author Jon
  */
-public interface ProfileCoverage extends DiscretePointCoverage<Double>
+public interface ProfileCoverage extends DiscretePointCoverage<VerticalPosition, Record>, CompoundCoverage<VerticalPosition>
 {
     @Override
     public ProfileDomain getDomain();
-
-    /**
-     * Returns the value of the coverage at the given vertical coordinate.
-     * @param position The vertical position at which the coverage is to be evaluated,
-     * which must be expressed in this coverage's {@link #getCoordinateReferenceSystem()
-     * vertical coordinate reference system}.
-     * @param fieldNames The fields for which the coverage is to be evaluated.
-     * If {@code fieldNames} is null, this method returns a Record containing
-     * values for all fields.  If {@code fieldNames} is non-null but empty, this
-     * method returns an empty record.
-     * @return a {@link Record} containing the values of the given fields at the
-     * given position, or null if this coverage is not defined at the given
-     * position.
-     * @todo check the behaviour if the coverage is not defined at the position.
-     */
-    @Override
-    public Record evaluate(Double position, Collection<String> fieldNames);
 
 }

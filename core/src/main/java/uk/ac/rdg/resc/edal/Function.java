@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,31 +26,23 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.feature;
-
-import org.joda.time.DateTime;
-import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+package uk.ac.rdg.resc.edal;
 
 /**
- * A vertical profile measurement.
+ * Defines a unary function.
+ * @param <A> The type of the function input
+ * @param <B> The type of the function output
  * @author Jon
  */
-public interface ProfileFeature extends Feature<Double> {
+public interface Function<A, B>
+{
 
     /**
-     * Gets the horizontal location of this profile feature.
-     * @return the horizontal location of this profile feature.
+     * Evaluates the function for the given value.
+     * @param val The function input
+     * @return The function output, or null if the function is not defined for the
+     * given input.
      */
-    public HorizontalPosition getHorizontalPosition();
-
-    /**
-     * Gets the temporal location of this profile feature.
-     * @return the temporal location of this profile feature.
-     */
-    public DateTime getDateTime();
-
-    @Override
-    public ProfileCoverage getCoverage();
+    public B evaluate(A val);
 
 }

@@ -31,8 +31,6 @@ package uk.ac.rdg.resc.edal.coverage.grid;
 import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
-import uk.ac.rdg.resc.edal.coverage.domain.Extent;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
 
 /**
  * <p>A {@link HorizontalGrid} whose axes in the {@link #getCoordinateReferenceSystem() 
@@ -81,15 +79,5 @@ public interface RectilinearGrid extends HorizontalGrid {
      */
     @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem();
-
-    /**
-     * {@inheritDoc}
-     * <p>Note that the extent extends beyond the minimum and
-     * maximum coordinate values of the axes, because the coordinate values
-     * represent the centre of grid cells, and the grid cells have a
-     * finite size.</p>
-     */
-    @Override
-    public Extent<HorizontalPosition> getExtent();
 
 }

@@ -29,36 +29,36 @@
 package uk.ac.rdg.resc.edal.coverage.domain;
 
 import java.util.List;
-import org.joda.time.Chronology;
-import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.coverage.SwathCoverage;
+import uk.ac.rdg.resc.edal.geometry.GeoPosition;
+import uk.ac.rdg.resc.edal.time.CalendarSystem;
 
 /**
- * The domain of a {@link SwathCoverage}: a set of ground pixels.
+ * The domain of a {@link SwathCoverage}: a set of ground pixels.  Vertical
+ * information is ignored.
  * @author Jon
- * @todo Replace DirectPosition with a type that can identify a horizontal position
- * and a time instant.
+ * @todo Replace GeoPosition with a more precise type (XytPosition?)
  */
-public interface SwathDomain extends DiscreteDomain<DirectPosition, GroundPixel>
+public interface SwathDomain extends DiscreteDomain<GeoPosition, GroundPixel>
 {
+
     /**
-     * Returns the {@link Chronology} used to reference the time values of the
+     * The ground pixels that comprise the swath, in ascending order of time.
+     */
+    @Override
+    public List<GroundPixel> getDomainObjects();
+
+    /**
+     * Returns the {@link CalendarSystem} used to reference the time values of the
      * ground pixels.
      */
-    public Chronology getChronology();
+    public CalendarSystem getCalendarSystem();
 
     /**
      * Returns the coordinate reference system used to reference the horizontal
      * polygons in the ground pixels.
      */
     public CoordinateReferenceSystem getHorizontalCrs();
-
-    /**
-     * Returns the list of ground pixels that comprise this swath's domain.  The
-     * pixels are referenced to the
-     */
-    @Override
-    public List<GroundPixel> getDomainObjects();
 
 }

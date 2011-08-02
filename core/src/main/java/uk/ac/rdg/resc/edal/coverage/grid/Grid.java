@@ -55,12 +55,13 @@ public interface Grid
     public GridExtent getGridExtent();
 
     /**
-     * Returns a list of the grid points that comprise this grid.  If this is not a
-     * {@link ReferenceableGrid}, the footprint of each grid point will be null.
-     * @return a list of the grid points that comprise this grid
-     * @todo Define the ordering
+     * Gets the offset of the given grid point within the
+     * {@link #getGridPoints() list of grid points}.
+     * @param coords The coordinates of the grid point
+     * @return the offset of the given grid point within the
+     * {@link #getGridPoints() list of grid points}.
      */
-    public List<GridPoint> getGridPoints();
+    public int getOffset(GridCoordinates coords);
 
     /**
      * Returns the dimensionality of the grid. This will be the same as

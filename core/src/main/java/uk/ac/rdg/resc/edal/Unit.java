@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,26 +26,44 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.geometry;
-
-import org.joda.time.DateTime;
-import org.opengis.geometry.DirectPosition;
+package uk.ac.rdg.resc.edal;
 
 /**
- * <p>Defines the position of a point in space and time.  This does not inherit
- * from {@link DirectPosition} because it is more convenient to express times
- * as {@link DateTime}s than as coordinates in a temporal CRS.  Therefore this
- * interface <i>composes</i> horizontal, vertical and temporal positions.</p>
- * <p>Strictly speaking, in some coordinate reference systems it is not legal
- * to separate horizontal and vertical positions.  However we allow this here
- * for convenience</p>
+ * <p>Simple immutable class consisting of a unit string and the vocabulary that
+ * can be used to interpret the string.  Instances of this class are created
+ * through the static factory methods, which give the possibility in future to
+ * cache instances of this class, saving object creation and garbage collection.</p>
+ * <p>Instances of this class are <b>not</b> guaranteed to be valid units within
+ * the vocabulary in question.  External methods must be used to check validity and
+ * to convert units between systems.</p>
  * @author Jon
  */
-public interface SpatioTemporalPoint {
+public final class Unit
+{
 
-    /**
-     * Return the time instant, or null if this point contains no time information.
-     */
-    public DateTime getDateTime();
+    private final String unitString;
+    private final UnitVocabulary unitVocabulary;
+
+    private Unit(String unitString, UnitVocabulary unitVocabulary)
+    {
+        this.unitString = unitString;
+        this.unitVocabulary = unitVocabulary;
+    }
+
+    /** Gets an instance of a unit with the given string in the given vocabulary. */
+    public static Unit getUnit(String unitString, UnitVocabulary unitVocabulary)
+    {
+        return new Unit(unitString, unitVocabulary);
+    }
+
+    /** Gets an instance of a unit with the given string in an unknown vocabulary.
+        The returned Unit cannot be converted to other unit types.  */
+    public static Unit getUnit(String unitString)
+    {
+        return getUnit(unitString, UnitVocabulary.UNKNOWN);
+    }
+
+    public String getUnitString() { return this.unitString; }
+    public UnitVocabulary getVocabulary() { return this.unitVocabulary; }
 
 }

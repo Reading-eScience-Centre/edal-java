@@ -36,9 +36,10 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscretePointDomain;
  * values (in the evaluate() method) are of the same type of the domain objects.</p>
  * @param <P> The type of the domain object, which is the same as the type of the
  * object used to identify a position within the domain.
+ * @param <R> The type of the value returned by the coverage
  * @author Jon
  */
-public interface DiscretePointCoverage<P> extends DiscreteCoverage<P, P>
+public interface DiscretePointCoverage<P, R> extends DiscreteCoverage<P, P, R>
 {
     @Override
     public DiscretePointDomain getDomain();

@@ -29,25 +29,25 @@
 package uk.ac.rdg.resc.edal.coverage.domain;
 
 import java.util.List;
-import org.joda.time.Chronology;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.VerticalCRS;
 import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
-import uk.ac.rdg.resc.edal.geometry.SpatioTemporalPoint;
+import uk.ac.rdg.resc.edal.geometry.GeoPosition;
+import uk.ac.rdg.resc.edal.time.CalendarSystem;
 
 /**
  * The domain of a {@link TrajectoryCoverage}: a set of positions in space and
  * time.
  * @author Jon
  */
-public interface TrajectoryDomain extends DiscretePointDomain<SpatioTemporalPoint>
+public interface TrajectoryDomain extends DiscretePointDomain<GeoPosition>
 {
     /**
      * The positions in space and time that comprise the domain, in ascending
      * order of time.
      */
     @Override
-    public List<SpatioTemporalPoint> getDomainObjects();
+    public List<GeoPosition> getDomainObjects();
 
     /**
      * Returns the vertical coordinate reference system used to reference
@@ -62,10 +62,10 @@ public interface TrajectoryDomain extends DiscretePointDomain<SpatioTemporalPoin
     public CoordinateReferenceSystem getHorizontalCrs();
 
     /**
-     * Returns the Chronology used to reference the temporal components of the
+     * Returns the calendar system used to reference the temporal components of the
      * {@link #getDomainObjects() positions}.
      * @return
      */
-    public Chronology getChronology();
+    public CalendarSystem getCalendarSystem();
 
 }

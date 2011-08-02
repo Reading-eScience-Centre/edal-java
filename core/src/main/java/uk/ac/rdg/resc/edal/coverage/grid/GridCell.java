@@ -26,33 +26,41 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.feature;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.Domain;
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
-import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.time.CalendarSystem;
 import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
- * A measurement of a time series at a point
+ * Associates a set of grid coordinates with its real-world sample space.
  * @author Jon
  */
-public interface PointSeriesFeature extends Feature<TimePosition, Record> {
+public interface GridCell<P> extends Domain<P> {
+
+    /** Returns the coordinates of this grid point within the grid */
+    public GridCoordinates getGridCoordinates();
+
+    /** Returns the centre of the grid cell in horizontal space */
+    public HorizontalPosition getCentre();
 
     /**
-     * Gets the horizontal location of this point series feature.
-     * @return the horizontal location of this point series feature.
+     * Returns the footprint of this grid cell in horizontal space.
+     * @todo Create a return type
      */
-    public HorizontalPosition getHorizontalPosition();
+    public Polygon getFootprint();
+    
+    public CoordinateReferenceSystem getHorizontalCrs();
 
-    /**
-     * Gets the vertical location of this point series feature.
-     * @return the vertical location of this point series feature.
-     */
-    public VerticalPosition getVerticalPosition();
+    public Extent<TimePosition> getTimeExtent();
 
-    @Override
-    public PointSeriesCoverage getCoverage();
+    public CalendarSystem getCalendarSystem();
+
+    /** Returns the {@link ReferenceableGrid} of which this GridPoint is a part */
+    public ReferenceableGrid getGrid();
 
 }

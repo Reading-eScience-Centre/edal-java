@@ -26,25 +26,39 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal;
+package uk.ac.rdg.resc.edal.geometry;
+
+import java.util.List;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.Domain;
 
 /**
- * A term within a {@link Vocabulary}.
+ * A polygon in the horizontal plane, defined by a list of vertices in a given
+ * coordinate reference system.
  * @author Jon
  */
-public interface VocabularyTerm extends IdentifiedResource {
+public interface Polygon extends Domain<HorizontalPosition> {
 
     /**
-     * Gets the short identifier of this term, unique within the
-     * {@link #getVocabulary() vocabulary}.
-     * @return
+     * Returns the two-dimensional horizontal coordinate reference system to
+     * which the {@link #getVertices() vertices} are referenced.
+     * @return the two-dimensional horizontal coordinate reference system to
+     * which the vertices are referenced.
      */
-    public String getId();
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
     /**
-     * Gets the vocabulary to which this term belongs.
-     * @return
+     * Returns the list of vertices that define this polygon in the horizontal
+     * plane.  The coordinates of the vertices are defined in this object's
+     * {@link #getCoordinateReferenceSystem() coordinate reference system}.  The
+     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
+     * as this object, but they may not have a non-null CRS that is different from
+     * that of this object.
+     * @return the list of vertices that define this polygon in the horizontal
+     * plane.
+     * @todo define whether the polygon is closed, and whether there is a particular
+     * order (clockwise or anticlockwise) to the vertices.
      */
-    public Vocabulary<?> getVocabulary();
+    public List<HorizontalPosition> getVertices();
 
 }

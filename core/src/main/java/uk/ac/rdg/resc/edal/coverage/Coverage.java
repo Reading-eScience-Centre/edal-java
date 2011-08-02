@@ -28,44 +28,36 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.Collection;
-import uk.ac.rdg.resc.edal.coverage.domain.Domain;
+import uk.ac.rdg.resc.edal.PartialFunction;
+import uk.ac.rdg.resc.edal.Domain;
 
 /**
  * <p>A Coverage associates positions with its {@link #getDomain() domain}
- * to values (its <i>range</i>).  It is essentially a function.</p>
+ * to values (its <i>range</i>).  It is a partial function because, generally,
+ * not all possible positions are associated with values.</p>
+ * <p>Coverages may return a single value for each position (in which case they
+ * may be modelled as {@link SimpleCoverage}s), or they may return multiple values
+ * for each position ({@link CompoundCoverage}s).</p>
+ *
  * @param <P> The type of object used to identify positions within the coverage's domain.
  * This may be a spatial, temporal, or combined spatiotemporal position.
+ * @param <R> The type of the value returned by the coverage
  * @author Jon
  */
-public interface Coverage<P>
+public interface Coverage<P, R> extends PartialFunction<P, R>
 {
 
     /**
-     * Returns an object that describes the values that are returned by this
-     * coverage.
-     * @return an object that describes the values that are returned by this
-     * coverage.
+     * Returns a human-readable description of this coverage.
+     * @todo Does this belong here or at the Feature level?
+     * @return a human-readable description of this coverage.
      */
-    public RecordType getRangeType();
+    public String getDescription();
 
     /**
-     * Returns an object that describes the domain of the coverage.
+     * The runtime type of the values of the coverage's range.
+     * @todo confusing nomenclature?  ISO standard would have returned a RecordType.
      */
-    public Domain<P> getDomain();
-
-    /**
-     * This calculates and returns the value of the coverage
-     * for a point in space and/or time.
-     * @param position an indicator of the position within this coverage's domain
-     * @param fieldNames a List of for which the coverage is to be evaluated
-     * (each of these must be represented in the {@link #getRangeType() range type}.
-     * If this is null, this method returns a Record containing values for all
-     * fields.  If this is non-null but empty this method returns an empty
-     * record.
-     * @return A Record containing the values of the requested fields, or null
-     * if the coverage is not defined at the given position.
-     */
-    public Record evaluate(P position, Collection<String> fieldNames);
+    public Class<R> getRangeType();
 
 }

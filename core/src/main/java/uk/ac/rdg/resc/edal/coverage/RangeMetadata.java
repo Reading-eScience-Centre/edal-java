@@ -26,33 +26,41 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.feature;
+package uk.ac.rdg.resc.edal.coverage;
 
-import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
-import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.Phenomenon;
+import uk.ac.rdg.resc.edal.Unit;
 
 /**
- * A measurement of a time series at a point
+ * Describes the values returned by a {@link Coverage}.
  * @author Jon
  */
-public interface PointSeriesFeature extends Feature<TimePosition, Record> {
+public interface RangeMetadata
+{
+    /**
+     * Returns a human-readable description of the values.
+     * @return a human-readable description of the values.
+     */
+    public String getDescription();
 
     /**
-     * Gets the horizontal location of this point series feature.
-     * @return the horizontal location of this point series feature.
+     * Returns the units of measure of the values
+     * @return the units of measure of the values, or null if the values have
+     * no units.
      */
-    public HorizontalPosition getHorizontalPosition();
+    public Unit getUnits();
 
     /**
-     * Gets the vertical location of this point series feature.
-     * @return the vertical location of this point series feature.
+     * Returns the real-world phenomenon that the values represent.
+     * @return the real-world phenomenon that the values represent.
+     * @todo Can this return null?
      */
-    public VerticalPosition getVerticalPosition();
+    public Phenomenon getParameter();
 
-    @Override
-    public PointSeriesCoverage getCoverage();
+    /**
+     * Returns the runtime class of the values
+     * @return the runtime class of the values
+     */
+    public Class<?> getValueType();
 
 }

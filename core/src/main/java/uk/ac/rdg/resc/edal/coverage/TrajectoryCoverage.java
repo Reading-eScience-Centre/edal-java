@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,14 +29,14 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import uk.ac.rdg.resc.edal.coverage.domain.TrajectoryDomain;
-import uk.ac.rdg.resc.edal.geometry.SpatioTemporalPoint;
+import uk.ac.rdg.resc.edal.geometry.GeoPosition;
 
 /**
  * A {@link DiscretePointCoverage} that represents a trajectory, i.e. a list
  * of positions in space and time.
  * @author Jon
  */
-public interface TrajectoryCoverage extends DiscretePointCoverage<SpatioTemporalPoint> {
+public interface TrajectoryCoverage extends DiscretePointCoverage<GeoPosition, Record>, CompoundCoverage<GeoPosition> {
 
     @Override
     public TrajectoryDomain getDomain();

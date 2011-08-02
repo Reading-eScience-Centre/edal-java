@@ -40,8 +40,8 @@ public interface VerticalPosition extends OneDimensionalPosition {
     public double getZ();
 
     /**
-     * Returns a temporal coordinate reference system.
-     * @return a temporal coordinate reference system.
+     * Returns a vertical coordinate reference system.
+     * @return a vertical coordinate reference system.
      */
     @Override public VerticalCRS getCoordinateReferenceSystem();
 

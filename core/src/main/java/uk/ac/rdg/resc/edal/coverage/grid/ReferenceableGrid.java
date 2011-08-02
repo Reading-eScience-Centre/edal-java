@@ -55,9 +55,9 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
  * @param <P> The type of object used to identify real-world positions within
  * this grid
  * @author Jon
- * @todo define getExtent()
+ * @todo define methods to describe the x,y,z and t extents of the grid
  */
-public interface ReferenceableGrid<P> extends Grid, DiscreteDomain<P, GridPoint> {
+public interface ReferenceableGrid<P> extends Grid, DiscreteDomain<P, GridCell<P>> {
 
     /**
      * Transforms a grid coordinates to a real-world position.  The returned
@@ -71,24 +71,24 @@ public interface ReferenceableGrid<P> extends Grid, DiscreteDomain<P, GridPoint>
     public P transformCoordinates(GridCoordinates coords);
 
     /**
-     * Transforms from a real-world position to the grid coordinates of the
-     * corresponding grid point.  No interpolation is performed, i.e. the passed
-     * position must exactly match a grid point.  (WATCH!  Standard actually
-     * defines nearest-neighbour interpolation for this method, which seems suspect.)
+     * <p>Finds the GridCell that contains the given position.</p>
+     * <p>This method is intended to be better-defined and less confusing than
+     * the (roughly) equivalent method in ISO19123, called inverseTransformCoordinates().
+     * The ISO19123 returns the <i>nearest</i> grid cell to the given point, but
+     * this is not always helpful: sometimes the nearest grid cell is not actually
+     * the cell that contains the point.</p>
      * @param pos - The "real world" coordinates to transform.
-     * @return The coordinates of the corresponding grid point, or null if there
-     * is no grid point that corresponds with the direct position.
+     * @return The GridCell containing the given position, or null if the position
+     * is outside the domain of the grid.
      */
-    public GridCoordinates inverseTransformCoordinates(P pos);
+    public GridCell findContainingCell(P pos);
 
     /**
-     * Returns the list of GridPoints that comprise this grid.  Each GridPoint
-     * has a {@link Footprint} that defines its extent in an external coordinate
-     * reference system.
-     * @return
+     * Returns the list of GridCells that comprise this grid.
+     * @return the list of GridCells that comprise this grid.
      * @todo Define the order of iteration of the list with respect to the grid
      */
     @Override
-    public List<GridPoint> getDomainObjects();
+    public List<GridCell<P>> getDomainObjects();
 
 }

@@ -26,28 +26,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal;
 
 /**
- * A GridPoint associates a set of grid coordinates with its sample space in an
- * external coordinate reference system.
+ * <p>A set of positions for which a {@link Function} is defined.</p>
+ * @param <P> The type of object used to identify positions within this domain
  * @author Jon
  */
-public interface GridPoint {
-
-    /** Returns the coordinates of this grid point within the grid */
-    public GridCoordinates getGridCoordinates();
-
+public interface Domain<P>
+{
     /**
-     * Returns the sample space of this grid point in an external coordinate
-     * reference system.
-     * @return the sample space of this grid point in an external coordinate
-     * reference system.
-     * @todo Create a return type
+     * Returns true if the given position is contained within this domain.
      */
-    public Footprint getSampleSpace();
-
-    /** Returns the {@link Grid} of which this GridPoint is a part */
-    public Grid getGrid();
+    public boolean contains(P position);
 
 }

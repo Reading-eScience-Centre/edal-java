@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.feature;
-
-import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
-import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
-import uk.ac.rdg.resc.edal.time.TimePosition;
-
 /**
- * A measurement of a time series at a point
- * @author Jon
+ * Contains definitions of Coverages, which are functions that return values
+ * for spatial/temporal points within their domain.  Types in this package are
+ * based upon the ISO19123 standard, although this is not followed literally in
+ * the interests of yielding simpler, more readable code.
  */
-public interface PointSeriesFeature extends Feature<TimePosition, Record> {
-
-    /**
-     * Gets the horizontal location of this point series feature.
-     * @return the horizontal location of this point series feature.
-     */
-    public HorizontalPosition getHorizontalPosition();
-
-    /**
-     * Gets the vertical location of this point series feature.
-     * @return the vertical location of this point series feature.
-     */
-    public VerticalPosition getVerticalPosition();
-
-    @Override
-    public PointSeriesCoverage getCoverage();
-
-}
+package uk.ac.rdg.resc.edal.coverage;

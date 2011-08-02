@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,21 +29,30 @@
 package uk.ac.rdg.resc.edal;
 
 /**
- * A vocabulary contains a set of defined terms, such as units of measure or
- * phenomena.
- * @param <T> the type of {@link VocabularyTerm term} in this vocabulary.
+ * <p>Defines a partial unary function, which explicitly advertises the values of
+ * A for which the function is defined.</p>
+ * <p><i>Note: this approach is borrowed from the Scala language.</i></p>
+ * @param <A> The type of the function input
+ * @param <B> The type of the function output
  * @author Jon
  */
-public interface Vocabulary<T extends VocabularyTerm> extends IdentifiedResource {
+public interface PartialFunction<A, B> extends Function<A, B>
+{
 
     /**
-     * Gets the term within this vocabulary that is identified by the given
-     * identifier.
-     * @param identifier
-     * @return the term within this vocabulary that is identified by the given
-     * identifier.
-     * @todo what if {@code identifier} is not a member of this vocabulary?
+     * The set of positions for which the partial function is defined.
+     * @return
      */
-    public T getTerm(String identifier);
+    public Domain<A> getDomain();
+
+    /**
+     * Returns true if the function is defined at the given input value.
+     * If the function is defined at this value (i.e. the domain contains the value) then
+     * {@link #evaluate(java.lang.Object) evaluate()} will return a non-null value.
+     * @param val The input value to test
+     * @return true if the function is defined at the given input value, false
+     * otherwise.
+     */
+    public boolean isDefinedAt(A val);
 
 }

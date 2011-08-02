@@ -26,22 +26,32 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.feature;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.coverage.DiscreteGridPointCoverage;
+import uk.ac.rdg.resc.edal.Extent;
 
 /**
- * A timeseries of gridded fields
+ * An axis of a {@link Grid}
  * @author Jon
  */
-public interface GridSeriesFeature extends Feature {
+public interface GridAxis
+{
+    /** Returns the name of the axis. */
+    public String getName();
 
     /**
-     * @todo Do we need a GridSeriesCoverage that inherits from
-     * DiscreteGridPointCoverage, as in the CSML user's manual?
+     * Returns the range of integer coordinate values defined on this axis.
+     * Usually the low value of the extent will be zero.  The extent of the
+     * axis is inclusive.
      * @return
      */
-    @Override
-    public DiscreteGridPointCoverage getCoverage();
+    public Extent<Integer> getIndexExtent();
 
+    /**
+     * Returns the number of points along this axis.  This will be the same
+     * as extent.getHigh() - extent.getLow() + 1 (recalling that the extent is
+     * inclusive).
+     * @return
+     */
+    public int size();
 }

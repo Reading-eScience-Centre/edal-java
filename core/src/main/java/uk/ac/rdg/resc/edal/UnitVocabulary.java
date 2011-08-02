@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,28 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.feature;
-
-import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
-import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+package uk.ac.rdg.resc.edal;
 
 /**
- * A measurement of a time series at a point
+ * Enumeration of vocabularies that can be used to interpret a {@link Unit} string.
+ * @todo "Vocabulary" might not be the right term here.  "System" may be better
+ * but implies something like SI - this isn't the same thing.
  * @author Jon
  */
-public interface PointSeriesFeature extends Feature<TimePosition, Record> {
-
+public enum UnitVocabulary
+{
     /**
-     * Gets the horizontal location of this point series feature.
-     * @return the horizontal location of this point series feature.
+     * The Unified Code for Units of Measure.
+     * @see http://unitsofmeasure.org/
      */
-    public HorizontalPosition getHorizontalPosition();
+    UCUM,
 
-    /**
-     * Gets the vertical location of this point series feature.
-     * @return the vertical location of this point series feature.
-     */
-    public VerticalPosition getVerticalPosition();
+    /** Unidata UDUNITS */
+    UDUNITS,
 
-    @Override
-    public PointSeriesCoverage getCoverage();
+    /** UDUNITS version 2 */
+    UDUNITS2,
 
+    /** Unknown unit vocabulary: units cannot be converted to another system. */
+    UNKNOWN;
 }

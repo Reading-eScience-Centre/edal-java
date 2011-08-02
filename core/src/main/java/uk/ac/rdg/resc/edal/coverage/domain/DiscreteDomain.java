@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
+import uk.ac.rdg.resc.edal.Domain;
 import java.util.List;
 import java.util.Set;
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
@@ -43,6 +44,12 @@ public interface DiscreteDomain<P, DO> extends Domain<P>
 {
 
     /**
+     * Returns true if at least one of the domain objects contains the given
+     * position.
+     */
+    @Override public boolean contains(P position);
+
+    /**
      * Returns the {@link List} of domain objects that comprise this domain.
      * The domain objects are in a defined order, hence we use a {@link List};
      * however, the domain objects will also each be unique, so the returned list
@@ -53,7 +60,7 @@ public interface DiscreteDomain<P, DO> extends Domain<P>
     public List<DO> getDomainObjects();
 
     /**
-     * Returns the index of the domain object in the {@link #getDomainObjects()
+     * Returns the index of the first domain object in the {@link #getDomainObjects()
      * list of domain objects} that contains the given position, or -1 if the
      * position is outside the domain.
      */

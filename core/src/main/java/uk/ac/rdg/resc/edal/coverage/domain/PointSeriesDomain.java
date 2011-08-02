@@ -28,21 +28,22 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
+import uk.ac.rdg.resc.edal.Extent;
 import java.util.List;
-import org.joda.time.Chronology;
-import org.joda.time.DateTime;
+import uk.ac.rdg.resc.edal.time.CalendarSystem;
+import uk.ac.rdg.resc.edal.time.TimePosition;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 
 /**
  * The domain of a {@link PointSeriesCoverage}: a set of time instants.
  * @author Jon
  */
-public interface PointSeriesDomain extends DiscretePointDomain<DateTime>
+public interface PointSeriesDomain extends DiscretePointDomain<TimePosition>
 {
     /**
-     * Returns the {@link Chronology} used to reference the time instants.
+     * Returns the calendar system used to interpret time fields.
      */
-    public Chronology getChronology();
+    public CalendarSystem getCalendarSystem();
 
     /**
      * Returns the list of time coordinate values that comprise this domain,
@@ -50,6 +51,13 @@ public interface PointSeriesDomain extends DiscretePointDomain<DateTime>
      * in ascending order of time.
      */
     @Override
-    public List<DateTime> getDomainObjects();
+    public List<TimePosition> getDomainObjects();
+
+    /**
+     * Returns the extent of the domain.  (This information could also be
+     * calculated from the first and last values in {@link #getDomainObjects()}.
+     * @return the extent of the domain.
+     */
+    public Extent<TimePosition> getExtent();
 
 }

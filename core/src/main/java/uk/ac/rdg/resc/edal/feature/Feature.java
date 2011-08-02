@@ -36,8 +36,9 @@ import uk.ac.rdg.resc.edal.coverage.Coverage;
  * @todo How best to represent metadata?
  * @param <P> The type of object used to identify positions within the {@link
  * #getCoverage() coverage}'s {@link Domain}.
+ * @param <R> The type of the value returned by the coverage
  */
-public interface Feature<P>
+public interface Feature<P, R>
 {
     
     /**
@@ -68,5 +69,5 @@ public interface Feature<P>
     /**
      * Gets the measurement values
      */
-    public Coverage<P> getCoverage();
+    public Coverage<P, R> getCoverage();
 }
