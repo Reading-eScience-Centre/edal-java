@@ -33,7 +33,7 @@ package uk.ac.rdg.resc.edal.coverage.grid;
  * spaced.</p>
  * @author Jon
  */
-public interface RegularAxis extends ReferenceableAxis {
+public interface RegularAxis extends ReferenceableAxis<Double> {
 
     /** Gets the spacing between coordinate values, might be negative. */
     public double getCoordinateSpacing();

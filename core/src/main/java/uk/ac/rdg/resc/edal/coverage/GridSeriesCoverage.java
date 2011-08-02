@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,35 +28,19 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import uk.ac.rdg.resc.edal.PartialFunction;
+import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
+import uk.ac.rdg.resc.edal.geometry.GeoPosition;
 
 /**
- * <p>A Coverage associates positions with its {@link #getDomain() domain}
- * to values (its <i>range</i>).  It is a partial function because, generally,
- * not all possible positions are associated with values.</p>
- * <p>Coverages may return a single value for each position (in which case they
- * may be modelled as {@link SimpleCoverage}s), or they may return multiple values
- * for each position ({@link CompoundCoverage}s).</p>
- *
- * @param <P> The type of object used to identify positions within the coverage's domain.
- * This may be a spatial, temporal, or combined spatiotemporal position.
- * @param <R> The type of the value returned by the coverage
+ * A multidimensional grid.
+ * @todo ncWMS Layer types are more like SimpleCoverages.  Should GridSeriesCoverages
+ * be SimpleCoverages too?
  * @author Jon
  */
-public interface Coverage<P, R> extends PartialFunction<P, R>
-{
+public interface GridSeriesCoverage
+        extends GridCoverage<GeoPosition, Record>, CompoundCoverage<GeoPosition> {
+    
+    @Override public GridSeriesDomain getDomain();
 
-    /**
-     * Returns a human-readable description of this coverage.
-     * @todo Does this belong here or at the Feature level?
-     * @return a human-readable description of this coverage.
-     */
-    public String getDescription();
-
-    /**
-     * The runtime type of the values of the coverage's range.
-     * @todo confusing nomenclature?  ISO standard would have returned a RecordType.
-     */
-    public Class<R> getRangeType();
 
 }

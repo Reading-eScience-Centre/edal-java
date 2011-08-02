@@ -56,8 +56,11 @@ public final class Unit
         return new Unit(unitString, unitVocabulary);
     }
 
-    /** Gets an instance of a unit with the given string in an unknown vocabulary.
-        The returned Unit cannot be converted to other unit types.  */
+    /**
+     * Gets an instance of a unit with the given string in an unknown vocabulary.
+     * The returned Unit should not generally be considered to be convertible
+     * to other unit types.
+     */
     public static Unit getUnit(String unitString)
     {
         return getUnit(unitString, UnitVocabulary.UNKNOWN);

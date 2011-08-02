@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
+import java.util.List;
 import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
@@ -43,6 +44,9 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
  * @author Jon
  */
 public interface RectilinearGrid extends HorizontalGrid {
+
+    @Override
+    public List<ReferenceableAxis<Double>> getAxes();
 
     /**
      * <p>Returns the {@link ReferenceableAxis} for the given axis index. This object
@@ -60,17 +64,17 @@ public interface RectilinearGrid extends HorizontalGrid {
      * @return The ReferenceableAxis at the required index
      * @throws IndexOutOfBoundsException if {@code index} is neither 0 nor 1.
      */
-    public ReferenceableAxis getAxis(int index);
+    public ReferenceableAxis<Double> getAxis(int index);
 
     /**
      * Gets the x axis of the grid, equivalent to {@code getAxis(0)}.
      */
-    public ReferenceableAxis getXAxis();
+    public ReferenceableAxis<Double> getXAxis();
 
     /**
      * Gets the y axis of the grid, equivalent to {@code getAxis(1)}
      */
-    public ReferenceableAxis getYAxis();
+    public ReferenceableAxis<Double> getYAxis();
 
     /**
      * {@inheritDoc}

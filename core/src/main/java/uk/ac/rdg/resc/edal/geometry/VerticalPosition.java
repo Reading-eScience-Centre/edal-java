@@ -31,7 +31,9 @@ package uk.ac.rdg.resc.edal.geometry;
 import org.opengis.referencing.crs.VerticalCRS;
 
 /**
- * Defines the position of a point in time
+ * Defines the position of a point in vertical space.
+ * @todo Not sure if VerticalCRS is going to be a convenient data type.  Do we
+ * need to define our own version of this?
  * @author Jon
  */
 public interface VerticalPosition extends OneDimensionalPosition {

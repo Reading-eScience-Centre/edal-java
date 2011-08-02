@@ -41,7 +41,6 @@ import uk.ac.rdg.resc.edal.Extent;
  * monotonically with increasing axis index.</p>
  * @param <P> The type of object used to identify positions on this axis
  * @author Jon
- * @todo could this be a subclass of {@link DiscreteDomain}?
  */
 public interface ReferenceableAxis<P extends Comparable<? super P>> extends GridAxis, DiscreteDomain<P, Extent<P>> {
 

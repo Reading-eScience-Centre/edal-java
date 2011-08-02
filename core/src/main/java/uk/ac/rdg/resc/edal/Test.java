@@ -6,7 +6,7 @@
 package uk.ac.rdg.resc.edal;
 
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.domain.GridCoverage2D;
+import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 
 /**
  *

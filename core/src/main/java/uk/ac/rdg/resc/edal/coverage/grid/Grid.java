@@ -46,7 +46,7 @@ public interface Grid
      * and {@link #getGridExtent() grid envelope}.
      * @return a list containing the names of the grid axes.
      */
-    public List<String> getAxisNames();
+    public List<? extends GridAxis> getAxes();
 
     /**
      * Returns the extent of the grid in integer coordinates.

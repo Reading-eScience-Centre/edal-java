@@ -26,37 +26,33 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.feature;
 
-import uk.ac.rdg.resc.edal.PartialFunction;
+import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
+import uk.ac.rdg.resc.edal.coverage.Record;
+import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
+import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
- * <p>A Coverage associates positions with its {@link #getDomain() domain}
- * to values (its <i>range</i>).  It is a partial function because, generally,
- * not all possible positions are associated with values.</p>
- * <p>Coverages may return a single value for each position (in which case they
- * may be modelled as {@link SimpleCoverage}s), or they may return multiple values
- * for each position ({@link CompoundCoverage}s).</p>
- *
- * @param <P> The type of object used to identify positions within the coverage's domain.
- * This may be a spatial, temporal, or combined spatiotemporal position.
- * @param <R> The type of the value returned by the coverage
+ * A measurement of a vertical profile at a point
  * @author Jon
  */
-public interface Coverage<P, R> extends PartialFunction<P, R>
-{
+public interface ProfileFeature extends Feature<VerticalPosition, Record> {
 
     /**
-     * Returns a human-readable description of this coverage.
-     * @todo Does this belong here or at the Feature level?
-     * @return a human-readable description of this coverage.
+     * Gets the horizontal location of this profile feature.
+     * @return the horizontal location of this profile feature.
      */
-    public String getDescription();
+    public HorizontalPosition getHorizontalPosition();
 
     /**
-     * The runtime type of the values of the coverage's range.
-     * @todo confusing nomenclature?  ISO standard would have returned a RecordType.
+     * Gets the time at which the profile was measured
+     * @return the time at which the profile was measured
      */
-    public Class<R> getRangeType();
+    public TimePosition getTime();
+
+    @Override
+    public ProfileCoverage getCoverage();
 
 }

@@ -26,33 +26,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.domain;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import java.util.List;
-import org.opengis.coverage.grid.GridCoordinates;
-import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
-import uk.ac.rdg.resc.edal.coverage.SimpleCoverage;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCell;
-import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
- * A two-dimensional grid that returns single values for points in its domain.
- * Objects of this type can be rendered simply into maps (e.g. for WMS GetMap
- * operations), and may commonly be created by extracting data from a larger
- * GridSeriesFeature.
- * @param <V> The type of values (usually numeric) returned by the coverage
+ * A time axis.
  * @author Jon
  */
-public interface GridCoverage2D<V>
-        extends DiscreteCoverage<HorizontalPosition, GridCell<HorizontalPosition>, V>,
-                SimpleCoverage<HorizontalPosition, V> {
-    
-    @Override public HorizontalGrid getDomain();
-    
-    
-    public V evaluate(GridCoordinates coords);
-    public List<V> evaluate(List<GridCoordinates> coords);
-
-
+public interface TimeAxis extends ReferenceableAxis<TimePosition> {
+    // Placeholder awaiting further information
 }
