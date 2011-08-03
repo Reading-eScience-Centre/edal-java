@@ -55,6 +55,12 @@ public interface ReferenceableAxis<P extends Comparable<? super P>> extends Grid
     public P getCoordinateValue(int index);
 
     /**
+     * Returns true if the values on the axis are in ascending order according
+     * to their natural ordering.
+     */
+    public boolean isAscending();
+
+    /**
      * Gets the coordinate bounds associated with the point at the given index.
      * In some types of ReferenceableAxis, each point along the axis is associated
      * with a <i>range</i> of positions, rather than a single infinitesimal position.

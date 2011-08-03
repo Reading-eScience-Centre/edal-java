@@ -33,6 +33,7 @@ import uk.ac.rdg.resc.edal.Extent;
 
 /**
  * The extent of a {@link Grid} expressed in terms of {@link GridCoordinates}.
+ * @todo Is is correct to model this as an Extent?
  */
 public interface GridExtent extends Extent<GridCoordinates>, GridEnvelope {
 

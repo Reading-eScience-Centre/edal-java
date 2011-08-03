@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,13 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.Domain;
-import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
-import uk.ac.rdg.resc.edal.geometry.Polygon;
-import uk.ac.rdg.resc.edal.time.CalendarSystem;
-import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
  * Associates a set of grid coordinates with its real-world sample space.
@@ -44,23 +38,5 @@ public interface GridCell<P> extends Domain<P> {
 
     /** Returns the coordinates of this grid point within the grid */
     public GridCoordinates getGridCoordinates();
-
-    /** Returns the centre of the grid cell in horizontal space */
-    public HorizontalPosition getCentre();
-
-    /**
-     * Returns the footprint of this grid cell in horizontal space.
-     * @todo Create a return type
-     */
-    public Polygon getFootprint();
-    
-    public CoordinateReferenceSystem getHorizontalCrs();
-
-    public Extent<TimePosition> getTimeExtent();
-
-    public CalendarSystem getCalendarSystem();
-
-    /** Returns the {@link ReferenceableGrid} of which this GridPoint is a part */
-    public ReferenceableGrid getGrid();
 
 }

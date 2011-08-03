@@ -35,6 +35,7 @@ package uk.ac.rdg.resc.edal.coverage.grid;
  */
 public interface VerticalAxis extends ReferenceableAxis<Double> {
 
+    // Or could use GeoAPI's AxisDirection?
     public enum PositiveDirection { UP, DOWN }
 
     // Placeholder awaiting further information

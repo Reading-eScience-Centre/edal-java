@@ -57,7 +57,7 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
  * @author Jon
  * @todo define methods to describe the x,y,z and t extents of the grid
  */
-public interface ReferenceableGrid<P> extends Grid, DiscreteDomain<P, GridCell<P>> {
+public interface ReferenceableGrid<P, GC extends GridCell<P>> extends Grid, DiscreteDomain<P, GC> {
 
     /**
      * Transforms a grid coordinates to a real-world position.  The returned
@@ -81,7 +81,7 @@ public interface ReferenceableGrid<P> extends Grid, DiscreteDomain<P, GridCell<P
      * @return The GridCell containing the given position, or null if the position
      * is outside the domain of the grid.
      */
-    public GridCell findContainingCell(P pos);
+    public GC findContainingCell(P pos);
 
     /**
      * Returns the list of GridCells that comprise this grid.
@@ -89,6 +89,6 @@ public interface ReferenceableGrid<P> extends Grid, DiscreteDomain<P, GridCell<P
      * @todo Define the order of iteration of the list with respect to the grid
      */
     @Override
-    public List<GridCell<P>> getDomainObjects();
+    public List<GC> getDomainObjects();
 
 }

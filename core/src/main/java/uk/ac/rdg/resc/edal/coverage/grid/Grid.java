@@ -64,6 +64,12 @@ public interface Grid
     public int getOffset(GridCoordinates coords);
 
     /**
+     * Returns an ordered list of GridCoordinates objects representing each
+     * cell in the grid.
+     */
+    public List<GridCoordinates> getGridPoints();
+
+    /**
      * Returns the dimensionality of the grid. This will be the same as
      * {@link #getAxisNames()}.size() and {@link #getExtent()}.getDimension().
      * @return the dimensionality of the grid.
@@ -75,5 +81,5 @@ public interface Grid
      * @return the number of grid points in the grid.
      * @todo should return a long?
      */
-    public int getSize();
+    public int size();
 }

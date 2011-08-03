@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
+import uk.ac.rdg.resc.edal.time.CalendarSystem;
 import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
@@ -35,5 +36,10 @@ import uk.ac.rdg.resc.edal.time.TimePosition;
  * @author Jon
  */
 public interface TimeAxis extends ReferenceableAxis<TimePosition> {
-    // Placeholder awaiting further information
+    
+    public CalendarSystem getCalendarSystem();
+
+    /** Always returns true: values on a time axis are always in ascending order of time */
+    @Override
+    public boolean isAscending();
 }

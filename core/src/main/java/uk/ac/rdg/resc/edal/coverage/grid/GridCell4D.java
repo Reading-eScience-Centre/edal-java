@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2010 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,30 +26,39 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import java.util.List;
-import org.opengis.coverage.grid.GridCoordinates;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.geometry.GeoPosition;
 import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.time.CalendarSystem;
+import uk.ac.rdg.resc.edal.time.TimePosition;
 
 /**
- * A two-dimensional grid that returns single values for points in its domain.
- * Objects of this type can be rendered simply into maps (e.g. for WMS GetMap
- * operations), and may commonly be created by extracting data from a larger
- * GridSeriesFeature.
- * @param <V> The type of values (usually numeric) returned by the coverage
+ * A cell in a (potentially) four-dimensional grid.
+ * @todo Should this return GridCoordinates for i and j only, then return
+ * indices along t and z axes separately?
  * @author Jon
  */
-public interface GridCoverage2D<V>
-        extends DiscreteCoverage<HorizontalPosition, GridCell2D, V>, SimpleCoverage<HorizontalPosition, V> {
-    
-    @Override public HorizontalGrid getDomain();
+public interface GridCell4D extends GridCell<GeoPosition> {
+
+    /** Returns the centre of the grid cell in horizontal space */
+    public HorizontalPosition getCentre();
+
+    /**
+     * Returns the footprint of this grid cell in horizontal space.
+     * @todo Create a return type
+     */
+    public Polygon getFootprint();
+
+    public CoordinateReferenceSystem getHorizontalCrs();
 
 
-    public V evaluate(GridCoordinates coords);
-    public List<V> evaluate(List<GridCoordinates> coords);
+    public Extent<TimePosition> getTimeExtent();
 
+    public CalendarSystem getCalendarSystem();
 
+    // TODO: need vertical extent too
 }

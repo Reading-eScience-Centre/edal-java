@@ -28,22 +28,32 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.geometry.GeoPosition;
+import uk.ac.rdg.resc.edal.time.CalendarSystem;
 
 /**
- * The domain of a GridSeriesFeature
+ * The domain of a GridSeriesFeature, modelled as a composition of a horizontal
+ * grid, plus t and z axes.
+ * @todo Explain that GridCoordinates are 4D and explain ordering.
  * @author Jon
  */
-public interface GridSeriesDomain extends ReferenceableGrid<GeoPosition> {
+public interface GridSeriesDomain extends ReferenceableGrid<GeoPosition, GridCell4D>
+{
     
     public HorizontalGrid getHorizontalGrid();
 
     public VerticalAxis getVerticalAxis();
 
     public TimeAxis getTimeAxis();
+
+    public CoordinateReferenceSystem getHorizontalCrs();
+
+    public CalendarSystem getCalendarSystem();
 
 }

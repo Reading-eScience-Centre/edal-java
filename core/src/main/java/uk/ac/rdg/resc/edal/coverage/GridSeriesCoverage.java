@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.geometry.GeoPosition;
 
 /**
@@ -38,9 +39,14 @@ import uk.ac.rdg.resc.edal.geometry.GeoPosition;
  * @author Jon
  */
 public interface GridSeriesCoverage
-        extends GridCoverage<GeoPosition, Record>, CompoundCoverage<GeoPosition> {
+        extends DiscreteCoverage<GeoPosition, GridCell4D, Record>, CompoundCoverage<GeoPosition> {
     
     @Override public GridSeriesDomain getDomain();
 
 
+}
+
+class Test {
+    void foo(GridSeriesCoverage cov) {
+    }
 }

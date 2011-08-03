@@ -33,9 +33,10 @@ import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
 
 /**
  * A two-dimensional {@link ReferenceableGrid} in the horizontal plane.
+ * @todo Explain that GridCoordinates are 2D.  Specify axis order?
  * @author Jon
  */
-public interface HorizontalGrid extends ReferenceableGrid<HorizontalPosition>
+public interface HorizontalGrid extends ReferenceableGrid<HorizontalPosition, GridCell2D>
 {
 
     /**

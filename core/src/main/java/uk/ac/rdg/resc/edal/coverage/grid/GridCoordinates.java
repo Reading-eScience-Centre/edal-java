@@ -42,6 +42,7 @@ import java.util.Arrays;
  * <p>This interface also defines a {@link #compareTo(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates) 
  * natural ordering} for GridCoordinates.</p>
  * @see org.opengis.coverage.grid.GridCoordinates
+ * @todo Should this be constrained to 2D?
  * @author Jon
  */
 public interface GridCoordinates extends org.opengis.coverage.grid.GridCoordinates,

@@ -26,27 +26,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
-import java.util.List;
-import org.opengis.coverage.grid.GridCoordinates;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCell;
-import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableGrid;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
 
 /**
- * A {@link DiscreteCoverage} whose values are held on a Grid.
- * @param <P> The type of object used to identify positions within the coverage's domain.
- * This may be a spatial, temporal, or combined spatiotemporal position.
- * @param <R> The type of the value returned by the coverage
+ * A cell in a two-dimensional xy grid.
  * @author Jon
  */
-public interface GridCoverage<P, R> extends DiscreteCoverage<P, GridCell<P>, R> {
-    
-    @Override public ReferenceableGrid<P> getDomain();
-    
-    
-    public R evaluate(GridCoordinates coords);
-    public List<R> evaluate(List<GridCoordinates> coords);
+public interface GridCell2D extends GridCell<HorizontalPosition> {
 
+    /** Returns the centre of the grid cell in horizontal space */
+    public HorizontalPosition getCentre();
+
+    /**
+     * Returns the footprint of this grid cell in horizontal space.
+     * @todo Create a return type
+     */
+    public Polygon getFootprint();
+    
+    public CoordinateReferenceSystem getHorizontalCrs();
 
 }
