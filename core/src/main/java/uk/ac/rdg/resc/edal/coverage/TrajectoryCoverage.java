@@ -36,7 +36,8 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
  * of positions in space and time.
  * @author Jon
  */
-public interface TrajectoryCoverage extends DiscretePointCoverage<GeoPosition, Record>, CompoundCoverage<GeoPosition> {
+public interface TrajectoryCoverage extends DiscreteCompoundCoverage<GeoPosition, GeoPosition>
+{
 
     @Override
     public TrajectoryDomain getDomain();

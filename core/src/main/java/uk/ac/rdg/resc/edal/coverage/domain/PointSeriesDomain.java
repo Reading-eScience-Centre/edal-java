@@ -38,7 +38,7 @@ import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
  * The domain of a {@link PointSeriesCoverage}: a set of time instants.
  * @author Jon
  */
-public interface PointSeriesDomain extends DiscretePointDomain<TimePosition>
+public interface PointSeriesDomain extends DiscreteDomain<TimePosition, TimePosition>
 {
     /**
      * Returns the calendar system used to interpret time fields.
@@ -47,8 +47,8 @@ public interface PointSeriesDomain extends DiscretePointDomain<TimePosition>
 
     /**
      * Returns the list of time coordinate values that comprise this domain,
-     * in the domain's {@link #getCalendarSystem() calendar system}.  The values will be
-     * in ascending order of time.
+     * in the domain's {@link #getCalendarSystem() calendar system}.  The values
+     * will be in ascending order of time.
      */
     @Override
     public List<TimePosition> getDomainObjects();

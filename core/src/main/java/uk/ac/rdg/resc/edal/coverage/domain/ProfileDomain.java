@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
+import java.util.List;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
@@ -36,7 +37,7 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  * The domain of a {@link ProfileCoverage}: a set of vertical positions.
  * @author Jon
  */
-public interface ProfileDomain extends DiscretePointDomain<VerticalPosition>
+public interface ProfileDomain extends DiscreteDomain<VerticalPosition, VerticalPosition>
 {
     /**
      * Returns the vertical coordinate reference system used to reference
@@ -44,4 +45,14 @@ public interface ProfileDomain extends DiscretePointDomain<VerticalPosition>
      */
     public VerticalCrs getVerticalCrs();
 
+    /**
+     * <p>Gets the list of coordinate values, all of which are expressed in the
+     * domain's {@link #getVerticalCrs() vertical coordinate reference system}.</p>
+     * <p>This may be more convenient to use than {@link #getDomainObjects()}
+     * in many cases, but contains the same information, in the same order.</p>
+     * @return the list of coordinate values
+     */
+    public List<Double> getZValues();
+
 }
+

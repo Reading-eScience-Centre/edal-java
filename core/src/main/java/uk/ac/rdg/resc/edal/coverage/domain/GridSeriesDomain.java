@@ -36,6 +36,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
  * The domain of a GridSeriesFeature, modelled as a composition of a horizontal
@@ -53,6 +54,8 @@ public interface GridSeriesDomain extends ReferenceableGrid<GeoPosition, GridCel
     public TimeAxis getTimeAxis();
 
     public CoordinateReferenceSystem getHorizontalCrs();
+
+    public VerticalCrs getVerticalCrs();
 
     public CalendarSystem getCalendarSystem();
 

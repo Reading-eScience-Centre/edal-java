@@ -37,7 +37,7 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * record many values at the same time.</p>
  * @author Jon
  */
-public interface PointSeriesCoverage extends DiscretePointCoverage<TimePosition, Record>, CompoundCoverage<TimePosition>
+public interface PointSeriesCoverage extends DiscreteCompoundCoverage<TimePosition, TimePosition>
 {
 
     @Override public PointSeriesDomain getDomain();

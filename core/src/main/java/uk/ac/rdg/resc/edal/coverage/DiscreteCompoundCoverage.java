@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,25 +26,24 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.domain;
+package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.List;
-import uk.ac.rdg.resc.edal.coverage.DiscretePointCoverage;
 
 /**
- * <p>A {@link DiscreteDomain} that consists of a finite number of infinitesimal
- * points.  The domain objects are therefore of the same type as the object
- * used to identify positions within the domain.  This is the domain of a
- * {@link DiscretePointCoverage}.</p>
- * <p>A typical implementation might use
- * {@link #getDomainObjects()}{@link List#contains(java.lang.Object) .contains()}
- * to implement the {@link #contains(java.lang.Object)} operation, and
- * {@link #getDomainObjects()}{@link List#indexOf(java.lang.Object) .indexOf()}
- * to implement {@link #findIndexOf(java.lang.Object)}.</p>
- * @param <P> The type of the domain object and the objects used to define
- * positions within the domain
+ * <p>A Coverage that is both a {@link DiscreteCoverage} and a
+ * {@link CompoundCoverage}.  Hence the name.<p>
+ *
+ * @param <P> The type of object used to identify positions within the coverage's domain.
+ * This may be a spatial, temporal, or combined spatiotemporal position.
+ * @param <DO> The type of domain object
  * @author Jon
  */
-public interface DiscretePointDomain<P> extends DiscreteDomain<P, P>
+public interface DiscreteCompoundCoverage<P, DO>
+        extends DiscreteCoverage<P, DO, Record>, CompoundCoverage<P>
 {
+    /**
+     * Returns a list of values for the given member name.
+     */
+    public List<?> getValues(String memberName);
 }

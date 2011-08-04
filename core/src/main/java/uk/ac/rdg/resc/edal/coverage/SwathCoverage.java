@@ -39,7 +39,7 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
  * equivalent to a GroundPixel.  Represent this as a subclass?
  * @author Jon
  */
-public interface SwathCoverage extends DiscreteCoverage<GeoPosition, GroundPixel, Record>, CompoundCoverage<GeoPosition>{
+public interface SwathCoverage extends DiscreteCompoundCoverage<GeoPosition, GroundPixel> {
 
     @Override
     public SwathDomain getDomain();

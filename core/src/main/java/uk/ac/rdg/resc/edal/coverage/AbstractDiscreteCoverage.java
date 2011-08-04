@@ -65,11 +65,12 @@ public abstract class AbstractDiscreteCoverage<P, DO, R> implements DiscreteCove
         final R value = this.getValues().get(i);
 
         return new DomainObjectValuePair<DO, R>() {
-            public DO getDomainObject() { return domainObject; }
-            public R getValue() { return value; }
+            @Override public DO getDomainObject() { return domainObject; }
+            @Override public R getValue() { return value; }
         };
     }
 
+    @Override
     public DomainObjectValuePair<DO, R> locate(P pos) {
         DiscreteDomain<P, DO> domain = this.getDomain();
         int i = domain.findIndexOf(pos);
@@ -77,16 +78,20 @@ public abstract class AbstractDiscreteCoverage<P, DO, R> implements DiscreteCove
         return this.getDvp(i);
     }
 
+    @Override
     public List<DomainObjectValuePair<DO, R>> list() {
         return this.dovpList;
     }
 
+    @Override
     public int size() { return this.getDomain().size(); }
 
+    @Override
     public boolean isDefinedAt(P pos) {
         return this.getDomain().contains(pos);
     }
 
+    @Override
     public R evaluate(P pos) {
         int i = this.getDomain().findIndexOf(pos);
         if (i < 0) return null;

@@ -40,7 +40,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
  * time.
  * @author Jon
  */
-public interface TrajectoryDomain extends DiscretePointDomain<GeoPosition>
+public interface TrajectoryDomain extends DiscreteDomain<GeoPosition, GeoPosition>
 {
     /**
      * The positions in space and time that comprise the domain, in ascending

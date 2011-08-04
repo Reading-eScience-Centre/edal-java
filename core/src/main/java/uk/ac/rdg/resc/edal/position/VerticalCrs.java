@@ -34,6 +34,7 @@ import uk.ac.rdg.resc.edal.Unit;
  * <p>A vertical coordinate reference system.</p>
  * <p>We don't use GeoAPI's VerticalCRS class here as we need to incorporate
  * pressure and dimensionless coordinates.</p>
+ * @todo Datum?
  */
 public interface VerticalCrs {
 
