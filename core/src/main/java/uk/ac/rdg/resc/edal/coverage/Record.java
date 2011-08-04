@@ -36,8 +36,8 @@ public interface Record {
     
     /**
      * <p>Gets the value of the given coverage member..</p>
-     * <p>This is called locate() in GeoAPI - I don't know why (presumably this
-     * reflects the standard, but it seems like an odd name).</p>
+     * <p><i>This is called locate() in GeoAPI - I don't know why (presumably this
+     * reflects the standard, but it seems like an odd name).</i></p>
      * @param memberName The name of a member of this record as provided by
      * the Coverage's {@link CompoundCoverage#getMemberNames() set of member
      * names}.
