@@ -32,7 +32,7 @@ import java.util.List;
 import org.opengis.coverage.grid.GridCoordinates;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
  * A two-dimensional grid that returns single values for points in its domain.

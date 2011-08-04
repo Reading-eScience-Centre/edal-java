@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage.domain;
 
 import uk.ac.rdg.resc.edal.geometry.Polygon;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A part of a {@link SwathDomain}, consisting of a polygon in the horizontal

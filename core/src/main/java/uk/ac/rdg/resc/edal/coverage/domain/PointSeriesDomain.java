@@ -30,8 +30,8 @@ package uk.ac.rdg.resc.edal.coverage.domain;
 
 import uk.ac.rdg.resc.edal.Extent;
 import java.util.List;
-import uk.ac.rdg.resc.edal.time.CalendarSystem;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 
 /**

@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
  * A two-dimensional {@link ReferenceableGrid} in the horizontal plane.

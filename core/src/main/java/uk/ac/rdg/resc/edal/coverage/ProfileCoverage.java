@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * <p>A Coverage that contains values for a vertical profile of data</p>

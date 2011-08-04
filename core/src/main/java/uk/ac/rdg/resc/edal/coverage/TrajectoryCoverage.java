@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import uk.ac.rdg.resc.edal.coverage.domain.TrajectoryDomain;
-import uk.ac.rdg.resc.edal.geometry.GeoPosition;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * A {@link DiscretePointCoverage} that represents a trajectory, i.e. a list

@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.geometry;
+package uk.ac.rdg.resc.edal.position;
 
 import org.opengis.referencing.crs.VerticalCRS;
 

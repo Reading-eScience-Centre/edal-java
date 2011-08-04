@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.time;
+package uk.ac.rdg.resc.edal.position;
 
 /**
  * Calendar system used to interpret dates and times.

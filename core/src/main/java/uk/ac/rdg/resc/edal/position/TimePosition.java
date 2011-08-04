@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.time;
+package uk.ac.rdg.resc.edal.position;
 
 /**
  * <p>Identifies a point in time.  A new type is required here because (1) intrinsic

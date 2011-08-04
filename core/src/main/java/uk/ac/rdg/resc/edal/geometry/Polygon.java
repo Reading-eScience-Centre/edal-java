@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.geometry;
 
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.Domain;

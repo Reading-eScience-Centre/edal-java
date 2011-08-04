@@ -30,7 +30,7 @@ package uk.ac.rdg.resc.edal.coverage;
 
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
-import uk.ac.rdg.resc.edal.geometry.GeoPosition;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * A multidimensional grid.

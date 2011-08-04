@@ -31,8 +31,8 @@ package uk.ac.rdg.resc.edal.coverage.domain;
 import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.coverage.SwathCoverage;
-import uk.ac.rdg.resc.edal.geometry.GeoPosition;
-import uk.ac.rdg.resc.edal.time.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.CalendarSystem;
 
 /**
  * The domain of a {@link SwathCoverage}: a set of ground pixels.  Vertical

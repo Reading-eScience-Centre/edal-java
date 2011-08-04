@@ -28,8 +28,8 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import uk.ac.rdg.resc.edal.time.CalendarSystem;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A time axis.

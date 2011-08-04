@@ -34,8 +34,8 @@ import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.geometry.GeoPosition;
-import uk.ac.rdg.resc.edal.time.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.CalendarSystem;
 
 /**
  * The domain of a GridSeriesFeature, modelled as a composition of a horizontal

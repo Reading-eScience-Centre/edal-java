@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * <p>A Coverage that contains values for a timeseries of data at a fixed point

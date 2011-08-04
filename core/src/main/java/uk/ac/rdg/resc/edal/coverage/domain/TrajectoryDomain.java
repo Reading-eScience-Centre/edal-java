@@ -32,8 +32,8 @@ import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.VerticalCRS;
 import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
-import uk.ac.rdg.resc.edal.geometry.GeoPosition;
-import uk.ac.rdg.resc.edal.time.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.CalendarSystem;
 
 /**
  * The domain of a {@link TrajectoryCoverage}: a set of positions in space and

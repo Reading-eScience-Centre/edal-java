@@ -30,7 +30,7 @@ package uk.ac.rdg.resc.edal.coverage;
 
 import uk.ac.rdg.resc.edal.coverage.domain.GroundPixel;
 import uk.ac.rdg.resc.edal.coverage.domain.SwathDomain;
-import uk.ac.rdg.resc.edal.geometry.GeoPosition;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * A {@link DiscreteCoverage} that represents a swath measurement, i.e. a collection

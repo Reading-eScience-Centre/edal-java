@@ -30,11 +30,11 @@ package uk.ac.rdg.resc.edal.coverage.grid;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.geometry.GeoPosition;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
-import uk.ac.rdg.resc.edal.time.CalendarSystem;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A cell in a (potentially) four-dimensional grid.

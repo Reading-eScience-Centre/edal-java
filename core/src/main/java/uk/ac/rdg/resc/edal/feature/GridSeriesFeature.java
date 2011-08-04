@@ -32,7 +32,7 @@ import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.geometry.GeoPosition;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * Represents data held on a multidimensional grid

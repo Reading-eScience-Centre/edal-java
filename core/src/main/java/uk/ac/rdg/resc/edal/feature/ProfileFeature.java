@@ -30,9 +30,9 @@ package uk.ac.rdg.resc.edal.feature;
 
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
 import uk.ac.rdg.resc.edal.coverage.Record;
-import uk.ac.rdg.resc.edal.geometry.HorizontalPosition;
-import uk.ac.rdg.resc.edal.geometry.VerticalPosition;
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A measurement of a vertical profile at a point

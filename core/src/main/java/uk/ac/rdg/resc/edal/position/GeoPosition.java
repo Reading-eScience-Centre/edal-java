@@ -26,9 +26,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.geometry;
+package uk.ac.rdg.resc.edal.position;
 
-import uk.ac.rdg.resc.edal.time.TimePosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * <p>Defines the position of a point in four-dimensional space and time.</p>
