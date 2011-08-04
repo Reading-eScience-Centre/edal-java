@@ -28,18 +28,21 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
+
 /**
- * A vertical axis.
- * See ElevationAxis in ncWMS.cdm package
+ * A vertical axis in a ReferenceableGrid.
  * @author Jon
  */
 public interface VerticalAxis extends ReferenceableAxis<Double> {
 
-    // Or could use GeoAPI's AxisDirection?
-    public enum PositiveDirection { UP, DOWN }
+    /** Returns the vertical coordinate reference system for coordinates on this axis */
+    public VerticalCrs getVerticalCrs();
 
-    // Placeholder awaiting further information
-    // Needs a vertical CRS at least
-
-    public PositiveDirection getPositiveDirection();
+    /**
+     * {@inheritDoc}
+     * <p>Note that this does <i>not</i> have the same meaning as {@code getVerticalCrs().getPositiveDirection()}.</p>
+     */
+    @Override
+    public boolean isAscending();
 }

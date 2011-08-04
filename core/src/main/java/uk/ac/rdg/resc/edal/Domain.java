@@ -29,15 +29,15 @@
 package uk.ac.rdg.resc.edal;
 
 /**
- * <p>A set of positions for which a {@link Function} is defined.</p>
- * @param <P> The type of object used to identify positions within this domain
+ * <p>A set of values for which a {@link Function} is defined.</p>
+ * @param <A> The type of object used as input to the function
  * @author Jon
  */
-public interface Domain<P>
+public interface Domain<A>
 {
     /**
      * Returns true if the given position is contained within this domain.
      */
-    public boolean contains(P position);
+    public boolean contains(A position);
 
 }

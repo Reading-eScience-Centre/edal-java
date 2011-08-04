@@ -28,18 +28,16 @@
 
 package uk.ac.rdg.resc.edal;
 
-import uk.ac.rdg.resc.edal.Domain;
-
 /**
  * <p>Defines a contiguous domain that is defined by "low" and "high" values.
  * Any value between or including these values is considered part of the domain.</p>
- * @param <P> The type of object used to identify positions within this extent.
+ * @param <A> The type of object used to identify values within this extent.
  * @todo Would Range be a better name here?
  * @author Jon
  */
-public interface Extent<P extends Comparable<? super P>> extends Domain<P>
+public interface Extent<A extends Comparable<? super A>> extends Domain<A>
 {
-    public P getLow();
+    public A getLow();
 
-    public P getHigh();
+    public A getHigh();
 }

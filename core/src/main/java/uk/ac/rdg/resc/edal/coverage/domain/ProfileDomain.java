@@ -28,8 +28,8 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
-import org.opengis.referencing.crs.VerticalCRS;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
@@ -42,6 +42,6 @@ public interface ProfileDomain extends DiscretePointDomain<VerticalPosition>
      * Returns the vertical coordinate reference system used to reference
      * the coordinate values.
      */
-    public VerticalCRS getVerticalCrs();
+    public VerticalCrs getVerticalCrs();
 
 }

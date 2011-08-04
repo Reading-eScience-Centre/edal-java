@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,31 +28,43 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-import org.opengis.geometry.DirectPosition;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.Unit;
 
 /**
- * A direct position within a one-dimensional coordinate reference system
- * @author Jon
+ * <p>A vertical coordinate reference system.</p>
+ * <p>We don't use GeoAPI's VerticalCRS class here as we need to incorporate
+ * pressure and dimensionless coordinates.</p>
  */
-public interface OneDimensionalPosition extends DirectPosition {
-    
-    /** Returns a one-dimensional coordinate reference system */
-    @Override public CoordinateReferenceSystem getCoordinateReferenceSystem();
+public interface VerticalCrs {
 
-    /** Returns 1 */
-    @Override public int getDimension();
 
-    /**
-     * Returns an array with a single element containing the coordinate value
-     */
-    @Override public double[] getCoordinate();
+    // Or could use GeoAPI's AxisDirection?
+    public enum PositiveDirection { UP, DOWN }
+
+    public Unit getUnits();
 
     /**
-     * Returns the ordinate at the specified dimension.
-     * @param dimension - The dimension: must be 0
-     * @return The coordinate at the specified dimension
-     * @throws IndexOutOfBoundsException if {@code index != 0}
+     * Return true if this axis has units of pressure.  If this is true
+     * then the positive direction must be DOWN.
      */
-    @Override public double getOrdinate(int index);
+    public boolean isPressure();
+
+    /**
+     * <p>Return true if this is a dimensionless (e.g. sigma or terrain-following)
+     * coordinate system.  If this is true then the units are irrelevant, and
+     * isPressure() will return false.</p>
+     * <p>Future APIs will need to allow conversions between dimensionless and
+     * dimensional coordinates, which will require more information.  (The conversion
+     * can be performed using existing routines, e.g. in Java-NetCDF.)  However,
+     * the current purpose of EDAL is not to perform the conversion but to provide
+     * client code with enough information to decide what to do.</p>
+     * @see http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.5/cf-conventions.html#dimensionless-v-coord
+     */
+    public boolean isDimensionless();
+
+    /**
+     * Indicates whether coordinate values increase upward or downward.
+     */
+    public PositiveDirection getPositiveDirection();
+
 }

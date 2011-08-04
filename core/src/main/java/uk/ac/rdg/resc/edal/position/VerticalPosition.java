@@ -28,15 +28,11 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-import org.opengis.referencing.crs.VerticalCRS;
-
 /**
  * Defines the position of a point in vertical space.
- * @todo Not sure if VerticalCRS is going to be a convenient data type.  Do we
- * need to define our own version of this?
  * @author Jon
  */
-public interface VerticalPosition extends OneDimensionalPosition {
+public interface VerticalPosition {
 
     /** Returns the vertical coordinate of this position, equivalent to getOrdinate(0) */
     public double getZ();
@@ -45,6 +41,6 @@ public interface VerticalPosition extends OneDimensionalPosition {
      * Returns a vertical coordinate reference system.
      * @return a vertical coordinate reference system.
      */
-    @Override public VerticalCRS getCoordinateReferenceSystem();
+    public VerticalCrs getCoordinateReferenceSystem();
 
 }

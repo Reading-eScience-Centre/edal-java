@@ -28,8 +28,6 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-import uk.ac.rdg.resc.edal.position.TimePosition;
-
 /**
  * <p>Defines the position of a point in four-dimensional space and time.</p>
  * @author Jon

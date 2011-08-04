@@ -30,10 +30,10 @@ package uk.ac.rdg.resc.edal.coverage.domain;
 
 import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.crs.VerticalCRS;
 import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
  * The domain of a {@link TrajectoryCoverage}: a set of positions in space and
@@ -53,7 +53,7 @@ public interface TrajectoryDomain extends DiscretePointDomain<GeoPosition>
      * Returns the vertical coordinate reference system used to reference
      * the {@link #getDomainObjects() positions}.
      */
-    public VerticalCRS getVerticalCrs();
+    public VerticalCrs getVerticalCrs();
 
     /**
      * Returns the horizontal coordinate reference system used to reference
