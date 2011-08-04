@@ -47,7 +47,7 @@ public interface PointSeriesDomain extends DiscretePointDomain<TimePosition>
 
     /**
      * Returns the list of time coordinate values that comprise this domain,
-     * in the domain's {@link #getChronology() chronology}.  The values will be
+     * in the domain's {@link #getCalendarSystem() calendar system}.  The values will be
      * in ascending order of time.
      */
     @Override

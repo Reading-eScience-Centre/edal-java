@@ -43,10 +43,7 @@ public interface GridSeriesCoverage
     
     @Override public GridSeriesDomain getDomain();
 
-
+    // TODO: not sure this the best signature - what about GridCoordinates?
+    public Record evaluate(int tindex, int zindex, int yindex, int xindex);
 }
 
-class Test {
-    void foo(GridSeriesCoverage cov) {
-    }
-}

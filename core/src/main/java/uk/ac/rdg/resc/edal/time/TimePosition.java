@@ -36,6 +36,10 @@ package uk.ac.rdg.resc.edal.time;
  * classes.</p>
  * <p>Defines a natural ordering that is consistent with equals.</p>
  * @todo Methods could be name-compatible with Joda.
+ * @todo Include a precision argument?  It will be common for times to be known
+ * only to the level of a certain field (second, day, month, year etc).  This
+ * may help with creating sensible user interfaces that don't imply spurious
+ * precision.
  * @author Jon
  */
 public interface TimePosition extends Comparable<TimePosition> {
@@ -62,6 +66,11 @@ public interface TimePosition extends Comparable<TimePosition> {
     public int getMillisecondOfSecond();
 
     /**
+     * Gets the offset from GMT in <b>minutes</b>.
+     */
+    public int getTimeZoneOffset();
+
+    /**
      * Returns the calendar system in which the field values and temporal datum
      * are to be interpreted.
      * @return the calendar system in which the field values and temporal datum
@@ -83,6 +92,8 @@ public interface TimePosition extends Comparable<TimePosition> {
      * @return a negative integer if this object is before the other object on the
      * timeline, a positive integer if it is after the other object, or zero
      * if they represent the same point.
+     * @throws IllegalArgumentException if {@code t} is not in the same calendar
+     * system as this object.
      */
     @Override
     public int compareTo(TimePosition t);

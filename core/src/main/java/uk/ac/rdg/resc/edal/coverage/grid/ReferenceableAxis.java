@@ -84,6 +84,7 @@ public interface ReferenceableAxis<P extends Comparable<? super P>> extends Grid
      * @param position
      * @return the index of the given coordinate value, or -1 if not found.
      */
+    @Override
     public int findIndexOf(P position);
 
     /**
@@ -93,7 +94,7 @@ public interface ReferenceableAxis<P extends Comparable<? super P>> extends Grid
      * last set of coordinate bounds (but beware that values along the axis might
      * <i>decrease</i>, not increase).
      */
-    public Extent<P> getExtent();
+    public Extent<P> getCoordinateExtent();
 
     /**
      * Returns the {@link CoordinateSystemAxis} to which the points on the
