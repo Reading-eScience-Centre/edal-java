@@ -58,6 +58,16 @@ public abstract class AbstractDiscreteCompoundCoverage<P, DO>
         public Object getValue(String memberName) {
             return this.map.get(memberName);
         }
+
+        @Override
+        public Set<String> getMemberNames() {
+            return AbstractDiscreteCompoundCoverage.this.getMemberNames();
+        }
+
+        @Override
+        public RangeMetadata getRangeMetadata(String memberName) {
+            return AbstractDiscreteCompoundCoverage.this.getRangeMetadata(memberName);
+        }
     }
 
     private final List<Record> recordList = new AbstractList<Record>() {

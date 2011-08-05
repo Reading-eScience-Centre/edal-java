@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
+import java.util.Set;
+
 /**
  * Contains the data values returned by a {@link CompoundCoverage}.
  * @author Jon
@@ -48,5 +50,24 @@ public interface Record {
      * member name
      */
     public Object getValue(String memberName);
+
+    /**
+     * Returns a Set of unique identifiers, one for each member of the coverage.
+     * These identifiers are not (necessarily) intended to be human-readable.
+     * @return a Set of unique identifiers, one for each member of the coverage.
+     */
+    public Set<String> getMemberNames();
+
+    /**
+     * Returns a description of the values returned by the coverage (including
+     * their units, runtime type and the phenomenon they represent) for a particular
+     * member.
+     * @param memberName The unique identifier of the member
+     * @return a description of the values returned by the coverage for a particular
+     * member.
+     * @throws IllegalArgumentException if {@code memberName} is not present in
+     * the {@link #getMemberNames() set of member names}.
+     */
+    public RangeMetadata getRangeMetadata(String memberName);
 
 }
