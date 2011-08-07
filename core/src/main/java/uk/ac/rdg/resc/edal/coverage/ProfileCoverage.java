@@ -33,9 +33,11 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * <p>A Coverage that contains values for a vertical profile of data</p>
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @author Jon
  */
-public interface ProfileCoverage extends DiscreteCompoundCoverage<VerticalPosition, VerticalPosition>
+public interface ProfileCoverage<R> extends DiscreteCoverage<VerticalPosition, VerticalPosition, R>
 {
     @Override
     public ProfileDomain getDomain();

@@ -28,22 +28,57 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * <p>A Coverage that is both a {@link DiscreteCoverage} and a
- * {@link CompoundCoverage}.  Hence the name.<p>
- *
+ * <p>Partial implementation of a simple {@link DiscreteCoverage}, providing default
+ * implementations of some methods.</p>
  * @param <P> The type of object used to identify positions within the coverage's domain.
  * This may be a spatial, temporal, or combined spatiotemporal position.
  * @param <DO> The type of domain object
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @author Jon
  */
-public interface DiscreteCompoundCoverage<P, DO>
-        extends DiscreteCoverage<P, DO, Record>, CompoundCoverage<P>
+public abstract class AbstractDiscreteSimpleCoverage<P, DO, R>
+        extends AbstractDiscreteCoverage<P, DO, R>
 {
-    /**
-     * Returns a list of values for the given member name.
-     */
-    public List<?> getValues(String memberName);
+
+    private static final Set<String> MEMBER_NAMES = new HashSet<String>();
+
+    static {
+        MEMBER_NAMES.add(null);
+    }
+
+    @Override
+    public final boolean isCompound() { return false; }
+
+    @Override
+    public final List<?> getValues(String memberName) {
+        if (memberName == null) return this.getValues();
+        throw new IllegalArgumentException("For a simple coverage, memberName must be null");
+    }
+
+    @Override
+    public final Set<String> getMemberNames() { return MEMBER_NAMES; }
+
+    @Override
+    public final RangeMetadata getRangeMetadata(String memberName) {
+        if (memberName == null) return this.getRangeMetadata();
+        throw new IllegalArgumentException("For a simple coverage, memberName must be null");
+    }
+
+    protected abstract RangeMetadata getRangeMetadata();
+
+    @Override
+    public final R evaluate(P pos, Set<String> memberNames) {
+        if (memberNames == null || memberNames.equals(MEMBER_NAMES)) {
+            return this.evaluate(pos);
+        }
+        throw new IllegalArgumentException("For a simple coverage, memberNames "
+                + "must be null or a set containing a single null element");
+    }
+
 }

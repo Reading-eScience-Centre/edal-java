@@ -38,7 +38,8 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
  * @param <P> The type of object used to identify positions within the coverage's domain.
  * This may be a spatial, temporal, or combined spatiotemporal position.
  * @param <DO> The type of domain object
- * @param <R> The type of the value returned by the coverage
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @author Jon
  */
 public abstract class AbstractDiscreteCoverage<P, DO, R> implements DiscreteCoverage<P, DO, R>

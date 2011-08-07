@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
+import java.util.List;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
@@ -35,11 +36,24 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * <p>A Coverage that contains values for a timeseries of data at a fixed point
  * in space.  We model this as a {@link CompoundCoverage} since usually instruments
  * record many values at the same time.</p>
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @author Jon
  */
-public interface PointSeriesCoverage extends DiscreteCompoundCoverage<TimePosition, TimePosition>
+public interface PointSeriesCoverage<R> extends DiscreteCoverage<TimePosition, TimePosition, R>
 {
 
     @Override public PointSeriesDomain getDomain();
 
+}
+
+class Test {
+    void foo(PointSeriesCoverage<Float> cov) {
+        if (cov.isCompound()) {
+            for (String member : cov.getMemberNames()) {
+                RangeMetadata meta = cov.getRangeMetadata(member);
+                List<?> values = cov.getValues(member);
+            }
+        }
+    }
 }

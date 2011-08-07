@@ -36,9 +36,11 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A measurement of a vertical profile at a point
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @author Jon
  */
-public interface ProfileFeature extends Feature<VerticalPosition, Record> {
+public interface ProfileFeature<R> extends Feature<VerticalPosition, R> {
 
     /**
      * Gets the horizontal location of this profile feature.
@@ -53,6 +55,6 @@ public interface ProfileFeature extends Feature<VerticalPosition, Record> {
     public TimePosition getTime();
 
     @Override
-    public ProfileCoverage getCoverage();
+    public ProfileCoverage<R> getCoverage();
 
 }

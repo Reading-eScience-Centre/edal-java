@@ -39,17 +39,18 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * Objects of this type can be rendered simply into maps (e.g. for WMS GetMap
  * operations), and may commonly be created by extracting data from a larger
  * GridSeriesFeature.
- * @param <V> The type of values (usually numeric) returned by the coverage
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @author Jon
  */
-public interface GridCoverage2D<V>
-        extends DiscreteCoverage<HorizontalPosition, GridCell2D, V>, SimpleCoverage<HorizontalPosition, V> {
+public interface GridCoverage2D<R>
+        extends DiscreteCoverage<HorizontalPosition, GridCell2D, R> {
     
     @Override public HorizontalGrid getDomain();
 
 
-    public V evaluate(GridCoordinates coords);
-    public List<V> evaluate(List<GridCoordinates> coords);
+    public R evaluate(GridCoordinates coords);
+    public List<R> evaluate(List<GridCoordinates> coords);
 
 
 }

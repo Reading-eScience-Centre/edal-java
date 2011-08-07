@@ -35,11 +35,13 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 /**
  * A {@link DiscreteCoverage} that represents a swath measurement, i.e. a collection
  * of {@link GroundPixel}s swept out over a period of time.
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @todo Swaths might also be represented as a grid, each of which has a footprint
  * equivalent to a GroundPixel.  Represent this as a subclass?
  * @author Jon
  */
-public interface SwathCoverage extends DiscreteCompoundCoverage<GeoPosition, GroundPixel> {
+public interface SwathCoverage<R> extends DiscreteCoverage<GeoPosition, GroundPixel, R> {
 
     @Override
     public SwathDomain getDomain();

@@ -39,7 +39,8 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
  * @param <P> The type of object used to identify positions within the coverage's domain.
  * This may be a spatial, temporal, or combined spatiotemporal position.
  * @param <DO> The type of domain object
- * @param <R> The type of the value returned by the coverage
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @author Jon
  */
 public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R>
@@ -55,6 +56,15 @@ public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R>
      * @return the list of objects that comprise this coverage's range.
      */
     public List<R> getValues();
+
+    /**
+     * Gets the list of values for the given coverage member.
+     * @param memberName The identifier from the {@link #getMemberNames() set of
+     * member names}.  For a simple coverage only {@code null} is a valid argument,
+     * in which case this method behaves identically to {@link #getValues()}.
+     * @return
+     */
+    public List<?> getValues(String memberName);
 
     /**
      * <p>Returns the domain object and its associated value corresponding with

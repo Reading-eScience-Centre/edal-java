@@ -36,13 +36,15 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * Represents data held on a multidimensional grid
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  */
-public interface GridSeriesFeature extends Feature<GeoPosition, Record>
+public interface GridSeriesFeature<R> extends Feature<GeoPosition, R>
 {
 
     @Override
-    public GridSeriesCoverage getCoverage();
+    public GridSeriesCoverage<R> getCoverage();
 
-    public ProfileFeature extractProfileFeature(ProfileDomain profDomain);
-    public PointSeriesFeature extractPointSeriesFeature(PointSeriesDomain pointSeriesDomain);
+    public ProfileFeature<R> extractProfileFeature(ProfileDomain profDomain);
+    public PointSeriesFeature<R> extractPointSeriesFeature(PointSeriesDomain pointSeriesDomain);
 }

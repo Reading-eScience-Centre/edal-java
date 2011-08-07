@@ -34,16 +34,18 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * A multidimensional grid.
+ * @param <R> The type of the value returned by the coverage; for a compound
+ * coverage this type will be {@link Record}.
  * @todo ncWMS Layer types are more like SimpleCoverages.  Should GridSeriesCoverages
  * be SimpleCoverages too?
  * @author Jon
  */
-public interface GridSeriesCoverage
-        extends DiscreteCoverage<GeoPosition, GridCell4D, Record>, CompoundCoverage<GeoPosition> {
+public interface GridSeriesCoverage<R>
+        extends DiscreteCoverage<GeoPosition, GridCell4D, R> {
     
     @Override public GridSeriesDomain getDomain();
 
     // TODO: not sure this the best signature - what about GridCoordinates?
-    public Record evaluate(int tindex, int zindex, int yindex, int xindex);
+    public R evaluate(int tindex, int zindex, int yindex, int xindex);
 }
 

@@ -35,8 +35,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * <p>Partial implementation of a {@link DiscreteCompoundCoverage}, providing default
- * implementations of some methods.</p>
+ * <p>Partial implementation of a compound {@link DiscreteCoverage}, providing
+ * default implementations of some methods.</p>
  * @param <P> The type of object used to identify positions within the coverage's domain.
  * This may be a spatial, temporal, or combined spatiotemporal position.
  * @param <DO> The type of domain object
@@ -44,7 +44,6 @@ import java.util.Set;
  */
 public abstract class AbstractDiscreteCompoundCoverage<P, DO>
         extends AbstractDiscreteCoverage<P, DO, Record>
-        implements DiscreteCompoundCoverage<P, DO>
 {
     private final class SimpleRecord implements Record {
 
@@ -122,5 +121,6 @@ public abstract class AbstractDiscreteCompoundCoverage<P, DO>
     }
 
     @Override
-    public final Class<Record> getRangeType() { return Record.class; }
+    public final boolean isCompound() { return true; }
+
 }
