@@ -28,23 +28,25 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.Record;
-import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
- * Represents data held on a multidimensional grid
+ * Represents data held on a multidimensional grid.
  * @param <R> The type of the value returned by the coverage; for a compound
  * coverage this type will be {@link Record}.
  */
-public interface GridSeriesFeature<R> extends Feature<GeoPosition, R>
+public interface GridSeriesFeature<R> extends Feature
 {
 
     @Override
     public GridSeriesCoverage<R> getCoverage();
 
-    public ProfileFeature<R> extractProfileFeature(ProfileDomain profDomain);
-    public PointSeriesFeature<R> extractPointSeriesFeature(PointSeriesDomain pointSeriesDomain);
+    public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition t);
+    public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos,
+            VerticalPosition z, Extent<TimePosition> tRange);
 }

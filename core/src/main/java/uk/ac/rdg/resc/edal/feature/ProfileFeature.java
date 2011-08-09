@@ -31,7 +31,6 @@ package uk.ac.rdg.resc.edal.feature;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
 import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
@@ -40,7 +39,7 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * coverage this type will be {@link Record}.
  * @author Jon
  */
-public interface ProfileFeature<R> extends Feature<VerticalPosition, R> {
+public interface ProfileFeature<R> extends Feature {
 
     /**
      * Gets the horizontal location of this profile feature.

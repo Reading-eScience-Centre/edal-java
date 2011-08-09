@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2009 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,43 +28,23 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
-import uk.ac.rdg.resc.edal.coverage.Coverage;
+import java.util.Collection;
+import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
- * <p>Superclass for all Feature types.</p>
+ * A collection of ProfileFeatures.
  * @author Jon
- * @todo How best to represent metadata?
  */
-public interface Feature
+public interface ProfileFeatureCollection extends FeatureCollection<ProfileFeature>
 {
-    
-    /**
-     * Gets the {@link FeatureCollection} to which this feature belongs.  If this
-     * feature does not belong to a collection, this will return null.
-     * @return
-     */
-    public FeatureCollection<? extends Feature> getFeatureCollection();
-    
-    /**
-     * Gets an identifier that is unique within the {@link #getFeatureCollection() 
-     * feature collection to which this feature belongs}.  Must never be null.
-     */
-    public String getId();
-    
-    /**
-     * Gets a human-readable short string that identifies this feature.
-     * Not enforced to be unique.
-     */
-    public String getName();
-    
-    /**
-     * Gets a (perhaps lengthy) human-readable description of this feature.
-     * @return
-     */
-    public String getDescription();
 
     /**
-     * Gets the measurement values
+     * Returns all the profiles in the collection whose horizontal position lies
+     * within the given polygon, and which were measured within the given time
+     * range.
      */
-    public Coverage<?, ?> getCoverage();
+    public Collection<ProfileFeature> findProfiles(Polygon polygon, Extent<TimePosition> tRange);
+    
 }

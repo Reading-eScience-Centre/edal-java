@@ -32,7 +32,6 @@ import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A measurement of a time series at a point
@@ -40,7 +39,7 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * coverage this type will be {@link Record}.
  * @author Jon
  */
-public interface PointSeriesFeature<R> extends Feature<TimePosition, R> {
+public interface PointSeriesFeature<R> extends Feature {
 
     /**
      * Gets the horizontal location of this point series feature.
