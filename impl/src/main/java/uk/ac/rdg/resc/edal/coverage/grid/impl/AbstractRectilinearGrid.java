@@ -25,7 +25,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     protected AbstractRectilinearGrid(CoordinateReferenceSystem crs) {
         super(crs);
     }
-
+    
     @Override
     public ReferenceableAxis<Double> getAxis(int index) {
         if (index == 0)
@@ -54,7 +54,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     public GridCell2D findContainingCell(HorizontalPosition pos) {
         int xIndex = getXAxis().findIndexOf(pos.getX());
         int yIndex = getYAxis().findIndexOf(pos.getY());
-        return new GridCell2DSquare(new GridCoordinatesImpl(xIndex, yIndex),
+        return new GridCell2DRectangle(new GridCoordinatesImpl(xIndex, yIndex),
                                     getXAxis().getCoordinateBounds(xIndex).getLow(),
                                     getYAxis().getCoordinateBounds(yIndex).getLow(),
                                     getXAxis().getCoordinateBounds(xIndex).getHigh(),
@@ -81,7 +81,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         int yIMax = getYAxis().getIndexExtent().getHigh() + 1;
         for (Integer xIndex = xIMin; xIndex < xIMax; xIndex++) {
             for (Integer yIndex = yIMin; yIndex < yIMax; yIndex++) {
-                gridCells.add(new GridCell2DSquare(new GridCoordinatesImpl(xIndex, yIndex),
+                gridCells.add(new GridCell2DRectangle(new GridCoordinatesImpl(xIndex, yIndex),
                                                    getXAxis().getCoordinateBounds(xIndex).getLow(),
                                                    getYAxis().getCoordinateBounds(yIndex).getLow(),
                                                    getXAxis().getCoordinateBounds(xIndex).getHigh(),
@@ -94,10 +94,12 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
 
     @Override
     public int findIndexOf(HorizontalPosition position) {
-        // TODO Auto-generated method stub
-        return 0;
+        int xIndex = getXAxis().findIndexOf(position.getX());
+        int yIndex = getYAxis().findIndexOf(position.getY());
+        // +1 because extents are INCLUSIVE
+        int yRange = getYAxis().getIndexExtent().getHigh() + 1 - getYAxis().getIndexExtent().getLow();
+        return xIndex * yRange + yIndex;
     }
-    
 
     @Override
     public List<GridCoordinates> getGridPoints() {

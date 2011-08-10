@@ -18,7 +18,7 @@ import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
  * @author Guy Griffiths
  * 
  */
-public class Square implements Polygon {
+public class Rectangle implements Polygon {
 
     private final Double minX;
     private final Double maxX;
@@ -28,7 +28,7 @@ public class Square implements Polygon {
     private final CoordinateReferenceSystem crs;
 
     /**
-     * Instantiate the {@link Square} with the minimum and maximum bounds in
+     * Instantiate the {@link Rectangle} with the minimum and maximum bounds in
      * both directions
      * 
      * @param minX The minimum x coordinate
@@ -37,7 +37,7 @@ public class Square implements Polygon {
      * @param maxY The maximum y coordinate
      * @param crs The {@link CoordinateReferenceSystem} to which the x and y values apply
      */
-    public Square(Double minX, Double minY, Double maxX, Double maxY, CoordinateReferenceSystem crs) {
+    public Rectangle(Double minX, Double minY, Double maxX, Double maxY, CoordinateReferenceSystem crs) {
         this.minX = minX;
         this.maxX = maxX;
         this.minY = minY;

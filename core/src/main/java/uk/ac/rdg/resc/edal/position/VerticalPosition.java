@@ -32,10 +32,10 @@ package uk.ac.rdg.resc.edal.position;
  * Defines the position of a point in vertical space.
  * @author Jon
  */
-public interface VerticalPosition {
+public interface VerticalPosition extends Comparable<VerticalPosition> {
 
     /** Returns the vertical coordinate of this position, equivalent to getOrdinate(0) */
-    public double getZ();
+    public Double getZ();
 
     /**
      * Returns a vertical coordinate reference system.

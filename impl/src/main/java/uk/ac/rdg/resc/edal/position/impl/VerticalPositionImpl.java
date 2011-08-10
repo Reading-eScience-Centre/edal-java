@@ -17,7 +17,7 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  */
 public class VerticalPositionImpl implements VerticalPosition {
 
-    private final double z;
+    private final Double z;
     private final VerticalCrs crs;
 
     /**
@@ -56,8 +56,13 @@ public class VerticalPositionImpl implements VerticalPosition {
 
     /** Returns the vertical coordinate of this position */
     @Override
-    public final double getZ() {
+    public final Double getZ() {
         return z;
+    }
+
+    @Override
+    public int compareTo(VerticalPosition vPosition) {
+        return z.compareTo(vPosition.getZ());
     }
 
 }

@@ -29,12 +29,14 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A cell in a (potentially) four-dimensional grid.
@@ -55,10 +57,10 @@ public interface GridCell4D extends GridCell<GeoPosition> {
 
     public CoordinateReferenceSystem getHorizontalCrs();
 
-
     public Extent<TimePosition> getTimeExtent();
+
+    public Extent<VerticalPosition> getVerticalExtent();
 
     public CalendarSystem getCalendarSystem();
 
-    // TODO: need vertical extent too
 }
