@@ -59,7 +59,7 @@ public final class GridExtentImpl implements GridExtent {
     }
 
     /**
-     * Creates a new GridEnvelope with the given high coordinates with all low
+     * Creates a new GridExtent with the given high coordinates with all low
      * coordinates equal to zero.
      * 
      * @param high
@@ -72,7 +72,7 @@ public final class GridExtentImpl implements GridExtent {
     }
 
     /**
-     * Creates a new GridEnvelope with the given high coordinates with all low
+     * Creates a new GridExtent with the given high coordinates with all low
      * coordinates equal to zero.
      * 
      * @param highCoord1
@@ -125,19 +125,19 @@ public final class GridExtentImpl implements GridExtent {
 
     /**
      * <p>
-     * Creates a new GridEnvelopeImpl from the given GridEnvelope object. This
-     * may be used to convert a GridEnvelope object of unknown type to one of
+     * Creates a new GridExtentImpl from the given GridExtent object. This
+     * may be used to convert a GridExtent object of unknown type to one of
      * this type, perhaps to make an object that is guaranteed immutable.
      * </p>
      * <p>
-     * If {@code env} is already an instance of GridEnvelopeImpl, this method
+     * If {@code env} is already an instance of GridExtentImpl, this method
      * simply returns it: no new objects are created.
      * </p>
      * 
      * @param env
-     *            The GridEnvelope to copy.
-     * @return a GridEnvelopeImpl object containing the same information as the
-     *         provided GridEnvelope object.
+     *            The GridExtent to copy.
+     * @return a GridExtentImpl object containing the same information as the
+     *         provided GridExtent object.
      */
     public static GridExtentImpl convert(GridExtent env) {
         if (env instanceof GridExtentImpl)

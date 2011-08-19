@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.domain.impl;
+package uk.ac.rdg.resc.edal.coverage.domain.impl;
 
 import java.util.Arrays;
 import java.util.List;

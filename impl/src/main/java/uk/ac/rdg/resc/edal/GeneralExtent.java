@@ -9,8 +9,8 @@ package uk.ac.rdg.resc.edal;
  */
 public final class GeneralExtent implements Extent<Double> {
 
-    private final Double max;
     private final Double min;
+    private final Double max;
 
     /**
      * Instantiate a new {@link GeneralExtent}. This object will be immutable
@@ -21,6 +21,8 @@ public final class GeneralExtent implements Extent<Double> {
      *            the high value of the extent
      */
     public GeneralExtent(Double min, Double max) {
+        if(max < min)
+            throw new IllegalArgumentException("Minimum value must be less than maximum value");
         this.min = min;
         this.max = max;
     }
