@@ -29,12 +29,13 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A vertical axis in a ReferenceableGrid.
  * @author Jon
  */
-public interface VerticalAxis extends ReferenceableAxis<Double> {
+public interface VerticalAxis extends ReferenceableAxis<VerticalPosition> {
 
     /** Returns the vertical coordinate reference system for coordinates on this axis */
     public VerticalCrs getVerticalCrs();

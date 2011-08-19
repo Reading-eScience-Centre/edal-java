@@ -12,28 +12,43 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
+import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
 public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> implements GridCell4D {
 
     private final GridCell2D horizGridCell;
     @SuppressWarnings("unused")
     private final VerticalPosition verticalCentre;
-    private final Extent<VerticalPosition> verticalRange;
+    private final Extent<VerticalPosition> verticalExtent;
     private final int verticalIndex;
     private final TimePosition timeCentre;
-    private final Extent<TimePosition> timeRange;
+    private final Extent<TimePosition> timeExtent;
     private final int timeIndex;
 
     public GridCell4DRectangle(GridCell2D horizGridCell, VerticalPosition verticalCentre,
-            Extent<VerticalPosition> verticalRange, int verticalIndex, TimePosition timeCentre,
-            Extent<TimePosition> timeRange, int timeIndex) {
+            Extent<VerticalPosition> verticalExtent, int verticalIndex, TimePosition timeCentre,
+            Extent<TimePosition> timeExtent, int timeIndex) {
         super(horizGridCell.getGridCoordinates());
         this.horizGridCell = horizGridCell;
         this.verticalCentre = verticalCentre;
-        this.verticalRange = verticalRange;
+        this.verticalExtent = verticalExtent;
         this.verticalIndex = verticalIndex;
         this.timeCentre = timeCentre;
-        this.timeRange = timeRange;
+        this.timeExtent = timeExtent;
+        this.timeIndex = timeIndex;
+    }
+    
+    public GridCell4DRectangle(GridCell2D horizGridCell, Extent<VerticalPosition> verticalRange,
+                               int verticalIndex, Extent<TimePosition> timeRange, int timeIndex) {
+        super(horizGridCell.getGridCoordinates());
+        this.horizGridCell = horizGridCell;
+        this.verticalCentre = new VerticalPositionImpl(0.5*(verticalRange.getHigh().getZ()+verticalRange.getLow().getZ()));
+        this.verticalExtent = verticalRange;
+        this.verticalIndex = verticalIndex;
+        long meantime = (long) (0.5*(timeRange.getLow().getValue() + timeRange.getHigh().getValue()));
+        this.timeCentre = new TimePositionImpl(meantime, timeRange.getLow().getCalendarSystem(), timeRange.getLow().getTimeZoneOffset());
+        this.timeExtent = timeRange;
         this.timeIndex = timeIndex;
     }
 
@@ -59,19 +74,19 @@ public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> imp
 
     @Override
     public Extent<TimePosition> getTimeExtent() {
-        return timeRange;
+        return timeExtent;
     }
 
     @Override
     public Extent<VerticalPosition> getVerticalExtent() {
-        return verticalRange;
+        return verticalExtent;
     }
 
     @Override
     public boolean contains(GeoPosition position) {
         return (horizGridCell.contains(position.getHorizontalPosition())
-                && verticalRange.contains(position.getVerticalPosition())
-                && timeRange.contains(position.getTimePosition()));
+                && verticalExtent.contains(position.getVerticalPosition())
+                && timeExtent.contains(position.getTimePosition()));
     }
 
     @Override
