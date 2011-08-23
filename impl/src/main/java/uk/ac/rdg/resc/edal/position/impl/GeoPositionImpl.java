@@ -3,6 +3,7 @@ package uk.ac.rdg.resc.edal.position.impl;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
@@ -32,6 +33,12 @@ public class GeoPositionImpl implements GeoPosition {
     public GeoPositionImpl(HorizontalPosition hPos, VerticalPosition vPos, TimePosition tPos) {
         this.hPos = hPos;
         this.vPos = vPos;
+        this.tPos = tPos;
+    }
+
+    public GeoPositionImpl(HorizontalPosition hPos, Double vPos, VerticalCrs vCrs, TimePosition tPos) {
+        this.hPos = hPos;
+        this.vPos = new VerticalPositionImpl(vPos, vCrs);
         this.tPos = tPos;
     }
 

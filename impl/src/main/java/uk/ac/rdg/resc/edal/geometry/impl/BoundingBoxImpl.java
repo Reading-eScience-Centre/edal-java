@@ -3,6 +3,8 @@ package uk.ac.rdg.resc.edal.geometry.impl;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.impl.DirectPositionImpl;
 
@@ -30,33 +32,18 @@ public class BoundingBoxImpl extends AbstractEnvelope implements BoundingBox {
         this.maxy = envelope2d.getMaximum(1);
     }
 
-    public BoundingBoxImpl(Envelope xExtent, Envelope yExtent, CoordinateReferenceSystem crs) {
+    public BoundingBoxImpl(Extent<Double> xExtent, Extent<Double> yExtent, CoordinateReferenceSystem crs) {
+        // TODO Ditch Envelopes entirely?
         super(crs);
 
-        if (xExtent.getDimension() != 1 || yExtent.getDimension() != 1) {
-            throw new IllegalArgumentException("Envelopes must be one-dimensional");
-        }
-
-        // Check that CRSs match
-        if (xExtent.getCoordinateReferenceSystem() != null) {
-            if (!xExtent.getCoordinateReferenceSystem().equals(crs)) {
-                throw new IllegalArgumentException("CRSs do not match");
-            }
-        }
-        if (yExtent.getCoordinateReferenceSystem() != null) {
-            if (!yExtent.getCoordinateReferenceSystem().equals(crs)) {
-                throw new IllegalArgumentException("CRSs do not match");
-            }
-        }
-
-        this.minx = xExtent.getMinimum(0);
-        this.maxx = xExtent.getMaximum(0);
-        this.miny = yExtent.getMinimum(0);
-        this.maxy = yExtent.getMaximum(0);
+        this.minx = xExtent.getLow();
+        this.maxx = xExtent.getHigh();
+        this.miny = yExtent.getLow();
+        this.maxy = yExtent.getHigh();
     }
 
     /** Constructs a BoundingBox with a null coordinate reference system */
-    public BoundingBoxImpl(Envelope xExtent, Envelope yExtent) {
+    public BoundingBoxImpl(Extent<Double> xExtent, Extent<Double> yExtent) {
         this(xExtent, yExtent, null);
     }
 

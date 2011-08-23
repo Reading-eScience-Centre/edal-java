@@ -3,8 +3,8 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.GeneralExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Immutable implementation of a {@link RegularAxis}, whose values are regularly
@@ -107,6 +107,6 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis implements 
 
     @Override
     public Extent<Double> getCoordinateBounds(int index) {
-        return new GeneralExtent(firstValue - 0.5 * spacing, firstValue + (size - 0.5) * spacing);
+        return Extents.newExtent(firstValue - 0.5 * spacing, firstValue + (size - 0.5) * spacing);
     }
 }

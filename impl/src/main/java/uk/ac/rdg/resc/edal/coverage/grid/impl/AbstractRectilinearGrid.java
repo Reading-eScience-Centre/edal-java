@@ -11,6 +11,8 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 
@@ -130,5 +132,10 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     @Override
     public boolean contains(HorizontalPosition position) {
         return (getXAxis().contains(position.getX()) && getYAxis().contains(position.getY()));
+    }
+    
+    @Override
+    public BoundingBox getCoordinateExtent() {
+        return new BoundingBoxImpl(getXAxis().getCoordinateExtent(), getYAxis().getCoordinateExtent());
     }
 }

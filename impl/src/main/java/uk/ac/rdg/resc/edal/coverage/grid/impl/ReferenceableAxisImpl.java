@@ -1,15 +1,12 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.GeneralExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
-import uk.ac.rdg.resc.edal.util.Utils;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Immutable implementation of a {@link ReferenceableAxis}, whose values are not
@@ -17,13 +14,12 @@ import uk.ac.rdg.resc.edal.util.Utils;
  * 
  * @author Jon
  */
-public class ReferenceableAxisImpl extends AbstractReferenceableAxis<Double> {
+public class ReferenceableAxisImpl extends AbstractReferenceableAxis {
     /**
      * The axis values, always in ascending numerical order to simplify
      * searching
      */
     private double[] axisValues;
-    private final boolean isLongitude;
 
     /** True if axis values in the above array have been reversed */
     private boolean reversed = false;
@@ -48,8 +44,7 @@ public class ReferenceableAxisImpl extends AbstractReferenceableAxis<Double> {
      *             order, or if the array of axis values is empty
      */
     public ReferenceableAxisImpl(String name, double[] axisValues, boolean isLongitude) {
-        super(name);
-        this.isLongitude = isLongitude;
+        super(name, isLongitude);
         init(axisValues);
     }
 
@@ -76,8 +71,7 @@ public class ReferenceableAxisImpl extends AbstractReferenceableAxis<Double> {
      *             order, or if the array of axis values is empty
      */
     public ReferenceableAxisImpl(CoordinateSystemAxis axis, double[] axisValues, boolean isLongitude) {
-        super(axis);
-        this.isLongitude = isLongitude;
+        super(axis, isLongitude);
         init(axisValues);
     }
 
@@ -85,7 +79,7 @@ public class ReferenceableAxisImpl extends AbstractReferenceableAxis<Double> {
      * Sets all the fields and checks that the axis values ascend or descend
      * monotonically, throwing an IllegalArgumentException if not.
      */
-    private void init(double[] axisValues) {
+    protected void init(double[] axisValues) {
         if (axisValues.length == 0) {
             throw new IllegalArgumentException("Zero-length array");
         }
@@ -137,6 +131,13 @@ public class ReferenceableAxisImpl extends AbstractReferenceableAxis<Double> {
     }
 
     @Override
+    protected int doGetCoordinateIndex(Double value) {
+        // Do a binary search for the coordinate value
+        int index = Arrays.binarySearch(axisValues, value);
+        return index >= 0 ? this.maybeReverseIndex(index) : -1;
+    }
+
+    @Override
     public int size() {
         return axisValues.length;
     }
@@ -164,59 +165,6 @@ public class ReferenceableAxisImpl extends AbstractReferenceableAxis<Double> {
             upperBound = 0.5 * (axisValues[upperIndex] + axisValues[index]);
         }
 
-        return new GeneralExtent(lowerBound, upperBound);
-    }
-
-
-    @Override
-    public int findIndexOf(Double position) {
-        if (isLongitude) {
-            position = Utils.getNextEquivalentLongitude(this.getMinimumValue(), position);
-        }
-        int index = Arrays.binarySearch(axisValues, position);
-        return index >= 0 ? maybeReverseIndex(index) : -1;
-    }
-
-    @Override
-    public Extent<Double> getCoordinateExtent() {
-        final double min;
-        final double max;
-        if (size() == 1) {
-            min = getMinimumValue();
-            max = getMaximumValue();
-        } else {
-            double val1 = getFirstValue() - 0.5 * (getCoordinateValue(1) - getFirstValue());
-            double val2 = getLastValue() + 0.5 * (getLastValue() - getCoordinateValue(size() - 2));
-            if (this.isAscending()) {
-                min = val1;
-                max = val2;
-            } else {
-                min = val2;
-                max = val1;
-            }
-        }
-        return new GeneralExtent(min, max);
-    }
-
-    @Override
-    public boolean contains(Double position) {
-        /*
-         * We can simply find out whether the position falls within the extent
-         * of the axis.
-         * 
-         * Special behaviour (e.g. discontinuous axes) should be implemented in
-         * a subclass
-         */
-        Extent<Double> extent = getCoordinateExtent();
-        return (position >= extent.getLow() && position <= extent.getHigh());
-    }
-
-    @Override
-    public List<Extent<Double>> getDomainObjects() {
-        List<Extent<Double>> domainObjects = new ArrayList<Extent<Double>>();
-        for (int i = 0; i < size(); i++) {
-            domainObjects.add(getCoordinateBounds(i));
-        }
-        return domainObjects;
+        return Extents.newExtent(lowerBound, upperBound);
     }
 }

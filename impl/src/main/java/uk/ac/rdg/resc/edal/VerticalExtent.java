@@ -29,4 +29,9 @@ public class VerticalExtent implements Extent<VerticalPosition> {
         return (position.getZ() >= min.getZ() && position.getZ() <= max.getZ());
     }
 
+    @Override
+    public boolean isEmpty() {
+        return (min == null && max == null);
+    }
+
 }

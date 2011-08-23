@@ -33,14 +33,22 @@ import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+
 /**
- * <p>A {@link HorizontalGrid} whose axes in the {@link #getCoordinateReferenceSystem() 
- * external CRS} are aligned with the axes in grid space.</p>
- *
- * <p>The order of grid coordinates must match the order of the coordinate
- * axes in the external coordinate reference system.  Therefore, for grid coordinates
- * [i,j], the i coordinate refers to the first (x) axis of the external coordinate
- * system.</p>
+ * <p>
+ * A {@link HorizontalGrid} whose axes in the
+ * {@link #getCoordinateReferenceSystem() external CRS} are aligned with the
+ * axes in grid space.
+ * </p>
+ * 
+ * <p>
+ * The order of grid coordinates must match the order of the coordinate axes in
+ * the external coordinate reference system. Therefore, for grid coordinates
+ * [i,j], the i coordinate refers to the first (x) axis of the external
+ * coordinate system.
+ * </p>
+ * 
  * @author Jon
  */
 public interface RectilinearGrid extends HorizontalGrid {
@@ -49,20 +57,28 @@ public interface RectilinearGrid extends HorizontalGrid {
     public List<ReferenceableAxis<Double>> getAxes();
 
     /**
-     * <p>Returns the {@link ReferenceableAxis} for the given axis index. This object
-     * maps from integer indices along the axis to real-world coordinates.
-     * The index matches the index of the corresponding {@link CoordinateSystemAxis}
-     * within the {@link #getCoordinateReferenceSystem() coordinate reference system}.</p>
-     *
-     * <p>The {@link ReferenceableAxis#getExtent() extent} of each axis will
-     * be a one-dimensional {@link Envelope} with a null coordinate reference
-     * system (since the CRS of this grid is generally not decomposable into
-     * two orthogonal CRSs).</p>
-     *
-     * @param index The index of the required axis with the grid's
+     * <p>
+     * Returns the {@link ReferenceableAxis} for the given axis index. This
+     * object maps from integer indices along the axis to real-world
+     * coordinates. The index matches the index of the corresponding
+     * {@link CoordinateSystemAxis} within the
      * {@link #getCoordinateReferenceSystem() coordinate reference system}.
+     * </p>
+     * 
+     * <p>
+     * The {@link ReferenceableAxis#getExtent() extent} of each axis will be a
+     * one-dimensional {@link Envelope} with a null coordinate reference system
+     * (since the CRS of this grid is generally not decomposable into two
+     * orthogonal CRSs).
+     * </p>
+     * 
+     * @param index
+     *            The index of the required axis with the grid's
+     *            {@link #getCoordinateReferenceSystem() coordinate reference
+     *            system}.
      * @return The ReferenceableAxis at the required index
-     * @throws IndexOutOfBoundsException if {@code index} is neither 0 nor 1.
+     * @throws IndexOutOfBoundsException
+     *             if {@code index} is neither 0 nor 1.
      */
     public ReferenceableAxis<Double> getAxis(int index);
 
@@ -77,9 +93,18 @@ public interface RectilinearGrid extends HorizontalGrid {
     public ReferenceableAxis<Double> getYAxis();
 
     /**
+     * Gets the bounding box for the co-ordinates of the grid
+     * 
+     * @return A {@link BoundingBox} containing the co-ordinates of the grid
+     */
+    public BoundingBox getCoordinateExtent();
+
+    /**
      * {@inheritDoc}
-     * <p>The number of dimensions in this coordinate reference system must
-     * match the {@link #getDimension() number of dimensions in the grid}.</p>
+     * <p>
+     * The number of dimensions in this coordinate reference system must match
+     * the {@link #getDimension() number of dimensions in the grid}.
+     * </p>
      */
     @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem();

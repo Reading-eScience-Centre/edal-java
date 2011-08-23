@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2009 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.coverage.grid;
+package uk.ac.rdg.resc.edal.exceptions;
 
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.geometry.impl.LineString;
 
 /**
- * A vertical axis in a ReferenceableGrid.
+ * Exception that is thrown when a {@link LineString} is constructed with an
+ * invalid line string specification
  * @author Jon
  */
-public interface VerticalAxis extends ReferenceableAxis<Double> {
-
-    /** Returns the vertical coordinate reference system for coordinates on this axis */
-    public VerticalCrs getVerticalCrs();
-
-    /**
-     * {@inheritDoc}
-     * <p>Note that this does <i>not</i> have the same meaning as {@code getVerticalCrs().getPositiveDirection()}.</p>
-     */
-    @Override
-    public boolean isAscending();
+public class InvalidLineStringException extends Exception {
+    public InvalidLineStringException(String message) {
+        super(message);
+    }
 }

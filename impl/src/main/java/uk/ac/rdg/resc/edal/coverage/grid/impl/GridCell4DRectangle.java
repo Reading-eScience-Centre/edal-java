@@ -3,6 +3,7 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.VerticalExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
@@ -11,6 +12,7 @@ import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
@@ -26,19 +28,6 @@ public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> imp
     private final Extent<TimePosition> timeExtent;
     private final int timeIndex;
 
-    public GridCell4DRectangle(GridCell2D horizGridCell, VerticalPosition verticalCentre,
-            Extent<VerticalPosition> verticalExtent, int verticalIndex, TimePosition timeCentre,
-            Extent<TimePosition> timeExtent, int timeIndex) {
-        super(horizGridCell.getGridCoordinates());
-        this.horizGridCell = horizGridCell;
-        this.verticalCentre = verticalCentre;
-        this.verticalExtent = verticalExtent;
-        this.verticalIndex = verticalIndex;
-        this.timeCentre = timeCentre;
-        this.timeExtent = timeExtent;
-        this.timeIndex = timeIndex;
-    }
-    
     public GridCell4DRectangle(GridCell2D horizGridCell, Extent<VerticalPosition> verticalRange,
                                int verticalIndex, Extent<TimePosition> timeRange, int timeIndex) {
         super(horizGridCell.getGridCoordinates());
@@ -50,6 +39,16 @@ public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> imp
         this.timeCentre = new TimePositionImpl(meantime, timeRange.getLow().getCalendarSystem(), timeRange.getLow().getTimeZoneOffset());
         this.timeExtent = timeRange;
         this.timeIndex = timeIndex;
+    }
+
+    public GridCell4DRectangle(GridCell2D hCell, Extent<Double> vExtent, VerticalCrs vCrs, int vIndex,
+            Extent<TimePosition> tExtent, int tIndex) {
+        this(hCell,
+             new VerticalExtent(new VerticalPositionImpl(vExtent.getLow(), vCrs),
+                               new VerticalPositionImpl(vExtent.getHigh(), vCrs)),
+             vIndex,
+             tExtent,
+             tIndex);
     }
 
     @Override

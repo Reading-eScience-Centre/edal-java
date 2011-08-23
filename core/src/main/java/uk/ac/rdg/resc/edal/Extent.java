@@ -40,4 +40,6 @@ public interface Extent<A extends Comparable<? super A>> extends Domain<A>
     public A getLow();
 
     public A getHigh();
+    
+    public boolean isEmpty();
 }

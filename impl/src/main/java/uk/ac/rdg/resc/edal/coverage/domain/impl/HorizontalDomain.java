@@ -47,4 +47,8 @@ public final class HorizontalDomain implements Domain<HorizontalPosition> {
     public boolean contains(HorizontalPosition position) {
         return posList.contains(position);
     }
+    
+    public List<HorizontalPosition> getDomainObjects(){
+        return posList;
+    }
 }
