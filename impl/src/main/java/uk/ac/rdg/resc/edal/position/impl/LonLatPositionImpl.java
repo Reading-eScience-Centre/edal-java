@@ -44,4 +44,18 @@ public final class LonLatPositionImpl extends HorizontalPositionImpl implements 
     public LonLatPositionImpl(double longitude, double latitude, CoordinateReferenceSystem crs) {
         super(longitude, latitude, crs);
     }
+
+    /**
+     * Creates a new LonLatPositionImpl with the given coordinates.
+     * 
+     * @param longitude
+     *            The longitude. Will be converted internally to a longitude in
+     *            the range [-180:180], so all getter methods will return values
+     *            in this range.
+     * @param latitude
+     *            The geodetic latitude
+     */
+    public LonLatPositionImpl(double longitude, double latitude) {
+        super(longitude, latitude);
+    }
 }

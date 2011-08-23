@@ -287,4 +287,9 @@ public final class GridExtentImpl implements GridExtent {
     public int getSize() {
         return size;
     }
+
+    @Override
+    public boolean isEmpty() {
+        return (low == null && high == null);
+    }
 }

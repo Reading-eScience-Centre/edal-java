@@ -57,7 +57,7 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
 
     @Override
     public final CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return this.crs;
+        return crs;
     }
 
     @Override

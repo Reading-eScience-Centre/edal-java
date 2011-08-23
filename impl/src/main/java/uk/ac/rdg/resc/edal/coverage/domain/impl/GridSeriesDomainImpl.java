@@ -23,7 +23,6 @@ import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.GeoPositionImpl;
 
 public class GridSeriesDomainImpl implements GridSeriesDomain {
@@ -80,13 +79,13 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
 
     @Override
     public GridCell4D findContainingCell(GeoPosition pos) {
-        int vIndex = vAxis.findIndexOf(pos.getVerticalPosition());
+        int vIndex = vAxis.findIndexOf(pos.getVerticalPosition().getZ());
         int tIndex = tAxis.findIndexOf(pos.getTimePosition());
         GridCell2D hCell = hGrid.findContainingCell(pos.getHorizontalPosition());
-        Extent<VerticalPosition> vExtent = vAxis.getCoordinateBounds(vIndex);
+        Extent<Double> vExtent = vAxis.getCoordinateBounds(vIndex);
         Extent<TimePosition> tExtent = tAxis.getCoordinateBounds(tIndex);
         
-        return new GridCell4DRectangle(hCell, vExtent, vIndex, tExtent, tIndex);
+        return new GridCell4DRectangle(hCell, vExtent, vAxis.getVerticalCrs(), vIndex, tExtent, tIndex);
     }
 
     @Override
@@ -94,15 +93,15 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         List<GridCell4D> gridCells = new ArrayList<GridCell4D>();
         
         List<GridCell2D> hCells = hGrid.getDomainObjects();
-        List<Extent<VerticalPosition>> vExtents = vAxis.getDomainObjects();
+        List<Extent<Double>> vExtents = vAxis.getDomainObjects();
         List<Extent<TimePosition>> tExtents = tAxis.getDomainObjects();
         
         for(GridCell2D hCell : hCells){
             for(int i=0; i < vExtents.size(); i++){
-                Extent<VerticalPosition> vExtent = vExtents.get(i);
+                Extent<Double> vExtent = vExtents.get(i);
                 for(int j=0; j < tExtents.size(); j++){
                     Extent<TimePosition> tExtent = tExtents.get(j);
-                    gridCells.add(new GridCell4DRectangle(hCell, vExtent, i, tExtent, j));
+                    gridCells.add(new GridCell4DRectangle(hCell, vExtent, vAxis.getVerticalCrs(),i, tExtent, j));
                 }
             }
         }
@@ -117,6 +116,7 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         int tIndex = coords.getCoordinateValue(3);
         return new GeoPositionImpl(hGrid.transformCoordinates(new GridCoordinatesImpl(xIndex, yIndex)),
                                    vAxis.getCoordinateValue(vIndex),
+                                   vAxis.getVerticalCrs(),
                                    tAxis.getCoordinateValue(tIndex));
     }
 
@@ -205,7 +205,7 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
     @Override
     public boolean contains(GeoPosition position) {
         return (hGrid.contains(position.getHorizontalPosition()) && 
-                vAxis.contains(position.getVerticalPosition()) && 
+                vAxis.contains(position.getVerticalPosition().getZ()) && 
                 tAxis.contains(position.getTimePosition()));
     }
 
@@ -213,7 +213,7 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
     public int findIndexOf(GeoPosition position) {
         // TODO test
         int hIndex = hGrid.findIndexOf(position.getHorizontalPosition());
-        int vIndex = vAxis.findIndexOf(position.getVerticalPosition());
+        int vIndex = vAxis.findIndexOf(position.getVerticalPosition().getZ());
         int tIndex = tAxis.findIndexOf(position.getTimePosition());
 
         int yRange = hGrid.getGridExtent().getHigh().getCoordinateValue(1) + 1 - hGrid.getGridExtent().getLow().getCoordinateValue(1);
