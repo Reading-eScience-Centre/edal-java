@@ -35,5 +35,4 @@ public class RangeMetadataImpl implements RangeMetadata {
     public Class<?> getValueType() {
         return Double.class;
     }
-
 }

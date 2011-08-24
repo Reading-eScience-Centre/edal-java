@@ -12,6 +12,7 @@ import uk.ac.rdg.resc.edal.Extent;
  * is non-instantiable.
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public final class Extents {
     /** Prevents instantiation */

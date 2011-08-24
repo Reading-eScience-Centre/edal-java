@@ -7,6 +7,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
  * Immutable implementation of {@link GridCoordinates}.
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public final class GridCoordinatesImpl implements GridCoordinates {
 

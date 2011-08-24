@@ -158,5 +158,4 @@ public class TimePositionImpl implements TimePosition {
     public int getYear() {
         return cal.get(Calendar.YEAR);
     }
-
 }

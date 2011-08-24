@@ -13,6 +13,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * necessarily regularly spaced along the axis.
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public class ReferenceableAxisImpl extends AbstractReferenceableAxis {
     /**
