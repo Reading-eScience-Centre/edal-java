@@ -13,7 +13,7 @@ public class VerticalExtent implements Extent<VerticalPosition> {
         this.min = min;
         this.max = max;
     }
-    
+
     @Override
     public VerticalPosition getHigh() {
         return max;

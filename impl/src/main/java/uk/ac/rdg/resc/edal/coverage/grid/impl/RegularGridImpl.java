@@ -11,6 +11,7 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
  * Immutable implementation of a {@link RegularGrid}.
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public final class RegularGridImpl extends AbstractRectilinearGrid implements RegularGrid {
     private final RegularAxis xAxis;

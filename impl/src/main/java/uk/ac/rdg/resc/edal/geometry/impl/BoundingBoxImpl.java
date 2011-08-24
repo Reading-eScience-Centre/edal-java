@@ -14,6 +14,7 @@ import uk.ac.rdg.resc.edal.position.impl.DirectPositionImpl;
  * </p>
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public class BoundingBoxImpl extends AbstractEnvelope implements BoundingBox {
     private final double minx;

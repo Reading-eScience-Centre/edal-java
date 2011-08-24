@@ -29,5 +29,4 @@ public abstract class AbstractEnvelope implements Envelope {
     public final CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return this.crs;
     }
-
 }

@@ -36,5 +36,4 @@ public class VerticalCrsImpl implements VerticalCrs {
         // TODO Check how units work first...
         return units.getUnitString().equalsIgnoreCase("hpa");
     }
-
 }

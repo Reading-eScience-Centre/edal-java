@@ -11,6 +11,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * spaced along the axis.
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public final class RegularAxisImpl extends AbstractReferenceableAxis implements RegularAxis {
     private double firstValue;

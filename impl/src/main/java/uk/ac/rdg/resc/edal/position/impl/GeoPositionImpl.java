@@ -56,5 +56,4 @@ public class GeoPositionImpl implements GeoPosition {
     public VerticalPosition getVerticalPosition() {
         return vPos;
     }
-
 }
