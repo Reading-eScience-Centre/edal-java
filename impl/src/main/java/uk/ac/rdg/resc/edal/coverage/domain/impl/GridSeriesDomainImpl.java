@@ -101,7 +101,7 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
                 Extent<Double> vExtent = vExtents.get(i);
                 for(int j=0; j < tExtents.size(); j++){
                     Extent<TimePosition> tExtent = tExtents.get(j);
-                    gridCells.add(new GridCell4DRectangle(hCell, vExtent, vAxis.getVerticalCrs(),i, tExtent, j));
+                    gridCells.add(new GridCell4DRectangle(hCell, vExtent, vAxis.getVerticalCrs(), i, tExtent, j));
                 }
             }
         }
@@ -143,6 +143,7 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         int hDim = hExtent.getDimension();
         if(hDim != 2){
             // TODO deal with case where this is not 2D (it should be?)
+            throw new IllegalArgumentException("Horizontal grid does not have 2 dimensions");
         }
         GridCoordinates low = new GridCoordinatesImpl(hExtent.getLow().getCoordinateValue(0),
                                                       hExtent.getLow().getCoordinateValue(1),

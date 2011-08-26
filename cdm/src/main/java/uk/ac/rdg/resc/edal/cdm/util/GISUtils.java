@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.cdm;
+package uk.ac.rdg.resc.edal.cdm.util;
 
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
@@ -12,8 +12,9 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.LonLatPositionImpl;
+import uk.ac.rdg.resc.edal.util.Utils;
 
-public class Utils extends uk.ac.rdg.resc.edal.util.Utils {
+public class GISUtils extends Utils {
 
     /**
      * Converts the given GeographicBoundingBox to a BoundingBox in WGS84

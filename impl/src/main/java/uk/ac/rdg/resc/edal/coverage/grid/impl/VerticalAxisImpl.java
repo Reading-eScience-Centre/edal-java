@@ -1,5 +1,7 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
+import java.util.List;
+
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
@@ -12,6 +14,11 @@ public class VerticalAxisImpl extends ReferenceableAxisImpl implements VerticalA
     
     public VerticalAxisImpl(CoordinateSystemAxis coordSysAxis, double[] values, VerticalCrs vCrs) {
         super(coordSysAxis, values, false);
+        this.vCrs = vCrs;
+    }
+    
+    public VerticalAxisImpl(String axisName, List<Double> values, VerticalCrs vCrs) {
+        super(axisName, values, false);
         this.vCrs = vCrs;
     }
 
