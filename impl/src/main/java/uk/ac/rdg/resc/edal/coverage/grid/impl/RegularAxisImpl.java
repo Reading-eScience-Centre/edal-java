@@ -5,6 +5,7 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.Utils;
 
 /**
  * Immutable implementation of a {@link RegularAxis}, whose values are regularly
@@ -13,18 +14,21 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * @author Jon
  * @author Guy Griffiths
  */
-public final class RegularAxisImpl extends AbstractReferenceableAxis implements RegularAxis {
+public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> implements RegularAxis {
     private double firstValue;
     private double spacing; // The axis spacing
     private int size; // The number of points on the axis
+    private final boolean isLongitude;
 
     public RegularAxisImpl(CoordinateSystemAxis axis, double firstValue, double spacing, int size, boolean isLongitude) {
-        super(axis, isLongitude);
+        super(axis);
+        this.isLongitude = isLongitude;
         init(firstValue, spacing, size);
     }
 
     public RegularAxisImpl(String name, double firstValue, double spacing, int size, boolean isLongitude) {
-        super(name, isLongitude);
+        super(name);
+        this.isLongitude = isLongitude;
         init(firstValue, spacing, size);
     }
 
@@ -51,30 +55,6 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis implements 
             throw new IndexOutOfBoundsException(index + " must be between 0 and " + (size - 1));
         }
         return firstValue + index * spacing;
-    }
-
-    @Override
-    protected int doGetCoordinateIndex(Double value) {
-        // This method will generally be faster than an exhaustive search, or
-        // even a binary search
-
-        // We find the (non-integer) index of the given value
-        Double indexDbl = getIndex(value);
-
-        // We find the nearest integer indices on either side of this and
-        // compare
-        // the corresponding values with the target value. We do this so that we
-        // are not sensitive to rounding errors
-        int indexAbove = (int) Math.ceil(indexDbl);
-        if (indexMatchesValue(indexAbove, value))
-            return indexAbove;
-
-        int indexBelow = (int) Math.floor(indexDbl);
-        if (indexMatchesValue(indexBelow, value))
-            return indexBelow;
-
-        // Neither of the indices matched the target value
-        return -1;
     }
 
     /**
@@ -109,5 +89,42 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis implements 
     @Override
     public Extent<Double> getCoordinateBounds(int index) {
         return Extents.newExtent(firstValue - 0.5 * spacing, firstValue + (size - 0.5) * spacing);
+    }
+
+    @Override
+    public int findIndexOf(Double position) {
+        if (isLongitude) {
+            position = Utils.getNextEquivalentLongitude(this.getMinimumValue(), position);
+        }
+        // This method will generally be faster than an exhaustive search, or
+        // even a binary search
+
+        // We find the (non-integer) index of the given value
+        Double indexDbl = getIndex(position);
+
+        // We find the nearest integer indices on either side of this and
+        // compare
+        // the corresponding values with the target value. We do this so that we
+        // are not sensitive to rounding errors
+        int indexAbove = (int) Math.ceil(indexDbl);
+        if (indexMatchesValue(indexAbove, position))
+            return indexAbove;
+
+        int indexBelow = (int) Math.floor(indexDbl);
+        if (indexMatchesValue(indexBelow, position))
+            return indexBelow;
+
+        // Neither of the indices matched the target value
+        return -1;
+    }
+
+    @Override
+    protected Double extendFirstValue(Double firstVal, Double nextVal) {
+        return firstVal - 0.5 * (nextVal - firstVal);
+    }
+
+    @Override
+    protected Double extendLastValue(Double lastVal, Double secondLastVal) {
+        return lastVal + 0.5 * (lastVal - secondLastVal);
     }
 }

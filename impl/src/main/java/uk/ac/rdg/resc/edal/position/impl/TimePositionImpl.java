@@ -25,7 +25,11 @@ public class TimePositionImpl implements TimePosition {
      * @param timeInMilliseconds Offset in ms from the epoch (01-01-1970 00:00:00)
      */
     public TimePositionImpl(long timeInMilliseconds){
-        this(timeInMilliseconds, CalendarSystem.CAL_ISO_8601, 0);
+        this(timeInMilliseconds, CalendarSystem.CAL_ISO_8601);
+    }
+    
+    public TimePositionImpl(long timeInMilliseconds, CalendarSystem calSys){
+        this(timeInMilliseconds, calSys, 0);
     }
     
     public TimePositionImpl(long timeInMilliseconds, CalendarSystem calSys, int utcOffset){

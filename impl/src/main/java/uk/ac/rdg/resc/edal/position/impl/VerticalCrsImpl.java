@@ -7,10 +7,12 @@ public class VerticalCrsImpl implements VerticalCrs {
 
     private final PositiveDirection posDir;
     private final Unit units;
+    private final Boolean isPressure;
     
-    public VerticalCrsImpl(Unit units, PositiveDirection posDir) {
+    public VerticalCrsImpl(Unit units, PositiveDirection posDir, boolean isPressure) {
         this.units = units;
         this.posDir = posDir;
+        this.isPressure = isPressure;
     }
     
     @Override
@@ -33,7 +35,6 @@ public class VerticalCrsImpl implements VerticalCrs {
 
     @Override
     public boolean isPressure() {
-        // TODO Check how units work first...
-        return units.getUnitString().equalsIgnoreCase("hpa");
+        return isPressure;
     }
 }

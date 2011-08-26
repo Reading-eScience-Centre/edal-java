@@ -81,8 +81,8 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         int yIMin = getYAxis().getIndexExtent().getLow();
         // +1 because extents are INCLUSIVE
         int yIMax = getYAxis().getIndexExtent().getHigh() + 1;
-        for (Integer xIndex = xIMin; xIndex < xIMax; xIndex++) {
-            for (Integer yIndex = yIMin; yIndex < yIMax; yIndex++) {
+        for (Integer yIndex = yIMin; yIndex < yIMax; yIndex++) {
+            for (Integer xIndex = xIMin; xIndex < xIMax; xIndex++) {
                 gridCells.add(new GridCell2DRectangle(new GridCoordinatesImpl(xIndex, yIndex),
                                                    getXAxis().getCoordinateBounds(xIndex).getLow(),
                                                    getYAxis().getCoordinateBounds(yIndex).getLow(),
@@ -99,8 +99,8 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         int xIndex = getXAxis().findIndexOf(position.getX());
         int yIndex = getYAxis().findIndexOf(position.getY());
         // +1 because extents are INCLUSIVE
-        int yRange = getYAxis().getIndexExtent().getHigh() + 1 - getYAxis().getIndexExtent().getLow();
-        return xIndex * yRange + yIndex;
+        int xRange = getXAxis().getIndexExtent().getHigh() + 1 - getXAxis().getIndexExtent().getLow();
+        return xIndex + xRange * yIndex;
     }
 
     @Override
@@ -112,8 +112,8 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         int yIMin = getYAxis().getIndexExtent().getLow();
         // +1 because extents are INCLUSIVE
         int yIMax = getYAxis().getIndexExtent().getHigh() + 1;
-        for (Integer xIndex = xIMin; xIndex < xIMax; xIndex++) {
-            for (Integer yIndex = yIMin; yIndex < yIMax; yIndex++) {
+        for (Integer yIndex = yIMin; yIndex < yIMax; yIndex++) {
+            for (Integer xIndex = xIMin; xIndex < xIMax; xIndex++) {
                 gridCoords.add(new GridCoordinatesImpl(xIndex, yIndex));
             }
         }
@@ -125,8 +125,8 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         int xIndex = coords.getCoordinateValue(0);
         int yIndex = coords.getCoordinateValue(1);
         // +1 because extents are INCLUSIVE
-        int yRange = getYAxis().getIndexExtent().getHigh() + 1 - getYAxis().getIndexExtent().getLow();
-        return xIndex * yRange + yIndex;
+        int xRange = getXAxis().getIndexExtent().getHigh() + 1 - getXAxis().getIndexExtent().getLow();
+        return xIndex + xRange * yIndex;
     }
 
     @Override

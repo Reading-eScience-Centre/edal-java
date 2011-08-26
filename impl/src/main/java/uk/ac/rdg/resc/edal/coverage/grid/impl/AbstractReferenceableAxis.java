@@ -8,7 +8,6 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.Utils;
 
 /**
  * Abstract superclass for {@link ReferenceableAxis} implementations. Handles
@@ -20,11 +19,10 @@ import uk.ac.rdg.resc.edal.util.Utils;
  *       latitudes outside this range?
  * @author Jon
  */
-public abstract class AbstractReferenceableAxis implements ReferenceableAxis<Double> {
+public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>> implements ReferenceableAxis<T> {
 
     private final CoordinateSystemAxis coordSysAxis;
     private final String name;
-    private final boolean isLongitude;
 
     /**
      * Creates an axis that is referenceable to the given coordinate system
@@ -33,53 +31,29 @@ public abstract class AbstractReferenceableAxis implements ReferenceableAxis<Dou
      * @throws NullPointerException
      *             if coordSysAxis is null
      */
-    protected AbstractReferenceableAxis(CoordinateSystemAxis coordSysAxis, boolean isLongitude) {
+    protected AbstractReferenceableAxis(CoordinateSystemAxis coordSysAxis) {
         if (coordSysAxis == null)
             throw new NullPointerException("coordSysAxis cannot be null");
         this.name = coordSysAxis.getName().toString();
         this.coordSysAxis = coordSysAxis;
-        this.isLongitude = isLongitude;
     }
 
     /**
      * Creates an axis with the given name. The
      * {@link #getCoordinateSystemAxis() coordinate system axis} will be null.
      */
-    protected AbstractReferenceableAxis(String name, boolean isLongitude) {
+    protected AbstractReferenceableAxis(String name) {
         this.name = name;
         coordSysAxis = null;
-        this.isLongitude = isLongitude;
     }
-
-    @Override
-    public int findIndexOf(Double position) {
-        if (isLongitude) {
-            position = Utils.getNextEquivalentLongitude(this.getMinimumValue(), position);
-        }
-        return doGetCoordinateIndex(position);
-    }
-
-    /**
-     * <p>
-     * Gets the index of the given coordinate value, ignoring the possibility of
-     * longitude axis wrapping. Returns -1 if the value is not a coordinate
-     * value of this axis.
-     * </p>
-     * <p>
-     * Subclasses should make this implementation as efficient as possible,
-     * since the implementation is reused in the {@code indexOf} method of the
-     * {@link #findIndexOf() list of coordinate values}.
-     * </p>
-     */
-    protected abstract int doGetCoordinateIndex(Double value);
 
     /** Gets the value of the axis at index 0 */
-    private final double getFirstValue() {
+    protected final T getFirstValue() {
         return getCoordinateValue(0);
     }
 
     /** Gets the value of the axis at index (size - 1) */
-    private final double getLastValue() {
+    protected final T getLastValue() {
         return getCoordinateValue(this.size() - 1);
     }
 
@@ -90,7 +64,7 @@ public abstract class AbstractReferenceableAxis implements ReferenceableAxis<Dou
      * 
      * @return the minimum coordinate value of this axis
      */
-    private final double getMinimumValue() {
+    protected final T getMinimumValue() {
         return isAscending() ? getFirstValue() : getLastValue();
     }
 
@@ -101,29 +75,8 @@ public abstract class AbstractReferenceableAxis implements ReferenceableAxis<Dou
      * 
      * @return the maximum coordinate value of this axis
      */
-    private final double getMaximumValue() {
+    protected final T getMaximumValue() {
         return isAscending() ? getLastValue() : getFirstValue();
-    }
-
-    @Override
-    public Extent<Double> getCoordinateExtent() {
-        final double min;
-        final double max;
-        if (size() == 1) {
-            min = getMinimumValue();
-            max = getMaximumValue();
-        } else {
-            double val1 = getFirstValue() - 0.5 * (getCoordinateValue(1) - getFirstValue());
-            double val2 = getLastValue() + 0.5 * (getLastValue() - getCoordinateValue(size() - 2));
-            if (this.isAscending()) {
-                min = val1;
-                max = val2;
-            } else {
-                min = val2;
-                max = val1;
-            }
-        }
-        return Extents.newExtent(min, max);
     }
 
     @Override
@@ -145,9 +98,9 @@ public abstract class AbstractReferenceableAxis implements ReferenceableAxis<Dou
     public String getName() {
         return name;
     }
-    
+
     @Override
-    public boolean contains(Double position) {
+    public boolean contains(T position) {
         /*
          * We can simply find out whether the position falls within the extent
          * of the axis.
@@ -155,17 +108,59 @@ public abstract class AbstractReferenceableAxis implements ReferenceableAxis<Dou
          * Special behaviour (e.g. discontinuous axes) should be implemented in
          * a subclass
          */
-        Extent<Double> extent = getCoordinateExtent();
-        return (position >= extent.getLow() && position <= extent.getHigh());
+        Extent<T> extent = getCoordinateExtent();
+        return (position.compareTo(extent.getLow()) > 0 && position.compareTo(extent.getHigh()) < 0);
     }
-    
 
     @Override
-    public List<Extent<Double>> getDomainObjects() {
-        List<Extent<Double>> domainObjects = new ArrayList<Extent<Double>>();
+    public List<Extent<T>> getDomainObjects() {
+        List<Extent<T>> domainObjects = new ArrayList<Extent<T>>();
         for (int i = 0; i < size(); i++) {
             domainObjects.add(getCoordinateBounds(i));
         }
         return domainObjects;
     }
+
+    @Override
+    public Extent<T> getCoordinateExtent() {
+        final T min;
+        final T max;
+        if (size() == 1) {
+            min = getMinimumValue();
+            max = getMaximumValue();
+        } else {
+            T val1 = extendFirstValue(getFirstValue(), getCoordinateValue(1));
+            T val2 = extendLastValue(getLastValue(), getCoordinateValue(size() - 2));
+            if (this.isAscending()) {
+                min = val1;
+                max = val2;
+            } else {
+                min = val2;
+                max = val1;
+            }
+        }
+        return Extents.newExtent(min, max);
+    }
+
+    /**
+     * This should return the lower bound of the first value of the axis, based
+     * on the first and second values. This will generally be equivalent to:<p>
+     * firstVal - (nextVal-firstVal)/2
+     * 
+     * @param firstVal
+     * @param nextVal
+     * @return
+     */
+    protected abstract T extendFirstValue(T firstVal, T nextVal);
+
+    /**
+     * This should return the upper bound of the last value of the axis, based
+     * on the last two values. This will generally be equivalent to:<p>
+     * lastVal + (lastVal-secondLastVal)/2
+     * 
+     * @param firstVal
+     * @param nextVal
+     * @return
+     */
+    protected abstract T extendLastValue(T lastVal, T secondLastVal);
 }
