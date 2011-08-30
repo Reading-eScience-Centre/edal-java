@@ -28,6 +28,9 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
+import java.util.List;
+
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
@@ -47,5 +50,6 @@ public interface GridSeriesCoverage<R>
 
     // TODO: not sure this the best signature - what about GridCoordinates?
     public R evaluate(int tindex, int zindex, int yindex, int xindex);
+    public List<R> evaluate(Extent<Integer> tindexExtent, Extent<Integer> zindexExtent, Extent<Integer> yindexExtent, Extent<Integer> xindexExtent);
 }
 
