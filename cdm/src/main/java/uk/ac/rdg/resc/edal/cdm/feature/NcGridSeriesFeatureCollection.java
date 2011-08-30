@@ -99,13 +99,11 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
     public static void main(String[] args) throws IOException {
 //        NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection", "Test Collection", "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
         NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection", "Test Collection", "/home/guy/Data/FOAM_ONE/FOAM_20100130.0.nc");
-        String var = "TMP";
+        String var = "V";
         
         System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getDescription());
         System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getUnits().getUnitString());
         System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getParameter().getStandardName());
-        System.out.println(fs.getFeatureById(var).getCoverage().getDomain().getGridExtent().getLow());
-        System.out.println(fs.getFeatureById(var).getCoverage().getDomain().getGridExtent().getHigh());
         
         List<Float> vals = fs.getFeatureById(var).getCoverage().getValues();
         GridCoordinates lowIndices = fs.getFeatureById(var).getCoverage().getDomain().getGridExtent().getLow();
@@ -116,20 +114,25 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         int tSize=highIndices.getCoordinateValue(3)-lowIndices.getCoordinateValue(3)+1;
         
         double err = 0.0;
-        for(int x=0; x<xSize; x++){
-            for(int y=0; y<ySize; y++){
-                for(int z=0; z<zSize; z++){
-                    for(int t=0; t<tSize; t++){
-                        if(fs.getFeatureById(var).getCoverage().evaluate(x,y,z,t).isNaN() &&
-                                vals.get(x+y*xSize+z*ySize*xSize+t*zSize*ySize*xSize).isNaN()){
+        System.out.println(xSize+","+ySize+","+zSize+","+tSize);
+        for(int t=0; t<tSize; t++){
+            for(int z=0; z<zSize; z++){
+                for(int y=0; y<ySize; y++){
+                    for(int x=0; x<xSize; x++){
+                        Float evVal = fs.getFeatureById(var).getCoverage().evaluate(t,z,y,x);
+                        int index = x + y * xSize + z * ySize * xSize + t * zSize * ySize * xSize;
+                        Float vaVal = vals.get(index);
+                        
+//                        System.out.println(x+","+y+","+z+","+t);
+                        if(evVal.isNaN() && vaVal.isNaN()){
+                            // Ignore
                         } else {
-                            if(fs.getFeatureById(var).getCoverage().evaluate(x,y,z,t).isNaN() ||
-                                    vals.get(x+y*xSize+z*ySize*xSize+t*zSize*ySize*xSize).isNaN()){
-                                System.out.println("One is NaN, but the other isn't:"
-                                        + fs.getFeatureById(var).getCoverage().evaluate(x, y, z, t) + ","
-                                        + vals.get(x + y * xSize + z * ySize * xSize + t * zSize * ySize * xSize));
+//                            System.out.println(evVal + "," + vaVal);
+                            if(evVal.isNaN() || vaVal.isNaN()){
+                                System.out.println("One is NaN, but the other isn't:" + evVal + "," + vaVal);
+                            } else {
+                                err += evVal-vaVal;
                             }
-                            err += fs.getFeatureById(var).getCoverage().evaluate(x,y,z,t)-vals.get(x+y*xSize+z*ySize*xSize+t*zSize*ySize*xSize);
                         }
                     }
                 }

@@ -8,6 +8,7 @@ import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.Variable;
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
 import uk.ac.rdg.resc.edal.Unit;
@@ -50,23 +51,53 @@ public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosi
     @Override
     public Float evaluate(int tindex, int zindex, int yindex, int xindex) {
         List<Range> ranges = new ArrayList<Range>();
-        Float ret=null;
+        Float ret = null;
         try {
-            if(hGrid != null){
-                ranges.add(new Range(xindex, xindex));
-                ranges.add(new Range(yindex, yindex));
-            }
-            if(vAxis != null){
-                ranges.add(new Range(zindex, zindex));
-            }
-            if(tAxis != null){
+            if (tAxis != null) {
                 ranges.add(new Range(tindex, tindex));
             }
+            if (vAxis != null) {
+                ranges.add(new Range(zindex, zindex));
+            }
+            if (hGrid != null) {
+                ranges.add(new Range(yindex, yindex));
+                ranges.add(new Range(xindex, xindex));
+            }
             Array a = variable.read(ranges);
-            if(a.getSize() == 1){
+            if (a.getSize() == 1) {
                 ret = a.getFloat(0);
             } else {
                 throw new InvalidRangeException();
+            }
+        } catch (InvalidRangeException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return ret;
+    }
+
+    @Override
+    public List<Float> evaluate(Extent<Integer> tindexExtent, Extent<Integer> zindexExtent,
+            Extent<Integer> yindexExtent, Extent<Integer> xindexExtent) {
+        List<Range> ranges = new ArrayList<Range>();
+        List<Float> ret = new ArrayList<Float>();
+        try {
+            if (tAxis != null) {
+                ranges.add(new Range(tindexExtent.getLow(), tindexExtent.getHigh()));
+            }
+            if (vAxis != null) {
+                ranges.add(new Range(zindexExtent.getLow(), zindexExtent.getHigh()));
+            }
+            if (hGrid != null) {
+                ranges.add(new Range(yindexExtent.getLow(), yindexExtent.getHigh()));
+                ranges.add(new Range(xindexExtent.getLow(), xindexExtent.getHigh()));
+            }
+            Array a = variable.read(ranges);
+            while(a.hasNext()){
+                ret.add(a.nextFloat());
             }
         } catch (InvalidRangeException e) {
             // TODO Auto-generated catch block

@@ -14,17 +14,15 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
 public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> implements GridCell4D {
 
     private final GridCell2D horizGridCell;
-    @SuppressWarnings("unused")
-    private final VerticalPosition verticalCentre;
+//    private final VerticalPosition verticalCentre;
     private final Extent<VerticalPosition> verticalExtent;
     private final int verticalIndex;
-    private final TimePosition timeCentre;
+//    private final TimePosition timeCentre;
     private final Extent<TimePosition> timeExtent;
     private final int timeIndex;
 
@@ -32,11 +30,11 @@ public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> imp
                                int verticalIndex, Extent<TimePosition> timeRange, int timeIndex) {
         super(horizGridCell.getGridCoordinates());
         this.horizGridCell = horizGridCell;
-        this.verticalCentre = new VerticalPositionImpl(0.5*(verticalRange.getHigh().getZ()+verticalRange.getLow().getZ()));
+//        this.verticalCentre = new VerticalPositionImpl(0.5*(verticalRange.getHigh().getZ()+verticalRange.getLow().getZ()));
         this.verticalExtent = verticalRange;
         this.verticalIndex = verticalIndex;
-        long meantime = (long) (0.5*(timeRange.getLow().getValue() + timeRange.getHigh().getValue()));
-        this.timeCentre = new TimePositionImpl(meantime, timeRange.getLow().getCalendarSystem(), timeRange.getLow().getTimeZoneOffset());
+//        long meantime = (long) (0.5*(timeRange.getLow().getValue() + timeRange.getHigh().getValue()));
+//        this.timeCentre = new TimePositionImpl(meantime, timeRange.getLow().getCalendarSystem(), timeRange.getLow().getTimeZoneOffset());
         this.timeExtent = timeRange;
         this.timeIndex = timeIndex;
     }
@@ -53,7 +51,10 @@ public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> imp
 
     @Override
     public CalendarSystem getCalendarSystem() {
-        return timeCentre.getCalendarSystem();
+        if(timeExtent != null )
+            return timeExtent.getLow().getCalendarSystem();
+        else
+            return null;
     }
 
     @Override
@@ -83,9 +84,21 @@ public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> imp
 
     @Override
     public boolean contains(GeoPosition position) {
-        return (horizGridCell.contains(position.getHorizontalPosition())
-                && verticalExtent.contains(position.getVerticalPosition())
-                && timeExtent.contains(position.getTimePosition()));
+        boolean containsH = horizGridCell.contains(position.getHorizontalPosition());
+        boolean containsV = false;
+        boolean containsT = false;
+        if(verticalExtent != null){
+            containsV = verticalExtent.contains(position.getVerticalPosition());
+        } else {
+            containsV = position.getVerticalPosition() == null;
+        }
+        if(timeExtent != null){
+            containsT = timeExtent.contains(position.getTimePosition());
+        } else {
+            containsT = position.getTimePosition() == null;
+        }
+        
+        return (containsH && containsV && containsT);
     }
 
     @Override
