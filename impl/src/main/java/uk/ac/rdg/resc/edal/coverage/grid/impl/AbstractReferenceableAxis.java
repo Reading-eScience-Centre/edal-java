@@ -111,7 +111,7 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
         Extent<T> extent = getCoordinateExtent();
         return (position.compareTo(extent.getLow()) > 0 && position.compareTo(extent.getHigh()) < 0);
     }
-
+    
     @Override
     public List<Extent<T>> getDomainObjects() {
         List<Extent<T>> domainObjects = new ArrayList<Extent<T>>();

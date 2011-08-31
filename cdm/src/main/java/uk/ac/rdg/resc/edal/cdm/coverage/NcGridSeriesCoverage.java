@@ -24,6 +24,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosition, GridCell4D, Float> implements
         GridSeriesCoverage<Float> {
@@ -107,6 +108,13 @@ public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosi
             e.printStackTrace();
         }
         return ret;
+    }
+
+    @Override
+    public List<Float> extractHorizontalLayer(int tindex, int zindex) {
+        Extent<Integer> xExtent = Extents.newExtent(hGrid.getGridExtent().getLow(0),hGrid.getGridExtent().getHigh(0));
+        Extent<Integer> yExtent = Extents.newExtent(hGrid.getGridExtent().getLow(1),hGrid.getGridExtent().getHigh(1));
+        return evaluate(Extents.newExtent(tindex, tindex), Extents.newExtent(zindex, zindex), yExtent, xExtent);
     }
 
     @Override

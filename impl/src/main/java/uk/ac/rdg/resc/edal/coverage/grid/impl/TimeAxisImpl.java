@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -92,7 +93,20 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
     @Override
     public int findIndexOf(TimePosition time) {
         int index = Arrays.binarySearch(axisValues, time);
-        return index >= 0 ? maybeReverseIndex(index) : -1;
+        if(index >= 0){
+            return maybeReverseIndex(index);
+        } else {
+            int insertionPoint = -(index+1);
+            if(insertionPoint == axisValues.length || insertionPoint == 0){
+                return -1;
+            }
+            if(Math.abs(axisValues[insertionPoint].getValue() - time.getValue()) <= 
+               Math.abs(axisValues[insertionPoint-1].getValue() - time.getValue())){
+                return maybeReverseIndex(insertionPoint);
+            } else {
+                return maybeReverseIndex(insertionPoint-1);
+            }
+        }
     }
 
     /** If the array has been reversed, we need to reverse the index */
@@ -132,5 +146,25 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
     @Override
     public int size() {
         return axisValues.length;
+    }
+    
+    public static void main(String[] args) {
+        List<TimePosition> axisValues = new ArrayList<TimePosition>();
+        for(int minute = 0; minute < 60; minute += 5){
+            TimePosition t = new TimePositionImpl(2011, 8, 31, 9, minute, 0);
+            axisValues.add(t);
+        }
+        TimeAxis a = new TimeAxisImpl("time", axisValues);
+        for(int i=0;i<60;i++){
+            TimePosition t1 = new TimePositionImpl(2011, 8, 31, 9, i, 30);
+            int ind = a.findIndexOf(t1);
+            if(ind >=0)
+                System.out.println("Index of t1:"+ind+"    "+t1+" => "+a.getCoordinateValue(ind));
+            else
+                System.out.println("Index of t1:"+ind+"    "+t1+" => not in range");
+        }
+        for(int i=0; i<a.size(); i++){
+            System.out.println(i+":"+a.getCoordinateValue(i));
+        }
     }
 }

@@ -65,12 +65,6 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         return (value - firstValue) / spacing;
     }
 
-    private boolean indexMatchesValue(int index, Double value) {
-        if (index < 0 || index >= size)
-            return false;
-        return value == getCoordinateValue(index);
-    }
-
     @Override
     public int size() {
         return size;
@@ -101,21 +95,12 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
 
         // We find the (non-integer) index of the given value
         Double indexDbl = getIndex(position);
-
-        // We find the nearest integer indices on either side of this and
-        // compare
-        // the corresponding values with the target value. We do this so that we
-        // are not sensitive to rounding errors
-        int indexAbove = (int) Math.ceil(indexDbl);
-        if (indexMatchesValue(indexAbove, position))
-            return indexAbove;
-
-        int indexBelow = (int) Math.floor(indexDbl);
-        if (indexMatchesValue(indexBelow, position))
-            return indexBelow;
-
-        // Neither of the indices matched the target value
-        return -1;
+        // We round to the nearest integer
+        int index = (int)Math.round(indexDbl);
+        // Check the extremes (probably not strictly necessary?)
+        if (index < 0) return 0;
+        if (index >= this.size) return this.size - 1;
+        return index;
     }
 
     @Override

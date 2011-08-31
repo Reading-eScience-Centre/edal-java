@@ -27,6 +27,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
 
 /**
  * An implementation of {@link FeatureCollection} which contains
@@ -39,43 +40,58 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 
     private String collectionId;
     private String name;
-    private Map<String, NcGridSeriesFeature> id2GridSeriesFeature;
+    private Map<String, GridSeriesFeatureImpl> id2GridSeriesFeature;
 
-    public NcGridSeriesFeatureCollection(String collectionId, String collectionName, String location) throws IOException {
-        this.collectionId =  collectionId;
+    /**
+     * Instantiates a collection of features from one or more NetCDF files.
+     * 
+     * @param collectionId
+     *            The ID of the collection (comparable to the Dataset ID in old
+     *            ncWMS)
+     * @param collectionName
+     *            The name of the collection (comparable to the Dataset name in
+     *            old ncWMS)
+     * @param location
+     *            The location of the NetCDF file(s)
+     * @throws IOException
+     *             If there is a problem reading the file
+     */
+    public NcGridSeriesFeatureCollection(String collectionId, String collectionName, String location)
+            throws IOException {
+        this.collectionId = collectionId;
         this.name = collectionName;
 
-        id2GridSeriesFeature = new HashMap<String, NcGridSeriesFeature>();
-        
+        id2GridSeriesFeature = new HashMap<String, GridSeriesFeatureImpl>();
+
         List<File> files = FileUtils.expandGlobExpression(location);
-        for(File file : files){
+        for (File file : files) {
             NetcdfDataset ncDataset = openDataset(file.getPath());
-            
+
             FeatureDataset featureDS = FeatureDatasetFactoryManager.wrap(FeatureType.GRID, ncDataset, null, null);
             if (featureDS == null) {
-                throw new IOException("No grid datasets found in file: "+file.getPath());
+                throw new IOException("No grid datasets found in file: " + file.getPath());
             }
             FeatureType fType = featureDS.getFeatureType();
             assert (fType == FeatureType.GRID);
             GridDataset gridDS = (GridDataset) featureDS;
-            
-            for(Gridset gridset : gridDS.getGridsets()){
+
+            for (Gridset gridset : gridDS.getGridsets()) {
                 /*
-                 * Get everything from the GridCoordSystem that is needed
-                 * for making an NcGridSeriesFeature, and keep locally until...
+                 * Get everything from the GridCoordSystem that is needed for
+                 * making an NcGridSeriesFeature, and keep locally until...
                  */
                 GridCoordSystem coordSys = gridset.getGeoCoordSystem();
                 HorizontalGrid hGrid = CdmUtils.createHorizontalGrid(coordSys);
                 VerticalAxis vAxis = CdmUtils.createVerticalAxis(coordSys);
                 TimeAxis tAxis = null;
-                if(coordSys.hasTimeAxis1D()){
+                if (coordSys.hasTimeAxis1D()) {
                     tAxis = CdmUtils.createTimeAxis(coordSys);
                 }
-                
-                System.out.println(coordSys.getName()+",");
-                
+
+                System.out.println(coordSys.getName() + ",");
+
                 List<GridDatatype> grids = gridset.getGrids();
-                for(GridDatatype gridDT : grids){
+                for (GridDatatype gridDT : grids) {
                     /*
                      * ...here, where we can get each variable and construct the
                      * NcGridSeriesFeature add add it to the collection
@@ -84,65 +100,71 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     String name = CdmUtils.getVariableTitle(var);
                     String id = var.getName();
                     String description = var.getDescription();
-                    
-                    System.out.println("\t"+gridDT.getName()+":"+name+","+id+","+description);
+
+                    System.out.println("\t" + gridDT.getName() + ":" + name + "," + id + "," + description);
 
                     GridSeriesCoverage<Float> coverage = new NcGridSeriesCoverage(var, hGrid, vAxis, tAxis);
-                    NcGridSeriesFeature feature = new NcGridSeriesFeature(name, id, description, this, coverage);
-                    
+                    GridSeriesFeatureImpl feature = new GridSeriesFeatureImpl(name, id, description, this, coverage);
+
                     id2GridSeriesFeature.put(id.toLowerCase(), feature);
                 }
             }
         }
     }
-    
+
     public static void main(String[] args) throws IOException {
-//        NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection", "Test Collection", "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
-        NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection", "Test Collection", "/home/guy/Data/FOAM_ONE/FOAM_20100130.0.nc");
+        // NcGridSeriesFeatureCollection fs = new
+        // NcGridSeriesFeatureCollection("testcollection", "Test Collection",
+        // "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
+        NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection", "Test Collection",
+                "/home/guy/Data/FOAM_ONE/FOAM_20100130.0.nc");
         String var = "V";
-        
+
         System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getDescription());
         System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getUnits().getUnitString());
-        System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getParameter().getStandardName());
-        
+        System.out
+                .println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getParameter().getStandardName());
+
         List<Float> vals = fs.getFeatureById(var).getCoverage().getValues();
         GridCoordinates lowIndices = fs.getFeatureById(var).getCoverage().getDomain().getGridExtent().getLow();
         GridCoordinates highIndices = fs.getFeatureById(var).getCoverage().getDomain().getGridExtent().getHigh();
-        int xSize=highIndices.getCoordinateValue(0)-lowIndices.getCoordinateValue(0)+1;
-        int ySize=highIndices.getCoordinateValue(1)-lowIndices.getCoordinateValue(1)+1;
-        int zSize=highIndices.getCoordinateValue(2)-lowIndices.getCoordinateValue(2)+1;
-        int tSize=highIndices.getCoordinateValue(3)-lowIndices.getCoordinateValue(3)+1;
-        
+        int xSize = highIndices.getCoordinateValue(0) - lowIndices.getCoordinateValue(0) + 1;
+        int ySize = highIndices.getCoordinateValue(1) - lowIndices.getCoordinateValue(1) + 1;
+        int zSize = highIndices.getCoordinateValue(2) - lowIndices.getCoordinateValue(2) + 1;
+        int tSize = highIndices.getCoordinateValue(3) - lowIndices.getCoordinateValue(3) + 1;
+
         double err = 0.0;
-        System.out.println(xSize+","+ySize+","+zSize+","+tSize);
-        for(int t=0; t<tSize; t++){
-            for(int z=0; z<zSize; z++){
-                for(int y=0; y<ySize; y++){
-                    for(int x=0; x<xSize; x++){
-                        Float evVal = fs.getFeatureById(var).getCoverage().evaluate(t,z,y,x);
+        System.out.println(xSize + "," + ySize + "," + zSize + "," + tSize);
+        for (int t = 0; t < tSize; t++) {
+            for (int z = 0; z < zSize; z++) {
+                for (int y = 0; y < ySize; y++) {
+                    for (int x = 0; x < xSize; x++) {
+                        Float evVal = fs.getFeatureById(var).getCoverage().evaluate(t, z, y, x);
                         int index = x + y * xSize + z * ySize * xSize + t * zSize * ySize * xSize;
                         Float vaVal = vals.get(index);
-                        
-//                        System.out.println(x+","+y+","+z+","+t);
-                        if(evVal.isNaN() && vaVal.isNaN()){
+
+                        // System.out.println(x+","+y+","+z+","+t);
+                        if (evVal.isNaN() && vaVal.isNaN()) {
                             // Ignore
                         } else {
-//                            System.out.println(evVal + "," + vaVal);
-                            if(evVal.isNaN() || vaVal.isNaN()){
+                            // System.out.println(evVal + "," + vaVal);
+                            if (evVal.isNaN() || vaVal.isNaN()) {
                                 System.out.println("One is NaN, but the other isn't:" + evVal + "," + vaVal);
                             } else {
-                                err += evVal-vaVal;
+                                err += evVal - vaVal;
                             }
                         }
                     }
                 }
             }
-            System.out.println("Total error:"+err);
+            System.out.println("Total error:" + err);
         }
-        
-//        NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection", "Test Collection", "/home/guy/Data/FOAM_ONE/*.nc");
+
+        // NcGridSeriesFeatureCollection fs = new
+        // NcGridSeriesFeatureCollection("testcollection", "Test Collection",
+        // "/home/guy/Data/FOAM_ONE/*.nc");
     }
-    
+
     /**
      * Opens the NetCDF dataset at the given location, using the dataset cache
      * if {@code location} represents an NcML aggregation. We cannot use the
@@ -183,9 +205,9 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         }
         return nc;
     }
-    
+
     @Override
-    public NcGridSeriesFeature getFeatureById(String id) {
+    public GridSeriesFeatureImpl getFeatureById(String id) {
         return id2GridSeriesFeature.get(id.toLowerCase());
     }
 
@@ -198,7 +220,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
     @Override
     public Class<GridSeriesFeature<Float>> getFeatureType() {
         // TODO check this with usage examples
-        return (Class<GridSeriesFeature<Float>>)(Class<?>)GridSeriesFeature.class;
+        return (Class<GridSeriesFeature<Float>>) (Class<?>) GridSeriesFeature.class;
     }
 
     @Override
@@ -227,7 +249,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
             }
 
             @Override
-            public NcGridSeriesFeature next() {
+            public GridSeriesFeatureImpl next() {
                 return id2GridSeriesFeature.values().iterator().next();
             }
 

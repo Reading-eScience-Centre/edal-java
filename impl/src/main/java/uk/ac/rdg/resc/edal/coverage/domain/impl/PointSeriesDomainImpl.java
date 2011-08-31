@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.domain.impl;
 
+import java.util.Collections;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.Extent;
@@ -45,15 +46,26 @@ public class PointSeriesDomainImpl implements PointSeriesDomain {
 
     @Override
     public boolean contains(TimePosition position) {
-        // TODO check whether this should find the nearest index...
-        return times.contains(position);
-//        return (position.getValue() >= times.get(0).getValue() && position.getValue() <= times.get(0).getValue());
+        return (position.getValue() >= times.get(0).getValue() && position.getValue() <= times.get(times.size()-1).getValue());
     }
 
     @Override
-    public int findIndexOf(TimePosition position) {
-        // TODO check whether this should find the nearest index...
-        return times.indexOf(position);
+    public int findIndexOf(TimePosition time) {
+        int index = Collections.binarySearch(times, time);
+        if(index >= 0){
+            return index;
+        } else {
+            int insertionPoint = -(index+1);
+            if(insertionPoint == times.size() || insertionPoint == 0){
+                return -1;
+            }
+            if(Math.abs(times.get(insertionPoint).getValue() - time.getValue()) < 
+               Math.abs(times.get(insertionPoint-1).getValue() - time.getValue())){
+                return insertionPoint;
+            } else {
+                return insertionPoint-1;
+            }
+        }
     }
 
     @Override
