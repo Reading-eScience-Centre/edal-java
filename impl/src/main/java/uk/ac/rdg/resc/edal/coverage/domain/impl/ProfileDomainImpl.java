@@ -49,13 +49,26 @@ public class ProfileDomainImpl implements ProfileDomain {
 
     @Override
     public boolean contains(VerticalPosition position) {
-        return false;
+        return (position.getZ() >= values.get(0) && position.getZ() <= values.get(values.size()-1));
     }
 
     @Override
     public int findIndexOf(VerticalPosition position) {
-        // TODO Auto-generated method stub
-        return 0;
+        int index = Collections.binarySearch(values, position.getZ());
+        if(index >= 0){
+            return index;
+        } else {
+            int insertionPoint = -(index+1);
+            if(insertionPoint == values.size() || insertionPoint == 0){
+                return -1;
+            }
+            if(Math.abs(values.get(insertionPoint) - position.getZ()) < 
+               Math.abs(values.get(insertionPoint-1) - position.getZ())){
+                return insertionPoint;
+            } else {
+                return insertionPoint-1;
+            }
+        }
     }
 
     @Override

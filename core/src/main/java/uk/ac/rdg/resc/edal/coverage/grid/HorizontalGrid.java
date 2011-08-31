@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
+import java.util.List;
+
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
@@ -39,6 +41,9 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 public interface HorizontalGrid extends ReferenceableGrid<HorizontalPosition, GridCell2D>
 {
 
+    @Override
+    public List<ReferenceableAxis<Double>> getAxes();
+    
     /**
      * Returns a two-dimensional horizontal coordinate reference system.
      * @return a two-dimensional horizontal coordinate reference system.

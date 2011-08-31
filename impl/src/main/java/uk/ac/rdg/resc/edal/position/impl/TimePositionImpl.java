@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.position.impl;
 
+import java.text.DateFormat;
 import java.util.Calendar;
 
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
@@ -47,7 +48,7 @@ public class TimePositionImpl implements TimePosition {
      * @param year
      *            The year
      * @param month
-     *            The month, starting from January=0
+     *            The month, starting from January=1
      * @param dayOfMonth
      *            The day of the month
      * @param hour
@@ -67,7 +68,7 @@ public class TimePositionImpl implements TimePosition {
      * @param year
      *            The year
      * @param month
-     *            The month, starting from January=0
+     *            The month, starting from January=1
      * @param dayOfMonth
      *            The day of the month
      * @param hour
@@ -87,7 +88,7 @@ public class TimePositionImpl implements TimePosition {
             CalendarSystem calSys, int utcOffset) {
         cal = Calendar.getInstance();
         cal.clear();
-        cal.set(year, month, dayOfMonth, hour, minute, second);
+        cal.set(year, month-1, dayOfMonth, hour, minute, second);
         cal.set(Calendar.MILLISECOND, milliseconds);
 
         this.calSys = calSys;
@@ -161,5 +162,10 @@ public class TimePositionImpl implements TimePosition {
     @Override
     public int getYear() {
         return cal.get(Calendar.YEAR);
+    }
+    
+    @Override
+    public String toString() {
+        return DateFormat.getDateTimeInstance().format(cal.getTime());
     }
 }

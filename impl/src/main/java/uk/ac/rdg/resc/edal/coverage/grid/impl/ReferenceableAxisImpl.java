@@ -179,10 +179,21 @@ public class ReferenceableAxisImpl extends AbstractReferenceableAxis<Double> {
         if (isLongitude) {
             position = Utils.getNextEquivalentLongitude(this.getMinimumValue(), position);
         }
-
-        // Do a binary search for the coordinate value
         int index = Arrays.binarySearch(axisValues, position);
-        return index >= 0 ? maybeReverseIndex(index) : -1;
+        if(index >= 0){
+            return maybeReverseIndex(index);
+        } else {
+            int insertionPoint = -(index+1);
+            if(insertionPoint == axisValues.length || insertionPoint == 0){
+                return -1;
+            }
+            if(Math.abs(axisValues[insertionPoint] - position) < 
+               Math.abs(axisValues[insertionPoint-1] - position)){
+                return maybeReverseIndex(insertionPoint);
+            } else {
+                return maybeReverseIndex(insertionPoint-1);
+            }
+        }
     }
     
 

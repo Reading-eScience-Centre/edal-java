@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.cdm.feature;
+package uk.ac.rdg.resc.edal.feature.impl;
 
 import java.util.List;
 
@@ -15,20 +15,17 @@ import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.impl.AbstractFeature;
-import uk.ac.rdg.resc.edal.feature.impl.PointSeriesFeatureImpl;
-import uk.ac.rdg.resc.edal.feature.impl.ProfileFeatureImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-public class NcGridSeriesFeature extends AbstractFeature implements GridSeriesFeature<Float> {
+public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeriesFeature<Float> {
 
     private FeatureCollection<? extends Feature> parentCollection;
     private GridSeriesCoverage<Float> coverage;
 
-    public NcGridSeriesFeature(String name, String id, String description,
+    public GridSeriesFeatureImpl(String name, String id, String description,
             FeatureCollection<? extends Feature> parentCollection, GridSeriesCoverage<Float> coverage) {
         super(name, id, description);
         this.parentCollection = parentCollection;

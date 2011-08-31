@@ -60,6 +60,14 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
 public interface ReferenceableGrid<P, GC extends GridCell<P>> extends Grid, DiscreteDomain<P, GC> {
 
     /**
+     * Returns a list containing the names of the grid axes.  The order of these
+     * names matches the order of elements in this Grid's {@link GridCoordinates}
+     * and {@link #getGridExtent() grid envelope}.
+     * @return a list containing the names of the grid axes.
+     */
+    public List<? extends GridAxis> getAxes();
+    
+    /**
      * Transforms a grid coordinates to a real-world position.  The returned
      * position is referenced to this Grid's coordinate reference system.
      * @param coords The grid coordinates to transform.
