@@ -36,6 +36,12 @@
             <organizationUrl>http://www.resc.reading.ac.uk</organizationUrl>
             <email>j.d.blower@reading.ac.uk</email>
         </developer>
+        <developer>
+            <name>Guy Griffiths</name>
+            <organization>Reading e-Science Centre, University of Reading, UK</organization>
+            <organizationUrl>http://www.resc.reading.ac.uk</organizationUrl>
+            <email>guy.griffiths@reading.ac.uk</email>
+        </developer>
     </developers>
     <contributors>
         <contributor>
@@ -84,8 +90,8 @@
                     links will also have to be updated. -->
                     <links>
                         <link>http://java.sun.com/j2se/1.6.0/docs/api/</link>
-                        <link>http://joda-time.sourceforge.net/api-1.6/</link>
-                        <link>http://geoapi.sourceforge.net/2.2/javadoc/</link>
+                        <link>http://www.geoapi.org/3.0/javadoc/</link>
+                        <link>http://www.unidata.ucar.edu/software/netcdf-java/v4.2/javadoc/</link>
                     </links>
                 </configuration>
             </plugin>
@@ -160,7 +166,7 @@
     <modules>
         <!-- Note that these are relative directory paths, not artifactIds! -->
         <module>core</module>
-        <module>util</module>
+        <module>impl</module>
         <module>cdm</module>
     </modules>
 </project>
