@@ -88,7 +88,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     tAxis = CdmUtils.createTimeAxis(coordSys);
                 }
 
-                System.out.println(coordSys.getName() + ",");
+//                System.out.println(coordSys.getName() + ",");
 
                 List<GridDatatype> grids = gridset.getGrids();
                 for (GridDatatype gridDT : grids) {
@@ -101,7 +101,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     String id = var.getName();
                     String description = var.getDescription();
 
-                    System.out.println("\t" + gridDT.getName() + ":" + name + "," + id + "," + description);
+//                    System.out.println("\t" + gridDT.getName() + ":" + name + "," + id + "," + description);
 
                     GridSeriesCoverage<Float> coverage = new NcGridSeriesCoverage(var, hGrid, vAxis, tAxis);
                     GridSeriesFeatureImpl feature = new GridSeriesFeatureImpl(name, id, description, this, coverage);
@@ -118,12 +118,16 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         // "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
         NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection", "Test Collection",
                 "/home/guy/Data/FOAM_ONE/FOAM_20100130.0.nc");
+        
+        for(String fId : fs.getFeatureIds()){
+            fs.getFeatureById(fId).getCoverage().extractHorizontalLayer(0, 0);
+        }
+        
         String var = "V";
 
         System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getDescription());
         System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getUnits().getUnitString());
-        System.out
-                .println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getParameter().getStandardName());
+        System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getParameter().getStandardName());
 
         List<Float> vals = fs.getFeatureById(var).getCoverage().getValues();
         GridCoordinates lowIndices = fs.getFeatureById(var).getCoverage().getDomain().getGridExtent().getLow();
