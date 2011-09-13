@@ -174,19 +174,16 @@ public final class GridExtentImpl implements GridExtent {
         return high;
     }
 
-    @Override
     public int getLow(int dimension) {
         checkIndex(dimension);
         return low.getCoordinateValue(dimension);
     }
 
-    @Override
     public int getHigh(int dimension) {
         checkIndex(dimension);
         return high.getCoordinateValue(dimension);
     }
 
-    @Override
     public int getSpan(int dimension) {
         checkIndex(dimension);
         return getHigh(dimension) - getLow(dimension) + 1;

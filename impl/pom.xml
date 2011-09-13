@@ -20,13 +20,12 @@
     		<type>jar</type>
     		<optional>false</optional>
     	</dependency>
-    	<dependency>
-    		<groupId>org.opengis</groupId>
-    		<artifactId>geoapi-pending</artifactId>
-    		<version>2.3-M7</version>
-    		<type>jar</type>
-    		<optional>false</optional>
-    	</dependency>
+        <dependency>
+            <groupId>org.geotoolkit</groupId>
+            <artifactId>geotk-referencing</artifactId>
+            <version>3.18-geoapi-3.0</version>
+        </dependency>
     </dependencies>
 </project>
+
 

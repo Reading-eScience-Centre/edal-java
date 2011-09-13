@@ -3,7 +3,10 @@ package uk.ac.rdg.resc.edal.util;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Utils {
+public final class Utils {
+
+    private Utils() {}
+    
     /**
      * Returns the smallest longitude value that is equivalent to the target
      * value and greater than the reference value. Therefore if {@code reference
