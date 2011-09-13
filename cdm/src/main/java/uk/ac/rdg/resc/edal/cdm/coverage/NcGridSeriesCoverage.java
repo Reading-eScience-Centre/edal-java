@@ -3,6 +3,7 @@ package uk.ac.rdg.resc.edal.cdm.coverage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.opengis.coverage.grid.GridCoordinates;
 
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
@@ -20,6 +21,7 @@ import uk.ac.rdg.resc.edal.coverage.RangeMetadataImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.GridSeriesDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
@@ -112,8 +114,11 @@ public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosi
 
     @Override
     public List<Float> extractHorizontalLayer(int tindex, int zindex) {
-        Extent<Integer> xExtent = Extents.newExtent(hGrid.getGridExtent().getLow(0),hGrid.getGridExtent().getHigh(0));
-        Extent<Integer> yExtent = Extents.newExtent(hGrid.getGridExtent().getLow(1),hGrid.getGridExtent().getHigh(1));
+        GridExtent extent = hGrid.getGridExtent();
+        GridCoordinates low = extent.getLow();
+        GridCoordinates high = extent.getHigh();
+        Extent<Integer> xExtent = Extents.newExtent(low.getCoordinateValue(0),high.getCoordinateValue(0));
+        Extent<Integer> yExtent = Extents.newExtent(low.getCoordinateValue(1),high.getCoordinateValue(1));
         return evaluate(Extents.newExtent(tindex, tindex), Extents.newExtent(zindex, zindex), yExtent, xExtent);
     }
 
