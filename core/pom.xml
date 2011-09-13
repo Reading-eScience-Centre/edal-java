@@ -15,9 +15,10 @@
     <dependencies>
         <dependency>
             <groupId>org.opengis</groupId>
-            <artifactId>geoapi-pending</artifactId>
-            <version>2.3-M7</version>
+            <artifactId>geoapi</artifactId>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 </project>
+
 
