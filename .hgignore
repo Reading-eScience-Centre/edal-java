@@ -1,5 +1,9 @@
-\.orig$
-\.orig\..*$
-\.chg\..*$
-\.rej$
-\.conflict\~$
+syntax: glob
+
+#\.orig$
+#\.orig\..*$
+#\.chg\..*$
+#\.rej$
+#\.conflict\~$
+*/target/
+csmlbeans/*.jar
