@@ -28,21 +28,51 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import java.util.List;
 
+import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * A two-dimensional {@link ReferenceableGrid} in the horizontal plane.
- * @todo Explain that GridCoordinates are 2D.  Specify axis order?
+ * A two-dimensional grid in the horizontal plane that is referenced to a
+ * 2D horizontal coordinate reference system.  If each individual grid axis
+ * is aligned with the axes of the CRS, the {@link RectilinearGrid} class can be
+ * used.
  * @author Jon
  */
-public interface HorizontalGrid extends ReferenceableGrid<HorizontalPosition, GridCell2D>
+public interface HorizontalGrid extends Grid2, DiscreteDomain<HorizontalPosition, GridCell2D>
 {
 
+    /**
+     * {@inheritDoc}
+     * <p>This may or may not be aligned with any of the
+     * real-world coordinate axes in the {@link #getCoordinateReferenceSystem()
+     * coordinate reference system}.</p>
+     */
     @Override
-    public List<ReferenceableAxis<Double>> getAxes();
+    public GridAxis getXAxis();
+
+    /**
+     * {@inheritDoc}
+     * <p>This may or may not be aligned with any of the
+     * real-world coordinate axes in the {@link #getCoordinateReferenceSystem()
+     * coordinate reference system}.</p>
+     */
+    @Override
+    public GridAxis getYAxis();
+
+    /**
+     * {@inheritDoc}
+     * <p>Use this method with caution, as it is possible that the number of
+     * domain objects (grid cells) will exceed {@link Integer#MAX_VALUE}, meaning
+     * that the value of {@code size()} in the returned List may be inaccurate.
+     * Prefer the use of {@link #size()} instead, which returns a long integer.</p>
+     * @return
+     */
+    @Override
+    public List<GridCell2D> getDomainObjects();
     
     /**
      * Returns a two-dimensional horizontal coordinate reference system.
@@ -50,7 +80,45 @@ public interface HorizontalGrid extends ReferenceableGrid<HorizontalPosition, Gr
      */
     public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
-    /** Returns 2 */
+    /**
+     * Gets the bounding box for the coordinates of the grid in the grid's
+     * coordinate reference system.
+     * @return A {@link BoundingBox} containing the co-ordinates of the grid
+     */
+    public BoundingBox getCoordinateExtent();
+
+    /**
+     * Returns TODO
+     * @param xIndex
+     * @param yIndex
+     * @return
+     */
+    public HorizontalPosition transformCoordinates(int xIndex, int yIndex);
+
+    /**
+     * Returns TODO
+     * @param coords
+     * @return
+     */
+    public HorizontalPosition transformCoordinates(GridCoordinates2D coords);
+
+    /**
+     * Returns the coordinates of the GridCell that contains the given
+     * horizontal position
+     * @param pos
+     * @return
+     */
+    public GridCoordinates2D findContainingCell(HorizontalPosition pos);
+
+    public GridCell2D getGridCell(GridCoordinates2D coords);
+
+    public GridCell2D getGridCell(int xIndex, int yIndex);
+    
+    /**
+     * The number of grid cells in this grid
+     */
     @Override
-    public int getDimension();
+    public long size();
+
+
 }

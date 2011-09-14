@@ -28,15 +28,18 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.Domain;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 
 /**
- * A cell in a two-dimensional xy grid.
+ * A cell in a {@link HorizontalGrid}.
  * @author Jon
  */
-public interface GridCell2D extends GridCell<HorizontalPosition> {
+public interface GridCell2D extends Domain<HorizontalPosition> {
+
+    /** Returns the coordinates within the parent {@link HorizontalGrid} */
+    public GridCoordinates2D getGridCoordinates();
 
     /** Returns the centre of the grid cell in horizontal space */
     public HorizontalPosition getCentre();
@@ -46,7 +49,8 @@ public interface GridCell2D extends GridCell<HorizontalPosition> {
      * @todo Create a return type
      */
     public Polygon getFootprint();
-    
-    public CoordinateReferenceSystem getHorizontalCrs();
+
+    /** Returns the grid of which this cell is a part */
+    public HorizontalGrid getGrid();
 
 }

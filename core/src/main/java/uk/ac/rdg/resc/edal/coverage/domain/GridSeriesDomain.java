@@ -28,10 +28,11 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
+import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
@@ -39,12 +40,12 @@ import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
- * The domain of a GridSeriesFeature, modelled as a composition of a horizontal
+ * The domain of a {@link GridSeriesCoverage}, modelled as a composition of a horizontal
  * grid, plus t and z axes.
  * @todo Explain that GridCoordinates are 4D and explain ordering.
  * @author Jon
  */
-public interface GridSeriesDomain extends ReferenceableGrid<GeoPosition, GridCell4D>
+public interface GridSeriesDomain extends DiscreteDomain<GeoPosition, GridCell4D>
 {
     
     public HorizontalGrid getHorizontalGrid();
@@ -58,5 +59,18 @@ public interface GridSeriesDomain extends ReferenceableGrid<GeoPosition, GridCel
     public VerticalCrs getVerticalCrs();
 
     public CalendarSystem getCalendarSystem();
+
+    public GridCell4D findContainingCell(GeoPosition pos);
+
+    /**
+     * {@inheritDoc}
+     * <p>Use this method with caution, as it is possible that the number of
+     * domain objects (grid cells) will exceed {@link Integer#MAX_VALUE}, meaning
+     * that the value of {@code size()} in the returned List may be inaccurate.
+     * Prefer the use of {@link #size()} instead, which returns a long integer.</p>
+     * @return
+     */
+    @Override
+    public List<GridCell4D> getDomainObjects();
 
 }

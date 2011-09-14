@@ -29,8 +29,10 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.Domain;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
@@ -39,12 +41,16 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
- * A cell in a (potentially) four-dimensional grid.
- * @todo Should this return GridCoordinates for i and j only, then return
- * indices along t and z axes separately?
+ * A cell in a {@link GridSeriesDomain}, which can have up to four dimensions.
  * @author Jon
  */
-public interface GridCell4D extends GridCell<GeoPosition> {
+public interface GridCell4D extends Domain<GeoPosition> {
+
+    public GridCoordinates2D getHorizontalCoordinates();
+
+    public int getTimeIndex();
+
+    public int getVerticalIndex();
 
     /** Returns the centre of the grid cell in horizontal space */
     public HorizontalPosition getCentre();
@@ -62,5 +68,7 @@ public interface GridCell4D extends GridCell<GeoPosition> {
     public Extent<VerticalPosition> getVerticalExtent();
 
     public CalendarSystem getCalendarSystem();
+
+    public GridSeriesDomain getGrid();
 
 }

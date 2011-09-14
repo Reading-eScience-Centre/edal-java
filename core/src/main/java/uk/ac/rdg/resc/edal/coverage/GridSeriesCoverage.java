@@ -41,8 +41,6 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
  * @param <R>
  *            The type of the value returned by the coverage; for a compound
  *            coverage this type will be {@link Record}.
- * @todo ncWMS Layer types are more like SimpleCoverages. Should
- *       GridSeriesCoverages be SimpleCoverages too?
  * @author Jon
  */
 public interface GridSeriesCoverage<R> extends DiscreteCoverage<GeoPosition, GridCell4D, R> {

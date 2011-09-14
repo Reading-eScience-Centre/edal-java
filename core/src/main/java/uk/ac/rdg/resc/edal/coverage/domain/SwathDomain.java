@@ -45,9 +45,9 @@ public interface SwathDomain extends DiscreteDomain<GeoPosition, GroundPixel>
 
     /**
      * The ground pixels that comprise the swath, in ascending order of time.
+     * This is exactly equivalent to {@link #getDomainObjects()}.
      */
-    @Override
-    public List<GroundPixel> getDomainObjects();
+    public List<GroundPixel> getGroundPixels();
 
     /**
      * Returns the {@link CalendarSystem} used to reference the time values of the

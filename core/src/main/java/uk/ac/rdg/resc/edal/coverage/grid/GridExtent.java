@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,10 +31,14 @@ package uk.ac.rdg.resc.edal.coverage.grid;
 import uk.ac.rdg.resc.edal.Extent;
 
 /**
- * The extent of a {@link Grid} expressed in terms of {@link GridCoordinates}.
+ * The extent of a {@link HorizontalGrid} in index space
+ * @author Jon
  */
-public interface GridExtent extends Extent<GridCoordinates> {
+public interface GridExtent extends Extent<GridCoordinates2D> {
 
-    public int getDimension();
+    public Extent<Integer> getXExtent();
+    public Extent<Integer> getYExtent();
 
+    /** The number of grid points in the grid */
+    public long size();
 }

@@ -29,7 +29,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A vertical axis in a ReferenceableGrid.

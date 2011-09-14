@@ -28,58 +28,41 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import java.util.List;
-
 /**
- * A description of a multidimensional grid with integer coordinates.
+ * A two-dimensional grid composed of an X and Y axis.  This top-level type
+ * contains no georeferencing information, and so the X and Y axes are arbitrarily
+ * chosen, however, the x index is usually assumed to vary faster in underlying
+ * storage.  Hence the natural order of grid coordinates is (x0, y0), (x1, y0),
+ * (x2, y0), (x0, y1) etc.
  * @author Jon
- * @todo implement Iterable&lt;GridCoordinates&gt;?  Would be nice to be able
- * to do {@code for (GridCoordinates coords : grid) ...}.  This method could
- * also be available on the GridEnvelope implementation.
  */
-public interface Grid
+public interface Grid2
 {
 
     /**
-     * Returns a list containing the names of the grid axes.  The order of these
-     * names matches the order of elements in this Grid's {@link GridCoordinates}
-     * and {@link #getGridExtent() grid envelope}.
-     * @return a list containing the names of the grid axes.
+     * Gets the X axis of the grid.  This may not be aligned with any of the
+     * real-world coordinate axes in the {@link #getCoordinateReferenceSystem()
+     * coordinate reference system}.
+     * @return the X axis of the grid.
      */
-    public List<? extends GridAxis> getAxes();
+    public GridAxis getXAxis();
 
     /**
-     * Returns the extent of the grid in integer coordinates.
-     * @return
+     * Gets the Y axis of the grid.  This may not be aligned with any of the
+     * real-world coordinate axes in the {@link #getCoordinateReferenceSystem()
+     * coordinate reference system}.
+     * @return the Y axis of the grid.
+     */
+    public GridAxis getYAxis();
+
+    /**
+     * The extent of the grid in integer coordinates.
      */
     public GridExtent getGridExtent();
-
+    
     /**
-     * Gets the offset of the given grid point within the
-     * {@link #getGridPoints() list of grid points}.
-     * @param coords The coordinates of the grid point
-     * @return the offset of the given grid point within the
-     * {@link #getGridPoints() list of grid points}.
+     * The number of grid cells in this grid (equivalent to {@link GridExtent#size()}).
      */
-    public int getOffset(GridCoordinates coords);
+    public long size();
 
-    /**
-     * Returns an ordered list of GridCoordinates objects representing each
-     * cell in the grid.
-     */
-    public List<GridCoordinates> getGridPoints();
-
-    /**
-     * Returns the dimensionality of the grid. This will be the same as
-     * {@link #getAxisNames()}.size() and {@link #getExtent()}.getDimension().
-     * @return the dimensionality of the grid.
-     */
-    public int getDimension();
-
-    /**
-     * Returns the number of grid points in the grid.
-     * @return the number of grid points in the grid.
-     * @todo should return a long?
-     */
-    public int size();
 }

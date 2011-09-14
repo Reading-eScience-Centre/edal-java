@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2009 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,34 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package uk.ac.rdg.resc.edal.coverage.grid;
+
 /**
- * Contains definitions of Coverages, which are functions that return values
- * for spatial/temporal points within their domain.  Types in this package are
- * based upon the ISO19123 standard, although this is not followed literally in
- * the interests of yielding simpler, more readable code.
+ * The coordinates of a grid cell within a {@link HorizontalGrid}.  It is usually
+ * assumed that the x index varies faster than the y index in underlying storage,
+ * hence we define {@link #compareTo(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D) compareTo()}
+ * so that coordinates may be sorted in a manner that reflects this.
+ * @author Jon
  */
-package uk.ac.rdg.resc.edal.coverage;
+public interface GridCoordinates2D extends Comparable<GridCoordinates2D> {
+
+    /**
+     * The index of the point on the {@link HorizontalGrid#getXAxis() x axis of the grid}
+     */
+    public int getXIndex();
+
+    /**
+     * The index of the point on the {@link HorizontalGrid#getXAxis() y axis of the grid}
+     */
+    public int getYIndex();
+
+    /**
+     * Compares first on the basis of the y index, then the x index.  Hence
+     * the coordinates (x=1, y=2) are taken to be "less than" (x=2, y=1).
+     * @param coords
+     * @return
+     */
+    @Override
+    public int compareTo(GridCoordinates2D coords);
+
+}

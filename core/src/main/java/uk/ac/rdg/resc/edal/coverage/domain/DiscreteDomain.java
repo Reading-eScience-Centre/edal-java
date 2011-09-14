@@ -28,14 +28,13 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
-import uk.ac.rdg.resc.edal.Domain;
 import java.util.List;
-import java.util.Set;
+import uk.ac.rdg.resc.edal.Domain;
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 
 /**
- * A {@link Domain} that consists of a finite number of discrete objects.
- * {@link DiscreteCoverage}s use this type of domain.
+ * <p>A {@link Domain} that consists of a finite number of discrete objects.
+ * {@link DiscreteCoverage}s use this type of domain.</p>
  * @param <P> The type of object used to identify positions within this domain
  * @param <DO> The type of the domain object
  * @author Jon
@@ -50,7 +49,7 @@ public interface DiscreteDomain<P, DO> extends Domain<P>
     @Override public boolean contains(P position);
 
     /**
-     * Returns the {@link List} of domain objects that comprise this domain.
+     * Returns a {@link List} of domain objects that comprise this domain.
      * The domain objects are in a defined order, hence we use a {@link List};
      * however, the domain objects will also each be unique, so the returned list
      * will also have the semantics of a {@link Set}.  (It is impossible in Java
@@ -60,17 +59,18 @@ public interface DiscreteDomain<P, DO> extends Domain<P>
     public List<DO> getDomainObjects();
 
     /**
-     * Returns the index of the first domain object in the {@link #getDomainObjects()
-     * list of domain objects} that contains the given position, or -1 if the
-     * position is outside the domain.
+     * Finds the index of the first domain object that contains the given position.
      */
-    public int findIndexOf(P position);
+    public long findIndexOf(P pos);
 
     /**
-     * Returns the number of domain objects in the domain (equivalent to
-     * {@link #getDomainObjects()}.size()).
+     * <p>Returns the number of domain objects in the domain.</p>
+     * <p>Grids  may have very large numbers of objects, hence we need a long
+     * integer.  Many subclasses will implement a method that returns the domain
+     * objects as a List, whose size will be a 4-byte integer.  This may be a more
+     * convenient way to get the domain size in some circumstances.</p>
      * @return the number of domain objects in the domain
      */
-    public int size();
+    public long size();
 
 }
