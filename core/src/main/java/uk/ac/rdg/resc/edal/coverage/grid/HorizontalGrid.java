@@ -42,7 +42,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * used.
  * @author Jon
  */
-public interface HorizontalGrid extends Grid2, DiscreteDomain<HorizontalPosition, GridCell2D>
+public interface HorizontalGrid extends Grid, DiscreteDomain<HorizontalPosition, GridCell2D>
 {
 
     /**

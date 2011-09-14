@@ -36,7 +36,7 @@ package uk.ac.rdg.resc.edal.coverage.grid;
  * (x2, y0), (x0, y1) etc.
  * @author Jon
  */
-public interface Grid2
+public interface Grid
 {
 
     /**
