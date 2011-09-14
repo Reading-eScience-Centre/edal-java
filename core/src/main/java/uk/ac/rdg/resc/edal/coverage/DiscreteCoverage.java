@@ -88,8 +88,7 @@ public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R>
      * Gets the number of distinct values in this coverage.  (Equivalent to
      * {@code getDomain().size()}.)
      * @return the number of distinct values in this coverage.
-     * @todo Do we need this?
      */
-    public int size();
+    public long size();
 
 }

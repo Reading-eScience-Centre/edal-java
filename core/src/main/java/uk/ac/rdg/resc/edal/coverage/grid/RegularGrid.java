@@ -48,10 +48,4 @@ public interface RegularGrid extends RectilinearGrid {
     @Override
     public RegularAxis getYAxis();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public RegularAxis getAxis(int index);
-
 }

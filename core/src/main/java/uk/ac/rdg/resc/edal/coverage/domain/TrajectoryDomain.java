@@ -44,10 +44,9 @@ public interface TrajectoryDomain extends DiscreteDomain<GeoPosition, GeoPositio
 {
     /**
      * The positions in space and time that comprise the domain, in ascending
-     * order of time.
+     * order of time. This is exactly equivalent to {@link #getDomainObjects()}.
      */
-    @Override
-    public List<GeoPosition> getDomainObjects();
+    public List<GeoPosition> getPositions();
 
     /**
      * Returns the vertical coordinate reference system used to reference

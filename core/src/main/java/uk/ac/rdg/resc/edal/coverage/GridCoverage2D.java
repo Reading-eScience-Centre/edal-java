@@ -29,8 +29,8 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.List;
-import org.opengis.coverage.grid.GridCoordinates;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
@@ -48,9 +48,7 @@ public interface GridCoverage2D<R>
     
     @Override public HorizontalGrid getDomain();
 
-
-    public R evaluate(GridCoordinates coords);
-    public List<R> evaluate(List<GridCoordinates> coords);
-
+    public R evaluate(GridCoordinates2D coords);
+    public List<R> evaluate(List<GridCoordinates2D> coords);
 
 }

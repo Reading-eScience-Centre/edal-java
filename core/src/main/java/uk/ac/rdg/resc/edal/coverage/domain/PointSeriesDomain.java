@@ -46,12 +46,12 @@ public interface PointSeriesDomain extends DiscreteDomain<TimePosition, TimePosi
     public CalendarSystem getCalendarSystem();
 
     /**
-     * Returns the list of time coordinate values that comprise this domain,
+     * <p>Returns the list of time coordinate values that comprise this domain,
      * in the domain's {@link #getCalendarSystem() calendar system}.  The values
-     * will be in ascending order of time.
+     * will be in ascending order of time.</p>
+     * <p>This is exactly equivalent to {@link #getDomainObjects()}.</p>
      */
-    @Override
-    public List<TimePosition> getDomainObjects();
+    public List<TimePosition> getTimes();
 
     /**
      * Returns the extent of the domain.  (This information could also be

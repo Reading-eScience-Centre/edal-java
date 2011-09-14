@@ -29,7 +29,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import org.opengis.referencing.cs.CoordinateSystemAxis;
-import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
 import uk.ac.rdg.resc.edal.Extent;
 
 /**
@@ -42,7 +41,7 @@ import uk.ac.rdg.resc.edal.Extent;
  * @param <P> The type of object used to identify positions on this axis
  * @author Jon
  */
-public interface ReferenceableAxis<P extends Comparable<? super P>> extends GridAxis, DiscreteDomain<P, Extent<P>> {
+public interface ReferenceableAxis<P extends Comparable<? super P>> extends GridAxis {
 
     /**
      * Gets the coordinate value at the given index
@@ -84,7 +83,6 @@ public interface ReferenceableAxis<P extends Comparable<? super P>> extends Grid
      * @param position
      * @return the index of the given coordinate value, or -1 if not found.
      */
-    @Override
     public int findIndexOf(P position);
 
     /**

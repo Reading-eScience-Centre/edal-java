@@ -33,6 +33,7 @@ import org.opengis.geometry.Envelope;
 /**
  * A bounding box in the horizontal plane.  Extends {@link Envelope} by providing
  * convenience methods for accessing minimum and maximum x and y values
+ * @todo does this need to extend Envelope?
  * @author Jon
  */
 public interface BoundingBox extends Envelope {
