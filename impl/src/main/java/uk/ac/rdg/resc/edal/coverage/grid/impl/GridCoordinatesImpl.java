@@ -1,7 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.Arrays;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 
 /**
  * Immutable implementation of {@link GridCoordinates}.
@@ -9,41 +8,22 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
  * @author Jon
  * @author Guy Griffiths
  */
-public final class GridCoordinatesImpl implements GridCoordinates {
+public final class GridCoordinatesImpl implements GridCoordinates2D {
 
-    /** 1-D immutable GridCoordinates with a single coordinate value of zero */
-    public static final GridCoordinatesImpl ZERO_1D = new GridCoordinatesImpl(0);
-
-    /** 2-D immutable GridCoordinates with both values zero */
-    public static final GridCoordinatesImpl ZERO_2D = new GridCoordinatesImpl(0, 0);
-
-    /** 3-D immutable GridCoordinates with all values zero */
-    public static final GridCoordinatesImpl ZERO_3D = new GridCoordinatesImpl(0, 0, 0);
-
-    /** 4-D immutable GridCoordinates with all values zero */
-    public static final GridCoordinatesImpl ZERO_4D = new GridCoordinatesImpl(0, 0, 0, 0);
-
-    private final int[] coords;
+    private final int xIndex;
+    private final int yIndex;
 
     /**
      * Creates a new GridCoordinatesImpl with the given coordinates.
      * 
-     * @param coord1
+     * @param xIndex
      *            The first coordinate
      * @param otherCoords
      *            The remaining coordinates
      */
-    public GridCoordinatesImpl(int coord1, int... otherCoords) {
-        int coordsLength = 1;
-        if (otherCoords != null)
-            coordsLength += otherCoords.length;
-        coords = new int[coordsLength];
-        coords[0] = coord1;
-        if (otherCoords != null) {
-            for (int i = 0; i < otherCoords.length; i++) {
-                coords[i + 1] = otherCoords[i];
-            }
-        }
+    public GridCoordinatesImpl(int xIndex, int yIndex) {
+        this.xIndex = xIndex;
+        this.yIndex = yIndex;
     }
 
     /**
@@ -59,9 +39,10 @@ public final class GridCoordinatesImpl implements GridCoordinates {
     public GridCoordinatesImpl(int[] coords) {
         if (coords == null)
             throw new NullPointerException();
-        if (coords.length == 0)
-            throw new IllegalArgumentException("Zero-length coordinates array");
-        this.coords = coords.clone(); // Copy of coords to preserve immutability
+        if (coords.length != 0)
+            throw new IllegalArgumentException("Grid co-ordinates must have 2 dimensions");
+        xIndex = coords[0];
+        yIndex = coords[1];
     }
 
     /**
@@ -78,18 +59,16 @@ public final class GridCoordinatesImpl implements GridCoordinates {
      * </p>
      * 
      * @param gridCoordinates
-     *            The GridCoordinates to convert.
+     *            The GridCoordinates2D to convert.
      * @return a GridCoordinatesImpl object containing the same information as
-     *         the provided GridCoordinates object.
+     *         the provided GridCoordinates2D object.
      * @see #clone()
-     * @throws IllegalArgumentException
-     *             if the given GridCoordinates object has no dimensions.
      */
-    public static GridCoordinatesImpl convert(org.opengis.coverage.grid.GridCoordinates gridCoordinates) {
+    public static GridCoordinatesImpl convert(GridCoordinates2D gridCoordinates) {
         if (gridCoordinates instanceof GridCoordinatesImpl) {
             return (GridCoordinatesImpl) gridCoordinates;
         }
-        return new GridCoordinatesImpl(gridCoordinates.getCoordinateValues());
+        return new GridCoordinatesImpl(gridCoordinates.getXIndex(), gridCoordinates.getYIndex());
     }
 
     /**
@@ -101,55 +80,12 @@ public final class GridCoordinatesImpl implements GridCoordinates {
      * @throws IllegalArgumentException
      *             if {@code dimension <= 0}
      */
-    public static GridCoordinatesImpl zero(int dimension) {
-        if (dimension <= 0) {
-            throw new IllegalArgumentException("Dimension cannot be less than or equal to zero");
-        }
-        // We reuse objects where we can as they are immutable
-        if (dimension == 1)
-            return ZERO_1D;
-        if (dimension == 2)
-            return ZERO_2D;
-        if (dimension == 3)
-            return ZERO_3D;
-        if (dimension == 4)
-            return ZERO_4D;
-        // Create a new object with the required number of dimensions
-        return new GridCoordinatesImpl(new int[dimension]);
+    public static GridCoordinatesImpl zero() {
+        return new GridCoordinatesImpl(new int[2]);
     }
 
     @Override
-    public int getDimension() {
-        return coords.length;
-    }
-
-    @Override
-    public int[] getCoordinateValues() {
-        // Returns a copy to preserve immutability
-        return coords.clone();
-    }
-
-    @Override
-    public int getCoordinateValue(int dimension) {
-        if (dimension < 0 || dimension >= coords.length) {
-            String msg = String.format("Attempt to access element at index %d in array of length %d", dimension,
-                    coords.length);
-            throw new IndexOutOfBoundsException(msg);
-        }
-        return coords[dimension];
-    }
-
-    /**
-     * Throws {@link UnsupportedOperationException}: instances of this class are
-     * immutable.
-     */
-    @Override
-    public void setCoordinateValue(int dimension, int value) {
-        throw new UnsupportedOperationException("Not supported");
-    }
-
-    @Override
-    public int compareTo(GridCoordinates other) {
+    public int compareTo(GridCoordinates2D other) {
         return GridCoordinatesComparator.INSTANCE.compare(this, other);
     }
 
@@ -173,26 +109,36 @@ public final class GridCoordinatesImpl implements GridCoordinates {
      */
     @Override
     public Object clone() {
-        return new GridCoordinatesImpl(coords);
+        return new GridCoordinatesImpl(xIndex,yIndex);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(coords);
+        return (xIndex*yIndex) % Integer.MAX_VALUE;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == this)
             return true;
-        if (!(obj instanceof GridCoordinates))
+        if (!(obj instanceof GridCoordinates2D))
             return false;
-        GridCoordinates other = (GridCoordinates) obj;
-        return Arrays.equals(getCoordinateValues(), other.getCoordinateValues());
+        GridCoordinates2D other = (GridCoordinates2D) obj;
+        return (getXIndex() == other.getXIndex() && getYIndex() == other.getYIndex());
     }
 
     @Override
     public String toString() {
-        return Arrays.toString(coords);
+        return xIndex+","+yIndex;
+    }
+
+    @Override
+    public int getXIndex() {
+        return xIndex;
+    }
+
+    @Override
+    public int getYIndex() {
+        return yIndex;
     }
 }

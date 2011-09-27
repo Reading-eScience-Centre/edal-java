@@ -6,6 +6,7 @@ import java.util.List;
 import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.ProfileDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiscreteSimpleCoverage;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<VerticalPosition, VerticalPosition, R> implements ProfileCoverage<R>{

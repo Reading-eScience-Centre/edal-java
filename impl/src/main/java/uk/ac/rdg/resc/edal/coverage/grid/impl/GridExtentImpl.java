@@ -1,15 +1,15 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
+import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 public final class GridExtentImpl implements GridExtent {
 
     private final GridCoordinatesImpl low;
     private final GridCoordinatesImpl high;
-    private final int dimensionality;
     // These are calculated from the GridCoordinates upon construction
-    private transient final int[] combos;
     private transient final int size;
 
     /**
@@ -27,35 +27,22 @@ public final class GridExtentImpl implements GridExtent {
      *             any of the high coordinates is lower than its corresponding
      *             low coordinate.
      */
-    public GridExtentImpl(GridCoordinates low, GridCoordinates high) {
-        if (low.getDimension() != high.getDimension()) {
-            throw new IllegalArgumentException("Dimensions of low and high " + "GridCoordinates must be equal");
-        }
-        dimensionality = low.getDimension();
-        for (int i = 0; i < dimensionality; i++) {
-            if (high.getCoordinateValue(i) < low.getCoordinateValue(i)) {
-                String msg = String.format("High coordinate at index %d is lower" + " than the low coordinate", i);
-                throw new IllegalArgumentException(msg);
-            }
+    public GridExtentImpl(GridCoordinates2D low, GridCoordinates2D high) {
+        if (high.getXIndex() < low.getXIndex() || high.getYIndex() < low.getYIndex()) {
+            String msg = String.format("A high coordinate is lower" + " than a low coordinate");
+            throw new IllegalArgumentException(msg);
         }
         // We ensure that the internal GridCoordinates objects are instances of
         // GridCoordinatesImpl to ensure that they are immutable
         this.low = GridCoordinatesImpl.convert(low);
         this.high = GridCoordinatesImpl.convert(high);
 
-        // Calculate the number of combinations of coordinates for each
-        // dimension. We need this for indexOf() and getCoordinates(), which may
-        // be called many times, so this pre-calculation is sensible.
-        // We calculate the number of coordinates in this grid (the size) at the
-        // same time.
-        combos = new int[dimensionality];
-        combos[dimensionality - 1] = 1;
-        int n = getSpan(dimensionality - 1);
-        for (int j = dimensionality - 2; j >= 0; j--) {
-            combos[j] = combos[j + 1] * getSpan(j + 1);
-            n *= getSpan(j);
-        }
-        size = n;
+        size = getXSpan() * getYSpan();
+    }
+    
+    public GridExtentImpl(Extent<Integer> xExtent, Extent<Integer> yExtent) {
+        this(new GridCoordinatesImpl(xExtent.getLow(), yExtent.getLow()),
+                new GridCoordinatesImpl(xExtent.getHigh(),yExtent.getHigh()));
     }
 
     /**
@@ -67,23 +54,23 @@ public final class GridExtentImpl implements GridExtent {
      * @throws IllegalArgumentException
      *             if any of the high coordinates is less than zero.
      */
-    public GridExtentImpl(GridCoordinates high) {
-        this(GridCoordinatesImpl.zero(high.getDimension()), high);
+    public GridExtentImpl(GridCoordinates2D high) {
+        this(GridCoordinatesImpl.zero(), high);
     }
 
     /**
      * Creates a new GridExtent with the given high coordinates with all low
      * coordinates equal to zero.
      * 
-     * @param highCoord1
-     *            The first high coordinate
-     * @param otherHighCoords
-     *            The remaining high coordinates
+     * @param highCoordX
+     *            The high coordinate of the x-axis
+     * @param highCoordY
+     *            The high coordinate of the y-axis
      * @throws IllegalArgumentException
      *             if any of the high coordinates is less than zero.
      */
-    public GridExtentImpl(int highCoord1, int... otherHighCoords) {
-        this(new GridCoordinatesImpl(highCoord1, otherHighCoords));
+    public GridExtentImpl(int highCoordX, int highCoordY) {
+        this(new GridCoordinatesImpl(highCoordX, highCoordY));
     }
 
     /**
@@ -94,8 +81,8 @@ public final class GridExtentImpl implements GridExtent {
      * @return true if this envelope contains the given coordinates.
      */
     @Override
-    public boolean contains(GridCoordinates coords) {
-        return contains(coords.getCoordinateValues());
+    public boolean contains(GridCoordinates2D coords) {
+        return contains(coords.getXIndex(), coords.getYIndex());
     }
 
     /**
@@ -108,19 +95,9 @@ public final class GridExtentImpl implements GridExtent {
      *             dimensionality of the grid
      * @return true if this envelope contains the given coordinates
      */
-    public boolean contains(int... coords) {
-        if (coords == null)
-            throw new NullPointerException();
-        if (coords.length != dimensionality) {
-            throw new IllegalArgumentException("coords.length should be " + dimensionality);
-        }
-
-        for (int i = 0; i < coords.length; i++) {
-            if (coords[i] < getLow().getCoordinateValue(i) || coords[i] > getHigh().getCoordinateValue(i)) {
-                return false;
-            }
-        }
-        return true;
+    public boolean contains(int xIndex, int yIndex) {
+        return (xIndex >= getLow().getXIndex() && xIndex <= getHigh().getXIndex() &&
+                yIndex >= getLow().getYIndex() && yIndex <= getHigh().getYIndex());
     }
 
     /**
@@ -143,11 +120,6 @@ public final class GridExtentImpl implements GridExtent {
         if (env instanceof GridExtentImpl)
             return (GridExtentImpl) env;
         return new GridExtentImpl(env.getLow(), env.getHigh());
-    }
-
-    @Override
-    public int getDimension() {
-        return dimensionality;
     }
 
     /**
@@ -173,78 +145,13 @@ public final class GridExtentImpl implements GridExtent {
     public GridCoordinatesImpl getHigh() {
         return high;
     }
-
-    public int getLow(int dimension) {
-        checkIndex(dimension);
-        return low.getCoordinateValue(dimension);
+    
+    private int getXSpan(){
+        return getHigh().getXIndex() - getLow().getXIndex() + 1;
     }
-
-    public int getHigh(int dimension) {
-        checkIndex(dimension);
-        return high.getCoordinateValue(dimension);
-    }
-
-    public int getSpan(int dimension) {
-        checkIndex(dimension);
-        return getHigh(dimension) - getLow(dimension) + 1;
-    }
-
-    private void checkIndex(int dimension) {
-        if (dimension < 0 || dimension >= dimensionality) {
-            String msg = String.format("Attempt to access element at dimension "
-                    + "%d in envelope of dimensionality %d", dimension, dimensionality);
-            throw new IndexOutOfBoundsException(msg);
-        }
-    }
-
-    /**
-     * <p>
-     * Returns the <i>i</i>th set of grid coordinates in this envelope, based
-     * upon the ordering defined by
-     * {@link org.jcsml.coverage.grid.GridCoordinates#compareTo(org.jcsml.coverage.grid.GridCoordinates)}. 
-     * {@code getCoordinates(0)} is therefore equivalent to {@link #getLow()
-     * getLow()} and {@code getCoordinates(getSize() - 1)} is equivalent to
-     * {@link #getHigh() getHigh()}.
-     * </p>
-     * <p>
-     * The returned {@link GridCoordinates} object will be immutable.
-     * </p>
-     * <p>
-     * This method is the inverse of
-     * {@link #indexOf(org.opengis.coverage.grid.GridCoordinates)
-     * indexOf(GridCoordinates)}.
-     * </p>
-     * 
-     * @param i
-     *            the index through the grid coordinates in this envelope
-     * @return the <i>i</i>th set of grid coordinates in this envelope
-     * @throws IllegalArgumentException
-     *             if {@code i < 0} or {@code i >= getSize()}.
-     */
-    public GridCoordinatesImpl getCoordinates(int i) {
-        if (i < 0 || i >= size) {
-            String msg = String.format("The requested index (%d) is outside the" + " range of this envelope", i);
-            throw new IllegalArgumentException(msg);
-        }
-        // Shortcuts for efficiency
-        if (i == 0)
-            return getLow();
-        if (i == size - 1)
-            return getHigh();
-
-        // Now we find the coordinate index for each axis
-        int[] coords = new int[dimensionality];
-        for (int j = 0; j < dimensionality; j++) {
-            coords[j] = i / combos[j];
-            i %= combos[j];
-        }
-
-        // Now we must add the low coordinates to these
-        for (int j = 0; j < dimensionality; j++) {
-            coords[j] += low.getCoordinateValue(j);
-        }
-
-        return new GridCoordinatesImpl(coords);
+    
+    private int getYSpan(){
+        return getHigh().getYIndex() - getLow().getYIndex() + 1;
     }
 
     private int hashCode = Integer.MAX_VALUE;
@@ -288,5 +195,20 @@ public final class GridExtentImpl implements GridExtent {
     @Override
     public boolean isEmpty() {
         return (low == null && high == null);
+    }
+
+    @Override
+    public Extent<Integer> getXExtent() {
+        return Extents.newExtent(low.getXIndex(), high.getXIndex());
+    }
+
+    @Override
+    public Extent<Integer> getYExtent() {
+        return Extents.newExtent(low.getYIndex(), high.getYIndex());
+    }
+
+    @Override
+    public long size() {
+        return size;
     }
 }
