@@ -1,7 +1,8 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import java.util.Comparator;
-import org.opengis.coverage.grid.GridCoordinates;
+
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 
 /**
  * <p>
@@ -20,7 +21,7 @@ import org.opengis.coverage.grid.GridCoordinates;
  * 
  * @author Jon
  */
-public enum GridCoordinatesComparator implements Comparator<GridCoordinates> {
+public enum GridCoordinatesComparator implements Comparator<GridCoordinates2D> {
 
     /** Singleton instance */
     INSTANCE;
@@ -31,20 +32,14 @@ public enum GridCoordinatesComparator implements Comparator<GridCoordinates> {
      * ordering as follows:
      * </p>
      * <ul>
-     * <li>First compare the dimensions of the objects. If they are different,
-     * the object with the greater number of dimensions is considered greater.</li>
-     * <li>Next compare each individual coordinate from each object, starting
-     * with {@link #getCoordinateValue(int) getCoordinateValue}(0). If they are
-     * different, the object with the higher coordinate is considered greater.</li>
+     * <li>If the x-index of c1 is greater than the x-index of c2, then c1 is
+     * considered to be larger than c1</li>
+     * <li>If the x-indices of c1 and c2 are identical, comparison is done on
+     * the y-index</li>
      * </ul>
      * <p>
-     * It is unlikely to be useful in reality to compare GridCoordinates objects
-     * with different numbers of dimensions, but we specify this for
-     * completeness.
-     * </p>
-     * <p>
      * This ordering ensures that collections of GridCoordinates objects will be
-     * ordered with the last coordinate varying fastest.
+     * ordered with the y-coordinate varying fastest.
      * </p>
      * 
      * @param c1
@@ -55,16 +50,13 @@ public enum GridCoordinatesComparator implements Comparator<GridCoordinates> {
      *         less than, equal to, or greater than {@code c2}.
      */
     @Override
-    public int compare(GridCoordinates c1, GridCoordinates c2) {
-        int diff = c1.getDimension() - c2.getDimension();
+    public int compare(GridCoordinates2D c1, GridCoordinates2D c2) {
+        int diff = c1.getXIndex() - c2.getXIndex();
         if (diff != 0)
             return diff;
-        // If we get this far the objects have the same number of dimensions
-        for (int i = 0; i < c1.getDimension(); i++) {
-            diff = c1.getCoordinateValue(i) - c2.getCoordinateValue(i);
-            if (diff != 0)
-                return diff;
-        }
+        diff = c1.getYIndex() - c2.getYIndex();
+        if (diff != 0)
+            return diff;
         return 0; // If we get this far the objects are equal
     }
 

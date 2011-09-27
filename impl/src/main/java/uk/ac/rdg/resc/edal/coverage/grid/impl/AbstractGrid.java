@@ -1,6 +1,7 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import uk.ac.rdg.resc.edal.coverage.grid.Grid;
+import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 
 /**
  * Abstract superclass that implements the {@link #getSize()} and
@@ -16,19 +17,14 @@ public abstract class AbstractGrid implements Grid
      * provided by subclasses.</p>
      */
     @Override
-    public final int size() {
+    public final long size() {
         // We reuse code in GridExtentImpl to calculate the size
         return GridExtentImpl.convert(getGridExtent()).getSize();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>This implementation uses the {@link #getGridExtent() GridEnvelope}
-     * provided by subclasses.</p>
-     */
     @Override
-    public final int getDimension() {
-        return getGridExtent().getDimension();
+    public GridExtent getGridExtent() {
+        return new GridExtentImpl(getXAxis().getIndexExtent(), getYAxis().getIndexExtent());
     }
 
 }

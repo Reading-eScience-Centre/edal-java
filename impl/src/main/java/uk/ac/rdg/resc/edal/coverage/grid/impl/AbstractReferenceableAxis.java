@@ -1,8 +1,5 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
@@ -97,28 +94,6 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public boolean contains(T position) {
-        /*
-         * We can simply find out whether the position falls within the extent
-         * of the axis.
-         * 
-         * Special behaviour (e.g. discontinuous axes) should be implemented in
-         * a subclass
-         */
-        Extent<T> extent = getCoordinateExtent();
-        return (position.compareTo(extent.getLow()) > 0 && position.compareTo(extent.getHigh()) < 0);
-    }
-    
-    @Override
-    public List<Extent<T>> getDomainObjects() {
-        List<Extent<T>> domainObjects = new ArrayList<Extent<T>>();
-        for (int i = 0; i < size(); i++) {
-            domainObjects.add(getCoordinateBounds(i));
-        }
-        return domainObjects;
     }
 
     @Override

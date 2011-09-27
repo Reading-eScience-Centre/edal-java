@@ -50,7 +50,7 @@ public class PointSeriesDomainImpl implements PointSeriesDomain {
     }
 
     @Override
-    public int findIndexOf(TimePosition time) {
+    public long findIndexOf(TimePosition time) {
         int index = Collections.binarySearch(times, time);
         if(index >= 0){
             return index;
@@ -69,7 +69,12 @@ public class PointSeriesDomainImpl implements PointSeriesDomain {
     }
 
     @Override
-    public int size() {
+    public long size() {
         return times.size();
+    }
+
+    @Override
+    public List<TimePosition> getTimes() {
+        return times;
     }
 }

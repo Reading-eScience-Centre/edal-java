@@ -53,7 +53,7 @@ public class ProfileDomainImpl implements ProfileDomain {
     }
 
     @Override
-    public int findIndexOf(VerticalPosition position) {
+    public long findIndexOf(VerticalPosition position) {
         int index = Collections.binarySearch(values, position.getZ());
         if(index >= 0){
             return index;
@@ -81,7 +81,7 @@ public class ProfileDomainImpl implements ProfileDomain {
     }
 
     @Override
-    public int size() {
+    public long size() {
         return values.size();
     }
 

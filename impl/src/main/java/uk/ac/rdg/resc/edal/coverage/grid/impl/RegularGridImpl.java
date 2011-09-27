@@ -104,15 +104,6 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
     }
 
     @Override
-    public RegularAxis getAxis(int index) {
-        if (index == 0)
-            return getXAxis();
-        if (index == 1)
-            return getYAxis();
-        throw new IndexOutOfBoundsException();
-    }
-
-    @Override
     public RegularAxis getXAxis() {
         return xAxis;
     }

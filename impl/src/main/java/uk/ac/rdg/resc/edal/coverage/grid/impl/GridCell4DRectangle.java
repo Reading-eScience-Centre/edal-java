@@ -3,58 +3,42 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.VerticalExtent;
+import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
-public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> implements GridCell4D {
-
+public final class GridCell4DRectangle implements GridCell4D {
+    
+    private final GridSeriesDomain parentGrid;
     private final GridCell2D horizGridCell;
-//    private final VerticalPosition verticalCentre;
-    private final Extent<VerticalPosition> verticalExtent;
-    private final int verticalIndex;
-//    private final TimePosition timeCentre;
-    private final Extent<TimePosition> timeExtent;
-    private final int timeIndex;
+    
+    private final Extent<TimePosition> tExtent;
+    private final int tIndex;
+    private final Extent<VerticalPosition> vExtent;
+    private final int vIndex;
 
-    public GridCell4DRectangle(GridCell2D horizGridCell, Extent<VerticalPosition> verticalRange,
-                               int verticalIndex, Extent<TimePosition> timeRange, int timeIndex) {
-        super(horizGridCell.getGridCoordinates());
+    public GridCell4DRectangle(GridSeriesDomain parentGrid, GridCell2D horizGridCell, Extent<TimePosition> tExtent,
+            int tIndex, Extent<VerticalPosition> vExtent, int vIndex) {
+        this.parentGrid = parentGrid;
         this.horizGridCell = horizGridCell;
-//        this.verticalCentre = new VerticalPositionImpl(0.5*(verticalRange.getHigh().getZ()+verticalRange.getLow().getZ()));
-        this.verticalExtent = verticalRange;
-        this.verticalIndex = verticalIndex;
-//        long meantime = (long) (0.5*(timeRange.getLow().getValue() + timeRange.getHigh().getValue()));
-//        this.timeCentre = new TimePositionImpl(meantime, timeRange.getLow().getCalendarSystem(), timeRange.getLow().getTimeZoneOffset());
-        this.timeExtent = timeRange;
-        this.timeIndex = timeIndex;
-    }
-
-    public GridCell4DRectangle(GridCell2D hCell, Extent<Double> vExtent, VerticalCrs vCrs, int vIndex,
-            Extent<TimePosition> tExtent, int tIndex) {
-        this(hCell,
-             new VerticalExtent(new VerticalPositionImpl(vExtent.getLow(), vCrs),
-                               new VerticalPositionImpl(vExtent.getHigh(), vCrs)),
-             vIndex,
-             tExtent,
-             tIndex);
+        this.tExtent = tExtent;
+        this.tIndex = tIndex;
+        this.vExtent = vExtent;
+        this.vIndex = vIndex;
     }
 
     @Override
-    public CalendarSystem getCalendarSystem() {
-        if(timeExtent != null )
-            return timeExtent.getLow().getCalendarSystem();
-        else
-            return null;
+    public boolean contains(GeoPosition position) {
+        return (horizGridCell.contains(position.getHorizontalPosition()) && 
+                    tExtent.contains(position.getTimePosition()) &&
+                    vExtent.contains(position.getVerticalPosition()));
     }
 
     @Override
@@ -68,46 +52,42 @@ public final class GridCell4DRectangle extends AbstractGridCell<GeoPosition> imp
     }
 
     @Override
+    public GridSeriesDomain getGrid() {
+        return parentGrid;
+    }
+
+    @Override
+    public GridCoordinates2D getHorizontalCoordinates() {
+        return horizGridCell.getGridCoordinates();
+    }
+
+    @Override
     public CoordinateReferenceSystem getHorizontalCrs() {
-        return horizGridCell.getHorizontalCrs();
+        return horizGridCell.getCentre().getCoordinateReferenceSystem();
     }
 
     @Override
     public Extent<TimePosition> getTimeExtent() {
-        return timeExtent;
+        return tExtent;
+    }
+
+    @Override
+    public int getTimeIndex() {
+        return tIndex;
+    }
+    
+    @Override
+    public CalendarSystem getCalendarSystem() {
+        return tExtent.getLow().getCalendarSystem();
     }
 
     @Override
     public Extent<VerticalPosition> getVerticalExtent() {
-        return verticalExtent;
+        return vExtent;
     }
 
     @Override
-    public boolean contains(GeoPosition position) {
-        boolean containsH = horizGridCell.contains(position.getHorizontalPosition());
-        boolean containsV = false;
-        boolean containsT = false;
-        if(verticalExtent != null){
-            containsV = verticalExtent.contains(position.getVerticalPosition());
-        } else {
-            containsV = position.getVerticalPosition() == null;
-        }
-        if(timeExtent != null){
-            containsT = timeExtent.contains(position.getTimePosition());
-        } else {
-            containsT = position.getTimePosition() == null;
-        }
-        
-        return (containsH && containsV && containsT);
+    public int getVerticalIndex() {
+        return vIndex;
     }
-
-    @Override
-    public GridCoordinates getGridCoordinates() {
-        int[] xy = horizGridCell.getGridCoordinates().getCoordinateValues();
-        if (xy.length != 2) {
-            throw new UnsupportedOperationException("Horizontal position must consist of 2 axes");
-        }
-        return new GridCoordinatesImpl(xy[0], xy[1], verticalIndex, timeIndex);
-    }
-
 }
