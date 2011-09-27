@@ -1,17 +1,16 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -27,15 +26,6 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
 
     protected AbstractRectilinearGrid(CoordinateReferenceSystem crs) {
         super(crs);
-    }
-    
-    @Override
-    public ReferenceableAxis<Double> getAxis(int index) {
-        if (index == 0)
-            return getXAxis();
-        if (index == 1)
-            return getYAxis();
-        throw new IndexOutOfBoundsException();
     }
 
     @Override
@@ -54,25 +44,12 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     }
 
     @Override
-    public GridCell2D findContainingCell(HorizontalPosition pos) {
+    public GridCoordinates2D findContainingCell(HorizontalPosition pos) {
         int xIndex = getXAxis().findIndexOf(pos.getX());
         int yIndex = getYAxis().findIndexOf(pos.getY());
-        return new GridCell2DRectangle(new GridCoordinatesImpl(xIndex, yIndex),
-                                    getXAxis().getCoordinateBounds(xIndex).getLow(),
-                                    getYAxis().getCoordinateBounds(yIndex).getLow(),
-                                    getXAxis().getCoordinateBounds(xIndex).getHigh(),
-                                    getYAxis().getCoordinateBounds(yIndex).getHigh(),
-                                    getCoordinateReferenceSystem());
+        return new GridCoordinatesImpl(xIndex, yIndex);
     }
 
-    @Override
-    public List<ReferenceableAxis<Double>> getAxes() {
-        List<ReferenceableAxis<Double>> axes = new ArrayList<ReferenceableAxis<Double>>();
-        axes.add(getXAxis());
-        axes.add(getYAxis());
-        return Collections.unmodifiableList(axes);
-    }
-    
     @Override
     public List<GridCell2D> getDomainObjects() {
         List<GridCell2D> gridCells = new ArrayList<GridCell2D>();
@@ -89,14 +66,14 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
                                                    getYAxis().getCoordinateBounds(yIndex).getLow(),
                                                    getXAxis().getCoordinateBounds(xIndex).getHigh(),
                                                    getYAxis().getCoordinateBounds(yIndex).getHigh(),
-                                                   getCoordinateReferenceSystem()));
+                                                   getCoordinateReferenceSystem(),this));
             }
         }
         return Collections.unmodifiableList(gridCells);
     }
 
     @Override
-    public int findIndexOf(HorizontalPosition position) {
+    public long findIndexOf(HorizontalPosition position) {
         int xIndex = getXAxis().findIndexOf(position.getX());
         int yIndex = getYAxis().findIndexOf(position.getY());
         // +1 because extents are INCLUSIVE
@@ -105,38 +82,28 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     }
 
     @Override
-    public List<GridCoordinates> getGridPoints() {
-        List<GridCoordinates> gridCoords = new ArrayList<GridCoordinates>();
-        int xIMin = getXAxis().getIndexExtent().getLow();
-        // +1 because extents are INCLUSIVE
-        int xIMax = getXAxis().getIndexExtent().getHigh() + 1;
-        int yIMin = getYAxis().getIndexExtent().getLow();
-        // +1 because extents are INCLUSIVE
-        int yIMax = getYAxis().getIndexExtent().getHigh() + 1;
-        for (Integer yIndex = yIMin; yIndex < yIMax; yIndex++) {
-            for (Integer xIndex = xIMin; xIndex < xIMax; xIndex++) {
-                gridCoords.add(new GridCoordinatesImpl(xIndex, yIndex));
-            }
-        }
-        return Collections.unmodifiableList(gridCoords);
-    }
-
-    @Override
-    public int getOffset(GridCoordinates coords) {
-        int xIndex = coords.getCoordinateValue(0);
-        int yIndex = coords.getCoordinateValue(1);
-        // +1 because extents are INCLUSIVE
-        int xRange = getXAxis().getIndexExtent().getHigh() + 1 - getXAxis().getIndexExtent().getLow();
-        return xIndex + xRange * yIndex;
-    }
-
-    @Override
     public boolean contains(HorizontalPosition position) {
-        return (getXAxis().contains(position.getX()) && getYAxis().contains(position.getY()));
+        return (getXAxis().getCoordinateExtent().contains(position.getX()) && 
+                    getYAxis().getCoordinateExtent().contains(position.getY()));
     }
     
     @Override
     public BoundingBox getCoordinateExtent() {
         return new BoundingBoxImpl(getXAxis().getCoordinateExtent(), getYAxis().getCoordinateExtent());
+    }
+    
+    @Override
+    public GridCell2D getGridCell(GridCoordinates2D coords) {
+        return getGridCell(coords.getXIndex(), coords.getYIndex());
+    }
+
+    @Override
+    public GridCell2D getGridCell(int xIndex, int yIndex) {
+        GridCoordinates2D gridCoords = new GridCoordinatesImpl(xIndex,yIndex);
+        Extent<Double> xExtents = getXAxis().getCoordinateBounds(xIndex);
+        Extent<Double> yExtents = getYAxis().getCoordinateBounds(yIndex);
+        return new GridCell2DRectangle(gridCoords, xExtents.getLow(), yExtents.getLow(),
+                                                   xExtents.getHigh(), yExtents.getHigh(),
+                                                   getCoordinateReferenceSystem(), this);
     }
 }
