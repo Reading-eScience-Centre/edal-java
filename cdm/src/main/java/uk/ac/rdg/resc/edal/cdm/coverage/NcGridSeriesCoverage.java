@@ -3,7 +3,6 @@ package uk.ac.rdg.resc.edal.cdm.coverage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.opengis.coverage.grid.GridCoordinates;
 
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
@@ -14,17 +13,18 @@ import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.UnitVocabulary;
-import uk.ac.rdg.resc.edal.coverage.AbstractDiscreteSimpleCoverage;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.RangeMetadataImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.GridSeriesDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiscreteSimpleCoverage;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -115,10 +115,10 @@ public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosi
     @Override
     public List<Float> extractHorizontalLayer(int tindex, int zindex) {
         GridExtent extent = hGrid.getGridExtent();
-        GridCoordinates low = extent.getLow();
-        GridCoordinates high = extent.getHigh();
-        Extent<Integer> xExtent = Extents.newExtent(low.getCoordinateValue(0),high.getCoordinateValue(0));
-        Extent<Integer> yExtent = Extents.newExtent(low.getCoordinateValue(1),high.getCoordinateValue(1));
+        GridCoordinates2D low = extent.getLow();
+        GridCoordinates2D high = extent.getHigh();
+        Extent<Integer> xExtent = Extents.newExtent(low.getXIndex(),high.getXIndex());
+        Extent<Integer> yExtent = Extents.newExtent(low.getYIndex(),high.getYIndex());
         return evaluate(Extents.newExtent(tindex, tindex), Extents.newExtent(zindex, zindex), yExtent, xExtent);
     }
 

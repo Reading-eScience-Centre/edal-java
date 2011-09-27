@@ -21,7 +21,7 @@ import uk.ac.rdg.resc.edal.cdm.coverage.NcGridSeriesCoverage;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.cdm.util.FileUtils;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
+import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
@@ -130,13 +130,13 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getParameter().getStandardName());
 
         List<Float> vals = fs.getFeatureById(var).getCoverage().getValues();
-        GridCoordinates lowIndices = fs.getFeatureById(var).getCoverage().getDomain().getGridExtent().getLow();
-        GridCoordinates highIndices = fs.getFeatureById(var).getCoverage().getDomain().getGridExtent().getHigh();
-        int xSize = highIndices.getCoordinateValue(0) - lowIndices.getCoordinateValue(0) + 1;
-        int ySize = highIndices.getCoordinateValue(1) - lowIndices.getCoordinateValue(1) + 1;
-        int zSize = highIndices.getCoordinateValue(2) - lowIndices.getCoordinateValue(2) + 1;
-        int tSize = highIndices.getCoordinateValue(3) - lowIndices.getCoordinateValue(3) + 1;
 
+        GridSeriesDomain domain = fs.getFeatureById(var).getCoverage().getDomain(); 
+        int xSize = domain.getHorizontalGrid().getXAxis().size();
+        int ySize = domain.getHorizontalGrid().getYAxis().size();
+        int zSize = domain.getVerticalAxis().size();
+        int tSize = domain.getTimeAxis().size();
+        
         double err = 0.0;
         System.out.println(xSize + "," + ySize + "," + zSize + "," + tSize);
         for (int t = 0; t < tSize; t++) {
