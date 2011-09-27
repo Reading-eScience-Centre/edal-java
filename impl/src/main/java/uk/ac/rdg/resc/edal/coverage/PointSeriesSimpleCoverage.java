@@ -3,13 +3,10 @@ package uk.ac.rdg.resc.edal.coverage;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.ac.rdg.resc.edal.coverage.AbstractDiscreteSimpleCoverage;
-import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.PointSeriesDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiscreteSimpleCoverage;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
 public class PointSeriesSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<TimePosition, TimePosition, R> implements PointSeriesCoverage<R> {

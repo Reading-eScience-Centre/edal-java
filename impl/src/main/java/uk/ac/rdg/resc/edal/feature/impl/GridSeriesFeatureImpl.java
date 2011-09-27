@@ -8,8 +8,7 @@ import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesSimpleCoverage;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
 import uk.ac.rdg.resc.edal.coverage.ProfileSimpleCoverage;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
@@ -36,10 +35,9 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
     public PointSeriesFeature<Float> extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
             Extent<TimePosition> tRange) {
         Extent<Integer> tExtent = coverage.getDomain().getTimeAxis().getIndexExtent();
-        GridCell2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
-        GridCoordinates gridCoords = gridCell.getGridCoordinates();
-        int xIndex = gridCoords.getCoordinateValue(0);
-        int yIndex = gridCoords.getCoordinateValue(1);
+        GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
+        int xIndex = gridCell.getXIndex();
+        int yIndex = gridCell.getYIndex();
         int zIndex = coverage.getDomain().getVerticalAxis().findIndexOf(z.getZ());
 
         List<Float> values = coverage.evaluate(tExtent, Extents.newExtent(zIndex, zIndex), Extents.newExtent(yIndex,
@@ -56,10 +54,9 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
     public ProfileFeature<Float> extractProfileFeature(HorizontalPosition pos, TimePosition t) {
 
         Extent<Integer> vExtent = coverage.getDomain().getVerticalAxis().getIndexExtent();
-        GridCell2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
-        GridCoordinates gridCoords = gridCell.getGridCoordinates();
-        int xIndex = gridCoords.getCoordinateValue(0);
-        int yIndex = gridCoords.getCoordinateValue(1);
+        GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
+        int xIndex = gridCell.getXIndex();
+        int yIndex = gridCell.getYIndex();
         int tIndex = coverage.getDomain().getTimeAxis().findIndexOf(t);
 
         List<Float> values = coverage.evaluate(Extents.newExtent(tIndex, tIndex), vExtent, Extents.newExtent(yIndex,
