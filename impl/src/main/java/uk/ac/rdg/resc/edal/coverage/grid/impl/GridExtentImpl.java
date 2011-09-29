@@ -10,7 +10,7 @@ public final class GridExtentImpl implements GridExtent {
     private final GridCoordinatesImpl low;
     private final GridCoordinatesImpl high;
     // These are calculated from the GridCoordinates upon construction
-    private transient final int size;
+    private transient final long size;
 
     /**
      * Creates a new GridExtent with the given low and high coordinates. Note
@@ -37,7 +37,12 @@ public final class GridExtentImpl implements GridExtent {
         this.low = GridCoordinatesImpl.convert(low);
         this.high = GridCoordinatesImpl.convert(high);
 
-        size = getXSpan() * getYSpan();
+        /*
+         * int * int -> int, EVEN WHEN RESULT IS TOO BIG
+         * 
+         * Therefore we must cast (at least one of the values) to long
+         */
+        size = (long) getXSpan() * (long) getYSpan();
     }
     
     public GridExtentImpl(Extent<Integer> xExtent, Extent<Integer> yExtent) {
@@ -186,10 +191,6 @@ public final class GridExtentImpl implements GridExtent {
     @Override
     public String toString() {
         return low.toString() + ":" + high.toString();
-    }
-
-    public int getSize() {
-        return size;
     }
 
     @Override

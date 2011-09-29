@@ -39,7 +39,7 @@ public final class GridCoordinatesImpl implements GridCoordinates2D {
     public GridCoordinatesImpl(int[] coords) {
         if (coords == null)
             throw new NullPointerException();
-        if (coords.length != 0)
+        if (coords.length != 2)
             throw new IllegalArgumentException("Grid co-ordinates must have 2 dimensions");
         xIndex = coords[0];
         yIndex = coords[1];

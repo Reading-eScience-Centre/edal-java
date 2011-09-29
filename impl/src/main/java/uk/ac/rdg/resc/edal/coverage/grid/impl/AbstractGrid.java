@@ -19,7 +19,7 @@ public abstract class AbstractGrid implements Grid
     @Override
     public final long size() {
         // We reuse code in GridExtentImpl to calculate the size
-        return GridExtentImpl.convert(getGridExtent()).getSize();
+        return GridExtentImpl.convert(getGridExtent()).size();
     }
 
     @Override
