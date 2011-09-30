@@ -32,9 +32,14 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.feature.FeatureCollection;
+import javax.imageio.ImageIO;
+
+import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Creates KMZ files for importing into Google Earth.  Only one instance of this class
@@ -52,134 +57,148 @@ public class KmzFormat extends ImageFormat
     private static final String PICNAME = "frame";
     private static final String PICEXT  = "png";
     private static final String COLOUR_SCALE_FILENAME = "legend.png";
-    
+
     /**
      * Writes the given list of {@link java.awt.BufferedImage}s to the given
      * OutputStream.
-     * @param frames List of BufferedImages to render into an image
-     * @param out The OutputStream to which the image will be written
-     * @param layer the Layer object representing the image(s)
-     * @param tValues List of Strings representing the time values, one for each frame
-     * @param zValue The elevation value representing the image(s)
-     * @param bbox The bounding box of the image(s)
-     * @param legend A legend image (this will be null unless this.requiresLegend()
-     * returns true.
-     * @throws IOException if there was an error writing to the output stream
-     * @throws IllegalArgumentException if this ImageFormat cannot render all
-     * of the given BufferedImages.
+     * 
+     * @param frames
+     *            List of BufferedImages to render into an image
+     * @param out
+     *            The OutputStream to which the image will be written
+     * @param layer
+     *            the Layer object representing the image(s)
+     * @param tValues
+     *            List of Strings representing the time values, one for each
+     *            frame
+     * @param zValue
+     *            The elevation value representing the image(s)
+     * @param bbox
+     *            The bounding box of the image(s)
+     * @param legend
+     *            A legend image (this will be null unless this.requiresLegend()
+     *            returns true.
+     * @throws IOException
+     *             if there was an error writing to the output stream
+     * @throws IllegalArgumentException
+     *             if this ImageFormat cannot render all of the given
+     *             BufferedImages.
      */
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out, FeatureCollection<Feature> featureCollection,
-            String featureId, BufferedImage legend) throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out, GridSeriesFeature<?> feature, BufferedImage legend)
+            throws IOException {
         StringBuffer kml = new StringBuffer();
-// TODO Uncomment & implement
-//        for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++)
-//        {
-//            if (frameIndex == 0)
-//            {
-//                // This is the first frame.  Add the KML header and folder metadata
-//                kml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-//                kml.append(System.getProperty("line.separator"));
-//                kml.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">");
-//                kml.append("<Folder>");
-//                kml.append("<visibility>1</visibility>");
-//                kml.append("<name>" + layer.getDataset().getId() + ", " +
-//                    layer.getId() + "</name>");
-//                kml.append("<description>" + layer.getDataset().getTitle() + ", "
-//                    + layer.getTitle() + ": " + layer.getLayerAbstract() +
-//                    "</description>");
-//
-//                // Add the screen overlay containing the colour scale
-//                kml.append("<ScreenOverlay>");
-//                kml.append("<name>Colour scale</name>");
-//                kml.append("<Icon><href>" + COLOUR_SCALE_FILENAME + "</href></Icon>");
-//                kml.append("<overlayXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\"/>");
-//                kml.append("<screenXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\"/>");
-//                kml.append("<rotationXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>");
-//                kml.append("<size x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>");
-//                kml.append("</ScreenOverlay>");
-//            }
-//        
-//            kml.append("<GroundOverlay>");
-//            String timestamp = null;
-//            String z = null;
+        // TODO Uncomment & implement
+        for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++)
+        {
+            if (frameIndex == 0)
+            {
+                // This is the first frame.  Add the KML header and folder metadata
+                kml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+                kml.append(System.getProperty("line.separator"));
+                kml.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">");
+                kml.append("<Folder>");
+                kml.append("<visibility>1</visibility>");
+                kml.append("<name>" + feature.getFeatureCollection().getId() + ", " +
+                    feature.getId() + "</name>");
+                kml.append("<description>" + feature.getFeatureCollection().getName() + ", "
+                    + feature.getName() + ": " + feature.getDescription() +
+                    "</description>");
+
+                // Add the screen overlay containing the colour scale
+                kml.append("<ScreenOverlay>");
+                kml.append("<name>Colour scale</name>");
+                kml.append("<Icon><href>" + COLOUR_SCALE_FILENAME + "</href></Icon>");
+                kml.append("<overlayXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\"/>");
+                kml.append("<screenXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\"/>");
+                kml.append("<rotationXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>");
+                kml.append("<size x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>");
+                kml.append("</ScreenOverlay>");
+            }
+        
+            kml.append("<GroundOverlay>");
+            String timestamp = null;
+            String z = null;
+            
+            /*
+             * TODO NEED TO FINISH THIS
+             */
+            
+            
 //            if (tValues.get(frameIndex) != null && !tValues.get(frameIndex).equals(""))
 //            {
 //                // We must make sure the ISO8601 timestamp is full and includes
 //                // seconds, otherwise Google Earth gets confused.  This is why we
 //                // convert to a DateTime and back again.
 //                // TODO: not sure if this will work for 360-day calendars...
-//                DateTime dt = WmsUtils.iso8601ToDateTime(tValues.get(frameIndex), layer.getChronology());
-//                timestamp = WmsUtils.dateTimeToISO8601(dt);
+//                DateTime dt = GISUtils.iso8601ToDateTime(tValues.get(frameIndex), layer.getChronology());
+//                timestamp = GISUtils.dateTimeToISO8601(dt);
 //                kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
 //            }
-//            if (zValue != null && !zValue.equals("") && layer.getElevationValues() != null)
+//            if (zValue != null && !zValue.equals("") && feature.getCoverage().getDomain().getVerticalAxis() != null)
 //            {
 //                z = "";
 //                if (timestamp != null) z += "<br />";
-//                z += "Elevation: " + zValue + " " + layer.getElevationUnits();
+//                z += "Elevation: " + zValue + " " + feature.getCoverage().getDomain().getVerticalCrs().getUnits().getUnitString();
 //            }
-//            kml.append("<name>");
-//            if (timestamp == null && z == null)
-//            {
-//                kml.append("Frame " + frameIndex);
-//            }
-//            else
-//            {
-//                kml.append("<![CDATA[");
-//                if (timestamp != null) kml.append("Time: " + timestamp);
-//                if (z != null) kml.append(z);
-//                kml.append("]]>");
-//            }
-//            kml.append("</name>");
-//            kml.append("<visibility>1</visibility>");
-//
-//            kml.append("<Icon><href>" + getPicFileName(frameIndex) + "</href></Icon>");
-//
-//            kml.append("<LatLonBox id=\"" + frameIndex + "\">");
-//            kml.append("<west>"  + bbox.getMinX() + "</west>");
-//            kml.append("<south>" + bbox.getMinY() + "</south>");
-//            kml.append("<east>"  + bbox.getMaxX() + "</east>");
-//            kml.append("<north>" + bbox.getMaxY() + "</north>");
-//            kml.append("<rotation>0</rotation>");
-//            kml.append("</LatLonBox>");
-//            kml.append("</GroundOverlay>");
-//        }
-//
-//        // Write the footer of the KML file
-//        kml.append("</Folder>");
-//        kml.append("</kml>");
-//        
-//        ZipOutputStream zipOut = new ZipOutputStream(out);
-//        
-//        // Write the KML file: todo get filename properly
-//        logger.debug("Writing KML file to KMZ file");
-//        ZipEntry kmlEntry = new ZipEntry(layer.getDataset().getId() + "_" +
-//            layer.getId() + ".kml");
-//        kmlEntry.setTime(System.currentTimeMillis());
-//        zipOut.putNextEntry(kmlEntry);
-//        zipOut.write(kml.toString().getBytes());
-//        
-//        // Now write all the images
-//        int frameIndex = 0;
-//        logger.debug("Writing frames to KMZ file");
-//        for (BufferedImage frame : frames)
-//        {
-//            ZipEntry picEntry = new ZipEntry(getPicFileName(frameIndex));
-//            frameIndex++;
-//            zipOut.putNextEntry(picEntry);
-//            ImageIO.write(frame, PICEXT, zipOut);
-//        }
-//        
-//        // Finally, write the colour scale
-//        logger.debug("Constructing colour scale image");
-//        ZipEntry scaleEntry = new ZipEntry(COLOUR_SCALE_FILENAME);
-//        zipOut.putNextEntry(scaleEntry);
-//        // Write the colour scale bar to the KMZ file
-//        logger.debug("Writing colour scale image to KMZ file");
-//        ImageIO.write(legend, PICEXT, zipOut);
-//        
-//        zipOut.close();
+            kml.append("<name>");
+            if (timestamp == null && z == null)
+            {
+                kml.append("Frame " + frameIndex);
+            }
+            else
+            {
+                kml.append("<![CDATA[");
+                if (timestamp != null) kml.append("Time: " + timestamp);
+                if (z != null) kml.append(z);
+                kml.append("]]>");
+            }
+            kml.append("</name>");
+            kml.append("<visibility>1</visibility>");
+
+            kml.append("<Icon><href>" + getPicFileName(frameIndex) + "</href></Icon>");
+
+            BoundingBox bbox = feature.getCoverage().getDomain().getHorizontalGrid().getCoordinateExtent();
+            kml.append("<LatLonBox id=\"" + frameIndex + "\">");
+            kml.append("<west>"  + bbox.getMinX() + "</west>");
+            kml.append("<south>" + bbox.getMinY() + "</south>");
+            kml.append("<east>"  + bbox.getMaxX() + "</east>");
+            kml.append("<north>" + bbox.getMaxY() + "</north>");
+            kml.append("<rotation>0</rotation>");
+            kml.append("</LatLonBox>");
+            kml.append("</GroundOverlay>");
+        }
+
+        // Write the footer of the KML file
+        kml.append("</Folder>");
+        kml.append("</kml>");
+        
+        ZipOutputStream zipOut = new ZipOutputStream(out);
+        
+        // Write the KML file: todo get filename properly
+        ZipEntry kmlEntry = new ZipEntry(feature.getFeatureCollection().getId() + "_" +
+            feature.getId() + ".kml");
+        kmlEntry.setTime(System.currentTimeMillis());
+        zipOut.putNextEntry(kmlEntry);
+        zipOut.write(kml.toString().getBytes());
+        
+        // Now write all the images
+        int frameIndex = 0;
+        for (BufferedImage frame : frames)
+        {
+            ZipEntry picEntry = new ZipEntry(getPicFileName(frameIndex));
+            frameIndex++;
+            zipOut.putNextEntry(picEntry);
+            ImageIO.write(frame, PICEXT, zipOut);
+        }
+        
+        // Finally, write the colour scale
+        ZipEntry scaleEntry = new ZipEntry(COLOUR_SCALE_FILENAME);
+        zipOut.putNextEntry(scaleEntry);
+        // Write the colour scale bar to the KMZ file
+        ImageIO.write(legend, PICEXT, zipOut);
+        
+        zipOut.close();
     }
     
     /**

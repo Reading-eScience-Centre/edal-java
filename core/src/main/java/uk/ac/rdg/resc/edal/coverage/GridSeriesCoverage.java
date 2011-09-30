@@ -54,14 +54,4 @@ public interface GridSeriesCoverage<R> extends DiscreteCoverage<GeoPosition, Gri
     public List<R> evaluate(Extent<Integer> tindexExtent, Extent<Integer> zindexExtent, Extent<Integer> yindexExtent,
             Extent<Integer> xindexExtent);
 
-    /**
-     * Convenience method to extract a horizontal layer for plotting purposes
-     * 
-     * @param tindex
-     *            The index of the time dimension required
-     * @param zindex
-     *            The index of the elevation dimension required
-     * @return A list of values, with x varying first
-     */
-    public List<R> extractHorizontalLayer(int tindex, int zindex);
 }

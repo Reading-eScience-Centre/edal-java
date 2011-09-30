@@ -5,7 +5,7 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.Utils;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Immutable implementation of a {@link RegularAxis}, whose values are regularly
@@ -88,7 +88,7 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     @Override
     public int findIndexOf(Double position) {
         if (isLongitude) {
-            position = Utils.getNextEquivalentLongitude(this.getMinimumValue(), position);
+            position = GISUtils.getNextEquivalentLongitude(this.getMinimumValue(), position);
         }
         // This method will generally be faster than an exhaustive search, or
         // even a binary search

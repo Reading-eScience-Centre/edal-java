@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
-import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
+import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 
 /**
  * Abstract superclass for simple image formats that do not require information
@@ -26,7 +26,7 @@ public abstract class SimpleFormat extends ImageFormat {
     /**
      * Delegates to writeImage(frames, out), ignoring most of the parameters.
      * 
-        * @param frames
+     * @param frames
      *            List of BufferedImages to render into an image
      * @param out
      *            The OutputStream to which the image will be written
@@ -46,8 +46,8 @@ public abstract class SimpleFormat extends ImageFormat {
      *             BufferedImages.
      */
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out, FeatureCollection<Feature> featureCollection,
-            String featureId, BufferedImage legend) throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out, GridSeriesFeature<?> feature, BufferedImage legend)
+            throws IOException {
         this.writeImage(frames, out);
     }
 

@@ -29,24 +29,41 @@
 package uk.ac.rdg.resc.edal.feature;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.Record;
+import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * Represents data held on a multidimensional grid.
- * @param <R> The type of the value returned by the coverage; for a compound
- * coverage this type will be {@link Record}.
+ * 
+ * @param <R>
+ *            The type of the value returned by the coverage; for a compound
+ *            coverage this type will be {@link Record}.
  */
-public interface GridSeriesFeature<R> extends Feature
-{
+public interface GridSeriesFeature<R> extends Feature {
 
     @Override
     public GridSeriesCoverage<R> getCoverage();
 
     public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition t);
-    public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos,
-            VerticalPosition z, Extent<TimePosition> tRange);
+
+    public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
+            Extent<TimePosition> tRange);
+
+    /**
+     * Convenience method to extract a horizontal layer for plotting purposes
+     * 
+     * @param tindex
+     *            The index of the time dimension required
+     * @param zindex
+     *            The index of the elevation dimension required
+     * @param targetDomain
+     *            The desired domain of the resultant coverage
+     * @return A list of values, with x varying first
+     */
+    public GridCoverage2D<R> extractHorizontalGrid(int tindex, int zindex, HorizontalGrid targetDomain);
 }

@@ -18,7 +18,7 @@ import org.w3c.dom.ranges.Range;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.Utils;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * An object that is used to render data into images. Instances of this class
@@ -70,7 +70,7 @@ public final class ImageProducer {
         }
 
         public List<Float> getMagnitudes() {
-            return y == null ? x : Utils.getMagnitudes(x, y);
+            return y == null ? x : GISUtils.getMagnitudes(x, y);
         }
     }
 
