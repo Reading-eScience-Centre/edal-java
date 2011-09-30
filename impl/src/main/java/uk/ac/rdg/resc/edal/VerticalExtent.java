@@ -33,5 +33,4 @@ public class VerticalExtent implements Extent<VerticalPosition> {
     public boolean isEmpty() {
         return (min == null && max == null);
     }
-
 }

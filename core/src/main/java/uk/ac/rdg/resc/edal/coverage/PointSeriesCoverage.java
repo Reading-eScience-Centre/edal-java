@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.List;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
@@ -45,15 +44,4 @@ public interface PointSeriesCoverage<R> extends DiscreteCoverage<TimePosition, T
 
     @Override public PointSeriesDomain getDomain();
 
-}
-
-class Test {
-    void foo(PointSeriesCoverage<Float> cov) {
-        if (cov.isCompound()) {
-            for (String member : cov.getMemberNames()) {
-                RangeMetadata meta = cov.getRangeMetadata(member);
-                List<?> values = cov.getValues(member);
-            }
-        }
-    }
 }

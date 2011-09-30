@@ -19,12 +19,12 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeriesFeature<Float> {
+public abstract class AbstractGridSeriesFeature extends AbstractFeature implements GridSeriesFeature<Float> {
 
     private FeatureCollection<? extends Feature> parentCollection;
     private GridSeriesCoverage<Float> coverage;
 
-    public GridSeriesFeatureImpl(String name, String id, String description,
+    public AbstractGridSeriesFeature(String name, String id, String description,
             FeatureCollection<? extends Feature> parentCollection, GridSeriesCoverage<Float> coverage) {
         super(name, id, description);
         this.parentCollection = parentCollection;
@@ -77,5 +77,4 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
     public FeatureCollection<? extends Feature> getFeatureCollection() {
         return parentCollection;
     }
-
 }

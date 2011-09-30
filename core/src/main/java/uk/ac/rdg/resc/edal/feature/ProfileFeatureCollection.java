@@ -37,7 +37,7 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * A collection of ProfileFeatures.
  * @author Jon
  */
-public interface ProfileFeatureCollection extends FeatureCollection<ProfileFeature>
+public interface ProfileFeatureCollection<R> extends FeatureCollection<ProfileFeature<R>>
 {
 
     /**
@@ -45,6 +45,6 @@ public interface ProfileFeatureCollection extends FeatureCollection<ProfileFeatu
      * within the given polygon, and which were measured within the given time
      * range.
      */
-    public Collection<ProfileFeature> findProfiles(Polygon polygon, Extent<TimePosition> tRange);
+    public Collection<ProfileFeature<R>> findProfiles(Polygon polygon, Extent<TimePosition> tRange);
     
 }

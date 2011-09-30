@@ -15,8 +15,10 @@ import ucar.nc2.dataset.CoordinateAxis;
 import ucar.nc2.dataset.CoordinateAxis1D;
 import ucar.nc2.dataset.CoordinateAxis1DTime;
 import ucar.nc2.dataset.CoordinateAxis2D;
+import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridCoordSystem;
 import uk.ac.rdg.resc.edal.Unit;
+import uk.ac.rdg.resc.edal.cdm.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
@@ -207,4 +209,19 @@ public final class CdmUtils {
         }
     }
 
+    /**
+     * Estimates the optimum {@link DataReadingStrategy} from the given
+     * NetcdfDataset.  Essentially, if the data are remote (e.g. OPeNDAP) or
+     * compressed, this will return {@link DataReadingStrategy#BOUNDING_BOX},
+     * which makes a single i/o call, minimizing the overhead.  If the data
+     * are local and uncompressed this will return {@link DataReadingStrategy#SCANLINE},
+     * which reduces the amount of data read.
+     * @param nc The NetcdfDataset from which data will be read.
+     * @return an optimum DataReadingStrategy for reading from the dataset
+     */
+    public static DataReadingStrategy getOptimumDataReadingStrategy(NetcdfDataset nc) {
+        String fileType = nc.getFileTypeId();
+        return "netCDF".equals(fileType) || "HDF4".equals(fileType) ? DataReadingStrategy.SCANLINE
+                : DataReadingStrategy.BOUNDING_BOX;
+    }
 }

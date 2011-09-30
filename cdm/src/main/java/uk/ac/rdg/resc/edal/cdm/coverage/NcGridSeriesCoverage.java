@@ -19,14 +19,11 @@ import uk.ac.rdg.resc.edal.coverage.RangeMetadataImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.GridSeriesDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiscreteSimpleCoverage;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosition, GridCell4D, Float> implements
         GridSeriesCoverage<Float> {
@@ -110,16 +107,6 @@ public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosi
             e.printStackTrace();
         }
         return ret;
-    }
-
-    @Override
-    public List<Float> extractHorizontalLayer(int tindex, int zindex) {
-        GridExtent extent = hGrid.getGridExtent();
-        GridCoordinates2D low = extent.getLow();
-        GridCoordinates2D high = extent.getHigh();
-        Extent<Integer> xExtent = Extents.newExtent(low.getXIndex(),high.getXIndex());
-        Extent<Integer> yExtent = Extents.newExtent(low.getYIndex(),high.getYIndex());
-        return evaluate(Extents.newExtent(tindex, tindex), Extents.newExtent(zindex, zindex), yExtent, xExtent);
     }
 
     @Override

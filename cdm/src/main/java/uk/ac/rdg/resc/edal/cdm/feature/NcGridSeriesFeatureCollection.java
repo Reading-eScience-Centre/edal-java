@@ -17,6 +17,7 @@ import ucar.nc2.dt.GridDataset.Gridset;
 import ucar.nc2.dt.grid.GridDataset;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
+import uk.ac.rdg.resc.edal.cdm.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.cdm.coverage.NcGridSeriesCoverage;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.cdm.util.FileUtils;
@@ -27,7 +28,6 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
-import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
 
 /**
  * An implementation of {@link FeatureCollection} which contains
@@ -40,7 +40,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 
     private String collectionId;
     private String name;
-    private Map<String, GridSeriesFeatureImpl> id2GridSeriesFeature;
+    private Map<String, GridSeriesFeature<Float>> id2GridSeriesFeature;
 
     /**
      * Instantiates a collection of features from one or more NetCDF files.
@@ -61,7 +61,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         this.collectionId = collectionId;
         this.name = collectionName;
 
-        id2GridSeriesFeature = new HashMap<String, GridSeriesFeatureImpl>();
+        id2GridSeriesFeature = new HashMap<String, GridSeriesFeature<Float>>();
 
         List<File> files = FileUtils.expandGlobExpression(location);
         for (File file : files) {
@@ -75,6 +75,8 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
             assert (fType == FeatureType.GRID);
             GridDataset gridDS = (GridDataset) featureDS;
 
+            DataReadingStrategy dataReadingStrategy = CdmUtils.getOptimumDataReadingStrategy(ncDataset);
+            
             for (Gridset gridset : gridDS.getGridsets()) {
                 /*
                  * Get everything from the GridCoordSystem that is needed for
@@ -104,7 +106,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 //                    System.out.println("\t" + gridDT.getName() + ":" + name + "," + id + "," + description);
 
                     GridSeriesCoverage<Float> coverage = new NcGridSeriesCoverage(var, hGrid, vAxis, tAxis);
-                    GridSeriesFeatureImpl feature = new GridSeriesFeatureImpl(name, id, description, this, coverage);
+                    GridSeriesFeature<Float> feature = new NcGridSeriesFeature(name, id, description, this, coverage, dataReadingStrategy, gridDT);
 
                     id2GridSeriesFeature.put(id.toLowerCase(), feature);
                 }
@@ -120,7 +122,8 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                 "/home/guy/Data/FOAM_ONE/FOAM_20100130.0.nc");
         
         for(String fId : fs.getFeatureIds()){
-            fs.getFeatureById(fId).getCoverage().extractHorizontalLayer(0, 0);
+//            fs.getFeatureById(fId).getCoverage().extractHorizontalLayer(0, 0);
+            System.out.println(fs.getFeatureById(fId).getDescription()+","+fs.getFeatureById(fId).getName());
         }
         
         String var = "V";
@@ -211,7 +214,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
     }
 
     @Override
-    public GridSeriesFeatureImpl getFeatureById(String id) {
+    public GridSeriesFeature<Float> getFeatureById(String id) {
         return id2GridSeriesFeature.get(id.toLowerCase());
     }
 
@@ -245,6 +248,8 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
          * return id2GridSeriesFeature.values().iterator()
          * 
          * because this will be an iterator of the wrong type
+         * 
+         * TODO IS THIS STILL TRUE?
          */
         return new Iterator<GridSeriesFeature<Float>>() {
             @Override
@@ -253,7 +258,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
             }
 
             @Override
-            public GridSeriesFeatureImpl next() {
+            public GridSeriesFeature<Float> next() {
                 return id2GridSeriesFeature.values().iterator().next();
             }
 
