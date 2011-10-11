@@ -2,8 +2,10 @@ package uk.ac.rdg.resc.edal.position.impl;
 
 import java.text.DateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.TimePeriod;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
@@ -13,12 +15,20 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * @author Guy Griffiths
  * 
  */
-public class TimePositionImpl implements TimePosition {
+public final class TimePositionImpl implements TimePosition {
 
     private Calendar cal;
     private CalendarSystem calSys;
     private int utcOffset;
 
+    public TimePositionImpl(){
+        this(new Date().getTime());
+    }
+
+    public TimePositionImpl(CalendarSystem calSys){
+        this(new Date().getTime(), calSys);
+    }
+    
     /**
      * Instantiates an instance of the class with time in UTC, using the ISO8601
      * calendar system
@@ -167,5 +177,45 @@ public class TimePositionImpl implements TimePosition {
     @Override
     public String toString() {
         return DateFormat.getDateTimeInstance().format(cal.getTime());
+    }
+
+    @Override
+    public TimePosition plus(TimePeriod period) {
+        TimePositionImpl ret = new TimePositionImpl(this.getValue(), this.getCalendarSystem());
+        ret.cal.add(Calendar.SECOND, period.getSeconds());
+        ret.cal.add(Calendar.MINUTE, period.getMinutes());
+        ret.cal.add(Calendar.HOUR_OF_DAY, period.getHours());
+        ret.cal.add(Calendar.DAY_OF_MONTH, period.getDays());
+        ret.cal.add(Calendar.WEEK_OF_MONTH, period.getWeeks());
+        ret.cal.add(Calendar.MONTH, period.getMonths());
+        ret.cal.add(Calendar.YEAR, period.getYears());
+        return ret;
+    }
+    
+    @Override
+    public TimePosition minus(TimePeriod period) {
+        TimePositionImpl ret = new TimePositionImpl(this.getValue(), this.getCalendarSystem());
+        ret.cal.add(Calendar.SECOND, -period.getSeconds());
+        ret.cal.add(Calendar.MINUTE, -period.getMinutes());
+        ret.cal.add(Calendar.HOUR_OF_DAY, -period.getHours());
+        ret.cal.add(Calendar.DAY_OF_MONTH, -period.getDays());
+        ret.cal.add(Calendar.WEEK_OF_MONTH, -period.getWeeks());
+        ret.cal.add(Calendar.MONTH, -period.getMonths());
+        ret.cal.add(Calendar.YEAR, -period.getYears());
+        return ret;
+    }
+
+    @Override
+    public long differenceInMillis(TimePosition time) {
+        return (getValue() - time.getValue());
+    }
+
+    public static void main(String[] args) {
+        TimePosition tp = new TimePositionImpl();
+        System.out.println("Time: "+tp);
+        System.out.println("Plus 13h: "+tp.plus(new TimePeriodImpl().withHours(13)));
+        System.out.println("Plus 1w: "+tp.plus(new TimePeriodImpl().withWeeks(1)));
+        System.out.println("Plus 1month: "+tp.plus(new TimePeriodImpl().withMonths(1)));
+        System.out.println("Plus 1year: "+tp.plus(new TimePeriodImpl().withYears(1)));
     }
 }

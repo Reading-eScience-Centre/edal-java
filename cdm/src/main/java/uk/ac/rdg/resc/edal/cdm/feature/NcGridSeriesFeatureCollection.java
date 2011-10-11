@@ -90,8 +90,6 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     tAxis = CdmUtils.createTimeAxis(coordSys);
                 }
 
-//                System.out.println(coordSys.getName() + ",");
-
                 List<GridDatatype> grids = gridset.getGrids();
                 for (GridDatatype gridDT : grids) {
                     /*
@@ -102,8 +100,6 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     String name = CdmUtils.getVariableTitle(var);
                     String id = var.getName();
                     String description = var.getDescription();
-
-//                    System.out.println("\t" + gridDT.getName() + ":" + name + "," + id + "," + description);
 
                     GridSeriesCoverage<Float> coverage = new NcGridSeriesCoverage(var, hGrid, vAxis, tAxis);
                     GridSeriesFeature<Float> feature = new NcGridSeriesFeature(name, id, description, this, coverage, dataReadingStrategy, gridDT);

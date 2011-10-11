@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
+import java.util.List;
+
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import uk.ac.rdg.resc.edal.Extent;
 
@@ -52,6 +54,12 @@ public interface ReferenceableAxis<P extends Comparable<? super P>> extends Grid
      * this index.
      */
     public P getCoordinateValue(int index);
+    
+    /**
+     * Gets all of the coordinate values of the axis
+     * @return A list of coordinate values
+     */
+    public List<P> getCoordinateValues();
 
     /**
      * Returns true if the values on the axis are in ascending order according

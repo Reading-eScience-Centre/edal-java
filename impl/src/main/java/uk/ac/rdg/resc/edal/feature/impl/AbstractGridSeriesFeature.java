@@ -52,8 +52,12 @@ public abstract class AbstractGridSeriesFeature extends AbstractFeature implemen
 
     @Override
     public ProfileFeature<Float> extractProfileFeature(HorizontalPosition pos, TimePosition t) {
-
-        Extent<Integer> vExtent = coverage.getDomain().getVerticalAxis().getIndexExtent();
+        Extent<Integer> vExtent = Extents.emptyExtent();
+        try{
+            vExtent = coverage.getDomain().getVerticalAxis().getIndexExtent();
+        } catch (NullPointerException npe){
+            // Do nothing
+        }
         GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
         int xIndex = gridCell.getXIndex();
         int yIndex = gridCell.getYIndex();

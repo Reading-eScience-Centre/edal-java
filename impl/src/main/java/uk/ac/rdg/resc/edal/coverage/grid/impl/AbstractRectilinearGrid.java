@@ -76,6 +76,9 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     public long findIndexOf(HorizontalPosition position) {
         int xIndex = getXAxis().findIndexOf(position.getX());
         int yIndex = getYAxis().findIndexOf(position.getY());
+        if(xIndex < 0 || yIndex < 0){
+            return -1;
+        }
         // +1 because extents are INCLUSIVE
         int xRange = getXAxis().getIndexExtent().getHigh() + 1 - getXAxis().getIndexExtent().getLow();
         return xIndex + xRange * yIndex;
