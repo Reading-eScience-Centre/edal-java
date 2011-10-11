@@ -22,11 +22,13 @@ public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<Ver
         metadata = coverage.getRangeMetadata(null);
         description = coverage.getDescription();
         List<Double> elevations = new ArrayList<Double>();
-        VerticalAxis vAxis = coverage.getDomain().getVerticalAxis(); 
-        for(int i=0; i<vAxis.size(); i++){
-            elevations.add(vAxis.getCoordinateValue(i));
+        VerticalAxis vAxis = coverage.getDomain().getVerticalAxis();
+        if(vAxis != null) {
+            for(int i=0; i<vAxis.size(); i++){
+                elevations.add(vAxis.getCoordinateValue(i));
+            }
         }
-        domain = new ProfileDomainImpl(elevations, vAxis.getVerticalCrs());
+        domain = new ProfileDomainImpl(elevations, vAxis == null ? null : vAxis.getVerticalCrs());
     }
 
     @Override

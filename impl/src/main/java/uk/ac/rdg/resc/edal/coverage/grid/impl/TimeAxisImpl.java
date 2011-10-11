@@ -142,7 +142,7 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
     public TimePosition getCoordinateValue(int index) {
         return axisValues[maybeReverseIndex(index)];
     }
-
+    
     @Override
     public int size() {
         return axisValues.length;

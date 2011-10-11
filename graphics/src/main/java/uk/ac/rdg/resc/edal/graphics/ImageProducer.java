@@ -17,6 +17,9 @@ import java.util.List;
 import org.w3c.dom.ranges.Range;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
+import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
@@ -45,7 +48,7 @@ public final class ImageProducer {
     private ColorPalette colorPalette;
 
     /**
-     * Colour scale range of the picture. An {@link Range#isEmpty() empty Range}
+     * Colour scale range of the picture. An {@link Extent#isEmpty() empty Range}
      * means that the picture will be auto-scaled.
      */
     private Extent<Float> scaleRange;
@@ -98,6 +101,11 @@ public final class ImageProducer {
         return transparent;
     }
 
+//    public void addFrame(GridSeriesFeature<Float> feature, BoundingBox bbox, int width, int height, ){
+//        coverage.
+//        addFrame(feature.getCoverage().getValues(), feature.getName())
+//    }
+    
     /**
      * Adds a frame of scalar data to this ImageProducer. If the data cannot yet
      * be rendered into a BufferedImage, the data and label are stored.

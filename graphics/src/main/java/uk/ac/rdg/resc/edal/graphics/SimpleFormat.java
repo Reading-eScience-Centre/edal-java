@@ -46,8 +46,8 @@ public abstract class SimpleFormat extends ImageFormat {
      *             BufferedImages.
      */
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out, GridSeriesFeature<?> feature, BufferedImage legend)
-            throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out, GridSeriesFeature<?> feature,
+            List<String> tValues, String zValue, BufferedImage legend) throws IOException {
         this.writeImage(frames, out);
     }
 
@@ -68,4 +68,28 @@ public abstract class SimpleFormat extends ImageFormat {
      *             BufferedImages.
      */
     public abstract void writeImage(List<BufferedImage> frames, OutputStream out) throws IOException;
+
+    @Override
+    public String getMimeType() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean supportsFullyTransparentPixels() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean supportsMultipleFrames() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean supportsPartiallyTransparentPixels() {
+        // TODO Auto-generated method stub
+        return false;
+    }
 }

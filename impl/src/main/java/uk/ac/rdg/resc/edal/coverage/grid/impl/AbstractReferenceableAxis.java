@@ -1,5 +1,8 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
@@ -117,6 +120,15 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
         return Extents.newExtent(min, max);
     }
 
+    @Override
+    public List<T> getCoordinateValues() {
+        List<T> ret = new ArrayList<T>();
+        for (int i = 0; i < size(); i++) {
+            ret.add(getCoordinateValue(i));
+        }
+        return ret;
+    }
+    
     /**
      * This should return the lower bound of the first value of the axis, based
      * on the first and second values. This will generally be equivalent to:<p>

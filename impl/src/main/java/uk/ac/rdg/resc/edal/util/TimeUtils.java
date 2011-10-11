@@ -32,6 +32,8 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,6 +55,28 @@ public class TimeUtils {
 
     private static final SimpleDateFormat ISO_DATE_TIME_FORMATTER = new SimpleDateFormat("yyyy-mm-ddThh:mm:ssZ");
     private static final SimpleDateFormat ISO_TIME_FORMATTER = new SimpleDateFormat("hh:mm:ssZ");
+    
+    /**
+     * <p>A {@link Comparator} that compares {@link DateTime} objects based only
+     * on their millisecond instant values.  This can be used for
+     * {@link Collections#sort(java.util.List, java.util.Comparator) sorting} or
+     * {@link Collections#binarySearch(java.util.List, java.lang.Object,
+     * java.util.Comparator) searching} {@link List}s of {@link DateTime} objects.</p>
+     * <p>The ordering defined by this Comparator is <i>inconsistent with equals</i>
+     * because it ignores the Chronology of the DateTime instants.</p>
+     * <p><i>(Note: The DateTime object inherits from Comparable, not
+     * Comparable&lt;DateTime&gt;, so we can't use the methods in Collections
+     * directly.  However we can reuse the {@link DateTime#compareTo(java.lang.Object)}
+     * method.)</i></p>
+     */
+    public static final Comparator<TimePosition> TIME_POSITION_COMPARATOR =
+        new Comparator<TimePosition>()
+    {
+        @Override
+        public int compare(TimePosition dt1, TimePosition dt2) {
+            return dt1.compareTo(dt2);
+        }
+    };
 
     private static long MILLIS_PER_SECOND = 1000L;
     private static long MILLIS_PER_MINUTE = 60L * MILLIS_PER_SECOND;
@@ -80,17 +104,32 @@ public class TimeUtils {
      *             valid within the Chronology (e.g. 31st July in a 360-day
      *             calendar).
      */
-    public static TimePosition iso8601ToDateTime(String isoDateTime/*
-                                                                    * ,
-                                                                    * Chronology
-                                                                    * chronology
-                                                                    */) throws ParseException {
+    public static TimePosition iso8601ToDateTime(String isoDateTime, CalendarSystem calSys) throws ParseException {
         /*
-         * TODO Chronology?
+         * TODO CalendarSystem?
          */
         return new TimePositionImpl(ISO_DATE_TIME_FORMATTER.parse(isoDateTime).getTime());
     }
 
+    /**
+     * Searches the given list of timesteps for the specified date-time using the binary
+     * search algorithm.  Matches are found based only upon the millisecond
+     * instant of the target DateTime, not its Chronology.
+     * @param  target The timestep to search for.
+     * @return the index of the search key, if it is contained in the list;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the list: the index of the first
+     *         element greater than the key, or <tt>list.size()</tt> if all
+     *         elements in the list are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.  If this Layer does not have a time
+     *         axis this method will return -1.
+     */
+    public static int findTimeIndex(List<TimePosition> dtList, TimePosition target) {
+        return Collections.binarySearch(dtList, target, TIME_POSITION_COMPARATOR);
+    }
+    
     /**
      * Formats a DateTime as the time only in the format "HH:mm:ss", e.g.
      * "14:53:03". Time zone offset is zero (UTC).

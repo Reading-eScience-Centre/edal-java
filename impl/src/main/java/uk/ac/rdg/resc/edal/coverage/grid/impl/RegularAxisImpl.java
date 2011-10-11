@@ -98,8 +98,10 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         // We round to the nearest integer
         int index = (int)Math.round(indexDbl);
         // Check the extremes (probably not strictly necessary?)
-        if (index < 0) return 0;
-        if (index >= this.size) return this.size - 1;
+//        if (index < 0) return 0;
+//        if (index >= this.size) return this.size - 1;
+        if (index < 0 || index >= size)
+            return -1;
         return index;
     }
 

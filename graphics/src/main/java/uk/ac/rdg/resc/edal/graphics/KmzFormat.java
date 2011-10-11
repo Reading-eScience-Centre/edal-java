@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.ParseException;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -39,23 +40,21 @@ import javax.imageio.ImageIO;
 
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.util.TimeUtils;
 
 /**
- * Creates KMZ files for importing into Google Earth.  Only one instance of this class
- * will ever be created, so this class contains no member variables to ensure
- * thread safety.
+ * Creates KMZ files for importing into Google Earth. Only one instance of this
+ * class will ever be created, so this class contains no member variables to
+ * ensure thread safety.
+ * 
  * @todo Would this be better handled by a JSP?
- *
+ * 
  * @author Jon Blower
- * $Revision$
- * $Date$
- * $Log$
  */
-public class KmzFormat extends ImageFormat
-{
+public class KmzFormat extends ImageFormat {
     private static final String PICNAME = "frame";
-    private static final String PICEXT  = "png";
+    private static final String PICEXT = "png";
     private static final String COLOUR_SCALE_FILENAME = "legend.png";
 
     /**
@@ -85,25 +84,21 @@ public class KmzFormat extends ImageFormat
      *             BufferedImages.
      */
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out, GridSeriesFeature<?> feature, BufferedImage legend)
-            throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out, GridSeriesFeature<?> feature,
+            List<String> tValues, String zValue, BufferedImage legend) throws IOException {
         StringBuffer kml = new StringBuffer();
-        // TODO Uncomment & implement
-        for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++)
-        {
-            if (frameIndex == 0)
-            {
-                // This is the first frame.  Add the KML header and folder metadata
+        for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++) {
+            if (frameIndex == 0) {
+                // This is the first frame. Add the KML header and folder
+                // metadata
                 kml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
                 kml.append(System.getProperty("line.separator"));
                 kml.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">");
                 kml.append("<Folder>");
                 kml.append("<visibility>1</visibility>");
-                kml.append("<name>" + feature.getFeatureCollection().getId() + ", " +
-                    feature.getId() + "</name>");
-                kml.append("<description>" + feature.getFeatureCollection().getName() + ", "
-                    + feature.getName() + ": " + feature.getDescription() +
-                    "</description>");
+                kml.append("<name>" + feature.getFeatureCollection().getId() + ", " + feature.getId() + "</name>");
+                kml.append("<description>" + feature.getFeatureCollection().getName() + ", " + feature.getName() + ": "
+                        + feature.getDescription() + "</description>");
 
                 // Add the screen overlay containing the colour scale
                 kml.append("<ScreenOverlay>");
@@ -115,42 +110,45 @@ public class KmzFormat extends ImageFormat
                 kml.append("<size x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>");
                 kml.append("</ScreenOverlay>");
             }
-        
+
             kml.append("<GroundOverlay>");
             String timestamp = null;
             String z = null;
-            
+
             /*
              * TODO NEED TO FINISH THIS
              */
-            
-            
-//            if (tValues.get(frameIndex) != null && !tValues.get(frameIndex).equals(""))
-//            {
-//                // We must make sure the ISO8601 timestamp is full and includes
-//                // seconds, otherwise Google Earth gets confused.  This is why we
-//                // convert to a DateTime and back again.
-//                // TODO: not sure if this will work for 360-day calendars...
-//                DateTime dt = GISUtils.iso8601ToDateTime(tValues.get(frameIndex), layer.getChronology());
-//                timestamp = GISUtils.dateTimeToISO8601(dt);
-//                kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
-//            }
-//            if (zValue != null && !zValue.equals("") && feature.getCoverage().getDomain().getVerticalAxis() != null)
-//            {
-//                z = "";
-//                if (timestamp != null) z += "<br />";
-//                z += "Elevation: " + zValue + " " + feature.getCoverage().getDomain().getVerticalCrs().getUnits().getUnitString();
-//            }
-            kml.append("<name>");
-            if (timestamp == null && z == null)
-            {
-                kml.append("Frame " + frameIndex);
+
+            if (tValues != null && tValues.get(frameIndex) != null && !tValues.get(frameIndex).equals("")) {
+                // We must make sure the ISO8601 timestamp is full and includes
+                // seconds, otherwise Google Earth gets confused. This is why we
+                // convert to a DateTime and back again.
+                // TODO: not sure if this will work for 360-day calendars...
+                // TODO Doesn't (yet) use chronology
+                try {
+                    TimePosition dt = TimeUtils.iso8601ToDateTime(tValues.get(frameIndex), feature.getCoverage().getDomain().getCalendarSystem());
+                    timestamp = TimeUtils.dateTimeToISO8601(dt);
+                    kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
-            else
-            {
+            if (zValue != null && !zValue.equals("") && feature.getCoverage().getDomain().getVerticalAxis() != null) {
+                z = "";
+                if (timestamp != null)
+                    z += "<br />";
+                z += "Elevation: " + zValue + " "
+                        + feature.getCoverage().getDomain().getVerticalCrs().getUnits().getUnitString();
+            }
+            kml.append("<name>");
+            if (timestamp == null && z == null) {
+                kml.append("Frame " + frameIndex);
+            } else {
                 kml.append("<![CDATA[");
-                if (timestamp != null) kml.append("Time: " + timestamp);
-                if (z != null) kml.append(z);
+                if (timestamp != null)
+                    kml.append("Time: " + timestamp);
+                if (z != null)
+                    kml.append(z);
                 kml.append("]]>");
             }
             kml.append("</name>");
@@ -160,9 +158,9 @@ public class KmzFormat extends ImageFormat
 
             BoundingBox bbox = feature.getCoverage().getDomain().getHorizontalGrid().getCoordinateExtent();
             kml.append("<LatLonBox id=\"" + frameIndex + "\">");
-            kml.append("<west>"  + bbox.getMinX() + "</west>");
+            kml.append("<west>" + bbox.getMinX() + "</west>");
             kml.append("<south>" + bbox.getMinY() + "</south>");
-            kml.append("<east>"  + bbox.getMaxX() + "</east>");
+            kml.append("<east>" + bbox.getMaxX() + "</east>");
             kml.append("<north>" + bbox.getMaxY() + "</north>");
             kml.append("<rotation>0</rotation>");
             kml.append("</LatLonBox>");
@@ -172,70 +170,62 @@ public class KmzFormat extends ImageFormat
         // Write the footer of the KML file
         kml.append("</Folder>");
         kml.append("</kml>");
-        
+
         ZipOutputStream zipOut = new ZipOutputStream(out);
-        
+
         // Write the KML file: todo get filename properly
-        ZipEntry kmlEntry = new ZipEntry(feature.getFeatureCollection().getId() + "_" +
-            feature.getId() + ".kml");
+        ZipEntry kmlEntry = new ZipEntry(feature.getFeatureCollection().getId() + "_" + feature.getId() + ".kml");
         kmlEntry.setTime(System.currentTimeMillis());
         zipOut.putNextEntry(kmlEntry);
         zipOut.write(kml.toString().getBytes());
-        
+
         // Now write all the images
         int frameIndex = 0;
-        for (BufferedImage frame : frames)
-        {
+        for (BufferedImage frame : frames) {
             ZipEntry picEntry = new ZipEntry(getPicFileName(frameIndex));
             frameIndex++;
             zipOut.putNextEntry(picEntry);
             ImageIO.write(frame, PICEXT, zipOut);
         }
-        
+
         // Finally, write the colour scale
         ZipEntry scaleEntry = new ZipEntry(COLOUR_SCALE_FILENAME);
         zipOut.putNextEntry(scaleEntry);
         // Write the colour scale bar to the KMZ file
         ImageIO.write(legend, PICEXT, zipOut);
-        
+
         zipOut.close();
     }
-    
+
     /**
      * @return the name of the picture file with the given index
      */
-    private static final String getPicFileName(int frameIndex)
-    {
+    private static final String getPicFileName(int frameIndex) {
         return PICNAME + frameIndex + "." + PICEXT;
     }
 
     @Override
-    public String getMimeType()
-    {
+    public String getMimeType() {
         return "application/vnd.google-earth.kmz";
     }
 
     @Override
-    public boolean supportsMultipleFrames()
-    {
+    public boolean supportsMultipleFrames() {
         return true;
     }
 
     @Override
-    public boolean supportsFullyTransparentPixels()
-    {
+    public boolean supportsFullyTransparentPixels() {
         return true;
     }
-    
+
     @Override
-    public boolean supportsPartiallyTransparentPixels()
-    {
+    public boolean supportsPartiallyTransparentPixels() {
         return true;
     }
-    
+
     @Override
-    public boolean requiresLegend()
-    {
+    public boolean requiresLegend() {
         return true;
     }
 }
