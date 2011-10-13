@@ -66,4 +66,17 @@ public interface GridSeriesFeature<R> extends Feature {
      * @return A list of values, with x varying first
      */
     public GridCoverage2D<R> extractHorizontalGrid(int tindex, int zindex, HorizontalGrid targetDomain);
+    
+    /**
+     * Convenience method to extract a horizontal layer for plotting purposes
+     * 
+     * @param tPos
+     *            The time value required
+     * @param zPos
+     *            The elevation value required
+     * @param targetDomain
+     *            The desired domain of the resultant coverage
+     * @return A list of values, with x varying first
+     */
+    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, double zPos, HorizontalGrid targetDomain);
 }

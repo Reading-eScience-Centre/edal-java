@@ -17,30 +17,34 @@ import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.impl.AbstractGridSeriesFeature;
 
-public class NcGridSeriesFeature extends AbstractGridSeriesFeature {
+public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
 
     private DataReadingStrategy dataReadingStrategy;
     private GridDatatype grid;
-    
+
     public NcGridSeriesFeature(String name, String id, String description,
-            FeatureCollection<? extends Feature> parentCollection, GridSeriesCoverage<Float> coverage,
-            DataReadingStrategy dataReadingStrategy, GridDatatype grid) {
+            FeatureCollection<? extends Feature> parentCollection,
+            GridSeriesCoverage<Float> coverage, DataReadingStrategy dataReadingStrategy,
+            GridDatatype grid) {
         super(name, id, description, parentCollection, coverage);
         this.dataReadingStrategy = dataReadingStrategy;
         this.grid = grid;
     }
 
     @Override
-    public GridCoverage2D<Float> extractHorizontalGrid(int tindex, int zindex, final HorizontalGrid targetDomain) {
+    public GridCoverage2D<Float> extractHorizontalGrid(int tindex, int zindex,
+            final HorizontalGrid targetDomain) {
+
         HorizontalGrid sourceGrid = getCoverage().getDomain().getHorizontalGrid();
         PixelMap pixelMap = new PixelMap(sourceGrid, targetDomain);
-        
+
         List<Float> dataList;
         if (pixelMap.isEmpty()) {
-            // There is no overlap between the source data grid and the target
-            // domain. Return a list of null values.
-            // It's very unlikely that the target domain will be bigger than
-            // Integer.MAX_VALUE
+            /*
+             * There is no overlap between the source data grid and the target
+             * domain. Return a list of null values. It's very unlikely that the
+             * target domain will be bigger than Integer.MAX_VALUE
+             */
             dataList = new AbstractList<Float>() {
                 @Override
                 public Float get(int index) {
@@ -60,6 +64,7 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature {
             try {
                 dataReadingStrategy.readData(tindex, zindex, grid, pixelMap, data);
             } catch (IOException e) {
+                // TODO deal with this better
                 e.printStackTrace();
             }
             dataList = new ArrayList<Float>();
@@ -71,7 +76,7 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature {
                 }
             }
         }
-        return new GridCoverage2DImpl(getCoverage(), targetDomain, dataList);
+        return new GridCoverage2DImpl<Float>(getCoverage(), targetDomain, dataList, Float.class);
     }
 
 }
