@@ -12,22 +12,23 @@ import ucar.nc2.constants.FeatureType;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
-import ucar.nc2.dt.GridDatatype;
 import ucar.nc2.dt.GridDataset.Gridset;
+import ucar.nc2.dt.GridDatatype;
 import ucar.nc2.dt.grid.GridDataset;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import uk.ac.rdg.resc.edal.cdm.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.cdm.coverage.NcGridSeriesCoverage;
+import uk.ac.rdg.resc.edal.cdm.coverage.NcVectorGridSeriesCoverage;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.cdm.util.FileUtils;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
+import uk.ac.rdg.resc.edal.position.Vector2D;
 
 /**
  * An implementation of {@link FeatureCollection} which contains
@@ -36,11 +37,11 @@ import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
  * @author Guy Griffiths
  * 
  */
-public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeriesFeature<Float>> {
+public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeriesFeature<?>> {
 
     private String collectionId;
     private String name;
-    private Map<String, GridSeriesFeature<Float>> id2GridSeriesFeature;
+    private Map<String, GridSeriesFeature<?>> id2GridSeriesFeature;
 
     /**
      * Instantiates a collection of features from one or more NetCDF files.
@@ -61,13 +62,14 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         this.collectionId = collectionId;
         this.name = collectionName;
 
-        id2GridSeriesFeature = new HashMap<String, GridSeriesFeature<Float>>();
+        id2GridSeriesFeature = new HashMap<String, GridSeriesFeature<?>>();
 
         List<File> files = FileUtils.expandGlobExpression(location);
         for (File file : files) {
             NetcdfDataset ncDataset = openDataset(file.getPath());
 
-            FeatureDataset featureDS = FeatureDatasetFactoryManager.wrap(FeatureType.GRID, ncDataset, null, null);
+            FeatureDataset featureDS = FeatureDatasetFactoryManager.wrap(FeatureType.GRID,
+                    ncDataset, null, null);
             if (featureDS == null) {
                 throw new IOException("No grid datasets found in file: " + file.getPath());
             }
@@ -75,8 +77,9 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
             assert (fType == FeatureType.GRID);
             GridDataset gridDS = (GridDataset) featureDS;
 
-            DataReadingStrategy dataReadingStrategy = CdmUtils.getOptimumDataReadingStrategy(ncDataset);
-            
+            DataReadingStrategy dataReadingStrategy = CdmUtils
+                    .getOptimumDataReadingStrategy(ncDataset);
+
             for (Gridset gridset : gridDS.getGridsets()) {
                 /*
                  * Get everything from the GridCoordSystem that is needed for
@@ -90,6 +93,8 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     tAxis = CdmUtils.createTimeAxis(coordSys);
                 }
 
+                Map<String, GridDatatype[]> compoundsCoverageComponents = new HashMap<String, GridDatatype[]>();
+
                 List<GridDatatype> grids = gridset.getGrids();
                 for (GridDatatype gridDT : grids) {
                     /*
@@ -101,71 +106,69 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     String id = var.getName();
                     String description = var.getDescription();
 
-                    GridSeriesCoverage<Float> coverage = new NcGridSeriesCoverage(var, hGrid, vAxis, tAxis);
-                    GridSeriesFeature<Float> feature = new NcGridSeriesFeature(name, id, description, this, coverage, dataReadingStrategy, gridDT);
+                    NcGridSeriesCoverage coverage = new NcGridSeriesCoverage(var, hGrid, vAxis,
+                            tAxis);
+                    GridSeriesFeature<Float> feature = new NcGridSeriesFeature(name, id,
+                            description, this, coverage, dataReadingStrategy, gridDT);
+
+                    if (name.contains("eastward")) {
+                        String compoundName = name.replaceFirst("eastward_", "");
+                        if (compoundsCoverageComponents.containsKey(compoundName)) {
+                            compoundsCoverageComponents.get(compoundName)[0] = gridDT;
+                        } else {
+                            GridDatatype[] compoundArray = new GridDatatype[2];
+                            compoundArray[0] = gridDT;
+                            compoundsCoverageComponents.put(compoundName, compoundArray);
+                        }
+                    } else if (name.contains("northward")) {
+                        String compoundName = name.replaceFirst("northward_", "");
+                        if (compoundsCoverageComponents.containsKey(compoundName)) {
+                            compoundsCoverageComponents.get(compoundName)[1] = gridDT;
+                        } else {
+                            GridDatatype[] compoundArray = new GridDatatype[2];
+                            compoundArray[1] = gridDT;
+                            compoundsCoverageComponents.put(compoundName, compoundArray);
+                        }
+                    }
 
                     id2GridSeriesFeature.put(id.toLowerCase(), feature);
                 }
-            }
-        }
-    }
 
-    public static void main(String[] args) throws IOException {
-        // NcGridSeriesFeatureCollection fs = new
-        // NcGridSeriesFeatureCollection("testcollection", "Test Collection",
-        // "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
-        NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection", "Test Collection",
-                "/home/guy/Data/FOAM_ONE/FOAM_20100130.0.nc");
-        
-        for(String fId : fs.getFeatureIds()){
-//            fs.getFeatureById(fId).getCoverage().extractHorizontalLayer(0, 0);
-            System.out.println(fs.getFeatureById(fId).getDescription()+","+fs.getFeatureById(fId).getName());
-        }
-        
-        String var = "V";
+                for (String compoundVar : compoundsCoverageComponents.keySet()) {
+                    GridDatatype[] gridDTList = compoundsCoverageComponents.get(compoundVar);
+                    if (gridDTList.length != 2 || gridDTList[0] == null || gridDTList[1] == null) {
+                        // TODO Deal with error properly
+                        System.out.println("Do not know how to compound anything but 2 variables");
+                        continue;
+                    }
+                    GridDatatype gridX = gridDTList[0];
+                    GridDatatype gridY = gridDTList[1];
+                    VariableDS varX = gridX.getVariable();
+                    VariableDS varY = gridY.getVariable();
+                    String id = varX.getName() + "+" + varY.getName();
+                    String xDesc = varX.getDescription();
+                    int xIndex = xDesc.indexOf("-component of");
+                    String description = xDesc.substring(xIndex + 14);
+                    NcGridSeriesCoverage covX = new NcGridSeriesCoverage(varX, hGrid, vAxis, tAxis);
+                    NcGridSeriesCoverage covY = new NcGridSeriesCoverage(varY, hGrid, vAxis, tAxis);
 
-        System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getDescription());
-        System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getUnits().getUnitString());
-        System.out.println(fs.getFeatureById(var).getCoverage().getRangeMetadata(null).getParameter().getStandardName());
-
-        List<Float> vals = fs.getFeatureById(var).getCoverage().getValues();
-
-        GridSeriesDomain domain = fs.getFeatureById(var).getCoverage().getDomain(); 
-        int xSize = domain.getHorizontalGrid().getXAxis().size();
-        int ySize = domain.getHorizontalGrid().getYAxis().size();
-        int zSize = domain.getVerticalAxis().size();
-        int tSize = domain.getTimeAxis().size();
-        
-        double err = 0.0;
-        System.out.println(xSize + "," + ySize + "," + zSize + "," + tSize);
-        for (int t = 0; t < tSize; t++) {
-            for (int z = 0; z < zSize; z++) {
-                for (int y = 0; y < ySize; y++) {
-                    for (int x = 0; x < xSize; x++) {
-                        Float evVal = fs.getFeatureById(var).getCoverage().evaluate(t, z, y, x);
-                        int index = x + y * xSize + z * ySize * xSize + t * zSize * ySize * xSize;
-                        Float vaVal = vals.get(index);
-
-                        // System.out.println(x+","+y+","+z+","+t);
-                        if (evVal.isNaN() && vaVal.isNaN()) {
-                            // Ignore
-                        } else {
-                            // System.out.println(evVal + "," + vaVal);
-                            if (evVal.isNaN() || vaVal.isNaN()) {
-                                System.out.println("One is NaN, but the other isn't:" + evVal + "," + vaVal);
-                            } else {
-                                err += evVal - vaVal;
-                            }
-                        }
+                    GridSeriesCoverage<Vector2D<Float>> coverage;
+                    try {
+                        coverage = new NcVectorGridSeriesCoverage(covX, covY);
+                        GridSeriesFeature<Vector2D<Float>> feature = new NcVectorGridSeriesFeature(
+                                compoundVar, id, description, this, coverage, dataReadingStrategy,
+                                gridX, gridY);
+                        id2GridSeriesFeature.put(id.toLowerCase(), feature);
+                    } catch (InstantiationException e) {
+                        /*
+                         * If we get this error, it means that the components do
+                         * not match properly, and can't make a Vector coverage.
+                         */
+                        // TODO log the error
                     }
                 }
             }
-            System.out.println("Total error:" + err);
         }
-
-        // NcGridSeriesFeatureCollection fs = new
-        // NcGridSeriesFeatureCollection("testcollection", "Test Collection",
-        // "/home/guy/Data/FOAM_ONE/*.nc");
     }
 
     /**
@@ -210,7 +213,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
     }
 
     @Override
-    public GridSeriesFeature<Float> getFeatureById(String id) {
+    public GridSeriesFeature<?> getFeatureById(String id) {
         return id2GridSeriesFeature.get(id.toLowerCase());
     }
 
@@ -221,9 +224,9 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 
     @SuppressWarnings("unchecked")
     @Override
-    public Class<GridSeriesFeature<Float>> getFeatureType() {
+    public Class<GridSeriesFeature<?>> getFeatureType() {
         // TODO check this with usage examples
-        return (Class<GridSeriesFeature<Float>>) (Class<?>) GridSeriesFeature.class;
+        return (Class<GridSeriesFeature<?>>) (Class<?>) GridSeriesFeature.class;
     }
 
     @Override
@@ -237,7 +240,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
     }
 
     @Override
-    public Iterator<GridSeriesFeature<Float>> iterator() {
+    public Iterator<GridSeriesFeature<?>> iterator() {
         /*
          * We cannot simply use:
          * 
@@ -247,14 +250,14 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
          * 
          * TODO IS THIS STILL TRUE?
          */
-        return new Iterator<GridSeriesFeature<Float>>() {
+        return new Iterator<GridSeriesFeature<?>>() {
             @Override
             public boolean hasNext() {
                 return id2GridSeriesFeature.values().iterator().hasNext();
             }
 
             @Override
-            public GridSeriesFeature<Float> next() {
+            public GridSeriesFeature<?> next() {
                 return id2GridSeriesFeature.values().iterator().next();
             }
 

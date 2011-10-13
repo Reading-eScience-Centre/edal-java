@@ -100,8 +100,8 @@ public enum DataReadingStrategy {
         }
 
         @Override
-        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var, RangesList ranges)
-                throws IOException {
+        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var,
+                RangesList ranges) throws IOException {
             Iterator<PixelMapEntry> it = pixelMap.iterator();
             if (!it.hasNext())
                 return 0;
@@ -129,10 +129,12 @@ public enum DataReadingStrategy {
             return dataPointsRead;
         }
 
-        private int readScanline(float[] data, VariableDS var, RangesList ranges, Scanline scanline) throws IOException {
+        private int readScanline(float[] data, VariableDS var, RangesList ranges, Scanline scanline)
+                throws IOException {
             ranges.setYRange(scanline.jIndex, scanline.jIndex);
             int imin = scanline.pixelMapEntries.get(0).getSourceGridIIndex();
-            int imax = scanline.pixelMapEntries.get(scanline.pixelMapEntries.size() - 1).getSourceGridIIndex();
+            int imax = scanline.pixelMapEntries.get(scanline.pixelMapEntries.size() - 1)
+                    .getSourceGridIIndex();
             ranges.setXRange(imin, imax);
 
             // logger.debug(ranges.toString());
@@ -171,8 +173,8 @@ public enum DataReadingStrategy {
      */
     BOUNDING_BOX {
         @Override
-        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var, RangesList ranges)
-                throws IOException {
+        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var,
+                RangesList ranges) throws IOException {
             // Read the whole chunk of x-y data
             int imin = pixelMap.getMinIIndex();
             int imax = pixelMap.getMaxIIndex();
@@ -212,8 +214,8 @@ public enum DataReadingStrategy {
      */
     PIXEL_BY_PIXEL {
         @Override
-        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var, RangesList ranges)
-                throws IOException {
+        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var,
+                RangesList ranges) throws IOException {
             int numDataPointsRead = 0;
             for (PixelMapEntry pme : pixelMap) {
                 ranges.setYRange(pme.getSourceGridJIndex(), pme.getSourceGridJIndex());
@@ -241,8 +243,8 @@ public enum DataReadingStrategy {
      * 
      * @see PixelMap
      */
-    public final int readData(int tIndex, int zIndex, GridDatatype grid, PixelMap pixelMap, float[] data)
-            throws IOException {
+    public final int readData(int tIndex, int zIndex, GridDatatype grid, PixelMap pixelMap,
+            float[] data) throws IOException {
         // Set the time and z ranges
         RangesList rangesList = new RangesList(grid);
         rangesList.setZRange(zIndex, zIndex);
@@ -262,6 +264,6 @@ public enum DataReadingStrategy {
      * 
      * @return The number of data points actually read from the source data
      */
-    abstract int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var, RangesList ranges)
-            throws IOException;
+    abstract int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var,
+            RangesList ranges) throws IOException;
 }

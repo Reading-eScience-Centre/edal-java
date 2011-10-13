@@ -50,5 +50,6 @@ public interface GridCoverage2D<R>
 
     public R evaluate(GridCoordinates2D coords);
     public List<R> evaluate(List<GridCoordinates2D> coords);
+    public Class<?> getValueClass();
 
 }

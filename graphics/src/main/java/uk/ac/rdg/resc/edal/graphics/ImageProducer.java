@@ -11,27 +11,25 @@ import java.awt.image.IndexColorModel;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.w3c.dom.ranges.Range;
-
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
-import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
-import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.position.Vector2D;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
- * An object that is used to render data into images. Instances of this class
- * must be created through the {@link Builder}.
+ * An object that is used to render data into images. Instances of this class must be created
+ * through the {@link Builder}.
  * 
  * @author Jon Blower
+ * @author Guy Griffiths
  */
 public final class ImageProducer {
     public static enum Style {
-        BOXFILL, VECTOR
+        BOXFILL, VECTOR, DEFAULT
     };
 
     private Style style;
@@ -41,15 +39,13 @@ public final class ImageProducer {
     private boolean transparent;
     private int opacity;
     private int numColourBands;
-    private boolean logarithmic; // True if the colour scale is to be
-                                 // logarithmic,
-    // false if linear
+    private boolean logarithmic; // True if the colour scale is to be logarithmic, false if linear
     private Color bgColor;
     private ColorPalette colorPalette;
 
     /**
-     * Colour scale range of the picture. An {@link Extent#isEmpty() empty Range}
-     * means that the picture will be auto-scaled.
+     * Colour scale range of the picture. An {@link Extent#isEmpty() empty Range} means that the
+     * picture will be auto-scaled.
      */
     private Extent<Float> scaleRange;
 
@@ -64,16 +60,46 @@ public final class ImageProducer {
     // If we need to cache the frame data and associated labels (we do this if
     // we have to auto-scale the image) this is where we put them.
     private static final class Components {
-        private final List<Float> x;
-        private final List<Float> y;
+        private final List<?> data;
+        private final boolean vector;
 
-        public Components(List<Float> x, List<Float> y) {
-            this.x = x;
-            this.y = y;
+        public Components(List<?> data, boolean vector) {
+            this.data = data;
+            this.vector = vector;
         }
 
         public List<Float> getMagnitudes() {
-            return y == null ? x : GISUtils.getMagnitudes(x, y);
+            return new AbstractList<Float>() {
+                @Override
+                @SuppressWarnings("unchecked")
+                public Float get(int index) {
+                    if (vector) {
+                        Vector2D<Float> vec = (Vector2D<Float>) data.get(index);
+                        return vec == null ? null : vec.getMagnitude();
+                    } else {
+                        return (Float) data.get(index);
+                    }
+                }
+
+                @Override
+                public int size() {
+                    return data.size();
+                }
+            };
+        }
+
+        @SuppressWarnings("unchecked")
+        public Float getDirection(int i) {
+            if (vector) {
+                Vector2D<Float> vec = (Vector2D<Float>) data.get(i);
+                return vec == null ? null : vec.getDirection();
+            } else {
+                return null;
+            }
+        }
+
+        public boolean isVector() {
+            return vector;
         }
     }
 
@@ -101,25 +127,11 @@ public final class ImageProducer {
         return transparent;
     }
 
-//    public void addFrame(GridSeriesFeature<Float> feature, BoundingBox bbox, int width, int height, ){
-//        coverage.
-//        addFrame(feature.getCoverage().getValues(), feature.getName())
-//    }
-    
-    /**
-     * Adds a frame of scalar data to this ImageProducer. If the data cannot yet
-     * be rendered into a BufferedImage, the data and label are stored.
-     */
-    public void addFrame(List<Float> data, String label) {
-        addFrame(data, null, label);
-    }
+    public void addFrame(GridCoverage2D<?> coverage, String label) {
+        Class<?> clazz = coverage.getValueClass();
 
-    /**
-     * Adds a frame of vector data to this ImageProducer. If the data cannot yet
-     * be rendered into a BufferedImage, the data and label are stored.
-     */
-    public void addFrame(List<Float> xData, List<Float> yData, String label) {
-        Components comps = new Components(xData, yData);
+        Components comps = new Components(coverage.getValues(), clazz == Vector2D.class);
+
         if (scaleRange.isEmpty()) {
             if (frameData == null) {
                 frameData = new ArrayList<Components>();
@@ -133,28 +145,30 @@ public final class ImageProducer {
     }
 
     /**
-     * Returns the {@link IndexColorModel} which will be used by this
-     * ImageProducer
+     * Returns the {@link IndexColorModel} which will be used by this ImageProducer
      */
     public IndexColorModel getColorModel() {
         return colorPalette.getColorModel(numColourBands, opacity, bgColor, transparent);
     }
 
     /**
-     * Creates and returns a single frame as an Image, based on the given data.
-     * Adds the label if one has been set. The scale must be set before calling
-     * this method.
+     * Creates and returns a single frame as an Image, based on the given data. Adds the label if
+     * one has been set. The scale must be set before calling this method.
      */
     private BufferedImage createImage(Components comps, String label) {
         // Create the pixel array for the frame
         byte[] pixels = new byte[picWidth * picHeight];
-        // We get the magnitude of the input data (takes care of the case
-        // in which the data are two components of a vector)
+        /*
+         * We get the magnitude of the input data (takes care of the case in
+         * which the data are two components of a vector)
+         */
         List<Float> magnitudes = comps.getMagnitudes();
         for (int i = 0; i < pixels.length; i++) {
-            // The image coordinate system has the vertical axis increasing
-            // downward, but the data's coordinate system has the vertical axis
-            // increasing upwards. The method below flips the axis
+            /*
+             * The image coordinate system has the vertical axis increasing
+             * downward, but the data's coordinate system has the vertical axis
+             * increasing upwards. The method below flips the axis
+             */
             int dataIndex = getDataIndex(i);
             pixels[i] = (byte) getColourIndex(magnitudes.get(dataIndex));
         }
@@ -178,7 +192,11 @@ public final class ImageProducer {
             gfx.drawString(label, 10, image.getHeight() - 5);
         }
 
-        if (style == Style.VECTOR) {
+        /*
+         * If no style has been specified, DEFAULT will be selected. In the case of default style,
+         * we want to plot direction lines for vector components
+         */
+        if (comps.isVector() && (style == Style.VECTOR || style == Style.DEFAULT)) {
             // We superimpose direction arrows on top of the background
             // TODO: only do this for lat-lon projections!
             Graphics2D g = image.createGraphics();
@@ -190,27 +208,17 @@ public final class ImageProducer {
             for (int i = 0; i < picWidth; i += Math.ceil(arrowLength * 1.2)) {
                 for (int j = 0; j < picHeight; j += Math.ceil(arrowLength * 1.2)) {
                     int dataIndex = getDataIndex(i, j);
-                    Float eastVal = comps.x.get(dataIndex);
-                    Float northVal = comps.y.get(dataIndex);
-                    if (eastVal != null && northVal != null) {
-                        double angle = Math.atan2(northVal.doubleValue(), eastVal.doubleValue());
+                    Float angle = comps.getDirection(dataIndex);
+                    if (angle != null) {
                         // Calculate the end point of the arrow
                         double iEnd = i + arrowLength * Math.cos(angle);
-                        // Screen coordinates go down, but north is up, hence
-                        // the minus sign
+                        // Screen coordinates go down, but north is up, hence the minus sign
                         double jEnd = j - arrowLength * Math.sin(angle);
-                        // logger.debug("i={}, j={}, dataIndex={}, east={}, north={}",
-                        // new Object[]{i, j, dataIndex, data[0][dataIndex],
-                        // data[1][dataIndex]});
                         // Draw a dot representing the data location
                         g.fillOval(i - 2, j - 2, 4, 4);
-                        // Draw a line representing the vector direction and
-                        // magnitude
+                        // Draw a line representing the vector direction and magnitude
                         g.setStroke(new BasicStroke(1));
                         g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
-                        // Draw the arrow on the canvas
-                        // drawArrow(g, i, j, (int)Math.round(iEnd),
-                        // (int)Math.round(jEnd), 2);
                     }
                 }
             }
@@ -220,9 +228,8 @@ public final class ImageProducer {
     }
 
     /**
-     * Calculates the index of the data point in a data array that corresponds
-     * with the given index in the image array, taking into account that the
-     * vertical axis is flipped.
+     * Calculates the index of the data point in a data array that corresponds with the given index
+     * in the image array, taking into account that the vertical axis is flipped.
      */
     private int getDataIndex(int imageIndex) {
         int imageI = imageIndex % picWidth;
@@ -231,9 +238,8 @@ public final class ImageProducer {
     }
 
     /**
-     * Calculates the index of the data point in a data array that corresponds
-     * with the given index in the image array, taking into account that the
-     * vertical axis is flipped.
+     * Calculates the index of the data point in a data array that corresponds with the given index
+     * in the image array, taking into account that the vertical axis is flipped.
      */
     private int getDataIndex(int imageI, int imageJ) {
         int dataJ = picHeight - imageJ - 1;
@@ -258,10 +264,12 @@ public final class ImageProducer {
             double frac = (val - min) / (max - min);
             // Compute and return the index of the corresponding colour
             int index = (int) (frac * numColourBands);
-            // For values very close to the maximum value in the range, this
-            // index might turn out to be equal to numColourBands due to
-            // rounding error. In this case we subtract one from the index to
-            // ensure that such pixels are not displayed as background pixels.
+            /*
+             * For values very close to the maximum value in the range, this
+             * index might turn out to be equal to numColourBands due to
+             * rounding error. In this case we subtract one from the index to
+             * ensure that such pixels are not displayed as background pixels.
+             */
             if (index == numColourBands)
                 index--;
             return index;
@@ -269,11 +277,10 @@ public final class ImageProducer {
     }
 
     /**
-     * Gets the frames as BufferedImages, ready to be turned into a picture or
-     * animation. This is called just before the picture is due to be created,
-     * so subclasses can delay creating the BufferedImages until all the data
-     * has been extracted (for example, if we are auto-scaling an animation, we
-     * can't create each individual frame until we have data for all the frames)
+     * Gets the frames as BufferedImages, ready to be turned into a picture or animation. This is
+     * called just before the picture is due to be created, so subclasses can delay creating the
+     * BufferedImages until all the data has been extracted (for example, if we are auto-scaling an
+     * animation, we can't create each individual frame until we have data for all the frames)
      * 
      * @return List of BufferedImages
      */
@@ -290,9 +297,8 @@ public final class ImageProducer {
     }
 
     /**
-     * Makes sure that the scale is set: if we are auto-scaling, this reads all
-     * of the data we have stored to find the extremes. If the scale has already
-     * been set, this does nothing.
+     * Makes sure that the scale is set: if we are auto-scaling, this reads all of the data we have
+     * stored to find the extremes. If the scale has already been set, this does nothing.
      */
     private void setScale() {
         if (scaleRange.isEmpty()) {
@@ -302,7 +308,7 @@ public final class ImageProducer {
             // colour scale
             for (Components comps : frameData) {
                 // We only use the first component if this is a vector quantity
-                Extent<Float> range = Extents.findMinMax(comps.x);
+                Extent<Float> range = Extents.findMinMax(comps.getMagnitudes());
                 // TODO: could move this logic to the Range/Ranges class
                 if (!range.isEmpty()) {
                     if (scaleMin == null || range.getLow().compareTo(scaleMin) < 0) {
@@ -339,8 +345,8 @@ public final class ImageProducer {
         private ColorPalette colorPalette = null;
 
         /**
-         * Sets the style to be used. If not set or if the parameter is null,
-         * {@link Style#BOXFILL} will be used
+         * Sets the style to be used. If not set or if the parameter is null, {@link Style#BOXFILL}
+         * will be used
          */
         public Builder style(Style style) {
             this.style = style;
@@ -348,8 +354,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets the colour palette. If not set or if the parameter is null, the
-         * default colour palette will be used. {@see ColorPalette}
+         * Sets the colour palette. If not set or if the parameter is null, the default colour
+         * palette will be used. {@see ColorPalette}
          */
         public Builder palette(ColorPalette colorPalette) {
             this.colorPalette = colorPalette;
@@ -373,8 +379,7 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets whether or not background pixels should be transparent (defaults
-         * to false)
+         * Sets whether or not background pixels should be transparent (defaults to false)
          */
         public Builder transparent(boolean transparent) {
             this.transparent = transparent;
@@ -390,8 +395,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets the colour scale range. If not set (or if set to null), the min
-         * and max values of the data will be used.
+         * Sets the colour scale range. If not set (or if set to null), the min and max values of
+         * the data will be used.
          */
         public Builder colourScaleRange(Extent<Float> scaleRange) {
             this.scaleRange = scaleRange;
@@ -399,8 +404,7 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets the number of colour bands to use in the image, from 0 to 254
-         * (default 254)
+         * Sets the number of colour bands to use in the image, from 0 to 254 (default 254)
          */
         public Builder numColourBands(int numColourBands) {
             if (numColourBands < 0 || numColourBands > ColorPalette.MAX_NUM_COLOURS) {
@@ -411,8 +415,7 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets whether or not the colour scale is to be spaced logarithmically
-         * (default is false)
+         * Sets whether or not the colour scale is to be spaced logarithmically (default is false)
          */
         public Builder logarithmic(Boolean logarithmic) {
             this.logarithmic = logarithmic;
@@ -420,9 +423,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets the background colour, which is used only if transparent==false,
-         * for background pixels. Defaults to white. If the passed-in color is
-         * null, it is ignored.
+         * Sets the background colour, which is used only if transparent==false, for background
+         * pixels. Defaults to white. If the passed-in color is null, it is ignored.
          */
         public Builder backgroundColour(Color bgColor) {
             if (bgColor != null)
@@ -431,8 +433,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Checks the fields for internal consistency, then creates and returns
-         * a new ImageProducer object.
+         * Checks the fields for internal consistency, then creates and returns a new ImageProducer
+         * object.
          * 
          * @throws IllegalStateException
          *             if the builder cannot create a valid ImageProducer object
@@ -449,7 +451,7 @@ public final class ImageProducer {
             ip.transparent = transparent;
             ip.bgColor = bgColor;
             ip.numColourBands = numColourBands;
-            ip.style = style == null ? Style.BOXFILL : style;
+            ip.style = style == null ? Style.DEFAULT : style;
             ip.colorPalette = colorPalette == null ? ColorPalette.get(null) : colorPalette;
             ip.logarithmic = logarithmic == null ? false : logarithmic.booleanValue();
             // Signifies auto-scaling

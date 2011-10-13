@@ -88,7 +88,7 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     @Override
     public int findIndexOf(Double position) {
         if (isLongitude) {
-            position = GISUtils.getNextEquivalentLongitude(this.getMinimumValue(), position);
+            position = GISUtils.getNextEquivalentLongitude(this.getCoordinateExtent().getLow(), position);
         }
         // This method will generally be faster than an exhaustive search, or
         // even a binary search
@@ -99,7 +99,7 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         int index = (int)Math.round(indexDbl);
         // Check the extremes (probably not strictly necessary?)
 //        if (index < 0) return 0;
-//        if (index >= this.size) return this.size - 1;
+//        if (index == this.size) return this.size - 1;
         if (index < 0 || index >= size)
             return -1;
         return index;

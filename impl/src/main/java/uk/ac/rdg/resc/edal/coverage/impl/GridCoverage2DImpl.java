@@ -11,23 +11,25 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
-public class GridCoverage2DImpl extends AbstractDiscreteSimpleCoverage<HorizontalPosition, GridCell2D, Float> implements
-        GridCoverage2D<Float> {
+public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<HorizontalPosition, GridCell2D, R> implements
+        GridCoverage2D<R> {
 
     private final RangeMetadata metadata;
     private final String description;
     private final HorizontalGrid grid;
-    private final List<Float> data;
+    private final List<R> data;
+    private final Class<?> clazz;
     
-    public GridCoverage2DImpl(GridSeriesCoverage<Float> fullCoverage, HorizontalGrid grid, List<Float> data) {
+    public GridCoverage2DImpl(GridSeriesCoverage<R> fullCoverage, HorizontalGrid grid, List<R> data, Class<?> clazz) {
         metadata = fullCoverage.getRangeMetadata(null);
         description = fullCoverage.getDescription();
         this.grid = grid;
         this.data = data;
+        this.clazz = clazz;
     }
 
     @Override
-    public Float evaluate(GridCoordinates2D coords) {
+    public R evaluate(GridCoordinates2D coords) {
         return data.get(gridCoordsToIndex(coords));
     }
 
@@ -36,8 +38,8 @@ public class GridCoverage2DImpl extends AbstractDiscreteSimpleCoverage<Horizonta
     }
 
     @Override
-    public List<Float> evaluate(List<GridCoordinates2D> coords) {
-        List<Float> ret = new ArrayList<Float>();
+    public List<R> evaluate(List<GridCoordinates2D> coords) {
+        List<R> ret = new ArrayList<R>();
         for(GridCoordinates2D coord : coords){
             ret.add(data.get(gridCoordsToIndex(coord)));
         }
@@ -50,7 +52,7 @@ public class GridCoverage2DImpl extends AbstractDiscreteSimpleCoverage<Horizonta
     }
 
     @Override
-    public List<Float> getValues() {
+    public List<R> getValues() {
         return data;
     }
 
@@ -63,4 +65,9 @@ public class GridCoverage2DImpl extends AbstractDiscreteSimpleCoverage<Horizonta
     protected RangeMetadata getRangeMetadata() {
         return metadata;
     }
+
+	@Override
+	public Class<?> getValueClass() {
+		return clazz;
+	}
 }

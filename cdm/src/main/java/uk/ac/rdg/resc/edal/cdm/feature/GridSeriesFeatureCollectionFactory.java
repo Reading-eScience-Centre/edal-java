@@ -9,7 +9,7 @@ import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 
 public abstract class GridSeriesFeatureCollectionFactory {
     
-    public abstract FeatureCollection<GridSeriesFeature<Float>> read(String location, String id, String name) throws IOException;
+    public abstract FeatureCollection<GridSeriesFeature<?>> read(String location, String id, String name) throws IOException;
 
     /**
      * Maps class names to GridSeriesFeatureCollectionFactory objects.  Only one DataReader object of
