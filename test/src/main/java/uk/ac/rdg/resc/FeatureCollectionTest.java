@@ -56,6 +56,7 @@ public class FeatureCollectionTest {
 //            System.out.println(tPos+","+vPos.getZ());
 //            feature.getCoverage().getDomain().getVerticalAxis().getCoordinateValue(0);
             GridCoverage2D<?> gridCoverage = feature.extractHorizontalGrid(0, 0, targetDomain);
+            System.out.println(gridCoverage.getRangeMetadata(null).getValueType());
 //            System.out.println("VALUE-->"+gridCoverage.evaluate(new HorizontalPositionImpl(-0.25, -45)));
 //            System.out.println("3dVAL-->"+feature.getCoverage().evaluate(new GeoPositionImpl(new HorizontalPositionImpl(-0.25, -45), vPos, tPos)));
             if(gridCoverage != null) {

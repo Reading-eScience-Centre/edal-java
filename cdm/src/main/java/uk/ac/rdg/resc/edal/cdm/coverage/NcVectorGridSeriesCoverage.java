@@ -27,7 +27,7 @@ public class NcVectorGridSeriesCoverage
 	private NcGridSeriesCoverage yCoverage;
 	
 	public NcVectorGridSeriesCoverage(NcGridSeriesCoverage xCoverage, NcGridSeriesCoverage yCoverage) throws InstantiationException {
-		if(xCoverage.size() != yCoverage.size()){
+	    if(xCoverage.size() != yCoverage.size()){
 			throw new InstantiationException("Component coverages must be the same size as each other");
 		}
 		if(!xCoverage.getVariable().getUnitsString().equalsIgnoreCase(yCoverage.getVariable().getUnitsString())){
@@ -98,7 +98,7 @@ public class NcVectorGridSeriesCoverage
 		String yName = yCoverage.getVariable().getName();
         RangeMetadata metadata = new RangeMetadataImpl(getDescription(),
                 Phenomenon.getPhenomenon(xName+"+"+yName, PhenomenonVocabulary.CLIMATE_AND_FORECAST),
-                Unit.getUnit(xCoverage.getVariable().getUnitsString(), UnitVocabulary.UDUNITS));
+                Unit.getUnit(xCoverage.getVariable().getUnitsString(), UnitVocabulary.UDUNITS), Vector2D.class);
         return metadata;
 	}
 }

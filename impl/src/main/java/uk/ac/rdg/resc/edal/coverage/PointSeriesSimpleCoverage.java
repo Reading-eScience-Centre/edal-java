@@ -17,7 +17,6 @@ public class PointSeriesSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage
     private PointSeriesDomain domain;
     
     public PointSeriesSimpleCoverage(GridSeriesCoverage<R> coverage, List<R> values) {
-        super();
         this.values = values;
         metadata = coverage.getRangeMetadata(null);
         description = coverage.getDescription();

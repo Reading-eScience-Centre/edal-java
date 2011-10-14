@@ -17,7 +17,6 @@ public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<Ver
     private ProfileDomain domain;
     
     public ProfileSimpleCoverage(GridSeriesCoverage<R> coverage, List<R> values) {
-        super();
         this.values = values;
         metadata = coverage.getRangeMetadata(null);
         description = coverage.getDescription();

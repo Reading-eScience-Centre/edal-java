@@ -45,7 +45,6 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
  */
 public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R>
 {
-
     /** {@inheritDoc} */
     @Override
     public DiscreteDomain<P, DO> getDomain();

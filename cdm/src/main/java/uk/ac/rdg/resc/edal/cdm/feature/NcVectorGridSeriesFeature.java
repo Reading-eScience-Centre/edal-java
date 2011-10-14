@@ -86,7 +86,7 @@ public class NcVectorGridSeriesFeature extends
 				}
 			}
 		}
-		return new GridCoverage2DImpl<Vector2D<Float>>(getCoverage(), targetDomain, dataList, Vector2D.class);
+		return new GridCoverage2DImpl<Vector2D<Float>>(getCoverage(), targetDomain, dataList);
 	}
 
 }

@@ -32,8 +32,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
+import uk.ac.rdg.resc.edal.coverage.Record;
 
 /**
  * <p>Partial implementation of a simple {@link DiscreteCoverage}, providing default

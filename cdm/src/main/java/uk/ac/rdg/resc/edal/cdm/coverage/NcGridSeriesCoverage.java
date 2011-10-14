@@ -44,7 +44,7 @@ public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosi
     protected RangeMetadata getRangeMetadata() {
         RangeMetadata metadata = new RangeMetadataImpl(getDescription(),
                                        Phenomenon.getPhenomenon(variable.getName(), PhenomenonVocabulary.CLIMATE_AND_FORECAST),
-                                       Unit.getUnit(variable.getUnitsString(), UnitVocabulary.UDUNITS));
+                                       Unit.getUnit(variable.getUnitsString(), UnitVocabulary.UDUNITS), Float.class);
         return metadata;
     }
 

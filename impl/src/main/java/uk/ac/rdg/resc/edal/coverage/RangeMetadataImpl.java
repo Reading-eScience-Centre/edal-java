@@ -8,11 +8,13 @@ public class RangeMetadataImpl implements RangeMetadata {
     private final String description;
     private final Phenomenon parameter;
     private final Unit units;
+    private final Class<?> clazz;
 
-    public RangeMetadataImpl(String description, Phenomenon parameter, Unit units) {
+    public RangeMetadataImpl(String description, Phenomenon parameter, Unit units, Class<?> clazz) {
         this.description = description;
         this.parameter = parameter;
         this.units = units;
+        this.clazz = clazz;
     }
 
     @Override
@@ -33,6 +35,6 @@ public class RangeMetadataImpl implements RangeMetadata {
     // TODO Check that this is the right behaviour...
     @Override
     public Class<?> getValueType() {
-        return Double.class;
+        return clazz;
     }
 }

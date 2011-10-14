@@ -18,14 +18,12 @@ public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<Horizo
     private final String description;
     private final HorizontalGrid grid;
     private final List<R> data;
-    private final Class<?> clazz;
     
-    public GridCoverage2DImpl(GridSeriesCoverage<R> fullCoverage, HorizontalGrid grid, List<R> data, Class<?> clazz) {
+    public GridCoverage2DImpl(GridSeriesCoverage<R> fullCoverage, HorizontalGrid grid, List<R> data) {
         metadata = fullCoverage.getRangeMetadata(null);
         description = fullCoverage.getDescription();
         this.grid = grid;
         this.data = data;
-        this.clazz = clazz;
     }
 
     @Override
@@ -65,9 +63,4 @@ public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<Horizo
     protected RangeMetadata getRangeMetadata() {
         return metadata;
     }
-
-	@Override
-	public Class<?> getValueClass() {
-		return clazz;
-	}
 }
