@@ -45,9 +45,12 @@ public class VerticalPositionImpl implements VerticalPosition {
      * @param z
      *            The z coordinate (height/depth) of this position
      */
-    public VerticalPositionImpl(double z) {
-        this(z, null);
-    }
+//    public VerticalPositionImpl(double z) {
+//        this(z, null);
+//    }
+    /*
+     * TODO Put this back as it might be needed, but try and make sure all Vertical Positions HAVE a CRS
+     */
 
     @Override
     public final VerticalCrs getCoordinateReferenceSystem() {

@@ -76,7 +76,7 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
                 }
             }
         }
-        return new GridCoverage2DImpl<Float>(getCoverage(), targetDomain, dataList, Float.class);
+        return new GridCoverage2DImpl<Float>(getCoverage(), targetDomain, dataList);
     }
 
 }

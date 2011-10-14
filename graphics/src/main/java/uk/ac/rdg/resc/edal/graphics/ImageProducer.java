@@ -128,7 +128,7 @@ public final class ImageProducer {
     }
 
     public void addFrame(GridCoverage2D<?> coverage, String label) {
-        Class<?> clazz = coverage.getValueClass();
+        Class<?> clazz = coverage.getRangeMetadata(null).getValueType();
 
         Components comps = new Components(coverage.getValues(), clazz == Vector2D.class);
 
