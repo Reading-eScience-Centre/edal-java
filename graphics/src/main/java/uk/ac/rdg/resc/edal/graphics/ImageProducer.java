@@ -455,7 +455,7 @@ public final class ImageProducer {
             ip.colorPalette = colorPalette == null ? ColorPalette.get(null) : colorPalette;
             ip.logarithmic = logarithmic == null ? false : logarithmic.booleanValue();
             // Signifies auto-scaling
-            Extent<Float> emptyRange = Extents.emptyExtent();
+            Extent<Float> emptyRange = Extents.emptyExtent(Float.class);
             ip.scaleRange = scaleRange == null ? emptyRange : scaleRange;
 
             return ip;

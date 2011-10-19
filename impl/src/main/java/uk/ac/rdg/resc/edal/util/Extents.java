@@ -72,7 +72,7 @@ public final class Extents {
         return new SimpleExtentWithComparator<T>(min, max, comp);
     }
 
-    public static <T extends Comparable<? super T>> Extent<T> emptyExtent() {
+    public static <T extends Comparable<? super T>> Extent<T> emptyExtent(Class<T> clazz) {
         return new SimpleExtentWithComparator<T>((T) null, (T) null, null);
     }
 
