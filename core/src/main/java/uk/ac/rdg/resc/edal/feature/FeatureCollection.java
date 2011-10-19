@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -65,6 +66,13 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
      * @throws IllegalArgumentException if {@code id} is not a valid feature id
      */
     public F getFeatureById(String id);
+    
+    /**
+     * Gets all features in the {@link FeatureCollection}.
+     * 
+     * @return A {@link Collection} of features
+     */
+    public Collection<F> getFeatures();
 
     /**
      * Gets the runtime class of the features within this collection.
