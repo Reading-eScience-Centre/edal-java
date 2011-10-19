@@ -54,7 +54,7 @@ public abstract class AbstractGridSeriesFeature<R> extends AbstractFeature imple
 
     @Override
     public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition t) {
-        Extent<Integer> vExtent = Extents.emptyExtent();
+        Extent<Integer> vExtent = Extents.emptyExtent(Integer.class);
         try{
             vExtent = coverage.getDomain().getVerticalAxis().getIndexExtent();
         } catch (NullPointerException npe){
@@ -87,8 +87,16 @@ public abstract class AbstractGridSeriesFeature<R> extends AbstractFeature imple
     @Override
     public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, double zPos,
             HorizontalGrid targetDomain) {
-        int tindex = getCoverage().getDomain().getTimeAxis().findIndexOf(tPos);
-        int zindex = getCoverage().getDomain().getVerticalAxis().findIndexOf(zPos);
+        int tindex = 0;
+        int zindex = 0;
+        try{
+            tindex = getCoverage().getDomain().getTimeAxis().findIndexOf(tPos);
+        } catch(NullPointerException e){
+        }
+        try{
+            zindex = getCoverage().getDomain().getVerticalAxis().findIndexOf(zPos);
+        } catch(NullPointerException e){
+        }
         return extractHorizontalGrid(tindex, zindex, targetDomain);
     }
 }
