@@ -2,6 +2,7 @@ package uk.ac.rdg.resc.edal.cdm.feature;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -131,7 +132,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                         }
                     }
 
-                    id2GridSeriesFeature.put(id.toLowerCase(), feature);
+                    id2GridSeriesFeature.put(id, feature);
                 }
 
                 for (String compoundVar : compoundsCoverageComponents.keySet()) {
@@ -145,7 +146,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     GridDatatype gridY = gridDTList[1];
                     VariableDS varX = gridX.getVariable();
                     VariableDS varY = gridY.getVariable();
-                    String id = varX.getName() + "+" + varY.getName();
+                    String id = varX.getName() + varY.getName();
                     String xDesc = varX.getDescription();
                     int xIndex = xDesc.indexOf("-component of");
                     String description = xDesc.substring(xIndex + 14);
@@ -158,7 +159,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                         GridSeriesFeature<Vector2D<Float>> feature = new NcVectorGridSeriesFeature(
                                 compoundVar, id, description, this, coverage, dataReadingStrategy,
                                 gridX, gridY);
-                        id2GridSeriesFeature.put(id.toLowerCase(), feature);
+                        id2GridSeriesFeature.put(id, feature);
                     } catch (InstantiationException e) {
                         /*
                          * If we get this error, it means that the components do
@@ -214,12 +215,17 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 
     @Override
     public GridSeriesFeature<?> getFeatureById(String id) {
-        return id2GridSeriesFeature.get(id.toLowerCase());
+        return id2GridSeriesFeature.get(id);
     }
 
     @Override
     public Set<String> getFeatureIds() {
         return id2GridSeriesFeature.keySet();
+    }
+
+    @Override
+    public Collection<GridSeriesFeature<?>> getFeatures() {
+        return id2GridSeriesFeature.values();
     }
 
     @SuppressWarnings("unchecked")
