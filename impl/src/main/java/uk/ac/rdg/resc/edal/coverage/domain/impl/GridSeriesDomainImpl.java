@@ -193,8 +193,8 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
 
     @Override
     public long findIndexOf(GeoPosition position) {
-        // TODO test
         long hIndex = hGrid.findIndexOf(position.getHorizontalPosition());
+        long hRange = hGrid.getGridExtent().size();
         int vIndex = 0;
         int vRange = 1;
         if(vAxis != null){
@@ -202,14 +202,10 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
             vRange = vAxis.getIndexExtent().getHigh() + 1 - vAxis.getIndexExtent().getLow();
         }
         int tIndex = 0;
-        int tRange = 1;
         if(tAxis != null){
             tIndex = tAxis.findIndexOf(position.getTimePosition());
-            tRange = tAxis.getIndexExtent().getHigh() + 1 - tAxis.getIndexExtent().getLow();
         }
-        int yRange = hGrid.getGridExtent().getHigh().getYIndex() + 1
-                - hGrid.getGridExtent().getLow().getYIndex();
-        return hIndex * yRange * vRange * tRange + vIndex * tRange + tIndex;
+        return hIndex + hRange * vIndex + hRange * vRange * tIndex;
     }
 
 }
