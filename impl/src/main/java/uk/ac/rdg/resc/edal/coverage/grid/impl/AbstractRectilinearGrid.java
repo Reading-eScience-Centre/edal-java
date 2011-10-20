@@ -92,7 +92,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     
     @Override
     public BoundingBox getCoordinateExtent() {
-        return new BoundingBoxImpl(getXAxis().getCoordinateExtent(), getYAxis().getCoordinateExtent());
+        return new BoundingBoxImpl(getXAxis().getCoordinateExtent(), getYAxis().getCoordinateExtent(), getCoordinateReferenceSystem());
     }
     
     @Override

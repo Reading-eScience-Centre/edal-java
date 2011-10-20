@@ -53,7 +53,14 @@ import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
  */
 public class TimeUtils {
 
-    private static final SimpleDateFormat ISO_DATE_TIME_FORMATTER = new SimpleDateFormat("yyyy-mm-ddThh:mm:ssZ");
+    /*
+     * TODO This currently doesn't take account of time zones. Basically there
+     * is no easy way to parse an ISO8601 date using a SimpleDateFormat object
+     * without doing a lot of regex manipulation on it first. This should
+     * *definitely* use Joda-time, but I will add this at a later date - the
+     * current method is OK for testing
+     */
+    private static final SimpleDateFormat ISO_DATE_TIME_FORMATTER = new SimpleDateFormat("yyyy-mm-dd'T'hh:mm:ss");
     private static final SimpleDateFormat ISO_TIME_FORMATTER = new SimpleDateFormat("hh:mm:ssZ");
     
     /**
