@@ -114,18 +114,24 @@ public class NcGridSeriesCoverage extends AbstractDiscreteSimpleCoverage<GeoPosi
         return new GridSeriesDomainImpl(hGrid, vAxis, tAxis);
     }
 
+    private List<Float> values = null;
+    
     @Override
     public List<Float> getValues() {
-        try {
-            Array arr = variable.read();
-            float[] vals = (float[]) arr.copyTo1DJavaArray();
-            List<Float> ret = new ArrayList<Float>();
-            for(float f : vals){
-                ret.add(f);
+        if(values == null){
+            try {
+                Array arr = variable.read();
+                float[] vals = (float[]) arr.copyTo1DJavaArray();
+                values = new ArrayList<Float>();
+                for(float f : vals){
+                    values.add(f);
+                }
+                return values;
+            } catch (IOException e) {
+                return null;
             }
-            return ret;
-        } catch (IOException e) {
-            return null;
+        } else {
+            return values;
         }
     }
 

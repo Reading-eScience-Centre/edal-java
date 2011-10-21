@@ -29,7 +29,7 @@ public class GridCell2DRectangle implements GridCell2D {
     public GridCell2DRectangle(GridCoordinates2D gridCoords, Double minX, Double minY, Double maxX, Double maxY,
             CoordinateReferenceSystem crs, HorizontalGrid parentGrid) {
         this.gridCoords = gridCoords;
-        this.centre = new HorizontalPositionImpl(0.5 * (minX + maxX), 0.5 * (minY + maxY));
+        this.centre = new HorizontalPositionImpl(0.5 * (minX + maxX), 0.5 * (minY + maxY), crs);
         rectangularRegion = new Rectangle(minX, minY, maxX, maxY, crs);
         this.parentGrid = parentGrid;
     }

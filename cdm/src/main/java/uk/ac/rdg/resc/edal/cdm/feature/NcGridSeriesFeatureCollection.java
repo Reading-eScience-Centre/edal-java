@@ -104,8 +104,8 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                      */
                     VariableDS var = gridDT.getVariable();
                     String name = CdmUtils.getVariableTitle(var);
-                    String id = var.getName();
-                    String description = var.getDescription();
+                    String id = gridDT.getName();
+                    String description = gridDT.getDescription();
 
                     NcGridSeriesCoverage coverage = new NcGridSeriesCoverage(var, hGrid, vAxis,
                             tAxis);
