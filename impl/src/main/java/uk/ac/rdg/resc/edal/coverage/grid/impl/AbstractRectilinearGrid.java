@@ -15,6 +15,7 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Abstract superclass that partially implements a two-dimensional
@@ -45,6 +46,9 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
 
     @Override
     public GridCoordinates2D findContainingCell(HorizontalPosition pos) {
+        if(pos.getCoordinateReferenceSystem() != getCoordinateReferenceSystem()){
+            pos = GISUtils.transformPosition(pos, getCoordinateReferenceSystem());
+        }
         int xIndex = getXAxis().findIndexOf(pos.getX());
         int yIndex = getYAxis().findIndexOf(pos.getY());
         return new GridCoordinatesImpl(xIndex, yIndex);
