@@ -40,7 +40,14 @@ public interface VerticalCrs {
 
 
     // Or could use GeoAPI's AxisDirection?
-    public enum PositiveDirection { UP, DOWN }
+    public enum PositiveDirection { UP, DOWN;
+        public boolean isPositive(){
+            if(this == PositiveDirection.UP){
+                return true;
+            }
+            return false;
+        }
+    }
 
     public Unit getUnits();
 
