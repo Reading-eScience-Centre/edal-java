@@ -28,12 +28,12 @@
 
 package uk.ac.rdg.resc.edal.util;
 
-import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,8 +60,8 @@ public class TimeUtils {
      * *definitely* use Joda-time, but I will add this at a later date - the
      * current method is OK for testing
      */
-    private static final SimpleDateFormat ISO_DATE_TIME_FORMATTER = new SimpleDateFormat("yyyy-mm-dd'T'hh:mm:ss");
-    private static final SimpleDateFormat ISO_TIME_FORMATTER = new SimpleDateFormat("hh:mm:ssZ");
+    private static final SimpleDateFormat ISO_DATE_TIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    private static final SimpleDateFormat ISO_TIME_FORMATTER = new SimpleDateFormat("HH:mm:ssZ");
     
     /**
      * <p>A {@link Comparator} that compares {@link DateTime} objects based only
@@ -101,7 +101,7 @@ public class TimeUtils {
     public static String dateTimeToISO8601(TimePosition dateTime) {
         return ISO_DATE_TIME_FORMATTER.format(new Date(dateTime.getValue()));
     }
-
+    
     /**
      * Converts an ISO8601-formatted String into a {@link DateTime} object
      * @throws ParseException 
@@ -112,10 +112,22 @@ public class TimeUtils {
      *             calendar).
      */
     public static TimePosition iso8601ToDateTime(String isoDateTime, CalendarSystem calSys) throws ParseException {
-        /*
-         * TODO CalendarSystem?
-         */
         return new TimePositionImpl(ISO_DATE_TIME_FORMATTER.parse(isoDateTime).getTime());
+    }
+
+    public static TimePosition iso8601ToDate(String isoDate, CalendarSystem calSys) throws ParseException {
+        String[] yMD = isoDate.split("-");
+        if(yMD.length != 3){
+            throw new NumberFormatException("Date must contain year, month, and day only");
+        }
+        int year = Integer.parseInt(yMD[0]);
+        int month = Integer.parseInt(yMD[1]);
+        int day = Integer.parseInt(yMD[2]);
+        
+        /*
+         * We return midday, for no particular reason
+         */
+        return new TimePositionImpl(year, month, day, 00, 0, 0);
     }
 
     /**
