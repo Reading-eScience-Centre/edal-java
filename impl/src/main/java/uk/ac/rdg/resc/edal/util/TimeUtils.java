@@ -99,6 +99,8 @@ public class TimeUtils {
      * Converts a {@link DateTime} object into an ISO8601-formatted String.
      */
     public static String dateTimeToISO8601(TimePosition dateTime) {
+        if(dateTime == null)
+            return "";
         return ISO_DATE_TIME_FORMATTER.format(new Date(dateTime.getValue()));
     }
     
@@ -122,7 +124,8 @@ public class TimeUtils {
         }
         int year = Integer.parseInt(yMD[0]);
         int month = Integer.parseInt(yMD[1]);
-        int day = Integer.parseInt(yMD[2]);
+        String[] dayStr = yMD[2].split("T");
+        int day = Integer.parseInt(dayStr[0]);
         
         /*
          * We return midday, for no particular reason
