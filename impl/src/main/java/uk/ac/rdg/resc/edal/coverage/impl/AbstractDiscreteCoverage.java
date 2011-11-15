@@ -30,10 +30,10 @@ package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.util.AbstractList;
 import java.util.List;
-import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
+
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.DomainObjectValuePair;
-import uk.ac.rdg.resc.edal.coverage.DomainObjectValuePair;
+import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
 
 /**

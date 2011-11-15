@@ -33,12 +33,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
+
+import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.Record;
-import uk.ac.rdg.resc.edal.coverage.Record;
-import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * <p>Partial implementation of a compound {@link DiscreteCoverage}, providing

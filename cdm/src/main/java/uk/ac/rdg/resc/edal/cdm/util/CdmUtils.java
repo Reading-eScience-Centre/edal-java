@@ -19,6 +19,8 @@ import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridCoordSystem;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.cdm.DataReadingStrategy;
+import uk.ac.rdg.resc.edal.cdm.coverage.grid.LookUpTableGrid;
+import uk.ac.rdg.resc.edal.cdm.coverage.grid.ProjectedGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
@@ -39,6 +41,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs.PositiveDirection;
 import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
+
 
 /**
  * Contains static helper methods for reading data and metadata from NetCDF
@@ -100,9 +103,7 @@ public final class CdmUtils {
                 // Axes are not latitude and longitude so we need to create a
                 // ReferenceableGrid that uses the coordinate system's
                 // Projection object to convert from x and y to lat and lon
-                throw new UnsupportedOperationException("Axes not lat lon - not yet supported");
-                // TODO IMPLEMENT PROJECTEDGRID
-                // return new ProjectedGrid(coordSys);
+               return new ProjectedGrid(coordSys);
             }
         } else if (xAxis instanceof CoordinateAxis2D && yAxis instanceof CoordinateAxis2D) {
             // The axis must be 2D so we have to create look-up tables
@@ -110,9 +111,7 @@ public final class CdmUtils {
                 throw new UnsupportedOperationException("Can't create a HorizontalGrid"
                         + " from 2D coordinate axes that are not longitude and latitude.");
             }
-            // TODO IMPLEMENT LOOKUPTABLEGRID
-            throw new UnsupportedOperationException("Need a lookup grid - not yet supported");
-            // return LookUpTableGrid.generate(coordSys);
+           return LookUpTableGrid.generate(coordSys);
         } else {
             // Shouldn't get here
             throw new IllegalStateException("Inconsistent axis types");

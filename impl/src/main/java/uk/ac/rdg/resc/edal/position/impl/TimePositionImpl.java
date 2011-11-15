@@ -44,6 +44,8 @@ public final class TimePositionImpl implements TimePosition {
     }
     
     public TimePositionImpl(long timeInMilliseconds, CalendarSystem calSys, int utcOffset){
+        if(calSys == null)
+            calSys = CalendarSystem.CAL_ISO_8601;
         cal = Calendar.getInstance();
         cal.setTimeInMillis(timeInMilliseconds);
         
