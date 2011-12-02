@@ -68,5 +68,15 @@ public final class Unit
 
     public String getUnitString() { return this.unitString; }
     public UnitVocabulary getVocabulary() { return this.unitVocabulary; }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Unit){
+            Unit unit = (Unit) obj;
+            return unit.unitString.equals(unitString) && unit.unitVocabulary == unitVocabulary;
+        } else {
+            return false;
+        }
+    }
 
 }

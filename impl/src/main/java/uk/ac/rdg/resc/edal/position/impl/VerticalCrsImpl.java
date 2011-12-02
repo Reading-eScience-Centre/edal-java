@@ -37,4 +37,15 @@ public class VerticalCrsImpl implements VerticalCrs {
     public boolean isPressure() {
         return isPressure;
     }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof VerticalCrsImpl){
+            VerticalCrsImpl vCrs = (VerticalCrsImpl) obj;
+            return (vCrs.isPressure == isPressure) && (vCrs.posDir == posDir)
+                    && (vCrs.units.equals(units));
+        } else {
+            return false;
+        }
+    }
 }

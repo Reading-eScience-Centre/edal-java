@@ -30,6 +30,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.position.Vector2D;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * An implementation of {@link FeatureCollection} which contains
@@ -105,12 +106,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     VariableDS var = gridDT.getVariable();
                     String name = CdmUtils.getVariableTitle(var);
                     String id = gridDT.getName();
-                    String description = gridDT.getDescription();
-
-                    NcGridSeriesCoverage coverage = new NcGridSeriesCoverage(var, hGrid, vAxis,
-                            tAxis);
-                    GridSeriesFeature<Float> feature = new NcGridSeriesFeature(name, id,
-                            description, this, coverage, dataReadingStrategy, gridDT);
+//                    String description = gridDT.getDescription();
 
                     if (name.contains("eastward")) {
                         String compoundName = name.replaceFirst("eastward_", "");
@@ -131,16 +127,19 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                             compoundsCoverageComponents.put(compoundName, compoundArray);
                         }
                     }
-
-                    id2GridSeriesFeature.put(id, feature);
+                    
+                    if(id2GridSeriesFeature.containsKey(id)){
+                        ((NcGridSeriesFeature)id2GridSeriesFeature.get(id)).mergeGrid(gridDT, hGrid, vAxis, tAxis);
+                    } else {
+                        NcGridSeriesFeature feature = new NcGridSeriesFeature(gridDT, hGrid, vAxis, tAxis, this, dataReadingStrategy);
+                        id2GridSeriesFeature.put(id, feature);
+                    }
                 }
 
                 for (String compoundVar : compoundsCoverageComponents.keySet()) {
                     GridDatatype[] gridDTList = compoundsCoverageComponents.get(compoundVar);
                     if (gridDTList.length != 2 || gridDTList[0] == null || gridDTList[1] == null) {
-                        // TODO Deal with error properly
-                        System.out.println("Do not know how to compound anything but 2 variables");
-                        continue;
+                        throw new UnsupportedOperationException("Can only make 2 variables into a compound var");
                     }
                     GridDatatype gridX = gridDTList[0];
                     GridDatatype gridY = gridDTList[1];
@@ -153,19 +152,26 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     NcGridSeriesCoverage covX = new NcGridSeriesCoverage(varX, hGrid, vAxis, tAxis);
                     NcGridSeriesCoverage covY = new NcGridSeriesCoverage(varY, hGrid, vAxis, tAxis);
 
-                    GridSeriesCoverage<Vector2D<Float>> coverage;
-                    try {
-                        coverage = new NcVectorGridSeriesCoverage(covX, covY);
-                        GridSeriesFeature<Vector2D<Float>> feature = new NcVectorGridSeriesFeature(
-                                compoundVar, id, description, this, coverage, dataReadingStrategy,
-                                gridX, gridY);
-                        id2GridSeriesFeature.put(id, feature);
-                    } catch (InstantiationException e) {
-                        /*
-                         * If we get this error, it means that the components do
-                         * not match properly, and can't make a Vector coverage.
-                         */
-                        // TODO log the error
+                    /*
+                     * TODO we need to aggregate variables with different time values into the same coverage
+                     */
+                    if(id2GridSeriesFeature.containsKey(id)){
+                        ((NcVectorGridSeriesFeature)id2GridSeriesFeature.get(id)).mergeGrids(gridX, gridY, hGrid, vAxis, tAxis);
+                    } else {
+                        try{
+                            GridSeriesCoverage<Vector2D<Float>> coverage = new NcVectorGridSeriesCoverage(
+                                    covX, covY);
+                            GridSeriesFeature<Vector2D<Float>> feature = new NcVectorGridSeriesFeature(
+                                    compoundVar, id, description, this, coverage, dataReadingStrategy,
+                                    gridX, gridY);
+                            id2GridSeriesFeature.put(id, feature);
+                        } catch (InstantiationException e) {
+                            /*
+                             * If we get this error, it means that the components do
+                             * not match properly, and can't make a Vector coverage.
+                             */
+                            // TODO log the error
+                        }
                     }
                 }
             }
@@ -274,4 +280,19 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         };
     }
 
+    
+    public static void main(String[] args) throws IOException {
+        NcGridSeriesFeatureCollection nc = new NcGridSeriesFeatureCollection("testId", "testName", "/home/guy/MIPe2e/gabbard/*.nc");
+        NcGridSeriesFeature feature = (NcGridSeriesFeature) nc.getFeatureById("analysed_sst");
+        List<Float> values = feature.getCoverage().evaluate(
+                feature.getCoverage().getDomain().getTimeAxis().getIndexExtent(),
+                Extents.emptyExtent(Integer.class),
+                Extents.newExtent(0, 0),
+                Extents.newExtent(0, 0));
+        System.out.println("[");
+        for(Float f:values){
+            System.out.println(f+",");
+        }
+        System.out.println("]");
+    }
 }
