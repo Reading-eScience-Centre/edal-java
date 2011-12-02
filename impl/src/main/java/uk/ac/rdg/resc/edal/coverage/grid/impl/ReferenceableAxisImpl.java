@@ -227,4 +227,15 @@ public class ReferenceableAxisImpl extends AbstractReferenceableAxis<Double> {
 
         return Extents.newExtent(lowerBound, upperBound);
     }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof ReferenceableAxisImpl){
+            ReferenceableAxisImpl axis = (ReferenceableAxisImpl) obj;
+            return super.equals(obj) && (axis.getCoordinateValues().equals(getCoordinateValues()))
+                    && (reversed == axis.reversed) && (isLongitude == axis.isLongitude);
+        } else {
+            return false;
+        }
+    }
 }

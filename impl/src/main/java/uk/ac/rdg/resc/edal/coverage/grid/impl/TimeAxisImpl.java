@@ -60,10 +60,13 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
      */
     private void checkAscending() {
         long prevVal = axisValues[0].getValue();
+        TimePosition lastT = axisValues[0];
         for (int i = 1; i < axisValues.length; i++) {
             if (axisValues[i].getValue() <= prevVal) {
+                System.out.println(axisValues[i]+" is before "+lastT);
                 throw new IllegalArgumentException("Coordinate values must increase or decrease monotonically");
             }
+            lastT = axisValues[i];
             prevVal = axisValues[i].getValue();
         }
     }

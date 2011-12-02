@@ -38,5 +38,10 @@ public class VerticalAxisImpl extends ReferenceableAxisImpl implements VerticalA
     public VerticalCrs getVerticalCrs() {
         return vCrs;
     }
-
+    
+    @Override
+    public boolean equals(Object arg0) {
+        VerticalAxisImpl axis = (VerticalAxisImpl) arg0;
+        return super.equals(arg0) && axis.vCrs.equals(vCrs);
+    }
 }

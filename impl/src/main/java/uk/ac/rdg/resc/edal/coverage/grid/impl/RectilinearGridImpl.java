@@ -37,4 +37,14 @@ public final class RectilinearGridImpl extends AbstractRectilinearGrid {
     public ReferenceableAxis<Double> getYAxis() {
         return yAxis;
     }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof RectilinearGridImpl){
+            RectilinearGridImpl grid = (RectilinearGridImpl) obj;
+            return grid.xAxis.equals(xAxis) && grid.yAxis.equals(yAxis) && super.equals(obj);
+        } else {
+            return false;
+        }
+    }
 }

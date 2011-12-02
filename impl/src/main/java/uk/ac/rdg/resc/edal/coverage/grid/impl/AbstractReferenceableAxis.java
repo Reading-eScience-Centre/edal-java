@@ -150,4 +150,23 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
      * @return
      */
     protected abstract T extendLastValue(T lastVal, T secondLastVal);
+    
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof AbstractReferenceableAxis<?>){
+            AbstractReferenceableAxis<?> axis = (AbstractReferenceableAxis<?>) obj;
+            boolean ret = name.equals(axis.name);
+            if(coordSysAxis == null){
+                if(axis.coordSysAxis != null)
+                    return false;
+            } else if(axis.coordSysAxis == null){
+                return false;
+            } else {
+                ret = ret && coordSysAxis.equals(axis.coordSysAxis);
+            }
+            return ret;
+        } else {
+            return false;
+        }
+    }
 }

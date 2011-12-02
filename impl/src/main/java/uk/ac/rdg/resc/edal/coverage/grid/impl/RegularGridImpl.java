@@ -112,4 +112,14 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
     public RegularAxis getYAxis() {
         return yAxis;
     }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof RegularGridImpl){
+            RegularGridImpl grid = (RegularGridImpl) obj;
+            return grid.xAxis.equals(xAxis) && grid.yAxis.equals(yAxis) && super.equals(obj);
+        } else {
+            return false;
+        }
+    }
 }

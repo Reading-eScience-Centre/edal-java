@@ -172,5 +172,14 @@ public class ProjectedGrid extends AbstractHorizontalGrid {
         // TODO Auto-generated method stub
         return 0;
     }
-
+    
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof ProjectedGrid){
+            ProjectedGrid grid = (ProjectedGrid) obj;
+            return grid.xAxis.equals(xAxis) && grid.yAxis.equals(yAxis) && super.equals(obj);
+        } else {
+            return false;
+        }
+    }
 }
