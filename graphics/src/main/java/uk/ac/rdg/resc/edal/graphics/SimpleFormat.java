@@ -46,8 +46,9 @@ public abstract class SimpleFormat extends ImageFormat {
      *             BufferedImages.
      */
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out, GridSeriesFeature<?> feature,
-            List<String> tValues, String zValue, BufferedImage legend) throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out,
+            GridSeriesFeature<?> feature, double[] bbox, List<String> tValues, String zValue,
+            BufferedImage legend) throws IOException {
         this.writeImage(frames, out);
     }
 
@@ -67,7 +68,8 @@ public abstract class SimpleFormat extends ImageFormat {
      *             if this ImageFormat cannot render all of the given
      *             BufferedImages.
      */
-    public abstract void writeImage(List<BufferedImage> frames, OutputStream out) throws IOException;
+    public abstract void writeImage(List<BufferedImage> frames, OutputStream out)
+            throws IOException;
 
     @Override
     public String getMimeType() {
