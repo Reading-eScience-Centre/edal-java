@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,25 +24,27 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal;
 
 /**
  * Defines a unary function.
- * @param <A> The type of the function input
- * @param <B> The type of the function output
- * @author Jon
+ * 
+ * @param <A>
+ *            The type of the function input
+ * @param <B>
+ *            The type of the function output
+ * @author Jon Blower
  */
-public interface Function<A, B>
-{
-
+public interface Function<A, B> {
     /**
      * Evaluates the function for the given value.
-     * @param val The function input
-     * @return The function output, or null if the function is not defined for the
-     * given input.
+     * 
+     * @param val
+     *            The function input
+     * @return The function output, or null if the function is not defined for
+     *         the given input.
      */
     public B evaluate(A val);
-
 }

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2009 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.feature;
 
@@ -35,16 +35,14 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A collection of ProfileFeatures.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
-public interface ProfileFeatureCollection<R> extends FeatureCollection<ProfileFeature<R>>
-{
-
+public interface ProfileFeatureCollection<R> extends FeatureCollection<ProfileFeature<R>> {
     /**
      * Returns all the profiles in the collection whose horizontal position lies
      * within the given polygon, and which were measured within the given time
      * range.
      */
     public Collection<ProfileFeature<R>> findProfiles(Polygon polygon, Extent<TimePosition> tRange);
-    
 }

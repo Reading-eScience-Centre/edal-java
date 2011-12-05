@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
@@ -40,35 +40,65 @@ import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
- * The domain of a {@link GridSeriesCoverage}, modelled as a composition of a horizontal
- * grid, plus t and z axes.
+ * The domain of a {@link GridSeriesCoverage}, modelled as a composition of a
+ * horizontal grid, plus t and z axes.
+ * 
  * @todo Explain that GridCoordinates are 4D and explain ordering.
- * @author Jon
+ * @author Jon Blower
  */
-public interface GridSeriesDomain extends DiscreteDomain<GeoPosition, GridCell4D>
-{
-    
+public interface GridSeriesDomain extends DiscreteDomain<GeoPosition, GridCell4D> {
+
+    /**
+     * @return the horizontal component of this domain
+     */
     public HorizontalGrid getHorizontalGrid();
 
+    /**
+     * @return the vertical component of this domain
+     */
     public VerticalAxis getVerticalAxis();
 
+    /**
+     * @return the time component of this domain
+     */
     public TimeAxis getTimeAxis();
 
+    /**
+     * @return the {@link CoordinateReferenceSystem} of the horizontal component
+     *         of this domain
+     */
     public CoordinateReferenceSystem getHorizontalCrs();
 
+    /**
+     * @return the {@link VerticalCrs} of the vertical component of this domain
+     */
     public VerticalCrs getVerticalCrs();
 
+    /**
+     * @return the {@link CalendarSystem} of the time component of this domain
+     */
     public CalendarSystem getCalendarSystem();
 
+    /**
+     * Find the {@link GridCell4D} which contains the desired position
+     * 
+     * @param pos
+     *            the position whose grid cell is wanted
+     * @return the resultant {@link GridCell4D}
+     */
     public GridCell4D findContainingCell(GeoPosition pos);
 
     /**
      * {@inheritDoc}
-     * <p>Use this method with caution, as it is possible that the number of
-     * domain objects (grid cells) will exceed {@link Integer#MAX_VALUE}, meaning
-     * that the value of {@code size()} in the returned List may be inaccurate.
-     * Prefer the use of {@link #size()} instead, which returns a long integer.</p>
-     * @return
+     * <p>
+     * Use this method with caution, as it is possible that the number of domain
+     * objects (grid cells) will exceed {@link Integer#MAX_VALUE}, meaning that
+     * the value of {@code size()} in the returned List may be inaccurate.
+     * Prefer the use of {@link #size()} instead, which returns a long integer.
+     * </p>
+     * 
+     * @return a list of the {@link GridCell4D} objects which comprise this
+     *         domain
      */
     @Override
     public List<GridCell4D> getDomainObjects();

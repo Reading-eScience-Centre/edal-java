@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
@@ -33,44 +33,54 @@ import uk.ac.rdg.resc.edal.Domain;
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 
 /**
- * <p>A {@link Domain} that consists of a finite number of discrete objects.
- * {@link DiscreteCoverage}s use this type of domain.</p>
- * @param <P> The type of object used to identify positions within this domain
- * @param <DO> The type of the domain object
- * @author Jon
+ * <p>
+ * A {@link Domain} that consists of a finite number of discrete objects.
+ * {@link DiscreteCoverage}s use this type of domain.
+ * </p>
+ * 
+ * @param <P>
+ *            The type of object used to identify positions within this domain
+ * @param <DO>
+ *            The type of the domain object
+ * @author Jon Blower
  */
-public interface DiscreteDomain<P, DO> extends Domain<P>
-{
+public interface DiscreteDomain<P, DO> extends Domain<P> {
 
     /**
      * Returns true if at least one of the domain objects contains the given
      * position.
      */
-    @Override public boolean contains(P position);
+    @Override
+    public boolean contains(P position);
 
     /**
-     * Returns a {@link List} of domain objects that comprise this domain.
-     * The domain objects are in a defined order, hence we use a {@link List};
-     * however, the domain objects will also each be unique, so the returned list
-     * will also have the semantics of a {@link Set}.  (It is impossible in Java
-     * to define an object that correctly implements both the List and Set
+     * Returns a {@link List} of domain objects that comprise this domain. The
+     * domain objects are in a defined order, hence we use a {@link List};
+     * however, the domain objects will also each be unique, so the returned
+     * list will also have the semantics of a {@link Set}. (It is impossible in
+     * Java to define an object that correctly implements both the List and Set
      * interfaces simultaneously.)
      */
     public List<DO> getDomainObjects();
 
     /**
-     * Finds the index of the first domain object that contains the given position.
+     * Finds the index of the first domain object that contains the given
+     * position.
      */
     public long findIndexOf(P pos);
 
     /**
-     * <p>Returns the number of domain objects in the domain.</p>
-     * <p>Grids  may have very large numbers of objects, hence we need a long
-     * integer.  Many subclasses will implement a method that returns the domain
-     * objects as a List, whose size will be a 4-byte integer.  This may be a more
-     * convenient way to get the domain size in some circumstances.</p>
+     * <p>
+     * Returns the number of domain objects in the domain.
+     * </p>
+     * <p>
+     * Grids may have very large numbers of objects, hence we need a long
+     * integer. Many subclasses will implement a method that returns the domain
+     * objects as a List, whose size will be a 4-byte integer. This may be a
+     * more convenient way to get the domain size in some circumstances.
+     * </p>
+     * 
      * @return the number of domain objects in the domain
      */
     public long size();
-
 }

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
@@ -34,23 +34,29 @@ import uk.ac.rdg.resc.edal.geometry.Polygon;
 
 /**
  * A cell in a {@link HorizontalGrid}.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
 public interface GridCell2D extends Domain<HorizontalPosition> {
 
-    /** Returns the coordinates within the parent {@link HorizontalGrid} */
+    /**
+     * @return the coordinates within the parent {@link HorizontalGrid}
+     */
     public GridCoordinates2D getGridCoordinates();
 
-    /** Returns the centre of the grid cell in horizontal space */
+    /**
+     * @return the centre of the grid cell in horizontal space
+     */
     public HorizontalPosition getCentre();
 
     /**
-     * Returns the footprint of this grid cell in horizontal space.
-     * @todo Create a return type
+     * @return the footprint of this grid cell in horizontal space.
      */
     public Polygon getFootprint();
 
-    /** Returns the grid of which this cell is a part */
+    /**
+     * @return the grid of which this cell is a part
+     */
     public HorizontalGrid getGrid();
 
 }

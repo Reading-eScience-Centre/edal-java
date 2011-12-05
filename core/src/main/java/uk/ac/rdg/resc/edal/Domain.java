@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,20 +24,22 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal;
 
 /**
- * <p>A set of values for which a {@link Function} is defined.</p>
- * @param <A> The type of object used as input to the function
- * @author Jon
+ * <p>
+ * A set of values for which a {@link Function} is defined.
+ * </p>
+ * 
+ * @param <A>
+ *            The type of object used as input to the function
+ * @author Jon Blower
  */
-public interface Domain<A>
-{
+public interface Domain<A> {
     /**
-     * Returns true if the given position is contained within this domain.
+     * @return true if the given position is contained within this domain.
      */
     public boolean contains(A position);
-
 }

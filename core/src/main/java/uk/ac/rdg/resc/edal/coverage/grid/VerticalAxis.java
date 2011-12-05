@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
@@ -32,16 +32,23 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
  * A vertical axis in a ReferenceableGrid.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
 public interface VerticalAxis extends ReferenceableAxis<Double> {
 
-    /** Returns the vertical coordinate reference system for coordinates on this axis */
+    /**
+     * Returns the vertical coordinate reference system for coordinates on this
+     * axis
+     */
     public VerticalCrs getVerticalCrs();
 
     /**
      * {@inheritDoc}
-     * <p>Note that this does <i>not</i> have the same meaning as {@code getVerticalCrs().getPositiveDirection()}.</p>
+     * <p>
+     * Note that this does <i>not</i> have the same meaning as
+     * {@code getVerticalCrs().getPositiveDirection()}.
+     * </p>
      */
     @Override
     public boolean isAscending();

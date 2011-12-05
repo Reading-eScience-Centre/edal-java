@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.feature;
 
@@ -35,25 +35,27 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A measurement of a vertical profile at a point
- * @param <R> The type of the value returned by the coverage; for a compound
- * coverage this type will be {@link Record}.
- * @author Jon
+ * 
+ * @param <R>
+ *            The type of the value returned by the coverage; for a compound
+ *            coverage this type will be {@link Record}.
+ * @author Jon Blower
  */
 public interface ProfileFeature<R> extends Feature {
-
     /**
      * Gets the horizontal location of this profile feature.
+     * 
      * @return the horizontal location of this profile feature.
      */
     public HorizontalPosition getHorizontalPosition();
 
     /**
      * Gets the time at which the profile was measured
+     * 
      * @return the time at which the profile was measured
      */
     public TimePosition getTime();
 
     @Override
     public ProfileCoverage<R> getCoverage();
-
 }

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
@@ -33,13 +33,22 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
  * A time axis.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
 public interface TimeAxis extends ReferenceableAxis<TimePosition> {
-    
+
+    /**
+     * Return the {@link CalendarSystem} used in this time axis
+     * 
+     * @return the {@link CalendarSystem} used in this time axis
+     */
     public CalendarSystem getCalendarSystem();
 
-    /** Always returns true: values on a time axis are always in ascending order of time */
+    /**
+     * Always returns true: values on a time axis are always in ascending order
+     * of time
+     */
     @Override
     public boolean isAscending();
 }

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.position;
 
@@ -45,7 +45,7 @@ package uk.ac.rdg.resc.edal.position;
  *       only to the level of a certain field (second, day, month, year etc).
  *       This may help with creating sensible user interfaces that don't imply
  *       spurious precision.
- * @author Jon
+ * @author Jon Blower
  */
 public interface TimePosition extends Comparable<TimePosition> {
 
@@ -54,28 +54,48 @@ public interface TimePosition extends Comparable<TimePosition> {
      * 1970-01-01T00:00:00.000Z", where "1970-01-01T00:00:00.000Z" is expressed
      * in the {@link #getCalendarSystem() calendar system}.
      * 
-     * @todo Could be flexible about the type of temporal coordinate system used
-     *       here, allowing "seconds since 1980" or similar. But perhaps this
-     *       would increase complexity with little practical reward?
+     * @return the value of the time coordinate
      */
     public long getValue();
 
-    // Convenience methods. Do they belong here or could they be factored out
-    // into a TimeFields type or similar?
+    /**
+     * @return the year represented by this {@link TimePosition}
+     */
     public int getYear();
 
+    /**
+     * @return the month of the year represented by this {@link TimePosition}
+     */
     public int getMonthOfYear();
 
+    /**
+     * @return the day of the year represented by this {@link TimePosition}
+     */
     public int getDayOfYear();
 
+    /**
+     * @return the day of the month represented by this {@link TimePosition}
+     */
     public int getDayOfMonth();
 
+    /**
+     * @return the hour of the day represented by this {@link TimePosition}
+     */
     public int getHourOfDay();
 
+    /**
+     * @return the minute part of this {@link TimePosition}
+     */
     public int getMinuteOfHour();
 
+    /**
+     * @return the second part of this {@link TimePosition}
+     */
     public int getSecondOfMinute();
 
+    /**
+     * @return the millisecond part of this {@link TimePosition}
+     */
     public int getMillisecondOfSecond();
 
     /**

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage;
 
@@ -41,17 +41,43 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
  * @param <R>
  *            The type of the value returned by the coverage; for a compound
  *            coverage this type will be {@link Record}.
- * @author Jon
+ * @author Jon Blower
  */
 public interface GridSeriesCoverage<R> extends DiscreteCoverage<GeoPosition, GridCell4D, R> {
 
     @Override
     public GridSeriesDomain getDomain();
 
-    // TODO: not sure this the best signature - what about GridCoordinates?
+    /**
+     * Get the value of the coverage at a particular point, specified by the
+     * integer indices of the coverage
+     * 
+     * @param tindex
+     *            the time index
+     * @param zindex
+     *            the vertical index
+     * @param yindex
+     *            the y index
+     * @param xindex
+     *            the x index
+     * @return the value from the coverage
+     */
     public R evaluate(int tindex, int zindex, int yindex, int xindex);
 
-    public List<R> evaluate(Extent<Integer> tindexExtent, Extent<Integer> zindexExtent, Extent<Integer> yindexExtent,
-            Extent<Integer> xindexExtent);
+    /**
+     * Gets a list of values in the coverage over a range of points
+     * 
+     * @param tindexExtent
+     *            the {@link Extent} of the time axis integers
+     * @param zindexExtent
+     *            the {@link Extent} of the vertical axis integers
+     * @param yindexExtent
+     *            the {@link Extent} of the y-axis integers
+     * @param xindexExtent
+     *            the {@link Extent} of the x-axis integers
+     * @return a list of values from the coverage
+     */
+    public List<R> evaluate(Extent<Integer> tindexExtent, Extent<Integer> zindexExtent,
+            Extent<Integer> yindexExtent, Extent<Integer> xindexExtent);
 
 }

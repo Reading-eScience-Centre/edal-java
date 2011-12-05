@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
@@ -34,29 +34,40 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
 import uk.ac.rdg.resc.edal.Extent;
 
 /**
- * <p>A one-dimensional axis of a referenceable Grid, which maps between integer indices along
- * the axis and real-world coordinates.  It is in spirit a one-dimensional
- * special case of a {@link ReferenceableGrid}.</p>
- * <p>ReferenceableAxes can be composed to form {@link RectilinearGrid}s.</p>
- * <p>If the values of the axis are numeric, the must either increase or decrease
- * monotonically with increasing axis index.</p>
- * @param <P> The type of object used to identify positions on this axis
- * @author Jon
+ * <p>
+ * A one-dimensional axis of a referenceable Grid, which maps between integer
+ * indices along the axis and real-world coordinates. It is in spirit a
+ * one-dimensional special case of a {@link ReferenceableGrid}.
+ * </p>
+ * <p>
+ * ReferenceableAxes can be composed to form {@link RectilinearGrid}s.
+ * </p>
+ * <p>
+ * If the values of the axis are numeric, the must either increase or decrease
+ * monotonically with increasing axis index.
+ * </p>
+ * 
+ * @param <P>
+ *            The type of object used to identify positions on this axis
+ * @author Jon Blower
  */
 public interface ReferenceableAxis<P extends Comparable<? super P>> extends GridAxis {
 
     /**
      * Gets the coordinate value at the given index
-     * @param index The index of the required position on the axis.  Must be
-     * within the axis' {@link #getAxisExtent() extent}.
+     * 
+     * @param index
+     *            The index of the required position on the axis. Must be within
+     *            the axis' {@link #getAxisExtent() extent}.
      * @return the coordinate value at the given index
-     * @throws IndexOutOfBoundsException if the axis' extent does not contain
-     * this index.
+     * @throws IndexOutOfBoundsException
+     *             if the axis' extent does not contain this index.
      */
     public P getCoordinateValue(int index);
-    
+
     /**
      * Gets all of the coordinate values of the axis
+     * 
      * @return A list of coordinate values
      */
     public List<P> getCoordinateValues();
@@ -69,44 +80,51 @@ public interface ReferenceableAxis<P extends Comparable<? super P>> extends Grid
 
     /**
      * Gets the coordinate bounds associated with the point at the given index.
-     * In some types of ReferenceableAxis, each point along the axis is associated
-     * with a <i>range</i> of positions, rather than a single infinitesimal position.
-     * This method returns this range.
+     * In some types of ReferenceableAxis, each point along the axis is
+     * associated with a <i>range</i> of positions, rather than a single
+     * infinitesimal position. This method returns this range.
+     * 
      * @param index
-     * @return the coordinate bounds associated with the point at the given index.
-     * Returns an Extent with low=high if the bounds are infinitesimal.  Never
-     * returns null.
+     * @return the coordinate bounds associated with the point at the given
+     *         index. Returns an Extent with low=high if the bounds are
+     *         infinitesimal. Never returns null.
      */
     public Extent<P> getCoordinateBounds(int index);
 
     /**
-     * <p>Finds the index along this axis that corresponds with the given position.
-     * Formally, this returns an index such that getCoordinateBounds(index).contains(position)
-     * returns true.  Returns -1 if the given position is not associated with
-     * any axis index.</p>
-     * <p>If this is a longitude
-     * axis, this method will handle the case of longitude values wrapping,
-     * therefore values of -180 and +180 are treated as equivalent by this method,
-     * irrespective of the values in {@link #getCoordinateValue(index)}.</p>
+     * <p>
+     * Finds the index along this axis that corresponds with the given position.
+     * Formally, this returns an index such that
+     * getCoordinateBounds(index).contains(position) returns true. Returns -1 if
+     * the given position is not associated with any axis index.
+     * </p>
+     * <p>
+     * If this is a longitude axis, this method will handle the case of
+     * longitude values wrapping, therefore values of -180 and +180 are treated
+     * as equivalent by this method, irrespective of the values in
+     * {@link #getCoordinateValue(index)}.
+     * </p>
+     * 
      * @param position
      * @return the index of the given coordinate value, or -1 if not found.
      */
     public int findIndexOf(P position);
 
     /**
-     * Gets the extent encompassing all the positions on this axis.  This will
-     * usually be given by the low value of the first set of {@link
-     * #getCoordinateBounds(int) coordinate bounds} and the high value of the
-     * last set of coordinate bounds (but beware that values along the axis might
-     * <i>decrease</i>, not increase).
+     * Gets the extent encompassing all the positions on this axis. This will
+     * usually be given by the low value of the first set of
+     * {@link #getCoordinateBounds(int) coordinate bounds} and the high value of
+     * the last set of coordinate bounds (but beware that values along the axis
+     * might <i>decrease</i>, not increase).
      */
     public Extent<P> getCoordinateExtent();
 
     /**
-     * Returns the {@link CoordinateSystemAxis} to which the points on the
-     * axis are referenced.  May be null if unknown.
-     * @return the {@link CoordinateSystemAxis} to which the points on the
-     * axis are referenced.
+     * Returns the {@link CoordinateSystemAxis} to which the points on the axis
+     * are referenced. May be null if unknown.
+     * 
+     * @return the {@link CoordinateSystemAxis} to which the points on the axis
+     *         are referenced.
      */
     public CoordinateSystemAxis getCoordinateSystemAxis();
 

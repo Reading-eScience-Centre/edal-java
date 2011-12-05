@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,34 +24,42 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal;
 
 /**
- * <p>Defines a partial unary function, which explicitly advertises the values of
- * A for which the function is defined.</p>
- * <p><i>Note: this approach is borrowed from the Scala language.</i></p>
- * @param <A> The type of the function input
- * @param <B> The type of the function output
- * @author Jon
+ * <p>
+ * Defines a partial unary function, which explicitly advertises the values of A
+ * for which the function is defined.
+ * </p>
+ * <p>
+ * <i>Note: this approach is borrowed from the Scala language.</i>
+ * </p>
+ * 
+ * @param <A>
+ *            The type of the function input
+ * @param <B>
+ *            The type of the function output
+ * @author Jon Blower
  */
-public interface PartialFunction<A, B> extends Function<A, B>
-{
+public interface PartialFunction<A, B> extends Function<A, B> {
 
     /**
-     * The set of positions for which the partial function is defined.
-     * @return
+     * @return the set of positions for which the partial function is defined.
      */
     public Domain<A> getDomain();
 
     /**
-     * Returns true if the function is defined at the given input value.
-     * If the function is defined at this value (i.e. the domain contains the value) then
-     * {@link #evaluate(java.lang.Object) evaluate()} will return a non-null value.
-     * @param val The input value to test
+     * Returns true if the function is defined at the given input value. If the
+     * function is defined at this value (i.e. the domain contains the value)
+     * then {@link #evaluate(java.lang.Object) evaluate()} will return a
+     * non-null value.
+     * 
+     * @param val
+     *            The input value to test
      * @return true if the function is defined at the given input value, false
-     * otherwise.
+     *         otherwise.
      */
     public boolean isDefinedAt(A val);
 

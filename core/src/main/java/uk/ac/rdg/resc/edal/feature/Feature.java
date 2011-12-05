@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,41 +24,44 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.feature;
 
 import uk.ac.rdg.resc.edal.coverage.Coverage;
 
 /**
- * <p>Superclass for all Feature types.</p>
- * @author Jon
- * @todo How best to represent metadata?
+ * <p>
+ * Superclass for all Feature types.
+ * </p>
+ * 
+ * @author Jon Blower
  */
-public interface Feature
-{
-    
+public interface Feature {
     /**
-     * Gets the {@link FeatureCollection} to which this feature belongs.  If this
+     * Gets the {@link FeatureCollection} to which this feature belongs. If this
      * feature does not belong to a collection, this will return null.
+     * 
      * @return
      */
     public FeatureCollection<? extends Feature> getFeatureCollection();
-    
+
     /**
-     * Gets an identifier that is unique within the {@link #getFeatureCollection() 
-     * feature collection to which this feature belongs}.  Must never be null.
+     * Gets an identifier that is unique within the
+     * {@link #getFeatureCollection() feature collection to which this feature
+     * belongs}. Must never be null.
      */
     public String getId();
-    
+
     /**
-     * Gets a human-readable short string that identifies this feature.
-     * Not enforced to be unique.
+     * Gets a human-readable short string that identifies this feature. Not
+     * enforced to be unique.
      */
     public String getName();
-    
+
     /**
      * Gets a (perhaps lengthy) human-readable description of this feature.
+     * 
      * @return
      */
     public String getDescription();

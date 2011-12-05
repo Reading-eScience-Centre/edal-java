@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,30 +24,36 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal;
 
 /**
- * Enumeration of vocabularies that can be used to interpret a {@link Unit} string.
- * @todo "Vocabulary" might not be the right term here.  "System" may be better
- * but implies something like SI - this isn't the same thing.
- * @author Jon
+ * Enumeration of vocabularies that can be used to interpret a {@link Unit}
+ * string.
+ * 
+ * @author Jon Blower
  */
-public enum UnitVocabulary
-{
+public enum UnitVocabulary {
     /**
      * The Unified Code for Units of Measure.
+     * 
      * @see http://unitsofmeasure.org/
      */
     UCUM,
 
-    /** Unidata UDUNITS */
+    /**
+     * Unidata UDUNITS
+     */
     UDUNITS,
 
-    /** UDUNITS version 2 */
+    /**
+     * UDUNITS version 2
+     */
     UDUNITS2,
 
-    /** Unknown unit vocabulary: units cannot be converted to another system. */
+    /**
+     * Unknown unit vocabulary: units cannot be converted to another system.
+     */
     UNKNOWN;
 }

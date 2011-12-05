@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2009 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.feature;
 
@@ -33,17 +33,18 @@ import java.util.Set;
 
 /**
  * FeatureCollections contain a single feature type.
+ * 
  * @todo Access control?
  * @todo Dictionaries of phenomena and units?
  * @todo Define a subclass that allows features in the collection to be found
- * using spatio-temporal searches.
- * @author Jon
+ *       using spatio-temporal searches.
+ * @author Jon Blower
  */
 public interface FeatureCollection<F extends Feature> extends Iterable<F> {
 
     /**
-     * Identifier for this collection.  Unique within its context (e.g. within
-     * a catalogue of feature collections), but not necessarily globally unique.
+     * Identifier for this collection. Unique within its context (e.g. within a
+     * catalogue of feature collections), but not necessarily globally unique.
      */
     public String getId();
 
@@ -54,19 +55,24 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
 
     /**
      * Returns the set of Feature identifiers within this collection
+     * 
      * @return
      */
     public Set<String> getFeatureIds();
 
     /**
      * Gets the feature with the given ID.
-     * @param id The ID of the feature within this collection.
+     * 
+     * @param id
+     *            The ID of the feature within this collection.
      * @return
-     * @throws NullPointerException if {@code id == null}
-     * @throws IllegalArgumentException if {@code id} is not a valid feature id
+     * @throws NullPointerException
+     *             if {@code id == null}
+     * @throws IllegalArgumentException
+     *             if {@code id} is not a valid feature id
      */
     public F getFeatureById(String id);
-    
+
     /**
      * Gets all features in the {@link FeatureCollection}.
      * 
@@ -76,6 +82,7 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
 
     /**
      * Gets the runtime class of the features within this collection.
+     * 
      * @return
      */
     public Class<F> getFeatureType();

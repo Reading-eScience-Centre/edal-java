@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,42 +24,60 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal;
 
 /**
- * <p>Simple immutable class consisting of a string and vocabulary that
- * acts as a namespace for the string.  Instances of this class are created
- * through the static factory methods, which give the possibility in future to
- * cache instances of this class, saving object creation and garbage collection.</p>
- * @author Jon
+ * <p>
+ * Simple immutable class consisting of a string and vocabulary that acts as a
+ * namespace for the string. Instances of this class are created through the
+ * static factory methods, which give the possibility in future to cache
+ * instances of this class, saving object creation and garbage collection.
+ * </p>
+ * 
+ * @author Jon Blower
  */
-public final class Phenomenon
-{
+public final class Phenomenon {
 
     private final String stdName;
     private final PhenomenonVocabulary phenomVocab;
 
-    private Phenomenon(String stdName, PhenomenonVocabulary phenomVocab)
-    {
+    private Phenomenon(String stdName, PhenomenonVocabulary phenomVocab) {
         this.stdName = stdName;
         this.phenomVocab = phenomVocab;
     }
 
-    /** Gets an instance of a phenomenon with the given standard name in the given vocabulary. */
-    public static Phenomenon getPhenomenon(String stdName, PhenomenonVocabulary phenomVocab)
-    {
+    /**
+     * Gets an instance of a phenomenon with the given standard name in the
+     * given vocabulary.
+     */
+    public static Phenomenon getPhenomenon(String stdName, PhenomenonVocabulary phenomVocab) {
         return new Phenomenon(stdName, phenomVocab);
     }
 
-    /** Gets an instance of a phenomenon with the given standard name in an unknown vocabulary. */
-    public static Phenomenon getPhenomenon(String stdName)
-    {
+    /**
+     * Gets an instance of a phenomenon with the given standard name in an
+     * unknown vocabulary.
+     */
+    public static Phenomenon getPhenomenon(String stdName) {
         return getPhenomenon(stdName, PhenomenonVocabulary.UNKNOWN);
     }
 
-    public String getStandardName() { return this.stdName; }
-    public PhenomenonVocabulary getVocabulary() { return this.phenomVocab; }
+    /**
+     * @return a {@link String} containing the standard name of this
+     *         {@link Phenomenon}
+     */
+    public String getStandardName() {
+        return stdName;
+    }
+
+    /**
+     * @return the {@link PhenomenonVocabulary} of which this {@link Phenomenon}
+     *         is a part of
+     */
+    public PhenomenonVocabulary getVocabulary() {
+        return phenomVocab;
+    }
 
 }

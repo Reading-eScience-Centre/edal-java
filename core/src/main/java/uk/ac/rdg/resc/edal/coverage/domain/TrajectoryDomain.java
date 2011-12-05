@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
@@ -38,32 +38,32 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 /**
  * The domain of a {@link TrajectoryCoverage}: a set of positions in space and
  * time.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
-public interface TrajectoryDomain extends DiscreteDomain<GeoPosition, GeoPosition>
-{
+public interface TrajectoryDomain extends DiscreteDomain<GeoPosition, GeoPosition> {
     /**
-     * The positions in space and time that comprise the domain, in ascending
-     * order of time. This is exactly equivalent to {@link #getDomainObjects()}.
+     * @return the positions in space and time that comprise the domain, in
+     *         ascending order of time. This is exactly equivalent to
+     *         {@link #getDomainObjects()}.
      */
     public List<GeoPosition> getPositions();
 
     /**
-     * Returns the vertical coordinate reference system used to reference
-     * the {@link #getDomainObjects() positions}.
+     * @return the vertical coordinate reference system used to reference the
+     *         {@link #getDomainObjects() positions}.
      */
     public VerticalCrs getVerticalCrs();
 
     /**
-     * Returns the horizontal coordinate reference system used to reference
-     * the {@link #getDomainObjects() positions}.
+     * @return the horizontal coordinate reference system used to reference the
+     *         {@link #getDomainObjects() positions}.
      */
     public CoordinateReferenceSystem getHorizontalCrs();
 
     /**
-     * Returns the calendar system used to reference the temporal components of the
-     * {@link #getDomainObjects() positions}.
-     * @return
+     * @return the calendar system used to reference the temporal components of
+     *         the {@link #getDomainObjects() positions}.
      */
     public CalendarSystem getCalendarSystem();
 
