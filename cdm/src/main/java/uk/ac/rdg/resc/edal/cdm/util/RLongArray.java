@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,14 +24,20 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.cdm.util;
 
 /**
- * <p>A resizeable array of signed long integers.  Data are stored in an array of primitive longs.</p>
- * <p>Instances of this class are not thread safe.</p>
- * @author Jon
+ * <p>
+ * A resizeable array of signed long integers. Data are stored in an array of
+ * primitive longs.
+ * </p>
+ * <p>
+ * Instances of this class are not thread safe.
+ * </p>
+ * 
+ * @author Jon Blower
  */
 public final class RLongArray extends RArray {
 
@@ -50,9 +56,12 @@ public final class RLongArray extends RArray {
 
     /**
      * Creates an array with the given initial capacity and chunk size.
-     * @param initialCapacity The number of elements in the storage array
-     * @param chunkSize The number of storage elements that will be added each
-     * time the storage array grows.
+     * 
+     * @param initialCapacity
+     *            The number of elements in the storage array
+     * @param chunkSize
+     *            The number of storage elements that will be added each time
+     *            the storage array grows.
      */
     public RLongArray(int initialCapacity, int chunkSize) {
         super(initialCapacity, chunkSize);
@@ -65,27 +74,29 @@ public final class RLongArray extends RArray {
 
     /**
      * Returns the <i>i</i>th element of the array.
-     * @param i The index of the element to return.
+     * 
+     * @param i
+     *            The index of the element to return.
      * @return the <i>i</i>th element of the array.
-     * @throws ArrayIndexOutOfBoundsException if {@code i >= size()}
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code i >= size()}
      */
     @Override
     public long getLong(int i) {
         return this.getStorage()[i];
     }
-    
+
     @Override
     public int getInt(int i) {
         long val = getLong(i);
         if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {
             throw new ArithmeticException(val + " cannot be represented as a 4-byte integer");
         }
-        return (int)val;
+        return (int) val;
     }
 
-    private long[] getStorage()
-    {
-        return (long[])this.storage;
+    private long[] getStorage() {
+        return (long[]) this.storage;
     }
 
     @Override

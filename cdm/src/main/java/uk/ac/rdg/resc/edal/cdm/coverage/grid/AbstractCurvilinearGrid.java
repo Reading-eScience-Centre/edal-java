@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -18,14 +18,13 @@
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR  CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
  * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
+ *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
@@ -48,13 +47,13 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * explicitly specifying the latitude and longitude coordinates of each grid
  * point.
  * 
- * @author Jon
+ * @author Jon Blower
  */
 abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
-    protected final CurvilinearGrid curvGrid;
+    protected final CurvilinearCoords curvGrid;
     private final GridExtent gridExtent;
 
-    protected AbstractCurvilinearGrid(CurvilinearGrid curvGrid) {
+    protected AbstractCurvilinearGrid(CurvilinearCoords curvGrid) {
         // All points will be returned in WGS84 lon-lat
         super(DefaultGeographicCRS.WGS84);
         this.curvGrid = curvGrid;
@@ -72,7 +71,7 @@ abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
     }
 
     /*
-     * TODO Check that this is OK 
+     * TODO Check that this is OK
      */
     @Override
     public GridAxis getXAxis() {
@@ -95,7 +94,7 @@ abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
     }
 
     /*
-     * TODO Check that this is OK 
+     * TODO Check that this is OK
      */
     @Override
     public GridAxis getYAxis() {
@@ -116,12 +115,12 @@ abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
             }
         };
     }
-    
+
     @Override
     public BoundingBox getCoordinateExtent() {
         return curvGrid.getBoundingBox();
     }
-    
+
     @Override
     public GridCell2D getGridCell(GridCoordinates2D coords) {
         return getGridCell(coords.getXIndex(), coords.getYIndex());

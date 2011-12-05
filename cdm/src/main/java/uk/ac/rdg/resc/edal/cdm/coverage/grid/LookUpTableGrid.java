@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2009 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
+ *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
 import java.util.ArrayList;
@@ -39,8 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ucar.nc2.dt.GridCoordSystem;
-import ucar.unidata.geoloc.LatLonPointImpl;
-import uk.ac.rdg.resc.edal.cdm.coverage.grid.CurvilinearGrid.Cell;
+import uk.ac.rdg.resc.edal.cdm.coverage.grid.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
@@ -76,7 +74,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
      *       calculated from these. This means that we could make other large
      *       objects available for garbage collection.
      */
-    private static final Map<CurvilinearGrid, LookUpTableGrid> CACHE = CollectionUtils.newHashMap();
+    private static final Map<CurvilinearCoords, LookUpTableGrid> CACHE = CollectionUtils.newHashMap();
 
     private final LookUpTable lut;
 
@@ -84,7 +82,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
      * The passed-in coordSys must have 2D horizontal coordinate axes.
      */
     public static LookUpTableGrid generate(GridCoordSystem coordSys) {
-        CurvilinearGrid curvGrid = new CurvilinearGrid(coordSys);
+        CurvilinearCoords curvGrid = new CurvilinearCoords(coordSys);
 
         // We calculate the required resolution of the look-up tables. We
         // want this to be around 3 times the resolution of the grid.
@@ -116,7 +114,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     }
 
     /** Private constructor to prevent direct instantiation */
-    private LookUpTableGrid(CurvilinearGrid curvGrid, LookUpTable lut) {
+    private LookUpTableGrid(CurvilinearCoords curvGrid, LookUpTable lut) {
         super(curvGrid);
         this.lut = lut;
     }

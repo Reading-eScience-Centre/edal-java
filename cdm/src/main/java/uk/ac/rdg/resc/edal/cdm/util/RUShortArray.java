@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,15 +24,20 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.cdm.util;
 
 /**
- * <p>A resizeable array of unsigned short integers.  Data are stored in an array of
- * primitive short integers.</p>
- * <p>Instances of this class are not thread safe.</p>
- * @author Jon
+ * <p>
+ * A resizeable array of unsigned short integers. Data are stored in an array of
+ * primitive short integers.
+ * </p>
+ * <p>
+ * Instances of this class are not thread safe.
+ * </p>
+ * 
+ * @author Jon Blower
  */
 public final class RUShortArray extends RArray {
 
@@ -51,9 +56,12 @@ public final class RUShortArray extends RArray {
 
     /**
      * Creates an array with the given initial capacity and chunk size.
-     * @param initialCapacity The number of elements in the storage array
-     * @param chunkSize The number of storage elements that will be added each
-     * time the storage array grows.
+     * 
+     * @param initialCapacity
+     *            The number of elements in the storage array
+     * @param chunkSize
+     *            The number of storage elements that will be added each time
+     *            the storage array grows.
      */
     public RUShortArray(int initialCapacity, int chunkSize) {
         super(initialCapacity, chunkSize);
@@ -66,9 +74,12 @@ public final class RUShortArray extends RArray {
 
     /**
      * Returns the <i>i</i>th element of the array.
-     * @param i The index of the element to return.
+     * 
+     * @param i
+     *            The index of the element to return.
      * @return the <i>i</i>th element of the array.
-     * @throws ArrayIndexOutOfBoundsException if {@code i >= size()}
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code i >= size()}
      */
     @Override
     public long getLong(int i) {
@@ -83,9 +94,8 @@ public final class RUShortArray extends RArray {
         return this.getStorage()[i] & 0xffff;
     }
 
-    private short[] getStorage()
-    {
-        return (short[])this.storage;
+    private short[] getStorage() {
+        return (short[]) this.storage;
     }
 
     @Override
@@ -95,7 +105,7 @@ public final class RUShortArray extends RArray {
 
     @Override
     protected void setElement(int index, long value) {
-        this.getStorage()[index] = (short)value;
+        this.getStorage()[index] = (short) value;
     }
 
     @Override
