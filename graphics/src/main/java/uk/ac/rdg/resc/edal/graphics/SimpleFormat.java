@@ -1,3 +1,30 @@
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *******************************************************************************/
 package uk.ac.rdg.resc.edal.graphics;
 
 import java.awt.image.BufferedImage;
@@ -12,11 +39,11 @@ import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
  * Abstract superclass for simple image formats that do not require information
  * about the layer, time values, bounding box etc to render an image.
  * 
- * @author Jon Blower $Revision$ $Date$ $Log$
+ * @author Jon Blower
  */
 public abstract class SimpleFormat extends ImageFormat {
     /**
-     * Returns false: simple formats do not require a lagend.
+     * Returns false: simple formats do not require a legend.
      */
     @Override
     public final boolean requiresLegend() {
@@ -70,28 +97,4 @@ public abstract class SimpleFormat extends ImageFormat {
      */
     public abstract void writeImage(List<BufferedImage> frames, OutputStream out)
             throws IOException;
-
-    @Override
-    public String getMimeType() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean supportsFullyTransparentPixels() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean supportsMultipleFrames() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean supportsPartiallyTransparentPixels() {
-        // TODO Auto-generated method stub
-        return false;
-    }
 }

@@ -1,3 +1,30 @@
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *******************************************************************************/
 package uk.ac.rdg.resc.edal.graphics;
 
 import java.awt.Color;
@@ -22,7 +49,7 @@ import uk.ac.rdg.resc.edal.Extent;
  * A palette of colours that is used by an {@link ImageProducer} to render data
  * into a BufferedImage
  * 
- * @author Jon
+ * @author Jon Blower
  */
 public class ColorPalette {
     /**
@@ -57,23 +84,28 @@ public class ColorPalette {
      * 
      * @see DEFAULT_PALETTE_NAME
      */
-    private static final ColorPalette DEFAULT_PALETTE = new ColorPalette(DEFAULT_PALETTE_NAME, new Color[] {
-            new Color(0, 0, 143), new Color(0, 0, 159), new Color(0, 0, 175), new Color(0, 0, 191),
-            new Color(0, 0, 207), new Color(0, 0, 223), new Color(0, 0, 239), new Color(0, 0, 255),
-            new Color(0, 11, 255), new Color(0, 27, 255), new Color(0, 43, 255), new Color(0, 59, 255),
-            new Color(0, 75, 255), new Color(0, 91, 255), new Color(0, 107, 255), new Color(0, 123, 255),
-            new Color(0, 139, 255), new Color(0, 155, 255), new Color(0, 171, 255), new Color(0, 187, 255),
-            new Color(0, 203, 255), new Color(0, 219, 255), new Color(0, 235, 255), new Color(0, 251, 255),
-            new Color(7, 255, 247), new Color(23, 255, 231), new Color(39, 255, 215), new Color(55, 255, 199),
-            new Color(71, 255, 183), new Color(87, 255, 167), new Color(103, 255, 151), new Color(119, 255, 135),
-            new Color(135, 255, 119), new Color(151, 255, 103), new Color(167, 255, 87), new Color(183, 255, 71),
-            new Color(199, 255, 55), new Color(215, 255, 39), new Color(231, 255, 23), new Color(247, 255, 7),
-            new Color(255, 247, 0), new Color(255, 231, 0), new Color(255, 215, 0), new Color(255, 199, 0),
-            new Color(255, 183, 0), new Color(255, 167, 0), new Color(255, 151, 0), new Color(255, 135, 0),
-            new Color(255, 119, 0), new Color(255, 103, 0), new Color(255, 87, 0), new Color(255, 71, 0),
-            new Color(255, 55, 0), new Color(255, 39, 0), new Color(255, 23, 0), new Color(255, 7, 0),
-            new Color(246, 0, 0), new Color(228, 0, 0), new Color(211, 0, 0), new Color(193, 0, 0),
-            new Color(175, 0, 0), new Color(158, 0, 0), new Color(140, 0, 0) });
+    private static final ColorPalette DEFAULT_PALETTE = new ColorPalette(DEFAULT_PALETTE_NAME,
+            new Color[] { new Color(0, 0, 143), new Color(0, 0, 159), new Color(0, 0, 175),
+                    new Color(0, 0, 191), new Color(0, 0, 207), new Color(0, 0, 223),
+                    new Color(0, 0, 239), new Color(0, 0, 255), new Color(0, 11, 255),
+                    new Color(0, 27, 255), new Color(0, 43, 255), new Color(0, 59, 255),
+                    new Color(0, 75, 255), new Color(0, 91, 255), new Color(0, 107, 255),
+                    new Color(0, 123, 255), new Color(0, 139, 255), new Color(0, 155, 255),
+                    new Color(0, 171, 255), new Color(0, 187, 255), new Color(0, 203, 255),
+                    new Color(0, 219, 255), new Color(0, 235, 255), new Color(0, 251, 255),
+                    new Color(7, 255, 247), new Color(23, 255, 231), new Color(39, 255, 215),
+                    new Color(55, 255, 199), new Color(71, 255, 183), new Color(87, 255, 167),
+                    new Color(103, 255, 151), new Color(119, 255, 135), new Color(135, 255, 119),
+                    new Color(151, 255, 103), new Color(167, 255, 87), new Color(183, 255, 71),
+                    new Color(199, 255, 55), new Color(215, 255, 39), new Color(231, 255, 23),
+                    new Color(247, 255, 7), new Color(255, 247, 0), new Color(255, 231, 0),
+                    new Color(255, 215, 0), new Color(255, 199, 0), new Color(255, 183, 0),
+                    new Color(255, 167, 0), new Color(255, 151, 0), new Color(255, 135, 0),
+                    new Color(255, 119, 0), new Color(255, 103, 0), new Color(255, 87, 0),
+                    new Color(255, 71, 0), new Color(255, 55, 0), new Color(255, 39, 0),
+                    new Color(255, 23, 0), new Color(255, 7, 0), new Color(246, 0, 0),
+                    new Color(228, 0, 0), new Color(211, 0, 0), new Color(193, 0, 0),
+                    new Color(175, 0, 0), new Color(158, 0, 0), new Color(140, 0, 0) });
 
     private final Color[] palette;
     private final String name;
@@ -119,7 +151,8 @@ public class ColorPalette {
         for (File file : paletteLocationDir.listFiles()) {
             if (file.getName().endsWith(".pal")) {
                 try {
-                    String paletteName = file.getName().substring(0, file.getName().lastIndexOf("."));
+                    String paletteName = file.getName().substring(0,
+                            file.getName().lastIndexOf("."));
                     ColorPalette palette = new ColorPalette(paletteName, readColorPalette(file));
                     palettes.put(palette.getName(), palette);
                 } catch (Exception e) {
@@ -212,11 +245,12 @@ public class ColorPalette {
      *             if the requested number of colour bands is less than one or
      *             greater than 254.
      */
-    public BufferedImage createLegend(int numColorBands, String title, String units, boolean logarithmic,
-            Extent<Float> colorScaleRange) {
+    public BufferedImage createLegend(int numColorBands, String title, String units,
+            boolean logarithmic, Extent<Float> colorScaleRange) {
         float colourScaleMin = colorScaleRange.getLow();
         float colourScaleMax = colorScaleRange.getHigh();
-        BufferedImage colourScale = new BufferedImage(LEGEND_WIDTH, LEGEND_HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
+        BufferedImage colourScale = new BufferedImage(LEGEND_WIDTH, LEGEND_HEIGHT,
+                BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D gfx = colourScale.createGraphics();
 
         // Create the colour bar itself
@@ -284,7 +318,8 @@ public class ColorPalette {
      *             if the requested number of colour bands is less than one or
      *             greater than {@link #MAX_NUM_COLOURS}.
      */
-    public IndexColorModel getColorModel(int numColorBands, int opacity, Color bgColor, boolean transparent) {
+    public IndexColorModel getColorModel(int numColorBands, int opacity, Color bgColor,
+            boolean transparent) {
         // Gets an interpolated/subsampled version of this palette with the
         // given number of colour bands
         Color[] newPalette = this.getPalette(numColorBands);
@@ -343,7 +378,8 @@ public class ColorPalette {
         if (numColorBands < 1 || numColorBands > MAX_NUM_COLOURS) {
             // Shouldn't happen: we have constrained this to a sane value in
             // GetMapStyleRequest
-            throw new IllegalArgumentException("numColorBands must be between 1 and " + MAX_NUM_COLOURS);
+            throw new IllegalArgumentException("numColorBands must be between 1 and "
+                    + MAX_NUM_COLOURS);
         }
         Color[] targetPalette;
         if (numColorBands == this.palette.length) {
@@ -365,7 +401,8 @@ public class ColorPalette {
                 for (int i = 1; i < targetPalette.length - 1; i++) {
                     // Find the nearest index in the source palette
                     // (Multiplying by 1.0f converts integers to floats)
-                    int nearestIndex = Math.round(this.palette.length * i * 1.0f / (targetPalette.length - 1));
+                    int nearestIndex = Math.round(this.palette.length * i * 1.0f
+                            / (targetPalette.length - 1));
                     targetPalette[i] = this.palette[nearestIndex];
                 }
             } else {
@@ -377,7 +414,8 @@ public class ColorPalette {
                 int lastIndex = 0;
                 for (int i = 1; i < this.palette.length - 1; i++) {
                     // Find the nearest index in the target palette
-                    int nearestIndex = Math.round(targetPalette.length * i * 1.0f / (this.palette.length - 1));
+                    int nearestIndex = Math.round(targetPalette.length * i * 1.0f
+                            / (this.palette.length - 1));
                     targetPalette[nearestIndex] = this.palette[i];
                     // Now interpolate all the values we missed
                     for (int j = lastIndex + 1; j < nearestIndex; j++) {
@@ -385,16 +423,17 @@ public class ColorPalette {
                         // and how much
                         // from the new colour
                         float fracFromThis = (1.0f * j - lastIndex) / (nearestIndex - lastIndex);
-                        targetPalette[j] = interpolate(targetPalette[nearestIndex], targetPalette[lastIndex],
-                                fracFromThis);
+                        targetPalette[j] = interpolate(targetPalette[nearestIndex],
+                                targetPalette[lastIndex], fracFromThis);
                     }
                     lastIndex = nearestIndex;
                 }
                 // Now for the last bit of interpolation
                 for (int j = lastIndex + 1; j < targetPalette.length - 1; j++) {
-                    float fracFromThis = (1.0f * j - lastIndex) / (targetPalette.length - lastIndex);
-                    targetPalette[j] = interpolate(targetPalette[targetPalette.length - 1], targetPalette[lastIndex],
-                            fracFromThis);
+                    float fracFromThis = (1.0f * j - lastIndex)
+                            / (targetPalette.length - lastIndex);
+                    targetPalette[j] = interpolate(targetPalette[targetPalette.length - 1],
+                            targetPalette[lastIndex], fracFromThis);
                 }
             }
         }
@@ -414,9 +453,9 @@ public class ColorPalette {
      */
     private static Color interpolate(Color c1, Color c2, float fracFromC1) {
         float fracFromC2 = 1.0f - fracFromC1;
-        return new Color(Math.round(fracFromC1 * c1.getRed() + fracFromC2 * c2.getRed()), Math.round(fracFromC1
-                * c1.getGreen() + fracFromC2 * c2.getGreen()), Math.round(fracFromC1 * c1.getBlue() + fracFromC2
-                * c2.getBlue()));
+        return new Color(Math.round(fracFromC1 * c1.getRed() + fracFromC2 * c2.getRed()),
+                Math.round(fracFromC1 * c1.getGreen() + fracFromC2 * c2.getGreen()),
+                Math.round(fracFromC1 * c1.getBlue() + fracFromC2 * c2.getBlue()));
     }
 
     /**
