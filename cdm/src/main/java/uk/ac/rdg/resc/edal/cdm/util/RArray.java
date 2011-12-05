@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,26 +24,32 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.cdm.util;
 
 /**
- * <p>Abstract superclass for resizeable integer arrays.  Although values are
- * retrieved and set using long integers, the underlying storage may be
- * any data type.</p>
- * <p>GNU Trove implements similar classes with more sophisticated features, but
- * the internal array doubles in capacity with each resize operation.  This class
- * grows the internal array linearly, by a constant amount each time.  Hence the
+ * <p>
+ * Abstract superclass for resizeable integer arrays. Although values are
+ * retrieved and set using long integers, the underlying storage may be any data
+ * type.
+ * </p>
+ * <p>
+ * GNU Trove implements similar classes with more sophisticated features, but
+ * the internal array doubles in capacity with each resize operation. This class
+ * grows the internal array linearly, by a constant amount each time. Hence the
  * number of elements in the internal storage array is never greater than
- * {@code size() + chunkSize - 1}.</p>
- * @author Jon
+ * {@code size() + chunkSize - 1}.
+ * </p>
+ * 
+ * @author Jon Blower
  */
 public abstract class RArray {
 
     protected int size = 0; // Number of used entries in the array
-    protected final int chunkSize; // The amount by which the array should grow on
-                                 // each resize
+    protected final int chunkSize; // The amount by which the array should grow
+                                   // on
+                                   // each resize
     protected Object storage; // must be an array
 
     /**
@@ -56,14 +62,17 @@ public abstract class RArray {
 
     /**
      * Creates an array with the given initial capacity and chunk size.
-     * @param initialCapacity The number of elements in the storage array
-     * @param chunkSize The number of storage elements that will be added each
-     * time the storage array grows.
+     * 
+     * @param initialCapacity
+     *            The number of elements in the storage array
+     * @param chunkSize
+     *            The number of storage elements that will be added each time
+     *            the storage array grows.
      */
     protected RArray(int initialCapacity, int chunkSize) {
         if (initialCapacity < 0 || chunkSize <= 0) {
-            throw new IllegalArgumentException("Initial capacity must be >=0" +
-                " and chunk size must be > 0");
+            throw new IllegalArgumentException("Initial capacity must be >=0"
+                    + " and chunk size must be > 0");
         }
         this.chunkSize = chunkSize;
         this.storage = this.makeStorage(initialCapacity);
@@ -82,30 +91,40 @@ public abstract class RArray {
     public abstract void swapElements(int i1, int i2);
 
     /**
-     * Returns the <i>i</i>th element of the array as a long integer, irrespective
-     * of the underlying storage type.
-     * @param i The index of the element to return.
+     * Returns the <i>i</i>th element of the array as a long integer,
+     * irrespective of the underlying storage type.
+     * 
+     * @param i
+     *            The index of the element to return.
      * @return the <i>i</i>th element of the array.
-     * @throws ArrayIndexOutOfBoundsException if {@code i >= size()}
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code i >= size()}
      */
     public abstract long getLong(int i);
 
     /**
      * Returns the <i>i</i>th element of the array as a 4-byte integer,
      * irrespective of the underlying storage type.
-     * @param i The index of the element to return.
+     * 
+     * @param i
+     *            The index of the element to return.
      * @return the <i>i</i>th element of the array.
-     * @throws ArrayIndexOutOfBoundsException if {@code i >= size()}
-     * @throws ArithmeticError if the element is too large or small to be
-     * represented as a 4-byte integer.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code i >= size()}
+     * @throws ArithmeticError
+     *             if the element is too large or small to be represented as a
+     *             4-byte integer.
      */
     public abstract int getInt(int i);
 
     /**
      * Appends an integer to the end of the array
-     * @param i The integer to append
-     * @throws ArithmeticException if {@code i} is too large or small to be stored
-     * in the underlying storage array
+     * 
+     * @param i
+     *            The integer to append
+     * @throws ArithmeticException
+     *             if {@code i} is too large or small to be stored in the
+     *             underlying storage array
      */
     public final void append(long i) {
         if (i < this.getMinValue() || i > this.getMaxValue()) {
@@ -122,6 +141,8 @@ public abstract class RArray {
         this.size++;
     }
 
-    public final int size() { return this.size; }
+    public final int size() {
+        return this.size;
+    }
 
 }

@@ -1,3 +1,30 @@
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.util;
 
 import java.util.ArrayList;
@@ -42,7 +69,6 @@ import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
-
 /**
  * Contains static helper methods for reading data and metadata from NetCDF
  * files, OPeNDAP servers and other data sources using the Unidata Common Data
@@ -84,7 +110,8 @@ public final class CdmUtils {
     public static HorizontalGrid createHorizontalGrid(GridCoordSystem coordSys) {
         CoordinateAxis xAxis = coordSys.getXHorizAxis();
         CoordinateAxis yAxis = coordSys.getYHorizAxis();
-        boolean isLatLon = xAxis.getAxisType() == AxisType.Lon && yAxis.getAxisType() == AxisType.Lat;
+        boolean isLatLon = xAxis.getAxisType() == AxisType.Lon
+                && yAxis.getAxisType() == AxisType.Lat;
 
         if (xAxis instanceof CoordinateAxis1D && yAxis instanceof CoordinateAxis1D) {
             ReferenceableAxis<Double> xRefAxis = createReferenceableAxis((CoordinateAxis1D) xAxis);
@@ -94,7 +121,8 @@ public final class CdmUtils {
                 // We can create a RectilinearGrid in lat-lon space
                 if (xRefAxis instanceof RegularAxis && yRefAxis instanceof RegularAxis) {
                     // We can create a regular grid
-                    return new RegularGridImpl((RegularAxis) xRefAxis, (RegularAxis) yRefAxis, crs84);
+                    return new RegularGridImpl((RegularAxis) xRefAxis, (RegularAxis) yRefAxis,
+                            crs84);
                 } else {
                     // Axes are not both regular
                     return new RectilinearGridImpl(xRefAxis, yRefAxis, crs84);
@@ -103,7 +131,7 @@ public final class CdmUtils {
                 // Axes are not latitude and longitude so we need to create a
                 // ReferenceableGrid that uses the coordinate system's
                 // Projection object to convert from x and y to lat and lon
-               return new ProjectedGrid(coordSys);
+                return new ProjectedGrid(coordSys);
             }
         } else if (xAxis instanceof CoordinateAxis2D && yAxis instanceof CoordinateAxis2D) {
             // The axis must be 2D so we have to create look-up tables
@@ -111,7 +139,7 @@ public final class CdmUtils {
                 throw new UnsupportedOperationException("Can't create a HorizontalGrid"
                         + " from 2D coordinate axes that are not longitude and latitude.");
             }
-           return LookUpTableGrid.generate(coordSys);
+            return LookUpTableGrid.generate(coordSys);
         } else {
             // Shouldn't get here
             throw new IllegalStateException("Inconsistent axis types");
@@ -119,7 +147,9 @@ public final class CdmUtils {
     }
 
     /**
-     * Creates a {@link VerticalAxis} from a given {@link GridCoordSystem} object.
+     * Creates a {@link VerticalAxis} from a given {@link GridCoordSystem}
+     * object.
+     * 
      * @param coordSys
      * @return
      */
@@ -148,11 +178,18 @@ public final class CdmUtils {
             return null;
         }
 
-        VerticalCrs vCrs = new VerticalCrsImpl(Unit.getUnit(units), isPositive ? PositiveDirection.UP
-                : PositiveDirection.DOWN, isPressure);
+        VerticalCrs vCrs = new VerticalCrsImpl(Unit.getUnit(units),
+                isPositive ? PositiveDirection.UP : PositiveDirection.DOWN, isPressure);
         return new VerticalAxisImpl("Vertical Axis", values, vCrs);
     }
-    
+
+    /**
+     * Creates a time axis from the given {@link GridCoordSystem}
+     * 
+     * @param coordSys
+     *            the {@link GridCoordSystem} containing the axis definition
+     * @return a new {@link TimeAxis}
+     */
     public static TimeAxis createTimeAxis(GridCoordSystem coordSys) {
         if (!coordSys.hasTimeAxis1D()) {
             return null;
@@ -172,12 +209,13 @@ public final class CdmUtils {
         } else {
             CalendarSystem calSys = CalendarSystem.valueOf(calString);
             if (calSys == null) {
-                throw new IllegalArgumentException("The calendar system " + cal.getStringValue() + " cannot be handled");
+                throw new IllegalArgumentException("The calendar system " + cal.getStringValue()
+                        + " cannot be handled");
             }
-            throw new UnsupportedOperationException("Currently only standard calendar systems are supported");
+            throw new UnsupportedOperationException(
+                    "Currently only standard calendar systems are supported");
         }
     }
-
 
     /**
      * Creates a {@link ReferenceableAxis} from the given
@@ -196,13 +234,15 @@ public final class CdmUtils {
      *            true if this is a longitude axis ({@literal i.e.} wraps at 360
      *            degrees).
      */
-    public static ReferenceableAxis<Double> createReferenceableAxis(CoordinateAxis1D axis, boolean isLongitude) {
+    public static ReferenceableAxis<Double> createReferenceableAxis(CoordinateAxis1D axis,
+            boolean isLongitude) {
         if (axis == null)
             throw new NullPointerException();
         String name = axis.getName();
         // TODO: generate coordinate system axes if appropriate
         if (axis.isRegular()) {
-            return new RegularAxisImpl(name, axis.getStart(), axis.getIncrement(), (int) axis.getSize(), isLongitude);
+            return new RegularAxisImpl(name, axis.getStart(), axis.getIncrement(),
+                    (int) axis.getSize(), isLongitude);
         } else {
             return new ReferenceableAxisImpl(name, axis.getCoordValues(), isLongitude);
         }
@@ -210,12 +250,15 @@ public final class CdmUtils {
 
     /**
      * Estimates the optimum {@link DataReadingStrategy} from the given
-     * NetcdfDataset.  Essentially, if the data are remote (e.g. OPeNDAP) or
+     * NetcdfDataset. Essentially, if the data are remote (e.g. OPeNDAP) or
      * compressed, this will return {@link DataReadingStrategy#BOUNDING_BOX},
-     * which makes a single i/o call, minimizing the overhead.  If the data
-     * are local and uncompressed this will return {@link DataReadingStrategy#SCANLINE},
-     * which reduces the amount of data read.
-     * @param nc The NetcdfDataset from which data will be read.
+     * which makes a single i/o call, minimizing the overhead. If the data are
+     * local and uncompressed this will return
+     * {@link DataReadingStrategy#SCANLINE}, which reduces the amount of data
+     * read.
+     * 
+     * @param nc
+     *            The NetcdfDataset from which data will be read.
      * @return an optimum DataReadingStrategy for reading from the dataset
      */
     public static DataReadingStrategy getOptimumDataReadingStrategy(NetcdfDataset nc) {

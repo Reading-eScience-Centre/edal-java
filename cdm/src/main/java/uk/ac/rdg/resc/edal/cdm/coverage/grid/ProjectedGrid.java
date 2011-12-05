@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
+ *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
 import java.util.List;
@@ -59,13 +58,12 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * convert from lat-lon coordinates to grid coordinates.
  * 
  * @todo repeats much code from AbstractRectilinearGrid - refactor?
- * @author Jon
+ * @author Jon Blower
  */
 public class ProjectedGrid extends AbstractHorizontalGrid {
     private final ProjectionImpl proj;
     private final ReferenceableAxis<Double> xAxis;
     private final ReferenceableAxis<Double> yAxis;
-//    private final GridExtent gridExtent;
     private final BoundingBox extent;
 
     /**
@@ -82,7 +80,6 @@ public class ProjectedGrid extends AbstractHorizontalGrid {
         this.xAxis = CdmUtils.createReferenceableAxis((CoordinateAxis1D) coordSys.getXHorizAxis(),
                 xAxisIsLongitude);
         this.yAxis = CdmUtils.createReferenceableAxis((CoordinateAxis1D) coordSys.getYHorizAxis());
-//        this.gridExtent = new GridExtentImpl(this.xAxis.size() - 1, this.yAxis.size() - 1);
         double[] bbox = new double[4];
         bbox[0] = coordSys.getLatLonBoundingBox().getLonMin();
         bbox[1] = coordSys.getLatLonBoundingBox().getLatMin();
@@ -169,8 +166,8 @@ public class ProjectedGrid extends AbstractHorizontalGrid {
 
     @Override
     public long findIndexOf(HorizontalPosition pos) {
-        // TODO Auto-generated method stub
-        return 0;
+        GridCoordinates2D gridCoords = findContainingCell(pos);
+        return gridCoords.getXIndex() + gridCoords.getYIndex()*xAxis.size();
     }
     
     @Override

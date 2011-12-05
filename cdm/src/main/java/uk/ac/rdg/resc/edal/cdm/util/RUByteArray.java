@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.cdm.util;
 
@@ -32,7 +32,7 @@ package uk.ac.rdg.resc.edal.cdm.util;
  * <p>A resizeable array of unsigned bytes.  Data are stored in an array of
  * primitive bytes.</p>
  * <p>Instances of this class are not thread safe.</p>
- * @author Jon
+ * @author Jon Blower
  */
 public final class RUByteArray extends RArray {
 
