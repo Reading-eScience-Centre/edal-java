@@ -1,3 +1,30 @@
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *******************************************************************************/
 package uk.ac.rdg.resc.edal.graphics;
 
 import java.awt.image.BufferedImage;
@@ -26,14 +53,16 @@ public abstract class ImageFormat {
     private static final Map<String, ImageFormat> formats = new LinkedHashMap<String, ImageFormat>();
 
     static {
-        // Prevent the use of a disk cache when creating images using ImageIO.
-        // Using the disk cache can cause problems if a suitable temporary
-        // directory can't be found, causing the rendering to fail under certain
-        // systems.
+        /*
+         * Prevent the use of a disk cache when creating images using ImageIO.
+         * Using the disk cache can cause problems if a suitable temporary
+         * directory can't be found, causing the rendering to fail under certain
+         * systems.
+         */
         ImageIO.setUseCache(false);
         // We pre-create all the ImageFormat objects
-        for (ImageFormat format : new ImageFormat[] { new PngFormat(), new Png32Format(), new GifFormat(),
-                new JpegFormat(), new KmzFormat() }) {
+        for (ImageFormat format : new ImageFormat[] { new PngFormat(), new Png32Format(),
+                new GifFormat(), new JpegFormat(), new KmzFormat() }) {
             formats.put(format.getMimeType(), format);
         }
     }
@@ -62,7 +91,8 @@ public abstract class ImageFormat {
     public static ImageFormat get(String mimeType) throws InvalidFormatException {
         ImageFormat format = formats.get(mimeType);
         if (format == null) {
-            throw new InvalidFormatException("The image format " + mimeType + " is not supported by this server");
+            throw new InvalidFormatException("The image format " + mimeType
+                    + " is not supported by this server");
         }
         return format;
     }
@@ -107,7 +137,7 @@ public abstract class ImageFormat {
      *            List of BufferedImages to render into an image
      * @param out
      *            The OutputStream to which the image will be written
-     * @param bbox 
+     * @param bbox
      * @param featureCollection
      *            the {@link FeatureCollection} to which the feature belongs.
      *            This is used for metadata and axes for {@link KmzFormat}
@@ -124,7 +154,7 @@ public abstract class ImageFormat {
      *             BufferedImages.
      */
     public abstract void writeImage(List<BufferedImage> frames, OutputStream out,
-            GridSeriesFeature<?> feature, double[] bbox, List<String> tValues,
-            String zValue, BufferedImage legend) throws IOException;
-    
+            GridSeriesFeature<?> feature, double[] bbox, List<String> tValues, String zValue,
+            BufferedImage legend) throws IOException;
+
 }

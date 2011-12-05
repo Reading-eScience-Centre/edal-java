@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2008 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.graphics;
 
@@ -96,9 +96,10 @@ public class KmzFormat extends ImageFormat {
                 kml.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">");
                 kml.append("<Folder>");
                 kml.append("<visibility>1</visibility>");
-                kml.append("<name>" + feature.getFeatureCollection().getId() + ", " + feature.getId() + "</name>");
-                kml.append("<description>" + feature.getFeatureCollection().getName() + ", " + feature.getName() + ": "
-                        + feature.getDescription() + "</description>");
+                kml.append("<name>" + feature.getFeatureCollection().getId() + ", "
+                        + feature.getId() + "</name>");
+                kml.append("<description>" + feature.getFeatureCollection().getName() + ", "
+                        + feature.getName() + ": " + feature.getDescription() + "</description>");
 
                 // Add the screen overlay containing the colour scale
                 kml.append("<ScreenOverlay>");
@@ -115,30 +116,32 @@ public class KmzFormat extends ImageFormat {
             String timestamp = null;
             String z = null;
 
-            /*
-             * TODO NEED TO FINISH THIS
-             */
-
-            if (tValues != null && tValues.get(frameIndex) != null && !tValues.get(frameIndex).equals("")) {
-                // We must make sure the ISO8601 timestamp is full and includes
-                // seconds, otherwise Google Earth gets confused. This is why we
-                // convert to a DateTime and back again.
-                // TODO: not sure if this will work for 360-day calendars...
-                // TODO Doesn't (yet) use chronology
+            if (tValues != null && tValues.get(frameIndex) != null
+                    && !tValues.get(frameIndex).equals("")) {
+                /*
+                 * We must make sure the ISO8601 timestamp is full and includes
+                 * seconds, otherwise Google Earth gets confused. This is why we
+                 * convert to a DateTime and back again.
+                 */
                 try {
-                    TimePosition dt = TimeUtils.iso8601ToDateTime(tValues.get(frameIndex), feature.getCoverage().getDomain().getCalendarSystem());
+                    TimePosition dt = TimeUtils.iso8601ToDateTime(tValues.get(frameIndex), feature
+                            .getCoverage().getDomain().getCalendarSystem());
                     timestamp = TimeUtils.dateTimeToISO8601(dt);
                     kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
             }
-            if (zValue != null && !zValue.equals("") && feature.getCoverage().getDomain().getVerticalAxis() != null) {
+            if (zValue != null && !zValue.equals("")
+                    && feature.getCoverage().getDomain().getVerticalAxis() != null) {
                 z = "";
                 if (timestamp != null)
                     z += "<br />";
-                z += "Elevation: " + zValue + " "
-                        + feature.getCoverage().getDomain().getVerticalCrs().getUnits().getUnitString();
+                z += "Elevation: "
+                        + zValue
+                        + " "
+                        + feature.getCoverage().getDomain().getVerticalCrs().getUnits()
+                                .getUnitString();
             }
             kml.append("<name>");
             if (timestamp == null && z == null) {
@@ -173,7 +176,8 @@ public class KmzFormat extends ImageFormat {
         ZipOutputStream zipOut = new ZipOutputStream(out);
 
         // Write the KML file: todo get filename properly
-        ZipEntry kmlEntry = new ZipEntry(feature.getFeatureCollection().getId() + "_" + feature.getId() + ".kml");
+        ZipEntry kmlEntry = new ZipEntry(feature.getFeatureCollection().getId() + "_"
+                + feature.getId() + ".kml");
         kmlEntry.setTime(System.currentTimeMillis());
         zipOut.putNextEntry(kmlEntry);
         zipOut.write(kml.toString().getBytes());

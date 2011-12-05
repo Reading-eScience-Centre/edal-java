@@ -1,3 +1,30 @@
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *******************************************************************************/
 package uk.ac.rdg.resc.edal.graphics;
 
 import java.awt.BasicStroke;
@@ -21,8 +48,8 @@ import uk.ac.rdg.resc.edal.position.Vector2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
- * An object that is used to render data into images. Instances of this class must be created
- * through the {@link Builder}.
+ * An object that is used to render data into images. Instances of this class
+ * must be created through the {@link Builder}.
  * 
  * @author Jon Blower
  * @author Guy Griffiths
@@ -39,13 +66,14 @@ public final class ImageProducer {
     private boolean transparent;
     private int opacity;
     private int numColourBands;
-    private boolean logarithmic; // True if the colour scale is to be logarithmic, false if linear
+    private boolean logarithmic; // True if the colour scale is to be
+                                 // logarithmic, false if linear
     private Color bgColor;
     private ColorPalette colorPalette;
 
     /**
-     * Colour scale range of the picture. An {@link Extent#isEmpty() empty Range} means that the
-     * picture will be auto-scaled.
+     * Colour scale range of the picture. An {@link Extent#isEmpty() empty
+     * Range} means that the picture will be auto-scaled.
      */
     private Extent<Float> scaleRange;
 
@@ -145,15 +173,17 @@ public final class ImageProducer {
     }
 
     /**
-     * Returns the {@link IndexColorModel} which will be used by this ImageProducer
+     * Returns the {@link IndexColorModel} which will be used by this
+     * ImageProducer
      */
     public IndexColorModel getColorModel() {
         return colorPalette.getColorModel(numColourBands, opacity, bgColor, transparent);
     }
 
     /**
-     * Creates and returns a single frame as an Image, based on the given data. Adds the label if
-     * one has been set. The scale must be set before calling this method.
+     * Creates and returns a single frame as an Image, based on the given data.
+     * Adds the label if one has been set. The scale must be set before calling
+     * this method.
      */
     private BufferedImage createImage(Components comps, String label) {
         // Create the pixel array for the frame
@@ -193,8 +223,9 @@ public final class ImageProducer {
         }
 
         /*
-         * If no style has been specified, DEFAULT will be selected. In the case of default style,
-         * we want to plot direction lines for vector components
+         * If no style has been specified, DEFAULT will be selected. In the case
+         * of default style, we want to plot direction lines for vector
+         * components
          */
         if (comps.isVector() && (style == Style.VECTOR || style == Style.DEFAULT)) {
             // We superimpose direction arrows on top of the background
@@ -212,11 +243,13 @@ public final class ImageProducer {
                     if (angle != null) {
                         // Calculate the end point of the arrow
                         double iEnd = i + arrowLength * Math.cos(angle);
-                        // Screen coordinates go down, but north is up, hence the minus sign
+                        // Screen coordinates go down, but north is up, hence
+                        // the minus sign
                         double jEnd = j - arrowLength * Math.sin(angle);
                         // Draw a dot representing the data location
                         g.fillOval(i - 2, j - 2, 4, 4);
-                        // Draw a line representing the vector direction and magnitude
+                        // Draw a line representing the vector direction and
+                        // magnitude
                         g.setStroke(new BasicStroke(1));
                         g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
                     }
@@ -228,8 +261,9 @@ public final class ImageProducer {
     }
 
     /**
-     * Calculates the index of the data point in a data array that corresponds with the given index
-     * in the image array, taking into account that the vertical axis is flipped.
+     * Calculates the index of the data point in a data array that corresponds
+     * with the given index in the image array, taking into account that the
+     * vertical axis is flipped.
      */
     private int getDataIndex(int imageIndex) {
         int imageI = imageIndex % picWidth;
@@ -238,8 +272,9 @@ public final class ImageProducer {
     }
 
     /**
-     * Calculates the index of the data point in a data array that corresponds with the given index
-     * in the image array, taking into account that the vertical axis is flipped.
+     * Calculates the index of the data point in a data array that corresponds
+     * with the given index in the image array, taking into account that the
+     * vertical axis is flipped.
      */
     private int getDataIndex(int imageI, int imageJ) {
         int dataJ = picHeight - imageJ - 1;
@@ -277,10 +312,11 @@ public final class ImageProducer {
     }
 
     /**
-     * Gets the frames as BufferedImages, ready to be turned into a picture or animation. This is
-     * called just before the picture is due to be created, so subclasses can delay creating the
-     * BufferedImages until all the data has been extracted (for example, if we are auto-scaling an
-     * animation, we can't create each individual frame until we have data for all the frames)
+     * Gets the frames as BufferedImages, ready to be turned into a picture or
+     * animation. This is called just before the picture is due to be created,
+     * so subclasses can delay creating the BufferedImages until all the data
+     * has been extracted (for example, if we are auto-scaling an animation, we
+     * can't create each individual frame until we have data for all the frames)
      * 
      * @return List of BufferedImages
      */
@@ -297,8 +333,9 @@ public final class ImageProducer {
     }
 
     /**
-     * Makes sure that the scale is set: if we are auto-scaling, this reads all of the data we have
-     * stored to find the extremes. If the scale has already been set, this does nothing.
+     * Makes sure that the scale is set: if we are auto-scaling, this reads all
+     * of the data we have stored to find the extremes. If the scale has already
+     * been set, this does nothing.
      */
     private void setScale() {
         if (scaleRange.isEmpty()) {
@@ -345,8 +382,8 @@ public final class ImageProducer {
         private ColorPalette colorPalette = null;
 
         /**
-         * Sets the style to be used. If not set or if the parameter is null, {@link Style#BOXFILL}
-         * will be used
+         * Sets the style to be used. If not set or if the parameter is null,
+         * {@link Style#BOXFILL} will be used
          */
         public Builder style(Style style) {
             this.style = style;
@@ -354,8 +391,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets the colour palette. If not set or if the parameter is null, the default colour
-         * palette will be used. {@see ColorPalette}
+         * Sets the colour palette. If not set or if the parameter is null, the
+         * default colour palette will be used. {@see ColorPalette}
          */
         public Builder palette(ColorPalette colorPalette) {
             this.colorPalette = colorPalette;
@@ -379,7 +416,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets whether or not background pixels should be transparent (defaults to false)
+         * Sets whether or not background pixels should be transparent (defaults
+         * to false)
          */
         public Builder transparent(boolean transparent) {
             this.transparent = transparent;
@@ -395,8 +433,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets the colour scale range. If not set (or if set to null), the min and max values of
-         * the data will be used.
+         * Sets the colour scale range. If not set (or if set to null), the min
+         * and max values of the data will be used.
          */
         public Builder colourScaleRange(Extent<Float> scaleRange) {
             this.scaleRange = scaleRange;
@@ -404,7 +442,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets the number of colour bands to use in the image, from 0 to 254 (default 254)
+         * Sets the number of colour bands to use in the image, from 0 to 254
+         * (default 254)
          */
         public Builder numColourBands(int numColourBands) {
             if (numColourBands < 0 || numColourBands > ColorPalette.MAX_NUM_COLOURS) {
@@ -415,7 +454,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets whether or not the colour scale is to be spaced logarithmically (default is false)
+         * Sets whether or not the colour scale is to be spaced logarithmically
+         * (default is false)
          */
         public Builder logarithmic(Boolean logarithmic) {
             this.logarithmic = logarithmic;
@@ -423,8 +463,9 @@ public final class ImageProducer {
         }
 
         /**
-         * Sets the background colour, which is used only if transparent==false, for background
-         * pixels. Defaults to white. If the passed-in color is null, it is ignored.
+         * Sets the background colour, which is used only if transparent==false,
+         * for background pixels. Defaults to white. If the passed-in color is
+         * null, it is ignored.
          */
         public Builder backgroundColour(Color bgColor) {
             if (bgColor != null)
@@ -433,8 +474,8 @@ public final class ImageProducer {
         }
 
         /**
-         * Checks the fields for internal consistency, then creates and returns a new ImageProducer
-         * object.
+         * Checks the fields for internal consistency, then creates and returns
+         * a new ImageProducer object.
          * 
          * @throws IllegalStateException
          *             if the builder cannot create a valid ImageProducer object
