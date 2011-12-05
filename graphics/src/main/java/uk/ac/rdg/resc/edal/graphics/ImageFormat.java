@@ -107,6 +107,7 @@ public abstract class ImageFormat {
      *            List of BufferedImages to render into an image
      * @param out
      *            The OutputStream to which the image will be written
+     * @param bbox 
      * @param featureCollection
      *            the {@link FeatureCollection} to which the feature belongs.
      *            This is used for metadata and axes for {@link KmzFormat}
@@ -123,7 +124,7 @@ public abstract class ImageFormat {
      *             BufferedImages.
      */
     public abstract void writeImage(List<BufferedImage> frames, OutputStream out,
-            GridSeriesFeature<?> feature, List<String> tValues,
+            GridSeriesFeature<?> feature, double[] bbox, List<String> tValues,
             String zValue, BufferedImage legend) throws IOException;
     
 }

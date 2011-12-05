@@ -39,7 +39,6 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
-import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 
@@ -84,8 +83,9 @@ public class KmzFormat extends ImageFormat {
      *             BufferedImages.
      */
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out, GridSeriesFeature<?> feature,
-            List<String> tValues, String zValue, BufferedImage legend) throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out,
+            GridSeriesFeature<?> feature, double[] bbox, List<String> tValues, String zValue,
+            BufferedImage legend) throws IOException {
         StringBuffer kml = new StringBuffer();
         for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++) {
             if (frameIndex == 0) {
@@ -156,12 +156,11 @@ public class KmzFormat extends ImageFormat {
 
             kml.append("<Icon><href>" + getPicFileName(frameIndex) + "</href></Icon>");
 
-            BoundingBox bbox = feature.getCoverage().getDomain().getHorizontalGrid().getCoordinateExtent();
             kml.append("<LatLonBox id=\"" + frameIndex + "\">");
-            kml.append("<west>" + bbox.getMinX() + "</west>");
-            kml.append("<south>" + bbox.getMinY() + "</south>");
-            kml.append("<east>" + bbox.getMaxX() + "</east>");
-            kml.append("<north>" + bbox.getMaxY() + "</north>");
+            kml.append("<west>" + bbox[0] + "</west>");
+            kml.append("<south>" + bbox[1] + "</south>");
+            kml.append("<east>" + bbox[2] + "</east>");
+            kml.append("<north>" + bbox[3] + "</north>");
             kml.append("<rotation>0</rotation>");
             kml.append("</LatLonBox>");
             kml.append("</GroundOverlay>");
