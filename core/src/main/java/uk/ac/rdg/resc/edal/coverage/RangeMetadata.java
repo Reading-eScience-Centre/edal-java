@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage;
 
@@ -33,32 +33,35 @@ import uk.ac.rdg.resc.edal.Unit;
 
 /**
  * Describes the values returned by a {@link Coverage}.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
-public interface RangeMetadata
-{
+public interface RangeMetadata {
     /**
      * Returns a human-readable description of the values.
+     * 
      * @return a human-readable description of the values.
      */
     public String getDescription();
 
     /**
      * Returns the units of measure of the values
-     * @return the units of measure of the values, or null if the values have
-     * no units.
+     * 
+     * @return the units of measure of the values, or null if the values have no
+     *         units.
      */
     public Unit getUnits();
 
     /**
      * Returns the real-world phenomenon that the values represent.
+     * 
      * @return the real-world phenomenon that the values represent.
-     * @todo Can this return null?
      */
     public Phenomenon getParameter();
 
     /**
      * Returns the runtime class of the values
+     * 
      * @return the runtime class of the values
      */
     public Class<?> getValueType();

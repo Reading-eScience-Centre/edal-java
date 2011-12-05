@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,33 +24,34 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 /**
- * A two-dimensional grid composed of an X and Y axis.  This top-level type
- * contains no georeferencing information, and so the X and Y axes are arbitrarily
- * chosen, however, the x index is usually assumed to vary faster in underlying
- * storage.  Hence the natural order of grid coordinates is (x0, y0), (x1, y0),
- * (x2, y0), (x0, y1) etc.
- * @author Jon
+ * A two-dimensional grid composed of an X and Y axis. This top-level type
+ * contains no georeferencing information, and so the X and Y axes are
+ * arbitrarily chosen, however, the x index is usually assumed to vary faster in
+ * underlying storage. Hence the natural order of grid coordinates is (x0, y0),
+ * (x1, y0), (x2, y0), (x0, y1) etc.
+ * 
+ * @author Jon Blower
  */
-public interface Grid
-{
-
+public interface Grid {
     /**
-     * Gets the X axis of the grid.  This may not be aligned with any of the
+     * Gets the X axis of the grid. This may not be aligned with any of the
      * real-world coordinate axes in the {@link #getCoordinateReferenceSystem()
      * coordinate reference system}.
+     * 
      * @return the X axis of the grid.
      */
     public GridAxis getXAxis();
 
     /**
-     * Gets the Y axis of the grid.  This may not be aligned with any of the
+     * Gets the Y axis of the grid. This may not be aligned with any of the
      * real-world coordinate axes in the {@link #getCoordinateReferenceSystem()
      * coordinate reference system}.
+     * 
      * @return the Y axis of the grid.
      */
     public GridAxis getYAxis();
@@ -59,10 +60,10 @@ public interface Grid
      * The extent of the grid in integer coordinates.
      */
     public GridExtent getGridExtent();
-    
+
     /**
-     * The number of grid cells in this grid (equivalent to {@link GridExtent#size()}).
+     * The number of grid cells in this grid (equivalent to
+     * {@link GridExtent#size()}).
      */
     public long size();
-
 }

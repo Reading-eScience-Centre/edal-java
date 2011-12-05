@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
@@ -32,13 +32,23 @@ import uk.ac.rdg.resc.edal.Extent;
 
 /**
  * The extent of a {@link HorizontalGrid} in index space
- * @author Jon
+ * 
+ * @author Jon Blower
  */
 public interface GridExtent extends Extent<GridCoordinates2D> {
 
+    /**
+     * @return the {@link Extent} of the x-axis
+     */
     public Extent<Integer> getXExtent();
+
+    /**
+     * @return the {@link Extent} of the y-axis
+     */
     public Extent<Integer> getYExtent();
 
-    /** The number of grid points in the grid */
+    /**
+     * The number of grid points in the grid
+     */
     public long size();
 }

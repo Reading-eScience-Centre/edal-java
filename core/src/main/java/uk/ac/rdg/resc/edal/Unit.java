@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,59 +24,83 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal;
 
 /**
- * <p>Simple immutable class consisting of a unit string and the vocabulary that
- * can be used to interpret the string.  Instances of this class are created
+ * <p>
+ * Simple immutable class consisting of a unit string and the vocabulary that
+ * can be used to interpret the string. Instances of this class are created
  * through the static factory methods, which give the possibility in future to
- * cache instances of this class, saving object creation and garbage collection.</p>
- * <p>Instances of this class are <b>not</b> guaranteed to be valid units within
- * the vocabulary in question.  External methods must be used to check validity and
- * to convert units between systems.</p>
- * @author Jon
+ * cache instances of this class, saving object creation and garbage collection.
+ * </p>
+ * <p>
+ * Instances of this class are <b>not</b> guaranteed to be valid units within
+ * the vocabulary in question. External methods must be used to check validity
+ * and to convert units between systems.
+ * </p>
+ * 
+ * @author Jon Blower
  */
-public final class Unit
-{
+public final class Unit {
 
     private final String unitString;
     private final UnitVocabulary unitVocabulary;
 
-    private Unit(String unitString, UnitVocabulary unitVocabulary)
-    {
+    /**
+     * Instantiates a new {@link Unit}. This is private, and should only be
+     * accessed by the static method getUnit
+     * 
+     * @param unitString
+     *            the {@link String} representing the {@link Unit}
+     * @param unitVocabulary
+     *            the {@link UnitVocabulary} of which this {@link Unit} is a
+     *            part
+     */
+    private Unit(String unitString, UnitVocabulary unitVocabulary) {
         this.unitString = unitString;
         this.unitVocabulary = unitVocabulary;
     }
 
-    /** Gets an instance of a unit with the given string in the given vocabulary. */
-    public static Unit getUnit(String unitString, UnitVocabulary unitVocabulary)
-    {
+    /**
+     * Gets an instance of a unit with the given string in the given vocabulary.
+     */
+    public static Unit getUnit(String unitString, UnitVocabulary unitVocabulary) {
         return new Unit(unitString, unitVocabulary);
     }
 
     /**
-     * Gets an instance of a unit with the given string in an unknown vocabulary.
-     * The returned Unit should not generally be considered to be convertible
-     * to other unit types.
+     * Gets an instance of a unit with the given string in an unknown
+     * vocabulary. The returned Unit should not generally be considered to be
+     * convertible to other unit types.
      */
-    public static Unit getUnit(String unitString)
-    {
+    public static Unit getUnit(String unitString) {
         return getUnit(unitString, UnitVocabulary.UNKNOWN);
     }
 
-    public String getUnitString() { return this.unitString; }
-    public UnitVocabulary getVocabulary() { return this.unitVocabulary; }
-    
+    /**
+     * @return a {@link String} representing the {@link Unit} type
+     */
+    public String getUnitString() {
+        return unitString;
+    }
+
+    /**
+     * @return the {@link UnitVocabulary} of which this {@link Unit} is a part
+     *         of
+     */
+    public UnitVocabulary getVocabulary() {
+        return unitVocabulary;
+    }
+
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof Unit){
+        if (obj instanceof Unit) {
             Unit unit = (Unit) obj;
             return unit.unitString.equals(unitString) && unit.unitVocabulary == unitVocabulary;
         } else {
             return false;
         }
     }
-
 }

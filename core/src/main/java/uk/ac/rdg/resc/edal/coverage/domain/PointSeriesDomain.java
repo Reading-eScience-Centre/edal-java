@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
@@ -36,26 +36,33 @@ import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 
 /**
  * The domain of a {@link PointSeriesCoverage}: a set of time instants.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
-public interface PointSeriesDomain extends DiscreteDomain<TimePosition, TimePosition>
-{
+public interface PointSeriesDomain extends DiscreteDomain<TimePosition, TimePosition> {
     /**
-     * Returns the calendar system used to interpret time fields.
+     * @return the calendar system used to interpret time fields.
      */
     public CalendarSystem getCalendarSystem();
 
     /**
-     * <p>Returns the list of time coordinate values that comprise this domain,
-     * in the domain's {@link #getCalendarSystem() calendar system}.  The values
-     * will be in ascending order of time.</p>
-     * <p>This is exactly equivalent to {@link #getDomainObjects()}.</p>
+     * <p>
+     * Returns the list of time coordinate values that comprise this domain, in
+     * the domain's {@link #getCalendarSystem() calendar system}. The values
+     * will be in ascending order of time.
+     * </p>
+     * <p>
+     * This is exactly equivalent to {@link #getDomainObjects()}.
+     * </p>
+     * 
+     * @return the {@link List} of {@link TimePosition}s in this domain
      */
     public List<TimePosition> getTimes();
 
     /**
-     * Returns the extent of the domain.  (This information could also be
+     * Returns the extent of the domain. (This information could also be
      * calculated from the first and last values in {@link #getDomainObjects()}.
+     * 
      * @return the extent of the domain.
      */
     public Extent<TimePosition> getExtent();

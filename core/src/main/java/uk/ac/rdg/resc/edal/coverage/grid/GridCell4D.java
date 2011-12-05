@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
@@ -42,33 +42,57 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A cell in a {@link GridSeriesDomain}, which can have up to four dimensions.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
 public interface GridCell4D extends Domain<GeoPosition> {
 
     public GridCoordinates2D getHorizontalCoordinates();
 
+    /**
+     * @return the time index of the grid cell in the parent grid
+     */
     public int getTimeIndex();
 
+    /**
+     * @return the z index of the grid cell in the parent grid
+     */
     public int getVerticalIndex();
 
-    /** Returns the centre of the grid cell in horizontal space */
+    /**
+     * @return the centre of the grid cell in horizontal space
+     */
     public HorizontalPosition getCentre();
 
     /**
-     * Returns the footprint of this grid cell in horizontal space.
-     * @todo Create a return type
+     * @return the footprint of this grid cell in horizontal space.
      */
     public Polygon getFootprint();
 
+    /**
+     * @return the {@link CoordinateReferenceSystem} of the horizontal component
+     *         of the grid cell
+     */
     public CoordinateReferenceSystem getHorizontalCrs();
 
+    /**
+     * @return the range of valid integers in the time axis of parent grid
+     */
     public Extent<TimePosition> getTimeExtent();
 
+    /**
+     * @return the range of valid integers in the vertical axis of parent grid
+     */
     public Extent<VerticalPosition> getVerticalExtent();
 
+    /**
+     * @return the {@link CalendarSystem} used in this grid cell
+     */
     public CalendarSystem getCalendarSystem();
 
+    /**
+     * @return the parent grid of this grid cell
+     */
     public GridSeriesDomain getGrid();
 
 }

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage;
 
@@ -32,14 +32,15 @@ import uk.ac.rdg.resc.edal.coverage.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
- * A {@link DiscretePointCoverage} that represents a trajectory, i.e. a list
- * of positions in space and time.
- * @param <R> The type of the value returned by the coverage; for a compound
- * coverage this type will be {@link Record}.
- * @author Jon
+ * A {@link DiscretePointCoverage} that represents a trajectory, i.e. a list of
+ * positions in space and time.
+ * 
+ * @param <R>
+ *            The type of the value returned by the coverage; for a compound
+ *            coverage this type will be {@link Record}.
+ * @author Jon Blower
  */
-public interface TrajectoryCoverage<R> extends DiscreteCoverage<GeoPosition, GeoPosition, R>
-{
+public interface TrajectoryCoverage<R> extends DiscreteCoverage<GeoPosition, GeoPosition, R> {
 
     @Override
     public TrajectoryDomain getDomain();

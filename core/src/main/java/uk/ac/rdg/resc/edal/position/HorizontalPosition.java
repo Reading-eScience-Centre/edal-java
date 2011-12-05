@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2009 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.position;
 
@@ -33,42 +33,57 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * Defines the position of a point in the horizontal plane.
+ * 
  * @todo May cause confusion for lat-lon coordinate systems (i.e. those with
- * latitude first).  In this case getX() would return latitude, which is
- * counterintuitive.  Do we actually need this interface at all?
- * @author Jon
+ *       latitude first). In this case getX() would return latitude, which is
+ *       counterintuitive. Do we actually need this interface at all?
+ * @author Jon Blower
  */
 public interface HorizontalPosition extends DirectPosition {
 
-    /** Returns the x coordinate of this position, equivalent to getOrdinate(0) */
+    /**
+     * Returns the x coordinate of this position, equivalent to getOrdinate(0)
+     */
     public double getX();
 
-    /** Returns the y coordinate of this position, equivalent to getOrdinate(1) */
+    /**
+     * Returns the y coordinate of this position, equivalent to getOrdinate(1)
+     */
     public double getY();
 
     /**
-     * Returns a two-dimensional coordinate reference system.
-     * The first coordinate in the CRS is the {@link #getX() x coordinate};
-     * the second is the {@link #getY() y coordinate}.
+     * Returns a two-dimensional coordinate reference system. The first
+     * coordinate in the CRS is the {@link #getX() x coordinate}; the second is
+     * the {@link #getY() y coordinate}.
+     * 
      * @return a two-dimensional coordinate reference system
      */
-    @Override public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
-    /** Returns 2 */
-    @Override public int getDimension();
+    /**
+     * Returns 2
+     */
+    @Override
+    public int getDimension();
 
     /**
      * Returns an array of two coordinates [x,y]
      */
-    @Override public double[] getCoordinate();
+    @Override
+    public double[] getCoordinate();
 
     /**
      * Returns the ordinate at the specified dimension.
-     * @param dimension - The dimension in the range 0 to 1 (inclusive)
-     * @return The coordinate at the specified dimension (index = 0 gives the
-     * x coordinate; index = 1 gives the y coordinate)
-     * @throws IndexOutOfBoundsException if {@code index < 0 || index > 1}
+     * 
+     * @param dimension
+     *            - The dimension in the range 0 to 1 (inclusive)
+     * @return The coordinate at the specified dimension (index = 0 gives the x
+     *         coordinate; index = 1 gives the y coordinate)
+     * @throws IndexOutOfBoundsException
+     *             if {@code index < 0 || index > 1}
      */
-    @Override public double getOrdinate(int index);
+    @Override
+    public double getOrdinate(int index);
 
 }

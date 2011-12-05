@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,28 +24,33 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage;
 
 /**
- * <p>Associates a domain object with its value in a {@link DiscreteCoverage}.</p>
- * @param <DO> The type of domain object
- * @param <R> The type of the value
- * @author Jon
+ * <p>
+ * Associates a domain object with its value in a {@link DiscreteCoverage}.
+ * </p>
+ * 
+ * @param <DO>
+ *            The type of domain object
+ * @param <R>
+ *            The type of the value
+ * @author Jon Blower
  */
-public interface DomainObjectValuePair<DO, R>
-{
+public interface DomainObjectValuePair<DO, R> {
 
     /**
      * Returns the domain object from the {@link DiscreteCoverage}'s domain.
+     * 
      * @return the domain object from the {@link DiscreteCoverage}'s domain.
      */
     public DO getDomainObject();
 
-
     /**
      * Returns the value from the {@link DiscreteCoverage}'s range.
+     * 
      * @return the value from the {@link DiscreteCoverage}'s range.
      */
     public R getValue();

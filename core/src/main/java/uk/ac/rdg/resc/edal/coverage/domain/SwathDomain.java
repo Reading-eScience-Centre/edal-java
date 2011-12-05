@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
@@ -35,29 +35,28 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 
 /**
- * The domain of a {@link SwathCoverage}: a set of ground pixels.  Vertical
+ * The domain of a {@link SwathCoverage}: a set of ground pixels. Vertical
  * information is ignored.
- * @author Jon
- * @todo Replace GeoPosition with a more precise type (XytPosition?)
+ * 
+ * @author Jon Blower
  */
-public interface SwathDomain extends DiscreteDomain<GeoPosition, GroundPixel>
-{
+public interface SwathDomain extends DiscreteDomain<GeoPosition, GroundPixel> {
 
     /**
-     * The ground pixels that comprise the swath, in ascending order of time.
-     * This is exactly equivalent to {@link #getDomainObjects()}.
+     * @return the ground pixels that comprise the swath, in ascending order of
+     *         time. This is exactly equivalent to {@link #getDomainObjects()}.
      */
     public List<GroundPixel> getGroundPixels();
 
     /**
-     * Returns the {@link CalendarSystem} used to reference the time values of the
-     * ground pixels.
+     * @returnsthe {@link CalendarSystem} used to reference the time values of
+     *             the ground pixels.
      */
     public CalendarSystem getCalendarSystem();
 
     /**
-     * Returns the coordinate reference system used to reference the horizontal
-     * polygons in the ground pixels.
+     * @return the coordinate reference system used to reference the horizontal
+     *         polygons in the ground pixels.
      */
     public CoordinateReferenceSystem getHorizontalCrs();
 

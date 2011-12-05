@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.feature;
 
@@ -43,16 +43,43 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  * @param <R>
  *            The type of the value returned by the coverage; for a compound
  *            coverage this type will be {@link Record}.
+ * @author Jon Blower
  */
 public interface GridSeriesFeature<R> extends Feature {
 
     @Override
     public GridSeriesCoverage<R> getCoverage();
 
-    public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition t);
+    /**
+     * Convenience method to extract a {@link ProfileFeature} for plotting
+     * purposes
+     * 
+     * @param pos
+     *            the {@link HorizontalPosition} of the desired
+     *            {@link ProfileFeature}
+     * @param time
+     *            the {@link TimePosition} of the desired {@link ProfileFeature}
+     * @return the extracted {@link ProfileFeature}
+     */
+    public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition time);
 
-    public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
-            Extent<TimePosition> tRange);
+    /**
+     * Convenience method to extract a {@link PointSeriesFeature} for plotting
+     * purposes
+     * 
+     * @param pos
+     *            the {@link HorizontalPosition} of the desired
+     *            {@link PointSeriesFeature}
+     * @param z
+     *            the {@link VerticalPosition} of the desired
+     *            {@link PointSeriesFeature}
+     * @param tRange
+     *            the range of {@link TimePosition}s of the desired
+     *            {@link PointSeriesFeature}
+     * @return the extracted {@link PointSeriesFeature}
+     */
+    public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos,
+            VerticalPosition z, Extent<TimePosition> tRange);
 
     /**
      * Convenience method to extract a horizontal layer for plotting purposes
@@ -65,8 +92,9 @@ public interface GridSeriesFeature<R> extends Feature {
      *            The desired domain of the resultant coverage
      * @return A list of values, with x varying first
      */
-    public GridCoverage2D<R> extractHorizontalGrid(int tindex, int zindex, HorizontalGrid targetDomain);
-    
+    public GridCoverage2D<R> extractHorizontalGrid(int tindex, int zindex,
+            HorizontalGrid targetDomain);
+
     /**
      * Convenience method to extract a horizontal layer for plotting purposes
      * 
@@ -78,5 +106,6 @@ public interface GridSeriesFeature<R> extends Feature {
      *            The desired domain of the resultant coverage
      * @return A list of values, with x varying first
      */
-    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, double zPos, HorizontalGrid targetDomain);
+    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, double zPos,
+            HorizontalGrid targetDomain);
 }

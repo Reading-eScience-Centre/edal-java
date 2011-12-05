@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,18 +24,19 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal;
 
 /**
  * Enumeration of vocabularies for {@link Phenomenon}s.
- * @author Jon
+ * 
+ * @author Jon Blower
  */
-public enum PhenomenonVocabulary
-{
+public enum PhenomenonVocabulary {
     /**
      * The Climate and Forecast standard names
+     * 
      * @see http://cfconventions.org/
      */
     CLIMATE_AND_FORECAST,

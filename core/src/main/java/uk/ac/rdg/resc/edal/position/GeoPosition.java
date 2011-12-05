@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2009 The University of Reading
+/*******************************************************************************
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,18 +24,33 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.position;
 
 /**
- * <p>Defines the position of a point in four-dimensional space and time.</p>
- * @author Jon
+ * <p>
+ * Defines the position of a point in four-dimensional space and time.
+ * </p>
+ * 
+ * @author Jon Blower
  */
 public interface GeoPosition {
-
+    /**
+     * @return the {@link HorizontalPosition} component of this
+     *         {@link GeoPosition}
+     */
     public HorizontalPosition getHorizontalPosition();
+
+    /**
+     * @return the {@link VerticalPosition} component of this
+     *         {@link GeoPosition}
+     */
     public VerticalPosition getVerticalPosition();
+
+    /**
+     * @return the {@link TimePosition} component of this {@link GeoPosition}
+     */
     public TimePosition getTimePosition();
 
 }

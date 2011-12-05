@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal.coverage;
 
@@ -39,17 +39,33 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * Objects of this type can be rendered simply into maps (e.g. for WMS GetMap
  * operations), and may commonly be created by extracting data from a larger
  * GridSeriesFeature.
- * @param <R> The type of the value returned by the coverage; for a compound
- * coverage this type will be {@link Record}.
- * @author Jon
+ * 
+ * @param <R>
+ *            The type of the value returned by the coverage; for a compound
+ *            coverage this type will be {@link Record}.
+ * @author Jon Blower
  */
-public interface GridCoverage2D<R>
-        extends DiscreteCoverage<HorizontalPosition, GridCell2D, R> {
-    
-    @Override public HorizontalGrid getDomain();
+public interface GridCoverage2D<R> extends DiscreteCoverage<HorizontalPosition, GridCell2D, R> {
 
+    @Override
+    public HorizontalGrid getDomain();
+
+    /**
+     * Gets the value of the coverage at given coordinates
+     * 
+     * @param coords
+     *            the grid coordinates of the desired value
+     * @return the value of the coverage
+     */
     public R evaluate(GridCoordinates2D coords);
-    public List<R> evaluate(List<GridCoordinates2D> coords);
 
+    /**
+     * Gets the values of the coverage at a given list of coordinates
+     * 
+     * @param coords
+     *            the grid coordinates of the desired values
+     * @return a list of values at the given coordinates
+     */
+    public List<R> evaluate(List<GridCoordinates2D> coords);
 
 }
