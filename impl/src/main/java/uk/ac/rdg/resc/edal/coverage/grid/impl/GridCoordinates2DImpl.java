@@ -8,7 +8,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
  * @author Jon
  * @author Guy Griffiths
  */
-public final class GridCoordinatesImpl implements GridCoordinates2D {
+public class GridCoordinates2DImpl implements GridCoordinates2D {
 
     private final int xIndex;
     private final int yIndex;
@@ -21,7 +21,7 @@ public final class GridCoordinatesImpl implements GridCoordinates2D {
      * @param otherCoords
      *            The remaining coordinates
      */
-    public GridCoordinatesImpl(int xIndex, int yIndex) {
+    public GridCoordinates2DImpl(int xIndex, int yIndex) {
         this.xIndex = xIndex;
         this.yIndex = yIndex;
     }
@@ -36,7 +36,7 @@ public final class GridCoordinatesImpl implements GridCoordinates2D {
      * @throws IllegalArgumentException
      *             if {@code coords.length == 0}.
      */
-    public GridCoordinatesImpl(int[] coords) {
+    public GridCoordinates2DImpl(int[] coords) {
         if (coords == null)
             throw new NullPointerException();
         if (coords.length != 2)
@@ -64,11 +64,11 @@ public final class GridCoordinatesImpl implements GridCoordinates2D {
      *         the provided GridCoordinates2D object.
      * @see #clone()
      */
-    public static GridCoordinatesImpl convert(GridCoordinates2D gridCoordinates) {
-        if (gridCoordinates instanceof GridCoordinatesImpl) {
-            return (GridCoordinatesImpl) gridCoordinates;
+    public static GridCoordinates2DImpl convert(GridCoordinates2D gridCoordinates) {
+        if (gridCoordinates instanceof GridCoordinates2DImpl) {
+            return (GridCoordinates2DImpl) gridCoordinates;
         }
-        return new GridCoordinatesImpl(gridCoordinates.getXIndex(), gridCoordinates.getYIndex());
+        return new GridCoordinates2DImpl(gridCoordinates.getXIndex(), gridCoordinates.getYIndex());
     }
 
     /**
@@ -80,8 +80,8 @@ public final class GridCoordinatesImpl implements GridCoordinates2D {
      * @throws IllegalArgumentException
      *             if {@code dimension <= 0}
      */
-    public static GridCoordinatesImpl zero() {
-        return new GridCoordinatesImpl(new int[2]);
+    public static GridCoordinates2DImpl zero() {
+        return new GridCoordinates2DImpl(new int[2]);
     }
 
     @Override
@@ -91,9 +91,9 @@ public final class GridCoordinatesImpl implements GridCoordinates2D {
 
     /**
      * <p>
-     * Returns a new {@link GridCoordinatesImpl} object that is a copy of this
+     * Returns a new {@link GridCoordinates2DImpl} object that is a copy of this
      * object. There is generally no need to call this method as
-     * {@link GridCoordinatesImpl} objects are immutable and can be reused
+     * {@link GridCoordinates2DImpl} objects are immutable and can be reused
      * freely.
      * </p>
      * <p>
@@ -103,13 +103,13 @@ public final class GridCoordinatesImpl implements GridCoordinates2D {
      * concrete implementations.
      * </p>
      * 
-     * @return a new {@link GridCoordinatesImpl} object that is a copy of this
+     * @return a new {@link GridCoordinates2DImpl} object that is a copy of this
      *         object.
      * @see #convert(org.opengis.coverage.grid.GridCoordinates)
      */
     @Override
     public Object clone() {
-        return new GridCoordinatesImpl(xIndex,yIndex);
+        return new GridCoordinates2DImpl(xIndex,yIndex);
     }
 
     @Override

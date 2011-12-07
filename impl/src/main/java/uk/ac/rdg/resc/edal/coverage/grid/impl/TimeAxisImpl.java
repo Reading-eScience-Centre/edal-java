@@ -1,6 +1,5 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -11,26 +10,36 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
 import uk.ac.rdg.resc.edal.util.Extents;
 
+/**
+ * An implementation of a {@link TimeAxis}
+ * 
+ * @author Jon Blower
+ * @author Guy Griffiths
+ * 
+ */
 public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> implements TimeAxis {
 
     private TimePosition[] axisValues;
     private final CalendarSystem calSys;
-    
+
     private boolean reversed;
-    
+
     public TimeAxisImpl(String name, TimePosition[] axisValues) {
         super(name);
-        this.calSys = axisValues[0].getCalendarSystem(); 
+        this.calSys = axisValues[0].getCalendarSystem();
         init(axisValues);
     }
-    
+
     public TimeAxisImpl(String name, List<TimePosition> axisValues) {
         super(name);
-        this.calSys = axisValues.get(0).getCalendarSystem(); 
+        this.calSys = axisValues.get(0).getCalendarSystem();
         init(axisValues.toArray(new TimePosition[0]));
     }
-    
-    private void init(TimePosition[] axisValues){
+
+    /*
+     * Initialise the axis from an array of values
+     */
+    private void init(TimePosition[] axisValues) {
         if (axisValues.length == 0) {
             throw new IllegalArgumentException("Zero-length array");
         }
@@ -53,8 +62,8 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
 
         checkAscending();
     }
-    
-    /**
+
+    /*
      * Checks that the axis values ascend or descend monotonically, throwing an
      * IllegalArgumentException if not.
      */
@@ -63,8 +72,9 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
         TimePosition lastT = axisValues[0];
         for (int i = 1; i < axisValues.length; i++) {
             if (axisValues[i].getValue() <= prevVal) {
-                System.out.println(axisValues[i]+" is before "+lastT);
-                throw new IllegalArgumentException("Coordinate values must increase or decrease monotonically");
+                System.out.println(axisValues[i] + " is before " + lastT);
+                throw new IllegalArgumentException(
+                        "Coordinate values must increase or decrease monotonically");
             }
             lastT = axisValues[i];
             prevVal = axisValues[i].getValue();
@@ -79,7 +89,8 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
 
     @Override
     protected TimePosition extendLastValue(TimePosition lastVal, TimePosition secondLastVal) {
-        long tVal = (long) (lastVal.getValue() + 0.5 * (lastVal.getValue() - secondLastVal.getValue()));
+        long tVal = (long) (lastVal.getValue() + 0.5 * (lastVal.getValue() - secondLastVal
+                .getValue()));
         return new TimePositionImpl(tVal);
     }
 
@@ -96,30 +107,32 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
     @Override
     public int findIndexOf(TimePosition time) {
         int index = Arrays.binarySearch(axisValues, time);
-        if(index >= 0){
+        if (index >= 0) {
             return maybeReverseIndex(index);
         } else {
-            int insertionPoint = -(index+1);
-            if(insertionPoint == axisValues.length || insertionPoint == 0){
+            int insertionPoint = -(index + 1);
+            if (insertionPoint == axisValues.length || insertionPoint == 0) {
                 return -1;
             }
-            if(Math.abs(axisValues[insertionPoint].getValue() - time.getValue()) <= 
-               Math.abs(axisValues[insertionPoint-1].getValue() - time.getValue())){
+            if (Math.abs(axisValues[insertionPoint].getValue() - time.getValue()) <= Math
+                    .abs(axisValues[insertionPoint - 1].getValue() - time.getValue())) {
                 return maybeReverseIndex(insertionPoint);
             } else {
-                return maybeReverseIndex(insertionPoint-1);
+                return maybeReverseIndex(insertionPoint - 1);
             }
         }
     }
 
-    /** If the array has been reversed, we need to reverse the index */
+    /*
+     * If the array has been reversed, we need to reverse the index
+     */
     private int maybeReverseIndex(int index) {
         if (reversed)
             return axisValues.length - 1 - index;
         else
             return index;
     }
-    
+
     @Override
     public Extent<TimePosition> getCoordinateBounds(int index) {
         int upperIndex = index + 1;
@@ -128,14 +141,16 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
         if (index == 0) {
             lowerBound = getCoordinateExtent().getLow();
         } else {
-            lowerBound = new TimePositionImpl((long) (0.5 * (axisValues[index].getValue() + axisValues[lowerIndex].getValue())));
+            lowerBound = new TimePositionImpl(
+                    (long) (0.5 * (axisValues[index].getValue() + axisValues[lowerIndex].getValue())));
         }
 
         TimePosition upperBound;
         if (index == size() - 1) {
             upperBound = getCoordinateExtent().getHigh();
         } else {
-            upperBound = new TimePositionImpl((long) (0.5 * (axisValues[upperIndex].getValue() + axisValues[index].getValue())));
+            upperBound = new TimePositionImpl(
+                    (long) (0.5 * (axisValues[upperIndex].getValue() + axisValues[index].getValue())));
         }
 
         return Extents.newExtent(lowerBound, upperBound);
@@ -145,29 +160,9 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
     public TimePosition getCoordinateValue(int index) {
         return axisValues[maybeReverseIndex(index)];
     }
-    
+
     @Override
     public int size() {
         return axisValues.length;
-    }
-    
-    public static void main(String[] args) {
-        List<TimePosition> axisValues = new ArrayList<TimePosition>();
-        for(int minute = 0; minute < 60; minute += 5){
-            TimePosition t = new TimePositionImpl(2011, 8, 31, 9, minute, 0);
-            axisValues.add(t);
-        }
-        TimeAxis a = new TimeAxisImpl("time", axisValues);
-        for(int i=0;i<60;i++){
-            TimePosition t1 = new TimePositionImpl(2011, 8, 31, 9, i, 30);
-            int ind = a.findIndexOf(t1);
-            if(ind >=0)
-                System.out.println("Index of t1:"+ind+"    "+t1+" => "+a.getCoordinateValue(ind));
-            else
-                System.out.println("Index of t1:"+ind+"    "+t1+" => not in range");
-        }
-        for(int i=0; i<a.size(); i++){
-            System.out.println(i+":"+a.getCoordinateValue(i));
-        }
     }
 }

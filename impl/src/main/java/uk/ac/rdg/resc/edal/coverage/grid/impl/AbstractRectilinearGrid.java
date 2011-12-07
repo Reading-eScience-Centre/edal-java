@@ -51,7 +51,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         }
         int xIndex = getXAxis().findIndexOf(pos.getX());
         int yIndex = getYAxis().findIndexOf(pos.getY());
-        return new GridCoordinatesImpl(xIndex, yIndex);
+        return new GridCoordinates2DImpl(xIndex, yIndex);
     }
 
     @Override
@@ -65,7 +65,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         int yIMax = getYAxis().getIndexExtent().getHigh() + 1;
         for (Integer yIndex = yIMin; yIndex < yIMax; yIndex++) {
             for (Integer xIndex = xIMin; xIndex < xIMax; xIndex++) {
-                gridCells.add(new GridCell2DRectangle(new GridCoordinatesImpl(xIndex, yIndex),
+                gridCells.add(new GridCell2DRectangle(new GridCoordinates2DImpl(xIndex, yIndex),
                                                    getXAxis().getCoordinateBounds(xIndex).getLow(),
                                                    getYAxis().getCoordinateBounds(yIndex).getLow(),
                                                    getXAxis().getCoordinateBounds(xIndex).getHigh(),
@@ -106,7 +106,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
 
     @Override
     public GridCell2D getGridCell(int xIndex, int yIndex) {
-        GridCoordinates2D gridCoords = new GridCoordinatesImpl(xIndex,yIndex);
+        GridCoordinates2D gridCoords = new GridCoordinates2DImpl(xIndex,yIndex);
         Extent<Double> xExtents = getXAxis().getCoordinateBounds(xIndex);
         Extent<Double> yExtents = getYAxis().getCoordinateBounds(yIndex);
         return new GridCell2DRectangle(gridCoords, xExtents.getLow(), yExtents.getLow(),

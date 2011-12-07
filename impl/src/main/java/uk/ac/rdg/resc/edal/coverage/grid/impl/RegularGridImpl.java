@@ -54,14 +54,19 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
      *            the number of grid points in the y direction
      */
     public RegularGridImpl(BoundingBox bbox, int width, int height) {
-        this(bbox.getMinX(), bbox.getMinY(), bbox.getMaxX(), bbox.getMaxY(), bbox.getCoordinateReferenceSystem(),
-                width, height);
+        this(bbox.getMinX(), bbox.getMinY(), bbox.getMaxX(), bbox.getMaxY(), bbox
+                .getCoordinateReferenceSystem(), width, height);
     }
 
     /**
+     * Constructs a RegularGrid from the given bounding box, with the given
+     * width and height. Note that the bounding box represents the edges of the
+     * grid, whereas grid coordinates represent the centre of the grid points.
+     * 
      * @param bbox
-     *            [minx, miny, maxx, maxy]
+     *            the bounding box, in the form: [minx, miny, maxx, maxy]
      * @param crs
+     *            the {@link CoordinateReferenceSystem} of the bounding box
      * @param width
      *            the number of grid points in the x direction
      * @param height
@@ -71,8 +76,28 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
         this(bbox[0], bbox[1], bbox[2], bbox[3], crs, width, height);
     }
 
-    public RegularGridImpl(double minx, double miny, double maxx, double maxy, CoordinateReferenceSystem crs,
-            int width, int height) {
+    /**
+     * Constructs a RegularGrid from the given bounding box, with the given
+     * width and height. Note that the bounding box represents the edges of the
+     * grid, whereas grid coordinates represent the centre of the grid points.
+     * 
+     * @param minx
+     *            the minimum x value of the bounding box
+     * @param miny
+     *            the minimum y value of the bounding box
+     * @param maxx
+     *            the maximum x value of the bounding box
+     * @param maxy
+     *            the maximum y value of the bounding box
+     * @param crs
+     *            the {@link CoordinateReferenceSystem}
+     * @param width
+     *            the number of grid points in the x-direction
+     * @param height
+     *            the number of grid points in the y-direction
+     */
+    public RegularGridImpl(double minx, double miny, double maxx, double maxy,
+            CoordinateReferenceSystem crs, int width, int height) {
         super(crs);
         if (maxx < minx || maxy < miny) {
             throw new IllegalArgumentException("Invalid bounding box");
@@ -92,12 +117,14 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
         boolean isLongitude = false;
 
         if (crs == null) {
-            xAxis = new RegularAxisImpl("Unknown X axis", firstXAxisValue, xSpacing, width, isLongitude);
+            xAxis = new RegularAxisImpl("Unknown X axis", firstXAxisValue, xSpacing, width,
+                    isLongitude);
             // y axis is very unlikely to be longitude
             yAxis = new RegularAxisImpl("Unknown Y axis", firstYAxisValue, ySpacing, height, false);
         } else {
             CoordinateSystem cs = crs.getCoordinateSystem();
-            xAxis = new RegularAxisImpl(cs.getAxis(0), firstXAxisValue, xSpacing, width, isLongitude);
+            xAxis = new RegularAxisImpl(cs.getAxis(0), firstXAxisValue, xSpacing, width,
+                    isLongitude);
             // y axis is very unlikely to be longitude
             yAxis = new RegularAxisImpl(cs.getAxis(1), firstYAxisValue, ySpacing, height, false);
         }
@@ -112,10 +139,10 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
     public RegularAxis getYAxis() {
         return yAxis;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof RegularGridImpl){
+        if (obj instanceof RegularGridImpl) {
             RegularGridImpl grid = (RegularGridImpl) obj;
             return grid.xAxis.equals(xAxis) && grid.yAxis.equals(yAxis) && super.equals(obj);
         } else {

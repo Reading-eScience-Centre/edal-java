@@ -56,8 +56,8 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.Vector2D;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * An implementation of {@link FeatureCollection} which contains
@@ -309,17 +309,12 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 
     
     public static void main(String[] args) throws IOException {
-        NcGridSeriesFeatureCollection nc = new NcGridSeriesFeatureCollection("testId", "testName", "/home/guy/MIPe2e/gabbard/*.nc");
-        NcGridSeriesFeature feature = (NcGridSeriesFeature) nc.getFeatureById("analysed_sst");
-        List<Float> values = feature.getCoverage().evaluate(
-                feature.getCoverage().getDomain().getTimeAxis().getIndexExtent(),
-                Extents.emptyExtent(Integer.class),
-                Extents.newExtent(0, 0),
-                Extents.newExtent(0, 0));
-        System.out.println("[");
-        for(Float f:values){
-            System.out.println(f+",");
+        NcGridSeriesFeatureCollection nc = new NcGridSeriesFeatureCollection("testId", "testName", "/home/guy/MIPe2e/makassar/*.nc");
+        for(String feature:nc.getFeatureIds())
+            System.out.println(feature);
+        NcGridSeriesFeature feature = (NcGridSeriesFeature) nc.getFeatureById("sozowind");
+        for(TimePosition tp:feature.getCoverage().getDomain().getTimeAxis().getCoordinateValues()){
+            System.out.println(tp);
         }
-        System.out.println("]");
     }
 }

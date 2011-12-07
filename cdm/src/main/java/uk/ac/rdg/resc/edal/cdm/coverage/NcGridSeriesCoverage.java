@@ -28,6 +28,7 @@
 package uk.ac.rdg.resc.edal.cdm.coverage;
 
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ import uk.ac.rdg.resc.edal.coverage.RangeMetadataImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.GridSeriesDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
@@ -76,6 +78,7 @@ public class NcGridSeriesCoverage extends
     private Map<TimePosition, VariableAndTIndex> tPosToVariable;
 
     private List<Float> values = null;
+    private GridSeriesDomain domain;
 
     public NcGridSeriesCoverage(Variable variable, HorizontalGrid hGrid, VerticalAxis vAxis,
             TimeAxis tAxis) {
@@ -128,6 +131,8 @@ public class NcGridSeriesCoverage extends
         String name = tAxis.getName();
         Collections.sort(values);
         this.tAxis = new TimeAxisImpl(name, values);
+        // Update the domain
+        domain = new GridSeriesDomainImpl(hGrid, vAxis, this.tAxis);
     }
 
     @Override
@@ -225,6 +230,8 @@ public class NcGridSeriesCoverage extends
                         startI = tPosToVariable.get(time).getTIndex();
                     }
                 }
+                if (endI == null)
+                    endI = startI;
                 /*
                  * Once we have finished, we still need to add the final Range
                  */
@@ -273,20 +280,57 @@ public class NcGridSeriesCoverage extends
 
     @Override
     public GridSeriesDomain getDomain() {
-        return new GridSeriesDomainImpl(hGrid, vAxis, tAxis);
+        if (domain == null)
+            domain = new GridSeriesDomainImpl(hGrid, vAxis, tAxis);
+        return domain;
     }
 
     @Override
     public List<Float> getValues() {
         if (values == null) {
-            Extent<Integer> xExtent = hGrid.getXAxis().getIndexExtent();
-            Extent<Integer> yExtent = hGrid.getYAxis().getIndexExtent();
-            Extent<Integer> zExtent = vAxis.getIndexExtent();
-            Extent<Integer> tExtent = tAxis.getIndexExtent();
-            values = evaluate(tExtent, zExtent, yExtent, xExtent);
+            values = new AbstractList<Float>() {
+                @Override
+                public Float get(int index) {
+                    GridCoordinates4D gC = getDomain().getComponentsOf(index);
+                    return evaluate(gC.getTIndex(), gC.getZIndex(), gC.getYIndex(), gC.getXIndex());
+                }
+
+                @Override
+                public int size() {
+                    return (int) getDomain().size();
+                }
+            };
         }
         return values;
+        /*
+         * Note: The method below works. It is slow on the first access, and
+         * then fast on subsequent ones. However, it uses a lot of memory, and
+         * is overkill if we only want to extract a few values.
+         * 
+         * The method above is slower, but uses very little memory, and will
+         * take the same amount of time for each individual value extracted
+         */
+//        if (values == null) {
+//            Extent<Integer> xExtent = null;
+//            Extent<Integer> yExtent = null;
+//            Extent<Integer> zExtent = null;
+//            Extent<Integer> tExtent = null;
+//            if(hGrid != null){
+//                xExtent = hGrid.getXAxis().getIndexExtent();
+//                yExtent = hGrid.getYAxis().getIndexExtent();
+//            }
+//            if(vAxis != null){
+//                zExtent = vAxis.getIndexExtent();
+//            }
+//            if(tAxis != null){
+//                tExtent = tAxis.getIndexExtent();
+//            }
+//            values = evaluate(tExtent, zExtent, yExtent, xExtent);
+//        }
+//        return values;
     }
+    
+
 
     @Override
     public String getDescription() {

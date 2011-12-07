@@ -11,10 +11,12 @@ import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCell4DRectangle;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates4DImpl;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
@@ -56,7 +58,6 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
      *            The calendar system in use
      */
     public GridSeriesDomainImpl(HorizontalGrid hGrid, VerticalAxis vAxis, TimeAxis tAxis) {
-        super();
         this.hGrid = hGrid;
         this.vAxis = vAxis;
         this.tAxis = tAxis;
@@ -194,18 +195,38 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
     @Override
     public long findIndexOf(GeoPosition position) {
         long hIndex = hGrid.findIndexOf(position.getHorizontalPosition());
-        long hRange = hGrid.getGridExtent().size();
         int vIndex = 0;
-        int vRange = 1;
         if(vAxis != null){
             vIndex = vAxis.findIndexOf(position.getVerticalPosition().getZ());
-            vRange = vAxis.getIndexExtent().getHigh() + 1 - vAxis.getIndexExtent().getLow();
         }
         int tIndex = 0;
         if(tAxis != null){
             tIndex = tAxis.findIndexOf(position.getTimePosition());
         }
-        return hIndex + hRange * vIndex + hRange * vRange * tIndex;
+        return getIndex(hIndex, vIndex, tIndex);
     }
 
+    @Override
+    public long getIndex(long hIndex, int vIndex, int tIndex) {
+        long hSize = hGrid.getGridExtent().size();
+        int vSize = 1;
+        if(vAxis != null){
+            vSize = vAxis.size();
+        }
+        return hIndex + hSize * vIndex + hSize * vSize * tIndex;
+    }
+
+    @Override
+    public GridCoordinates4D getComponentsOf(long index) {
+        int xSize = hGrid.getXAxis().size();
+        int ySize = hGrid.getYAxis().size();
+        int zSize = 1;
+        if(vAxis != null)
+            zSize = vAxis.size();
+        int tComp = (int) ((index - (index % (xSize*ySize*zSize)))/(xSize*ySize*zSize));
+        int zComp = (int) ((index-tComp*xSize*ySize*zSize-(index%(xSize*ySize)))/(xSize*ySize));
+        int yComp = (int) ((index-tComp*xSize*ySize*zSize-zComp*xSize*ySize-(index%xSize))/(xSize));
+        int xComp = (int) (index-tComp*xSize*ySize*zSize-zComp*xSize*ySize-yComp*xSize);
+        return new GridCoordinates4DImpl(xComp, yComp, zComp, tComp);
+    }
 }
