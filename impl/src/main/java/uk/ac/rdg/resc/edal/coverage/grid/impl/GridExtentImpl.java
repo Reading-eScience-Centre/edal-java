@@ -7,8 +7,8 @@ import uk.ac.rdg.resc.edal.util.Extents;
 
 public final class GridExtentImpl implements GridExtent {
 
-    private final GridCoordinatesImpl low;
-    private final GridCoordinatesImpl high;
+    private final GridCoordinates2DImpl low;
+    private final GridCoordinates2DImpl high;
     // These are calculated from the GridCoordinates upon construction
     private transient final long size;
 
@@ -34,8 +34,8 @@ public final class GridExtentImpl implements GridExtent {
         }
         // We ensure that the internal GridCoordinates objects are instances of
         // GridCoordinatesImpl to ensure that they are immutable
-        this.low = GridCoordinatesImpl.convert(low);
-        this.high = GridCoordinatesImpl.convert(high);
+        this.low = GridCoordinates2DImpl.convert(low);
+        this.high = GridCoordinates2DImpl.convert(high);
 
         /*
          * int * int -> int, EVEN WHEN RESULT IS TOO BIG
@@ -46,8 +46,8 @@ public final class GridExtentImpl implements GridExtent {
     }
     
     public GridExtentImpl(Extent<Integer> xExtent, Extent<Integer> yExtent) {
-        this(new GridCoordinatesImpl(xExtent.getLow(), yExtent.getLow()),
-                new GridCoordinatesImpl(xExtent.getHigh(),yExtent.getHigh()));
+        this(new GridCoordinates2DImpl(xExtent.getLow(), yExtent.getLow()),
+                new GridCoordinates2DImpl(xExtent.getHigh(),yExtent.getHigh()));
     }
 
     /**
@@ -60,7 +60,7 @@ public final class GridExtentImpl implements GridExtent {
      *             if any of the high coordinates is less than zero.
      */
     public GridExtentImpl(GridCoordinates2D high) {
-        this(GridCoordinatesImpl.zero(), high);
+        this(GridCoordinates2DImpl.zero(), high);
     }
 
     /**
@@ -75,7 +75,7 @@ public final class GridExtentImpl implements GridExtent {
      *             if any of the high coordinates is less than zero.
      */
     public GridExtentImpl(int highCoordX, int highCoordY) {
-        this(new GridCoordinatesImpl(highCoordX, highCoordY));
+        this(new GridCoordinates2DImpl(highCoordX, highCoordY));
     }
 
     /**
@@ -135,7 +135,7 @@ public final class GridExtentImpl implements GridExtent {
      *         <b>inclusive</b>.
      */
     @Override
-    public GridCoordinatesImpl getLow() {
+    public GridCoordinates2DImpl getLow() {
         return low;
     }
 
@@ -147,7 +147,7 @@ public final class GridExtentImpl implements GridExtent {
      *         <b>inclusive</b>.
      */
     @Override
-    public GridCoordinatesImpl getHigh() {
+    public GridCoordinates2DImpl getHigh() {
         return high;
     }
     

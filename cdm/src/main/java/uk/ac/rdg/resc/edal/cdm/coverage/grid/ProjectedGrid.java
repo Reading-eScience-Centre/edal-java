@@ -45,7 +45,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractHorizontalGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinatesImpl;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -107,7 +107,7 @@ public class ProjectedGrid extends AbstractHorizontalGrid {
         int j = this.yAxis.findIndexOf(point.getY());
         if (i < 0 || j < 0)
             return null;
-        return new GridCoordinatesImpl(i, j);
+        return new GridCoordinates2DImpl(i, j);
     }
 
     /**

@@ -42,7 +42,7 @@ import uk.ac.rdg.resc.edal.cdm.coverage.grid.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinatesImpl;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
@@ -135,7 +135,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
         // the neighbours
         Cell cell = this.curvGrid.getCell(lutCoords[0], lutCoords[1]);
         if (cell.contains(lonLatPos))
-            return new GridCoordinatesImpl(lutCoords);
+            return new GridCoordinates2DImpl(lutCoords);
 
         // We do a gradient-descent method to find the true nearest
         // neighbour
@@ -167,11 +167,11 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
         // actually
         // contained within one of the cell's neighbours
         if (cell.contains(lonLatPos)) {
-            return new GridCoordinatesImpl(cell.getI(), cell.getJ());
+            return new GridCoordinates2DImpl(cell.getI(), cell.getJ());
         }
         for (Cell neighbour : cell.getNeighbours()) {
             if (neighbour.contains(lonLatPos)) {
-                return new GridCoordinatesImpl(neighbour.getI(), neighbour.getJ());
+                return new GridCoordinates2DImpl(neighbour.getI(), neighbour.getJ());
             }
         }
 
@@ -180,7 +180,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
          * the contains() checks. This is probably OK in the middle of a grid,
          * but we might need to be careful at the edges
          */
-        return new GridCoordinatesImpl(cell.getI(), cell.getJ());
+        return new GridCoordinates2DImpl(cell.getI(), cell.getJ());
     }
 
     @Override
@@ -211,7 +211,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
             
             @Override
             public GridCoordinates2D getGridCoordinates() {
-                return new GridCoordinatesImpl(cell.getI(), cell.getJ());
+                return new GridCoordinates2DImpl(cell.getI(), cell.getJ());
             }
             
             @Override

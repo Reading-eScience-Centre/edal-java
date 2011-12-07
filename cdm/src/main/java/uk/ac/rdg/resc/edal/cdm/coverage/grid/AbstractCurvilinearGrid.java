@@ -49,15 +49,17 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * 
  * @author Jon Blower
  */
-abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
+public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
     protected final CurvilinearCoords curvGrid;
     private final GridExtent gridExtent;
+    private BoundingBox coordinateExtent;
 
     protected AbstractCurvilinearGrid(CurvilinearCoords curvGrid) {
         // All points will be returned in WGS84 lon-lat
         super(DefaultGeographicCRS.WGS84);
         this.curvGrid = curvGrid;
-        this.gridExtent = new GridExtentImpl(curvGrid.getNi(), curvGrid.getNj());
+        this.gridExtent = new GridExtentImpl(curvGrid.getNi()-1, curvGrid.getNj()-1);
+        coordinateExtent = curvGrid.getBoundingBox();
     }
 
     @Override
@@ -88,7 +90,7 @@ abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
 
             @Override
             public Extent<Integer> getIndexExtent() {
-                return Extents.newExtent(0, curvGrid.getNi());
+                return Extents.newExtent(0, curvGrid.getNi()-1);
             }
         };
     }
@@ -111,14 +113,15 @@ abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
 
             @Override
             public Extent<Integer> getIndexExtent() {
-                return Extents.newExtent(0, curvGrid.getNj());
+                return Extents.newExtent(0, curvGrid.getNj()-1);
             }
         };
     }
 
     @Override
     public BoundingBox getCoordinateExtent() {
-        return curvGrid.getBoundingBox();
+//        return curvGrid.getBoundingBox();
+        return coordinateExtent;
     }
 
     @Override

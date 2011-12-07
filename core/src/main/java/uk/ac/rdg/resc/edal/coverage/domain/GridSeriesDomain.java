@@ -32,6 +32,7 @@ import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
@@ -103,4 +104,14 @@ public interface GridSeriesDomain extends DiscreteDomain<GeoPosition, GridCell4D
     @Override
     public List<GridCell4D> getDomainObjects();
 
+    /**
+     * This method returns the overall index of a point with the specified axis indices
+     * @param hIndex the index in the horizontal grid
+     * @param vIndex the index in the vertical axis
+     * @param tIndex the index in the time axis
+     * @return the overall index, which will correspond to the position in findIndexOf()
+     */
+    public long getIndex(long hIndex, int vIndex, int tIndex);
+    
+    public GridCoordinates4D getComponentsOf(long index);
 }
