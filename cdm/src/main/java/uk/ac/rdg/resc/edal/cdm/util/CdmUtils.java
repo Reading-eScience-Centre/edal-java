@@ -27,6 +27,7 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.util;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -38,12 +39,18 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import ucar.nc2.Attribute;
 import ucar.nc2.Variable;
 import ucar.nc2.constants.AxisType;
+import ucar.nc2.constants.FeatureType;
 import ucar.nc2.dataset.CoordinateAxis;
 import ucar.nc2.dataset.CoordinateAxis1D;
 import ucar.nc2.dataset.CoordinateAxis1DTime;
 import ucar.nc2.dataset.CoordinateAxis2D;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridCoordSystem;
+import ucar.nc2.dt.GridDataset;
+import ucar.nc2.dt.GridDatatype;
+import ucar.nc2.dt.TypedDatasetFactory;
+import ucar.nc2.ft.FeatureDataset;
+import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.cdm.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.LookUpTableGrid;
@@ -265,5 +272,82 @@ public final class CdmUtils {
         String fileType = nc.getFileTypeId();
         return "netCDF".equals(fileType) || "HDF4".equals(fileType) ? DataReadingStrategy.SCANLINE
                 : DataReadingStrategy.BOUNDING_BOX;
+    }
+    
+    /**
+     * Opens the NetCDF dataset at the given location, using the dataset cache
+     * if {@code location} represents an NcML aggregation. We cannot use the
+     * cache for OPeNDAP or single NetCDF files because the underlying data may
+     * have changed and the NetcdfDataset cache may cache a dataset forever. In
+     * the case of NcML we rely on the fact that server administrators ought to
+     * have set a "recheckEvery" parameter for NcML aggregations that may change
+     * with time. It is desirable to use the dataset cache for NcML aggregations
+     * because they can be time-consuming to assemble and we don't want to do
+     * this every time a map is drawn.
+     * 
+     * @param location
+     *            The location of the data: a local NetCDF file, an NcML
+     *            aggregation file or an OPeNDAP location, {@literal i.e.}
+     *            anything that can be passed to
+     *            NetcdfDataset.openDataset(location).
+     * @return a {@link NetcdfDataset} object for accessing the data at the
+     *         given location.
+     * @throws IOException
+     *             if there was an error reading from the data source.
+     */
+    public static NetcdfDataset openDataset(String location) throws IOException {
+        NetcdfDataset nc;
+        if (location.endsWith(".xml") || location.endsWith(".ncml")) {
+            // We use the cache of NetcdfDatasets to read NcML aggregations
+            // as they can be time-consuming to put together. If the underlying
+            // data can change we rely on the server admin setting the
+            // "recheckEvery" parameter in the aggregation file.
+            nc = NetcdfDataset.acquireDataset(location, null);
+        } else {
+            // For local single files and OPeNDAP datasets we don't use the
+            // cache, to ensure that we are always reading the most up-to-date
+            // data. There is a small possibility that the dataset cache will
+            // have swallowed up all available file handles, in which case
+            // the server admin will need to increase the number of available
+            // handles on the server.
+            nc = NetcdfDataset.openDataset(location);
+        }
+        return nc;
+    }
+    
+    /** Closes the given dataset, logging any exceptions at debug level */
+    public static void closeDataset(NetcdfDataset nc) {
+        if (nc == null)
+            return;
+        try {
+            nc.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            System.out.println("IOException closing " + nc.getLocation());
+        }
+    }
+
+    public static GridDatatype getGridDatatype(NetcdfDataset ncDataset, String varId) throws IOException {
+        GridDataset gd = getGridDataset(ncDataset);
+        if (gd == null) {
+            throw new IllegalArgumentException("Dataset does not contain gridded data");
+        }
+        GridDatatype grid = gd.findGridDatatype(varId);
+        if (grid == null) {
+            throw new IllegalArgumentException("No variable with name " + varId);
+        }
+        return grid;
+    }
+
+    /** Gets a GridDataset from the given NetcdfDataset */
+    public static GridDataset getGridDataset(NetcdfDataset ncDataset) throws IOException {
+        FeatureDataset featureDS = FeatureDatasetFactoryManager.wrap(FeatureType.GRID, ncDataset,
+                null, null);
+        if (featureDS == null) {
+            throw new IOException("No grid datasets found in file: " + ncDataset.getLocation());
+        }
+        FeatureType fType = featureDS.getFeatureType();
+        assert (fType == FeatureType.GRID);
+        return (GridDataset) featureDS;
     }
 }
