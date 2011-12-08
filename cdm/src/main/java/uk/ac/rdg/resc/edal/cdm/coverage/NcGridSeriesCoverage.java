@@ -39,11 +39,15 @@ import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.Variable;
+import ucar.nc2.dataset.NetcdfDataset;
+import ucar.nc2.dataset.VariableDS;
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.UnitVocabulary;
+import uk.ac.rdg.resc.edal.cdm.FilenameVarIdTimeIndex;
+import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.Coverage;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
@@ -75,29 +79,34 @@ public class NcGridSeriesCoverage extends
     private TimeAxis tAxis;
     private RangeMetadata metadata;
 
-    private Map<TimePosition, VariableAndTIndex> tPosToVariable;
+    private Map<TimePosition, FilenameVarIdTimeIndex> tPosToVariable;
 
     private List<Float> values = null;
     private GridSeriesDomain domain;
 
-    public NcGridSeriesCoverage(Variable variable, HorizontalGrid hGrid, VerticalAxis vAxis,
-            TimeAxis tAxis) {
+    public NcGridSeriesCoverage(String filename, String varId, HorizontalGrid hGrid, VerticalAxis vAxis,
+            TimeAxis tAxis, String description, String units) {
         this.hGrid = hGrid;
         this.vAxis = vAxis;
         this.tAxis = tAxis;
-        tPosToVariable = new HashMap<TimePosition, VariableAndTIndex>();
+        tPosToVariable = new HashMap<TimePosition, FilenameVarIdTimeIndex>();
         if (tAxis != null) {
             int tindex = 0;
             for (TimePosition t : tAxis.getCoordinateValues()) {
-                tPosToVariable.put(t, new VariableAndTIndex(variable, tindex));
+                tPosToVariable.put(t, new FilenameVarIdTimeIndex(filename, varId, tindex));
                 tindex++;
             }
         } else {
-            tPosToVariable.put(null, new VariableAndTIndex(variable, -1));
+            tPosToVariable.put(null, new FilenameVarIdTimeIndex(filename, varId, -1));
         }
-        metadata = new RangeMetadataImpl(variable.getDescription(), Phenomenon.getPhenomenon(
-                variable.getName(), PhenomenonVocabulary.CLIMATE_AND_FORECAST), Unit.getUnit(
-                variable.getUnitsString(), UnitVocabulary.UDUNITS), Float.class);
+        /*
+         * TODO
+         * Is varId OK here, or should we use something else?
+         * It came from var.getName()
+         */
+        metadata = new RangeMetadataImpl(description, Phenomenon.getPhenomenon(
+                varId, PhenomenonVocabulary.CLIMATE_AND_FORECAST), Unit.getUnit(
+                units, UnitVocabulary.UDUNITS), Float.class);
     }
 
     /**
@@ -108,7 +117,7 @@ public class NcGridSeriesCoverage extends
      * @param tAxis
      *            the {@link TimeAxis} of the new data
      */
-    public void addToCoverage(Variable variable, TimeAxis tAxis) {
+    public void addToCoverage(String filename, String varId, TimeAxis tAxis) {
         List<TimePosition> values = this.tAxis.getCoordinateValues();
         int tindex = 0;
         if (tAxis == null) {
@@ -120,7 +129,7 @@ public class NcGridSeriesCoverage extends
              * Add the new time to the map
              */
             if (!values.contains(t)) {
-                tPosToVariable.put(t, new VariableAndTIndex(variable, tindex));
+                tPosToVariable.put(t, new FilenameVarIdTimeIndex(filename, varId, tindex));
                 values.add(t);
             }
             tindex++;
@@ -143,19 +152,22 @@ public class NcGridSeriesCoverage extends
     @Override
     public Float evaluate(int tindex, int zindex, int yindex, int xindex) {
         TimePosition tPos = null;
-        VariableAndTIndex variableAndTIndex = null;
+        FilenameVarIdTimeIndex fileVarTimeIndex = null;
         Variable variable = null;
+        Float returnVal = null;
         if (tAxis != null) {
             tPos = tAxis.getCoordinateValue(tindex);
         }
-        variableAndTIndex = tPosToVariable.get(tPos);
-        variable = variableAndTIndex.getVariable();
-
-        List<Range> ranges = new ArrayList<Range>();
-        Float ret = null;
+        fileVarTimeIndex = tPosToVariable.get(tPos);
+        NetcdfDataset nc = null;
         try {
+            nc = CdmUtils.openDataset(fileVarTimeIndex.getFilename());
+            variable = CdmUtils.getGridDatatype(nc, fileVarTimeIndex.getVarId()).getVariable();
+    
+            List<Range> ranges = new ArrayList<Range>();
+            
             if (tAxis != null) {
-                ranges.add(new Range(variableAndTIndex.getTIndex(), variableAndTIndex.getTIndex()));
+                ranges.add(new Range(fileVarTimeIndex.getTIndex(), fileVarTimeIndex.getTIndex()));
             }
             if (vAxis != null) {
                 ranges.add(new Range(zindex, zindex));
@@ -166,7 +178,7 @@ public class NcGridSeriesCoverage extends
             }
             Array a = variable.read(ranges);
             if (a.getSize() == 1) {
-                ret = a.getFloat(0);
+                returnVal = a.getFloat(0);
             } else {
                 throw new InvalidRangeException();
             }
@@ -176,8 +188,10 @@ public class NcGridSeriesCoverage extends
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } finally {
+            CdmUtils.closeDataset(nc);
         }
-        return ret;
+        return returnVal;
     }
 
     @Override
@@ -186,9 +200,10 @@ public class NcGridSeriesCoverage extends
         List<Range> ranges = new ArrayList<Range>();
         List<Float> ret = new ArrayList<Float>();
 
-        List<Variable> variablesToRead = new ArrayList<Variable>();
+        List<FilenameVarIdTimeIndex> filesToRead = new ArrayList<FilenameVarIdTimeIndex>();
         List<Range> rangesToRead = new ArrayList<Range>();
 
+        NetcdfDataset nc = null;
         try {
             if (tAxis != null) {
                 /*
@@ -205,9 +220,9 @@ public class NcGridSeriesCoverage extends
                      * Get the variable at the current time index
                      */
                     TimePosition time = tAxis.getCoordinateValue(i);
-                    Variable varOfCurrentI = tPosToVariable.get(time).getVariable();
-                    if (variablesToRead.size() > 0
-                            && variablesToRead.get(variablesToRead.size() - 1) == varOfCurrentI) {
+                    FilenameVarIdTimeIndex varOfCurrentI = tPosToVariable.get(time);
+                    if (filesToRead.size() > 0
+                            && filesToRead.get(filesToRead.size() - 1) == varOfCurrentI) {
                         /*
                          * If we are still scanning through the same variable,
                          * update the final time index for this variable
@@ -226,7 +241,7 @@ public class NcGridSeriesCoverage extends
                          * Then add the new variable to the list, and set the
                          * start index in that variable
                          */
-                        variablesToRead.add(varOfCurrentI);
+                        filesToRead.add(varOfCurrentI);
                         startI = tPosToVariable.get(time).getTIndex();
                     }
                 }
@@ -242,7 +257,7 @@ public class NcGridSeriesCoverage extends
                  * axis indices will be equivalent to the entire coverage's axis
                  * indices
                  */
-                variablesToRead.add(tPosToVariable.get(null).getVariable());
+                filesToRead.add(tPosToVariable.get(null));
                 rangesToRead.add(new Range(tindexExtent.getLow(), tindexExtent.getHigh()));
             }
 
@@ -251,7 +266,7 @@ public class NcGridSeriesCoverage extends
              * the appropriate Ranges and read the results, adding to a
              * returnable list
              */
-            for (int i = 0; i < variablesToRead.size(); i++) {
+            for (int i = 0; i < filesToRead.size(); i++) {
                 ranges = new ArrayList<Range>();
                 if (tAxis != null) {
                     ranges.add(rangesToRead.get(i));
@@ -263,10 +278,15 @@ public class NcGridSeriesCoverage extends
                     ranges.add(new Range(yindexExtent.getLow(), yindexExtent.getHigh()));
                     ranges.add(new Range(xindexExtent.getLow(), xindexExtent.getHigh()));
                 }
-                Array a = variablesToRead.get(i).read(ranges);
+                
+                nc = CdmUtils.openDataset(filesToRead.get(i).getFilename());
+                VariableDS variable = CdmUtils.getGridDatatype(nc, filesToRead.get(i).getVarId())
+                        .getVariable();
+                Array a = variable.read(ranges);
                 while (a.hasNext()) {
                     ret.add(a.nextFloat());
                 }
+                CdmUtils.closeDataset(nc);
             }
         } catch (InvalidRangeException e) {
             // TODO Auto-generated catch block
@@ -287,21 +307,21 @@ public class NcGridSeriesCoverage extends
 
     @Override
     public List<Float> getValues() {
-        if (values == null) {
-            values = new AbstractList<Float>() {
-                @Override
-                public Float get(int index) {
-                    GridCoordinates4D gC = getDomain().getComponentsOf(index);
-                    return evaluate(gC.getTIndex(), gC.getZIndex(), gC.getYIndex(), gC.getXIndex());
-                }
-
-                @Override
-                public int size() {
-                    return (int) getDomain().size();
-                }
-            };
-        }
-        return values;
+//        if (values == null) {
+//            values = new AbstractList<Float>() {
+//                @Override
+//                public Float get(int index) {
+//                    GridCoordinates4D gC = getDomain().getComponentsOf(index);
+//                    return evaluate(gC.getTIndex(), gC.getZIndex(), gC.getYIndex(), gC.getXIndex());
+//                }
+//
+//                @Override
+//                public int size() {
+//                    return (int) getDomain().size();
+//                }
+//            };
+//        }
+//        return values;
         /*
          * Note: The method below works. It is slow on the first access, and
          * then fast on subsequent ones. However, it uses a lot of memory, and
@@ -310,24 +330,24 @@ public class NcGridSeriesCoverage extends
          * The method above is slower, but uses very little memory, and will
          * take the same amount of time for each individual value extracted
          */
-//        if (values == null) {
-//            Extent<Integer> xExtent = null;
-//            Extent<Integer> yExtent = null;
-//            Extent<Integer> zExtent = null;
-//            Extent<Integer> tExtent = null;
-//            if(hGrid != null){
-//                xExtent = hGrid.getXAxis().getIndexExtent();
-//                yExtent = hGrid.getYAxis().getIndexExtent();
-//            }
-//            if(vAxis != null){
-//                zExtent = vAxis.getIndexExtent();
-//            }
-//            if(tAxis != null){
-//                tExtent = tAxis.getIndexExtent();
-//            }
-//            values = evaluate(tExtent, zExtent, yExtent, xExtent);
-//        }
-//        return values;
+        if (values == null) {
+            Extent<Integer> xExtent = null;
+            Extent<Integer> yExtent = null;
+            Extent<Integer> zExtent = null;
+            Extent<Integer> tExtent = null;
+            if(hGrid != null){
+                xExtent = hGrid.getXAxis().getIndexExtent();
+                yExtent = hGrid.getYAxis().getIndexExtent();
+            }
+            if(vAxis != null){
+                zExtent = vAxis.getIndexExtent();
+            }
+            if(tAxis != null){
+                tExtent = tAxis.getIndexExtent();
+            }
+            values = evaluate(tExtent, zExtent, yExtent, xExtent);
+        }
+        return values;
     }
     
 
@@ -335,27 +355,5 @@ public class NcGridSeriesCoverage extends
     @Override
     public String getDescription() {
         return metadata.getDescription();
-    }
-
-    /*
-     * Simple class to hold a variable and the time index in that variable
-     */
-    private class VariableAndTIndex {
-        private final Variable variable;
-        private final int tIndex;
-
-        public VariableAndTIndex(Variable variable, int tIndex) {
-            super();
-            this.variable = variable;
-            this.tIndex = tIndex;
-        }
-
-        public Variable getVariable() {
-            return variable;
-        }
-
-        public int getTIndex() {
-            return tIndex;
-        }
     }
 }

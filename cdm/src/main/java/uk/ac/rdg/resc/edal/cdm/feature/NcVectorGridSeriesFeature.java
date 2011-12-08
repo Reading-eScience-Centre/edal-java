@@ -35,10 +35,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.cdm.DataReadingStrategy;
+import uk.ac.rdg.resc.edal.cdm.FilenameVarIdTimeIndex;
 import uk.ac.rdg.resc.edal.cdm.PixelMap;
 import uk.ac.rdg.resc.edal.cdm.coverage.NcVectorGridSeriesCoverage;
+import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.Coverage;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
@@ -66,7 +69,7 @@ import uk.ac.rdg.resc.edal.position.impl.Vector2DFloat;
 public class NcVectorGridSeriesFeature extends AbstractGridSeriesFeature<Vector2D<Float>> {
 
     private DataReadingStrategy dataReadingStrategy;
-    private Map<TimePosition, GridDatatypePair> tPosToGridMap = null;
+    private Map<TimePosition, FileDataPair> tPosToGridMap = null;
     private boolean noTimeAxis = false;
 
     /**
@@ -84,25 +87,27 @@ public class NcVectorGridSeriesFeature extends AbstractGridSeriesFeature<Vector2
      *            the {@link Coverage} for the feature
      * @param dataReadingStrategy
      *            the method used to read data
-     * @param xGrid
+     * @param xData
      *            the {@link GridDatatype} containing the x-components of the
      *            data
      * @param yGrid
      *            the {@link GridDatatype} containing the y-components of the
      *            data
      */
-    public NcVectorGridSeriesFeature(String name, String id, String description,
+    public NcVectorGridSeriesFeature
+//    (String name, String id, String description,
+//            FeatureCollection<? extends Feature> parentCollection,
+//            GridSeriesCoverage<Vector2D<Float>> coverage, DataReadingStrategy dataReadingStrategy,
+//            GridDatatype xGrid, GridDatatype yGrid)
+    (String xFilename, String xVarId, String yFilename, String yVarId, String name, String description,
+            GridSeriesCoverage<Vector2D<Float>> coverage,
             FeatureCollection<? extends Feature> parentCollection,
-            GridSeriesCoverage<Vector2D<Float>> coverage, DataReadingStrategy dataReadingStrategy,
-            GridDatatype xGrid, GridDatatype yGrid) {
-        super(name, id, description, parentCollection, coverage);
+            DataReadingStrategy dataReadingStrategy){
+        super(name, xVarId, description, parentCollection, coverage);
         this.dataReadingStrategy = dataReadingStrategy;
 
-        /*
-         * 
-         */
         TimeAxis tAxis = coverage.getDomain().getTimeAxis();
-        tPosToGridMap = new HashMap<TimePosition, GridDatatypePair>();
+        tPosToGridMap = new HashMap<TimePosition, FileDataPair>();
         if (tAxis != null) {
             /*
              * This maps time positions to the grid pair which contains them,
@@ -110,8 +115,9 @@ public class NcVectorGridSeriesFeature extends AbstractGridSeriesFeature<Vector2
              */
             int tindex = 0;
             for (TimePosition t : tAxis.getCoordinateValues()) {
-                GridDatatypePair gridPair = new GridDatatypePair(xGrid, yGrid, tindex);
-                tPosToGridMap.put(t, gridPair);
+                FileDataPair filePair = new FileDataPair(new FilenameVarIdTimeIndex(xFilename,
+                        xVarId, tindex), new FilenameVarIdTimeIndex(yFilename, yVarId, tindex));
+                tPosToGridMap.put(t, filePair);
                 tindex++;
             }
         } else {
@@ -119,7 +125,8 @@ public class NcVectorGridSeriesFeature extends AbstractGridSeriesFeature<Vector2
              * If we have no time axis, we will never merge another GridDatatype
              * pair into this grid. We use a null key, and set a flag
              */
-            tPosToGridMap.put(null, new GridDatatypePair(xGrid, yGrid, -1));
+            tPosToGridMap.put(null, new FileDataPair(new FilenameVarIdTimeIndex(xFilename, xVarId,
+                    -1), new FilenameVarIdTimeIndex(yFilename, yVarId, -1)));
             noTimeAxis = true;
         }
     }
@@ -142,8 +149,8 @@ public class NcVectorGridSeriesFeature extends AbstractGridSeriesFeature<Vector2
      * @param tAxis
      *            the {@link TimeAxis} of the new {@link GridDatatype}s
      */
-    public void mergeGrids(GridDatatype gridX, GridDatatype gridY, HorizontalGrid hGrid,
-            VerticalAxis vAxis, TimeAxis tAxis) {
+    public void mergeGrids(String xFilename, String xVarId, String yFilename, String yVarId,
+            HorizontalGrid hGrid, VerticalAxis vAxis, TimeAxis tAxis) {
         if (noTimeAxis) {
             throw new UnsupportedOperationException(
                     "The existing feature has no time axis to merge with");
@@ -158,13 +165,14 @@ public class NcVectorGridSeriesFeature extends AbstractGridSeriesFeature<Vector2
          * Merge the coverage
          */
         NcVectorGridSeriesCoverage coverage = (NcVectorGridSeriesCoverage) getCoverage();
-        coverage.addToCoverage(gridX.getVariable(), gridY.getVariable(), tAxis);
+        coverage.addToCoverage(xFilename, xVarId, yFilename, yVarId, tAxis);
         /*
          * Add all of the new time values to the map
          */
         int tindex = 0;
         for (TimePosition t : tAxis.getCoordinateValues()) {
-            GridDatatypePair gridPair = new GridDatatypePair(gridX, gridY, tindex);
+            FileDataPair gridPair = new FileDataPair(new FilenameVarIdTimeIndex(xFilename, xVarId,
+                    tindex), new FilenameVarIdTimeIndex(yFilename, yVarId, tindex));
             tPosToGridMap.put(t, gridPair);
             tindex++;
         }
@@ -205,14 +213,23 @@ public class NcVectorGridSeriesFeature extends AbstractGridSeriesFeature<Vector2
             float[] yData = new float[(int) targetDomain.size()];
             Arrays.fill(xData, Float.NaN);
             Arrays.fill(yData, Float.NaN);
-            GridDatatypePair grid;
             try {
-                grid = tPosToGridMap.get(tPos);
                 if (!noTimeAxis) {
-                    tindex = tPosToGridMap.get(tPos).getTIndex();
+                    /*
+                     * Both x and y should have the same time axes, and so we can pick either tindex
+                     */
+                    tindex = tPosToGridMap.get(tPos).getXData().getTIndex();
                 }
-                dataReadingStrategy.readData(tindex, zindex, grid.getXGrid(), pixelMap, xData);
-                dataReadingStrategy.readData(tindex, zindex, grid.getYGrid(), pixelMap, yData);
+                NetcdfDataset xNc = CdmUtils.openDataset(tPosToGridMap.get(tPos).getXData().getFilename());
+                GridDatatype xGrid = CdmUtils
+                        .getGridDatatype(xNc, tPosToGridMap.get(tPos).getXData().getVarId());
+                NetcdfDataset yNc = CdmUtils.openDataset(tPosToGridMap.get(tPos).getYData().getFilename());
+                GridDatatype yGrid = CdmUtils
+                        .getGridDatatype(yNc, tPosToGridMap.get(tPos).getYData().getVarId());
+                dataReadingStrategy.readData(tindex, zindex, xGrid, pixelMap, xData);
+                dataReadingStrategy.readData(tindex, zindex, yGrid, pixelMap, yData);
+                CdmUtils.closeDataset(xNc);
+                CdmUtils.closeDataset(yNc);
             } catch (IOException e) {
                 // TODO deal with this better
                 e.printStackTrace();
@@ -233,28 +250,22 @@ public class NcVectorGridSeriesFeature extends AbstractGridSeriesFeature<Vector2
      * A simple class to hold pairs of GridDatatypes and the time index within
      * them of the desired value
      */
-    private class GridDatatypePair {
-        private final GridDatatype xGrid;
-        private final GridDatatype yGrid;
-        private final int tindex;
+    private class FileDataPair {
+        private final FilenameVarIdTimeIndex xData;
+        private final FilenameVarIdTimeIndex yData;
 
-        public GridDatatypePair(GridDatatype xGrid, GridDatatype yGrid, int tindex) {
+        public FileDataPair(FilenameVarIdTimeIndex xData, FilenameVarIdTimeIndex yData) {
             super();
-            this.xGrid = xGrid;
-            this.yGrid = yGrid;
-            this.tindex = tindex;
+            this.xData = xData;
+            this.yData = yData;
         }
 
-        public GridDatatype getXGrid() {
-            return xGrid;
+        public FilenameVarIdTimeIndex getXData() {
+            return xData;
         }
 
-        public GridDatatype getYGrid() {
-            return yGrid;
-        }
-
-        public int getTIndex() {
-            return tindex;
+        public FilenameVarIdTimeIndex getYData() {
+            return yData;
         }
     }
 }

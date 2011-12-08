@@ -35,12 +35,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.cdm.DataReadingStrategy;
+import uk.ac.rdg.resc.edal.cdm.FilenameVarIdTimeIndex;
 import uk.ac.rdg.resc.edal.cdm.PixelMap;
 import uk.ac.rdg.resc.edal.cdm.coverage.NcGridSeriesCoverage;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
+import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
@@ -48,6 +51,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.GridCoverage2DImpl;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
+import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.impl.AbstractGridSeriesFeature;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
@@ -70,7 +74,7 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
      * contains the position, and also the index of each time position within
      * that file.
      */
-    private Map<TimePosition, GridTIndexPair> tPosToGridMap = null;
+    private Map<TimePosition, FilenameVarIdTimeIndex> tPosToGridMap = null;
     private boolean noTimeAxis = false;
 
     /**
@@ -91,14 +95,15 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
      *            the {@link DataReadingStrategy} which should be used to read
      *            the data
      */
-    public NcGridSeriesFeature(GridDatatype grid, HorizontalGrid hGrid, VerticalAxis vAxis,
-            TimeAxis tAxis, FeatureCollection<? extends Feature> parentCollection,
+    public NcGridSeriesFeature(String filename, String name, String varId,
+            GridSeriesCoverage<Float> coverage,
+            FeatureCollection<? extends Feature> parentCollection,
             DataReadingStrategy dataReadingStrategy) {
-        super(CdmUtils.getVariableTitle(grid.getVariable()), grid.getName(), grid.getDescription(),
-                parentCollection, new NcGridSeriesCoverage(grid.getVariable(), hGrid, vAxis, tAxis));
+        super(name, varId, coverage.getDescription(), parentCollection, coverage);
         this.dataReadingStrategy = dataReadingStrategy;
 
-        tPosToGridMap = new HashMap<TimePosition, GridTIndexPair>();
+        tPosToGridMap = new HashMap<TimePosition, FilenameVarIdTimeIndex>();
+        TimeAxis tAxis = coverage.getDomain().getTimeAxis();
         if (tAxis != null) {
             /*
              * This maps time positions to the grid which contains them, and the
@@ -106,7 +111,7 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
              */
             int tIndex = 0;
             for (TimePosition t : tAxis.getCoordinateValues()) {
-                tPosToGridMap.put(t, new GridTIndexPair(grid, tIndex));
+                tPosToGridMap.put(t, new FilenameVarIdTimeIndex(filename, varId, tIndex));
                 tIndex++;
             }
         } else {
@@ -115,7 +120,7 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
              * into this grid. We use a null key, and set a flag
              */
             noTimeAxis = true;
-            tPosToGridMap.put(null, new GridTIndexPair(grid, -1));
+            tPosToGridMap.put(null, new FilenameVarIdTimeIndex(filename, varId, -1));
         }
     }
 
@@ -135,7 +140,7 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
      * @param tAxis
      *            the {@link TimeAxis} of the new {@link GridDatatype}
      */
-    public void mergeGrid(GridDatatype newGrid, HorizontalGrid hGrid, VerticalAxis vAxis,
+    public void mergeGrid(String filename, String varId, HorizontalGrid hGrid, VerticalAxis vAxis,
             TimeAxis tAxis) {
         if (noTimeAxis == true) {
             throw new UnsupportedOperationException(
@@ -151,13 +156,13 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
         /*
          * Merge the coverage.
          */
-        coverage.addToCoverage(newGrid.getVariable(), tAxis);
+        coverage.addToCoverage(filename, varId, tAxis);
         /*
          * Add all of the new time values to the map, so that they can be read
          */
         int tIndex = 0;
         for (TimePosition t : tAxis.getCoordinateValues()) {
-            tPosToGridMap.put(t, new GridTIndexPair(newGrid, tIndex));
+            tPosToGridMap.put(t, new FilenameVarIdTimeIndex(filename, varId, tIndex));
             tIndex++;
         }
     }
@@ -203,11 +208,14 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
                  * grid is exactly equivalent to the time index in the entire
                  * feature)
                  */
-                GridDatatype grid = tPosToGridMap.get(tPos).getGridDatatype();
+                NetcdfDataset nc = CdmUtils.openDataset(tPosToGridMap.get(tPos).getFilename());
+                GridDatatype grid = CdmUtils
+                        .getGridDatatype(nc, tPosToGridMap.get(tPos).getVarId());
                 if (!noTimeAxis) {
                     tindex = tPosToGridMap.get(tPos).getTIndex();
                 }
                 dataReadingStrategy.readData(tindex, zindex, grid, pixelMap, data);
+                CdmUtils.closeDataset(nc);
             } catch (IOException e) {
                 // TODO deal with this better
                 e.printStackTrace();
@@ -222,28 +230,5 @@ public class NcGridSeriesFeature extends AbstractGridSeriesFeature<Float> {
             }
         }
         return new GridCoverage2DImpl<Float>(getCoverage(), targetDomain, dataList);
-    }
-
-    /*
-     * Private class for holding a GridDatatype and the index in that file of
-     * the time position. This can then go into the Map, so that we link each
-     * TimePosition with an index in the GridDatatype which contains it
-     */
-    private class GridTIndexPair {
-        private final GridDatatype gridDatatype;
-        private final int tIndex;
-    
-        public GridTIndexPair(GridDatatype gridDatatype, int tIndex) {
-            this.gridDatatype = gridDatatype;
-            this.tIndex = tIndex;
-        }
-    
-        public GridDatatype getGridDatatype() {
-            return gridDatatype;
-        }
-    
-        public int getTIndex() {
-            return tIndex;
-        }
     }
 }

@@ -27,6 +27,7 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.coverage;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +59,7 @@ public class NcVectorGridSeriesCoverage extends
 
     private NcGridSeriesCoverage xCoverage;
     private NcGridSeriesCoverage yCoverage;
+    private List<Vector2D<Float>> values;
 
     /**
      * Instantiate the coverage from two existing coverages containing scalar
@@ -97,9 +99,9 @@ public class NcVectorGridSeriesCoverage extends
      * @param tAxis
      *            the {@link TimeAxis} of the additional coverages
      */
-    public void addToCoverage(Variable xVar, Variable yVar, TimeAxis tAxis) {
-        xCoverage.addToCoverage(xVar, tAxis);
-        yCoverage.addToCoverage(yVar, tAxis);
+    public void addToCoverage(String xFilename, String xVarId, String yFilename, String yVarId, TimeAxis tAxis) {
+        xCoverage.addToCoverage(xFilename, xVarId, tAxis);
+        yCoverage.addToCoverage(yFilename, yVarId, tAxis);
     }
 
     @Override
@@ -136,19 +138,33 @@ public class NcVectorGridSeriesCoverage extends
 
     @Override
     public List<Vector2D<Float>> getValues() {
-        List<Float> xVals = xCoverage.getValues();
-        List<Float> yVals = yCoverage.getValues();
+        if(values == null){
+            values = new AbstractList<Vector2D<Float>>() {
+                @Override
+                public Vector2D<Float> get(int index) {
+                    return new Vector2DFloat(xCoverage.getValues().get(index), yCoverage
+                            .getValues().get(index));
+                }
 
-        if (xVals.size() != yVals.size()) {
-            throw new UnsupportedOperationException(
-                    "Cannot evaluate a vector containing two different coverages");
+                @Override
+                public int size() {
+                    return xCoverage.getValues().size();
+                }
+            };
         }
-
-        List<Vector2D<Float>> ret = new ArrayList<Vector2D<Float>>();
-        for (int i = 0; i < xVals.size(); i++) {
-            ret.add(new Vector2DFloat(xVals.get(i), yVals.get(i)));
-        }
-        return ret;
+        return values;
+//        List<Float> xVals = xCoverage.getValues();
+//        List<Float> yVals = yCoverage.getValues();
+//        if (xVals.size() != yVals.size()) {
+//            throw new UnsupportedOperationException(
+//                    "Cannot evaluate a vector containing two different coverages");
+//        }
+//
+//        List<Vector2D<Float>> ret = new ArrayList<Vector2D<Float>>();
+//        for (int i = 0; i < xVals.size(); i++) {
+//            ret.add(new Vector2DFloat(xVals.get(i), yVals.get(i)));
+//        }
+//        return ret;
     }
 
     @Override
