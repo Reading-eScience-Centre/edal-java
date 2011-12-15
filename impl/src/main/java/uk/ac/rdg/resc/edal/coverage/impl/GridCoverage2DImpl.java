@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
-import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
@@ -19,9 +18,9 @@ public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<Horizo
     private final HorizontalGrid grid;
     private final List<R> data;
     
-    public GridCoverage2DImpl(GridSeriesCoverage<R> fullCoverage, HorizontalGrid grid, List<R> data) {
-        metadata = fullCoverage.getRangeMetadata(null);
-        description = fullCoverage.getDescription();
+    public GridCoverage2DImpl(RangeMetadata metadata, String description, HorizontalGrid grid, List<R> data) {
+        this.metadata = metadata;
+        this.description = description;
         this.grid = grid;
         this.data = data;
     }

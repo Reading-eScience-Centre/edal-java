@@ -103,6 +103,11 @@ public final class ImageProducer {
                 public Float get(int index) {
                     if (vector) {
                         Vector2D<Float> vec = (Vector2D<Float>) data.get(index);
+//                        if(vec == null)
+//                            return null;
+//                        Float val = vec.getMagnitude();
+//                        if(Float.isNaN(val))
+//                            return null;
                         return vec == null ? null : vec.getMagnitude();
                     } else {
                         return (Float) data.get(index);
@@ -120,6 +125,12 @@ public final class ImageProducer {
         public Float getDirection(int i) {
             if (vector) {
                 Vector2D<Float> vec = (Vector2D<Float>) data.get(i);
+//                if(vec == null)
+//                    return null;
+//                Float val = vec.getDirection();
+//                if(Float.isNaN(val))
+//                    return null;
+//                return val;
                 return vec == null ? null : vec.getDirection();
             } else {
                 return null;
@@ -157,6 +168,13 @@ public final class ImageProducer {
 
     public void addFrame(GridCoverage2D<?> coverage, String label) {
         Class<?> clazz = coverage.getRangeMetadata(null).getValueType();
+        if(clazz != Vector2D.class && !Number.class.isAssignableFrom(clazz)){
+            System.out.println(clazz);
+            System.out.println((clazz != Vector2D.class));
+            System.out.println((!Number.class.isAssignableFrom(clazz)));
+            throw new UnsupportedOperationException(
+                    "Can only add frames from coverages which are either numbers or vectors");
+        }
 
         Components comps = new Components(coverage.getValues(), clazz == Vector2D.class);
 
@@ -289,6 +307,7 @@ public final class ImageProducer {
         if (value == null) {
             return numColourBands; // represents a background pixel
         } else if (!scaleRange.contains(value)) {
+//            System.out.println(value+" is outside scale range."+(value==Double.NEGATIVE_INFINITY)+(value==Double.POSITIVE_INFINITY));
             return numColourBands + 1; // represents an out-of-range pixel
         } else {
             float scaleMin = scaleRange.getLow().floatValue();

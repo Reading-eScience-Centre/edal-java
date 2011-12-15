@@ -69,7 +69,7 @@ public class PngFormat extends SimpleFormat {
     }
 
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out) throws IOException {
+    public synchronized void writeImage(List<BufferedImage> frames, OutputStream out) throws IOException {
         if (frames.size() > 1) {
             throw new IllegalArgumentException("Cannot render animations in PNG format");
         }

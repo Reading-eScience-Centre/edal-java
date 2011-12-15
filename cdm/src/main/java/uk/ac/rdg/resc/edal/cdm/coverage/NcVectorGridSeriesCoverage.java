@@ -28,7 +28,6 @@
 package uk.ac.rdg.resc.edal.cdm.coverage;
 
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.List;
 
 import ucar.nc2.Variable;
@@ -42,6 +41,7 @@ import uk.ac.rdg.resc.edal.coverage.VectorGridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiscreteSimpleCoverage;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.Vector2D;
@@ -79,6 +79,12 @@ public class NcVectorGridSeriesCoverage extends
             throw new InstantiationException(
                     "Component coverages must be the same size as each other");
         }
+        VerticalAxis xV = xCoverage.getDomain().getVerticalAxis();
+        VerticalAxis yV = yCoverage.getDomain().getVerticalAxis();
+        if (!xCoverage.getDomain().getHorizontalGrid()
+                .equals(yCoverage.getDomain().getHorizontalGrid())
+                || (xV != null && yV != null && !xV.equals(yV)) )
+            throw new InstantiationException("x- and y-components must have the same grids");
         if (!xCoverage.getRangeMetadata().getUnits()
                 .equals(yCoverage.getRangeMetadata().getUnits())) {
             throw new InstantiationException("x- and y-components must have the same units");
@@ -113,15 +119,17 @@ public class NcVectorGridSeriesCoverage extends
     public Vector2D<Float> evaluate(int tindex, int zindex, int yindex, int xindex) {
         float xVal = xCoverage.evaluate(tindex, zindex, yindex, xindex);
         float yVal = yCoverage.evaluate(tindex, zindex, yindex, xindex);
+        if(Float.isNaN(xVal) || Float.isNaN(yVal))
+            return null;
         return new Vector2DFloat(xVal, yVal);
     }
 
     @Override
     public List<Vector2D<Float>> evaluate(Extent<Integer> tindexExtent,
             Extent<Integer> zindexExtent, Extent<Integer> yindexExtent, Extent<Integer> xindexExtent) {
-        List<Float> xVals = xCoverage.evaluate(tindexExtent, zindexExtent, yindexExtent,
+        final List<Float> xVals = xCoverage.evaluate(tindexExtent, zindexExtent, yindexExtent,
                 xindexExtent);
-        List<Float> yVals = yCoverage.evaluate(tindexExtent, zindexExtent, yindexExtent,
+        final List<Float> yVals = yCoverage.evaluate(tindexExtent, zindexExtent, yindexExtent,
                 xindexExtent);
 
         if (xVals.size() != yVals.size()) {
@@ -129,10 +137,19 @@ public class NcVectorGridSeriesCoverage extends
                     "Cannot evaluate a vector containing two different coverages");
         }
 
-        List<Vector2D<Float>> ret = new ArrayList<Vector2D<Float>>();
-        for (int i = 0; i < xVals.size(); i++) {
-            ret.add(new Vector2DFloat(xVals.get(i), yVals.get(i)));
-        }
+        List<Vector2D<Float>> ret = new AbstractList<Vector2D<Float>>() {
+            @Override
+            public Vector2D<Float> get(int index) {
+                if(Float.isNaN(xVals.get(index)) || Float.isNaN(yVals.get(index)))
+                    return null;
+                return new Vector2DFloat(xVals.get(index), yVals.get(index));
+            }
+
+            @Override
+            public int size() {
+                return xVals.size();
+            }
+        };
         return ret;
     }
 
@@ -142,6 +159,9 @@ public class NcVectorGridSeriesCoverage extends
             values = new AbstractList<Vector2D<Float>>() {
                 @Override
                 public Vector2D<Float> get(int index) {
+                    if (Float.isNaN(xCoverage.getValues().get(index))
+                            || Float.isNaN(yCoverage.getValues().get(index)))
+                        return null;
                     return new Vector2DFloat(xCoverage.getValues().get(index), yCoverage
                             .getValues().get(index));
                 }
@@ -153,18 +173,6 @@ public class NcVectorGridSeriesCoverage extends
             };
         }
         return values;
-//        List<Float> xVals = xCoverage.getValues();
-//        List<Float> yVals = yCoverage.getValues();
-//        if (xVals.size() != yVals.size()) {
-//            throw new UnsupportedOperationException(
-//                    "Cannot evaluate a vector containing two different coverages");
-//        }
-//
-//        List<Vector2D<Float>> ret = new ArrayList<Vector2D<Float>>();
-//        for (int i = 0; i < xVals.size(); i++) {
-//            ret.add(new Vector2DFloat(xVals.get(i), yVals.get(i)));
-//        }
-//        return ret;
     }
 
     @Override

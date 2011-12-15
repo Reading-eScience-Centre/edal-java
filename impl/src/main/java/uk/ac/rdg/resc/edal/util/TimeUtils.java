@@ -112,6 +112,8 @@ public class TimeUtils {
      *             if the string is not a valid ISO date-time, or if it is not
      *             valid within the Chronology (e.g. 31st July in a 360-day
      *             calendar).
+     *             
+     * TODO Calendar System
      */
     public static TimePosition iso8601ToDateTime(String isoDateTime, CalendarSystem calSys) throws ParseException {
         return new TimePositionImpl(ISO_DATE_TIME_FORMATTER.parse(isoDateTime).getTime());
@@ -127,9 +129,6 @@ public class TimeUtils {
         String[] dayStr = yMD[2].split("T");
         int day = Integer.parseInt(dayStr[0]);
         
-        /*
-         * We return midday, for no particular reason
-         */
         return new TimePositionImpl(year, month, day, 00, 0, 0);
     }
 

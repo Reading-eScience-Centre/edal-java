@@ -108,4 +108,7 @@ public interface GridSeriesFeature<R> extends Feature {
      */
     public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, double zPos,
             HorizontalGrid targetDomain);
+    
+//    public TransectFeature extractTransectFeature(Arguments gohere);
+    
 }
