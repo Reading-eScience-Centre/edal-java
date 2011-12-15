@@ -195,23 +195,16 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
     @Override
     public long findIndexOf(GeoPosition position) {
         long hIndex = hGrid.findIndexOf(position.getHorizontalPosition());
+        long hSize = hGrid.getGridExtent().size();
         int vIndex = 0;
+        int vSize = 1;
         if(vAxis != null){
             vIndex = vAxis.findIndexOf(position.getVerticalPosition().getZ());
+            vSize = vAxis.size();
         }
         int tIndex = 0;
         if(tAxis != null){
             tIndex = tAxis.findIndexOf(position.getTimePosition());
-        }
-        return getIndex(hIndex, vIndex, tIndex);
-    }
-
-    @Override
-    public long getIndex(long hIndex, int vIndex, int tIndex) {
-        long hSize = hGrid.getGridExtent().size();
-        int vSize = 1;
-        if(vAxis != null){
-            vSize = vAxis.size();
         }
         return hIndex + hSize * vIndex + hSize * vSize * tIndex;
     }

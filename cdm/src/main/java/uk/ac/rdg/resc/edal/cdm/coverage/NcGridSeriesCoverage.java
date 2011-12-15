@@ -307,21 +307,21 @@ public class NcGridSeriesCoverage extends
 
     @Override
     public List<Float> getValues() {
-//        if (values == null) {
-//            values = new AbstractList<Float>() {
-//                @Override
-//                public Float get(int index) {
-//                    GridCoordinates4D gC = getDomain().getComponentsOf(index);
-//                    return evaluate(gC.getTIndex(), gC.getZIndex(), gC.getYIndex(), gC.getXIndex());
-//                }
-//
-//                @Override
-//                public int size() {
-//                    return (int) getDomain().size();
-//                }
-//            };
-//        }
-//        return values;
+        if (values == null) {
+            values = new AbstractList<Float>() {
+                @Override
+                public Float get(int index) {
+                    GridCoordinates4D gC = getDomain().getComponentsOf(index);
+                    return evaluate(gC.getTIndex(), gC.getZIndex(), gC.getYIndex(), gC.getXIndex());
+                }
+
+                @Override
+                public int size() {
+                    return (int) getDomain().size();
+                }
+            };
+        }
+        return values;
         /*
          * Note: The method below works. It is slow on the first access, and
          * then fast on subsequent ones. However, it uses a lot of memory, and
@@ -330,24 +330,24 @@ public class NcGridSeriesCoverage extends
          * The method above is slower, but uses very little memory, and will
          * take the same amount of time for each individual value extracted
          */
-        if (values == null) {
-            Extent<Integer> xExtent = null;
-            Extent<Integer> yExtent = null;
-            Extent<Integer> zExtent = null;
-            Extent<Integer> tExtent = null;
-            if(hGrid != null){
-                xExtent = hGrid.getXAxis().getIndexExtent();
-                yExtent = hGrid.getYAxis().getIndexExtent();
-            }
-            if(vAxis != null){
-                zExtent = vAxis.getIndexExtent();
-            }
-            if(tAxis != null){
-                tExtent = tAxis.getIndexExtent();
-            }
-            values = evaluate(tExtent, zExtent, yExtent, xExtent);
-        }
-        return values;
+//        if (values == null) {
+//            Extent<Integer> xExtent = null;
+//            Extent<Integer> yExtent = null;
+//            Extent<Integer> zExtent = null;
+//            Extent<Integer> tExtent = null;
+//            if(hGrid != null){
+//                xExtent = hGrid.getXAxis().getIndexExtent();
+//                yExtent = hGrid.getYAxis().getIndexExtent();
+//            }
+//            if(vAxis != null){
+//                zExtent = vAxis.getIndexExtent();
+//            }
+//            if(tAxis != null){
+//                tExtent = tAxis.getIndexExtent();
+//            }
+//            values = evaluate(tExtent, zExtent, yExtent, xExtent);
+//        }
+//        return values;
     }
     
 

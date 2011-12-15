@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.cdm.util;
+package uk.ac.rdg.resc.edal.coverage.util;
 
 /**
  * <p>

@@ -33,7 +33,7 @@ public class FeatureCollectionTest {
         for (String fId : fs.getFeatureIds()) {
 //        String fId = "sst";
             GridSeriesFeature<?> feature = fs.getFeatureById(fId);
-            double[] bbox = { -180.0, -90.0, 180.0, 90.0 };
+            double[] bbox = { -180.0, -80.0, 180.0, 80.0 };
 //            double[] bbox = { -7.5, 50.0, -2.5, 57.0 };
 //            double[] bbox = { -0.5, -45.0, 0.0, -44.5 };
             int width = 500;
@@ -56,12 +56,12 @@ public class FeatureCollectionTest {
 //            System.out.println(tPos+","+vPos.getZ());
 //            feature.getCoverage().getDomain().getVerticalAxis().getCoordinateValue(0);
             GridCoverage2D<?> gridCoverage = feature.extractHorizontalGrid(0, 0, targetDomain);
-            System.out.println(gridCoverage.getRangeMetadata(null).getValueType());
+//            System.out.println(gridCoverage.getRangeMetadata(null).getValueType());
 //            System.out.println("VALUE-->"+gridCoverage.evaluate(new HorizontalPositionImpl(-0.25, -45)));
 //            System.out.println("3dVAL-->"+feature.getCoverage().evaluate(new GeoPositionImpl(new HorizontalPositionImpl(-0.25, -45), vPos, tPos)));
             if(gridCoverage != null) {
-                System.out.println(feature.getName());
-            	System.out.println(fId+"-"+gridCoverage.getDescription()+"-"+feature.getName()+"-"+feature.getDescription());
+//                System.out.println(feature.getName());
+//            	System.out.println(fId+"-"+gridCoverage.getDescription()+"-"+feature.getName()+"-"+feature.getDescription());
 	            
 	//            HorizontalPosition hPos = new HorizontalPositionImpl(-5.0, 50.0);
 	//            GridCoordinates2D coords = gridCoverage.getDomain().findContainingCell(hPos);

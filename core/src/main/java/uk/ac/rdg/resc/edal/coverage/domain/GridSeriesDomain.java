@@ -105,13 +105,12 @@ public interface GridSeriesDomain extends DiscreteDomain<GeoPosition, GridCell4D
     public List<GridCell4D> getDomainObjects();
 
     /**
-     * This method returns the overall index of a point with the specified axis indices
-     * @param hIndex the index in the horizontal grid
-     * @param vIndex the index in the vertical axis
-     * @param tIndex the index in the time axis
-     * @return the overall index, which will correspond to the position in findIndexOf()
+     * Gets the individual indices from a combined index
+     * 
+     * @param index
+     *            the combined index, as used in e.g.
+     *            getDomainObjects.get(index)
+     * @return the individual indices
      */
-    public long getIndex(long hIndex, int vIndex, int tIndex);
-    
     public GridCoordinates4D getComponentsOf(long index);
 }

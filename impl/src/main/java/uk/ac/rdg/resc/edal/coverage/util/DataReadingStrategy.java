@@ -25,17 +25,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
-package uk.ac.rdg.resc.edal.cdm;
+package uk.ac.rdg.resc.edal.coverage.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import ucar.ma2.Index;
-import ucar.nc2.dataset.VariableDS;
-import ucar.nc2.dt.GridDatatype;
-import uk.ac.rdg.resc.edal.cdm.PixelMap.PixelMapEntry;
+import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
+import uk.ac.rdg.resc.edal.coverage.util.PixelMap.PixelMapEntry;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * <p>
@@ -127,8 +127,8 @@ public enum DataReadingStrategy {
         }
 
         @Override
-        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var,
-                RangesList ranges) throws IOException {
+        protected <R> int populatePixelArray(List<R> data, PixelMap pixelMap, int tIndex, int zIndex,
+                GridSeriesCoverage<R> coverage) throws IOException {
             Iterator<PixelMapEntry> it = pixelMap.iterator();
             if (!it.hasNext())
                 return 0;
@@ -144,47 +144,47 @@ public enum DataReadingStrategy {
                 } else {
                     // We have a new scanline.
                     // We read the data for the existing scanline first
-                    dataPointsRead += this.readScanline(data, var, ranges, scanline);
+                    dataPointsRead += this.readScanline(data, coverage, zIndex, tIndex, scanline);
                     // Now we create a new scanline
                     scanline = new Scanline(pme);
                 }
             }
 
             // We must read the last scanline
-            dataPointsRead += this.readScanline(data, var, ranges, scanline);
+            dataPointsRead += this.readScanline(data, coverage, zIndex, tIndex, scanline);
 
             return dataPointsRead;
         }
 
-        private int readScanline(float[] data, VariableDS var, RangesList ranges, Scanline scanline)
-                throws IOException {
-            ranges.setYRange(scanline.jIndex, scanline.jIndex);
+        private <R> int readScanline(List<R> data, GridSeriesCoverage<R> coverage, int zIndex,
+                int tIndex, Scanline scanline) {
+            Extent<Integer> yExtent = Extents.newExtent(scanline.jIndex, scanline.jIndex);
+            Extent<Integer> zExtent = Extents.newExtent(zIndex, zIndex);
+            Extent<Integer> tExtent = Extents.newExtent(tIndex, tIndex);
             int imin = scanline.pixelMapEntries.get(0).getSourceGridIIndex();
             int imax = scanline.pixelMapEntries.get(scanline.pixelMapEntries.size() - 1)
                     .getSourceGridIIndex();
-            ranges.setXRange(imin, imax);
+            Extent<Integer> xExtent = Extents.newExtent(imin, imax);
 
             // logger.debug(ranges.toString());
 
-            // Read a chunk of data - values will not be unpacked or
-            // checked for missing values yet
-            DataChunk dataChunk = DataChunk.readDataChunk(var, ranges);
-
-            // Get an index for the array and set it to zero
-            Index index = dataChunk.getIndex();
-            index.set(new int[index.getRank()]);
+            List<R> dataChunk = coverage.evaluate(tExtent, zExtent, yExtent, xExtent);
 
             // Now copy the scanline's data to the picture array
             for (PixelMapEntry pme : scanline.pixelMapEntries) {
-                index.setDim(ranges.getXAxisIndex(), pme.getSourceGridIIndex() - imin);
-                float val = dataChunk.readFloatValue(index);
+                int xIndex = pme.getSourceGridIIndex() - imin;
+                /*
+                 * Because we are reading something which only varies in x, we only
+                 * need to check the x-index
+                 */
+                R val = dataChunk.get(xIndex);
 
-                // Now we set the value of all the image pixels associated with
-                // this data point.
-                if (!Float.isNaN(val)) {
-                    for (int p : pme.getTargetGridPoints()) {
-                        data[p] = val;
-                    }
+                /*
+                 * Now we set the value of all the image pixels associated with
+                 * this data point.
+                 */
+                for (int p : pme.getTargetGridPoints()) {
+                    data.set(p, val);
                 }
             }
 
@@ -199,34 +199,33 @@ public enum DataReadingStrategy {
      * when reading from OPeNDAP datasets or compressed files.
      */
     BOUNDING_BOX {
+
         @Override
-        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var,
-                RangesList ranges) throws IOException {
+        protected <R> int populatePixelArray(List<R> data, PixelMap pixelMap, int tIndex, int zIndex,
+                GridSeriesCoverage<R> coverage) throws IOException {
             // Read the whole chunk of x-y data
             int imin = pixelMap.getMinIIndex();
             int imax = pixelMap.getMaxIIndex();
             int jmin = pixelMap.getMinJIndex();
             int jmax = pixelMap.getMaxJIndex();
-            ranges.setXRange(imin, imax);
-            ranges.setYRange(jmin, jmax);
-            // logger.debug("Shape of grid: {}",
-            // Arrays.toString(var.getShape()));
-            // logger.debug(ranges.toString());
+            Extent<Integer> tExtent = Extents.newExtent(tIndex, tIndex);
+            Extent<Integer> zExtent = Extents.newExtent(zIndex, zIndex);
+            Extent<Integer> yExtent = Extents.newExtent(jmin, jmax);
+            Extent<Integer> xExtent = Extents.newExtent(imin, imax);
 
-            DataChunk dataChunk = DataChunk.readDataChunk(var, ranges);
+            int xSize = xExtent.getHigh() - xExtent.getLow() + 1;
+            int ySize = yExtent.getHigh() - yExtent.getLow() + 1;
+            int zSize = zExtent.getHigh() - zExtent.getLow() + 1;
 
-            // Now extract the information we need from the data array
-            Index index = dataChunk.getIndex();
-            index.set(new int[index.getRank()]);
+            List<R> dataChunk = coverage.evaluate(tExtent, zExtent, yExtent, xExtent);
 
             for (PixelMapEntry pme : pixelMap) {
-                index.setDim(ranges.getYAxisIndex(), pme.getSourceGridJIndex() - jmin);
-                index.setDim(ranges.getXAxisIndex(), pme.getSourceGridIIndex() - imin);
-                float val = dataChunk.readFloatValue(index);
-                if (!Float.isNaN(val)) {
-                    for (int targetGridPoint : pme.getTargetGridPoints()) {
-                        data[targetGridPoint] = val;
-                    }
+                int xIndex = pme.getSourceGridIIndex() - imin;
+                int yIndex = pme.getSourceGridJIndex() - jmin;
+                int index = getIndex(xIndex, yIndex, zIndex, tIndex, xSize, ySize, zSize);
+                R val = dataChunk.get(index);
+                for (int targetGridPoint : pme.getTargetGridPoints()) {
+                    data.set(targetGridPoint, val);
                 }
             }
 
@@ -240,23 +239,16 @@ public enum DataReadingStrategy {
      * reading a single point is not large.
      */
     PIXEL_BY_PIXEL {
+
         @Override
-        protected int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var,
-                RangesList ranges) throws IOException {
+        protected <R> int populatePixelArray(List<R> data, PixelMap pixelMap, int tIndex, int zIndex,
+                GridSeriesCoverage<R> coverage) throws IOException {
             int numDataPointsRead = 0;
             for (PixelMapEntry pme : pixelMap) {
-                ranges.setYRange(pme.getSourceGridJIndex(), pme.getSourceGridJIndex());
-                ranges.setXRange(pme.getSourceGridIIndex(), pme.getSourceGridIIndex());
-                DataChunk dataChunk = DataChunk.readDataChunk(var, ranges);
-                // Get an index and set all elements to zero
-                Index index = dataChunk.getIndex();
-                index.set(new int[index.getRank()]);
-                float val = dataChunk.readFloatValue(index);
+                R val = coverage.evaluate(tIndex, zIndex, pme.getSourceGridJIndex(), pme.getSourceGridIIndex());
                 numDataPointsRead++;
-                if (!Float.isNaN(val)) {
-                    for (int targetGridPoint : pme.getTargetGridPoints()) {
-                        data[targetGridPoint] = val;
-                    }
+                for (int targetGridPoint : pme.getTargetGridPoints()) {
+                    data.set(targetGridPoint, val);
                 }
             }
             return numDataPointsRead;
@@ -267,30 +259,29 @@ public enum DataReadingStrategy {
      * Reads data from the given GridDatatype, populating the passed-in array of
      * floats. Returns the number of bytes actually read from the source data
      * files (which may be considerably larger than the size of the data array).
+     * @param <R>
      * 
      * @see PixelMap
      */
-    public final int readData(int tIndex, int zIndex, GridDatatype grid, PixelMap pixelMap,
-            float[] data) throws IOException {
-        // Set the time and z ranges
-        RangesList rangesList = new RangesList(grid);
-        rangesList.setZRange(zIndex, zIndex);
-        rangesList.setTRange(tIndex, tIndex);
-
-        // Now read the actual data from the source GridDatatype
-        VariableDS var = grid.getVariable();
-        int dataPointsRead = this.populatePixelArray(data, pixelMap, var, rangesList);
+    public final <R> int readHorizontalData(int tIndex, int zIndex, GridSeriesCoverage<R> coverage, PixelMap pixelMap,
+            List<R> data) throws IOException {
+        int dataPointsRead = this.populatePixelArray(data, pixelMap, zIndex, tIndex, coverage);
 
         // Calculate the number of bytes that we read from the source data
-        int bytesPerDataPoint = var.getDataType().getSize();
+        int bytesPerDataPoint = Float.SIZE/8;
         return dataPointsRead * bytesPerDataPoint;
+    }
+    
+    protected int getIndex(int xIndex, int yIndex, int zIndex, int tIndex, int xSize, int ySize, int zSize) {
+        return xIndex + yIndex * xSize + zIndex * zSize * ySize + xSize * ySize * zSize * tIndex;
     }
 
     /**
      * Reads data from the given variable, populating the given data array
+     * @param <R>
      * 
      * @return The number of data points actually read from the source data
      */
-    abstract int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var,
-            RangesList ranges) throws IOException;
+    abstract <R> int populatePixelArray(List<R> data, PixelMap pixelMap, int tIndex, int zIndex,
+            GridSeriesCoverage<R> coverage) throws IOException;
 }

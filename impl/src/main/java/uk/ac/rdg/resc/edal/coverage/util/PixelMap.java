@@ -25,32 +25,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
-package uk.ac.rdg.resc.edal.cdm;
+package uk.ac.rdg.resc.edal.coverage.util;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.operation.TransformException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import uk.ac.rdg.resc.edal.cdm.util.RArray;
-import uk.ac.rdg.resc.edal.cdm.util.RLongArray;
-import uk.ac.rdg.resc.edal.cdm.util.RUByteArray;
-import uk.ac.rdg.resc.edal.cdm.util.RUIntArray;
-import uk.ac.rdg.resc.edal.cdm.util.RUShortArray;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularAxisImpl;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
@@ -76,7 +64,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * </p>
  * 
  * <p>
- * The resulting PixelMap is then used by {@link DataReadingStrategy}s to work
+ * The resulting PixelMap is then used by {@link DataReadingStrategyDelete}s to work
  * out what data to read from the source data files. A variety of strategies are
  * possible for reading these data points, each of which may be optimal in a
  * certain situation.
@@ -92,10 +80,10 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  *       pixelmap should also be a RectilinearGrid, meaning that there would be
  *       no need to store mapping information in HashMaps etc. (Profiling shows
  *       that getting and putting data from/to the HashMaps is a bottleneck.)
- * @see DataReadingStrategy
+ * @see DataReadingStrategyDelete
  */
 public final class PixelMap implements Iterable<PixelMap.PixelMapEntry> {
-    private static final Logger logger = LoggerFactory.getLogger(PixelMap.class);
+//    private static final Logger logger = LoggerFactory.getLogger(PixelMap.class);
 
     /** Stores the source grid indices */
     private final RArray sourceGridIndices;
@@ -158,20 +146,20 @@ public final class PixelMap implements Iterable<PixelMap.PixelMapEntry> {
         // domains
         long maxSourceGridIndex = sourceGrid.size() - 1;
         this.sourceGridIndices = chooseRArray(maxSourceGridIndex, chunkSize);
-        logger.debug("Source grid indices (max: {}) stored in a {}", maxSourceGridIndex, this.sourceGridIndices
-                .getClass());
+//        logger.debug("Source grid indices (max: {}) stored in a {}", maxSourceGridIndex, this.sourceGridIndices
+//                .getClass());
 
         long maxTargetGridIndex = targetDomain.size() - 1;
         this.targetGridIndices = chooseRArray(maxTargetGridIndex, chunkSize);
-        logger.debug("Target grid indices (max: {}) stored in a {}", maxTargetGridIndex, this.targetGridIndices
-                .getClass());
+//        logger.debug("Target grid indices (max: {}) stored in a {}", maxTargetGridIndex, this.targetGridIndices
+//                .getClass());
         // This is just a double-check: shouldn't happen
         if (this.targetGridIndices instanceof RLongArray) {
             throw new IllegalStateException("Can't store target grid indices as"
                     + " longs: must be integers or smaller");
         }
 
-        long start = System.currentTimeMillis();
+//        long start = System.currentTimeMillis();
         if (sourceGrid instanceof RectilinearGrid && targetDomain instanceof RectilinearGrid
                 && GISUtils.isWgs84LonLat(sourceGrid.getCoordinateReferenceSystem())
                 && GISUtils.isWgs84LonLat(((RectilinearGrid)targetDomain).getCoordinateReferenceSystem())) {
@@ -198,7 +186,7 @@ public final class PixelMap implements Iterable<PixelMap.PixelMapEntry> {
 
         this.sortIndices();
 
-        logger.debug("Built pixel map in {} ms", System.currentTimeMillis() - start);
+//        logger.debug("Built pixel map in {} ms", System.currentTimeMillis() - start);
     }
 
     /**
@@ -293,7 +281,7 @@ public final class PixelMap implements Iterable<PixelMap.PixelMapEntry> {
 
     private void initFromPointList(HorizontalGrid sourceGrid, DiscreteDomain<HorizontalPosition, GridCell2D> targetDomain)
             throws TransformException {
-        logger.debug("Using generic method based on iterating over the domain");
+//        logger.debug("Using generic method based on iterating over the domain");
         int pixelIndex = 0;
         // Find the nearest grid coordinates to all the points in the domain
         
@@ -316,7 +304,7 @@ public final class PixelMap implements Iterable<PixelMap.PixelMapEntry> {
      *            The target grid in WGS84 lat-lon coordinates
      */
     private void initFromGrid(RectilinearGrid sourceGrid, RectilinearGrid targetGrid) {
-        logger.debug("Using optimized method for lat-lon coordinates with 1D axes");
+//        logger.debug("Using optimized method for lat-lon coordinates with 1D axes");
 
         ReferenceableAxis<Double> sourceGridXAxis = sourceGrid.getXAxis();
         ReferenceableAxis<Double> sourceGridYAxis = sourceGrid.getYAxis();
@@ -440,7 +428,7 @@ public final class PixelMap implements Iterable<PixelMap.PixelMapEntry> {
      * Gets the number of unique i-j pairs in this pixel map. When combined with
      * the size of the resulting image we can quantify the under- or
      * oversampling. This is the number of data points that will be extracted by
-     * the {@link DataReadingStrategy#PIXEL_BY_PIXEL PIXEL_BY_PIXEL} data
+     * the {@link DataReadingStrategyDelete#PIXEL_BY_PIXEL PIXEL_BY_PIXEL} data
      * reading strategy.
      * </p>
      * <p>
@@ -462,7 +450,7 @@ public final class PixelMap implements Iterable<PixelMap.PixelMapEntry> {
     /**
      * Gets the size of the i-j bounding box that encompasses all data. This is
      * the number of data points that will be extracted using the
-     * {@link DataReadingStrategy#BOUNDING_BOX BOUNDING_BOX} data reading
+     * {@link DataReadingStrategyDelete#BOUNDING_BOX BOUNDING_BOX} data reading
      * strategy.
      * 
      * @return the size of the i-j bounding box that encompasses all data.
@@ -535,40 +523,40 @@ public final class PixelMap implements Iterable<PixelMap.PixelMapEntry> {
         };
     }
 
-    public static void main(String[] args) throws Exception {
-        RegularAxis lonAxis = new RegularAxisImpl("lon", 64.01358, 0.045, 347400, true);
-        RegularAxis latAxis = new RegularAxisImpl("lat", 80.12541, -0.045, 35640, false);
-        RegularGrid sourceDomain = new RegularGridImpl(lonAxis, latAxis, DefaultGeographicCRS.WGS84);
-        double[] bbox = {-180.0, -90.0, 180.0, 90.0};
-        RegularGrid targetDomain = new RegularGridImpl(bbox, DefaultGeographicCRS.WGS84, 10, 10);
-        Runtime rt = Runtime.getRuntime();
-
-        long startMemUsed = memUsed(rt);
-        long start = System.nanoTime();
-        PixelMap p = new PixelMap(sourceDomain, targetDomain);
-        long finish = System.nanoTime();
-        long memUsed = memUsed(rt) - startMemUsed;
-        
-        System.out.println(p.getNumUniqueIJPairs()+","+p.sourceGridIndices.size());
-
-        System.out.println("Built PixelMap in " + ((finish - start) / 1.e6) + " ms");
-        // System.out.println("Number of entries " + pixelMap.numEntries + " ("
-        // + pixelMap.pixelMapEntries.length + ")");
-        // System.out.println("Num unique pairs = " +
-        // pixelMap.getNumUniqueIJPairs());
-        // System.out.println("Total insert time " + (pixelMap.insertTime /
-        // 1.e6));
-        // System.out.println("Stuff shifted " + pixelMap.stuffShifted);
-        System.out.println("mem used " + memUsed);
-        // With compression: 222 ms, 370k 840x400
-        // Without compression: 166ms, 2.7M
-        // With compression: 222 ms, 370k 512x512
-        // Without compression: 140ms, 2.1M
-    }
-
-    private static final long memUsed(Runtime rt) {
-        System.gc();
-        return rt.totalMemory() - rt.freeMemory();
-    }
+//    public static void main(String[] args) throws Exception {
+//        RegularAxis lonAxis = new RegularAxisImpl("lon", 64.01358, 0.045, 347400, true);
+//        RegularAxis latAxis = new RegularAxisImpl("lat", 80.12541, -0.045, 35640, false);
+//        RegularGrid sourceDomain = new RegularGridImpl(lonAxis, latAxis, DefaultGeographicCRS.WGS84);
+//        double[] bbox = {-180.0, -90.0, 180.0, 90.0};
+//        RegularGrid targetDomain = new RegularGridImpl(bbox, DefaultGeographicCRS.WGS84, 10, 10);
+//        Runtime rt = Runtime.getRuntime();
+//
+//        long startMemUsed = memUsed(rt);
+//        long start = System.nanoTime();
+//        PixelMap p = new PixelMap(sourceDomain, targetDomain);
+//        long finish = System.nanoTime();
+//        long memUsed = memUsed(rt) - startMemUsed;
+//        
+//        System.out.println(p.getNumUniqueIJPairs()+","+p.sourceGridIndices.size());
+//
+//        System.out.println("Built PixelMap in " + ((finish - start) / 1.e6) + " ms");
+//        // System.out.println("Number of entries " + pixelMap.numEntries + " ("
+//        // + pixelMap.pixelMapEntries.length + ")");
+//        // System.out.println("Num unique pairs = " +
+//        // pixelMap.getNumUniqueIJPairs());
+//        // System.out.println("Total insert time " + (pixelMap.insertTime /
+//        // 1.e6));
+//        // System.out.println("Stuff shifted " + pixelMap.stuffShifted);
+//        System.out.println("mem used " + memUsed);
+//        // With compression: 222 ms, 370k 840x400
+//        // Without compression: 166ms, 2.7M
+//        // With compression: 222 ms, 370k 512x512
+//        // Without compression: 140ms, 2.1M
+//    }
+//
+//    private static final long memUsed(Runtime rt) {
+//        System.gc();
+//        return rt.totalMemory() - rt.freeMemory();
+//    }
 
 }
