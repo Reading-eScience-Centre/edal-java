@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
@@ -44,16 +46,21 @@ import ucar.nc2.dt.GridDataset.Gridset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.cdm.coverage.NcGridSeriesCoverage;
 import uk.ac.rdg.resc.edal.cdm.coverage.NcVectorGridSeriesCoverage;
+import uk.ac.rdg.resc.edal.cdm.coverage.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.cdm.util.FileUtils;
+import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.util.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
+import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.Vector2D;
 
 /**
@@ -102,6 +109,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         List<File> files = FileUtils.expandGlobExpression(location);
         for (File file : files) {
             String filename = file.getPath();
+            System.out.println("Opening dataset:"+filename);
             NetcdfDataset ncDataset = CdmUtils.openDataset(filename);
 
             GridDataset gridDS = CdmUtils.getGridDataset(ncDataset);
@@ -114,6 +122,9 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                  */
                 GridCoordSystem coordSys = gridset.getGeoCoordSystem();
                 HorizontalGrid hGrid = CdmUtils.createHorizontalGrid(coordSys);
+                if(hGrid instanceof LookUpTableGrid){
+                    dataReadingStrategy = DataReadingStrategy.BOUNDING_BOX;
+                }
                 VerticalAxis vAxis = CdmUtils.createVerticalAxis(coordSys);
                 TimeAxis tAxis = null;
                 if (coordSys.hasTimeAxis1D()) {
@@ -173,10 +184,10 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                         cData.yCoverage = (NcGridSeriesCoverage) id2GridSeriesFeature.get(varId).getCoverage();
                         cData.yVarId = varId;
                     }
-
                 }
-
             }
+            System.out.println("Closing dataset:"+filename);
+            CdmUtils.closeDataset(ncDataset);
         }
         for (String compoundVar : compoundsCoverageComponents.keySet()) {
             CompoundData cData = compoundsCoverageComponents.get(compoundVar);
@@ -264,5 +275,25 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                 id2GridSeriesFeature.values().iterator().remove();
             }
         };
+    }
+    
+    public static void main(String[] args) throws IOException {
+        long startTime = System.currentTimeMillis();
+        NcGridSeriesFeatureCollection ncFC = new NcGridSeriesFeatureCollection("test", "test collection", "/home/guy/Data/Signell_curvilinear/useast/*.nc");
+        long t1 = System.currentTimeMillis();
+        for(String fId : ncFC.getFeatureIds())
+            System.out.println(fId);
+        GridSeriesFeature<?> feature = ncFC.getFeatureById("temp");
+        double[] bbox = new double[4];
+        bbox[0] = -91.0;
+        bbox[1] = 20.0;
+        bbox[2] = -71.0;
+        bbox[3] = 40.0;
+        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(bbox, DefaultGeographicCRS.WGS84), 512, 512);
+        long t2 = System.currentTimeMillis();
+        GridCoverage2D<?> coverage = feature.extractHorizontalGrid(0, 15, targetDomain);
+        long endTime = System.currentTimeMillis();
+        System.out.println("Time to load:"+(t1-startTime));
+        System.out.println("Time to extract:"+(endTime-t2));
     }
 }

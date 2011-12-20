@@ -286,7 +286,6 @@ public class NcGridSeriesCoverage extends
                 while (a.hasNext()) {
                     ret.add(a.nextFloat());
                 }
-                CdmUtils.closeDataset(nc);
             }
         } catch (InvalidRangeException e) {
             // TODO Auto-generated catch block
@@ -294,6 +293,8 @@ public class NcGridSeriesCoverage extends
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } finally {
+            CdmUtils.closeDataset(nc);
         }
         return ret;
     }

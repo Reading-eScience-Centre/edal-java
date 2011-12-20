@@ -215,14 +215,13 @@ public enum DataReadingStrategy {
 
             int xSize = xExtent.getHigh() - xExtent.getLow() + 1;
             int ySize = yExtent.getHigh() - yExtent.getLow() + 1;
-            int zSize = zExtent.getHigh() - zExtent.getLow() + 1;
 
             List<R> dataChunk = coverage.evaluate(tExtent, zExtent, yExtent, xExtent);
 
             for (PixelMapEntry pme : pixelMap) {
                 int xIndex = pme.getSourceGridIIndex() - imin;
                 int yIndex = pme.getSourceGridJIndex() - jmin;
-                int index = getIndex(xIndex, yIndex, zIndex, tIndex, xSize, ySize, zSize);
+                int index = getIndex(xIndex, yIndex, 0, 0, xSize, ySize, 1);
                 R val = dataChunk.get(index);
                 for (int targetGridPoint : pme.getTargetGridPoints()) {
                     data.set(targetGridPoint, val);
@@ -265,7 +264,7 @@ public enum DataReadingStrategy {
      */
     public final <R> int readHorizontalData(int tIndex, int zIndex, GridSeriesCoverage<R> coverage, PixelMap pixelMap,
             List<R> data) throws IOException {
-        int dataPointsRead = this.populatePixelArray(data, pixelMap, zIndex, tIndex, coverage);
+        int dataPointsRead = this.populatePixelArray(data, pixelMap, tIndex, zIndex, coverage);
 
         // Calculate the number of bytes that we read from the source data
         int bytesPerDataPoint = Float.SIZE/8;
