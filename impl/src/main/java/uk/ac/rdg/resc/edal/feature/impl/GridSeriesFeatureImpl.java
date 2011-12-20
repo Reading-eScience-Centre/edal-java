@@ -68,18 +68,17 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
     @Override
     public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition t) {
         Extent<Integer> vExtent = Extents.emptyExtent(Integer.class);
-        try{
+        if(coverage.getDomain().getVerticalAxis() != null)
             vExtent = coverage.getDomain().getVerticalAxis().getIndexExtent();
-        } catch (NullPointerException npe){
-            // Do nothing
-        }
         GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
-        int xIndex = gridCell.getXIndex();
-        int yIndex = gridCell.getYIndex();
-        int tIndex = coverage.getDomain().getTimeAxis().findIndexOf(t);
-
-        List<R> values = coverage.evaluate(Extents.newExtent(tIndex, tIndex), vExtent, Extents.newExtent(yIndex,
-                yIndex), Extents.newExtent(xIndex, xIndex));
+        List<R> values = null;
+        if(gridCell != null){
+            int xIndex = gridCell.getXIndex();
+            int yIndex = gridCell.getYIndex();
+            int tIndex = coverage.getDomain().getTimeAxis().findIndexOf(t);
+            values = coverage.evaluate(Extents.newExtent(tIndex, tIndex), vExtent, Extents.newExtent(yIndex,
+                    yIndex), Extents.newExtent(xIndex, xIndex));
+        }
         ProfileCoverage<R> profileCoverage = new ProfileSimpleCoverage<R>(coverage, values);
         // TODO Check whether we just want default values for name, id, etc.
         ProfileFeature<R> feature = new ProfileFeatureImpl<R>(getName(), getId(), getDescription(),

@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,24 +57,33 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
 
     @Override
     public List<GridCell2D> getDomainObjects() {
-        List<GridCell2D> gridCells = new ArrayList<GridCell2D>();
         int xIMin = getXAxis().getIndexExtent().getLow();
         // +1 because extents are INCLUSIVE
         int xIMax = getXAxis().getIndexExtent().getHigh() + 1;
         int yIMin = getYAxis().getIndexExtent().getLow();
         // +1 because extents are INCLUSIVE
         int yIMax = getYAxis().getIndexExtent().getHigh() + 1;
-        for (Integer yIndex = yIMin; yIndex < yIMax; yIndex++) {
-            for (Integer xIndex = xIMin; xIndex < xIMax; xIndex++) {
-                gridCells.add(new GridCell2DRectangle(new GridCoordinates2DImpl(xIndex, yIndex),
+        final int xSize = (xIMax-xIMin);
+        final int size = xSize*(yIMax-yIMin);
+        List<GridCell2D> gridCells = new AbstractList<GridCell2D>() {
+            @Override
+            public GridCell2D get(int index) {
+                int xIndex = index % xSize;
+                int yIndex = (index - xIndex) / xSize;
+                return new GridCell2DRectangle(new GridCoordinates2DImpl(xIndex, yIndex),
                                                    getXAxis().getCoordinateBounds(xIndex).getLow(),
                                                    getYAxis().getCoordinateBounds(yIndex).getLow(),
                                                    getXAxis().getCoordinateBounds(xIndex).getHigh(),
                                                    getYAxis().getCoordinateBounds(yIndex).getHigh(),
-                                                   getCoordinateReferenceSystem(),this));
+                                                   getCoordinateReferenceSystem(),AbstractRectilinearGrid.this);
             }
-        }
-        return Collections.unmodifiableList(gridCells);
+
+            @Override
+            public int size() {
+                return size;
+            }
+        };
+        return gridCells;
     }
 
     @Override

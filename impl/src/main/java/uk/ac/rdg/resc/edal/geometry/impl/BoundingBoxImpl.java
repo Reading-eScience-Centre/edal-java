@@ -65,7 +65,10 @@ public class BoundingBoxImpl extends AbstractEnvelope implements BoundingBox {
         }
     }
 
-    /** Constructs a bounding box with an unknown (null) CRS */
+    /**
+     * Creates a BoundingBox from a four-element array [minx, miny, maxx, maxy]
+     * with an unknown (null) CRS
+     */
     public BoundingBoxImpl(double[] bbox) {
         this(bbox, null);
     }
