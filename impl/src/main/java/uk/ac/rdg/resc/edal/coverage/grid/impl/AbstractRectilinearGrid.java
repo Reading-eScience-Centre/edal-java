@@ -1,8 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;

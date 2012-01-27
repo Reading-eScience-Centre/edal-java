@@ -40,7 +40,6 @@ import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
-import ucar.nc2.dataset.VariableDS;
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
@@ -51,7 +50,6 @@ import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.Coverage;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadataImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.GridSeriesDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
@@ -61,6 +59,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiscreteSimpleCoverage;
+import uk.ac.rdg.resc.edal.coverage.impl.RangeMetadataImpl;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
@@ -159,10 +158,8 @@ public class NcGridSeriesCoverage extends
             tPos = tAxis.getCoordinateValue(tindex);
         }
         fileVarTimeIndex = tPosToVariable.get(tPos);
-        NetcdfDataset nc = null;
         try {
-            nc = CdmUtils.openDataset(fileVarTimeIndex.getFilename());
-            variable = CdmUtils.getGridDatatype(nc, fileVarTimeIndex.getVarId()).getVariable();
+            variable = getVariable(fileVarTimeIndex);
     
             List<Range> ranges = new ArrayList<Range>();
             
@@ -188,8 +185,6 @@ public class NcGridSeriesCoverage extends
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } finally {
-            CdmUtils.closeDataset(nc);
         }
         return returnVal;
     }
@@ -203,7 +198,6 @@ public class NcGridSeriesCoverage extends
         List<FilenameVarIdTimeIndex> filesToRead = new ArrayList<FilenameVarIdTimeIndex>();
         List<Range> rangesToRead = new ArrayList<Range>();
 
-        NetcdfDataset nc = null;
         try {
             if (tAxis != null) {
                 /*
@@ -279,9 +273,7 @@ public class NcGridSeriesCoverage extends
                     ranges.add(new Range(xindexExtent.getLow(), xindexExtent.getHigh()));
                 }
                 
-                nc = CdmUtils.openDataset(filesToRead.get(i).getFilename());
-                VariableDS variable = CdmUtils.getGridDatatype(nc, filesToRead.get(i).getVarId())
-                        .getVariable();
+                Variable variable = getVariable(filesToRead.get(i));
                 Array a = variable.read(ranges);
                 while (a.hasNext()) {
                     ret.add(a.nextFloat());
@@ -293,12 +285,36 @@ public class NcGridSeriesCoverage extends
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } finally {
-            CdmUtils.closeDataset(nc);
         }
         return ret;
     }
 
+    /*
+     * We define state variables, such that we keep a Variable object in memory
+     * until a new one is used. This prevents closing and re-opening the dataset
+     * for every call to evaluate (which seems to be extremely slow for e.g.
+     * curvilinear grids).
+     */
+    private String currentFilename = null;
+    private NetcdfDataset nc = null;
+    private Variable currentVariable = null;
+
+    private synchronized Variable getVariable(FilenameVarIdTimeIndex fileVarTimeIndex) throws IOException{
+        Variable variable = null;
+        if(currentFilename != null && currentFilename.equals(fileVarTimeIndex.getFilename())){
+            variable = currentVariable;
+        } else {
+            if(currentFilename != null){
+                CdmUtils.closeDataset(nc);
+            }
+            nc = CdmUtils.openDataset(fileVarTimeIndex.getFilename());
+            variable = CdmUtils.getGridDatatype(nc, fileVarTimeIndex.getVarId()).getVariable();
+            currentVariable = variable;
+            currentFilename = fileVarTimeIndex.getFilename();
+        }
+        return variable;
+    }
+    
     @Override
     public GridSeriesDomain getDomain() {
         if (domain == null)
