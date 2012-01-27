@@ -3,18 +3,19 @@ package uk.ac.rdg.resc.edal.coverage.domain.impl;
 import java.util.Arrays;
 import java.util.List;
 
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
 import uk.ac.rdg.resc.edal.Domain;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * <p>
- * A list of {@link HorizontalPosition}s in a certain coordinate reference
- * system.
- * </p>
+ * A list of {@link HorizontalPosition}s. Each will have a
+ * {@link CoordinateReferenceSystem} associated with it. Generally, all
+ * positions within the {@link Domain} will belong to the same
+ * {@link CoordinateReferenceSystem}
  * 
  * @author Guy Griffiths
  */
-// TODO Check that this is OK and we do not need a CRS any more
 public final class HorizontalDomain implements Domain<HorizontalPosition> {
 
     private final List<HorizontalPosition> posList;
@@ -47,8 +48,13 @@ public final class HorizontalDomain implements Domain<HorizontalPosition> {
     public boolean contains(HorizontalPosition position) {
         return posList.contains(position);
     }
-    
-    public List<HorizontalPosition> getDomainObjects(){
+
+    /**
+     * Gets a list of all objects in the domain
+     * 
+     * @return a {@link List} of {@link HorizontalPosition}s
+     */
+    public List<HorizontalPosition> getDomainObjects() {
         return posList;
     }
 }

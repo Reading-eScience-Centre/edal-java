@@ -98,26 +98,36 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
 
     @Override
     public GridCell4D findContainingCell(GeoPosition pos) {
-        int vIndex = 0;
-        if (vAxis != null) {
-            vIndex = vAxis.findIndexOf(pos.getVerticalPosition().getZ());
-        }
+        /*
+         * Get the extent of the time axis (if available - empty if not)
+         */
         int tIndex = 0;
+        Extent<TimePosition> tExtent = Extents.emptyExtent(TimePosition.class);
         if (tAxis != null) {
             tAxis.findIndexOf(pos.getTimePosition());
+            tExtent = tAxis.getCoordinateBounds(tIndex);
         }
+
+        /*
+         * Get the extent of the vertical axis (if available - empty if not)
+         */
+        int vIndex = 0;
+        VerticalCrs vCrs = null;
+        Extent<VerticalPosition> vExtent = Extents.emptyExtent(VerticalPosition.class);
+        if (vAxis != null) {
+            vIndex = vAxis.findIndexOf(pos.getVerticalPosition().getZ());
+            vCrs = vAxis.getVerticalCrs();
+            Extent<Double> vExtentDouble = vAxis.getCoordinateBounds(vIndex);
+            vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
+                                        (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
+        }
+        
         GridCoordinates2D hCoords = hGrid.findContainingCell(pos.getHorizontalPosition());
         GridCell2D hCell = hGrid.getGridCell(hCoords);
-        Extent<TimePosition> tExtent = tAxis.getCoordinateBounds(tIndex);
-
-        VerticalCrs vCrs = null;
-        if (vAxis != null) {
-            vCrs = vAxis.getVerticalCrs();
-        }
-        Extent<Double> vExtentDouble = vAxis.getCoordinateBounds(vIndex);
-        // Cast is needed here, otherwise an Extent<VerticalPositionImpl> is returned, which is not what we want
-        Extent<VerticalPosition> vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
-                                                             (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
+        
+        /*
+         * Cast is needed here, otherwise an Extent<VerticalPositionImpl> is returned, which is not what we want
+         */
 
         return new GridCell4DRectangle(this, hCell, tExtent, tIndex, vExtent, vIndex);
     }
@@ -139,19 +149,18 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
             tSize = tAxis.size();
         }
 
-        // TODO check variable order
         for (GridCell2D hCell : hCells) {
-            for (int vIndex = 0; vIndex < vSize; vIndex++) {
-                Extent<VerticalPosition> vExtent = null;
-                if(vAxis != null){
-                    Extent<Double> vExtentDouble = vAxis.getCoordinateBounds(vIndex);
-                    vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
-                                                (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs));
+            for (int tIndex = 0; tIndex < tSize; tIndex++) {
+                Extent<TimePosition> tExtent = null;
+                if(tAxis != null){
+                    tExtent = tAxis.getCoordinateBounds(tIndex);
                 }
-                for (int tIndex = 0; tIndex < tSize; tIndex++) {
-                    Extent<TimePosition> tExtent = null;
-                    if(tAxis != null){
-                        tExtent = tAxis.getCoordinateBounds(tIndex);
+                for (int vIndex = 0; vIndex < vSize; vIndex++) {
+                    Extent<VerticalPosition> vExtent = null;
+                    if(vAxis != null){
+                        Extent<Double> vExtentDouble = vAxis.getCoordinateBounds(vIndex);
+                        vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
+                                                    (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs));
                     }
                     gridCells.add(new GridCell4DRectangle(this, hCell, tExtent, tIndex, vExtent, vIndex));
                 }
