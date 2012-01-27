@@ -7,7 +7,7 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
+import uk.ac.rdg.resc.edal.position.impl.TimePositionJoda;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
@@ -84,14 +84,14 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
     @Override
     protected TimePosition extendFirstValue(TimePosition firstVal, TimePosition nextVal) {
         long tVal = (long) (firstVal.getValue() - 0.5 * (nextVal.getValue() - firstVal.getValue()));
-        return new TimePositionImpl(tVal);
+        return new TimePositionJoda(tVal);
     }
 
     @Override
     protected TimePosition extendLastValue(TimePosition lastVal, TimePosition secondLastVal) {
         long tVal = (long) (lastVal.getValue() + 0.5 * (lastVal.getValue() - secondLastVal
                 .getValue()));
-        return new TimePositionImpl(tVal);
+        return new TimePositionJoda(tVal);
     }
 
     @Override
@@ -141,7 +141,7 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
         if (index == 0) {
             lowerBound = getCoordinateExtent().getLow();
         } else {
-            lowerBound = new TimePositionImpl(
+            lowerBound = new TimePositionJoda(
                     (long) (0.5 * (axisValues[index].getValue() + axisValues[lowerIndex].getValue())));
         }
 
@@ -149,7 +149,7 @@ public final class TimeAxisImpl extends AbstractReferenceableAxis<TimePosition> 
         if (index == size() - 1) {
             upperBound = getCoordinateExtent().getHigh();
         } else {
-            upperBound = new TimePositionImpl(
+            upperBound = new TimePositionJoda(
                     (long) (0.5 * (axisValues[upperIndex].getValue() + axisValues[index].getValue())));
         }
 

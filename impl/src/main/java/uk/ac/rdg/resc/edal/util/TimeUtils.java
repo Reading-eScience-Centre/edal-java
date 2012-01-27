@@ -29,18 +29,21 @@
 package uk.ac.rdg.resc.edal.util;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.joda.time.Chronology;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
+import uk.ac.rdg.resc.edal.position.impl.TimePositionJoda;
 
 /**
  * <p>
@@ -53,15 +56,9 @@ import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
  */
 public class TimeUtils {
 
-    /*
-     * TODO This currently doesn't take account of time zones. Basically there
-     * is no easy way to parse an ISO8601 date using a SimpleDateFormat object
-     * without doing a lot of regex manipulation on it first. This should
-     * *definitely* use Joda-time, but I will add this at a later date - the
-     * current method is OK for testing
-     */
-    private static final SimpleDateFormat ISO_DATE_TIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-    private static final SimpleDateFormat ISO_TIME_FORMATTER = new SimpleDateFormat("HH:mm:ssZ");
+    private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
+    private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date();
+    private static final DateTimeFormatter ISO_TIME_FORMATTER = ISODateTimeFormat.time();
     
     /**
      * <p>A {@link Comparator} that compares {@link DateTime} objects based only
@@ -101,7 +98,7 @@ public class TimeUtils {
     public static String dateTimeToISO8601(TimePosition dateTime) {
         if(dateTime == null)
             return "";
-        return ISO_DATE_TIME_FORMATTER.format(new Date(dateTime.getValue()));
+        return ISO_DATE_TIME_FORMATTER.print(dateTime.getValue());
     }
     
     /**
@@ -116,20 +113,11 @@ public class TimeUtils {
      * TODO Calendar System
      */
     public static TimePosition iso8601ToDateTime(String isoDateTime, CalendarSystem calSys) throws ParseException {
-        return new TimePositionImpl(ISO_DATE_TIME_FORMATTER.parse(isoDateTime).getTime());
+        return new TimePositionJoda(ISO_DATE_TIME_FORMATTER.parseDateTime(isoDateTime), calSys);
     }
 
     public static TimePosition iso8601ToDate(String isoDate, CalendarSystem calSys) throws ParseException {
-        String[] yMD = isoDate.split("-");
-        if(yMD.length != 3){
-            throw new NumberFormatException("Date must contain year, month, and day only");
-        }
-        int year = Integer.parseInt(yMD[0]);
-        int month = Integer.parseInt(yMD[1]);
-        String[] dayStr = yMD[2].split("T");
-        int day = Integer.parseInt(dayStr[0]);
-        
-        return new TimePositionImpl(year, month, day, 00, 0, 0);
+        return new TimePositionJoda(ISO_DATE_FORMATTER.parseDateTime(isoDate), calSys);
     }
 
     /**
@@ -156,7 +144,7 @@ public class TimeUtils {
      * "14:53:03". Time zone offset is zero (UTC).
      */
     public static String formatUTCTimeOnly(TimePosition dateTime) {
-        return ISO_TIME_FORMATTER.format(new Date(dateTime.getValue()));
+        return ISO_TIME_FORMATTER.print(dateTime.getValue());
     }
 
     /**

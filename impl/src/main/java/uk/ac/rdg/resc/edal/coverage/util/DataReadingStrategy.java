@@ -262,7 +262,7 @@ public enum DataReadingStrategy {
      * 
      * @see PixelMap
      */
-    public final <R> int readHorizontalData(int tIndex, int zIndex, GridSeriesCoverage<R> coverage, PixelMap pixelMap,
+    public synchronized final <R> int readHorizontalData(int tIndex, int zIndex, GridSeriesCoverage<R> coverage, PixelMap pixelMap,
             List<R> data) throws IOException {
         int dataPointsRead = this.populatePixelArray(data, pixelMap, tIndex, zIndex, coverage);
 

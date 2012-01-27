@@ -71,7 +71,7 @@ import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrs.PositiveDirection;
-import uk.ac.rdg.resc.edal.position.impl.TimePositionImpl;
+import uk.ac.rdg.resc.edal.position.impl.TimePositionJoda;
 import uk.ac.rdg.resc.edal.position.impl.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
@@ -209,7 +209,7 @@ public final class CdmUtils {
             List<TimePosition> timesteps = new ArrayList<TimePosition>();
             // Use the Java NetCDF library's built-in date parsing code
             for (Date date : timeAxis.getTimeDates()) {
-                timesteps.add(new TimePositionImpl(date.getTime(), CalendarSystem.CAL_ISO_8601));
+                timesteps.add(new TimePositionJoda(date.getTime(), CalendarSystem.CAL_ISO_8601));
             }
             return new TimeAxisImpl("time", timesteps);
         } else {
@@ -348,5 +348,45 @@ public final class CdmUtils {
         FeatureType fType = featureDS.getFeatureType();
         assert (fType == FeatureType.GRID);
         return (GridDataset) featureDS;
+    }
+    
+    public static void main(String[] args) throws IOException {
+        String slowFilename = "/home/guy/Data/Signell_curvilinear/useast/useast_his_0001.nc";
+        String slowVarId = "ubar";
+        String fastFilename = "/home/guy/Data/OSTIA/20100715-UKMO-L4HRfnd-GLOB-v01-fv02-OSTIA.nc";
+        String fastVarId = "analysed_sst";
+        
+        String varId;
+        NetcdfDataset nc;
+        
+        System.out.println("Press something");
+        System.in.read();
+        int runs = 1000;
+        
+        
+        varId = fastVarId;
+        long starttime1 = System.currentTimeMillis();
+        nc = openDataset(fastFilename);
+        for(int i=0;i<runs;i++){
+            getGridDatatype(nc, varId);
+        }
+        closeDataset(nc);
+        long endtime1 = System.currentTimeMillis();
+        
+        varId = slowVarId;
+        long starttime2 = System.currentTimeMillis();
+        nc = openDataset(slowFilename);
+        for(int i=0;i<runs;i++){
+            getGridDatatype(nc, varId);
+        }
+        closeDataset(nc);
+        long endtime2 = System.currentTimeMillis();
+        
+        double diff1 = (endtime1-starttime1)/1000.0;
+        double diff2 = (endtime2-starttime2)/1000.0;
+        
+        System.out.println("Fast: "+diff1+"\nSlow: "+diff2);
+        System.out.println("Press something");
+        System.in.read();
     }
 }

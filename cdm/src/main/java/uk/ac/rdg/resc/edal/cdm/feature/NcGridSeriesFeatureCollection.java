@@ -109,7 +109,6 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         List<File> files = FileUtils.expandGlobExpression(location);
         for (File file : files) {
             String filename = file.getPath();
-            System.out.println("Opening dataset:"+filename);
             NetcdfDataset ncDataset = CdmUtils.openDataset(filename);
 
             GridDataset gridDS = CdmUtils.getGridDataset(ncDataset);
@@ -186,7 +185,6 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
                     }
                 }
             }
-            System.out.println("Closing dataset:"+filename);
             CdmUtils.closeDataset(ncDataset);
         }
         for (String compoundVar : compoundsCoverageComponents.keySet()) {
@@ -291,6 +289,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
         bbox[3] = 40.0;
         RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(bbox, DefaultGeographicCRS.WGS84), 512, 512);
         long t2 = System.currentTimeMillis();
+        @SuppressWarnings("unused")
         GridCoverage2D<?> coverage = feature.extractHorizontalGrid(0, 15, targetDomain);
         long endTime = System.currentTimeMillis();
         System.out.println("Time to load:"+(t1-startTime));
