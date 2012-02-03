@@ -216,7 +216,8 @@ public class NcGridSeriesCoverage extends
                     TimePosition time = tAxis.getCoordinateValue(i);
                     FilenameVarIdTimeIndex varOfCurrentI = tPosToVariable.get(time);
                     if (filesToRead.size() > 0
-                            && filesToRead.get(filesToRead.size() - 1) == varOfCurrentI) {
+                            && filesToRead.get(filesToRead.size() - 1).getFilename().equals(varOfCurrentI.getFilename()) 
+                            && filesToRead.get(filesToRead.size() - 1).getVarId().equals(varOfCurrentI.getVarId())) {
                         /*
                          * If we are still scanning through the same variable,
                          * update the final time index for this variable
@@ -266,7 +267,12 @@ public class NcGridSeriesCoverage extends
                     ranges.add(rangesToRead.get(i));
                 }
                 if (vAxis != null) {
+                    try{
                     ranges.add(new Range(zindexExtent.getLow(), zindexExtent.getHigh()));
+                    }catch(Exception e){
+                        e.printStackTrace();
+                        System.out.println(zindexExtent);
+                    }
                 }
                 if (hGrid != null) {
                     ranges.add(new Range(yindexExtent.getLow(), yindexExtent.getHigh()));

@@ -101,7 +101,7 @@ public abstract class AbstractDiscreteCoverage<P, DO, R> implements DiscreteCove
     @Override
     public R evaluate(P pos) {
         int i = (int)this.getDomain().findIndexOf(pos);
-        if (i < 0) return null;
+        if (i < 0 || this.getValues().size() == 0) return null;
         return this.getValues().get(i);
     }
 

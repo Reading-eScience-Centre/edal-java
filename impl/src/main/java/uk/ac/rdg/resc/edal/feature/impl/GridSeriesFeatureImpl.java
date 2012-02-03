@@ -2,6 +2,7 @@ package uk.ac.rdg.resc.edal.feature.impl;
 
 import java.io.IOException;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.Extent;
@@ -48,15 +49,29 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
 
     @Override
     public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
-            Extent<TimePosition> tRange) {
+            Extent<? extends TimePosition> tRange) {
         Extent<Integer> tExtent = coverage.getDomain().getTimeAxis().getIndexExtent();
         GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
         int xIndex = gridCell.getXIndex();
         int yIndex = gridCell.getYIndex();
-        int zIndex = coverage.getDomain().getVerticalAxis().findIndexOf(z.getZ());
+        int zIndex = 0;
+        VerticalAxis vAxis = coverage.getDomain().getVerticalAxis();
+        if(vAxis != null && z != null){
+            zIndex = vAxis.findIndexOf(z.getZ());
+        }
+        if(zIndex < 0)
+            zIndex *= -1;
 
-        List<R> values = coverage.evaluate(tExtent, Extents.newExtent(zIndex, zIndex), Extents.newExtent(yIndex,
-                yIndex), Extents.newExtent(xIndex, xIndex));
+        List<R> values;
+        if(xIndex < 0 || yIndex < 0){
+            /*
+             * If we are outside the coverage, do not evaluate
+             */
+            values = new ArrayList<R>();
+        } else {
+            values = coverage.evaluate(tExtent, Extents.newExtent(zIndex, zIndex), Extents.newExtent(yIndex,
+                    yIndex), Extents.newExtent(xIndex, xIndex));
+        }
 
         PointSeriesCoverage<R> pointCoverage = new PointSeriesSimpleCoverage<R>(coverage, values);
         // TODO Check whether we just want default values for name, id, etc.
@@ -97,16 +112,23 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
     }
     
     @Override
-    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, double zPos,
+    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, VerticalPosition zPos,
             HorizontalGrid targetDomain) {
         int tindex = 0;
         int zindex = 0;
         TimeAxis tAxis = getCoverage().getDomain().getTimeAxis();
-        if(tAxis != null)
+        if(tAxis != null && tPos != null)
             tindex = tAxis.findIndexOf(tPos);
+        if(tindex < 0){
+            // TODO is this the behaviour we want??
+            tindex *= -1;
+        }
         VerticalAxis vAxis = getCoverage().getDomain().getVerticalAxis();
         if(vAxis != null)
-            zindex = vAxis.findIndexOf(zPos);
+            zindex = vAxis.findIndexOf(zPos.getZ());
+        if(zindex < 0){
+            zindex *= -1;
+        }
         return extractHorizontalGrid(tindex, zindex, targetDomain);
     }
     

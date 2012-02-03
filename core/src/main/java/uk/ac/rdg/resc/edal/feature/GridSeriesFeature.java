@@ -79,7 +79,7 @@ public interface GridSeriesFeature<R> extends Feature {
      * @return the extracted {@link PointSeriesFeature}
      */
     public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos,
-            VerticalPosition z, Extent<TimePosition> tRange);
+            VerticalPosition z, Extent<? extends TimePosition> tRange);
 
     /**
      * Convenience method to extract a horizontal layer for plotting purposes
@@ -106,7 +106,7 @@ public interface GridSeriesFeature<R> extends Feature {
      *            The desired domain of the resultant coverage
      * @return A list of values, with x varying first
      */
-    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, double zPos,
+    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, VerticalPosition zPos,
             HorizontalGrid targetDomain);
     
 //    public TransectFeature extractTransectFeature(Arguments gohere);

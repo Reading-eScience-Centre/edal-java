@@ -10,7 +10,6 @@
     </parent>
     <artifactId>edal-cdm</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.0-SNAPSHOT</version>
     <name>EDAL interface to the Unidata Common Data Model</name>
     <dependencies>
         <dependency>
