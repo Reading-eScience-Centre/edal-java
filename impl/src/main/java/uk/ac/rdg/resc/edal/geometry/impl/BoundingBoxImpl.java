@@ -64,6 +64,19 @@ public class BoundingBoxImpl extends AbstractEnvelope implements BoundingBox {
             throw new IllegalArgumentException("Invalid bounding box specification");
         }
     }
+    
+    /** Creates a BoundingBox */
+    public BoundingBoxImpl(double minx, double miny, double maxx, double maxy, CoordinateReferenceSystem crs) {
+        super(crs);
+        this.minx = minx;
+        this.maxx = maxx;
+        this.miny = miny;
+        this.maxy = maxy;
+        // Check the bounds of the bbox
+        if (this.minx > this.maxx || this.miny > this.maxy) {
+            throw new IllegalArgumentException("Invalid bounding box specification");
+        }
+    }
 
     /**
      * Creates a BoundingBox from a four-element array [minx, miny, maxx, maxy]
