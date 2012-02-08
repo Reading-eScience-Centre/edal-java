@@ -8,7 +8,6 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.Unit;
@@ -19,6 +18,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.MapRenderer;
 import uk.ac.rdg.resc.edal.graphics.MapStyleDescriptor;
@@ -39,23 +39,21 @@ public class FeatureCollectionTest {
         // NcGridSeriesFeatureCollection("testcollection", "Test Collection",
         // "/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090320.nc");
 
-//        for (String fId : fs.getFeatureIds()) {
+        for (String fId : fs.getFeatureIds()) {
 //            System.out.println(fId);
 //        }
-        String fId = "TMP";
+//        String fId = "TMP";
         GridSeriesFeature<?> feature = fs.getFeatureById(fId);
-//        double[] bbox = { -180.0, -80.0, 180.0, 80.0 };
-        double[] bbox = { -9.9, -9.99, -0.1, -0.05 };
-        int width = 100;
-        int height = 100;
-        HorizontalGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(bbox,
-                DefaultGeographicCRS.WGS84), width, height);
+        BoundingBox bbox = new BoundingBoxImpl(new double[]{ -180.0, -80.0, 180.0, 80.0 }, DefaultGeographicCRS.WGS84);
+//        double[] bbox = { -9.9, -9.99, -0.1, -0.05 };
+        int width = 900;
+        int height = 450;
+        HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
 
         GridCoverage2D<?> gridCoverage = feature.extractHorizontalGrid(0, 0, targetDomain);
         if (gridCoverage != null) {
             MapStyleDescriptor style = new MapStyleDescriptor();
-            MapRenderer mapRenderer = new MapRenderer(style, width, height, new BoundingBoxImpl(
-                    bbox, DefaultGeographicCRS.WGS84));
+            MapRenderer mapRenderer = new MapRenderer(style, width, height, bbox);
             TimePosition okTime = feature.getCoverage().getDomain().getTimeAxis().getCoordinateValues().get(0);
             VerticalCrs vCrs = new VerticalCrsImpl(Unit.getUnit("m", UnitVocabulary.UDUNITS),
                     PositiveDirection.UP, false);
@@ -74,6 +72,6 @@ public class FeatureCollectionTest {
             List<BufferedImage> images = mapRenderer.getRenderedFrames();
             ImageIO.write(images.get(0), "png", new File(fId + ".png"));
         }
-//        }
+        }
     }
 }
