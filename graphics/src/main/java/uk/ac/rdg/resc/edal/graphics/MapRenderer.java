@@ -377,7 +377,6 @@ public final class MapRenderer {
                 return images;
             }
             style.setScaleRange(Extents.newExtent(min, max));
-            System.out.println(min + "," + max);
         }
 
         List<TimePosition> times = new ArrayList<TimePosition>(frameData.keySet());
