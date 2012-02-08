@@ -11,10 +11,7 @@
     <packaging>pom</packaging>
     <url>http://code.google.com/p/edal-java/</url>
     <inceptionYear>2010</inceptionYear>
-    <description>EDAL (Environmental Data Abstraction Library) is a set of Java
-    libraries that provide a consistent means for accessing and manipulating
-    environmental data. The core concepts are based on the standards-compliant
-    data model of the Climate Science Modelling Language.</description>
+    <description>EDAL (Environmental Data Abstraction Library) is a set of Java libararies that provide a consistent means for accessing and manipulating environmental data. The core concepts are based on the standards-compliant data model of the Climate Science Modelling Language.</description>
     <organization>
         <name>Reading e-Science Centre, University of Reading, UK</name>
         <url>http://www.resc.reading.ac.uk</url>
@@ -90,8 +87,8 @@
                     links will also have to be updated. -->
                     <links>
                         <link>http://java.sun.com/j2se/1.6.0/docs/api/</link>
-                        <link>http://www.geoapi.org/3.0/javadoc/</link>
-                        <link>http://www.unidata.ucar.edu/software/netcdf-java/v4.2/javadoc/</link>
+                        <link>http://joda-time.sourceforge.net/api-1.6/</link>
+                        <link>http://geoapi.sourceforge.net/2.2/javadoc/</link>
                     </links>
                 </configuration>
             </plugin>
@@ -129,7 +126,7 @@
                 <artifactId>maven-pmd-plugin</artifactId>
                 <configuration>
                     <aggregate>true</aggregate>
-                    <targetJdk>1.5</targetJdk>
+                    <targetJdk>1.6</targetJdk>
                 </configuration>
             </plugin>
             <plugin>
@@ -151,13 +148,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>geotoolkit</id>
-            <name>Geotoolkit repository</name>
-            <url>http://maven.geotoolkit.org</url>
-        </repository>
-    </repositories>
     <scm>
         <connection>scm:hg:https://edal-java.googlecode.com/hg/</connection>
         <developerConnection>scm:hg:https://edal-java.googlecode.com/hg/</developerConnection>
@@ -166,8 +156,19 @@
     <modules>
         <!-- Note that these are relative directory paths, not artifactIds! -->
         <module>core</module>
+        <!--<module>util</module>-->
         <module>impl</module>
         <module>cdm</module>
+        <module>graphics</module>
+        <module>ncwms</module>
+        <module>test</module>
+        <!--<module>en3</module>-->
     </modules>
+    <repositories>
+        <repository>
+            <id>geotoolkit</id>
+            <name>Geotoolkit.org project</name>
+            <url>http://maven.geotoolkit.org</url>
+        </repository>
+    </repositories>
 </project>
-
