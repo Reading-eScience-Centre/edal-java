@@ -151,6 +151,13 @@
         <developerConnection>scm:hg:https://edal-java.googlecode.com/hg/</developerConnection>
         <url>http://code.google.com/p/edal-java/source/browse/</url>
     </scm>
+    <distributionManagement>
+        <!-- use the following if you're not using a snapshot version. -->
+        <repository>
+            <id>edal-java-release</id>
+            <url>dav:https://edal-java.googlecode.com/hg/maven2/releases</url>
+        </repository>
+     </distributionManagement>
     <modules>
         <!-- Note that these are relative directory paths, not artifactIds! -->
         <module>core</module>
