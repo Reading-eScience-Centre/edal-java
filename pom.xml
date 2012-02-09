@@ -172,7 +172,7 @@
         <!-- use the following if you're not using a snapshot version. -->
         <repository>
             <id>edal-java-release</id>
-            <url>dav:https://edal-java.googlecode.com/hg/maven2/releases</url>
+            <url>dav:https://edal-java.googlecode.com/hg/repo</url>
         </repository>
      </distributionManagement>
     <modules>
