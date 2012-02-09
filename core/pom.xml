@@ -10,7 +10,6 @@
     </parent>
     <artifactId>edal-core</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.0-SNAPSHOT</version>
     <name>EDAL core data types</name>
     <dependencies>
         <dependency>
