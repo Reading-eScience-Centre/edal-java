@@ -15,7 +15,7 @@
     	<dependency>
     		<groupId>uk.ac.rdg.resc</groupId>
     		<artifactId>edal-core</artifactId>
-    		<version>0.1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
     		<type>jar</type>
     		<optional>false</optional>
     	</dependency>

@@ -10,20 +10,19 @@
     </parent>
     <artifactId>edal-graphics</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.0-SNAPSHOT</version>
     <name>Graphics library for plotting EDAL core data types</name>
     <dependencies>
     	<dependency>
     		<groupId>uk.ac.rdg.resc</groupId>
     		<artifactId>edal-core</artifactId>
-    		<version>0.1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
     		<type>jar</type>
     		<optional>false</optional>
     	</dependency>
     	<dependency>
     		<groupId>uk.ac.rdg.resc</groupId>
     		<artifactId>edal-impl</artifactId>
-    		<version>0.1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
     		<type>jar</type>
     		<optional>false</optional>
     	</dependency>
