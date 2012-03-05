@@ -28,6 +28,7 @@
 package uk.ac.rdg.resc.edal.cdm.feature;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -92,6 +93,9 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Gri
         Map<String, CompoundData> compoundsCoverageComponents = new HashMap<String, CompoundData>();
 
         List<File> files = FileUtils.expandGlobExpression(location);
+        if(files.size() == 0){
+            throw new FileNotFoundException("No files found at " + location);
+        }
         for (File file : files) {
             String filename = file.getPath();
             NetcdfDataset ncDataset = CdmUtils.openDataset(filename);
@@ -197,12 +201,5 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Gri
                 assert false;
             }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public Class<GridSeriesFeature<?>> getFeatureType() {
-        // TODO check this with usage examples
-        return (Class<GridSeriesFeature<?>>) (Class<?>) GridSeriesFeature.class;
     }
 }
