@@ -118,4 +118,9 @@ public class TimePositionJoda implements TimePosition {
     public long differenceInMillis(TimePosition time) {
         return getValue() - time.getValue();
     }
+    
+    @Override
+    public String toString() {
+        return dateTime.toString();
+    }
 }

@@ -1,6 +1,5 @@
 package uk.ac.rdg.resc.edal.feature.impl;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,8 +14,7 @@ public abstract class AbstractFeatureCollection<R extends Feature> implements Fe
     private String name;
     protected Map<String, R> id2Feature;
 
-    public AbstractFeatureCollection(String collectionId, String collectionName)
-            throws IOException {
+    public AbstractFeatureCollection(String collectionId, String collectionName) {
         this.collectionId = collectionId;
         this.name = collectionName;
 
@@ -51,5 +49,11 @@ public abstract class AbstractFeatureCollection<R extends Feature> implements Fe
     @Override
     public Iterator<R> iterator() {
         return id2Feature.values().iterator();
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public Class<R> getFeatureType() {
+        return (Class<R>) Feature.class;
     }
 }

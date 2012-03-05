@@ -52,6 +52,7 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
             Extent<? extends TimePosition> tRange) {
         Extent<Integer> tExtent = coverage.getDomain().getTimeAxis().getIndexExtent();
         GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
+        HorizontalPosition actualPos = coverage.getDomain().getHorizontalGrid().getGridCell(gridCell).getCentre();
         int xIndex = gridCell.getXIndex();
         int yIndex = gridCell.getYIndex();
         int zIndex = 0;
@@ -76,7 +77,7 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
         PointSeriesCoverage<R> pointCoverage = new PointSeriesSimpleCoverage<R>(coverage, values);
         // TODO Check whether we just want default values for name, id, etc.
         PointSeriesFeature<R> feature = new PointSeriesFeatureImpl<R>(getName(), getId(), getDescription(),
-                pointCoverage, pos, z, parentCollection);
+                pointCoverage, actualPos, z, parentCollection);
         return feature;
     }
 
