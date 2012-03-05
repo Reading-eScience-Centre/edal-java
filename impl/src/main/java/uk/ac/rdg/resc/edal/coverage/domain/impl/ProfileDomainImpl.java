@@ -1,6 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.domain.impl;
 
-import java.util.ArrayList;
+import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
 
@@ -13,6 +13,7 @@ public class ProfileDomainImpl implements ProfileDomain {
     
     private VerticalCrs vCrs;
     private List<Double> values;
+    private boolean reversed = false;
 
     public ProfileDomainImpl(List<Double> values, VerticalCrs vCrs) {
         this.vCrs = vCrs;
@@ -24,6 +25,7 @@ public class ProfileDomainImpl implements ProfileDomain {
          */
         if(values.size() >= 2){
             if(values.get(0) > values.get(1)){
+                reversed = true;
                 Collections.reverse(values);
             }
         }
@@ -44,7 +46,18 @@ public class ProfileDomainImpl implements ProfileDomain {
 
     @Override
     public List<Double> getZValues() {
-        return values;
+        List<Double> ret = new AbstractList<Double>() {
+            @Override
+            public Double get(int index) {
+                return values.get(reverseIndex(index));
+            }
+
+            @Override
+            public int size() {
+                return values.size();
+            }
+        };
+        return ret;
     }
 
     @Override
@@ -55,6 +68,7 @@ public class ProfileDomainImpl implements ProfileDomain {
     @Override
     public long findIndexOf(VerticalPosition position) {
         int index = Collections.binarySearch(values, position.getZ());
+        index = reverseIndex(index);
         if(index >= 0){
             return index;
         } else {
@@ -71,12 +85,26 @@ public class ProfileDomainImpl implements ProfileDomain {
         }
     }
 
+    private int reverseIndex(int index) {
+        if (reversed)
+            return values.size() - 1 - index;
+        else
+            return index;
+    }
+
     @Override
     public List<VerticalPosition> getDomainObjects() {
-        List<VerticalPosition> ret = new ArrayList<VerticalPosition>();
-        for(Double value : values){
-            ret.add(new VerticalPositionImpl(value, vCrs));
-        }
+        List<VerticalPosition> ret = new AbstractList<VerticalPosition>() {
+            @Override
+            public VerticalPosition get(int index) {
+                return new VerticalPositionImpl(values.get(reverseIndex(index)), vCrs);
+            }
+
+            @Override
+            public int size() {
+                return values.size();
+            }
+        };
         return ret;
     }
 
@@ -84,5 +112,4 @@ public class ProfileDomainImpl implements ProfileDomain {
     public long size() {
         return values.size();
     }
-
 }

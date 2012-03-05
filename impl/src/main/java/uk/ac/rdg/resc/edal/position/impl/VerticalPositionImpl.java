@@ -68,4 +68,8 @@ public class VerticalPositionImpl implements VerticalPosition {
         return z.compareTo(vPosition.getZ());
     }
 
+    @Override
+    public String toString() {
+        return z+crs.getUnits().getUnitString();
+    }
 }

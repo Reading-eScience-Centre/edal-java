@@ -1,6 +1,7 @@
 package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
@@ -24,10 +25,8 @@ public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<Ver
         description = coverage.getDescription();
         List<Double> elevations = new ArrayList<Double>();
         VerticalAxis vAxis = coverage.getDomain().getVerticalAxis();
-        if(vAxis != null) {
-            for(int i=0; i<vAxis.size(); i++){
-                elevations.add(vAxis.getCoordinateValue(i));
-            }
+        if(vAxis != null){
+            elevations.addAll(vAxis.getCoordinateValues());
         }
         domain = new ProfileDomainImpl(elevations, vAxis == null ? null : vAxis.getVerticalCrs());
     }
