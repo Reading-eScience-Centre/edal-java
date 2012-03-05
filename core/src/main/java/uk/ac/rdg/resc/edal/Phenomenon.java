@@ -80,4 +80,7 @@ public final class Phenomenon {
         return phenomVocab;
     }
 
+    public String toString() {
+        return getStandardName();
+    }
 }
