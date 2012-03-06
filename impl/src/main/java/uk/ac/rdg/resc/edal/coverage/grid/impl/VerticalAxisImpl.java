@@ -12,7 +12,7 @@ public class VerticalAxisImpl extends ReferenceableAxisImpl implements VerticalA
 
     private VerticalCrs vCrs;
     
-    public VerticalAxisImpl(CoordinateSystemAxis coordSysAxis, double[] values, VerticalCrs vCrs) {
+    public VerticalAxisImpl(CoordinateSystemAxis coordSysAxis, Double[] values, VerticalCrs vCrs) {
         super(coordSysAxis, values, false);
         this.vCrs = vCrs;
     }
@@ -26,8 +26,8 @@ public class VerticalAxisImpl extends ReferenceableAxisImpl implements VerticalA
         this(coordSysAxis, getValuesFromVerticalPositions(values), values[0].getCoordinateReferenceSystem());
     }
 
-    private static double[] getValuesFromVerticalPositions(VerticalPosition[] positions) {
-        double[] axisValues = new double[positions.length];
+    private static Double[] getValuesFromVerticalPositions(VerticalPosition[] positions) {
+        Double[] axisValues = new Double[positions.length];
         for (int i = 0; i < positions.length; i++) {
             axisValues[i] = positions[i].getZ();
         }
