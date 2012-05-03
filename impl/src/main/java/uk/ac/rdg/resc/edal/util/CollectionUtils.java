@@ -2,6 +2,7 @@ package uk.ac.rdg.resc.edal.util;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -16,6 +17,14 @@ import java.util.TreeMap;
  * @author Jon
  */
 public final class CollectionUtils {
+
+    private static final Set SET_OF_SINGLE_NULL_VALUE;
+
+    static {
+        Set set = new HashSet(1);
+        set.add(null);
+        SET_OF_SINGLE_NULL_VALUE = Collections.unmodifiableSet(set);
+    }
 
     /** Prevents direct instantiation */
     private CollectionUtils() {
@@ -158,6 +167,13 @@ public final class CollectionUtils {
         for (T value : values)
             set.add(value);
         return set;
+    }
+    
+    /**
+     * Returns an unmodifiable Set containing a single null value
+     */
+    public static <T> Set<T> setOfSingleNullValue() {
+        return (Set<T>)SET_OF_SINGLE_NULL_VALUE;
     }
 
 }

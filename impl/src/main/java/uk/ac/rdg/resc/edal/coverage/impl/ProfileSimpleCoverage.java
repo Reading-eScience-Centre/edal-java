@@ -5,16 +5,16 @@ import java.util.List;
 
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.ProfileDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<VerticalPosition, VerticalPosition, R> implements ProfileCoverage<R>{
 
     private List<R> values;
-    private RangeMetadata metadata;
+    private ScalarMetadata metadata;
     private String description;
     private ProfileDomain domain;
     
@@ -33,7 +33,7 @@ public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<Ver
     }
 
     @Override
-    protected RangeMetadata getRangeMetadata() {
+    public ScalarMetadata getRangeMetadata() {
         return metadata;
     }
 

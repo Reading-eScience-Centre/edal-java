@@ -4,21 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
-public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<HorizontalPosition, GridCell2D, R> implements
-        GridCoverage2D<R> {
+public class GridCoverage2DImpl<T> extends AbstractDiscreteSimpleCoverage<HorizontalPosition, GridCell2D, T> implements
+        GridCoverage2D<T> {
 
-    private final RangeMetadata metadata;
+    private final ScalarMetadata metadata;
     private final String description;
     private final HorizontalGrid grid;
-    private final List<R> data;
+    private final List<T> data;
     
-    public GridCoverage2DImpl(RangeMetadata metadata, String description, HorizontalGrid grid, List<R> data) {
+    public GridCoverage2DImpl(ScalarMetadata metadata, String description, HorizontalGrid grid, List<T> data) {
         this.metadata = metadata;
         this.description = description;
         this.grid = grid;
@@ -26,7 +26,7 @@ public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<Horizo
     }
 
     @Override
-    public R evaluate(GridCoordinates2D coords) {
+    public T evaluate(GridCoordinates2D coords) {
         return data.get(gridCoordsToIndex(coords));
     }
 
@@ -35,8 +35,8 @@ public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<Horizo
     }
 
     @Override
-    public List<R> evaluate(List<GridCoordinates2D> coords) {
-        List<R> ret = new ArrayList<R>();
+    public List<T> evaluate(List<GridCoordinates2D> coords) {
+        List<T> ret = new ArrayList<T>();
         for(GridCoordinates2D coord : coords){
             ret.add(data.get(gridCoordsToIndex(coord)));
         }
@@ -49,7 +49,7 @@ public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<Horizo
     }
 
     @Override
-    public List<R> getValues() {
+    public List<T> getValues() {
         return data;
     }
 
@@ -59,7 +59,7 @@ public class GridCoverage2DImpl<R> extends AbstractDiscreteSimpleCoverage<Horizo
     }
     
     @Override
-    protected RangeMetadata getRangeMetadata() {
+    public ScalarMetadata getRangeMetadata() {
         return metadata;
     }
 }

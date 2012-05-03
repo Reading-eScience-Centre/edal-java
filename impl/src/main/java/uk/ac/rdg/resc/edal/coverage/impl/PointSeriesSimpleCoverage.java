@@ -5,16 +5,16 @@ import java.util.List;
 
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.PointSeriesDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
 public class PointSeriesSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<TimePosition, TimePosition, R> implements PointSeriesCoverage<R> {
 
     private List<R> values;
-    private RangeMetadata metadata;
+    private ScalarMetadata metadata;
     private String description;
     private PointSeriesDomain domain;
     
@@ -31,7 +31,7 @@ public class PointSeriesSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage
     }
 
     @Override
-    protected RangeMetadata getRangeMetadata() {
+    public ScalarMetadata getRangeMetadata() {
         return metadata;
     }
 
