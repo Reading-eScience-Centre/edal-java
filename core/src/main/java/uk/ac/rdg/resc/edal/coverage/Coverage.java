@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.coverage;
 import java.util.Set;
 import uk.ac.rdg.resc.edal.PartialFunction;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
 /**
  * <p>
@@ -44,6 +45,7 @@ import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
  * position in {@link Record} objects (in which case they are <i>compound</i>
  * coverage).
  * </p>
+ * <p>TODO MAKE SURE DOCS ARE CORRECT FOR COMPOUND COVERAGES AND METADATA BEHAVIOUR</p>
  * 
  * @param <P>
  *            The type of object used to identify positions within the
@@ -107,18 +109,18 @@ public interface Coverage<P, R> extends PartialFunction<P, R> {
     public RangeMetadata getRangeMetadata();
 
     /**
-     * Returns a description of a particular coverage member.
+     * Returns a description of a particular scalar coverage member.
      * 
      * @param memberName
      *            The unique identifier of the member.  For simple coverages,
      *            only null is allowed.
      * @return a description of the values returned by the coverage for a
-     *         particular member.
+     *         particular scalar member.
      * @throws IllegalArgumentException
      *             if {@code memberName} is not present in the
      *             {@link #getMemberNames() set of member names}.
      */
-    public RangeMetadata getRangeMetadata(String memberName);
+    public ScalarMetadata getRangeMetadata(String memberName);
 
     /**
      * Evaluates the coverage for a specified set of its members.
