@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.Set;
+import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 
 /**
  * Contains the data values returned by a {@link CompoundCoverage}.
