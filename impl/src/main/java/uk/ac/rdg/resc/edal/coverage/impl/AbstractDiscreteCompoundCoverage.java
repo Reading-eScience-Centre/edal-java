@@ -35,8 +35,8 @@ import java.util.Map;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.Record;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
 /**
  * <p>Partial implementation of a compound {@link DiscreteCoverage}, providing
@@ -72,7 +72,7 @@ public abstract class AbstractDiscreteCompoundCoverage<P, DO>
         }
 
         @Override
-        public RangeMetadata getRangeMetadata(String memberName) {
+        public ScalarMetadata getRangeMetadata(String memberName) {
             return AbstractDiscreteCompoundCoverage.this.getRangeMetadata(memberName);
         }
     }

@@ -34,8 +34,9 @@ import java.util.List;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
-import uk.ac.rdg.resc.edal.coverage.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.Record;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 /**
  * <p>Partial implementation of a simple {@link DiscreteCoverage}, providing default
@@ -43,21 +44,14 @@ import uk.ac.rdg.resc.edal.coverage.Record;
  * @param <P> The type of object used to identify positions within the coverage's domain.
  * This may be a spatial, temporal, or combined spatiotemporal position.
  * @param <DO> The type of domain object
- * @param <R> The type of the value returned by the coverage; for a compound
- * coverage this type will be {@link Record}.
+ * @param <R> The type of the value returned by the coverage; for a simple coverage
+ * this will not be {@link Record}, but simple type such as Double.
  * @author Jon
  */
 public abstract class AbstractDiscreteSimpleCoverage<P, DO, R>
         extends AbstractDiscreteCoverage<P, DO, R>
 {
-
-    private static final Set<String> MEMBER_NAMES;
-
-    static {
-        Set<String> members = new HashSet<String>(1);
-        members.add(null);
-        MEMBER_NAMES = Collections.unmodifiableSet(members);
-    }
+    private static final Set<String> MEMBER_NAMES = CollectionUtils.setOfSingleNullValue();
 
     @Override
     public final boolean isCompound() { return false; }
@@ -72,12 +66,18 @@ public abstract class AbstractDiscreteSimpleCoverage<P, DO, R>
     public final Set<String> getMemberNames() { return MEMBER_NAMES; }
 
     @Override
-    public final RangeMetadata getRangeMetadata(String memberName) {
+    public final ScalarMetadata getRangeMetadata(String memberName) {
         if (memberName == null) return this.getRangeMetadata();
         throw new IllegalArgumentException("For a simple coverage, memberName must be null");
     }
-
-    protected abstract RangeMetadata getRangeMetadata();
+    
+    /**
+     * {@inheritDoc}
+     * <p>For a simple coverage this must return ScalarMetadata, hence overridden
+     * here.</p>
+     */
+    @Override
+    public abstract ScalarMetadata getRangeMetadata();
 
     @Override
     public final R evaluate(P pos, Set<String> memberNames) {
