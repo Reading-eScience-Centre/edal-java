@@ -37,13 +37,9 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * space. We model this as a {@link CompoundCoverage} since usually instruments
  * record many values at the same time.
  * </p>
- * 
- * @param <R>
- *            The type of the value returned by the coverage; for a compound
- *            coverage this type will be {@link Record}.
  * @author Jon Blower
  */
-public interface PointSeriesCoverage<R> extends DiscreteCoverage<TimePosition, TimePosition, R> {
+public interface PointSeriesCoverage extends DiscreteCoverage<TimePosition, TimePosition> {
 
     @Override
     public PointSeriesDomain getDomain();

@@ -37,13 +37,9 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * A multidimensional grid.
- * 
- * @param <R>
- *            The type of the value returned by the coverage; for a compound
- *            coverage this type will be {@link Record}.
  * @author Jon Blower
  */
-public interface GridSeriesCoverage<R> extends DiscreteCoverage<GeoPosition, GridCell4D, R> {
+public interface GridSeriesCoverage extends DiscreteCoverage<GeoPosition, GridCell4D> {
 
     @Override
     public GridSeriesDomain getDomain();
@@ -62,7 +58,7 @@ public interface GridSeriesCoverage<R> extends DiscreteCoverage<GeoPosition, Gri
      *            the x index
      * @return the value from the coverage
      */
-    public R evaluate(int tindex, int zindex, int yindex, int xindex);
+    public Record evaluate(int tindex, int zindex, int yindex, int xindex);
 
     /**
      * Gets a list of values in the coverage over a range of points
@@ -77,7 +73,7 @@ public interface GridSeriesCoverage<R> extends DiscreteCoverage<GeoPosition, Gri
      *            the {@link Extent} of the x-axis integers
      * @return a list of values from the coverage
      */
-    public List<R> evaluate(Extent<Integer> tindexExtent, Extent<Integer> zindexExtent,
+    public List<Record> evaluate(Extent<Integer> tindexExtent, Extent<Integer> zindexExtent,
             Extent<Integer> yindexExtent, Extent<Integer> xindexExtent);
 
 }
