@@ -13,12 +13,12 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 public class GridCoverage2DImpl<T> extends AbstractDiscreteSimpleCoverage<HorizontalPosition, GridCell2D, T> implements
         GridCoverage2D<T> {
 
-    private final ScalarMetadata metadata;
+    private final ScalarMetadata<T> metadata;
     private final String description;
     private final HorizontalGrid grid;
     private final List<T> data;
     
-    public GridCoverage2DImpl(ScalarMetadata metadata, String description, HorizontalGrid grid, List<T> data) {
+    public GridCoverage2DImpl(ScalarMetadata<T> metadata, String description, HorizontalGrid grid, List<T> data) {
         this.metadata = metadata;
         this.description = description;
         this.grid = grid;
@@ -59,7 +59,7 @@ public class GridCoverage2DImpl<T> extends AbstractDiscreteSimpleCoverage<Horizo
     }
     
     @Override
-    public ScalarMetadata getRangeMetadata() {
+    public ScalarMetadata<T> getRangeMetadata() {
         return metadata;
     }
 }
