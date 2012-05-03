@@ -69,5 +69,5 @@ public interface Feature {
     /**
      * Gets the measurement values
      */
-    public Coverage<?, ?> getCoverage();
+    public Coverage<?> getCoverage();
 }

@@ -39,16 +39,12 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * Represents data held on a multidimensional grid.
- * 
- * @param <R>
- *            The type of the value returned by the coverage; for a compound
- *            coverage this type will be {@link Record}.
  * @author Jon Blower
  */
-public interface GridSeriesFeature<R> extends Feature {
+public interface GridSeriesFeature extends Feature {
 
     @Override
-    public GridSeriesCoverage<R> getCoverage();
+    public GridSeriesCoverage getCoverage();
 
     /**
      * Convenience method to extract a {@link ProfileFeature} for plotting
@@ -61,7 +57,7 @@ public interface GridSeriesFeature<R> extends Feature {
      *            the {@link TimePosition} of the desired {@link ProfileFeature}
      * @return the extracted {@link ProfileFeature}
      */
-    public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition time);
+    public ProfileFeature extractProfileFeature(HorizontalPosition pos, TimePosition time);
 
     /**
      * Convenience method to extract a {@link PointSeriesFeature} for plotting
@@ -78,7 +74,7 @@ public interface GridSeriesFeature<R> extends Feature {
      *            {@link PointSeriesFeature}
      * @return the extracted {@link PointSeriesFeature}
      */
-    public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos,
+    public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos,
             VerticalPosition z, Extent<? extends TimePosition> tRange);
 
     /**
@@ -92,7 +88,7 @@ public interface GridSeriesFeature<R> extends Feature {
      *            The desired domain of the resultant coverage
      * @return A list of values, with x varying first
      */
-    public GridCoverage2D<R> extractHorizontalGrid(int tindex, int zindex,
+    public GridCoverage2D extractHorizontalGrid(int tindex, int zindex,
             HorizontalGrid targetDomain);
 
     /**
@@ -106,7 +102,7 @@ public interface GridSeriesFeature<R> extends Feature {
      *            The desired domain of the resultant coverage
      * @return A list of values, with x varying first
      */
-    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, VerticalPosition zPos,
+    public GridCoverage2D extractHorizontalGrid(TimePosition tPos, VerticalPosition zPos,
             HorizontalGrid targetDomain);
     
 //    public TransectFeature extractTransectFeature(Arguments gohere);
