@@ -29,12 +29,17 @@
 package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.util.AbstractList;
+import java.util.HashMap;
 import java.util.List;
 
+import java.util.Map;
+import java.util.Set;
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.DomainObjectValuePair;
 import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
+import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
 /**
  * <p>Partial implementation of a {@link DiscreteCoverage}, providing default
@@ -44,18 +49,57 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
  * @param <P> The type of object used to identify positions within the coverage's domain.
  * This may be a spatial, temporal, or combined spatiotemporal position.
  * @param <DO> The type of domain object
- * @param <R> The type of the value returned by the coverage; for a compound
- * coverage this type will be {@link Record}.
  * @author Jon
  */
-public abstract class AbstractDiscreteCoverage<P, DO, R> implements DiscreteCoverage<P, DO, R>
+public abstract class AbstractDiscreteCoverage<P, DO> implements DiscreteCoverage<P, DO>
 {
+    
+    private final class SimpleRecord implements Record {
 
-    private final List<DomainObjectValuePair<DO, R>> dovpList =
-            new AbstractList<DomainObjectValuePair<DO, R>>() {
+        private final Map<String, Object> map;
+
+        public SimpleRecord(Map<String, Object> map) {
+            this.map = map;
+        }
 
         @Override
-        public DomainObjectValuePair<DO, R> get(int i) {
+        public Object getValue(String memberName) {
+            return this.map.get(memberName);
+        }
+
+        @Override
+        public Set<String> getMemberNames() {
+            return this.map.keySet();
+        }
+
+        @Override
+        public ScalarMetadata<?> getRangeMetadata(String memberName) {
+            return AbstractDiscreteCoverage.this.getRangeMetadata(memberName);
+        }
+    }
+
+    private final List<Record> recordList = new AbstractList<Record>() {
+
+        @Override
+        public Record get(int index) {
+            return getRecord(index, getMemberNames());
+        }
+
+        @Override
+        public int size() { return (int)AbstractDiscreteCoverage.this.size(); }
+
+    };
+
+    @Override
+    public List<Record> getValues() {
+        return this.recordList;
+    }
+
+    private final List<DomainObjectValuePair<DO>> dovpList =
+            new AbstractList<DomainObjectValuePair<DO>>() {
+
+        @Override
+        public DomainObjectValuePair<DO> get(int i) {
             if (i < 0 || i >= this.size()) {
                 throw new IndexOutOfBoundsException("Index " + i + " out of bounds");
             }
@@ -66,28 +110,28 @@ public abstract class AbstractDiscreteCoverage<P, DO, R> implements DiscreteCove
         public int size() { return (int)AbstractDiscreteCoverage.this.size(); }
         
     };
-    
-    private DomainObjectValuePair<DO, R> getDvp(int i) {
-        final DO domainObject = this.getDomain().getDomainObjects().get(i);
-        final R value = this.getValues().get(i);
 
-        return new DomainObjectValuePair<DO, R>() {
+    @Override
+    public List<DomainObjectValuePair<DO>> list() {
+        return this.dovpList;
+    }
+    
+    private DomainObjectValuePair<DO> getDvp(int i) {
+        final DO domainObject = this.getDomain().getDomainObjects().get(i);
+        final Record value = this.getValues().get(i);
+
+        return new DomainObjectValuePair<DO>() {
             @Override public DO getDomainObject() { return domainObject; }
-            @Override public R getValue() { return value; }
+            @Override public Record getValue() { return value; }
         };
     }
 
     @Override
-    public DomainObjectValuePair<DO, R> locate(P pos) {
+    public DomainObjectValuePair<DO> locate(P pos) {
         DiscreteDomain<P, DO> domain = this.getDomain();
         int i = (int)domain.findIndexOf(pos);
         if (i < 0) return null;
         return this.getDvp(i);
-    }
-
-    @Override
-    public List<DomainObjectValuePair<DO, R>> list() {
-        return this.dovpList;
     }
 
     @Override
@@ -99,10 +143,92 @@ public abstract class AbstractDiscreteCoverage<P, DO, R> implements DiscreteCove
     }
 
     @Override
-    public R evaluate(P pos) {
+    public Record evaluate(P pos) {
+        return this.evaluate(pos, this.getMemberNames());
+    }
+
+    @Override
+    public Object evaluate(P pos, String memberName) {
+        this.checkMemberName(memberName);
         int i = (int)this.getDomain().findIndexOf(pos);
-        if (i < 0 || this.getValues().isEmpty()) return null;
-        return this.getValues().get(i);
+        if (i < 0) return null;
+        return getMemberValue(i, memberName);
+    }
+
+    @Override
+    public Record evaluate(P pos, Set<String> memberNames) {
+        int i = (int)this.getDomain().findIndexOf(pos);
+        if (i < 0) return null;
+        return this.getRecord(i, memberNames);
+    }
+    
+    private Object getMemberValue(int index, String memberName)
+    {
+        List<?> memberValues = this.getValues(memberName);
+        return memberValues.get(index);
+    }
+    
+    private Record getRecord(int index, Set<String> memberNames)
+    {
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        for (String memberName : memberNames) {
+            this.checkMemberName(memberName);
+            List<?> memberValues = this.getValues(memberName);
+            Object value = memberValues.get(index);
+            map.put(memberName, value);
+        }
+        return new SimpleRecord(map);
+    }
+    
+    protected void checkMemberName(String memberName) {
+        if (!this.getMemberNames().contains(memberName)) {
+            throw new IllegalArgumentException("Member name " + memberName +
+                    " not present in coverage");
+        }
+    }
+    
+    
+    /**
+     * {@inheritDoc}
+     * <p>This default implementation returns a "plain" RangeMetadata object
+     * containing all the ScalarMetadata objects as direct children in a flat
+     * hierarchy.  Subclasses should override to provide more accurate and
+     * expressive metadata relationships using the RangeMetadata subclasses.</p>
+     * @return 
+     */
+    @Override
+    public RangeMetadata getRangeMetadata() {
+        final AbstractDiscreteCoverage<P,DO> cov = AbstractDiscreteCoverage.this;
+        return new RangeMetadata() {
+
+            @Override
+            public String getName() {
+                return "TODO not sure what to put here!";
+            }
+
+            @Override
+            public String getDescription() {
+                return cov.getDescription();
+            }
+
+            @Override
+            public Set<String> getMemberNames() {
+                return cov.getMemberNames();
+            }
+
+            @Override
+            public RangeMetadata getMemberMetadata(String name) {
+                return cov.getRangeMetadata(name);
+            }
+
+            @Override
+            public RangeMetadata getParent() {
+                // This is the top-level metadata object: there is no parent
+                return null;
+            }
+            
+        };
     }
 
 }

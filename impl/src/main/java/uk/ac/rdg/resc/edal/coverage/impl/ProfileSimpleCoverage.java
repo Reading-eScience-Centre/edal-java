@@ -11,16 +11,16 @@ import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
-public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<VerticalPosition, VerticalPosition, R> implements ProfileCoverage<R>{
+public class ProfileSimpleCoverage<T> extends AbstractDiscreteSimpleCoverage<VerticalPosition, VerticalPosition, T> implements ProfileCoverage<T>{
 
-    private List<R> values;
-    private ScalarMetadata metadata;
+    private List<T> values;
+    private ScalarMetadata<T> metadata;
     private String description;
     private ProfileDomain domain;
     
-    public ProfileSimpleCoverage(GridSeriesCoverage<R> coverage, List<R> values) {
+    public ProfileSimpleCoverage(GridSeriesCoverage<T> coverage, List<T> values) {
         this.values = values;
-        metadata = coverage.getRangeMetadata(null);
+        metadata = (ScalarMetadata<T>)coverage.getRangeMetadata(null);
         description = coverage.getDescription();
         List<Double> elevations = new ArrayList<Double>();
         VerticalAxis vAxis = coverage.getDomain().getVerticalAxis();
@@ -33,7 +33,7 @@ public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<Ver
     }
 
     @Override
-    public ScalarMetadata getRangeMetadata() {
+    public ScalarMetadata<T> getRangeMetadata() {
         return metadata;
     }
 
@@ -43,7 +43,7 @@ public class ProfileSimpleCoverage<R> extends AbstractDiscreteSimpleCoverage<Ver
     }
 
     @Override
-    public List<R> getValues() {
+    public List<T> getValues() {
         return values;
     }
 
