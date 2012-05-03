@@ -97,15 +97,20 @@ public interface Coverage<P, R> extends PartialFunction<P, R> {
      *         containing a single null value.
      */
     public Set<String> getMemberNames();
+    
+    /**
+     * Returns the top-level metadata descriptor. This object describes all the
+     * members of the Coverage, using nesting to express semantic relationships
+     * between the members.
+     */
+    public RangeMetadata getRangeMetadata();
 
     /**
-     * Returns a description of the values returned by the coverage (including
-     * their units, runtime type and the phenomenon they represent) for a
-     * particular member.
+     * Returns a description of a particular coverage member.
      * 
      * @param memberName
-     *            The unique identifier of the member, or {@code null} for
-     *            simple coverages.
+     *            The unique identifier of the member.  For simple coverages,
+     *            only null is allowed.
      * @return a description of the values returned by the coverage for a
      *         particular member.
      * @throws IllegalArgumentException
@@ -122,7 +127,7 @@ public interface Coverage<P, R> extends PartialFunction<P, R> {
      * @param memberNames
      *            The set of member names for which the coverage is to be
      *            evaluated. For a simple coverage, {@code memberNames} can be
-     *            null, or can be a Set containing a simple null member.
+     *            null, or can be a Set containing a single null member.
      * @return A compound coverage returns a {@link Record} containing a value
      *         for each of the requested members. If {@code memberNames} is
      *         empty, the Record will be empty. If {@code memberNames} is null,
