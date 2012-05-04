@@ -48,7 +48,7 @@ public interface Record {
      * 
      * @param memberName
      *            The name of a member of this record as provided by the
-     *            Coverage's {@link CompoundCoverage#getMemberNames() set of
+     *            Coverage's {@link Coverage#getMemberNames() set of
      *            member names}.
      * @return the value of the given member. The runtime type of the value is
      *         given by the {@link RangeMetadata} object associated with the
