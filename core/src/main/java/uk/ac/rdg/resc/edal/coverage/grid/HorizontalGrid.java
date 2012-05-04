@@ -123,7 +123,8 @@ public interface HorizontalGrid extends Grid, DiscreteDomain<HorizontalPosition,
      * 
      * @param pos
      *            the desired {@link HorizontalPosition}
-     * @return the {@link GridCoordinates2D} containing the desired coordinates
+     * @return the {@link GridCoordinates2D} containing the desired coordinates,
+     *         or <code>null</code> if the position is outside of the grid
      */
     public GridCoordinates2D findContainingCell(HorizontalPosition pos);
 
