@@ -37,21 +37,6 @@ public class VerticalPositionImpl implements VerticalPosition {
         this.crs = crs;
     }
 
-    /**
-     * Creates a new VerticalPositionImpl without a specified
-     * {@link VerticalCrs}. This object may only be interpreted in the context
-     * of a containing or supporting object that contains the CRS.
-     * 
-     * @param z
-     *            The z coordinate (height/depth) of this position
-     */
-//    public VerticalPositionImpl(double z) {
-//        this(z, null);
-//    }
-    /*
-     * TODO Put this back as it might be needed, but try and make sure all Vertical Positions HAVE a CRS
-     */
-
     @Override
     public final VerticalCrs getCoordinateReferenceSystem() {
         return crs;

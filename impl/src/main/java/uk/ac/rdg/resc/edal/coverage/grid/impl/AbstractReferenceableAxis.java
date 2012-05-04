@@ -130,7 +130,7 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
 
             @Override
             public int size() {
-                return size();
+                return AbstractReferenceableAxis.this.size();
             }
         };
         return ret;

@@ -53,7 +53,7 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
              * SuppressWarnings), but in this case it is a choice between this,
              * unnecessary abstraction, or heavy repetition of code.
              */
-            this.axisValues = (T[]) new Object[axisValues.length];
+            this.axisValues = (T[]) new Comparable[axisValues.length];
             for (int i = 0; i < axisValues.length; i++) {
                 this.axisValues[i] = axisValues[axisValues.length - 1 - i];
             }
