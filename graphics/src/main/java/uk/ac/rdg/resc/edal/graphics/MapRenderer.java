@@ -19,19 +19,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
+import uk.ac.rdg.resc.edal.coverage.Record;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
+import uk.ac.rdg.resc.edal.exceptions.WmsException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.graphics.MapStyleDescriptor.Style;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.Vector2D;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.position.impl.GeoPositionImpl;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public final class MapRenderer {
@@ -51,11 +57,13 @@ public final class MapRenderer {
     private final class DataPoint {
         private final Float value;
         private final HorizontalPosition position;
+        private final String pointStyle;
 
-        public DataPoint(Float value, HorizontalPosition position) {
+        public DataPoint(Float value, HorizontalPosition position, String pointStyle) {
             super();
             this.value = value;
             this.position = position;
+            this.pointStyle = pointStyle;
         }
 
         public Float getValue() {
@@ -64,6 +72,10 @@ public final class MapRenderer {
 
         public HorizontalPosition getPosition() {
             return position;
+        }
+        
+        public String getPointStyle() {
+            return pointStyle;
         }
     }
 
@@ -156,7 +168,26 @@ public final class MapRenderer {
 
     public void addData(Feature feature, TimePosition tPos, VerticalPosition zPos, String label) {
         if (feature instanceof GridSeriesFeature<?>) {
-            addGriddedFrame((GridSeriesFeature<?>) feature, tPos, zPos, label);
+            GridSeriesFeature<?> gridSeriesFeature = (GridSeriesFeature<?>) feature;
+            if(style.getStyle() == Style.POINT){
+                /*
+                 * TODO This is very ropey. Don't use it unless you know why
+                 * you're using it. It only works under certain conditions
+                 */
+                List<GridCell2D> hCells = gridSeriesFeature.getCoverage().getDomain().getHorizontalGrid().getDomainObjects();
+                for(GridCell2D hCell : hCells){
+                    if(pointEntirelyOutsideBox(hCell.getCentre())){
+                        continue;
+                    }
+                    Float value = (Float) gridSeriesFeature.getCoverage().evaluate(new GeoPositionImpl(hCell.getCentre(), zPos, tPos));
+                    if(value != null && !value.equals(Float.NaN)){
+                        DataPoint data = new DataPoint(value, hCell.getCentre(), "square");
+                        addPointData(data, tPos, label);
+                    }
+                }
+            } else {
+                addGriddedFrame(gridSeriesFeature, tPos, zPos, label);
+            }
         } else if (feature instanceof PointSeriesFeature<?>) {
             addPointSeriesDataFrame((PointSeriesFeature<?>) feature, tPos, label);
         } else if (feature instanceof ProfileFeature<?>) {
@@ -245,11 +276,21 @@ public final class MapRenderer {
         } else if (clazz == Vector2D.class) {
             Vector2D<Float> vec = ((Vector2D<Float>) feature.getCoverage().evaluate(tPos));
             value = vec == null ? null : vec.getMagnitude();
+        } else if (clazz == Record.class) {
+            /*
+             * We use Float.POSITIVE_INFINITY to represent non-numerical data
+             * from a Record (i.e. we don't know which field to plot).
+             */
+            value = Float.POSITIVE_INFINITY;
+            /*
+             * TODO perhaps we can have a plotVar=varName option somewhere so
+             * that a particular variable on the Record can be plotted
+             */
         } else {
-            throw new UnsupportedOperationException("Feature value type should be Float or Vector");
+            throw new UnsupportedOperationException("Feature value type should be Float, Vector or Record");
         }
 
-        DataPoint data = new DataPoint(value, feature.getHorizontalPosition());
+        DataPoint data = new DataPoint(value, feature.getHorizontalPosition(), null);
         addPointData(data, tPos, label);
     }
 
@@ -268,11 +309,17 @@ public final class MapRenderer {
             throw new UnsupportedOperationException("Feature value type should be Float or Vector");
         }
 
-        DataPoint data = new DataPoint(value, feature.getHorizontalPosition());
+        DataPoint data = new DataPoint(value, feature.getHorizontalPosition(), null);
         addPointData(data, feature.getTime(), label);
     }
 
     private void addPointData(DataPoint data, TimePosition tPos, String label) {
+        /*
+         * TODO We need to be careful about the way this is done. Specifically
+         * we need to check what happens with points which are outside the
+         * bounding box, but not really outside the bounding box (i.e. longitude
+         * wraps)
+         */
         Frame currentFrameData;
         if (frameData.containsKey(tPos)) {
             currentFrameData = frameData.get(tPos);
@@ -284,7 +331,7 @@ public final class MapRenderer {
             currentFrameData.addPointDataValue(data);
         } else {
             BufferedImage currentImage = currentFrameData.getPointImage();
-            addToPointImage(data, currentImage);
+            currentImage = addToPointImage(data, currentImage);
             currentFrameData.setPointImage(currentImage);
         }
         if (currentFrameData.getLabel() == null)
@@ -299,6 +346,8 @@ public final class MapRenderer {
         }
         double x = pos.getX();
         double y = pos.getY();
+//        if(x>180)
+//            x-= 360;
         if (x < generousBbox.getMinX() || x > generousBbox.getMaxX() || y < generousBbox.getMinY()
                 || y > generousBbox.getMaxY())
             return true;
@@ -411,7 +460,7 @@ public final class MapRenderer {
             if (pointImage == null) {
                 if (currentFrame.getPointDataValues() != null) {
                     pointImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-                    addToPointImage(currentFrame.getPointDataValues(), pointImage);
+                    pointImage = addToPointImage(currentFrame.getPointDataValues(), pointImage);
                     graphics.drawImage(pointImage, 0, 0, null);
                 }
             } else {
@@ -434,6 +483,9 @@ public final class MapRenderer {
 
             images.add(image);
             frameData.remove(time);
+        }
+        if(images.isEmpty()){
+            images.add(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
         }
         return images;
     }
@@ -466,8 +518,8 @@ public final class MapRenderer {
          * of default style, we want to plot direction lines for vector
          * components
          */
-        if (gridDataDirections != null) {// && (style == Style.VECTOR || style
-                                         // == Style.DEFAULT)) {
+        if (gridDataDirections != null
+                && (style.getStyle() == Style.VECTOR || style.getStyle() == Style.DEFAULT)) {
             // We superimpose direction arrows on top of the background
             // TODO: only do this for lat-lon projections!
             Graphics2D g = image.createGraphics();
@@ -522,29 +574,48 @@ public final class MapRenderer {
         return dataIndex;
     }
 
-    private void addToPointImage(List<DataPoint> pointDataValues, BufferedImage pointImage) {
+    private BufferedImage addToPointImage(List<DataPoint> pointDataValues, BufferedImage pointImage) {
         for (DataPoint dataPoint : pointDataValues) {
-            addToPointImage(dataPoint, pointImage);
+            pointImage = addToPointImage(dataPoint, pointImage);
         }
+        return pointImage;
     }
 
-    private void addToPointImage(DataPoint pointDataValue, BufferedImage pointImage) {
+    private BufferedImage addToPointImage(DataPoint pointDataValue, BufferedImage pointImage) {
         if (pointImage == null) {
             pointImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         }
         int[] coords = transformPosition(pointDataValue.getPosition());
-        Color color = style.getColorForValue(pointDataValue.getValue());
-        ColourableIcon icon = style.getIcon();
+        Float value = pointDataValue.getValue();
+        Color color;
+        /*
+         * We use Float.POSITIVE_INFINITY to represent non-numerical data
+         * from a Record (i.e. we don't know which field to plot).
+         */
+        if(value.equals(Float.POSITIVE_INFINITY)){
+            color = Color.white;
+        } else {
+            color = style.getColorForValue(value);
+        }
+        ColourableIcon icon = style.getIcon(pointDataValue.getPointStyle());
         icon.drawOntoCanvas(coords[0], coords[1], pointImage.getGraphics(), color);
+        return pointImage;
     }
 
     private int[] transformPosition(HorizontalPosition pos) {
-        double xFrac = (pos.getX() - bbox.getMinX()) / (bbox.getMaxX() - bbox.getMinX());
+        double xPos = pos.getX();
+        double yPos = pos.getY();
+        /*
+         * TODO This is an issue...
+         */
+//        if(xPos > 180)
+//            xPos -= 360;
+        double xFrac = (xPos - bbox.getMinX()) / (bbox.getMaxX() - bbox.getMinX());
         /*
          * Y appears the wrong way around because vertical co-ords are switched
          * in images
          */
-        double yFrac = (bbox.getMaxY() - pos.getY()) / (bbox.getMaxY() - bbox.getMinY());
+        double yFrac = (bbox.getMaxY() - yPos) / (bbox.getMaxY() - bbox.getMinY());
         int[] pictureCoords = new int[2];
 
         pictureCoords[0] = (int) (xFrac * this.width);

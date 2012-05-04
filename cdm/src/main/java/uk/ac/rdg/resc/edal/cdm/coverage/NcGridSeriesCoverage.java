@@ -117,7 +117,14 @@ public class NcGridSeriesCoverage extends
      *            the {@link TimeAxis} of the new data
      */
     public void addToCoverage(String filename, String varId, TimeAxis tAxis) {
-        List<TimePosition> values = this.tAxis.getCoordinateValues();
+        /*
+         * We do this because this.tAxis.getCoordinateValues() may well
+         * return an AbstractList, which we cannot add to.
+         */
+        List<TimePosition> values = new ArrayList<TimePosition>();
+        for(TimePosition tPos : this.tAxis.getCoordinateValues()){
+            values.add(tPos);
+        }
         int tindex = 0;
         if (tAxis == null) {
             throw new UnsupportedOperationException(

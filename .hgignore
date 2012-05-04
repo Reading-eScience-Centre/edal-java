@@ -27,3 +27,5 @@ syntax: regexp
 ^ncwms/src/main/webapp/WEB-INF/deploy$
 syntax: regexp
 ^ncwms/src/main/webapp/META-INF/maven$
+syntax: regexp
+^ncwms/gwt-unitCache$

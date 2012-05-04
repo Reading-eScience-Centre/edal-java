@@ -5,17 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import uk.ac.rdg.resc.ncwms.gwt.client.handlers.LayerSelectionHandler;
-import uk.ac.rdg.resc.ncwms.gwt.client.requests.LayerMenuItem;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.OpenEvent;
 import com.google.gwt.event.logical.shared.OpenHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.PushButton;
@@ -23,39 +23,21 @@ import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
-public class LayerSelectorCombo extends Button implements LayerSelectorIF {
+import uk.ac.rdg.resc.ncwms.gwt.client.handlers.LayerSelectionHandler;
+import uk.ac.rdg.resc.ncwms.gwt.client.requests.LayerMenuItem;
+
+public class MultiLayerSelector extends VerticalPanel implements LayerSelectorIF {
     private LayerSelectionHandler layerSelectionHandler;
-    private PopupPanel popup;
     private Tree tree;
     private Map<String, String> layerIdToTitle;
-    private String selectedLayer;
+    private List<CheckBox> layers;
 
-    public LayerSelectorCombo(LayerSelectionHandler layerHandler) {
-        super("Loading");
+    public MultiLayerSelector(LayerSelectionHandler layerHandler) {
         this.layerSelectionHandler = layerHandler;
 
         layerIdToTitle = new HashMap<String, String>();
+        layers = new ArrayList<CheckBox>();
 
-        popup = new PopupPanel();
-        popup.setAutoHideEnabled(true);
-
-        setStylePrimaryName("hiddenButton");
-        addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                popup.setPopupPosition(
-                        LayerSelectorCombo.this.getAbsoluteLeft(),
-                        LayerSelectorCombo.this.getAbsoluteTop()
-                                + LayerSelectorCombo.this.getOffsetHeight());
-                if (!popup.isShowing()) {
-                    popup.show();
-                } else {
-//                    popup.hide();
-                }
-            }
-        });
-
-        VerticalPanel vPanel = new VerticalPanel();
         PushButton button = new PushButton("Refresh");
         button.setTitle("Click to refresh the layers list");
         button.addClickHandler(new ClickHandler() {
@@ -65,32 +47,30 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             }
         });
         tree = new Tree();
-        tree.addOpenHandler(new OpenHandler<TreeItem>() {
-            @Override
-            public void onOpen(OpenEvent<TreeItem> event) {
-                TreeItem selected = event.getTarget();
-                for(int i=0; i< tree.getItemCount(); i++){
-                    TreeItem other = tree.getItem(i);
-                    if(!other.equals(selected) && other.getState()){
-                        other.setState(false);
-                    }
-                }
-                
-            }
-        });
-        vPanel.add(tree);
-        vPanel.add(button);
-        popup.add(vPanel);
+//        tree.addOpenHandler(new OpenHandler<TreeItem>() {
+//            @Override
+//            public void onOpen(OpenEvent<TreeItem> event) {
+//                TreeItem selected = event.getTarget();
+//                for(int i=0; i< tree.getItemCount(); i++){
+//                    TreeItem other = tree.getItem(i);
+//                    if(!other.equals(selected) && other.getState()){
+//                        other.setState(false);
+//                    }
+//                }
+//                
+//            }
+//        });
+        add(tree);
+        add(button);
     }
-
-    
     public void populateLayers(LayerMenuItem topItem){
         tree.clear();
         String nodeLabel = topItem.getTitle();
         List<LayerMenuItem> children = topItem.getChildren();
-        setHTML("<big>" + nodeLabel + "</big>");
+        TreeItem rootLabel = new TreeItem(nodeLabel);
+        tree.addItem(rootLabel);
         for(LayerMenuItem child : children){
-            addNode(child, null);
+            addNode(child, rootLabel);
         }
     }
     
@@ -112,12 +92,17 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             final String label = item.getTitle();
             final String id = item.getId();
             layerIdToTitle.put(id, "<big>" + parentName + "</big> > " + label);
-            Label leaf = new Label(label);
-            leaf.addClickHandler(new ClickHandler() {
+            CheckBox leaf = new CheckBox(label);
+            leaf.setFormValue(id);
+            layers.add(leaf);
+            leaf.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
                 @Override
-                public void onClick(ClickEvent event) {
-                    setSelectedLayer(id);
-                    layerSelectionHandler.layerSelected(id);
+                public void onValueChange(ValueChangeEvent<Boolean> event) {
+                    if(event.getValue()){
+                        layerSelectionHandler.layerSelected(id);
+                    } else {
+                        layerSelectionHandler.layerDeselected(id);
+                    }
                 }
             });
             parentNode.addItem(leaf);
@@ -138,26 +123,25 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         }
     }
 
-    public List<String> getSelectedIds() {
-        List<String> ret = new ArrayList<String>();
-        ret.add(selectedLayer);
-        return ret;
-    }
-
-    public void setSelectedLayer(String id) {
-        selectedLayer = id;
-        setHTML(layerIdToTitle.get(id));
-        if (popup.isShowing()) {
-            popup.hide();
-        }
-    }
-    
     @Override
     public void setEnabled(boolean enabled) {
-        super.setEnabled(enabled);
         if(enabled)
             setStylePrimaryName("hiddenButton");
         else
             setStylePrimaryName("inactiveHiddenButton");
+    }
+    @Override
+    public List<String> getSelectedIds() {
+        List<String> ret = new ArrayList<String>();
+        for(CheckBox layer : layers){
+            if(layer.getValue()){
+                ret.add(layer.getFormValue());
+            }
+        }
+        return ret;
+    }
+    
+    @Override
+    public void setSelectedLayer(String id) {
     }
 }

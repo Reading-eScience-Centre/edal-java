@@ -50,6 +50,9 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         }
         int xIndex = getXAxis().findIndexOf(pos.getX());
         int yIndex = getYAxis().findIndexOf(pos.getY());
+        if(xIndex < 0 || yIndex < 0){
+            return null;
+        }
         return new GridCoordinates2DImpl(xIndex, yIndex);
     }
 

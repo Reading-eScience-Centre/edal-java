@@ -250,7 +250,12 @@ public final class CdmUtils {
             return new RegularAxisImpl(name, axis.getStart(), axis.getIncrement(),
                     (int) axis.getSize(), isLongitude);
         } else {
-            return new ReferenceableAxisImpl(name, axis.getCoordValues(), isLongitude);
+            double[] primVals = axis.getCoordValues();
+            Double[] objVals = new Double[primVals.length];
+            for (int i = 0; i < primVals.length; i++) {
+                objVals[i] = primVals[i];
+            }
+            return new ReferenceableAxisImpl(name, objVals, isLongitude);
         }
     }
 

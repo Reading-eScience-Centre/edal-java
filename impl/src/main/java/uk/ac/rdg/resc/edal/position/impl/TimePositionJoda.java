@@ -11,24 +11,60 @@ public class TimePositionJoda implements TimePosition {
     private DateTime dateTime;
     private CalendarSystem calSys;
     
+    /**
+     * Instantiates this {@link TimePosition} with the current time, and the
+     * ISO8601 calendar
+     */
     public TimePositionJoda(){
         this(CalendarSystem.CAL_ISO_8601);
     }
     
+    /**
+     * Instantiates this {@link TimePosition} with the current time, and a
+     * specified calendar
+     * 
+     * @param calSys
+     *            the {@link CalendarSystem} to use for this
+     *            {@link TimePosition}
+     */
     public TimePositionJoda(CalendarSystem calSys){
         dateTime = new DateTime();
         this.calSys = calSys;
     }
     
+    /**
+     * Instantiates this {@link TimePosition} with a specified time, and the
+     * ISO8601 calendar
+     * 
+     * @param dateInMillis
+     *            the time in milliseconds from 01-Jan-1970 00:00:00
+     */
     public TimePositionJoda(long dateInMillis){
         this(dateInMillis, CalendarSystem.CAL_ISO_8601);
     }
 
+    /**
+     * Instantiates this {@link TimePosition} with a specified time, and a
+     * specified calendar
+     * 
+     * @param dateInMillis
+     *            the time in milliseconds from 01-Jan-1970 00:00:00
+     * @param calSys
+     *            the {@link CalendarSystem} to use for this
+     *            {@link TimePosition}
+     */
     public TimePositionJoda(long dateInMillis, CalendarSystem calSys){
         this.dateTime = new DateTime(dateInMillis);
         this.calSys = calSys;
     }
     
+    /**
+     * Instantiates this {@link TimePosition} from a specified time and the
+     * ISO8601 calendar
+     * 
+     * @param dateTime
+     *            the required time
+     */
     public TimePositionJoda(DateTime dateTime){
         this(dateTime, CalendarSystem.CAL_ISO_8601);
     }
@@ -97,6 +133,17 @@ public class TimePositionJoda implements TimePosition {
     public int compareTo(TimePosition t) {
         return new Long(getValue()).compareTo(t.getValue());
     }
+    
+    @Override
+    public boolean equals(Object arg0) {
+        if(arg0 instanceof TimePosition){
+            TimePosition timePosition = (TimePosition) arg0;
+            if(timePosition.getValue() == getValue() && timePosition.getCalendarSystem().equals(calSys)){
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public TimePosition plus(TimePeriod period) {
@@ -117,5 +164,10 @@ public class TimePositionJoda implements TimePosition {
     @Override
     public long differenceInMillis(TimePosition time) {
         return getValue() - time.getValue();
+    }
+    
+    @Override
+    public String toString() {
+        return dateTime.toString();
     }
 }
