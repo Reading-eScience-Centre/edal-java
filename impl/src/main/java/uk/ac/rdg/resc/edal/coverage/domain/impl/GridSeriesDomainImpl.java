@@ -1,7 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.domain.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.AbstractList;
 import java.util.List;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -104,7 +103,9 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         int tIndex = 0;
         Extent<TimePosition> tExtent = Extents.emptyExtent(TimePosition.class);
         if (tAxis != null) {
-            tAxis.findIndexOf(pos.getTimePosition());
+            tIndex = tAxis.findIndexOf(pos.getTimePosition());
+            if(tIndex < 0)
+                return null;
             tExtent = tAxis.getCoordinateBounds(tIndex);
         }
 
@@ -116,57 +117,77 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         Extent<VerticalPosition> vExtent = Extents.emptyExtent(VerticalPosition.class);
         if (vAxis != null) {
             vIndex = vAxis.findIndexOf(pos.getVerticalPosition().getZ());
+            if(vIndex < 0)
+                return null;
             vCrs = vAxis.getVerticalCrs();
             Extent<Double> vExtentDouble = vAxis.getCoordinateBounds(vIndex);
+            /*
+             * Cast is needed here, otherwise an Extent<VerticalPositionImpl> is returned, which is not what we want
+             */
             vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
                                         (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
         }
         
         GridCoordinates2D hCoords = hGrid.findContainingCell(pos.getHorizontalPosition());
+        if(hCoords == null)
+            return null;
         GridCell2D hCell = hGrid.getGridCell(hCoords);
         
-        /*
-         * Cast is needed here, otherwise an Extent<VerticalPositionImpl> is returned, which is not what we want
-         */
-
         return new GridCell4DRectangle(this, hCell, tExtent, tIndex, vExtent, vIndex);
     }
 
+    private List<GridCell4D> domainObjs = null;
+    
     @Override
     public List<GridCell4D> getDomainObjects() {
-        List<GridCell4D> gridCells = new ArrayList<GridCell4D>();
+        if(domainObjs != null)
+            return domainObjs;
+        
+        final List<GridCell2D> hCells = hGrid.getDomainObjects();
 
-        List<GridCell2D> hCells = hGrid.getDomainObjects();
-
-        VerticalCrs vCrs = null;
-        int vSize = 0;
+        final VerticalCrs vCrs;
+        final int vSize;
         if (vAxis != null) {
             vCrs = vAxis.getVerticalCrs();
             vSize = vAxis.size();
+        } else {
+            vCrs = null;
+            vSize = 1;
         }
-        int tSize = 0;
+        final int tSize;
         if (tAxis != null) {
             tSize = tAxis.size();
+        } else {
+            tSize = 1;
         }
-
-        for (GridCell2D hCell : hCells) {
-            for (int tIndex = 0; tIndex < tSize; tIndex++) {
+        
+        domainObjs = new AbstractList<GridCell4D>() {
+            @Override
+            public GridCell4D get(int index) {
+                int hIndex = index % hCells.size();
+                int vIndex = ((index - hIndex) % vSize)/hCells.size();
+                int tIndex = (index - hIndex - vIndex*hCells.size())/(hCells.size()*vSize);
+                GridCell2D hCell = hCells.get(hIndex);
                 Extent<TimePosition> tExtent = null;
                 if(tAxis != null){
                     tExtent = tAxis.getCoordinateBounds(tIndex);
                 }
-                for (int vIndex = 0; vIndex < vSize; vIndex++) {
-                    Extent<VerticalPosition> vExtent = null;
-                    if(vAxis != null){
-                        Extent<Double> vExtentDouble = vAxis.getCoordinateBounds(vIndex);
-                        vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
-                                                    (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs));
-                    }
-                    gridCells.add(new GridCell4DRectangle(this, hCell, tExtent, tIndex, vExtent, vIndex));
+                Extent<VerticalPosition> vExtent = null;
+                if(vAxis != null){
+                    Extent<Double> vExtentDouble = vAxis.getCoordinateBounds(vIndex);
+                    vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
+                            (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
                 }
+                return new GridCell4DRectangle(GridSeriesDomainImpl.this, hCell, tExtent, tIndex, vExtent, vIndex);
             }
-        }
-        return Collections.unmodifiableList(gridCells);
+
+            @Override
+            public int size() {
+                return hCells.size() * tSize * vSize;
+            }
+        };
+        
+        return domainObjs;
     }
 
     @Override
@@ -209,11 +230,15 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         int vSize = 1;
         if(vAxis != null){
             vIndex = vAxis.findIndexOf(position.getVerticalPosition().getZ());
+            if(vIndex < 0)
+                return -1;
             vSize = vAxis.size();
         }
         int tIndex = 0;
         if(tAxis != null){
             tIndex = tAxis.findIndexOf(position.getTimePosition());
+            if(tIndex < 0)
+                return -1;
         }
         return hIndex + hSize * vIndex + hSize * vSize * tIndex;
     }
