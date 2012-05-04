@@ -50,8 +50,12 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
     @Override
     public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
             Extent<? extends TimePosition> tRange) {
-        Extent<Integer> tExtent = coverage.getDomain().getTimeAxis().getIndexExtent();
+        Extent<Integer> tExtent = Extents.emptyExtent(Integer.class);
+        if(coverage.getDomain().getTimeAxis() != null){
+            tExtent = coverage.getDomain().getTimeAxis().getIndexExtent();
+        }
         GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
+        HorizontalPosition actualPos = coverage.getDomain().getHorizontalGrid().getGridCell(gridCell).getCentre();
         int xIndex = gridCell.getXIndex();
         int yIndex = gridCell.getYIndex();
         int zIndex = 0;
@@ -59,8 +63,10 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
         if(vAxis != null && z != null){
             zIndex = vAxis.findIndexOf(z.getZ());
         }
-        if(zIndex < 0)
-            zIndex *= -1;
+        if(zIndex < 0){
+            throw new IllegalArgumentException(
+                    "Cannot extract grid, because z position is invalid in this feature");
+        }
 
         List<R> values;
         if(xIndex < 0 || yIndex < 0){
@@ -76,16 +82,18 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
         PointSeriesCoverage<R> pointCoverage = new PointSeriesSimpleCoverage<R>(coverage, values);
         // TODO Check whether we just want default values for name, id, etc.
         PointSeriesFeature<R> feature = new PointSeriesFeatureImpl<R>(getName(), getId(), getDescription(),
-                pointCoverage, pos, z, parentCollection);
+                pointCoverage, actualPos, z, parentCollection);
         return feature;
     }
 
     @Override
     public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition t) {
         Extent<Integer> vExtent = Extents.emptyExtent(Integer.class);
-        if(coverage.getDomain().getVerticalAxis() != null)
+        if(coverage.getDomain().getVerticalAxis() != null){
             vExtent = coverage.getDomain().getVerticalAxis().getIndexExtent();
+        }
         GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
+        HorizontalPosition actualPos = coverage.getDomain().getHorizontalGrid().getGridCell(gridCell).getCentre();
         List<R> values = null;
         if(gridCell != null){
             int xIndex = gridCell.getXIndex();
@@ -93,11 +101,13 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
             int tIndex = coverage.getDomain().getTimeAxis().findIndexOf(t);
             values = coverage.evaluate(Extents.newExtent(tIndex, tIndex), vExtent, Extents.newExtent(yIndex,
                     yIndex), Extents.newExtent(xIndex, xIndex));
+        } else {
+            throw new IllegalArgumentException(
+                    "Cannot extract grid, because horizontal position is invalid in this feature");
         }
         ProfileCoverage<R> profileCoverage = new ProfileSimpleCoverage<R>(coverage, values);
-        // TODO Check whether we just want default values for name, id, etc.
         ProfileFeature<R> feature = new ProfileFeatureImpl<R>(getName(), getId(), getDescription(),
-                profileCoverage, pos, t, parentCollection);
+                profileCoverage, actualPos, t, parentCollection);
         return feature;
     }
 
@@ -120,14 +130,15 @@ public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSer
         if(tAxis != null && tPos != null)
             tindex = tAxis.findIndexOf(tPos);
         if(tindex < 0){
-            // TODO is this the behaviour we want??
-            tindex *= -1;
+            throw new IllegalArgumentException(
+                    "Cannot extract grid, because time is invalid in this feature");
         }
         VerticalAxis vAxis = getCoverage().getDomain().getVerticalAxis();
         if(vAxis != null)
             zindex = vAxis.findIndexOf(zPos.getZ());
         if(zindex < 0){
-            zindex *= -1;
+            throw new IllegalArgumentException(
+                    "Cannot extract grid, because z position is invalid in this feature");
         }
         return extractHorizontalGrid(tindex, zindex, targetDomain);
     }

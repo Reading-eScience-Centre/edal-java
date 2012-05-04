@@ -1,6 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.ArrayList;
+import java.util.AbstractList;
 import java.util.List;
 
 import org.opengis.referencing.cs.CoordinateSystemAxis;
@@ -122,10 +122,17 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
 
     @Override
     public List<T> getCoordinateValues() {
-        List<T> ret = new ArrayList<T>();
-        for (int i = 0; i < size(); i++) {
-            ret.add(getCoordinateValue(i));
-        }
+        List<T> ret = new AbstractList<T>() {
+            @Override
+            public T get(int i) {
+                return getCoordinateValue(i);
+            }
+
+            @Override
+            public int size() {
+                return AbstractReferenceableAxis.this.size();
+            }
+        };
         return ret;
     }
     

@@ -90,4 +90,19 @@ public final class GridCell4DRectangle implements GridCell4D {
     public int getVerticalIndex() {
         return vIndex;
     }
+    
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        if(horizGridCell != null){
+            s.append(horizGridCell.toString());
+        }
+        if(tExtent != null){
+            s.append(", Time: "+tExtent.toString());
+        }
+        if(vExtent != null){
+            s.append(", Vertical: "+vExtent.toString());
+        }
+        return s.toString();
+    }
 }

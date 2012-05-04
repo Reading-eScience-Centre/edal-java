@@ -12,9 +12,6 @@ public class TimePeriodImpl implements TimePeriod {
     private int months = 0;
     private int years = 0;
 
-    public TimePeriodImpl() {
-    }
-
     @Override
     public TimePeriod withSeconds(int seconds) {
         this.seconds = seconds;

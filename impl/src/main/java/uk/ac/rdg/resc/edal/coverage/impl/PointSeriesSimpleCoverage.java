@@ -18,6 +18,15 @@ public class PointSeriesSimpleCoverage<T> extends AbstractDiscreteSimpleCoverage
     private String description;
     private PointSeriesDomain domain;
     
+    public PointSeriesSimpleCoverage(List<TimePosition> times, List<T> values, String description, RangeMetadata metadata) {
+        if(values.size() != times.size())
+            throw new IllegalArgumentException("Number of values must equal the number of times");
+        this.values = values;
+        this.metadata = metadata;
+        this.description = description;
+        domain = new PointSeriesDomainImpl(times);
+    }
+    
     public PointSeriesSimpleCoverage(GridSeriesCoverage<T> coverage, List<T> values) {
         this.values = values;
         // Can't enforce that GridSeriesCoverage<T>.getRangeMetadata() should return ScalarMetadata<T>
@@ -28,6 +37,8 @@ public class PointSeriesSimpleCoverage<T> extends AbstractDiscreteSimpleCoverage
         for(int i=0; i<tAxis.size(); i++){
             times.add(tAxis.getCoordinateValue(i));
         }
+        if(values.size() != times.size())
+            throw new IllegalArgumentException("Number of values must equal the number of times");
         domain = new PointSeriesDomainImpl(times);
     }
 

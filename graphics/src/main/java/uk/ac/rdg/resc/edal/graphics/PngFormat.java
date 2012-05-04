@@ -73,6 +73,8 @@ public class PngFormat extends SimpleFormat {
         if (frames.size() > 1) {
             throw new IllegalArgumentException("Cannot render animations in PNG format");
         }
-        ImageIO.write(frames.get(0), "png", out);
+        if(frames.size() > 0){
+            ImageIO.write(frames.get(0), "png", out);
+        }
     }
 }

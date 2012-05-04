@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -15,7 +17,50 @@ public class MapStyleDescriptor {
     public static enum Style {
         BOXFILL, VECTOR, POINT, TRAJECTORY, DEFAULT
     };
+    
+    private ColorPalette colorPalette = ColorPalette.get(null);
+    /*
+     * Colour scale range of the picture. An {@link Extent#isEmpty() empty
+     * Range} means that the picture will be auto-scaled.
+     */
+    private Extent<Float> scaleRange = Extents.emptyExtent(Float.class);
+    private Style style;
+    private boolean transparent = true;
+    private int opacity = 100;
+    private int numColourBands = 254;
+    private boolean logarithmic = false;
+    private Color bgColor = Color.black;
+    private Map<String, ColourableIcon> icons;
+    /*
+     * The length of arrows in pixels, only used for vector plots
+     */
+    private float arrowLength = 10.0f;
+    
+    public MapStyleDescriptor() throws InstantiationException {
+        icons = new HashMap<String, ColourableIcon>();
 
+        URL iconUrl;
+        BufferedImage iconImage;
+        
+        /*
+         * This will work when the files are packaged as a JAR. For running
+         * within an IDE, you may need to add the root directory of the project
+         * to the classpath
+         */
+        try {
+            iconUrl = this.getClass().getResource("/img/circle.png");
+            iconImage = ImageIO.read(iconUrl);
+            icons.put("circle", new ColourableIcon(iconImage));
+            
+            iconUrl = this.getClass().getResource("/img/square.png");
+            iconImage = ImageIO.read(iconUrl);
+            icons.put("square", new ColourableIcon(iconImage));
+        } catch (IOException e) {
+            throw new InstantiationException(
+                    "Cannot read required icons.  Ensure that JAR is packaged correctly, or that your project is set up correctly in your IDE");
+        }
+    }
+    
     public Style getStyle() {
         return style;
     }
@@ -60,57 +105,34 @@ public class MapStyleDescriptor {
         this.arrowLength = arrowLength;
     }
 
-    public void setPointIcon(ColourableIcon pointIcon) {
-        this.pointIcon = pointIcon;
+    public void addIcon(String name, ColourableIcon pointIcon) {
+        icons.put(name, pointIcon);
     }
 
     public float getArrowLength() {
         return arrowLength;
     }
 
-    private ColorPalette colorPalette = ColorPalette.get(null);
-    /*
-     * Colour scale range of the picture. An {@link Extent#isEmpty() empty
-     * Range} means that the picture will be auto-scaled.
-     */
-    private Extent<Float> scaleRange = Extents.emptyExtent(Float.class);
-    private Style style;
-    private boolean transparent = true;
-    private int opacity = 100;
-    private int numColourBands = 254;
-    private boolean logarithmic = false;
-    private Color bgColor = Color.black;
-
-    /*
-     * The length of arrows in pixels, only used for vector plots
-     */
-    private float arrowLength = 10.0f;
-    /*
-     * The icon to use for point data
-     */
-    private ColourableIcon pointIcon = null;
-    
     public Color getColorForValue(Float value){
         return new Color(getColorModel().getRGB(getColourIndex(value)));
     }
     
     public ColourableIcon getIcon(){
-        if(pointIcon == null){
-            BufferedImage iconImage;
-            try {
-                /*
-                 * This will work when the files are packaged as a JAR. For running
-                 * within an IDE, you may need to add the root directory of the project
-                 * to the classpath
-                 */
-                URL iconUrl = this.getClass().getResource("/img/data_point3.png");
-                iconImage = ImageIO.read(iconUrl);
-                pointIcon = new ColourableIcon(iconImage);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        return getIcon("circle");
+    }
+    
+    public ColourableIcon getIcon(String name){
+        ColourableIcon ret = null;
+        if(name == null){
+            ret = icons.get("circle");
+        } else {
+            ret = icons.get(name.toLowerCase());
         }
-        return pointIcon;
+        if(ret != null){
+            return ret;
+        } else {
+            return icons.get("circle");
+        }
     }
     
     /**
