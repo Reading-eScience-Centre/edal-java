@@ -25,6 +25,7 @@ import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
+import uk.ac.rdg.resc.edal.exceptions.WmsException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
@@ -56,11 +57,13 @@ public final class MapRenderer {
     private final class DataPoint {
         private final Float value;
         private final HorizontalPosition position;
+        private final String pointStyle;
 
-        public DataPoint(Float value, HorizontalPosition position) {
+        public DataPoint(Float value, HorizontalPosition position, String pointStyle) {
             super();
             this.value = value;
             this.position = position;
+            this.pointStyle = pointStyle;
         }
 
         public Float getValue() {
@@ -69,6 +72,10 @@ public final class MapRenderer {
 
         public HorizontalPosition getPosition() {
             return position;
+        }
+        
+        public String getPointStyle() {
+            return pointStyle;
         }
     }
 
@@ -169,11 +176,12 @@ public final class MapRenderer {
                  */
                 List<GridCell2D> hCells = gridSeriesFeature.getCoverage().getDomain().getHorizontalGrid().getDomainObjects();
                 for(GridCell2D hCell : hCells){
-                    if(pointEntirelyOutsideBox(hCell.getCentre()))
+                    if(pointEntirelyOutsideBox(hCell.getCentre())){
                         continue;
+                    }
                     Float value = (Float) gridSeriesFeature.getCoverage().evaluate(new GeoPositionImpl(hCell.getCentre(), zPos, tPos));
                     if(value != null && !value.equals(Float.NaN)){
-                        DataPoint data = new DataPoint(value, hCell.getCentre());
+                        DataPoint data = new DataPoint(value, hCell.getCentre(), "square");
                         addPointData(data, tPos, label);
                     }
                 }
@@ -282,7 +290,7 @@ public final class MapRenderer {
             throw new UnsupportedOperationException("Feature value type should be Float, Vector or Record");
         }
 
-        DataPoint data = new DataPoint(value, feature.getHorizontalPosition());
+        DataPoint data = new DataPoint(value, feature.getHorizontalPosition(), null);
         addPointData(data, tPos, label);
     }
 
@@ -301,7 +309,7 @@ public final class MapRenderer {
             throw new UnsupportedOperationException("Feature value type should be Float or Vector");
         }
 
-        DataPoint data = new DataPoint(value, feature.getHorizontalPosition());
+        DataPoint data = new DataPoint(value, feature.getHorizontalPosition(), null);
         addPointData(data, feature.getTime(), label);
     }
 
@@ -589,7 +597,7 @@ public final class MapRenderer {
         } else {
             color = style.getColorForValue(value);
         }
-        ColourableIcon icon = style.getIcon();
+        ColourableIcon icon = style.getIcon(pointDataValue.getPointStyle());
         icon.drawOntoCanvas(coords[0], coords[1], pointImage.getGraphics(), color);
         return pointImage;
     }
