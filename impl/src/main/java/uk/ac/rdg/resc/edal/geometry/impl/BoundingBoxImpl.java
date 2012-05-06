@@ -1,12 +1,12 @@
 package uk.ac.rdg.resc.edal.geometry.impl;
 
-import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.position.impl.DirectPositionImpl;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 
 /**
  * <p>
@@ -130,13 +130,13 @@ public class BoundingBoxImpl extends AbstractEnvelope implements BoundingBox {
     }
 
     @Override
-    public DirectPosition getLowerCorner() {
-        return new DirectPositionImpl(this.getCoordinateReferenceSystem(), this.minx, this.miny);
+    public HorizontalPosition getLowerCorner() {
+        return new HorizontalPositionImpl(this.minx, this.miny, this.getCoordinateReferenceSystem());
     }
 
     @Override
-    public DirectPosition getUpperCorner() {
-        return new DirectPositionImpl(this.getCoordinateReferenceSystem(), this.maxx, this.maxy);
+    public HorizontalPosition getUpperCorner() {
+        return new HorizontalPositionImpl(this.maxx, this.maxy, this.getCoordinateReferenceSystem());
     }
 
     @Override

@@ -13,14 +13,12 @@ public class ScalarMetadataImpl<T> implements ScalarMetadata<T> {
     private final String description;
     private final Phenomenon parameter;
     private final Unit units;
-    private final Class<T> clazz;
 
-    public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units, Class<T> clazz) {
+    public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units) {
         this.name = name;
         this.description = description;
         this.parameter = parameter;
         this.units = units;
-        this.clazz = clazz;
     }
 
     @Override
@@ -36,12 +34,6 @@ public class ScalarMetadataImpl<T> implements ScalarMetadata<T> {
     @Override
     public Unit getUnits() {
         return units;
-    }
-
-    // TODO Check that this is the right behaviour...
-    @Override
-    public Class<T> getValueType() {
-        return clazz;
     }
 
     @Override
