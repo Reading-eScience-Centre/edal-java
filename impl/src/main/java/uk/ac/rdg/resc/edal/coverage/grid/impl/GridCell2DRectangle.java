@@ -34,6 +34,7 @@ public class GridCell2DRectangle implements GridCell2D {
         this.parentGrid = parentGrid;
     }
 
+    @Override
     public GridCoordinates2D getGridCoordinates() {
         return gridCoords;
     }

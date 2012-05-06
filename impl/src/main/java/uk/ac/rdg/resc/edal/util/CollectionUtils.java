@@ -2,6 +2,7 @@ package uk.ac.rdg.resc.edal.util;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -164,8 +165,7 @@ public final class CollectionUtils {
      */
     public static <T> Set<T> setOf(T... values) {
         Set<T> set = newHashSet();
-        for (T value : values)
-            set.add(value);
+        set.addAll(Arrays.asList(values));
         return set;
     }
     

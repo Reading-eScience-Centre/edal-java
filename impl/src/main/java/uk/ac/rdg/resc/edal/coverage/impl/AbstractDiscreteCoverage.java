@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.coverage.impl;
 
-import java.util.AbstractList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -40,6 +39,8 @@ import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.util.AbstractBigList;
+import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
  * <p>Partial implementation of a {@link DiscreteCoverage}, providing default
@@ -78,28 +79,38 @@ public abstract class AbstractDiscreteCoverage<P, DO> implements DiscreteCoverag
         }
     }
 
-    private final List<Record> recordList = new AbstractList<Record>() {
+    private final BigList<Record> recordList = new AbstractBigList<Record>() {
 
         @Override
-        public Record get(int index) {
+        public Record get(long index) {
             return getRecord(index, getMemberNames());
         }
 
         @Override
-        public int size() { return (int)AbstractDiscreteCoverage.this.size(); }
+        public long sizeAsLong() { return AbstractDiscreteCoverage.this.size(); }
+        
+        @Override
+        public Class<Record> getValueType() { return Record.class; }
 
     };
 
     @Override
-    public List<Record> getValues() {
+    public BigList<Record> getValues() {
         return this.recordList;
     }
 
-    private final List<DomainObjectValuePair<DO>> dovpList =
-            new AbstractList<DomainObjectValuePair<DO>>() {
+    /**
+     * {@inheritDoc}
+     * <p>Some Coverages can get very large, so we specialize to a {@link BigList}.</p>
+     */
+    @Override
+    public abstract BigList<?> getValues(String memberName);
+
+    private final BigList<DomainObjectValuePair<DO>> dovpList =
+            new AbstractBigList<DomainObjectValuePair<DO>>() {
 
         @Override
-        public DomainObjectValuePair<DO> get(int i) {
+        public DomainObjectValuePair<DO> get(long i) {
             if (i < 0 || i >= this.size()) {
                 throw new IndexOutOfBoundsException("Index " + i + " out of bounds");
             }
@@ -107,17 +118,32 @@ public abstract class AbstractDiscreteCoverage<P, DO> implements DiscreteCoverag
         }
 
         @Override
-        public int size() { return (int)AbstractDiscreteCoverage.this.size(); }
+        public long sizeAsLong() { return AbstractDiscreteCoverage.this.size(); }
+        
+        @Override
+        public Class<DomainObjectValuePair<DO>> getValueType() {
+            // See http://stackoverflow.com/questions/7502243/java-casting-class-operator-used-on-a-generic-type-e-g-list-to-classlist
+            // for an explanation of these odd-looking casts
+            return (Class<DomainObjectValuePair<DO>>)(Class)DomainObjectValuePair.class;
+        }
         
     };
 
     @Override
-    public List<DomainObjectValuePair<DO>> list() {
+    public BigList<DomainObjectValuePair<DO>> list() {
         return this.dovpList;
     }
     
-    private DomainObjectValuePair<DO> getDvp(int i) {
-        final DO domainObject = this.getDomain().getDomainObjects().get(i);
+    private DomainObjectValuePair<DO> getDvp(long i) {
+        List<DO> domainObjects = this.getDomain().getDomainObjects();
+        final DO domainObject;
+        // Some domains can be big and are specialized to BigList
+        if (domainObjects instanceof BigList) {
+            BigList<DO> bigList = (BigList<DO>)domainObjects;
+            domainObject = bigList.get(i);
+        } else {
+            domainObject = domainObjects.get((int)i);
+        }
         final Record value = this.getValues().get(i);
 
         return new DomainObjectValuePair<DO>() {
@@ -150,31 +176,31 @@ public abstract class AbstractDiscreteCoverage<P, DO> implements DiscreteCoverag
     @Override
     public Object evaluate(P pos, String memberName) {
         this.checkMemberName(memberName);
-        int i = (int)this.getDomain().findIndexOf(pos);
+        long i = this.getDomain().findIndexOf(pos);
         if (i < 0) return null;
         return getMemberValue(i, memberName);
     }
 
     @Override
     public Record evaluate(P pos, Set<String> memberNames) {
-        int i = (int)this.getDomain().findIndexOf(pos);
+        long i = this.getDomain().findIndexOf(pos);
         if (i < 0) return null;
         return this.getRecord(i, memberNames);
     }
     
-    private Object getMemberValue(int index, String memberName)
+    private Object getMemberValue(long index, String memberName)
     {
-        List<?> memberValues = this.getValues(memberName);
+        BigList<?> memberValues = this.getValues(memberName);
         return memberValues.get(index);
     }
     
-    private Record getRecord(int index, Set<String> memberNames)
+    private Record getRecord(long index, Set<String> memberNames)
     {
         Map<String, Object> map = new HashMap<String, Object>();
 
         for (String memberName : memberNames) {
             this.checkMemberName(memberName);
-            List<?> memberValues = this.getValues(memberName);
+            BigList<?> memberValues = this.getValues(memberName);
             Object value = memberValues.get(index);
             map.put(memberName, value);
         }

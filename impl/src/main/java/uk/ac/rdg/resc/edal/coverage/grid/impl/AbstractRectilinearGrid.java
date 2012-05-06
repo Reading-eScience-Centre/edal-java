@@ -1,7 +1,5 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.AbstractList;
-import java.util.List;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -14,6 +12,8 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
+import uk.ac.rdg.resc.edal.util.AbstractBigList;
+import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
@@ -54,7 +54,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     }
 
     @Override
-    public List<GridCell2D> getDomainObjects() {
+    public BigList<GridCell2D> getDomainObjects() {
         int xIMin = getXAxis().getIndexExtent().getLow();
         // +1 because extents are INCLUSIVE
         int xIMax = getXAxis().getIndexExtent().getHigh() + 1;
@@ -63,25 +63,31 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         int yIMax = getYAxis().getIndexExtent().getHigh() + 1;
         final int xSize = (xIMax-xIMin);
         final int size = xSize*(yIMax-yIMin);
-        List<GridCell2D> gridCells = new AbstractList<GridCell2D>() {
+        return new AbstractBigList<GridCell2D>()
+        {
             @Override
-            public GridCell2D get(int index) {
-                int xIndex = index % xSize;
-                int yIndex = (index - xIndex) / xSize;
+            public GridCell2D get(long index) {
+                int xIndex = (int)(index % xSize);
+                int yIndex = (int)(index / xSize);
                 return new GridCell2DRectangle(new GridCoordinates2DImpl(xIndex, yIndex),
                                                    getXAxis().getCoordinateBounds(xIndex).getLow(),
                                                    getYAxis().getCoordinateBounds(yIndex).getLow(),
                                                    getXAxis().getCoordinateBounds(xIndex).getHigh(),
                                                    getYAxis().getCoordinateBounds(yIndex).getHigh(),
-                                                   getCoordinateReferenceSystem(),AbstractRectilinearGrid.this);
+                                                   getCoordinateReferenceSystem(),
+                                                   AbstractRectilinearGrid.this);
             }
 
             @Override
-            public int size() {
+            public long sizeAsLong() {
                 return size;
             }
+            
+            @Override
+            public Class<GridCell2D> getValueType() {
+                return GridCell2D.class;
+            }
         };
-        return gridCells;
     }
 
     @Override
@@ -93,7 +99,7 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
         }
         // +1 because extents are INCLUSIVE
         int xRange = getXAxis().getIndexExtent().getHigh() + 1 - getXAxis().getIndexExtent().getLow();
-        return xIndex + xRange * yIndex;
+        return xIndex + xRange * (long)yIndex;
     }
 
     @Override
