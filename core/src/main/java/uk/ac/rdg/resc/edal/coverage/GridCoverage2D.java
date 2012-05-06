@@ -31,8 +31,10 @@ package uk.ac.rdg.resc.edal.coverage;
 import java.util.List;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
  * A two-dimensional grid that returns single values for points in its domain.
@@ -47,21 +49,24 @@ public interface GridCoverage2D extends DiscreteCoverage<HorizontalPosition, Gri
     public HorizontalGrid getDomain();
 
     /**
-     * Gets the value of the coverage at given coordinates
-     * 
-     * @param coords
-     *            the grid coordinates of the desired value
-     * @return the value of the coverage
+     * {@inheritDoc
+     * <p>Grids can be large, so we specialize the return type to {@link BigList}.</p>
      */
-    public Record evaluate(GridCoordinates2D coords);
+    @Override
+    public BigList<Record> getValues();
 
     /**
-     * Gets the values of the coverage at a given list of coordinates
-     * 
-     * @param coords
-     *            the grid coordinates of the desired values
-     * @return a list of values at the given coordinates
+     * {@inheritDoc
+     * <p>Grids can be large, so we specialize the return type to {@link BigList}.</p>
      */
-    public List<Record> evaluate(List<GridCoordinates2D> coords);
+    @Override
+    public BigList<?> getValues(String memberName);
+    
+    /**
+     * Gets the values of the given member name, expressed as a Grid.
+     * ({@link #getValues(java.lang.String)} returns the same values as a List).
+     * @return 
+     */
+    public GridValuesMatrix<?> getGridValues(String memberName);
 
 }

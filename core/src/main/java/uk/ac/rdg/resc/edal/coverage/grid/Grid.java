@@ -39,18 +39,14 @@ package uk.ac.rdg.resc.edal.coverage.grid;
  */
 public interface Grid {
     /**
-     * Gets the X axis of the grid. This may not be aligned with any of the
-     * real-world coordinate axes in the {@link #getCoordinateReferenceSystem()
-     * coordinate reference system}.
+     * Gets the X axis of the grid.
      * 
      * @return the X axis of the grid.
      */
     public GridAxis getXAxis();
 
     /**
-     * Gets the Y axis of the grid. This may not be aligned with any of the
-     * real-world coordinate axes in the {@link #getCoordinateReferenceSystem()
-     * coordinate reference system}.
+     * Gets the Y axis of the grid.
      * 
      * @return the Y axis of the grid.
      */

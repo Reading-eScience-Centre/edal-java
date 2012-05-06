@@ -90,6 +90,12 @@ public interface Coverage<P> extends PartialFunction<P, Record> {
      *             {@link #getMemberNames() set of member names}.
      */
     public ScalarMetadata<?> getRangeMetadata(String memberName);
+    
+    /**
+     * Returns a descriptor of the runtime types of the members of the
+     * coverage.
+     */
+    public RecordType getRecordType();
 
     /**
      * Evaluates the coverage for a specified set of its members.
