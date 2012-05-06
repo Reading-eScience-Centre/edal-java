@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.geometry;
 
 import org.opengis.geometry.Envelope;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
  * A bounding box in the horizontal plane. Extends {@link Envelope} by providing
@@ -56,4 +57,10 @@ public interface BoundingBox extends Envelope {
      * Gets the maximum ordinate along the second axis
      */
     public double getMaxY();
+    
+    @Override
+    public HorizontalPosition getLowerCorner();
+
+    @Override
+    public HorizontalPosition getUpperCorner();
 }

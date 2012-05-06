@@ -29,35 +29,26 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.Set;
-import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 
 /**
- * Contains the data values returned by a {@link Coverage}.
+ * Contains the types of the data values returned by a {@link Coverage}.
  * 
  * @author Jon Blower
  */
-public interface Record {
+public interface RecordType {
 
     /**
-     * <p>
-     * Gets the value of the given coverage member..
-     * </p>
-     * <p>
-     * <i>This is called locate() in GeoAPI - I don't know why (presumably this
-     * reflects the standard, but it seems like an odd name).</i>
-     * </p>
+     * Gets the runtime type of the given coverage member.
      * 
      * @param memberName
      *            The name of a member of this record as provided by the
      *            Coverage's {@link Coverage#getMemberNames() set of
      *            member names}.
-     * @return the value of the given member. The runtime type of the value is
-     *         given by the {@link RangeMetadata} object associated with the
-     *         parent Coverage.
+     * @return the runtime type of the given member.
      * @throws IllegalArgumentException
      *             if {@code memberName} is not a valid member name
      */
-    public Object getValue(String memberName);
+    public Class<?> getValueType(String memberName);
 
     /**
      * Returns a Set of unique identifiers, one for each member of the coverage.
@@ -66,20 +57,5 @@ public interface Record {
      * @return a Set of unique identifiers, one for each member of the coverage.
      */
     public Set<String> getMemberNames();
-
-    /**
-     * Returns a description of the values returned by the coverage (including
-     * their units and the phenomenon they represent) for a
-     * particular member.
-     * 
-     * @param memberName
-     *            The unique identifier of the member
-     * @return a description of the values returned by the coverage for a
-     *         particular member.
-     * @throws IllegalArgumentException
-     *             if {@code memberName} is not present in the
-     *             {@link #getMemberNames() set of member names}.
-     */
-    public RangeMetadata getRangeMetadata(String memberName);
 
 }

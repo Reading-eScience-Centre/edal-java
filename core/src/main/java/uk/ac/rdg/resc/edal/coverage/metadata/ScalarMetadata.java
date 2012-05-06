@@ -37,11 +37,6 @@ public interface ScalarMetadata<T> extends RangeMetadata {
     public Unit getUnits();
     
     /**
-     * Returns the runtime type of the values in the field.
-     */
-    public Class<T> getValueType();
-    
-    /**
      * Returns the identifier of the quantity being measured.
      */
     public Phenomenon getParameter();

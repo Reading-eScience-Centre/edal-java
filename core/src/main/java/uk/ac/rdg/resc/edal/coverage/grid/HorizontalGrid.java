@@ -28,11 +28,11 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
  * A two-dimensional grid in the horizontal plane that is referenced to a 2D
@@ -69,16 +69,14 @@ public interface HorizontalGrid extends Grid, DiscreteDomain<HorizontalPosition,
     /**
      * {@inheritDoc}
      * <p>
-     * Use this method with caution, as it is possible that the number of domain
-     * objects (grid cells) will exceed {@link Integer#MAX_VALUE}, meaning that
-     * the value of {@code size()} in the returned List may be inaccurate.
-     * Prefer the use of {@link #size()} instead, which returns a long integer.
+     * Grids can have a large number of values, hence we specialize the return
+     * type to a {@link BigList}.
      * </p>
      * 
      * @return
      */
     @Override
-    public List<GridCell2D> getDomainObjects();
+    public BigList<GridCell2D> getDomainObjects();
 
     /**
      * Returns a two-dimensional horizontal coordinate reference system.
