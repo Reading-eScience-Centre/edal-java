@@ -37,22 +37,19 @@ import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.DomainObjectValuePair;
 import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.util.AbstractBigList;
 import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
  * <p>Partial implementation of a {@link DiscreteCoverage}, providing default
- * implementations of some methods.  Subclasses should usually inherit from
- * {@link AbstractDiscreteCompoundCoverage} or {@link AbstractDiscreteSimpleCoverage}
- * as appropriate.</p>
+ * implementations of some methods.</p>
  * @param <P> The type of object used to identify positions within the coverage's domain.
  * This may be a spatial, temporal, or combined spatiotemporal position.
  * @param <DO> The type of domain object
  * @author Jon
  */
-public abstract class AbstractDiscreteCoverage<P, DO> implements DiscreteCoverage<P, DO>
+public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P> implements DiscreteCoverage<P, DO>
 {
     
     private final class SimpleRecord implements Record {
@@ -74,7 +71,7 @@ public abstract class AbstractDiscreteCoverage<P, DO> implements DiscreteCoverag
         }
 
         @Override
-        public ScalarMetadata<?> getRangeMetadata(String memberName) {
+        public ScalarMetadata getRangeMetadata(String memberName) {
             return AbstractDiscreteCoverage.this.getRangeMetadata(memberName);
         }
     }
@@ -107,8 +104,8 @@ public abstract class AbstractDiscreteCoverage<P, DO> implements DiscreteCoverag
     public abstract BigList<?> getValues(String memberName);
 
     private final BigList<DomainObjectValuePair<DO>> dovpList =
-            new AbstractBigList<DomainObjectValuePair<DO>>() {
-
+            new AbstractBigList<DomainObjectValuePair<DO>>()
+    {
         @Override
         public DomainObjectValuePair<DO> get(long i) {
             if (i < 0 || i >= this.size()) {
@@ -205,56 +202,6 @@ public abstract class AbstractDiscreteCoverage<P, DO> implements DiscreteCoverag
             map.put(memberName, value);
         }
         return new SimpleRecord(map);
-    }
-    
-    protected void checkMemberName(String memberName) {
-        if (!this.getMemberNames().contains(memberName)) {
-            throw new IllegalArgumentException("Member name " + memberName +
-                    " not present in coverage");
-        }
-    }
-    
-    
-    /**
-     * {@inheritDoc}
-     * <p>This default implementation returns a "plain" RangeMetadata object
-     * containing all the ScalarMetadata objects as direct children in a flat
-     * hierarchy.  Subclasses should override to provide more accurate and
-     * expressive metadata relationships using the RangeMetadata subclasses.</p>
-     * @return 
-     */
-    @Override
-    public RangeMetadata getRangeMetadata() {
-        final AbstractDiscreteCoverage<P,DO> cov = AbstractDiscreteCoverage.this;
-        return new RangeMetadata() {
-
-            @Override
-            public String getName() {
-                return "TODO not sure what to put here!";
-            }
-
-            @Override
-            public String getDescription() {
-                return cov.getDescription();
-            }
-
-            @Override
-            public Set<String> getMemberNames() {
-                return cov.getMemberNames();
-            }
-
-            @Override
-            public RangeMetadata getMemberMetadata(String name) {
-                return cov.getRangeMetadata(name);
-            }
-
-            @Override
-            public RangeMetadata getParent() {
-                // This is the top-level metadata object: there is no parent
-                return null;
-            }
-            
-        };
     }
 
 }
