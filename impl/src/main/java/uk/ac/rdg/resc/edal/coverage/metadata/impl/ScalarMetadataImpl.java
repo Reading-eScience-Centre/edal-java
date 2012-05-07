@@ -7,7 +7,7 @@ import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
-public class ScalarMetadataImpl<T> implements ScalarMetadata<T> {
+public class ScalarMetadataImpl implements ScalarMetadata {
 
     private final String name;
     private final String description;
