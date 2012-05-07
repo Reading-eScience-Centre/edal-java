@@ -6,11 +6,11 @@ package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.awt.image.BufferedImage;
 import java.util.Set;
+import uk.ac.rdg.resc.edal.Phenomenon;
+import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
-import uk.ac.rdg.resc.edal.coverage.RecordType;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
-import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
@@ -30,7 +30,8 @@ public final class ImageCoverage extends AbstractGridCoverage2D
     private final BufferedImage im;
     private final HorizontalGrid domain;
     
-    private static final Set<String> MEMBER_NAMES = CollectionUtils.setOf(RED, GREEN, BLUE, ALPHA, COMPOSITE);
+    private static final Set<String> MEMBER_NAMES =
+            CollectionUtils.setOf(RED, GREEN, BLUE, ALPHA, COMPOSITE);
     
     public ImageCoverage(BufferedImage im, BoundingBox bbox)
     {
@@ -69,13 +70,22 @@ public final class ImageCoverage extends AbstractGridCoverage2D
     }
 
     @Override
-    public ScalarMetadata<?> getRangeMetadata(String memberName) {
+    protected Class<?> getValueType(String memberName) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    // TODO in AbstractCoverage make this easier to implement
     @Override
-    public RecordType getRecordType() {
+    protected String getDescription(String memberName) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected Unit getUnits(String memberName) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected Phenomenon getParameter(String memberName) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     

@@ -33,7 +33,8 @@ public abstract class AbstractGrid implements Grid
      * Gets the long index of the given coordinates, assuming that the i
      * coordinate varies fastest
      */
-    protected long getIndex(int i, int j) {
+    @Override
+    public long getIndex(int i, int j) {
         // First remove the offsets in the i and j directions
         i -= getXMin();
         j -= getYMin();
@@ -48,11 +49,13 @@ public abstract class AbstractGrid implements Grid
      * Gets the long index of the given coordinates, assuming that the i
      * coordinate varies fastest
      */
-    protected long getIndex(GridCoordinates2D coords) {
+    @Override
+    public long getIndex(GridCoordinates2D coords) {
         return this.getIndex(coords.getXIndex(), coords.getYIndex());
     }
     
-    protected GridCoordinates2D getCoords(long index) {
+    @Override
+    public GridCoordinates2D getCoords(long index) {
         
         // Calculate the indices assuming that the grid starts at (0,0)
         int xAxisSize = getXAxis().size();
