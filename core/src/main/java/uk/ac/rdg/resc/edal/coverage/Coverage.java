@@ -89,13 +89,13 @@ public interface Coverage<P> extends PartialFunction<P, Record> {
      *             if {@code memberName} is not present in the
      *             {@link #getMemberNames() set of member names}.
      */
-    public ScalarMetadata<?> getRangeMetadata(String memberName);
+    public ScalarMetadata getRangeMetadata(String memberName);
     
     /**
      * Returns a descriptor of the runtime types of the members of the
      * coverage.
      */
-    public RecordType getRecordType();
+    public RecordType getRangeType();
 
     /**
      * Evaluates the coverage for a specified set of its members.
@@ -126,7 +126,8 @@ public interface Coverage<P> extends PartialFunction<P, Record> {
     
     /**
      * Evaluates the coverage for one of its members.  Exactly equivalent to
-     * evaluate(pos).getValue(memberName);
+     * evaluate(pos).getValue(memberName); however, this may avoid the creation
+     * of an intermediate Record object.
      * 
      * @param pos
      *            The position at which the coverage is to be evaluated

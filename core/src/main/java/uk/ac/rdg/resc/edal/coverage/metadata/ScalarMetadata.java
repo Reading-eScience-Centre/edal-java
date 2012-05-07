@@ -10,12 +10,9 @@ import uk.ac.rdg.resc.edal.Unit;
 
 /**
  * Descriptor for a scalar field
- * @param <T> The type of the values of the scalar field.  This will usually be
- * a number, but may be anything at all (e.g. a String), provided it can be
- * considered a "simple" type with no sub-components or children.
  * @author Jon
  */
-public interface ScalarMetadata<T> extends RangeMetadata {
+public interface ScalarMetadata extends RangeMetadata {
     
     /**
      * Always returns the empty set: descriptors of scalars can have no
