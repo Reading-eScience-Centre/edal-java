@@ -62,4 +62,8 @@ public interface Grid {
      * {@link GridExtent#size()}).
      */
     public long size();
+    
+    public GridCoordinates2D getCoords(long index);
+    public long getIndex(GridCoordinates2D coords);
+    public long getIndex(int i, int j);
 }

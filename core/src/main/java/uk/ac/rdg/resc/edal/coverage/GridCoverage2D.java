@@ -28,9 +28,8 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.List;
+import java.util.Set;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -49,14 +48,14 @@ public interface GridCoverage2D extends DiscreteCoverage<HorizontalPosition, Gri
     public HorizontalGrid getDomain();
 
     /**
-     * {@inheritDoc
+     * {@inheritDoc}
      * <p>Grids can be large, so we specialize the return type to {@link BigList}.</p>
      */
     @Override
     public BigList<Record> getValues();
 
     /**
-     * {@inheritDoc
+     * {@inheritDoc}
      * <p>Grids can be large, so we specialize the return type to {@link BigList}.</p>
      */
     @Override
@@ -65,8 +64,24 @@ public interface GridCoverage2D extends DiscreteCoverage<HorizontalPosition, Gri
     /**
      * Gets the values of the given member name, expressed as a Grid.
      * ({@link #getValues(java.lang.String)} returns the same values as a List).
-     * @return 
      */
     public GridValuesMatrix<?> getGridValues(String memberName);
+    
+    /**
+     * <p>Extracts a GridCoverage2D whose domain matches the passed-in target grid
+     * for the given member names.  The returned GridCoverage2D will be memory-resident.</p>
+     * <p>The values in the returned Coverage are taken from the source Coverage
+     * (i.e. this Coverage) according to the following pseudocode:</p>
+     * <pre>
+     * for (GridCell2D targetGridCell : targetGrid.getDomainObjects()) {
+     *     Object value = this.evaluate(targetGridCell.getCentre(), memberNames);
+     *     addValueToCoverage(value);
+     * }
+     * </pre>
+     * @return a memory-resident GridCoverage2D whose domain matches the
+     * passed-in target grid and whose range includes the given coverage members.
+     */
+    public GridCoverage2D extractGridCoverage(HorizontalGrid targetGrid, Set<String> memberNames);
 
 }
+
