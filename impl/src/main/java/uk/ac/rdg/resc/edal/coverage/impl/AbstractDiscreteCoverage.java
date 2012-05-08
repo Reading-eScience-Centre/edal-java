@@ -52,6 +52,36 @@ import uk.ac.rdg.resc.edal.util.BigList;
 public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P> implements DiscreteCoverage<P, DO>
 {
     
+    /**
+     * Partial implementation of {@link BigList}, which can be used by
+     * subclasses of AbstractDiscreteCoverage.  Takes its size from the size
+     * of the Coverage (which in turn takes it from the size of the domain).
+     */
+    protected abstract class AbstractBigList2<E> extends AbstractBigList<E>
+    {
+        @Override public long sizeAsLong() {
+            return AbstractDiscreteCoverage.this.size();
+        }
+    }
+    
+    /**
+     * Partial implementation of {@link BigList}, which can be used by
+     * subclasses of AbstractDiscreteCoverage to implement {@link #getValues(java.lang.String)
+     * getValues(memberName)}.
+     */
+    protected abstract class AbstractMemberBigList<E> extends AbstractBigList2<E>
+    {
+        private final String memberName;
+        
+        public AbstractMemberBigList(String memberName) {
+            this.memberName = memberName;
+        }
+        
+        @Override public Class<E> getValueType() {
+            return (Class<E>)AbstractDiscreteCoverage.this.getValueType(memberName);
+        }
+    }
+    
     private final class SimpleRecord implements Record {
 
         private final Map<String, Object> map;
@@ -76,15 +106,12 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
         }
     }
 
-    private final BigList<Record> recordList = new AbstractBigList<Record>() {
+    private final BigList<Record> recordList = new AbstractBigList2<Record>() {
 
         @Override
         public Record get(long index) {
             return getRecord(index, getMemberNames());
         }
-
-        @Override
-        public long sizeAsLong() { return AbstractDiscreteCoverage.this.size(); }
         
         @Override
         public Class<Record> getValueType() { return Record.class; }
@@ -98,13 +125,15 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
 
     /**
      * {@inheritDoc}
-     * <p>Some Coverages can get very large, so we specialize to a {@link BigList}.</p>
+     * <p>Some Coverages can get very large, so we specialize to a {@link BigList}.
+     * Subclasses can use the {@link AbstractMemberBigList} abstract class to
+     * provide an easier way to implement this.</p>
      */
     @Override
     public abstract BigList<?> getValues(String memberName);
 
     private final BigList<DomainObjectValuePair<DO>> dovpList =
-            new AbstractBigList<DomainObjectValuePair<DO>>()
+            new AbstractBigList2<DomainObjectValuePair<DO>>()
     {
         @Override
         public DomainObjectValuePair<DO> get(long i) {
@@ -113,9 +142,6 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
             }
             return AbstractDiscreteCoverage.this.getDvp(i);
         }
-
-        @Override
-        public long sizeAsLong() { return AbstractDiscreteCoverage.this.size(); }
         
         @Override
         public Class<DomainObjectValuePair<DO>> getValueType() {

@@ -4,15 +4,9 @@
  */
 package uk.ac.rdg.resc.edal.coverage.impl;
 
-import java.util.Set;
-import uk.ac.rdg.resc.edal.Phenomenon;
-import uk.ac.rdg.resc.edal.Unit;
-import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
-import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.util.AbstractBigList;
+import java.util.ArrayList;
+import java.util.List;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
@@ -20,80 +14,57 @@ import uk.ac.rdg.resc.edal.util.BigList;
  * disk-based storage, in which data-reading operations may be slow.
  * @author Jon
  */
-public abstract class AbstractDiskBackedGridCoverage2D extends
-        AbstractDiscreteCoverage<HorizontalPosition, GridCell2D> implements GridCoverage2D
+public abstract class AbstractDiskBackedGridCoverage2D extends AbstractGridCoverage2D
 {
-
     @Override
-    public BigList<?> getValues(String memberName) {
-        return new AbstractBigList() {
-
-            @Override
-            public Object get(long index) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-
-            @Override
-            public Class getValueType() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-
-            @Override
-            public long sizeAsLong() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+    void extractCoverageValues(String memberName, PixelMap pixelMap, List<Object> values)
+    {
+        GridDataSource<?> dataSource = this.openDataSource(memberName);
         
+        // Select the data-reading strategy
+        
+        
+        // Read the data according to the strategy
+        
+        // Close the data source
+        dataSource.close();
+        
+    }
+
+    /**
+     * Returns an implementation of BigList that uses bulk reading methods
+     * to implement getAll().
+     */
+    @Override
+    public BigList<?> getValues(final String memberName)
+    {
+        return new AbstractMemberBigList<Object>(memberName)
+        {
+            @Override public Object get(long index)
+            {
+                GridCoordinates2D coords = getDomain().getCoords(index);
+                GridDataSource<?> dataSource = openDataSource(memberName);
+                Object value = dataSource.readPoint(coords.getXIndex(), coords.getYIndex());
+                dataSource.close();
+                return value;
+            }
+
+            @Override public List<Object> getAll(List<Long> indices)
+            {
+                GridDataSource<?> dataSource = openDataSource(memberName);
+                List<Object> values = new ArrayList<Object>(indices.size());
+                for (long index : indices)
+                {
+                    GridCoordinates2D coords = getDomain().getCoords(index);
+                    Object value = dataSource.readPoint(coords.getXIndex(), coords.getYIndex());
+                    values.add(value);
+                }
+                dataSource.close();
+                return values;
+            }
         };
     }
-
-    @Override
-    public GridValuesMatrix<?> getGridValues(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public GridCoverage2D extractGridCoverage(HorizontalGrid targetGrid, Set<String> memberNames) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
     
-}
-
-class test2 extends AbstractDiskBackedGridCoverage2D
-{
-
-    @Override
-    protected Class<?> getValueType(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    protected String getDescription(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    protected Unit getUnits(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    protected Phenomenon getParameter(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public String getDescription() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Set<String> getMemberNames() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public HorizontalGrid getDomain() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    protected abstract GridDataSource<?> openDataSource(String memberName);
     
 }
