@@ -27,6 +27,7 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.coverage.util;
 
+import uk.ac.rdg.resc.edal.coverage.impl.PixelMap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -34,7 +35,7 @@ import java.util.List;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.util.PixelMap.PixelMapEntry;
+import uk.ac.rdg.resc.edal.coverage.impl.PixelMap.PixelMapEntry;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**

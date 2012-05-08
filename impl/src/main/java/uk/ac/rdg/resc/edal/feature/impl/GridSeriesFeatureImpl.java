@@ -18,7 +18,7 @@ import uk.ac.rdg.resc.edal.coverage.impl.GridCoverage2DImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.PointSeriesSimpleCoverage;
 import uk.ac.rdg.resc.edal.coverage.impl.ProfileSimpleCoverage;
 import uk.ac.rdg.resc.edal.coverage.util.DataReadingStrategy;
-import uk.ac.rdg.resc.edal.coverage.util.PixelMap;
+import uk.ac.rdg.resc.edal.coverage.impl.PixelMap;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
