@@ -44,13 +44,4 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
      */
     protected abstract HorizontalPosition transformCoordinatesNoBoundsCheck(int i, int j);
     
-    @Override
-    public boolean equals(Object obj) {
-        if(obj instanceof AbstractHorizontalGrid){
-            AbstractHorizontalGrid grid = (AbstractHorizontalGrid) obj;
-            return crs.equals(grid.crs);
-        } else {
-            return false;
-        }
-    }
 }
