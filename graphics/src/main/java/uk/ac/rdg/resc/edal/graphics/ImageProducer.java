@@ -166,8 +166,8 @@ public final class ImageProducer {
         return transparent;
     }
 
-    public void addFrame(GridCoverage2D<?> coverage, String label) {
-        Class<?> clazz = coverage.getRangeMetadata(null).getValueType();
+    public void addFrame(GridCoverage2D coverage, String label) {
+        Class<?> clazz = coverage.getRangeType().getValueType(coverage.getName());
         if(clazz != Vector2D.class && !Number.class.isAssignableFrom(clazz)){
             System.out.println(clazz);
             System.out.println((clazz != Vector2D.class));

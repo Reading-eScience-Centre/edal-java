@@ -154,7 +154,7 @@ public abstract class ImageFormat {
      *             BufferedImages.
      */
     public abstract void writeImage(List<BufferedImage> frames, OutputStream out,
-            GridSeriesFeature<?> feature, double[] bbox, List<String> tValues, String zValue,
+            GridSeriesFeature feature, double[] bbox, List<String> tValues, String zValue,
             BufferedImage legend) throws IOException;
 
 }

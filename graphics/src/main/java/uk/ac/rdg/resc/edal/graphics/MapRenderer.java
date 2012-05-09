@@ -155,19 +155,19 @@ public final class MapRenderer {
     }
 
     public void addData(Feature feature, TimePosition tPos, VerticalPosition zPos, String label) {
-        if (feature instanceof GridSeriesFeature<?>) {
-            addGriddedFrame((GridSeriesFeature<?>) feature, tPos, zPos, label);
-        } else if (feature instanceof PointSeriesFeature<?>) {
-            addPointSeriesDataFrame((PointSeriesFeature<?>) feature, tPos, label);
-        } else if (feature instanceof ProfileFeature<?>) {
-            addProfileDataFrame((ProfileFeature<?>) feature, zPos, label);
+        if (feature instanceof GridSeriesFeature) {
+            addGriddedFrame((GridSeriesFeature) feature, tPos, zPos, label);
+        } else if (feature instanceof PointSeriesFeature) {
+            addPointSeriesDataFrame((PointSeriesFeature) feature, tPos, label);
+        } else if (feature instanceof ProfileFeature) {
+            addProfileDataFrame((ProfileFeature) feature, zPos, label);
         } else {
             throw new UnsupportedOperationException(
                     "Currently this type of feature can not be plotted");
         }
     }
 
-    private void addGriddedFrame(GridSeriesFeature<?> feature, TimePosition tPos,
+    private void addGriddedFrame(GridSeriesFeature feature, TimePosition tPos,
             VerticalPosition zPos, String label) {
         /*
          * First, we map the feature to a coverage of the correct size. This
@@ -175,7 +175,7 @@ public final class MapRenderer {
          * image
          */
         HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
-        final GridCoverage2D<?> coverage = feature.extractHorizontalGrid(tPos, zPos, targetDomain);
+        final GridCoverage2D coverage = feature.extractHorizontalGrid(tPos, zPos, targetDomain);
 
         Class<?> clazz = coverage.getRangeMetadata(null).getValueType();
         if (clazz != Vector2D.class && !Number.class.isAssignableFrom(clazz)) {
@@ -233,7 +233,7 @@ public final class MapRenderer {
         frameData.put(tPos, currentFrameData);
     }
 
-    private void addPointSeriesDataFrame(PointSeriesFeature<?> feature, TimePosition tPos,
+    private void addPointSeriesDataFrame(PointSeriesFeature feature, TimePosition tPos,
             String label) {
         if (pointEntirelyOutsideBox(feature.getHorizontalPosition()))
             return;
