@@ -54,8 +54,17 @@ public abstract class AbstractGrid implements Grid
         return this.getIndex(coords.getXIndex(), coords.getYIndex());
     }
     
+    /**
+     * Gets the grid coordinates of the cell at the given index in the grid
+     * (the index is constructed so that the i direction varies fastest).
+     * @throws IndexOutOfBoundsException if index >= size()
+     * @return 
+     */
     @Override
     public GridCoordinates2D getCoords(long index) {
+        if (index >= this.size()) {
+            throw new IndexOutOfBoundsException();
+        }
         
         // Calculate the indices assuming that the grid starts at (0,0)
         int xAxisSize = getXAxis().size();
