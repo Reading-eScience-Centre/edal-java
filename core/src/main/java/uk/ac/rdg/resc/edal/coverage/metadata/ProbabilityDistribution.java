@@ -25,7 +25,7 @@ public interface ProbabilityDistribution extends RangeMetadata {
      * This will always be a scalar quantity.
      */
     @Override
-    public ScalarMetadata<?> getMemberMetadata(String parameter);
+    public ScalarMetadata getMemberMetadata(String parameter);
     
     /**
      * Returns the quantity being described by the probability distribution

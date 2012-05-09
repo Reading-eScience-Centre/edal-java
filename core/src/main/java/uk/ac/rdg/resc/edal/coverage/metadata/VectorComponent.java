@@ -9,7 +9,7 @@ package uk.ac.rdg.resc.edal.coverage.metadata;
  * parent type.
  * @author Jon
  */
-public interface VectorComponent<N extends Number> extends ScalarMetadata<N> {
+public interface VectorComponent extends ScalarMetadata {
     
     /**
      * Returns an identifier indicating the direction of the vector component.
