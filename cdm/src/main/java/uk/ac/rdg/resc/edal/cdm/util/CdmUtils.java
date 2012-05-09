@@ -36,6 +36,7 @@ import java.util.List;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
 import ucar.nc2.Variable;
 import ucar.nc2.constants.AxisType;
@@ -50,6 +51,8 @@ import ucar.nc2.dt.GridDataset;
 import ucar.nc2.dt.GridDatatype;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
+import uk.ac.rdg.resc.edal.Phenomenon;
+import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.ProjectedGrid;
@@ -84,24 +87,68 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
  */
 public final class CdmUtils {
     /**
-     * @return the value of the standard_name attribute of the variable, or the
-     *         long_name if it does not exist, or the unique id if neither of
-     *         these attributes exist.
+     * Returns the Phenomenon that the given variable represents.  If the standard_name
+     * attribute is present on the variable, this will return a Phenomenon
+     * from the CF Standard Name vocabulary.  If not, the vocabulary will be
+     * unknown.
      */
-    public static String getVariableTitle(Variable var) {
+    public static Phenomenon getPhenomenon(Variable var) {
         Attribute stdNameAtt = var.findAttributeIgnoreCase("standard_name");
-        if (stdNameAtt == null || stdNameAtt.getStringValue().trim().equals("")) {
+        if (stdNameAtt == null || stdNameAtt.getStringValue().trim().equals(""))
+        {
             Attribute longNameAtt = var.findAttributeIgnoreCase("long_name");
-            if (longNameAtt == null || longNameAtt.getStringValue().trim().equals("")) {
-                return var.getName();
-            } else {
-                return longNameAtt.getStringValue();
+            if (longNameAtt == null || longNameAtt.getStringValue().trim().equals(""))
+            {
+                return Phenomenon.getPhenomenon(var.getName());
             }
-        } else {
-            return stdNameAtt.getStringValue();
+            else
+            {
+                return Phenomenon.getPhenomenon(longNameAtt.getStringValue());
+            }
+        }
+        else
+        {
+            return Phenomenon.getPhenomenon(stdNameAtt.getStringValue(),
+                    PhenomenonVocabulary.CLIMATE_AND_FORECAST);
         }
     }
+    
+    /**
+     * Returns the runtime Class of the values that will represent the given
+     * data type
+     */
+    public static Class<?> getClass(DataType dt)
+    {
+        if (dt == DataType.DOUBLE)  return Double.class;
+        if (dt == DataType.FLOAT)   return Float.class;
+        if (dt == DataType.BYTE)    return Byte.class;
+        if (dt == DataType.SHORT)   return Short.class;
+        if (dt == DataType.INT)     return Integer.class;
+        if (dt == DataType.LONG)    return Long.class;
+        if (dt == DataType.STRING)  return String.class;
+        if (dt == DataType.BOOLEAN) return Boolean.class;
+        throw new IllegalArgumentException("Can't support datatype " + dt.name());
+    }
 
+    /**
+     * Closes the given NetcdfDataset, checking for null values and swallowing
+     * any IOExceptions (we can't do anything about them anyway).
+     */
+    public static void safelyClose(NetcdfDataset nc)
+    {
+        if (nc != null)
+        {
+            try
+            {
+                nc.close();
+            }
+            catch(IOException ioe)
+            {
+                // Do nothing.
+            }
+        }
+    }
+    
     /**
      * Creates a two-dimensional referenceable grid from the given grid
      * coordinate system. Will return more specific subclasses (
