@@ -27,7 +27,6 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +46,8 @@ import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.position.impl.LonLatPositionImpl;
+import uk.ac.rdg.resc.edal.util.AbstractBigList;
+import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
@@ -184,20 +185,23 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     }
 
     @Override
-    public List<GridCell2D> getDomainObjects() {
-        List<GridCell2D> ret = new ArrayList<GridCell2D>();
-        int imax = getXAxis().getIndexExtent().getHigh();
-        int imin = getXAxis().getIndexExtent().getLow();
-        int jmax = getYAxis().getIndexExtent().getHigh();
-        int jmin = getYAxis().getIndexExtent().getLow();
-        // TODO should this be i<=imax?
-        for (int j = jmin; j < jmax; j++) {
-            for (int i = imin; i < imax; i++) {
-                // TODO should this be i<=imax?
-                ret.add(getGridCell(i, j));
+    public BigList<GridCell2D> getDomainObjects() {
+        
+        return new AbstractBigList<GridCell2D>()
+        {
+            @Override public GridCell2D get(long index) {
+                GridCoordinates2D coords = LookUpTableGrid.this.getCoords(index);
+                return getGridCell(coords.getXIndex(), coords.getYIndex());
             }
-        }
-        return ret;
+
+            @Override public Class<GridCell2D> getValueType() {
+                return GridCell2D.class;
+            }
+
+            @Override public long sizeAsLong() {
+                return LookUpTableGrid.this.size();
+            }
+        };
     }
 
     @Override
