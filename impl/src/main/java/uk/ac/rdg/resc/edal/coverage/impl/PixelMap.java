@@ -33,31 +33,31 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 //import java.util.logging.Logger;
+import java.util.NoSuchElementException;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
-import uk.ac.rdg.resc.edal.coverage.util.RArray;
-import uk.ac.rdg.resc.edal.coverage.util.RLongArray;
-import uk.ac.rdg.resc.edal.coverage.util.RUByteArray;
-import uk.ac.rdg.resc.edal.coverage.util.RUIntArray;
-import uk.ac.rdg.resc.edal.coverage.util.RUShortArray;
+import uk.ac.rdg.resc.edal.util.RArray;
+import uk.ac.rdg.resc.edal.util.RLongArray;
+import uk.ac.rdg.resc.edal.util.RUByteArray;
+import uk.ac.rdg.resc.edal.util.RUIntArray;
+import uk.ac.rdg.resc.edal.util.RUShortArray;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  *<p>Maps real-world points to i and j indices of corresponding
- * points within the source data.  This is a very important class in ncWMS.  A
+ * points within the source data.  A
  * PixelMap is constructed using the following general algorithm:</p>
  *
  * <pre>
- * For each point in the given {@link PointList}:
- *    1. Find the x-y coordinates of this point in the CRS of the PointList
- *    2. Transform these x-y coordinates into latitude and longitude
- *    3. Use the given {@link HorizontalCoordSys} to transform lat-lon into the
- *       index values (i and j) of the nearest cell in the source grid
- *    4. Add the mapping (point -> i,j) to the pixel map
+ * For each point in the given targetDomain:
+ *    1. Find the grid cell in the source grid that contains this point
+ *    2. Let i and j be the coordinates of this grid cell
+ *    3. Let p be the index of this point in the target domain
+ *    4. Add the mapping (p -> i,j) to the pixel map
  * </pre>
  *
  * <p>(A more efficient algorithm is used for the special case in which both the
@@ -99,6 +99,19 @@ final class PixelMap implements Iterable<PixelMap.PixelMapEntry>
          * source grid point.  Each grid point is expressed as a single integer
          * {@code j * width + i}.*/
         public List<Integer> getTargetGridPoints();
+    }
+    
+    /**
+     * Holds all the PixelMapEntries corresponding with a certain j index
+     */
+    public static interface Scanline
+    {
+        /** Gets the j index of this scanline in the source grid */
+        public int getSourceGridJIndex();
+        
+        /** Gets the list of PixelMapEntries associated with the j index, in order
+         *  of increasing i index */
+        public List<PixelMapEntry> getPixelMapEntries();
     }
 
     private final int sourceGridISize;
@@ -239,6 +252,7 @@ final class PixelMap implements Iterable<PixelMap.PixelMapEntry>
         int pixelIndex = 0;
         for (double lat : targetGridYAxis.getCoordinateValues())
         {
+            // TODO: this won't work for other CRSs
             if (lat >= -90.0 && lat <= 90.0)
             {
                 int yIndex = sourceGridYAxis.findIndexOf(lat);
@@ -517,6 +531,92 @@ final class PixelMap implements Iterable<PixelMap.PixelMapEntry>
             }
 
         };
+    }
+    
+    /**
+     * Returns an unmodifiable iterator over all the Scanlines in this pixel map
+     */
+    public Iterator<Scanline> scanlineIterator()
+    {
+        return new ScanlineIterator();
+    }
+    
+    private final class ScanlineIterator implements Iterator<Scanline>
+    {
+        final Iterator<PixelMapEntry> it = iterator();
+        private Scanline scanline = null;
+        private PixelMapEntry pme = null;
+        
+        public ScanlineIterator()
+        {
+            if (it.hasNext()) {
+                pme = it.next();
+                scanline = new SimpleScanline(pme);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return scanline != null;
+        }
+
+        @Override
+        public Scanline next()
+        {
+            while (it.hasNext())
+            {
+                pme = it.next();
+                int sourceJ = pme.getSourceGridJIndex();
+                if (sourceJ == scanline.getSourceGridJIndex())
+                {
+                    // This is part of the same scanline
+                    scanline.getPixelMapEntries().add(pme);
+                }
+                else
+                {
+                    // We have a new scanline.  We keep a handle to the old one
+                    // and create a new one.
+                    Scanline toReturn = scanline;
+                    scanline = new SimpleScanline(pme);
+                    // We return the completed scanline
+                    return toReturn;
+                }
+            }
+            if (scanline == null)
+            {
+                throw new NoSuchElementException();
+            }
+            else
+            {
+                Scanline toReturn = scanline;
+                scanline = null;
+                return toReturn;
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Immutable iterator.");
+        }
+    }
+    
+    private static final class SimpleScanline implements Scanline
+    {
+        private final int j;
+        private final List<PixelMapEntry> entries = new ArrayList<PixelMapEntry>();
+        
+        public SimpleScanline(PixelMapEntry pme) {
+            j = pme.getSourceGridJIndex();
+            entries.add(pme);
+        }
+        
+        @Override
+        public int getSourceGridJIndex() { return j; }
+
+        @Override
+        public List<PixelMapEntry> getPixelMapEntries() {
+            return entries;
+        }
     }
 
 }

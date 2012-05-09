@@ -5,8 +5,11 @@
 package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.impl.PixelMap.PixelMapEntry;
+import uk.ac.rdg.resc.edal.coverage.impl.PixelMap.Scanline;
 import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
@@ -22,18 +25,77 @@ public abstract class AbstractDiskBackedGridCoverage2D extends AbstractGridCover
         GridDataSource<?> dataSource = this.openDataSource(memberName);
         
         // Select the data-reading strategy
-        
-        
-        // Read the data according to the strategy
+        // TODO: also use the size of the grids as a deciding factor: it can
+        // be very slow to read large grids by the BOUNDING_BOX strategy
+        if (dataSource.isCompressed() || dataSource.isRemote())
+        {
+            // Use the BOUNDING_BOX strategy
+            readDataBoundingBox(dataSource, pixelMap, values);
+        }
+        else
+        {
+            // Use the SCANLINE strategy
+            readDataScanline(dataSource, pixelMap, values);
+        }
         
         // Close the data source
         dataSource.close();
+    }
+    
+    private static void readDataBoundingBox(GridDataSource<?> dataSource,
+            PixelMap pixelMap, List<Object> values)
+    {
+        int imin = pixelMap.getMinIIndex();
+        int imax = pixelMap.getMaxIIndex();
+        int jmin = pixelMap.getMinJIndex();
+        int jmax = pixelMap.getMaxJIndex();
+        int iSize = imax - imin + 1;
         
+        List<?> block = dataSource.readBlock(imin, imax, jmin, jmax);
+
+        for (PixelMapEntry pme : pixelMap) {
+            int i = pme.getSourceGridIIndex() - imin;
+            int j = pme.getSourceGridJIndex() - jmin;
+            int indexInList = j * iSize + i;
+            Object val = block.get(indexInList);
+            for (int targetGridPoint : pme.getTargetGridPoints()) {
+                values.set(targetGridPoint, val);
+            }
+        }
+    }
+    
+    private static void readDataScanline(GridDataSource<?> dataSource,
+            PixelMap pixelMap, List<Object> values)
+    {
+        Iterator<Scanline> it = pixelMap.scanlineIterator();
+        while (it.hasNext())
+        {
+            Scanline scanline = it.next();
+            List<PixelMapEntry> entries = scanline.getPixelMapEntries();
+            int entriesSize = entries.size();
+            
+            int j = scanline.getSourceGridJIndex();
+            int imin = entries.get(0).getSourceGridIIndex();
+            int imax = entries.get(entriesSize - 1).getSourceGridIIndex();
+            
+            List<?> data = dataSource.readScanline(j, imin, imax);
+            
+            for (PixelMapEntry pme : entries)
+            {
+                int i = pme.getSourceGridIIndex() - imin;
+                Object val = data.get(i);
+                for (int p : pme.getTargetGridPoints())
+                {
+                    values.set(p, val);
+                }
+            }
+        }
     }
 
     /**
      * Returns an implementation of BigList that uses bulk reading methods
      * to implement getAll().
+     * @todo make getAll(from, to) more efficient
      */
     @Override
     public BigList<?> getValues(final String memberName)
