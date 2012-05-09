@@ -6,7 +6,6 @@ import java.util.List;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> extends
@@ -45,22 +44,24 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
             this.axisValues = (T[])axisValues.toArray();
             return;
         }
+        
+        /*
+         * This is not recommended behaviour for Java (hence the
+         * SuppressWarnings), but in this case it is a choice between this,
+         * unnecessary abstraction, or heavy repetition of code.
+         */
+        @SuppressWarnings("unchecked")
+        T[] vals = (T[]) new Comparable[axisValues.size()];
+        this.axisValues = vals;
 
         reversed = axisValues.get(1).compareTo(axisValues.get(0)) < 0;
         if (reversed) {
-            /*
-             * This is not recommended behaviour for Java (hence the
-             * SuppressWarnings), but in this case it is a choice between this,
-             * unnecessary abstraction, or heavy repetition of code.
-             */
-            @SuppressWarnings("unchecked")
-            T[] vals = (T[]) new Comparable[axisValues.size()];
-            this.axisValues = vals;
+            // Reverse the coordinates so that they are in increasing order
             for (int i = 0; i < axisValues.size(); i++) {
                 this.axisValues[i] = axisValues.get(axisValues.size() - 1 - i);
             }
         } else {
-            this.axisValues = (T[])axisValues.toArray();
+            axisValues.toArray(this.axisValues);
         }
 
         checkAscending();

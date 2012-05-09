@@ -59,10 +59,10 @@ public final class GISUtils {
         try {
             MathTransform transform = CRS.findMathTransform(sourceCrs, DefaultGeographicCRS.WGS84);
             if (transform.isIdentity())
-                return new LonLatPositionImpl(pos.getX(), pos.getY(), DefaultGeographicCRS.WGS84);
+                return new LonLatPositionImpl(pos.getX(), pos.getY());
             double[] point = new double[] { pos.getX(), pos.getY() };
             transform.transform(point, 0, point, 0, 1);
-            return new LonLatPositionImpl(point[0], point[1], DefaultGeographicCRS.WGS84);
+            return new LonLatPositionImpl(point[0], point[1]);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -1,8 +1,9 @@
 package uk.ac.rdg.resc.edal.position.impl;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Immutable implementation of {@link LonLatPosition}.
@@ -18,7 +19,7 @@ public final class LonLatPositionImpl extends HorizontalPositionImpl implements 
      */
     @Override
     public double getLongitude() {
-        return this.getX();
+        return GISUtils.constrainLongitude180(this.getX());
     }
 
     /**
@@ -41,21 +42,7 @@ public final class LonLatPositionImpl extends HorizontalPositionImpl implements 
      * @param latitude
      *            The geodetic latitude
      */
-    public LonLatPositionImpl(double longitude, double latitude, CoordinateReferenceSystem crs) {
-        super(longitude, latitude, crs);
-    }
-
-    /**
-     * Creates a new LonLatPositionImpl with the given coordinates.
-     * 
-     * @param longitude
-     *            The longitude. Will be converted internally to a longitude in
-     *            the range [-180:180], so all getter methods will return values
-     *            in this range.
-     * @param latitude
-     *            The geodetic latitude
-     */
     public LonLatPositionImpl(double longitude, double latitude) {
-        super(longitude, latitude);
+        super(longitude, latitude, DefaultGeographicCRS.WGS84);
     }
 }

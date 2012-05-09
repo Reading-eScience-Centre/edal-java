@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
+import java.util.Arrays;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 
 /**
@@ -114,7 +115,8 @@ public class GridCoordinates2DImpl implements GridCoordinates2D {
 
     @Override
     public int hashCode() {
-        return (xIndex*yIndex) % Integer.MAX_VALUE;
+        // I think this follows the specification of GeoAPI.GridCoordinates
+        return Arrays.hashCode(new int[]{xIndex, yIndex});
     }
 
     @Override

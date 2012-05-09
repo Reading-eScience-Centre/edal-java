@@ -7,6 +7,7 @@ package uk.ac.rdg.resc.edal.coverage.impl;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
@@ -14,6 +15,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridValuesMatrixImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 /**
  * Skeletal implementation of GridCoverage2D.
@@ -39,11 +41,14 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
         // the target grid
         PixelMap pixelMap = PixelMap.forGrid(this.getDomain(), targetGrid);
         
+        Map<String, List<?>> valuesMap = CollectionUtils.newLinkedHashMap();
+        
         // Read the data from the source coverage
         for (String name : memberNames)
         {
             List<Object> values = listOfNulls(targetGridSize);
             this.extractCoverageValues(name, pixelMap, values);
+            valuesMap.put(name, values);
         }
         
         // Now assemble the remaining properties of the target coverage
