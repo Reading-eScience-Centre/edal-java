@@ -12,7 +12,7 @@ import uk.ac.rdg.resc.edal.Phenomenon;
  * (will usually be Double, maybe occasionally Float or even BigDecimal).
  * @author Jon
  */
-public interface PdfComponent<N extends Number> extends ScalarMetadata<N> {
+public interface PdfComponent extends ScalarMetadata {
     
     /**
      * Returns an identifier indicating the type of the component (mean, variance,

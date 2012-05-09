@@ -12,7 +12,7 @@ import uk.ac.rdg.resc.edal.Phenomenon;
  * (will usually be Double, maybe occasionally Float or even BigDecimal).
  * @author Jon
  */
-public interface Statistic<N extends Number> extends ScalarMetadata<N> {
+public interface Statistic extends ScalarMetadata {
     
     /**
      * Returns an identifier indicating the type of the statistic (mean, variance,
