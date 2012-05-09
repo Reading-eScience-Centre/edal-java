@@ -26,12 +26,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.coverage.util;
+package uk.ac.rdg.resc.edal.util;
 
 /**
  * <p>
- * A resizeable array of signed long integers. Data are stored in an array of
- * primitive longs.
+ * A resizeable array of unsigned short integers. Data are stored in an array of
+ * primitive short integers.
  * </p>
  * <p>
  * Instances of this class are not thread safe.
@@ -39,18 +39,18 @@ package uk.ac.rdg.resc.edal.coverage.util;
  * 
  * @author Jon Blower
  */
-public final class RLongArray extends RArray {
+public final class RUShortArray extends RArray {
 
     /** The maximum value that can be stored in this array */
-    public static final long MAX_VALUE = Long.MAX_VALUE;
+    public static final int MAX_VALUE = 65535;
     /** The minimum value that can be stored in this array */
-    public static final long MIN_VALUE = Long.MIN_VALUE;
+    public static final int MIN_VALUE = 0;
 
     /**
      * Creates an array in which the initial capacity is set the same as the
      * chunk size.
      */
-    public RLongArray(int chunkSize) {
+    public RUShortArray(int chunkSize) {
         this(chunkSize, chunkSize);
     }
 
@@ -63,13 +63,13 @@ public final class RLongArray extends RArray {
      *            The number of storage elements that will be added each time
      *            the storage array grows.
      */
-    public RLongArray(int initialCapacity, int chunkSize) {
+    public RUShortArray(int initialCapacity, int chunkSize) {
         super(initialCapacity, chunkSize);
     }
 
     @Override
-    protected long[] makeStorage(int capacity) {
-        return new long[capacity];
+    protected short[] makeStorage(int capacity) {
+        return new short[capacity];
     }
 
     /**
@@ -83,20 +83,19 @@ public final class RLongArray extends RArray {
      */
     @Override
     public long getLong(int i) {
-        return this.getStorage()[i];
+        return this.getInt(i);
     }
 
     @Override
     public int getInt(int i) {
-        long val = getLong(i);
-        if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {
-            throw new ArithmeticException(val + " cannot be represented as a 4-byte integer");
+        if (i >= this.size) {
+            throw new ArrayIndexOutOfBoundsException(i);
         }
-        return (int) val;
+        return this.getStorage()[i] & 0xffff;
     }
 
-    private long[] getStorage() {
-        return (long[]) this.storage;
+    private short[] getStorage() {
+        return (short[]) this.storage;
     }
 
     @Override
@@ -106,13 +105,13 @@ public final class RLongArray extends RArray {
 
     @Override
     protected void setElement(int index, long value) {
-        this.getStorage()[index] = value;
+        this.getStorage()[index] = (short) value;
     }
 
     @Override
     public void swapElements(int i1, int i2) {
-        long[] arr = this.getStorage();
-        long temp = arr[i1];
+        short[] arr = this.getStorage();
+        short temp = arr[i1];
         arr[i1] = arr[i2];
         arr[i2] = temp;
     }

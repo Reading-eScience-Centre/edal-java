@@ -26,23 +26,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.coverage.util;
+package uk.ac.rdg.resc.edal.util;
 
 /**
- * <p>
- * A resizeable array of unsigned short integers. Data are stored in an array of
- * primitive short integers.
- * </p>
- * <p>
- * Instances of this class are not thread safe.
- * </p>
- * 
+ * <p>A resizeable array of unsigned bytes.  Data are stored in an array of
+ * primitive bytes.</p>
+ * <p>Instances of this class are not thread safe.</p>
  * @author Jon Blower
  */
-public final class RUShortArray extends RArray {
+public final class RUByteArray extends RArray {
 
     /** The maximum value that can be stored in this array */
-    public static final int MAX_VALUE = 65535;
+    public static final int MAX_VALUE = 255;
     /** The minimum value that can be stored in this array */
     public static final int MIN_VALUE = 0;
 
@@ -50,36 +45,30 @@ public final class RUShortArray extends RArray {
      * Creates an array in which the initial capacity is set the same as the
      * chunk size.
      */
-    public RUShortArray(int chunkSize) {
+    public RUByteArray(int chunkSize) {
         this(chunkSize, chunkSize);
     }
 
     /**
      * Creates an array with the given initial capacity and chunk size.
-     * 
-     * @param initialCapacity
-     *            The number of elements in the storage array
-     * @param chunkSize
-     *            The number of storage elements that will be added each time
-     *            the storage array grows.
+     * @param initialCapacity The number of elements in the storage array
+     * @param chunkSize The number of storage elements that will be added each
+     * time the storage array grows.
      */
-    public RUShortArray(int initialCapacity, int chunkSize) {
+    public RUByteArray(int initialCapacity, int chunkSize) {
         super(initialCapacity, chunkSize);
     }
 
     @Override
-    protected short[] makeStorage(int capacity) {
-        return new short[capacity];
+    protected byte[] makeStorage(int capacity) {
+        return new byte[capacity];
     }
 
     /**
      * Returns the <i>i</i>th element of the array.
-     * 
-     * @param i
-     *            The index of the element to return.
+     * @param i The index of the element to return.
      * @return the <i>i</i>th element of the array.
-     * @throws ArrayIndexOutOfBoundsException
-     *             if {@code i >= size()}
+     * @throws ArrayIndexOutOfBoundsException if {@code i >= size()}
      */
     @Override
     public long getLong(int i) {
@@ -91,11 +80,12 @@ public final class RUShortArray extends RArray {
         if (i >= this.size) {
             throw new ArrayIndexOutOfBoundsException(i);
         }
-        return this.getStorage()[i] & 0xffff;
+        return this.getStorage()[i] & 0xff;
     }
 
-    private short[] getStorage() {
-        return (short[]) this.storage;
+    private byte[] getStorage()
+    {
+        return (byte[])this.storage;
     }
 
     @Override
@@ -105,13 +95,13 @@ public final class RUShortArray extends RArray {
 
     @Override
     protected void setElement(int index, long value) {
-        this.getStorage()[index] = (short) value;
+        this.getStorage()[index] = (byte)value;
     }
 
     @Override
     public void swapElements(int i1, int i2) {
-        short[] arr = this.getStorage();
-        short temp = arr[i1];
+        byte[] arr = this.getStorage();
+        byte temp = arr[i1];
         arr[i1] = arr[i2];
         arr[i2] = temp;
     }
