@@ -35,7 +35,8 @@ import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 public class DefaultGridSeriesFeatureCollectionFactory extends GridSeriesFeatureCollectionFactory {
 
     @Override
-    public FeatureCollection<GridSeriesFeature<?>> read(String location, String id, String name) throws IOException {
-        return new NcGridSeriesFeatureCollection(id, name, location);
+    public FeatureCollection<GridSeriesFeature> read(String location, String id, String name) throws IOException {
+        //return new NcGridSeriesFeatureCollection(id, name, location);
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

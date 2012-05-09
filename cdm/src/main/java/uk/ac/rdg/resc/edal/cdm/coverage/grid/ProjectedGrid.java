@@ -27,7 +27,6 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
-import java.util.List;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
@@ -51,6 +50,7 @@ import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.position.impl.LonLatPositionImpl;
+import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
@@ -136,9 +136,9 @@ public class ProjectedGrid extends AbstractHorizontalGrid {
     }
 
     @Override
-    public List<GridCell2D> getDomainObjects() {
-        // TODO Auto-generated method stub
-        return null;
+    public BigList<GridCell2D> getDomainObjects() {
+        // TODO: could implement getDomainObjects() etc in AbstractHorizontalGrid?
+        throw new UnsupportedOperationException("not supported yet");
     }
 
     @Override
@@ -161,7 +161,7 @@ public class ProjectedGrid extends AbstractHorizontalGrid {
     @Override
     public boolean contains(HorizontalPosition position) {
         return xAxis.getCoordinateExtent().contains(position.getX())
-                && yAxis.getCoordinateExtent().contains(position.getY());
+            && yAxis.getCoordinateExtent().contains(position.getY());
     }
 
     @Override
