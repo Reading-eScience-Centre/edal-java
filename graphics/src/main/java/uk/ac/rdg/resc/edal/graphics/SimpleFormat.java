@@ -74,7 +74,7 @@ public abstract class SimpleFormat extends ImageFormat {
      */
     @Override
     public void writeImage(List<BufferedImage> frames, OutputStream out,
-            GridSeriesFeature<?> feature, double[] bbox, List<String> tValues, String zValue,
+            GridSeriesFeature feature, double[] bbox, List<String> tValues, String zValue,
             BufferedImage legend) throws IOException {
         this.writeImage(frames, out);
     }
