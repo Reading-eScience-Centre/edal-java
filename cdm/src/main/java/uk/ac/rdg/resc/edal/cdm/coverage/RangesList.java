@@ -25,7 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
-package uk.ac.rdg.resc.edal.cdm;
+package uk.ac.rdg.resc.edal.cdm.coverage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
