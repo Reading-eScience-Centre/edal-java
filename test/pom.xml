@@ -77,6 +77,11 @@
 			<artifactId>derby</artifactId>
 			<version>10.8.2.2</version>
 		</dependency>
+        <dependency>
+            <groupId>org.geotoolkit</groupId>
+            <artifactId>geotk-epsg-javadb</artifactId>
+            <version>3.18</version>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>

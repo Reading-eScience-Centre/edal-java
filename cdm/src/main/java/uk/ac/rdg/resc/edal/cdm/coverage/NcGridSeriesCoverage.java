@@ -86,7 +86,14 @@ public class NcGridSeriesCoverage
 //     *            the {@link TimeAxis} of the new data
 //     */
 //    public void addToCoverage(String filename, String varId, TimeAxis tAxis) {
-//        List<TimePosition> values = this.tAxis.getCoordinateValues();
+//        /*
+//         * We do this because this.tAxis.getCoordinateValues() may well
+//         * return an AbstractList, which we cannot add to.
+//         */
+//        List<TimePosition> values = new ArrayList<TimePosition>();
+//        for(TimePosition tPos : this.tAxis.getCoordinateValues()){
+//            values.add(tPos);
+//        }
 //        int tindex = 0;
 //        if (tAxis == null) {
 //            throw new UnsupportedOperationException(
@@ -299,6 +306,29 @@ public class NcGridSeriesCoverage
 //
 //    @Override
 //    public List<Float> getValues() {
+//        if (values == null) {
+//            values = new AbstractList<Float>() {
+//                @Override
+//                public Float get(int index) {
+//                    GridCoordinates4D gC = getDomain().getComponentsOf(index);
+//                    return evaluate(gC.getTIndex(), gC.getZIndex(), gC.getYIndex(), gC.getXIndex());
+//                }
+//
+//                @Override
+//                public int size() {
+//                    return (int) getDomain().size();
+//                }
+//            };
+//        }
+//        return values;
+        /*
+         * Note: The method below works. It is slow on the first access, and
+         * then fast on subsequent ones. However, it uses a lot of memory, and
+         * is overkill if we only want to extract a few values.
+         * 
+         * The method above is slower, but uses very little memory, and will
+         * take the same amount of time for each individual value extracted
+         */
 //        if (values == null) {
 //            values = new AbstractList<Float>() {
 //                @Override
