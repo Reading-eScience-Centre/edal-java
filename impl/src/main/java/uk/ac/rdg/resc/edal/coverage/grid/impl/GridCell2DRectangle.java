@@ -59,4 +59,8 @@ public class GridCell2DRectangle implements GridCell2D {
         return parentGrid;
     }
 
+    @Override
+    public String toString() {
+        return centre.getX()+","+centre.getY();
+    }
 }

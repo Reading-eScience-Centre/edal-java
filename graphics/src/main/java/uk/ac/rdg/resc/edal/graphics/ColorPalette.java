@@ -207,24 +207,40 @@ public class ColorPalette {
      *            The height of the requested color bar in pixels
      * @param numColorBands
      *            The number of bands of color to include in the bar
+     * @param vertical
+     *            Whether the colour should vary vertically
      * @return a new BufferedImage
      */
-    public BufferedImage createColorBar(int width, int height, int numColorBands) {
-        double colorBandWidth = (double) height / numColorBands;
+    public BufferedImage createColorBar(int width, int height, int numColorBands, boolean vertical) {
         // Get an interpolated/subsampled palette for the color bar
         Color[] newPalette = this.getPalette(numColorBands);
         // Create a BufferedImage of the correct size - we don't need the alpha
         // channel
         BufferedImage colorBar = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D gfx = colorBar.createGraphics();
-        // Cycle through each row in the image and draw a band of the
-        // appropriate colour.
-        for (int i = 0; i < height; i++) {
-            int colorIndex = (int) (i / colorBandWidth);
-            // The colours at the end of the palette need to be at the top
-            // of the image
-            gfx.setColor(newPalette[numColorBands - colorIndex - 1]);
-            gfx.drawLine(0, i, width - 1, i);
+        /*
+         * Cycle through each row in the image and draw a band of the
+         * appropriate colour.
+         */
+        double colorBandWidth;
+        if(vertical){
+            colorBandWidth = (double) height / numColorBands;
+            for (int i = 0; i < height; i++) {
+                int colorIndex = (int) (i / colorBandWidth);
+                // The colours at the end of the palette need to be at the top
+                // of the image
+                gfx.setColor(newPalette[numColorBands - colorIndex - 1]);
+                gfx.drawLine(0, i, width - 1, i);
+            }
+        } else {
+            colorBandWidth = (double) width / numColorBands;
+            for (int i = 0; i < width; i++) {
+                int colorIndex = (int) (i / colorBandWidth);
+                // The colours at the end of the palette need to be at the top
+                // of the image
+                gfx.setColor(newPalette[colorIndex]);
+                gfx.drawLine(i, 0, i, height - 1);
+            }
         }
         return colorBar;
     }
@@ -259,7 +275,7 @@ public class ColorPalette {
         Graphics2D gfx = colourScale.createGraphics();
 
         // Create the colour bar itself
-        BufferedImage colorBar = this.createColorBar(24, MAX_NUM_COLOURS, numColorBands);
+        BufferedImage colorBar = this.createColorBar(24, MAX_NUM_COLOURS, numColorBands, true);
         // Add the colour bar to the legend
         gfx.drawImage(colorBar, null, 2, 5);
 

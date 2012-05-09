@@ -296,7 +296,9 @@ public final class CdmUtils {
             return new RegularAxisImpl(name, axis.getStart(), axis.getIncrement(),
                     (int) axis.getSize(), isLongitude);
         } else {
-            return new ReferenceableAxisImpl(name, axis.getCoordValues(), isLongitude);
+            double[] primVals = axis.getCoordValues();
+            List<Double> valsList = CollectionUtils.listFromDoubleArray(primVals);
+            return new ReferenceableAxisImpl(name, valsList, isLongitude);
         }
     }
 

@@ -14,7 +14,10 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.NumberFormat;
+import com.google.gwt.user.client.ui.CellPanel;
 import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
@@ -24,8 +27,9 @@ import com.google.gwt.user.client.ui.PushButton;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
-public class PaletteSelector extends HorizontalPanel{
+public class PaletteSelector implements PaletteSelectorIF {
 	private TextBox minScale;
 	private TextBox maxScale;
 	private ListBox nColorBands;
@@ -36,9 +40,17 @@ public class PaletteSelector extends HorizontalPanel{
 	private Label mlLabel;
 	private final NumberFormat format = NumberFormat.getFormat("#0.000");
 	
+	private CellPanel mainPanel;
+	
+	/*
+	 * Whether the palette selector is vertically orientated
+	 */
+	private boolean vertical;
+	
 	private List<String> availablePalettes;
 	private String currentPalette;
-	private int mapHeight;
+	private int height;
+	private int width;
 	
 	private Image paletteImage;
 	private String baseUrl;
@@ -49,12 +61,29 @@ public class PaletteSelector extends HorizontalPanel{
 	
 	private boolean enabled;
 	
-	public PaletteSelector(int mapHeight, 
+	private String id;
+	
+	/**
+	 * 
+	 * @param id
+	 * @param height
+	 *         The height of the image part of the palette
+	 * @param width
+	 *         The width of the image part of the palette
+	 * @param handler
+	 * @param baseUrl
+	 * @param vertical
+	 */
+	public PaletteSelector(String id, int height, int width, 
 	                       final PaletteSelectionHandler handler,
-	                       String baseUrl) {
+	                       String baseUrl, boolean vertical) {
+	    this.id = id;
 		this.baseUrl = baseUrl;
-		this.mapHeight = mapHeight;
+		this.height = height;
+		this.width = width;
 		this.paletteHandler = handler;
+		
+		this.vertical = vertical;
 		
 		enabled = true;
 		
@@ -67,27 +96,21 @@ public class PaletteSelector extends HorizontalPanel{
         nColorBands.setTitle("Select the number of colour bands to use for this data");
         
         paletteImage = new Image();
-        paletteImage.setWidth("30px");
-        paletteImage.setHeight(mapHeight+"px");
+        paletteImage.setWidth(width+"px");
+        paletteImage.setHeight(height+"px");
         paletteImage.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                if(enabled)
+                if(enabled && !isLocked())
                     popupPaletteSelector();
             }
         });
         paletteImage.setTitle("Click to choose palette and number of colour bands");
-        
-        add(paletteImage);
-        
-        VerticalPanel vp = new VerticalPanel();
-        vp.setHeight(mapHeight+"px");
-        vp.setWidth("70px");
-        
+
         ChangeHandler scaleChangeHandler = new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                handler.scaleRangeChanged(getScaleRange());
+                handler.scaleRangeChanged(PaletteSelector.this.id, getScaleRange());
                 setScaleLabels();
             }
         };
@@ -110,7 +133,7 @@ public class PaletteSelector extends HorizontalPanel{
                     ErrorBox.popupErrorMessage("Cannot use a negative or zero value for logarithmic scale");
                 } else {
                     setScaleLabels();
-                    handler.logScaleChanged(isLogScale());
+                    handler.logScaleChanged(PaletteSelector.this.id, isLogScale());
                 }
             }
         });
@@ -122,12 +145,12 @@ public class PaletteSelector extends HorizontalPanel{
 		minScale.setTitle("The minimum value of the colour range");
 		minScale.setMaxLength(8);
 
-		HorizontalPanel buttonsPanel = new HorizontalPanel();
 		autoButton = new PushButton(new Image("img/color_wheel.png"));
 		autoButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                handler.autoAdjustPalette();
+                if(!isLocked())
+                    handler.autoAdjustPalette(PaletteSelector.this.id);
             }
         });
 		autoButton.setTitle("Auto-adjust the colour range");
@@ -150,30 +173,89 @@ public class PaletteSelector extends HorizontalPanel{
 		mlLabel = new Label();
 		mlLabel.setStylePrimaryName("tickmark");
 		
-		buttonsPanel.add(autoButton);
-		buttonsPanel.add(lockButton);
-		
-		vp.add(maxScale);
-		vp.setCellHeight(maxScale, "30px");
-		vp.setCellVerticalAlignment(maxScale, ALIGN_TOP);
-		vp.add(mhLabel);
-		vp.setCellVerticalAlignment(mhLabel, ALIGN_BOTTOM);
-		
-		vp.add(logScale);
-		vp.setCellHeight(logScale, "60px");
-		vp.setCellVerticalAlignment(logScale, ALIGN_BOTTOM);
-		vp.add(buttonsPanel);
-		vp.setCellHeight(buttonsPanel, "60px");
-		vp.setCellVerticalAlignment(buttonsPanel, ALIGN_TOP);
+		if(vertical){
+		    initVertical();
+		} else {
+		    initHorizontal();
+		}
+	}
+	
+	private void initVertical(){
+        mainPanel = new HorizontalPanel();
 
-		vp.add(mlLabel);
-		vp.setCellVerticalAlignment(mlLabel, ALIGN_TOP);
-		
-		vp.add(minScale);
-		vp.setCellHeight(minScale, "30px");
-		vp.setCellVerticalAlignment(minScale, ALIGN_BOTTOM);
-		
-		add(vp);
+        mainPanel.add(paletteImage);
+
+        VerticalPanel vp = new VerticalPanel();
+        vp.setHeight(height + "px");
+        vp.setWidth((width+40)+"px");
+
+        HorizontalPanel buttonsPanel = new HorizontalPanel();
+        buttonsPanel.add(autoButton);
+        buttonsPanel.add(lockButton);
+
+        vp.add(maxScale);
+        vp.setCellHeight(maxScale, "30px");
+        vp.setCellVerticalAlignment(maxScale, HasVerticalAlignment.ALIGN_TOP);
+        vp.add(mhLabel);
+        vp.setCellVerticalAlignment(mhLabel, HasVerticalAlignment.ALIGN_BOTTOM);
+
+        vp.add(logScale);
+        vp.setCellHeight(logScale, "60px");
+        vp.setCellVerticalAlignment(logScale, HasVerticalAlignment.ALIGN_BOTTOM);
+        vp.add(buttonsPanel);
+        vp.setCellHeight(buttonsPanel, "60px");
+        vp.setCellVerticalAlignment(buttonsPanel, HasVerticalAlignment.ALIGN_TOP);
+
+        vp.add(mlLabel);
+        vp.setCellVerticalAlignment(mlLabel, HasVerticalAlignment.ALIGN_TOP);
+
+        vp.add(minScale);
+        vp.setCellHeight(minScale, "30px");
+        vp.setCellVerticalAlignment(minScale, HasVerticalAlignment.ALIGN_BOTTOM);
+
+        mainPanel.add(vp);
+	}
+	
+	private void initHorizontal(){
+	    mainPanel = new VerticalPanel();
+	    
+	    mainPanel.add(paletteImage);
+	    
+	    HorizontalPanel hp = new HorizontalPanel();
+	    hp.setHeight((height+40) + "px");
+	    hp.setWidth(width+"px");
+	    
+	    HorizontalPanel buttonsPanel = new HorizontalPanel();
+	    buttonsPanel.add(autoButton);
+	    buttonsPanel.add(lockButton);
+	    
+	    VerticalPanel buttonsAndLogPanel = new VerticalPanel();
+	    buttonsAndLogPanel.add(buttonsPanel);
+	    buttonsAndLogPanel.add(logScale);
+	    
+	    hp.add(minScale);
+	    hp.setCellHeight(minScale, "30px");
+	    hp.setCellHorizontalAlignment(minScale, HasHorizontalAlignment.ALIGN_LEFT);
+	    
+	    hp.add(mlLabel);
+	    hp.setCellHorizontalAlignment(mlLabel, HasHorizontalAlignment.ALIGN_RIGHT);
+	    
+//	    hp.add(logScale);
+//	    hp.setCellHeight(logScale, "60px");
+//	    hp.setCellVerticalAlignment(logScale, HasVerticalAlignment.ALIGN_BOTTOM);
+//	    hp.add(buttonsPanel);
+//	    hp.setCellHeight(buttonsPanel, "60px");
+//	    hp.setCellVerticalAlignment(buttonsPanel, HasVerticalAlignment.ALIGN_TOP);
+	    hp.add(buttonsAndLogPanel);
+	    
+	    hp.add(mhLabel);
+	    hp.setCellHorizontalAlignment(mhLabel, HasHorizontalAlignment.ALIGN_LEFT);
+	    
+	    hp.add(maxScale);
+	    hp.setCellHeight(maxScale, "30px");
+	    hp.setCellHorizontalAlignment(maxScale, HasHorizontalAlignment.ALIGN_RIGHT);
+	    
+	    mainPanel.add(hp);
 	}
 	
 	private void popupPaletteSelector() {
@@ -194,7 +276,7 @@ public class PaletteSelector extends HorizontalPanel{
         nCBPanel.add(new Label("Colour bands:"));
         nCBPanel.add(nColorBands);
         popupPanel.add(nCBPanel);
-        popupPanel.setCellHorizontalAlignment(nCBPanel, ALIGN_CENTER);
+        popupPanel.setCellHorizontalAlignment(nCBPanel, HasHorizontalAlignment.ALIGN_CENTER);
         popupPanel.add(palettesPanel);
         
         popup.setAutoHideEnabled(true);
@@ -207,7 +289,7 @@ public class PaletteSelector extends HorizontalPanel{
             @Override
             public void onClose(CloseEvent<PopupPanel> event) {
                 selectPalette(currentPalette);
-                paletteHandler.paletteChanged(currentPalette, getNumColorBands());
+                paletteHandler.paletteChanged(id, currentPalette, getNumColorBands());
             }
         });
         popup.center();
@@ -219,7 +301,7 @@ public class PaletteSelector extends HorizontalPanel{
 	    }
 	    palettesPanel.clear();
 	    for(final String palette : availablePalettes){
-	        Image pImage = new Image(getImageUrl(palette, 200));
+	        Image pImage = new Image(getImageUrl(palette, 200, 1));
 	        pImage.setHeight("200px");
 	        pImage.setWidth("30px");
 	        pImage.addClickHandler(new ClickHandler() {
@@ -234,16 +316,22 @@ public class PaletteSelector extends HorizontalPanel{
 	    }
     }
 
-    private String getImageUrl(String paletteName, int height){
+    private String getImageUrl(String paletteName, int height, int width){
 	    String url = "?request=GetLegendGraphic"
 	        +"&height="+height
-	        +"&width=1"
+	        +"&width="+width
 	        +"&numcolorbands="+getNumColorBands()
 	        +"&colorbaronly=true"
+	        +"&vertical="+vertical
 	        +"&palette="+paletteName;
 	    return URL.encode(baseUrl+url);
 	}
 
+    @Override
+    public void setId(String id) {
+        this.id = id;
+    }
+    
     public void populatePalettes(List<String> availablePalettes){
 	    this.availablePalettes = availablePalettes;
 	    setEnabled(true);
@@ -255,7 +343,10 @@ public class PaletteSelector extends HorizontalPanel{
 	
 	public void selectPalette(String paletteString){
 	    currentPalette = paletteString;
-        paletteImage.setUrl(getImageUrl(paletteString, mapHeight));
+	    if(vertical)
+	        paletteImage.setUrl(getImageUrl(paletteString, height, 1));
+	    else
+	        paletteImage.setUrl(getImageUrl(paletteString, 1, width));
 	}
 	
 	public boolean setScaleRange(String scaleRange) {
@@ -334,5 +425,10 @@ public class PaletteSelector extends HorizontalPanel{
         lockButton.setEnabled(enabled);
         logScale.setEnabled(enabled);
         this.enabled = enabled;
+    }
+
+    @Override
+    public Widget asWidget() {
+        return mainPanel;
     }
 }

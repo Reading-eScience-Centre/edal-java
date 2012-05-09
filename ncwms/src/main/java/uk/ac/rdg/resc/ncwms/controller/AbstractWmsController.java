@@ -80,6 +80,7 @@ import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.geometry.impl.LineString;
 import uk.ac.rdg.resc.edal.graphics.ColorPalette;
 import uk.ac.rdg.resc.edal.graphics.ImageFormat;
+import uk.ac.rdg.resc.edal.graphics.ImageProducer;
 import uk.ac.rdg.resc.edal.graphics.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.MapRenderer;
 import uk.ac.rdg.resc.edal.graphics.MapStyleDescriptor;
@@ -89,7 +90,6 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.Vector2D;
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.GeoPositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
@@ -482,9 +482,11 @@ public abstract class AbstractWmsController extends AbstractController {
             // Get the style type
             String styleType = styleStrEls[0];
             if (styleType.equalsIgnoreCase("boxfill")) {
-                // TODO deal with style here
+                styleDescriptor.setStyle(Style.BOXFILL);
             } else if (styleType.equalsIgnoreCase("vector")) {
-                // TODO deal with style here
+                styleDescriptor.setStyle(Style.VECTOR);
+            } else if (styleType.equalsIgnoreCase("point")) {
+                styleDescriptor.setStyle(Style.POINT);
             } else {
                 throw new StyleNotDefinedException("The style " + styles[0]
                         + " is not supported by this server");
@@ -716,6 +718,7 @@ public abstract class AbstractWmsController extends AbstractController {
 
         // Find out if we just want the colour bar with no supporting text
         String colorBarOnly = params.getString("colorbaronly", "false");
+        boolean vertical = params.getBoolean("vertical", true);
         if (colorBarOnly.equalsIgnoreCase("true")) {
             // We're only creating the colour bar so we need to know a width
             // and height
@@ -723,7 +726,7 @@ public abstract class AbstractWmsController extends AbstractController {
             int height = params.getPositiveInt("height", 200);
             // Find the requested colour palette, or use the default if not set
             ColorPalette palette = ColorPalette.get(paletteName);
-            legend = palette.createColorBar(width, height, numColourBands);
+            legend = palette.createColorBar(width, height, numColourBands, vertical);
         } else {
             // We're creating a legend with supporting text so we need to know
             // the colour scale range and the layer in question
@@ -1141,7 +1144,9 @@ public abstract class AbstractWmsController extends AbstractController {
             HorizontalGrid hGrid = feature.getCoverage().getDomain().getHorizontalGrid();
             Set<GridCoordinates2D> gridCoords = new HashSet<GridCoordinates2D>();
             for(HorizontalPosition pos : testPointList.getDomainObjects()){
-                gridCoords.add(hGrid.findContainingCell(pos));
+                GridCoordinates2D gridCoord = hGrid.findContainingCell(pos);
+                if(gridCoord != null)
+                    gridCoords.add(hGrid.findContainingCell(pos));
             }
 
             int numUniqueGridPointsSampled = gridCoords.size();
@@ -1293,6 +1298,7 @@ public abstract class AbstractWmsController extends AbstractController {
      *             ISO8601 string is not valid.
      */
     /*
+     * TODO - No it isn't...
      * This method is synchronized because if it isn't, it causes problems, and
      * exceptions can be thrown. If we back our time implementation with
      * Joda-time, it is possible that this error will disappear. However, it's

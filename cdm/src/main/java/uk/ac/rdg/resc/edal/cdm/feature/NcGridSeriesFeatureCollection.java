@@ -27,20 +27,9 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.feature;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-
-import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
-import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
-import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 
 /**
  * An implementation of {@link FeatureCollection} which contains
@@ -50,33 +39,30 @@ import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
  * @author Guy Griffiths
  * 
  */
-public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeriesFeature> {
+public class NcGridSeriesFeatureCollection
 
-    private String collectionId;
-    private String name;
-    private Map<String, GridSeriesFeature> id2GridSeriesFeature;
+//extends AbstractFeatureCollection<GridSeriesFeature> implements FeatureCollection<GridSeriesFeature>
 
-    /**
-     * Instantiates a collection of features from one or more NetCDF files.
-     * 
-     * @param collectionId
-     *            The ID of the collection (comparable to the Dataset ID in old
-     *            ncWMS)
-     * @param collectionName
-     *            The name of the collection (comparable to the Dataset name in
-     *            old ncWMS)
-     * @param location
-     *            The location of the NetCDF file(s)
-     * @throws IOException
-     *             If there is a problem reading the file
-     */
-    public NcGridSeriesFeatureCollection(String collectionId, String collectionName, String location)
-            throws IOException {
-//        this.collectionId = collectionId;
-//        this.name = collectionName;
+{
+
+//    /**
+//     * Instantiates a collection of features from one or more NetCDF files.
+//     * 
+//     * @param collectionId
+//     *            The ID of the collection (comparable to the Dataset ID in old
+//     *            ncWMS)
+//     * @param collectionName
+//     *            The name of the collection (comparable to the Dataset name in
+//     *            old ncWMS)
+//     * @param location
+//     *            The location of the NetCDF file(s)
+//     * @throws IOException
+//     *             If there is a problem reading the file
+//     */
+//    public NcGridSeriesFeatureCollection(String collectionId, String collectionName, String location)
+//            throws IOException {
+//        super(collectionId, collectionName);
 //
-//        id2GridSeriesFeature = new HashMap<String, GridSeriesFeature>();
-//        
 //        class CompoundData{
 //            NcGridSeriesCoverage xCoverage;
 //            NcGridSeriesCoverage yCoverage;
@@ -87,6 +73,9 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 //        Map<String, CompoundData> compoundsCoverageComponents = new HashMap<String, CompoundData>();
 //
 //        List<File> files = FileUtils.expandGlobExpression(location);
+//        if(files.size() == 0){
+//            throw new FileNotFoundException("No files found at " + location);
+//        }
 //        for (File file : files) {
 //            String filename = file.getPath();
 //            NetcdfDataset ncDataset = CdmUtils.openDataset(filename);
@@ -121,15 +110,15 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 //                    String varId = var.getName();
 //                    String description = var.getDescription();
 //
-//                    if (id2GridSeriesFeature.containsKey(varId)) {
-//                        ((NcGridSeriesCoverage) id2GridSeriesFeature.get(varId).getCoverage())
+//                    if (id2Feature.containsKey(varId)) {
+//                        ((NcGridSeriesCoverage) id2Feature.get(varId).getCoverage())
 //                                .addToCoverage(filename, varId, tAxis);
 //                    } else {
 //                        NcGridSeriesCoverage coverage = new NcGridSeriesCoverage(filename, varId,
 //                                hGrid, vAxis, tAxis, description, var.getUnitsString());
-//                        GridSeriesFeature<Float> feature = new GridSeriesFeatureImpl<Float>(name,
+//                        GridSeriesFeature feature = new GridSeriesFeatureImpl(name,
 //                                varId, this, coverage, dataReadingStrategy);
-//                        id2GridSeriesFeature.put(varId, feature);
+//                        id2Feature.put(varId, feature);
 //                    }
 //                    
 //                    /*
@@ -146,7 +135,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 //                        /*
 //                         * By doing this, we will end up with the merged coverage
 //                         */
-//                        cData.xCoverage = (NcGridSeriesCoverage) id2GridSeriesFeature.get(varId).getCoverage();
+//                        cData.xCoverage = (NcGridSeriesCoverage) id2Feature.get(varId).getCoverage();
 //                        cData.xVarId = varId;
 //                        cData.dataReadingStrategy = dataReadingStrategy;
 //                    } else if (name.contains("northward")) {
@@ -160,7 +149,7 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 //                        /*
 //                         * By doing this, we will end up with the merged coverage
 //                         */
-//                        cData.yCoverage = (NcGridSeriesCoverage) id2GridSeriesFeature.get(varId).getCoverage();
+//                        cData.yCoverage = (NcGridSeriesCoverage) id2Feature.get(varId).getCoverage();
 //                        cData.yVarId = varId;
 //                    }
 //                }
@@ -170,14 +159,14 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 //        for (String compoundVar : compoundsCoverageComponents.keySet()) {
 //            CompoundData cData = compoundsCoverageComponents.get(compoundVar);
 //            String id = cData.xVarId+cData.yVarId;
-//            if (!id2GridSeriesFeature.containsKey(id)) {
+//            if (!id2Feature.containsKey(id)) {
 //                try {
 //                    GridSeriesCoverage<Vector2D<Float>> coverage = new NcVectorGridSeriesCoverage(
 //                            cData.xCoverage, cData.yCoverage);
 //                    GridSeriesFeature<Vector2D<Float>> feature = new GridSeriesFeatureImpl<Vector2D<Float>>(
 //                            compoundVar, id, this, coverage,
 //                            cData.dataReadingStrategy);
-//                    id2GridSeriesFeature.put(id, feature);
+//                    id2Feature.put(id, feature);
 //                } catch (InstantiationException e) {
 //                    /*
 //                     * If we get this error, it means that the components do not
@@ -192,87 +181,6 @@ public class NcGridSeriesFeatureCollection implements FeatureCollection<GridSeri
 //                assert false;
 //            }
 //        }
-    }
+//    }
 
-    @Override
-    public GridSeriesFeature getFeatureById(String id) {
-        return id2GridSeriesFeature.get(id);
-    }
-
-    @Override
-    public Set<String> getFeatureIds() {
-        return id2GridSeriesFeature.keySet();
-    }
-
-    @Override
-    public Collection<GridSeriesFeature> getFeatures() {
-        return id2GridSeriesFeature.values();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public Class<GridSeriesFeature> getFeatureType() {
-        // TODO check this with usage examples
-        return GridSeriesFeature.class;
-    }
-
-    @Override
-    public String getId() {
-        return collectionId;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public Iterator<GridSeriesFeature> iterator() {
-        /*
-         * We cannot simply use:
-         * 
-         * return id2GridSeriesFeature.values().iterator()
-         * 
-         * because this will be an iterator of the wrong type
-         * 
-         * TODO IS THIS STILL TRUE?
-         */
-        return new Iterator<GridSeriesFeature>() {
-            @Override
-            public boolean hasNext() {
-                return id2GridSeriesFeature.values().iterator().hasNext();
-            }
-
-            @Override
-            public GridSeriesFeature next() {
-                return id2GridSeriesFeature.values().iterator().next();
-            }
-
-            @Override
-            public void remove() {
-                id2GridSeriesFeature.values().iterator().remove();
-            }
-        };
-    }
-    
-    public static void main(String[] args) throws IOException {
-        long startTime = System.currentTimeMillis();
-        NcGridSeriesFeatureCollection ncFC = new NcGridSeriesFeatureCollection("test", "test collection", "/home/guy/Data/Signell_curvilinear/useast/*.nc");
-        long t1 = System.currentTimeMillis();
-        for(String fId : ncFC.getFeatureIds())
-            System.out.println(fId);
-        GridSeriesFeature feature = ncFC.getFeatureById("temp");
-        double[] bbox = new double[4];
-        bbox[0] = -91.0;
-        bbox[1] = 20.0;
-        bbox[2] = -71.0;
-        bbox[3] = 40.0;
-        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(bbox, DefaultGeographicCRS.WGS84), 512, 512);
-        long t2 = System.currentTimeMillis();
-        @SuppressWarnings("unused")
-        GridCoverage2D coverage = feature.extractHorizontalGrid(0, 15, targetDomain);
-        long endTime = System.currentTimeMillis();
-        System.out.println("Time to load:"+(t1-startTime));
-        System.out.println("Time to extract:"+(endTime-t2));
-    }
 }
