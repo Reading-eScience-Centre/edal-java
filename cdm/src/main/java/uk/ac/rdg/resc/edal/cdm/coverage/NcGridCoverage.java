@@ -5,16 +5,20 @@
 package uk.ac.rdg.resc.edal.cdm.coverage;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
+import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiskBackedGridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.impl.GridDataSource;
+import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 /**
@@ -129,6 +133,21 @@ public class NcGridCoverage extends AbstractDiskBackedGridCoverage2D
     {
         checkMemberName(memberName);
         return new NcGridDataSource(this.location, memberName, this.zIndex, this.tIndex, fileType);
+    }
+    
+    public static void main(String[] args)
+    {
+        GridCoverage2D ncCov = new NcGridCoverage("C:\\Godiva2_data\\FOAM_ONE\\FOAM_20100130.0.nc", "TMP");
+        Record val = ncCov.evaluate(new HorizontalPositionImpl(0, 0, DefaultGeographicCRS.WGS84));
+        System.out.println(val.getValue("TMP"));
+        
+        List<?> vals = ncCov.getValues("TMP");
+        
+        for (int i = 0; i < vals.size(); i+= 720)
+        {
+            System.out.println(vals.get(i));
+        }
+        
     }
     
 }
