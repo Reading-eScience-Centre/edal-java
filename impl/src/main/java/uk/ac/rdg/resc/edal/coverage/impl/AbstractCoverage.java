@@ -30,13 +30,10 @@ package uk.ac.rdg.resc.edal.coverage.impl;
 
 
 import java.util.Set;
-import uk.ac.rdg.resc.edal.Phenomenon;
-import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.Coverage;
 import uk.ac.rdg.resc.edal.coverage.RecordType;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
 
 /**
  * <p>Partial implementation of a {@link Coverage}, providing a simpler way for
@@ -58,7 +55,7 @@ public abstract class AbstractCoverage<P> implements Coverage<P>
         @Override
         public Class<?> getValueType(String memberName) {
             checkMemberName(memberName);
-            return AbstractCoverage.this.getValueType(memberName);
+            return AbstractCoverage.this.getRangeMetadata(memberName).getClass();
         }
 
         @Override
@@ -68,14 +65,8 @@ public abstract class AbstractCoverage<P> implements Coverage<P>
     };
     
     @Override
-    public ScalarMetadata getRangeMetadata(String memberName) {
-        this.checkMemberName(memberName);
-        return new ScalarMetadataImpl(
-            memberName,
-            getDescription(memberName),
-            getParameter(memberName),
-            getUnits(memberName)
-        );
+    public RecordType getRangeType() {
+        return this.rangeType;
     }
     
     /**
@@ -119,16 +110,6 @@ public abstract class AbstractCoverage<P> implements Coverage<P>
             
         };
     }
-    
-    @Override
-    public RecordType getRangeType() {
-        return this.rangeType;
-    }
-    
-    protected abstract Class<?> getValueType(String memberName);
-    protected abstract String getDescription(String memberName);
-    protected abstract Unit getUnits(String memberName);
-    protected abstract Phenomenon getParameter(String memberName);
     
     protected void checkMemberName(String memberName) {
         if (!this.getMemberNames().contains(memberName)) {

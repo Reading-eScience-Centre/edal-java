@@ -78,7 +78,7 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
         }
         
         @Override public Class<E> getValueType() {
-            return (Class<E>)AbstractDiscreteCoverage.this.getValueType(memberName);
+            return (Class<E>)getRangeType().getValueType(memberName);
         }
     }
     

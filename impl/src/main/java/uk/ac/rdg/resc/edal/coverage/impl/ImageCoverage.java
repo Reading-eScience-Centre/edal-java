@@ -11,6 +11,8 @@ import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
@@ -70,23 +72,9 @@ public final class ImageCoverage extends AbstractInMemoryGridCoverage2D
     }
 
     @Override
-    protected Class<?> getValueType(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    protected String getDescription(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    protected Unit getUnits(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    protected Phenomenon getParameter(String memberName) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public ScalarMetadata getRangeMetadata(String memberName) {
+        checkMemberName(memberName);
+        return null; // TODO
     }
     
 }
