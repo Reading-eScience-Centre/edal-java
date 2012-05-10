@@ -79,7 +79,7 @@ public class ReferenceableAxisImplTest extends AbstractReferenceableAxisTest {
     /** Test finding nearest coordinate values */
     @Test
     public void testFindIndexOf() {
-        ReferenceableAxis axis = createAndTestReferenceableAxis(
+        ReferenceableAxis<Double> axis = createAndTestReferenceableAxis(
              new double[] {0.0, 1.5, 3.5, 6.0, 10.0, 15.0, 25.0, 50.0, 100.0},
              false);
 
@@ -118,6 +118,4 @@ public class ReferenceableAxisImplTest extends AbstractReferenceableAxisTest {
         assertEquals(7, axis.findIndexOf(2.51));
         assertEquals(-1, axis.findIndexOf(2.49));
     }
-
-
 }

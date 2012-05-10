@@ -58,7 +58,7 @@ public abstract class AbstractReferenceableAxisTest
         {
             axisVals[i] = firstValue + i * spacing;
         }
-        ReferenceableAxis refAxis = createAndTestReferenceableAxis(axisVals, isLongitude);
+        ReferenceableAxis<Double> refAxis = createAndTestReferenceableAxis(axisVals, isLongitude);
 
         // Test that the axes are equal
         assertEquals("Axes are not equal", regAxis.getCoordinateValues(), refAxis.getCoordinateValues());
