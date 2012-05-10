@@ -187,11 +187,6 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
     public long size() { return this.getDomain().size(); }
 
     @Override
-    public boolean isDefinedAt(P pos) {
-        return this.getDomain().contains(pos);
-    }
-
-    @Override
     public Record evaluate(P pos) {
         return this.evaluate(pos, this.getMemberNames());
     }

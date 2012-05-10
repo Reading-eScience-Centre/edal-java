@@ -47,6 +47,12 @@ import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
  */
 public abstract class AbstractCoverage<P> implements Coverage<P>
 {
+
+    @Override
+    public boolean isDefinedAt(P pos) {
+        return this.getDomain().contains(pos);
+    }
+    
     private final RecordType rangeType = new RecordType()
     {
         @Override
