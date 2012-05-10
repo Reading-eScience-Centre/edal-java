@@ -43,7 +43,7 @@ import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
  * @param <P>
  *            The type of object used to identify positions within the
  *            coverage's domain. This may be a spatial, temporal, or combined
- *            spatiotemporal position..
+ *            spatiotemporal position.
  * @author Jon Blower
  */
 public interface Coverage<P> extends PartialFunction<P, Record> {
