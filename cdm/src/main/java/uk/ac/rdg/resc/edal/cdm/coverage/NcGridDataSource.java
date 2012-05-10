@@ -23,11 +23,8 @@ final class NcGridDataSource extends GridDataSource<Float>
     private final GridDatatype grid;
     private final int zIndex;
     private final int tIndex;
-    private final boolean compressed;
-    private final boolean remote;
 
-    public NcGridDataSource(String location, String memberName, int zIndex, int tIndex,
-            String fileTypeId)
+    public NcGridDataSource(String location, String memberName, int zIndex, int tIndex)
     {
         try
         {
@@ -35,10 +32,6 @@ final class NcGridDataSource extends GridDataSource<Float>
             this.grid = CdmUtils.getGridDatatype(nc, memberName);
             this.zIndex = zIndex;
             this.tIndex = tIndex;
-            
-            // TODO: detect this based on the fileTypeId
-            this.compressed = false;
-            this.remote = false;
         }
         catch(IOException ioe)
         {
@@ -104,12 +97,6 @@ final class NcGridDataSource extends GridDataSource<Float>
             public Class<Float> getValueType() { return Float.class; }
         };
     }
-
-    @Override
-    public boolean isCompressed() { return this.compressed; }
-
-    @Override
-    public boolean isRemote() { return this.remote; }
 
     @Override
     public void close() {
