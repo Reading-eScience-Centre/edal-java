@@ -106,14 +106,14 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
             int insertionPoint = -(index + 1);
             if (insertionPoint == 0) {
                 if (getCoordinateBounds(0).contains(value)) {
-                    return 0;
+                    return maybeReverseIndex(0);
                 } else {
                     return -1;
                 }
             }
             if (insertionPoint == axisValues.length) {
                 if (getCoordinateBounds(axisValues.length - 1).contains(value)) {
-                    return axisValues.length - 1;
+                    return maybeReverseIndex(axisValues.length - 1);
                 } else {
                     return -1;
                 }
