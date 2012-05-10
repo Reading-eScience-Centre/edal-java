@@ -7,6 +7,7 @@ package uk.ac.rdg.resc.edal.coverage.metadata;
 import java.util.Set;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
+import uk.ac.rdg.resc.edal.coverage.Coverage;
 
 /**
  * Descriptor for a scalar field
@@ -37,5 +38,11 @@ public interface ScalarMetadata extends RangeMetadata {
      * Returns the identifier of the quantity being measured.
      */
     public Phenomenon getParameter();
+    
+    /**
+     * Returns the runtime type of the values of the scalar. (This is also
+     * exposed through {@link Coverage#getRangeType()}.)
+     */
+    public Class<?> getValueType();
     
 }
