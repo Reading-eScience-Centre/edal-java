@@ -10,14 +10,18 @@ import java.util.Set;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
-import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiskBackedGridCoverage2D;
+import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.impl.GridDataSource;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
@@ -32,13 +36,11 @@ public class NcGridCoverage extends AbstractDiskBackedGridCoverage2D
     private final int zIndex;
     private final int tIndex;
     
+    private final String description;
     private final Set<String> memberNames;
     private final HorizontalGrid horizGrid;
-    private final String description;
-    private final Unit units;
-    private final Phenomenon phenom;
-    private final Class<?> clazz;
-    private final String fileType;
+    private final ScalarMetadata metadata;
+    private final DataReadingStrategy strategy;
     
     /**
      * Creates an NcGridCoverage that wraps the given variable in the given
@@ -77,15 +79,18 @@ public class NcGridCoverage extends AbstractDiskBackedGridCoverage2D
             this.horizGrid = CdmUtils.createHorizontalGrid(grid.getCoordinateSystem());
             this.memberNames = CollectionUtils.setOf(varId);
             this.description = grid.getDescription();
-            // TODO this returns the unit in an unknown vocab: check for UDUNITS
-            this.units = Unit.getUnit(grid.getUnitsString());
-            this.phenom = CdmUtils.getPhenomenon(grid.getVariable());
             
-            // TODO Deal with different data types.  This is not totally trivial as we
-            // have to think about how to unpack data values (using scale/offset/missing).
-            this.clazz = Float.class; //CdmUtils.getClass(grid.getDataType());
+            this.metadata = new ScalarMetadataImpl(
+                varId,
+                this.description,
+                CdmUtils.getPhenomenon(grid.getVariable()),
+                Unit.getUnit(grid.getUnitsString()),
+                // TODO Deal with different data types.  This is not totally trivial as we
+                // have to think about how to unpack data values (using scale/offset/missing).
+                Float.class //CdmUtils.getClass(grid.getDataType());
+            );
             
-            this.fileType = nc.getFileTypeId();
+            this.strategy = CdmUtils.getOptimumDataReadingStrategy(nc);
             
             this.location = location;
             this.zIndex = zIndex;
@@ -105,16 +110,9 @@ public class NcGridCoverage extends AbstractDiskBackedGridCoverage2D
     /////////  METADATA PROPERTIES //////////////
 
     @Override
-    protected Class<?> getValueType(String memberName) { return this.clazz; }
-
-    @Override
-    protected String getDescription(String memberName) { return this.description; }
-
-    @Override
-    protected Unit getUnits(String memberName) { return this.units; }
-
-    @Override
-    protected Phenomenon getParameter(String memberName) { return this.phenom; }
+    public ScalarMetadata getRangeMetadata(String memberName) {
+        return this.metadata;
+    }
 
     @Override
     public String getDescription() { return this.description; }
@@ -132,22 +130,32 @@ public class NcGridCoverage extends AbstractDiskBackedGridCoverage2D
     protected GridDataSource<?> openDataSource(String memberName)
     {
         checkMemberName(memberName);
-        return new NcGridDataSource(this.location, memberName, this.zIndex, this.tIndex, fileType);
+        return new NcGridDataSource(this.location, memberName, this.zIndex, this.tIndex);
+    }
+
+    @Override
+    protected DataReadingStrategy getDataReadingStrategy() {
+        return this.strategy;
     }
     
     public static void main(String[] args)
     {
+        String var = "TMP";
         GridCoverage2D ncCov = new NcGridCoverage("C:\\Godiva2_data\\FOAM_ONE\\FOAM_20100130.0.nc", "TMP");
         Record val = ncCov.evaluate(new HorizontalPositionImpl(0, 0, DefaultGeographicCRS.WGS84));
-        System.out.println(val.getValue("TMP"));
+        System.out.println(val.getValue(var));
         
-        List<?> vals = ncCov.getValues("TMP");
+        List<?> vals = ncCov.getValues(var);
         
         for (int i = 0; i < vals.size(); i+= 720)
         {
             System.out.println(vals.get(i));
         }
         
+        RegularGrid grid = new RegularGridImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84, 100, 100);
+        GridCoverage2D subset = ncCov.extractGridCoverage(grid, CollectionUtils.setOf(var));
+        
+        System.out.println(subset.getDomain().size());
     }
     
 }

@@ -69,6 +69,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.VerticalAxisImpl;
+import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
@@ -315,12 +316,13 @@ public final class CdmUtils {
      *            The NetcdfDataset from which data will be read.
      * @return an optimum DataReadingStrategy for reading from the dataset
      */
-    // THIS CAN BE DELETED WHEN isCompressed() AND isLocal() are implemented correctly
-//    public static DataReadingStrategy getOptimumDataReadingStrategy(NetcdfDataset nc) {
-//        String fileType = nc.getFileTypeId();
-//        return "netCDF".equals(fileType) || "HDF4".equals(fileType) ? DataReadingStrategy.SCANLINE
-//                : DataReadingStrategy.BOUNDING_BOX;
-//    }
+    public static DataReadingStrategy getOptimumDataReadingStrategy(NetcdfDataset nc) {
+        // TODO: also use the size of the grids as a deciding factor: it can
+        // be very slow to read large grids by the BOUNDING_BOX strategy
+        String fileType = nc.getFileTypeId();
+        return "netCDF".equals(fileType) || "HDF4".equals(fileType) ? DataReadingStrategy.SCANLINE
+                : DataReadingStrategy.BOUNDING_BOX;
+    }
     
     /**
      * Opens the NetCDF dataset at the given location, using the dataset cache
