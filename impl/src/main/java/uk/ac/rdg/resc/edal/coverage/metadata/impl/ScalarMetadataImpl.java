@@ -13,12 +13,14 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     private final String description;
     private final Phenomenon parameter;
     private final Unit units;
+    private final Class<?> clazz;
 
-    public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units) {
+    public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units, Class<?> clazz) {
         this.name = name;
         this.description = description;
         this.parameter = parameter;
         this.units = units;
+        this.clazz = clazz;
     }
 
     @Override
@@ -44,6 +46,11 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     @Override
     public String getName() {
         return this.name;
+    }
+    
+    @Override
+    public Class<?> getValueType() {
+        return this.clazz;
     }
 
     @Override

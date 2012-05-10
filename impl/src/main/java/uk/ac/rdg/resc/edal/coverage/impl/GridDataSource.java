@@ -24,10 +24,6 @@ public abstract class GridDataSource<E>
     
     public abstract List<E> readBlock(int imin, int imax, int jmin, int jmax);
     
-    public abstract boolean isCompressed();
-    
-    public abstract boolean isRemote();
-    
     public abstract void close();
     
 }

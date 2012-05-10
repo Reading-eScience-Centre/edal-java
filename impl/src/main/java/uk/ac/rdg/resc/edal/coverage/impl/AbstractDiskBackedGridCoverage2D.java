@@ -23,19 +23,23 @@ public abstract class AbstractDiskBackedGridCoverage2D extends AbstractGridCover
     void extractCoverageValues(String memberName, PixelMap pixelMap, List<Object> values)
     {
         GridDataSource<?> dataSource = this.openDataSource(memberName);
+        DataReadingStrategy strategy = this.getDataReadingStrategy();
         
-        // Select the data-reading strategy
-        // TODO: also use the size of the grids as a deciding factor: it can
-        // be very slow to read large grids by the BOUNDING_BOX strategy
-        if (dataSource.isCompressed() || dataSource.isRemote())
+        if (strategy == DataReadingStrategy.BOUNDING_BOX)
         {
-            // Use the BOUNDING_BOX strategy
             readDataBoundingBox(dataSource, pixelMap, values);
+        }
+        else if (strategy == DataReadingStrategy.SCANLINE)
+        {
+            readDataScanline(dataSource, pixelMap, values);
+        }
+        else if (strategy == DataReadingStrategy.PIXEL_BY_PIXEL)
+        {
+            throw new UnsupportedOperationException("Not supported yet");
         }
         else
         {
-            // Use the SCANLINE strategy
-            readDataScanline(dataSource, pixelMap, values);
+            throw new IllegalStateException("Unknown strategy");
         }
         
         // Close the data source
@@ -128,5 +132,10 @@ public abstract class AbstractDiskBackedGridCoverage2D extends AbstractGridCover
     }
     
     protected abstract GridDataSource<?> openDataSource(String memberName);
+    
+    /**
+     * Returns the strategy that should be used to read data from this coverage
+     */
+    protected abstract DataReadingStrategy getDataReadingStrategy();
     
 }
