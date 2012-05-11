@@ -62,8 +62,16 @@ public interface GridCoverage2D extends DiscreteCoverage<HorizontalPosition, Gri
     public BigList<?> getValues(String memberName);
     
     /**
-     * Gets the values of the given member name, expressed as a Grid.
-     * ({@link #getValues(java.lang.String)} returns the same values as a List).
+     * <p>Gets an object through which the values of the given coverage member can be
+     * accessed.</p>
+     * <p>For disk-based storage, this method will usually return a new object
+     * with each invocation.  When the user has finished with the GridValuesMatrix,
+     * close() must be called to free any resources.  Following this, the 
+     * GridValuesMatrix may no longer be usable and a new one must be retrieved
+     * using this method.</p>
+     * <p>For in-memory storage, this method may choose to return the same object
+     * with each invocation, and the call to GridValuesMatrix.close() may be
+     * ignored.</p>
      */
     public GridValuesMatrix<?> getGridValues(String memberName);
     
