@@ -9,18 +9,17 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
+import uk.ac.rdg.resc.edal.util.AbstractBigList;
 import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
- * Implementation of {@link GridValuesMatrix}.
+ * Skeletal implementation of {@link GridValuesMatrix}.
  * @param <E> The type of the values contained in the grid
  * @author Jon
  */
-public final class GridValuesMatrixImpl<E> implements GridValuesMatrix<E>
+public abstract class AbstractGridValuesMatrix<E> implements GridValuesMatrix<E>
 {
-    
     private final Grid grid;
-    private final BigList<E> values;
     
     /**
      * Creates a GridValuesMatrix whose geometry is taken from the given Grid,
@@ -28,23 +27,41 @@ public final class GridValuesMatrixImpl<E> implements GridValuesMatrix<E>
      * @throws IllegalArgumentException if the sizes of the Grid and the BigList
      * do not match
      */
-    public GridValuesMatrixImpl(Grid grid, BigList<E> values)
+    public AbstractGridValuesMatrix(Grid grid)
     {
-        if (grid.size() != values.sizeAsLong()) {
-            throw new IllegalArgumentException("Sizes of grid and values don't match");
-        }
         this.grid = grid;
-        this.values = values;
     }
 
+    /**
+     * Returns a BigList that uses this GridValuesMatrix to obtain values.
+     * Note that none of the methods in this BigList close the parent
+     * GridValuesMatrix, so users must be careful to close the GridValuesMatrix
+     * when the BigList is no longer required.
+     * @todo implement getAll() based on something more efficient than
+     * repeated calls to get().
+     * @return 
+     */
     @Override
     public BigList<E> getValues() {
-        return this.values;
-    }
+        return new AbstractBigList<E>()
+        {
+            @Override public E get(long index)
+            {
+                GridCoordinates2D coords = getCoords(index);
+                E value = readPoint(coords.getXIndex(), coords.getYIndex());
+                return value;
+            }
 
-    @Override
-    public Class<E> getValueType() {
-        return this.values.getValueType();
+            @Override public Class<E> getValueType()
+            {
+                return AbstractGridValuesMatrix.this.getValueType();
+            }
+
+            @Override public long sizeAsLong()
+            {
+                return AbstractGridValuesMatrix.this.size();
+            }
+        };
     }
 
     @Override
@@ -64,7 +81,7 @@ public final class GridValuesMatrixImpl<E> implements GridValuesMatrix<E>
 
     @Override
     public long size() {
-        return this.values.sizeAsLong();
+        return this.grid.size();
     }
 
     @Override

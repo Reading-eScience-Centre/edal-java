@@ -5,16 +5,21 @@
 package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.GridValuesMatrixImpl;
+import uk.ac.rdg.resc.edal.coverage.impl.PixelMap.PixelMapEntry;
+import uk.ac.rdg.resc.edal.coverage.impl.PixelMap.Scanline;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 /**
@@ -23,11 +28,6 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
  */
 public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<HorizontalPosition, GridCell2D> implements GridCoverage2D
 {
-
-    @Override
-    public GridValuesMatrix<?> getGridValues(String memberName) {
-        return new GridValuesMatrixImpl(this.getDomain(), this.getValues(memberName));
-    }
 
     @Override
     public GridCoverage2D extractGridCoverage(HorizontalGrid targetGrid, Set<String> memberNames)
@@ -57,7 +57,100 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
         return null;
     }
     
-    abstract void extractCoverageValues(String memberName, PixelMap pixelMap, List<Object> values);
+    /**
+     * Returns the strategy that should be used to read data from this coverage
+     */
+    protected abstract DataReadingStrategy getDataReadingStrategy();
+    
+    private void extractCoverageValues(String memberName, PixelMap pixelMap, List<Object> values)
+    {
+        GridValuesMatrix<?> gridValues = this.getGridValues(memberName);
+        DataReadingStrategy strategy = this.getDataReadingStrategy();
+        
+        if (strategy == DataReadingStrategy.BOUNDING_BOX)
+        {
+            readDataBoundingBox(gridValues, pixelMap, values);
+        }
+        else if (strategy == DataReadingStrategy.SCANLINE)
+        {
+            readDataScanline(gridValues, pixelMap, values);
+        }
+        else if (strategy == DataReadingStrategy.PIXEL_BY_PIXEL)
+        {
+            readDataPixelByPixel(gridValues, pixelMap, values);
+        }
+        else
+        {
+            throw new IllegalStateException("Unknown strategy");
+        }
+        
+        // Close the data source
+        gridValues.close();
+    }
+    
+    private static void readDataBoundingBox(GridValuesMatrix<?> gridValues,
+            PixelMap pixelMap, List<Object> values)
+    {
+        int imin = pixelMap.getMinIIndex();
+        int imax = pixelMap.getMaxIIndex();
+        int jmin = pixelMap.getMinJIndex();
+        int jmax = pixelMap.getMaxJIndex();
+        
+        GridValuesMatrix<?> block = gridValues.readBlock(imin, imax, jmin, jmax);
+
+        for (PixelMapEntry pme : pixelMap) {
+            int i = pme.getSourceGridIIndex() - imin;
+            int j = pme.getSourceGridJIndex() - jmin;
+            Object val = block.readPoint(i, j);
+            for (int targetGridPoint : pme.getTargetGridPoints()) {
+                values.set(targetGridPoint, val);
+            }
+        }
+        // This will probably do nothing, because the result of readBlock() will
+        // usually be an in-memory structure.
+        block.close();
+    }
+    
+    private static void readDataScanline(GridValuesMatrix<?> dataSource,
+            PixelMap pixelMap, List<Object> values)
+    {
+        Iterator<Scanline> it = pixelMap.scanlineIterator();
+        while (it.hasNext())
+        {
+            Scanline scanline = it.next();
+            List<PixelMapEntry> entries = scanline.getPixelMapEntries();
+            int entriesSize = entries.size();
+            
+            int j = scanline.getSourceGridJIndex();
+            int imin = entries.get(0).getSourceGridIIndex();
+            int imax = entries.get(entriesSize - 1).getSourceGridIIndex();
+            
+            List<?> data = dataSource.readScanline(j, imin, imax);
+            
+            for (PixelMapEntry pme : entries)
+            {
+                int i = pme.getSourceGridIIndex() - imin;
+                Object val = data.get(i);
+                for (int p : pme.getTargetGridPoints())
+                {
+                    values.set(p, val);
+                }
+            }
+        }
+    }
+    
+    private void readDataPixelByPixel(GridValuesMatrix<?> dataSource,
+            PixelMap pixelMap, List<Object> values)
+    {
+        for (PixelMapEntry entry : pixelMap)
+        {
+            Object value = dataSource.readPoint(entry.getSourceGridIIndex(), entry.getSourceGridJIndex());
+            for (int index : entry.getTargetGridPoints())
+            {
+                values.set(index, value);
+            }
+        }
+    }
     
     /**
      * Creates and returns a new mutable list consisting entirely of null values.
@@ -89,5 +182,47 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
             
         };
     } 
+    
+    /**
+     * Returns an implementation of BigList that uses bulk reading methods
+     * to implement getAll().  Generally speaking clients should use:
+     * <pre>
+     * GridValueaMatrix<?> gridValues = getGridValues(memberName);
+     * BigList<?> bigList = gridValues.getValues();
+     * ... // do something with the BigList
+     * gridValues.close();
+     * </pre>
+     * instead, for efficiency reasons.
+     * @todo make getAll(from, to) more efficient
+     */
+    @Override
+    public BigList<?> getValues(final String memberName)
+    {
+        return new AbstractMemberBigList<Object>(memberName)
+        {
+            @Override public Object get(long index)
+            {
+                GridCoordinates2D coords = getDomain().getCoords(index);
+                GridValuesMatrix<?> gridValues = getGridValues(memberName);
+                Object value = gridValues.readPoint(coords.getXIndex(), coords.getYIndex());
+                gridValues.close();
+                return value;
+            }
+
+            @Override public List<Object> getAll(List<Long> indices)
+            {
+                GridValuesMatrix<?> gridValues = getGridValues(memberName);
+                List<Object> values = new ArrayList<Object>(indices.size());
+                for (long index : indices)
+                {
+                    GridCoordinates2D coords = getDomain().getCoords(index);
+                    Object value = gridValues.readPoint(coords.getXIndex(), coords.getYIndex());
+                    values.add(value);
+                }
+                gridValues.close();
+                return values;
+            }
+        };
+    }
     
 }
