@@ -138,17 +138,17 @@ public class MapStyleDescriptor {
     /**
      * @return the colour index that corresponds to the given value
      */
-    public int getColourIndex(Float value) {
+    public int getColourIndex(Number value) {
         if (value == null) {
             return numColourBands; // represents a background pixel
-        } else if (!scaleRange.contains(value)) {
+        } else if (!scaleRange.contains(value.floatValue())) {
             return numColourBands + 1; // represents an out-of-range pixel
         } else {
             float scaleMin = scaleRange.getLow().floatValue();
             float scaleMax = scaleRange.getHigh().floatValue();
             double min = logarithmic ? Math.log(scaleMin) : scaleMin;
             double max = logarithmic ? Math.log(scaleMax) : scaleMax;
-            double val = logarithmic ? Math.log(value) : value;
+            double val = logarithmic ? Math.log(value.doubleValue()) : value.doubleValue();
             double frac = (val - min) / (max - min);
             // Compute and return the index of the corresponding colour
             int index = (int) (frac * numColourBands);
