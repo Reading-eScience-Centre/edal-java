@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.cdm.coverage;
+package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
 import java.io.IOException;
 import java.util.Set;
