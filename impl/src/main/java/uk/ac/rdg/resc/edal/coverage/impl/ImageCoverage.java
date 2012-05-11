@@ -6,13 +6,10 @@ package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.awt.image.BufferedImage;
 import java.util.Set;
-import uk.ac.rdg.resc.edal.Phenomenon;
-import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
@@ -21,7 +18,7 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
  * georeferenced through the addition of a {@link BoundingBox}.
  * @author Jon
  */
-public final class ImageCoverage extends AbstractInMemoryGridCoverage2D
+public final class ImageCoverage extends AbstractGridCoverage2D
 {
     private static final String RED   = "red";
     private static final String GREEN = "green";
@@ -61,14 +58,6 @@ public final class ImageCoverage extends AbstractInMemoryGridCoverage2D
      */
     public BufferedImage getImage() {
         return this.im;
-    }
-
-    @Override
-    protected Object getValue(String memberName, int i, int j) {
-        int pixel = this.im.getRGB(i, j);
-        
-        // TODO
-        return null;
     }
 
     @Override
