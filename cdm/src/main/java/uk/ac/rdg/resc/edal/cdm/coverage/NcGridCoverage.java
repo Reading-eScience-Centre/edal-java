@@ -11,18 +11,24 @@ import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.Unit;
+import uk.ac.rdg.resc.edal.cdm.coverage.grid.NcGridValuesMatrix;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.Record;
+import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
+import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.DiskBasedGridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
-import uk.ac.rdg.resc.edal.coverage.impl.AbstractDiskBackedGridCoverage2D;
+import uk.ac.rdg.resc.edal.coverage.impl.AbstractGridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
-import uk.ac.rdg.resc.edal.coverage.impl.GridDataSource;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
+import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 /**
@@ -30,7 +36,7 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
  * Currently all datatypes will appear as Floats - TODO: relax this limitation.
  * @author Jon
  */
-public class NcGridCoverage extends AbstractDiskBackedGridCoverage2D
+public class NcGridCoverage extends AbstractGridCoverage2D
 {
     private final String location;
     private final int zIndex;
@@ -123,15 +129,13 @@ public class NcGridCoverage extends AbstractDiskBackedGridCoverage2D
     @Override
     public HorizontalGrid getDomain() { return this.horizGrid; }
     
+    @Override
+    public GridValuesMatrix<?> getGridValues(final String memberName) {
+        return new NcGridValuesMatrix(horizGrid, location, memberName, zIndex, tIndex);
+    }
+    
     
     /////////  DATA READING  //////////////
-
-    @Override
-    protected GridDataSource<?> openDataSource(String memberName)
-    {
-        checkMemberName(memberName);
-        return new NcGridDataSource(this.location, memberName, this.zIndex, this.tIndex);
-    }
 
     @Override
     protected DataReadingStrategy getDataReadingStrategy() {
@@ -157,5 +161,5 @@ public class NcGridCoverage extends AbstractDiskBackedGridCoverage2D
         
         System.out.println(subset.getDomain().size());
     }
-    
+
 }
