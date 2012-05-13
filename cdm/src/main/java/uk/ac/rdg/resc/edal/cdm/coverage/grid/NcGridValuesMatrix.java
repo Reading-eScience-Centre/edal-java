@@ -1,128 +1,68 @@
 package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import ucar.ma2.Index;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
-import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.grid.Grid;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.DiskBasedGridValuesMatrix;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.FloatListGridValuesMatrix;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.GridExtentImpl;
-import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractGridValuesMatrix;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.GridAxisImpl;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.InMemoryGridValuesMatrix;
 
-public class NcGridValuesMatrix extends DiskBasedGridValuesMatrix<Float> {
+public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float> {
 
-    private String location;
-    private String varId;
     private int zIndex;
     private int tIndex;
-    private GridDatatype gridDatatype = null;
+    private final NetcdfDataset nc;
+    private final GridDatatype gridDatatype;
     
     public NcGridValuesMatrix(Grid grid, String location, String varId, int zIndex, int tIndex) {
-        super(grid);
-        this.location = location;
-        this.varId = varId;
+        super(grid, Float.class);
         this.zIndex = zIndex;
         this.tIndex = tIndex;
+        try {
+            this.nc = CdmUtils.openDataset(location);
+            this.gridDatatype = CdmUtils.getGridDatatype(nc, varId);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public GridValuesMatrix<Float> readBlock(final int imin, final int imax, final int jmin, final int jmax) {
-        NetcdfDataset ncDataset;
-        if(gridDatatype == null){
-            try {
-                ncDataset = CdmUtils.openDataset(location);
-                gridDatatype = CdmUtils.getGridDatatype(ncDataset, varId);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        RangesList ranges = new RangesList(gridDatatype);
-        ranges.setTRange(tIndex, tIndex);
-        ranges.setZRange(zIndex, zIndex);
-        ranges.setYRange(jmin, jmax);
-        ranges.setXRange(imin, imax);
-        
+    public Float readPoint(int i, int j)
+    {
+        RangesList ranges = this.getRangesList(i, i, j, j);
+        DataChunk dataChunk = readDataChunk(ranges);
+        assert(dataChunk.size() == 1);
+        final Index arrayIndex = dataChunk.getIndex();
+        // Set index to zero in all directions
+        arrayIndex.set(new int[arrayIndex.getRank()]);
+        return dataChunk.readFloatValue(arrayIndex);
+    }
+
+    @Override
+    public GridValuesMatrix<Float> readBlock(final int imin, final int imax, final int jmin, final int jmax)
+    {
         final int iSize = imax - imin + 1;
         final int jSize = jmax - jmin + 1;
         final long size = (long) iSize * jSize;
         
-        final int iIndexInArray = ranges.getXAxisIndex();
-        final int jIndexInArray = ranges.getYAxisIndex();
-        
-        final DataChunk dataChunk;
-        try
-        {
-            dataChunk = DataChunk.readDataChunk(gridDatatype.getVariable(), ranges);
-        }
-        catch(IOException ioe)
-        {
-            throw new RuntimeException(ioe);
-        }
+        // Read the data from disk into memory
+        RangesList ranges = this.getRangesList(imin, imax, jmin, jmax);
+        final DataChunk dataChunk = readDataChunk(ranges);
         assert(size == dataChunk.size());
         
-        final Index arrayIndex = dataChunk.getIndex();
-        // Set the index to zero.  Is this necessary?
-        arrayIndex.set(new int[arrayIndex.getRank()]);
+        // Create a new Grid whose axes run from 0 to iSize - 1  and jSize - 1
+        final GridAxis xAxis = new GridAxisImpl(getXAxis().getName(), iSize);
+        final GridAxis yAxis = new GridAxisImpl(getYAxis().getName(), jSize);
         
-        List<Float> valueList = new ArrayList<Float>();
-        for (int index = 0; index < size; index++) {
-            int i = index % iSize;
-            int j = index / iSize;
-            arrayIndex.setDim(iIndexInArray, i);
-            arrayIndex.setDim(jIndexInArray, j);
-            valueList.add(dataChunk.readFloatValue(arrayIndex));
-        }
-
-        final GridAxis xAxis = new GridAxis() {
-            @Override
-            public int size() {
-                return 1+imax-imin;
-            }
-            
-            @Override
-            public String getName() {
-                return getXAxis().getName();
-            }
-            
-            @Override
-            public Extent<Integer> getIndexExtent() {
-                return Extents.newExtent(imin, imax);
-            }
-        };
-        final GridAxis yAxis = new GridAxis() {
-            @Override
-            public int size() {
-                return 1+jmax-jmin;
-            }
-            
-            @Override
-            public String getName() {
-                return getYAxis().getName();
-            }
-            
-            @Override
-            public Extent<Integer> getIndexExtent() {
-                return Extents.newExtent(jmin, jmax);
-            }
-        };
-        
-        Grid newGrid = new Grid() {
-            @Override
-            public long size() {
-                return size;
-            }
-            
+        Grid newGrid = new AbstractGrid()
+        {            
             @Override
             public GridAxis getYAxis() {
                 return yAxis;
@@ -132,39 +72,51 @@ public class NcGridValuesMatrix extends DiskBasedGridValuesMatrix<Float> {
             public GridAxis getXAxis() {
                 return xAxis;
             }
-            
-            @Override
-            public long getIndex(int i, int j) {
-                return i + iSize * j;
-            }
-            
-            @Override
-            public long getIndex(GridCoordinates2D coords) {
-                return getIndex(coords.getXIndex(), coords.getYIndex());
-            }
-            
-            @Override
-            public GridExtent getGridExtent() {
-                return new GridExtentImpl(Extents.newExtent(imin, imax), Extents.newExtent(jmin, jmax));
-            }
-            
-            @Override
-            public GridCoordinates2D getCoords(long index) {
-                return new GridCoordinates2DImpl((int) index % iSize, (int) index / iSize);
-            }
         };
         
-        return new FloatListGridValuesMatrix(newGrid, valueList);
+        // Return an in-memory GridValuesMatrix that wraps the DataChunk
+        final int iIndexInArray = ranges.getXAxisIndex();
+        final int jIndexInArray = ranges.getYAxisIndex();
+        
+        return new InMemoryGridValuesMatrix<Float>(newGrid, Float.class)
+        {
+            @Override public Float readPoint(int i, int j)
+            {
+                // TODO: check that getIndex() returns a new index each time,
+                // otherwise we may not be thread safe.
+                Index arrayIndex = dataChunk.getIndex();
+                arrayIndex.setDim(iIndexInArray, i);
+                arrayIndex.setDim(jIndexInArray, j);
+                return dataChunk.readFloatValue(arrayIndex);
+            }
+        };
     }
-
-    @Override
-    public Class<Float> getValueType() {
-        return Float.class;
+    
+    private RangesList getRangesList(final int imin, final int imax, final int jmin, final int jmax)
+    {
+        RangesList ranges = new RangesList(gridDatatype);
+        ranges.setTRange(tIndex, tIndex);
+        ranges.setZRange(zIndex, zIndex);
+        ranges.setYRange(jmin, jmax);
+        ranges.setXRange(imin, imax);
+        return ranges;
+    }
+    
+    private DataChunk readDataChunk(RangesList ranges)
+    {
+        try
+        {
+            return DataChunk.readDataChunk(gridDatatype.getVariable(), ranges);
+        }
+        catch(IOException ioe)
+        {
+            throw new RuntimeException(ioe);
+        }
     }
 
     @Override
     public void close() {
-
+        CdmUtils.safelyClose(nc);
     }
 
 }
