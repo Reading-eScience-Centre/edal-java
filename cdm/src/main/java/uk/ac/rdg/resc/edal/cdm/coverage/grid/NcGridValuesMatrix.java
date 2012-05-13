@@ -29,7 +29,6 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
     // TODO: pass in Grid.xAxis and yAxis instead of Grid object?
     public NcGridValuesMatrix(Grid grid, String location, String varId, int zIndex, int tIndex)
     {
-        super(Float.class);
         this.zIndex = zIndex;
         this.tIndex = tIndex;
         this.grid = grid;
@@ -71,7 +70,7 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
         final int iIndexInArray = ranges.getXAxisIndex();
         final int jIndexInArray = ranges.getYAxisIndex();
         
-        return new InMemoryGridValuesMatrix<Float>(Float.class)
+        return new InMemoryGridValuesMatrix<Float>()
         {
             @Override public Float readPoint(int i, int j)
             {
@@ -88,6 +87,11 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
 
             @Override
             public GridAxis getYAxis() { return yAxis; }
+
+            @Override
+            public Class<Float> getValueType() {
+                return Float.class;
+            }
         };
     }
     
@@ -126,6 +130,11 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
     @Override
     public void close() {
         CdmUtils.safelyClose(nc);
+    }
+
+    @Override
+    public Class<Float> getValueType() {
+        return Float.class;
     }
 
 }
