@@ -9,22 +9,30 @@ import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.grid.Grid;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractGridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.InMemoryGridValuesMatrix;
 
-public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float> {
+/**
+ * Disk-based GridValuesMatrix that reads data from NetCDF files.
+ * @author Jon
+ */
+public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
+{
 
-    private int zIndex;
-    private int tIndex;
+    private final int zIndex;
+    private final int tIndex;
+    private final Grid grid;
     private final NetcdfDataset nc;
     private final GridDatatype gridDatatype;
     
-    public NcGridValuesMatrix(Grid grid, String location, String varId, int zIndex, int tIndex) {
-        super(grid, Float.class);
+    // TODO: pass in Grid.xAxis and yAxis instead of Grid object?
+    public NcGridValuesMatrix(Grid grid, String location, String varId, int zIndex, int tIndex)
+    {
+        super(Float.class);
         this.zIndex = zIndex;
         this.tIndex = tIndex;
+        this.grid = grid;
         try {
             this.nc = CdmUtils.openDataset(location);
             this.gridDatatype = CdmUtils.getGridDatatype(nc, varId);
@@ -51,34 +59,19 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float> {
         final int iSize = imax - imin + 1;
         final int jSize = jmax - jmin + 1;
         final long size = (long) iSize * jSize;
+        final GridAxis xAxis = new GridAxisImpl(this.getXAxis().getName(), iSize);
+        final GridAxis yAxis = new GridAxisImpl(this.getYAxis().getName(), jSize);
         
         // Read the data from disk into memory
         RangesList ranges = this.getRangesList(imin, imax, jmin, jmax);
         final DataChunk dataChunk = readDataChunk(ranges);
         assert(size == dataChunk.size());
         
-        // Create a new Grid whose axes run from 0 to iSize - 1  and jSize - 1
-        final GridAxis xAxis = new GridAxisImpl(getXAxis().getName(), iSize);
-        final GridAxis yAxis = new GridAxisImpl(getYAxis().getName(), jSize);
-        
-        Grid newGrid = new AbstractGrid()
-        {            
-            @Override
-            public GridAxis getYAxis() {
-                return yAxis;
-            }
-            
-            @Override
-            public GridAxis getXAxis() {
-                return xAxis;
-            }
-        };
-        
         // Return an in-memory GridValuesMatrix that wraps the DataChunk
         final int iIndexInArray = ranges.getXAxisIndex();
         final int jIndexInArray = ranges.getYAxisIndex();
         
-        return new InMemoryGridValuesMatrix<Float>(newGrid, Float.class)
+        return new InMemoryGridValuesMatrix<Float>(Float.class)
         {
             @Override public Float readPoint(int i, int j)
             {
@@ -89,6 +82,12 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float> {
                 arrayIndex.setDim(jIndexInArray, j);
                 return dataChunk.readFloatValue(arrayIndex);
             }
+
+            @Override
+            public GridAxis getXAxis() { return xAxis; }
+
+            @Override
+            public GridAxis getYAxis() { return yAxis; }
         };
     }
     
@@ -112,6 +111,16 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float> {
         {
             throw new RuntimeException(ioe);
         }
+    }
+
+    @Override
+    public GridAxis getXAxis() {
+        return this.grid.getXAxis();
+    }
+
+    @Override
+    public GridAxis getYAxis() {
+        return this.grid.getYAxis();
     }
 
     @Override
