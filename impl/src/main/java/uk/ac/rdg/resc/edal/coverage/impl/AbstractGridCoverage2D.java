@@ -109,7 +109,7 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
             }
         }
         // This will probably do nothing, because the result of readBlock() will
-        // usually be an in-memory structure.
+        // be an in-memory structure.
         block.close();
     }
     
@@ -127,27 +127,30 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
             int imin = entries.get(0).getSourceGridIIndex();
             int imax = entries.get(entriesSize - 1).getSourceGridIIndex();
             
-            GridValuesMatrix<?> data = gridValues.readBlock(imin, imax, j, j);
+            GridValuesMatrix<?> block = gridValues.readBlock(imin, imax, j, j);
             
             for (PixelMapEntry pme : entries)
             {
                 int i = pme.getSourceGridIIndex() - imin;
-                Object val = data.readPoint(i, 0);
+                Object val = block.readPoint(i, 0);
                 for (int p : pme.getTargetGridPoints())
                 {
                     values.set(p, val);
                 }
             }
+            // This will probably do nothing, because the result of readBlock() will
+            // be an in-memory structure.
+            block.close();
         }
     }
     
-    private void readDataPixelByPixel(GridValuesMatrix<?> dataSource,
+    private void readDataPixelByPixel(GridValuesMatrix<?> gridValues,
             PixelMap pixelMap, List<Object> values)
     {
-        for (PixelMapEntry entry : pixelMap)
+        for (PixelMapEntry pme : pixelMap)
         {
-            Object value = dataSource.readPoint(entry.getSourceGridIIndex(), entry.getSourceGridJIndex());
-            for (int index : entry.getTargetGridPoints())
+            Object value = gridValues.readPoint(pme.getSourceGridIIndex(), pme.getSourceGridJIndex());
+            for (int index : pme.getTargetGridPoints())
             {
                 values.set(index, value);
             }

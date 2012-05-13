@@ -34,7 +34,14 @@ public abstract class AbstractGrid implements Grid
      * coordinate varies fastest
      */
     @Override
-    public long getIndex(int i, int j) {
+    public long getIndex(int i, int j)
+    {
+        if (!this.getXAxis().getIndexExtent().contains(i) ||
+            !this.getYAxis().getIndexExtent().contains(j))
+        {
+            // TODO more helpful message
+            throw new IndexOutOfBoundsException();
+        }
         // First remove the offsets in the i and j directions
         i -= getXMin();
         j -= getYMin();
@@ -62,7 +69,7 @@ public abstract class AbstractGrid implements Grid
      */
     @Override
     public GridCoordinates2D getCoords(long index) {
-        if (index >= this.size()) {
+        if (index < 0 || index >= this.size()) {
             throw new IndexOutOfBoundsException();
         }
         
