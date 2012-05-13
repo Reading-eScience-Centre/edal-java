@@ -65,6 +65,8 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
     private void extractCoverageValues(String memberName, PixelMap pixelMap, List<Object> values)
     {
         GridValuesMatrix<?> gridValues = this.getGridValues(memberName);
+        // TODO: for in-memory GridValuesMatrixes, the pixel-by-pixel strategy
+        // will usually be the most efficient
         DataReadingStrategy strategy = this.getDataReadingStrategy();
         
         if (strategy == DataReadingStrategy.BOUNDING_BOX)
@@ -111,7 +113,7 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
         block.close();
     }
     
-    private static void readDataScanline(GridValuesMatrix<?> dataSource,
+    private static void readDataScanline(GridValuesMatrix<?> gridValues,
             PixelMap pixelMap, List<Object> values)
     {
         Iterator<Scanline> it = pixelMap.scanlineIterator();
@@ -125,12 +127,12 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
             int imin = entries.get(0).getSourceGridIIndex();
             int imax = entries.get(entriesSize - 1).getSourceGridIIndex();
             
-            List<?> data = dataSource.readScanline(j, imin, imax);
+            GridValuesMatrix<?> data = gridValues.readBlock(imin, imax, j, j);
             
             for (PixelMapEntry pme : entries)
             {
                 int i = pme.getSourceGridIIndex() - imin;
-                Object val = data.get(i);
+                Object val = data.readPoint(i, 0);
                 for (int p : pme.getTargetGridPoints())
                 {
                     values.set(p, val);
