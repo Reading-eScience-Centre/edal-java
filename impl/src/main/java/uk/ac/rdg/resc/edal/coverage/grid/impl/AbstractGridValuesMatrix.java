@@ -17,22 +17,6 @@ import uk.ac.rdg.resc.edal.util.BigList;
  */
 public abstract class AbstractGridValuesMatrix<E> extends AbstractGrid implements GridValuesMatrix<E>
 {
-    private final Class<E> valueType;
-    
-    /**
-     * Creates a GridValuesMatrix whose geometry is taken from the given Grid.
-     */
-    public AbstractGridValuesMatrix(Class<E> valueType)
-    {
-        this.valueType = valueType;
-    }
-    
-    @Override
-    public final Class<E> getValueType()
-    {
-        return this.valueType;
-    }
-
     /**
      * Returns a BigList that uses this GridValuesMatrix to obtain values.
      * Note that none of the methods in this BigList close the parent

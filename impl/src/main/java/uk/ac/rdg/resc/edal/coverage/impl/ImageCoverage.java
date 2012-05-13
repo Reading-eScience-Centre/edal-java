@@ -80,10 +80,10 @@ public class ImageCoverage extends AbstractGridCoverage2D
         this.checkMemberName(memberName);
         // All the value types are integers except for the Composite member
         return new ScalarMetadataImpl(memberName, memberName,
-                Phenomenon.getPhenomenon("none"), Unit.getUnit("none"), getValueClass(memberName));
+                Phenomenon.getPhenomenon("none"), Unit.getUnit("none"), getValueType(memberName));
     }
     
-    private Class<?> getValueClass(String memberName)
+    private static Class<?> getValueType(String memberName)
     {
         if (COMPOSITE.equals(memberName)) return Color.class;
         else return Integer.class;
@@ -94,63 +94,50 @@ public class ImageCoverage extends AbstractGridCoverage2D
         // This is an in-memory GVM and so this strategy is most efficient
         return DataReadingStrategy.PIXEL_BY_PIXEL;
     }
-    
-    private abstract class GVM<E> extends InMemoryGridValuesMatrix<E>
-    {
-        public GVM(Class<E> valueType) { super(valueType); }
-        
-        @Override public GridAxis getXAxis() {
-            return new GridAxisImpl("x", im.getWidth());
-        }
-
-        @Override public GridAxis getYAxis() {
-            return new GridAxisImpl("y", im.getHeight());
-        }
-        
-        protected Color getColor(int i, int j) {
-            return new Color(im.getRGB(i, j));
-        }
-    }
 
     @Override
     public GridValuesMatrix<?> getGridValues(final String memberName)
     {
         this.checkMemberName(memberName);
-        if (COMPOSITE.equals(memberName))
+        
+        return new InMemoryGridValuesMatrix<Object>()
         {
-            return new GVM<Color>(Color.class)
-            {
-                @Override
-                public Color readPoint(int i, int j) {
-                    return getColor(i, j);
-                }
-            };
-        }
-        else
-        {
-            return new GVM<Integer>(Integer.class)
-            {
-                @Override
-                public Integer readPoint(int i, int j) {
-                    Color color = getColor(i, j);
-                    if (RED.equals(memberName)) return color.getRed();
-                    if (GREEN.equals(memberName)) return color.getGreen();
-                    if (BLUE.equals(memberName)) return color.getBlue();
-                    if (ALPHA.equals(memberName)) return color.getAlpha();
-                    throw new IllegalStateException("Member name " + memberName + " not recognized");
-                }
-            };
-        }
+            @Override public GridAxis getXAxis() {
+                return new GridAxisImpl("x", im.getWidth());
+            }
+
+            @Override public GridAxis getYAxis() {
+                return new GridAxisImpl("y", im.getHeight());
+            }
+
+            @Override
+            public Object readPoint(int i, int j) {
+                Color color = new Color(im.getRGB(i, j));
+                if (COMPOSITE.equals(memberName)) return color;
+                if (RED.equals(memberName)) return color.getRed();
+                if (GREEN.equals(memberName)) return color.getGreen();
+                if (BLUE.equals(memberName)) return color.getBlue();
+                if (ALPHA.equals(memberName)) return color.getAlpha();
+                throw new IllegalStateException("Member name " + memberName + " not recognized");
+            }
+
+            @Override
+            public Class<Object> getValueType() {
+                return (Class<Object>)(Class)ImageCoverage.getValueType(memberName);
+            }
+        };
     }
     
-    // Simple test routine: subsetting a large image
+    // Simple test routine: copying an image
+    // TODO perform a spatial subset, not just a straight copy.
     public static void main(String[] args) throws Exception
     {
         BufferedImage im = ImageIO.read(new File("C:\\Users\\Jon\\Desktop\\bluemarble.world.200410.3x5400x2700.jpg"));
         GridCoverage2D cov = new ImageCoverage(im,
              new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84));
         String memberName = BLUE;
-        GridValuesMatrix<Integer> gvm = (GridValuesMatrix<Integer>)cov.getGridValues(memberName);
+        GridValuesMatrix<?> gvm = cov.getGridValues(memberName);
+        System.out.println(gvm.getValueType());
         int xSize = gvm.getXAxis().size();
         int ySize = gvm.getYAxis().size();
         
@@ -159,7 +146,7 @@ public class ImageCoverage extends AbstractGridCoverage2D
         {
             for (int i = 0; i < xSize; i++)
             {
-                int comp = gvm.readPoint(i, j);
+                int comp = (Integer)gvm.readPoint(i, j);
                 Color col = new Color(comp, comp, comp);
                 im2.setRGB(i, j, col.getRGB());
             }
