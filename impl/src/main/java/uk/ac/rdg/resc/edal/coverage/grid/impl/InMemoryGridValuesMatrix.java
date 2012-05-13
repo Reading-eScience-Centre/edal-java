@@ -4,7 +4,7 @@
  */
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import uk.ac.rdg.resc.edal.coverage.grid.Grid;
+import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 
 /**
@@ -16,17 +16,38 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 public abstract class InMemoryGridValuesMatrix<E> extends AbstractGridValuesMatrix<E>
 {
     
-    public InMemoryGridValuesMatrix(Grid grid, Class<E> valueType) {
-        super(grid, valueType);
+    public InMemoryGridValuesMatrix(Class<E> valueType) {
+        super(valueType);
     }
 
     @Override
-    public GridValuesMatrix<E> readBlock(int imin, int imax, int jmin, int jmax) {
-        // TODO: is there an easy way to abstract out the creation of a Grid
-        // subset (i.e. axis names retained from parent Grid, axis sizes read
-        // from imin,imax,jmin,jmax).  We would use this in readBlock() implementations
-        // for both in-memory and grid-based GVMs.
-        throw new UnsupportedOperationException("Not supported yet.");
+    public GridValuesMatrix<E> readBlock(final int imin, final int imax, final int jmin, final int jmax)
+    {
+        final int iSize = imax - imin + 1;
+        final int jSize = jmax - jmin + 1;
+        // The GridAxisImpl constructors will throw IllegalArgumentExceptions if
+        // the sizes are less than 1.
+        final GridAxis xAxis = new GridAxisImpl(this.getXAxis().getName(), iSize);
+        final GridAxis yAxis = new GridAxisImpl(this.getYAxis().getName(), jSize);
+        
+        // This GridValuesMatrix wraps the parent one, without allocating new
+        // storage
+        return new InMemoryGridValuesMatrix<E>(this.getValueType())
+        {
+            @Override
+            public GridAxis getXAxis() { return xAxis; }
+
+            @Override
+            public GridAxis getYAxis() { return yAxis; }
+
+            @Override
+            public E readPoint(int i, int j) {
+                i -= imin;
+                j -= jmin;
+                return InMemoryGridValuesMatrix.this.readPoint(i, j);
+            }
+            
+        };
     }
 
     @Override

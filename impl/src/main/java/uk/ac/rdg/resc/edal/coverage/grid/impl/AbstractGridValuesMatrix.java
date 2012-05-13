@@ -4,10 +4,7 @@
  */
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import uk.ac.rdg.resc.edal.coverage.grid.Grid;
-import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.util.AbstractBigList;
 import uk.ac.rdg.resc.edal.util.BigList;
@@ -18,17 +15,15 @@ import uk.ac.rdg.resc.edal.util.BigList;
  * @param <E> The type of the values contained in the grid
  * @author Jon
  */
-public abstract class AbstractGridValuesMatrix<E> implements GridValuesMatrix<E>
+public abstract class AbstractGridValuesMatrix<E> extends AbstractGrid implements GridValuesMatrix<E>
 {
-    private final Grid grid;
     private final Class<E> valueType;
     
     /**
      * Creates a GridValuesMatrix whose geometry is taken from the given Grid.
      */
-    public AbstractGridValuesMatrix(Grid grid, Class<E> valueType)
+    public AbstractGridValuesMatrix(Class<E> valueType)
     {
-        this.grid = grid;
         this.valueType = valueType;
     }
     
@@ -68,41 +63,6 @@ public abstract class AbstractGridValuesMatrix<E> implements GridValuesMatrix<E>
                 return AbstractGridValuesMatrix.this.size();
             }
         };
-    }
-
-    @Override
-    public GridAxis getXAxis() {
-        return this.grid.getXAxis();
-    }
-
-    @Override
-    public GridAxis getYAxis() {
-        return this.grid.getYAxis();
-    }
-
-    @Override
-    public GridExtent getGridExtent() {
-        return this.grid.getGridExtent();
-    }
-
-    @Override
-    public long size() {
-        return this.grid.size();
-    }
-
-    @Override
-    public GridCoordinates2D getCoords(long index) {
-        return this.grid.getCoords(index);
-    }
-
-    @Override
-    public long getIndex(GridCoordinates2D coords) {
-        return this.grid.getIndex(coords);
-    }
-
-    @Override
-    public long getIndex(int i, int j) {
-        return this.grid.getIndex(i, j);
     }
     
 }

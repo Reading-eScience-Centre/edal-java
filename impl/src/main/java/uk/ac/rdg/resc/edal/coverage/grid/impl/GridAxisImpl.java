@@ -19,6 +19,7 @@ public class GridAxisImpl implements GridAxis
     
     public GridAxisImpl(String name, int size)
     {
+        if (size < 1) throw new IllegalArgumentException("Grid axis size must be >= 1");
         this.name = name;
         this.size = size;
     }
