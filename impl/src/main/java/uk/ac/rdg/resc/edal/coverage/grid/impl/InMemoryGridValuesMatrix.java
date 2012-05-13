@@ -15,10 +15,6 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
  */
 public abstract class InMemoryGridValuesMatrix<E> extends AbstractGridValuesMatrix<E>
 {
-    
-    public InMemoryGridValuesMatrix(Class<E> valueType) {
-        super(valueType);
-    }
 
     @Override
     public GridValuesMatrix<E> readBlock(final int imin, final int imax, final int jmin, final int jmax)
@@ -32,7 +28,7 @@ public abstract class InMemoryGridValuesMatrix<E> extends AbstractGridValuesMatr
         
         // This GridValuesMatrix wraps the parent one, without allocating new
         // storage
-        return new InMemoryGridValuesMatrix<E>(this.getValueType())
+        return new InMemoryGridValuesMatrix<E>()
         {
             @Override
             public GridAxis getXAxis() { return xAxis; }
@@ -46,7 +42,11 @@ public abstract class InMemoryGridValuesMatrix<E> extends AbstractGridValuesMatr
                 j -= jmin;
                 return InMemoryGridValuesMatrix.this.readPoint(i, j);
             }
-            
+
+            @Override
+            public Class<E> getValueType() {
+                return InMemoryGridValuesMatrix.this.getValueType();
+            }
         };
     }
 

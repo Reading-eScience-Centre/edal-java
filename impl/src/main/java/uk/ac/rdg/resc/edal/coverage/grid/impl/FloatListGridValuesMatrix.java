@@ -13,7 +13,6 @@ public class FloatListGridValuesMatrix extends InMemoryGridValuesMatrix<Float> {
     
     // TODO: pass in grid axes, or just their sizes and names?
     public FloatListGridValuesMatrix(Grid grid, List<Float> values) {
-        super(Float.class);
         this.grid = grid;
         this.values = values;
     }
@@ -33,6 +32,11 @@ public class FloatListGridValuesMatrix extends InMemoryGridValuesMatrix<Float> {
     @Override
     public GridAxis getYAxis() {
         return this.grid.getYAxis();
+    }
+
+    @Override
+    public Class<Float> getValueType() {
+        return Float.class;
     }
 
 }
