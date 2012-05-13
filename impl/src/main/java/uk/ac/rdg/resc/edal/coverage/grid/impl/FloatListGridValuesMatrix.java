@@ -10,7 +10,7 @@ public class FloatListGridValuesMatrix extends InMemoryGridValuesMatrix<Float> {
     private List<Float> values;
     
     public FloatListGridValuesMatrix(Grid grid, List<Float> values) {
-        super(grid);
+        super(grid, Float.class);
         this.values = values;
     }
 
@@ -19,11 +19,6 @@ public class FloatListGridValuesMatrix extends InMemoryGridValuesMatrix<Float> {
         GridCoordinates2D start = getGridExtent().getLow();
         int index = (i-start.getXIndex()) + (j-start.getYIndex()) * getXAxis().size();
         return values.get(index);
-    }
-
-    @Override
-    public Class<Float> getValueType() {
-        return Float.class;
     }
 
 }

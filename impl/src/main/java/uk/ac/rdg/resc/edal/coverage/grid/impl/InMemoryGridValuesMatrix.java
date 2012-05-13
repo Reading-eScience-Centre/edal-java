@@ -4,9 +4,6 @@
  */
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import uk.ac.rdg.resc.edal.coverage.grid.Grid;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 
@@ -19,28 +16,16 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 public abstract class InMemoryGridValuesMatrix<E> extends AbstractGridValuesMatrix<E>
 {
     
-    public InMemoryGridValuesMatrix(Grid grid) {
-        super(grid);
-    }
-
-    @Override
-    public List<E> readScanline(int j, int imin, int imax)
-    {
-        int n = imax - imin + 1;
-        if (n < 0) throw new IllegalArgumentException("imax must be >= imin");
-        if (n == 0) return Collections.emptyList();
-        
-        List<E> vals = new ArrayList<E>(n);
-        for (int i = imin; i <= imax; i++)
-        {
-            E val = this.readPoint(i, j);
-            vals.add(val);
-        }
-        return vals;
+    public InMemoryGridValuesMatrix(Grid grid, Class<E> valueType) {
+        super(grid, valueType);
     }
 
     @Override
     public GridValuesMatrix<E> readBlock(int imin, int imax, int jmin, int jmax) {
+        // TODO: is there an easy way to abstract out the creation of a Grid
+        // subset (i.e. axis names retained from parent Grid, axis sizes read
+        // from imin,imax,jmin,jmax).  We would use this in readBlock() implementations
+        // for both in-memory and grid-based GVMs.
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

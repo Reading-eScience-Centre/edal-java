@@ -14,22 +14,28 @@ import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
  * Skeletal implementation of {@link GridValuesMatrix}.
+ * TODO: is it better to wrap a Grid or to implement AbstractGrid?
  * @param <E> The type of the values contained in the grid
  * @author Jon
  */
 public abstract class AbstractGridValuesMatrix<E> implements GridValuesMatrix<E>
 {
     private final Grid grid;
+    private final Class<E> valueType;
     
     /**
-     * Creates a GridValuesMatrix whose geometry is taken from the given Grid,
-     * and whose values are taken from the given BigList.
-     * @throws IllegalArgumentException if the sizes of the Grid and the BigList
-     * do not match
+     * Creates a GridValuesMatrix whose geometry is taken from the given Grid.
      */
-    public AbstractGridValuesMatrix(Grid grid)
+    public AbstractGridValuesMatrix(Grid grid, Class<E> valueType)
     {
         this.grid = grid;
+        this.valueType = valueType;
+    }
+    
+    @Override
+    public final Class<E> getValueType()
+    {
+        return this.valueType;
     }
 
     /**

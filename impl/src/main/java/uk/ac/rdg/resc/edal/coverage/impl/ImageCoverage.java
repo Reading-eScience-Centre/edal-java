@@ -18,7 +18,8 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
  * georeferenced through the addition of a {@link BoundingBox}.
  * @author Jon
  */
-public final class ImageCoverage extends AbstractGridCoverage2D
+// TODO: only abstract temporarily so the module compiles.  Need to finish off.
+public abstract class ImageCoverage extends AbstractGridCoverage2D
 {
     private static final String RED   = "red";
     private static final String GREEN = "green";
