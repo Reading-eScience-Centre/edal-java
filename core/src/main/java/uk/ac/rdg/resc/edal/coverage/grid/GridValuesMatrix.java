@@ -14,12 +14,26 @@ import uk.ac.rdg.resc.edal.util.BigList;
  */
 public interface GridValuesMatrix<E> extends Grid {
     
+    /**
+     * Reads a single point from the grid.  For disk-based GridValuesMatrixes
+     * it will usually be more efficient to call readBlock() to read data in
+     * bulk.
+     * @throws IndexOutOfBoundsException if either i or j is out of bounds
+     */
     public E readPoint(int i, int j);
     
-    public List<E> readScanline(int j, int imin, int imax);
-    
+    /**
+     * Returns an in-memory GridValuesMatrix holding values from the given subset
+     * of this object.
+     */
     public GridValuesMatrix<E> readBlock(int imin, int imax, int jmin, int jmax);
     
+    /**
+     * Returns a representation of the values in this object as a BigList.
+     * For disk-based GridValuesMatrixes, it will not usually be efficient to
+     * use BigList.get() to read values.  Instead use BigList.getAll() or
+     * this.readBlock().getValues() to get an in-memory structure.
+     */
     public BigList<E> getValues();
     
     public Class<E> getValueType();
