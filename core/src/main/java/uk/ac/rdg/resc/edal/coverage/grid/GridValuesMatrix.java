@@ -4,7 +4,6 @@
  */
 package uk.ac.rdg.resc.edal.coverage.grid;
 
-import java.util.List;
 import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
@@ -36,6 +35,9 @@ public interface GridValuesMatrix<E> extends Grid {
      */
     public BigList<E> getValues();
     
+    /**
+     * @return the class which this {@link GridValuesMatrix} contains.
+     */
     public Class<E> getValueType();
     
     /**
