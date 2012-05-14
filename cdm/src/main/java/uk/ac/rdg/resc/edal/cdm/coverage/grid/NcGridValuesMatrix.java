@@ -22,16 +22,17 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
 
     private final int zIndex;
     private final int tIndex;
-    private final Grid grid;
+    private final GridAxis xAxis;
+    private final GridAxis yAxis;
     private final NetcdfDataset nc;
     private final GridDatatype gridDatatype;
     
-    // TODO: pass in Grid.xAxis and yAxis instead of Grid object?
-    public NcGridValuesMatrix(Grid grid, String location, String varId, int zIndex, int tIndex)
+    public NcGridValuesMatrix(GridAxis xAxis, GridAxis yAxis, String location, String varId, int zIndex, int tIndex)
     {
         this.zIndex = zIndex;
         this.tIndex = tIndex;
-        this.grid = grid;
+        this.xAxis = xAxis;
+        this.yAxis = yAxis;
         try {
             this.nc = CdmUtils.openDataset(location);
             this.gridDatatype = CdmUtils.getGridDatatype(nc, varId);
@@ -119,12 +120,12 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
 
     @Override
     public GridAxis getXAxis() {
-        return this.grid.getXAxis();
+        return xAxis;
     }
 
     @Override
     public GridAxis getYAxis() {
-        return this.grid.getYAxis();
+        return yAxis;
     }
 
     @Override
