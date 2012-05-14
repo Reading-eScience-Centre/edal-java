@@ -55,7 +55,7 @@ public abstract class AbstractCoverage<P> implements Coverage<P>
         @Override
         public Class<?> getValueType(String memberName) {
             checkMemberName(memberName);
-            return AbstractCoverage.this.getRangeMetadata(memberName).getClass();
+            return AbstractCoverage.this.getRangeMetadata(memberName).getValueType();
         }
 
         @Override
