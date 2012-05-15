@@ -130,7 +130,7 @@ public class NcGridCoverage extends AbstractGridCoverage2D
     
     @Override
     public GridValuesMatrix<Float> getGridValues(final String memberName) {
-        return new NcGridValuesMatrix(horizGrid, location, memberName, zIndex, tIndex);
+        return new NcGridValuesMatrix(horizGrid.getXAxis(), horizGrid.getYAxis(), location, memberName, zIndex, tIndex);
     }
     
     
