@@ -64,26 +64,8 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
         }
     }
     
-    /**
-     * Partial implementation of {@link BigList}, which can be used by
-     * subclasses of AbstractDiscreteCoverage to implement {@link #getValues(java.lang.String)
-     * getValues(memberName)}.
-     */
-    protected abstract class AbstractMemberBigList<E> extends AbstractBigList2<E>
+    private final class SimpleRecord implements Record
     {
-        private final String memberName;
-        
-        public AbstractMemberBigList(String memberName) {
-            this.memberName = memberName;
-        }
-        
-        @Override public Class<E> getValueType() {
-            return (Class<E>)getRangeType().getValueType(memberName);
-        }
-    }
-    
-    private final class SimpleRecord implements Record {
-
         private final Map<String, Object> map;
 
         public SimpleRecord(Map<String, Object> map) {
@@ -106,16 +88,12 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
         }
     }
 
-    private final BigList<Record> recordList = new AbstractBigList2<Record>() {
-
+    private final BigList<Record> recordList = new AbstractBigList2<Record>()
+    {
         @Override
         public Record get(long index) {
             return getRecord(index, getMemberNames());
         }
-        
-        @Override
-        public Class<Record> getValueType() { return Record.class; }
-
     };
 
     @Override
@@ -126,7 +104,7 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
     /**
      * {@inheritDoc}
      * <p>Some Coverages can get very large, so we specialize to a {@link BigList}.
-     * Subclasses can use the {@link AbstractMemberBigList} abstract class to
+     * Subclasses can use the {@link AbstractBigList2} abstract class to
      * provide an easier way to implement this.</p>
      */
     @Override
@@ -142,14 +120,6 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
             }
             return AbstractDiscreteCoverage.this.getDvp(i);
         }
-        
-        @Override
-        public Class<DomainObjectValuePair<DO>> getValueType() {
-            // See http://stackoverflow.com/questions/7502243/java-casting-class-operator-used-on-a-generic-type-e-g-list-to-classlist
-            // for an explanation of these odd-looking casts
-            return (Class<DomainObjectValuePair<DO>>)(Class)DomainObjectValuePair.class;
-        }
-        
     };
 
     @Override

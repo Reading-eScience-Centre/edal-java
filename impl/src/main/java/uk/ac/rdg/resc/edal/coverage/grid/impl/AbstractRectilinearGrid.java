@@ -85,11 +85,6 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
             public long sizeAsLong() {
                 return size;
             }
-            
-            @Override
-            public Class<GridCell2D> getValueType() {
-                return GridCell2D.class;
-            }
         };
     }
 
