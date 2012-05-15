@@ -63,11 +63,6 @@ public interface BigList<E> extends List<E> {
     public List<E> getAll(long fromIndex, long toIndex);
     
     /**
-     * Returns the runtime type of the values in the BigList.
-     */
-    public Class<E> getValueType();
-    
-    /**
      * Returns the number of elements in the list as a long integer.
      */
     public long sizeAsLong();
