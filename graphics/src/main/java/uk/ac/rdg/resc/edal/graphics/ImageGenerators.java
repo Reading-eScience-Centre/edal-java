@@ -7,12 +7,8 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
-import java.util.Collections;
-import java.util.Comparator;
 
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
-import uk.ac.rdg.resc.edal.util.BigList;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 public class ImageGenerators {
     public static BufferedImage plotGrid(final GridValuesMatrix<?> gridVals, MapStyleDescriptor style) {
