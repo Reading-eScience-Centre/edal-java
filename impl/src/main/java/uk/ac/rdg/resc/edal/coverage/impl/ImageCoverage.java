@@ -112,6 +112,9 @@ public class ImageCoverage extends AbstractGridCoverage2D
 
             @Override
             public Object readPoint(int i, int j) {
+                // We have to reverse the y-axis because coordinates in image
+                // space run from top to bottom
+                j = getYAxis().size() - j - 1;
                 Color color = new Color(im.getRGB(i, j));
                 if (COMPOSITE.equals(memberName)) return color;
                 if (RED.equals(memberName)) return color.getRed();
@@ -135,20 +138,29 @@ public class ImageCoverage extends AbstractGridCoverage2D
         BufferedImage im = ImageIO.read(new File("C:\\Users\\Jon\\Desktop\\bluemarble.world.200410.3x5400x2700.jpg"));
         GridCoverage2D cov = new ImageCoverage(im,
              new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84));
-        String memberName = BLUE;
-        GridValuesMatrix<?> gvm = cov.getGridValues(memberName);
+        
+        // HorizontalGrid targetGrid = new RegularGridImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84, 512, 512);
+        HorizontalGrid targetGrid = new RegularGridImpl(-10, 50, 5, 60, DefaultGeographicCRS.WGS84, 512, 512);
+        GridCoverage2D subset = cov.extractGridCoverage(targetGrid, CollectionUtils.setOf(RED, BLUE, COMPOSITE));
+        
+        String memberName = COMPOSITE;
+        GridValuesMatrix<?> gvm = subset.getGridValues(memberName);
         System.out.println(gvm.getValueType());
         int xSize = gvm.getXAxis().size();
         int ySize = gvm.getYAxis().size();
+        System.out.printf("%d, %d%n", xSize, ySize);
         
         BufferedImage im2 = new BufferedImage(xSize, ySize, BufferedImage.TYPE_INT_ARGB);
         for (int j = 0; j < ySize; j++)
         {
             for (int i = 0; i < xSize; i++)
             {
-                int comp = (Integer)gvm.readPoint(i, j);
-                Color col = new Color(comp, comp, comp);
-                im2.setRGB(i, j, col.getRGB());
+                //int comp = (Integer)gvm.readPoint(i, j);
+                //Color col = new Color(comp, comp, comp);
+                // We have to reverse the y-axis because coordinates in image
+                // space run from top to bottom
+                Color col = (Color)gvm.readPoint(i, j);
+                im2.setRGB(i, ySize - j - 1, col.getRGB());
             }
         }
         ImageIO.write(im2, "png", new File("c:\\Users\\Jon\\Desktop\\" + memberName + ".png"));

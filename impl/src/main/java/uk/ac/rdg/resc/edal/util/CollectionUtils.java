@@ -175,5 +175,28 @@ public final class CollectionUtils {
     public static <T> Set<T> setOfSingleNullValue() {
         return (Set<T>)SET_OF_SINGLE_NULL_VALUE;
     }
+    
+    /**
+     * Wraps a List as a BigList
+     */
+    public static <T> BigList<T> wrap(final List<T> list)
+    {
+        return new AbstractBigList<T>()
+        {
+            @Override
+            public T get(long index) {
+                if (index < 0 || index >= list.size()) {
+                    throw new IndexOutOfBoundsException(index +
+                            " out of bounds for list of size " + list.size());
+                }
+                return list.get((int)index);
+            }
+
+            @Override
+            public long sizeAsLong() {
+                return list.size();
+            }
+        };
+    }
 
 }

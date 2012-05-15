@@ -37,11 +37,6 @@ public abstract class AbstractGridValuesMatrix<E> extends AbstractGrid implement
                 return value;
             }
 
-            @Override public Class<E> getValueType()
-            {
-                return AbstractGridValuesMatrix.this.getValueType();
-            }
-
             @Override public long sizeAsLong()
             {
                 return AbstractGridValuesMatrix.this.size();
