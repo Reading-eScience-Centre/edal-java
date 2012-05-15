@@ -7,9 +7,12 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
-import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
 
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
+import uk.ac.rdg.resc.edal.util.BigList;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 public class ImageGenerators {
     public static BufferedImage plotGrid(final GridValuesMatrix<?> gridVals, MapStyleDescriptor style) {
@@ -27,24 +30,18 @@ public class ImageGenerators {
                     "Can only add frames from GridValuesMatrix objects which contain numbers");
         }
         
-        byte[] pixels = new byte[width * height];
         /*
-         * TODO this is painfully slow for NetCDF files. Currently, getValues
-         * returns an instance of AbstractDiskBackedGridCoverage2D, and getAll()
-         * delegates to GridDataSource.readPoint for each point. This then uses
-         * readBlock in NcGridDataSource for a 1x1 block (for every point)...
-         * 
-         * If we replace the line 
-         * 
-         * Number num = (Number) values.get(dataIndex);
-         * 
-         * with the (more logical?)
-         * 
-         * Number num = (Number) gridVals.getValues().get(dataIndex);
-         * 
-         * we get the same situation, but more explicitly...
+         * This method is generic, and cannot use auto-scaling. Any auto-scaling
+         * should be done at an earlier point (when setting the
+         * MapStyleDescriptor)
          */
-        List<?> values = gridVals.getValues().getAll(0L, gridVals.size());
+        if(style.isAutoScale()){
+            throw new UnsupportedOperationException(
+                    "Scale range cannot be automatically determined.  You must provide a non-empty scale range.");
+        }
+        
+        byte[] pixels = new byte[width * height];
+
         for (int i = 0; i < pixels.length; i++) {
             /*
              * The image coordinate system has the vertical axis increasing
@@ -52,9 +49,8 @@ public class ImageGenerators {
              * increasing upwards. The method below flips the axis
              */
             int dataIndex = getDataIndex(i, width, height);
-//            Number num = (Number) gridVals.getValues().get(dataIndex);
-            Number num = (Number) values.get(dataIndex);
-            if(num.equals(Float.NaN) || num.equals(Double.NaN)){
+            Number num = (Number) gridVals.getValues().get(dataIndex);
+            if(num != null && (num.equals(Float.NaN) || num.equals(Double.NaN))){
                 num = null;
             }
             pixels[i] = (byte) style.getColourIndex(num);

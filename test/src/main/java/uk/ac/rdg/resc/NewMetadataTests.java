@@ -18,20 +18,22 @@ import uk.ac.rdg.resc.edal.graphics.ColorPalette;
 import uk.ac.rdg.resc.edal.graphics.ImageGenerators;
 import uk.ac.rdg.resc.edal.graphics.MapStyleDescriptor;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public class NewMetadataTests {
     public static void main(String[] args) throws InstantiationException, IOException {
         GridCoverage2D ncCov = new NcGridCoverage("/home/guy/Data/FOAM_ONE/FOAM_20100130.0.nc", "TMP");
         Record val = ncCov.evaluate(new HorizontalPositionImpl(0, 0, DefaultGeographicCRS.WGS84));
-        HorizontalGrid targetGrid = new RegularGridImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84, 360, 180);
-//        GridCoverage2D extractedCov = ncCov.extractGridCoverage(targetGrid, CollectionUtils.setOf("TMP"));
-//        GridValuesMatrix<?> gridValues = extractedCov.getGridValues("TMP");
-        GridValuesMatrix<?> gridValues = ncCov.getGridValues("TMP");
+//        HorizontalGrid targetGrid = new RegularGridImpl(0, -90, 360, 90, DefaultGeographicCRS.WGS84, 500, 500);
+        HorizontalGrid targetGrid = new RegularGridImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84, 500, 500);
+        GridCoverage2D extractedCov = ncCov.extractGridCoverage(targetGrid, CollectionUtils.setOf("TMP"));
+        GridValuesMatrix<?> gridValues = extractedCov.getGridValues("TMP");
+//        GridValuesMatrix<?> gridValues = ncCov.getGridValues("TMP");
         MapStyleDescriptor style = new MapStyleDescriptor();
-        style.setScaleRange(Extents.newExtent(280.0f, 300.0f));
-        ColorPalette.loadPalettes(new File("/home/guy/Workspace/edal-java/ncwms/src/main/webapp/WEB-INF/conf/palettes/"));
-        style.setColorPalette("redblue");
+        style.setScaleRange(Extents.newExtent(271.0f, 304.0f));
+//        ColorPalette.loadPalettes(new File("/home/guy/Workspace/edal-java/ncwms/src/main/webapp/WEB-INF/conf/palettes/"));
+//        style.setColorPalette("redblue");
         BufferedImage image = ImageGenerators.plotGrid(gridValues, style);
         ImageIO.write(image, "png", new File("new_metadata_test.png"));
     }

@@ -6,7 +6,6 @@ import ucar.ma2.Index;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
-import uk.ac.rdg.resc.edal.coverage.grid.Grid;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractGridValuesMatrix;
@@ -22,16 +21,17 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
 
     private final int zIndex;
     private final int tIndex;
-    private final Grid grid;
+    private final GridAxis xAxis;
+    private final GridAxis yAxis;
     private final NetcdfDataset nc;
     private final GridDatatype gridDatatype;
     
-    // TODO: pass in Grid.xAxis and yAxis instead of Grid object?
-    public NcGridValuesMatrix(Grid grid, String location, String varId, int zIndex, int tIndex)
+    public NcGridValuesMatrix(GridAxis xAxis, GridAxis yAxis, String location, String varId, int zIndex, int tIndex)
     {
         this.zIndex = zIndex;
         this.tIndex = tIndex;
-        this.grid = grid;
+        this.xAxis = xAxis;
+        this.yAxis = yAxis;
         try {
             this.nc = CdmUtils.openDataset(location);
             this.gridDatatype = CdmUtils.getGridDatatype(nc, varId);
@@ -58,8 +58,8 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
         final int iSize = imax - imin + 1;
         final int jSize = jmax - jmin + 1;
         final long size = (long) iSize * jSize;
-        final GridAxis xAxis = new GridAxisImpl(this.getXAxis().getName(), iSize);
-        final GridAxis yAxis = new GridAxisImpl(this.getYAxis().getName(), jSize);
+        final GridAxis newXAxis = new GridAxisImpl(this.getXAxis().getName(), iSize);
+        final GridAxis newYAxis = new GridAxisImpl(this.getYAxis().getName(), jSize);
         
         // Read the data from disk into memory
         RangesList ranges = this.getRangesList(imin, imax, jmin, jmax);
@@ -83,10 +83,10 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
             }
 
             @Override
-            public GridAxis getXAxis() { return xAxis; }
+            public GridAxis getXAxis() { return newXAxis; }
 
             @Override
-            public GridAxis getYAxis() { return yAxis; }
+            public GridAxis getYAxis() { return newYAxis; }
 
             @Override
             public Class<Float> getValueType() {
@@ -119,12 +119,12 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
 
     @Override
     public GridAxis getXAxis() {
-        return this.grid.getXAxis();
+        return xAxis;
     }
 
     @Override
     public GridAxis getYAxis() {
-        return this.grid.getYAxis();
+        return yAxis;
     }
 
     @Override
