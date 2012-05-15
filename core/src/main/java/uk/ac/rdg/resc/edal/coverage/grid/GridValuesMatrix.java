@@ -36,7 +36,7 @@ public interface GridValuesMatrix<E> extends Grid {
     public BigList<E> getValues();
     
     /**
-     * @return the class which this {@link GridValuesMatrix} contains.
+     * @return the type of the values which this {@link GridValuesMatrix} contains.
      */
     public Class<E> getValueType();
     

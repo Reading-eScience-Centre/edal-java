@@ -63,7 +63,18 @@ public interface Grid {
      */
     public long size();
     
+    /**
+     * @throws IndexOutOfBoundsException if the index is out of range for this grid
+     */
     public GridCoordinates2D getCoords(long index);
+    
+    /**
+     * @throws IndexOutOfBoundsException if i or j is out of range for this grid
+     */
     public long getIndex(GridCoordinates2D coords);
+    
+    /**
+     * @throws IndexOutOfBoundsException if i or j is out of range for this grid
+     */
     public long getIndex(int i, int j);
 }
