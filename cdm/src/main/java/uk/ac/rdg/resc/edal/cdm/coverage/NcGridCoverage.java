@@ -4,9 +4,13 @@
  */
 package uk.ac.rdg.resc.edal.cdm.coverage;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import javax.imageio.ImageIO;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
@@ -125,7 +129,7 @@ public class NcGridCoverage extends AbstractGridCoverage2D
     public HorizontalGrid getDomain() { return this.horizGrid; }
     
     @Override
-    public GridValuesMatrix<?> getGridValues(final String memberName) {
+    public GridValuesMatrix<Float> getGridValues(final String memberName) {
         return new NcGridValuesMatrix(horizGrid, location, memberName, zIndex, tIndex);
     }
     
@@ -137,7 +141,7 @@ public class NcGridCoverage extends AbstractGridCoverage2D
         return this.strategy;
     }
     
-    public static void main(String[] args)
+    public static void main(String[] args) throws Exception
     {
         String var = "TMP";
         GridCoverage2D ncCov = new NcGridCoverage("C:\\Godiva2_data\\FOAM_ONE\\FOAM_20100130.0.nc", "TMP");
@@ -151,8 +155,34 @@ public class NcGridCoverage extends AbstractGridCoverage2D
             System.out.println(vals.get(i));
         }
         
-        RegularGrid grid = new RegularGridImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84, 100, 100);
+        int xSize = 500;
+        int ySize = 500;
+        RegularGrid grid = new RegularGridImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84, xSize, ySize);
         GridCoverage2D subset = ncCov.extractGridCoverage(grid, CollectionUtils.setOf(var));
+        GridValuesMatrix<?> gvm = subset.getGridValues(var);
+        
+        BufferedImage im = new BufferedImage(xSize, ySize, BufferedImage.TYPE_INT_ARGB);
+        for (int j = 0; j < ySize; j++)
+        {
+            for (int i = 0; i < xSize; i++)
+            {
+                //int comp = (Integer)gvm.readPoint(i, j);
+                //Color col = new Color(comp, comp, comp);
+                // We have to reverse the y-axis because coordinates in image
+                // space run from top to bottom
+                Float value = (Float)gvm.readPoint(i, j);
+                Color col;
+                if (value == null || Float.isNaN(value)) {
+                    col = Color.BLACK;
+                } else {
+                    int comp = (int)((value - 270) * (255 / 40.0f));
+                    // Create greyscale image
+                    col = new Color(comp, comp, comp);
+                }
+                im.setRGB(i, ySize - j - 1, col.getRGB());
+            }
+        }
+        ImageIO.write(im, "png", new File("c:\\Users\\Jon\\Desktop\\" + var + ".png"));
         
         System.out.println(subset.getDomain().size());
     }
