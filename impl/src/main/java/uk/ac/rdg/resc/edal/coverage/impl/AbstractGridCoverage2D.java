@@ -52,8 +52,7 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
         }
         
         // Now assemble the remaining properties of the target coverage
-        
-        return new InMemoryCoverage(targetGrid, valuesMap, "Interpolated grid from "+getDescription());
+        return new InMemoryCoverage(targetGrid, valuesMap, getRangeMetadata(), "Interpolated grid from "+getDescription());
     }
     
     /**
