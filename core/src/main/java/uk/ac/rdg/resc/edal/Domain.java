@@ -34,7 +34,7 @@ package uk.ac.rdg.resc.edal;
  * </p>
  * 
  * @param <A>
- *            The type of object used as input to the function
+ *            The type of object used to identify positions within the domain
  * @author Jon Blower
  */
 public interface Domain<A> {

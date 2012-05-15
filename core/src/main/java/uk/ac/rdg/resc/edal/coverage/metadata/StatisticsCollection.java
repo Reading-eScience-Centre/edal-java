@@ -11,7 +11,7 @@ import uk.ac.rdg.resc.edal.Phenomenon;
  * probability distribution is implied by the members of the collection.  (For
  * example, this may hold the mean and variance of a sample, but this does not
  * imply that the probability distribution of the population is Gaussian.)</p>
- * <p>To describe a known probability distribution, use {@link DistributionMetadata}.</p>
+ * <p>To describe a known probability distribution, use {@link ProbabilityDistribution}.</p>
  * @author Jon
  */
 public interface StatisticsCollection extends RangeMetadata {
