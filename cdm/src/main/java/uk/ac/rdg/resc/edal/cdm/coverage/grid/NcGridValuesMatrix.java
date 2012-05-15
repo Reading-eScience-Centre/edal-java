@@ -6,7 +6,6 @@ import ucar.ma2.Index;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
-import uk.ac.rdg.resc.edal.coverage.grid.Grid;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractGridValuesMatrix;
@@ -59,8 +58,8 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
         final int iSize = imax - imin + 1;
         final int jSize = jmax - jmin + 1;
         final long size = (long) iSize * jSize;
-        final GridAxis xAxis = new GridAxisImpl(this.getXAxis().getName(), iSize);
-        final GridAxis yAxis = new GridAxisImpl(this.getYAxis().getName(), jSize);
+        final GridAxis newXAxis = new GridAxisImpl(this.getXAxis().getName(), iSize);
+        final GridAxis newYAxis = new GridAxisImpl(this.getYAxis().getName(), jSize);
         
         // Read the data from disk into memory
         RangesList ranges = this.getRangesList(imin, imax, jmin, jmax);
@@ -84,10 +83,10 @@ public class NcGridValuesMatrix extends AbstractGridValuesMatrix<Float>
             }
 
             @Override
-            public GridAxis getXAxis() { return xAxis; }
+            public GridAxis getXAxis() { return newXAxis; }
 
             @Override
-            public GridAxis getYAxis() { return yAxis; }
+            public GridAxis getYAxis() { return newYAxis; }
 
             @Override
             public Class<Float> getValueType() {

@@ -18,6 +18,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.impl.PixelMap.PixelMapEntry;
 import uk.ac.rdg.resc.edal.coverage.impl.PixelMap.Scanline;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
@@ -42,6 +43,7 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
         PixelMap pixelMap = PixelMap.forGrid(this.getDomain(), targetGrid);
         
         Map<String, List<?>> valuesMap = CollectionUtils.newLinkedHashMap();
+        Map<String, ScalarMetadata> metadataMap = CollectionUtils.newLinkedHashMap();
         
         // Read the data from the source coverage
         for (String name : memberNames)
@@ -49,22 +51,30 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
             List<Object> values = listOfNulls(targetGridSize);
             this.extractCoverageValues(name, pixelMap, values);
             valuesMap.put(name, values);
+            metadataMap.put(name, this.getRangeMetadata(name));
         }
         
         // Now assemble the remaining properties of the target coverage
-        return new InMemoryCoverage(targetGrid, valuesMap, getRangeMetadata(), "Interpolated grid from "+getDescription());
+        return new InMemoryCoverage(targetGrid, valuesMap, metadataMap, "Interpolated grid from "+getDescription());
     }
     
     /**
-     * Returns the strategy that should be used to read data from this coverage
+     * Returns the strategy that should be used to read data from this coverage.
+     * For in-memory coverages, {@link DataReadingStrategy#PIXEL_BY_PIXEL} will
+     * usually be appropriate.  For disk-based coverages
+     * {@link DataReadingStrategy#SCANLINE} usually provides a good balance between
+     * speed and memory usage, although may be less efficient for compressed data.
+     * {@link DataReadingStrategy#BOUNDING_BOX} is often a good option for 
+     * network-based data (e.g. via OPeNDAP) or for compressed data, unless the
+     * datasets are very large.
      */
     protected abstract DataReadingStrategy getDataReadingStrategy();
     
     private void extractCoverageValues(String memberName, PixelMap pixelMap, List<Object> values)
     {
         GridValuesMatrix<?> gridValues = this.getGridValues(memberName);
-        // TODO: for in-memory GridValuesMatrixes, the pixel-by-pixel strategy
-        // will usually be the most efficient
+        // TODO: move the data-reading code back into DataReadingStrategy, or
+        // keep the enumeration values as simple markers?
         DataReadingStrategy strategy = this.getDataReadingStrategy();
         
         if (strategy == DataReadingStrategy.BOUNDING_BOX)
@@ -201,7 +211,7 @@ public abstract class AbstractGridCoverage2D extends AbstractDiscreteCoverage<Ho
     @Override
     public BigList<?> getValues(final String memberName)
     {
-        return new AbstractMemberBigList<Object>(memberName)
+        return new AbstractBigList2<Object>()
         {
             @Override public Object get(long index)
             {

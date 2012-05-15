@@ -11,21 +11,24 @@ import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.InMemoryGridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.util.BigList;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 public class InMemoryCoverage extends AbstractGridCoverage2D {
 
-    private HorizontalGrid domain;
-    private Map<String, List<?>> values;
-    private String description;
-    private RangeMetadata rangeMetadata;
-    private int xSize;
+    private final HorizontalGrid domain;
+    private final Map<String, ScalarMetadata> metadata;
+    private final Map<String, List<?>> values;
+    private final String description;
 
-    public InMemoryCoverage(HorizontalGrid domain, Map<String, List<?>> values, RangeMetadata recordType, String description) {
+    
+
+    public InMemoryCoverage(HorizontalGrid domain, Map<String, List<?>> values, 
+            Map<String, ScalarMetadata> metadata, String description) {
         this.domain = domain;
         this.values = values;
-        this.rangeMetadata = recordType;
+        this.metadata = metadata;
         this.description = description;
-        xSize = domain.getXAxis().size();
     }
     
     @Override
@@ -34,28 +37,24 @@ public class InMemoryCoverage extends AbstractGridCoverage2D {
     }
 
     @Override
-    public GridValuesMatrix<?> getGridValues(final String memberName) {
+    public GridValuesMatrix<?> getGridValues(final String memberName)
+    {
         this.checkMemberName(memberName);
         
-        return new InMemoryGridValuesMatrix<Object>() {
+        return new InMemoryGridValuesMatrix<Object>()
+        {
             @Override
             public Object readPoint(int i, int j) {
-                int index = i + j * xSize;
-                return values.get(memberName).get(index);
+                int index = (int)domain.getIndex(i, j);
+                List<?> vals = values.get(memberName);
+                return vals.get(index);
             }
-
-            @SuppressWarnings("unchecked")
+            
             @Override
-            public Class<Object> getValueType() {
-                RangeMetadata memberMetadata = rangeMetadata.getMemberMetadata(memberName);
-                if(memberMetadata instanceof ScalarMetadata){
-                    ScalarMetadata scalarMetadata = (ScalarMetadata) memberMetadata;
-                    return (Class<Object>) scalarMetadata.getValueType();
-                } else {
-                    return (Class<Object>)(Class)RangeMetadata.class;
-                }
+            public BigList<Object> getValues() {
+                return (BigList<Object>)CollectionUtils.wrap(values.get(memberName));
             }
-
+            
             @Override
             public GridAxis getXAxis() {
                 return domain.getXAxis();
@@ -64,6 +63,11 @@ public class InMemoryCoverage extends AbstractGridCoverage2D {
             @Override
             public GridAxis getYAxis() {
                 return domain.getYAxis();
+            }
+
+            @Override
+            public Class<Object> getValueType() {
+                return (Class<Object>)(Class)metadata.get(memberName).getValueType();
             }
         };
     }
@@ -81,7 +85,7 @@ public class InMemoryCoverage extends AbstractGridCoverage2D {
     @Override
     public ScalarMetadata getRangeMetadata(String memberName) {
         this.checkMemberName(memberName);
-        return (ScalarMetadata) rangeMetadata.getMemberMetadata(memberName);
+        return this.metadata.get(memberName);
     }
 
     @Override

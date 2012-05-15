@@ -194,10 +194,6 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
                 return getGridCell(coords.getXIndex(), coords.getYIndex());
             }
 
-            @Override public Class<GridCell2D> getValueType() {
-                return GridCell2D.class;
-            }
-
             @Override public long sizeAsLong() {
                 return LookUpTableGrid.this.size();
             }
