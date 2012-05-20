@@ -9,7 +9,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * @author Jon
  */
 public abstract class AbstractEnvelope implements Envelope {
-    private final CoordinateReferenceSystem crs;
+    final CoordinateReferenceSystem crs;
 
     public AbstractEnvelope(CoordinateReferenceSystem crs) {
         this.crs = crs;
