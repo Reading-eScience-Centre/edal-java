@@ -32,35 +32,57 @@ import org.opengis.geometry.Envelope;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * A bounding box in the horizontal plane. Extends {@link Envelope} by providing
- * convenience methods for accessing minimum and maximum x and y values
+ * A rectangular bounding box in the horizontal plane. Extends
+ * {@link Envelope} by providing convenience methods for accessing minimum and
+ * maximum x and y values.
  * 
  * @author Jon Blower
  */
-public interface BoundingBox extends Envelope {
+public interface BoundingBox extends Envelope, Polygon
+{
     /**
-     * Gets the minimum ordinate along the first axis
+     * Gets the minimum ordinate along the first axis, equivalent to
+     * {@code getMinimum(0)}.
      */
     public double getMinX();
 
     /**
-     * Gets the maximum ordinate along the first axis
+     * Gets the maximum ordinate along the first axis, equivalent to
+     * {@code getMaximum(0)}.
      */
     public double getMaxX();
 
     /**
-     * Gets the minimum ordinate along the second axis
+     * Gets the minimum ordinate along the second axis, equivalent to
+     * {@code getMinimum(1)}.
      */
     public double getMinY();
 
     /**
-     * Gets the maximum ordinate along the second axis
+     * Gets the maximum ordinate along the second axis, equivalent to
+     * {@code getMaximum(1)}.
      */
     public double getMaxY();
     
+    /**
+     * Gets the width of the bounding box, i.e. {@code getMaxX() - getMinX()}.
+     */
+    public double getWidth();
+    
+    /**
+     * Gets the height of the bounding box, i.e. {@code getMaxY() - getMinY()}.
+     */
+    public double getHeight();
+    
+    /**
+     * Gets the position (getMinX(), getMinY())
+     */
     @Override
     public HorizontalPosition getLowerCorner();
 
+    /**
+     * Gets the position (getMaxX(), getMaxY())
+     */
     @Override
     public HorizontalPosition getUpperCorner();
 }
