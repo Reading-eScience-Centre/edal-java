@@ -38,13 +38,6 @@
             <email>guy.griffiths@reading.ac.uk</email>
         </developer>
     </developers>
-    <contributors>
-        <contributor>
-            <name>David Neufeld</name>
-            <organization>NOAA, US</organization>
-            <organizationUrl>http://www.noaa.gov/</organizationUrl>
-        </contributor>
-    </contributors>
     <build>
         <plugins>
             <plugin>
@@ -66,6 +59,13 @@
 				</configuration>
 			</plugin>
         </plugins>
+        <extensions>
+            <!-- Enabling the use of SCP deployment of artefacts -->
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+            </extension>
+        </extensions>
     </build>
     <issueManagement>
         <system>Google Code</system>
@@ -167,6 +167,10 @@
             <id>edal-java-release</id>
             <url>https://edal-java.googlecode.com/hg/repo</url>
         </repository>
+        <snapshotRepository>
+            <id>edal-snapshots</id>
+            <url>scpexe://sweeney.nerc-essc.ac.uk/users/resc/website/maven</url>
+        </snapshotRepository>
      </distributionManagement>
     <modules>
         <!-- Note that these are relative directory paths, not artifactIds! -->
@@ -177,6 +181,7 @@
         <module>graphics</module>
         <module>ncwms</module>
         <module>test</module>
+        <module>viewer</module>
         <!--<module>en3</module>-->
     </modules>
     <repositories>
