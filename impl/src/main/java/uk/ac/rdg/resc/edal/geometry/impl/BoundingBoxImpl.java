@@ -67,6 +67,13 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
     }
     
     /** Creates a BoundingBox */
+    public BoundingBoxImpl(HorizontalPosition lowerCorner, HorizontalPosition upperCorner) {
+        // TODO: check that CRSs are equal
+        this(lowerCorner.getX(), lowerCorner.getY(), upperCorner.getX(),
+                upperCorner.getY(), lowerCorner.getCoordinateReferenceSystem());
+    }
+    
+    /** Creates a BoundingBox */
     public BoundingBoxImpl(double minx, double miny, double maxx, double maxy, CoordinateReferenceSystem crs) {
         super(crs);
         this.minx = minx;
