@@ -86,6 +86,7 @@ public class NcGridCoverage extends AbstractGridCoverage2D
             this.description = grid.getDescription();
             
             this.metadata = new ScalarMetadataImpl(
+                this.getRangeMetadata(),
                 varId,
                 this.description,
                 CdmUtils.getPhenomenon(grid.getVariable()),

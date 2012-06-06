@@ -78,13 +78,13 @@ public class ImageCoverage extends AbstractGridCoverage2D
     @Override
     public ScalarMetadata getRangeMetadata(String memberName) {
         this.checkMemberName(memberName);
-        // All the value types are integers except for the Composite member
-        return new ScalarMetadataImpl(memberName, memberName,
-                Phenomenon.getPhenomenon("none"), Unit.getUnit("none"), getValueType(memberName));
+        return new ScalarMetadataImpl(this.getRangeMetadata(), memberName, memberName,
+            Phenomenon.getPhenomenon("none"), Unit.getUnit("none"), getValueType(memberName));
     }
     
     private static Class<?> getValueType(String memberName)
     {
+        // All the value types are integers except for the Composite member
         if (COMPOSITE.equals(memberName)) return Color.class;
         else return Integer.class;
     }
