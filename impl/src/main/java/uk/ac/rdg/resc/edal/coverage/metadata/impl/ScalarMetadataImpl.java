@@ -14,8 +14,11 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     private final Phenomenon parameter;
     private final Unit units;
     private final Class<?> clazz;
+    private final RangeMetadata parent;
 
-    public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units, Class<?> clazz) {
+    public ScalarMetadataImpl(RangeMetadata parent, String name,
+            String description, Phenomenon parameter, Unit units, Class<?> clazz) {
+        this.parent = parent;
         this.name = name;
         this.description = description;
         this.parameter = parameter;
@@ -59,7 +62,7 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     }
 
     @Override
-    public RangeMetadata getParent() { return null; }
+    public RangeMetadata getParent() { return this.parent; }
     
     
     // TODO equals() and hashCode()
