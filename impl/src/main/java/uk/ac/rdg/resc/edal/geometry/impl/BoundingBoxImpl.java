@@ -202,6 +202,7 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
     @Override
     public boolean equals(Object other)
     {
+        if (other == null) return false;
         if (other == this) return true;
         if (!(other instanceof BoundingBoxImpl)) return false;
         BoundingBoxImpl otherBbox = (BoundingBoxImpl)other;
@@ -209,7 +210,7 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
                equalsDouble(miny, otherBbox.miny) &&
                equalsDouble(maxx, otherBbox.maxx) &&
                equalsDouble(maxy, otherBbox.maxy) &&
-               crs == null ? otherBbox.crs == null : crs.equals(otherBbox.crs);
+               equalsWithNull(crs, otherBbox.crs);
     }
     
     private static boolean equalsDouble(double d1, double d2)
