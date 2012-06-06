@@ -87,7 +87,7 @@ public final class GridExtentImpl implements GridExtent {
      */
     @Override
     public boolean contains(GridCoordinates2D coords) {
-        return contains(coords.getXIndex(), coords.getYIndex());
+        return this.contains(coords.getXIndex(), coords.getYIndex());
     }
 
     /**
@@ -100,6 +100,7 @@ public final class GridExtentImpl implements GridExtent {
      *             dimensionality of the grid
      * @return true if this envelope contains the given coordinates
      */
+    @Override
     public boolean contains(int xIndex, int yIndex) {
         return (xIndex >= getLow().getXIndex() && xIndex <= getHigh().getXIndex() &&
                 yIndex >= getLow().getYIndex() && yIndex <= getHigh().getYIndex());
