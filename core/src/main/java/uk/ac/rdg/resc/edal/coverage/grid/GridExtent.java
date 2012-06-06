@@ -46,6 +46,13 @@ public interface GridExtent extends Extent<GridCoordinates2D> {
      * @return the {@link Extent} of the y-axis
      */
     public Extent<Integer> getYExtent();
+    
+    /**
+     * Returns true if the grid extent contains the point with the given
+     * coordinates.
+     * @see #contains(java.lang.Object) 
+     */
+    public boolean contains(int i, int j);
 
     /**
      * The number of grid points in the grid

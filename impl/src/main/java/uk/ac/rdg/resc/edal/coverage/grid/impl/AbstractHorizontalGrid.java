@@ -3,6 +3,7 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
@@ -31,10 +32,12 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
 
     @Override
     public HorizontalPosition transformCoordinates(int xIndex, int yIndex) {
-        GridExtentImpl gridEnv = GridExtentImpl.convert(this.getGridExtent());
-        if (!gridEnv.contains(xIndex, yIndex))
-            return null;
-        return this.transformCoordinatesNoBoundsCheck(xIndex, yIndex);
+        GridExtent gridExtent = this.getGridExtent();
+        if (gridExtent.contains(xIndex, yIndex))
+        {
+            return this.transformCoordinatesNoBoundsCheck(xIndex, yIndex);
+        }
+        return null;
     }
 
     /**
