@@ -116,6 +116,7 @@ public class NcGridCoverage extends AbstractGridCoverage2D
 
     @Override
     public ScalarMetadata getRangeMetadata(String memberName) {
+        this.checkMemberName(memberName);
         return this.metadata;
     }
 
@@ -129,8 +130,16 @@ public class NcGridCoverage extends AbstractGridCoverage2D
     public HorizontalGrid getDomain() { return this.horizGrid; }
     
     @Override
-    public GridValuesMatrix<Float> getGridValues(final String memberName) {
-        return new NcGridValuesMatrix(horizGrid.getXAxis(), horizGrid.getYAxis(), location, memberName, zIndex, tIndex);
+    public GridValuesMatrix<Float> getGridValues(String memberName) {
+        this.checkMemberName(memberName);
+        return new NcGridValuesMatrix(
+            horizGrid.getXAxis(),
+            horizGrid.getYAxis(),
+            location,
+            memberName,
+            zIndex,
+            tIndex
+        );
     }
     
     
