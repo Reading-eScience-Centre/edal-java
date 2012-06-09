@@ -17,18 +17,19 @@ import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
  * @author Jon
  * @author Guy Griffiths
  */
-public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingBox
+public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBox
 {
     private final double minx;
     private final double miny;
     private final double maxx;
     private final double maxy;
+    private final CoordinateReferenceSystem crs;
 
     public BoundingBoxImpl(Envelope envelope2d) {
-        super(envelope2d.getCoordinateReferenceSystem());
         if (envelope2d.getDimension() != 2) {
             throw new IllegalArgumentException("Envelope dimension must be 2");
         }
+        this.crs = envelope2d.getCoordinateReferenceSystem();
         this.minx = envelope2d.getMinimum(0);
         this.maxx = envelope2d.getMaximum(0);
         this.miny = envelope2d.getMinimum(1);
@@ -36,12 +37,11 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
     }
 
     public BoundingBoxImpl(Extent<Double> xExtent, Extent<Double> yExtent, CoordinateReferenceSystem crs) {
-        super(crs);
-
         this.minx = xExtent.getLow();
         this.maxx = xExtent.getHigh();
         this.miny = yExtent.getLow();
         this.maxy = yExtent.getHigh();
+        this.crs = crs;
     }
 
     /** Constructs a BoundingBox with a null coordinate reference system */
@@ -51,9 +51,8 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
 
     /** Creates a BoundingBox from a four-element array [minx, miny, maxx, maxy] */
     public BoundingBoxImpl(double[] bbox, CoordinateReferenceSystem crs) {
-        super(crs);
         if (bbox == null)
-            throw new NullPointerException();
+            throw new NullPointerException("Bounding box cannot be null");
         if (bbox.length != 4)
             throw new IllegalArgumentException("Bounding box" + " must have four elements");
         this.minx = bbox[0];
@@ -64,6 +63,7 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
         if (this.minx > this.maxx || this.miny > this.maxy) {
             throw new IllegalArgumentException("Invalid bounding box specification");
         }
+        this.crs = crs;
     }
     
     /** Creates a BoundingBox */
@@ -75,7 +75,6 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
     
     /** Creates a BoundingBox */
     public BoundingBoxImpl(double minx, double miny, double maxx, double maxy, CoordinateReferenceSystem crs) {
-        super(crs);
         this.minx = minx;
         this.maxx = maxx;
         this.miny = miny;
@@ -84,6 +83,7 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
         if (this.minx > this.maxx || this.miny > this.maxy) {
             throw new IllegalArgumentException("Invalid bounding box specification");
         }
+        this.crs = crs;
     }
 
     /**
@@ -92,6 +92,11 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
      */
     public BoundingBoxImpl(double[] bbox) {
         this(bbox, null);
+    }
+    
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return this.crs;
     }
 
     @Override
@@ -164,6 +169,9 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
         return String.format("%f, %f - %f, %f", this.minx, this.miny, this.maxx, this.maxy);
     }
 
+    /**
+     * Returns a list of vertices in anticlockwise order starting at minx, miny
+     */
     @Override
     public List<HorizontalPosition> getVertices() {
         List<HorizontalPosition> positions = new ArrayList<HorizontalPosition>();
@@ -174,54 +182,24 @@ public final class BoundingBoxImpl extends AbstractEnvelope implements BoundingB
         return Collections.unmodifiableList(positions);
     }
 
+    /**
+     * Provides a more efficient contains() method than the one in AbstractPolygon
+     */
     @Override
-    public boolean contains(HorizontalPosition position) {
-        // TODO: deal with coordinate translation
-        if (!equalsWithNull(this.getCoordinateReferenceSystem(), position.getCoordinateReferenceSystem()))
-        {
-            throw new UnsupportedOperationException("Cannot yet perform contains()"
-                + " on position with a different CRS from the bounding box");
-        }
-        double x = position.getX();
-        double y = position.getY();
+    protected boolean contains(double x, double y) {
         return (x >= minx && x <= maxx && y >= miny && y <= maxy);
     }
     
+    
+    ///// OVERRIDES FROM ENVELOPE INTERFACE /////
+
     @Override
-    public int hashCode()
-    {
-        int hash = 17;
-        hash = hash * 31 + new Double(minx).hashCode();
-        hash = hash * 31 + new Double(miny).hashCode();
-        hash = hash * 31 + new Double(maxx).hashCode();
-        hash = hash * 31 + new Double(maxy).hashCode();
-        hash = hash * 31 + (this.crs == null ? this.crs.hashCode() : 0);
-        return hash;
+    public final double getMedian(int i) {
+        return (this.getMinimum(i) + this.getMaximum(i)) / 2.0;
     }
-    
+
     @Override
-    public boolean equals(Object other)
-    {
-        if (other == null) return false;
-        if (other == this) return true;
-        if (!(other instanceof BoundingBoxImpl)) return false;
-        BoundingBoxImpl otherBbox = (BoundingBoxImpl)other;
-        return equalsDouble(minx, otherBbox.minx) &&
-               equalsDouble(miny, otherBbox.miny) &&
-               equalsDouble(maxx, otherBbox.maxx) &&
-               equalsDouble(maxy, otherBbox.maxy) &&
-               equalsWithNull(crs, otherBbox.crs);
-    }
-    
-    private static boolean equalsDouble(double d1, double d2)
-    {
-        // See the docs for Double.equals() to explain why we don't just do
-        // d1 == d2.
-        return Double.doubleToLongBits(d1) == Double.doubleToLongBits(d2);
-    }
-    
-    private static boolean equalsWithNull(Object o1, Object o2)
-    {
-        return o1 == null ? o2 == null : o1.equals(o2);
+    public final double getSpan(int i) {
+        return this.getMaximum(i) - this.getMinimum(i);
     }
 }

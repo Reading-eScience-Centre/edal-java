@@ -146,16 +146,12 @@ public class DirectPositionImpl implements DirectPosition {
         return stringRep;
     }
 
-    private int hashCode = Integer.MIN_VALUE;
-
     /** Follows the contract defined by {@link DirectPosition} */
     @Override
     public final int hashCode() {
-        if (hashCode == Integer.MIN_VALUE) {
-            hashCode = Arrays.hashCode(this.coords);
-            if (this.crs != null) {
-                hashCode += this.crs.hashCode();
-            }
+        int hashCode = Arrays.hashCode(this.coords);
+        if (this.crs != null) {
+            hashCode += this.crs.hashCode();
         }
         return hashCode;
     }
