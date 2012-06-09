@@ -73,24 +73,24 @@ public final class GISUtils {
      * coordinate reference system.
      * 
      * @param pos
-     *            The position to translate
+     *            The position to translate.
      * @param targetCrs
      *            The CRS to translate into
      * @return a new position in the given CRS, or the same position if the new
      *         CRS is the same as the point's CRS. The returned point's CRS will
-     *         be set to {@code targetCrs}.
+     *         be set to {@code targetCrs}.  If the CRS of the position is null,
+     *         the CRS will simply be set to the targetCrs.
      * @throws NullPointerException
-     *             if {@code pos.getCoordinateReferenceSystem()} is null, or if
-     *             {@code targetCrs} is null.
+     *             if {@code targetCrs} is null.
      * @todo error handling
      */
     public static HorizontalPosition transformPosition(HorizontalPosition pos, CoordinateReferenceSystem targetCrs) {
-        CoordinateReferenceSystem sourceCrs = pos.getCoordinateReferenceSystem();
-        if (sourceCrs == null) {
-            throw new NullPointerException("Position must have a valid CRS");
-        }
         if (targetCrs == null) {
             throw new NullPointerException("Target CRS cannot be null");
+        }
+        CoordinateReferenceSystem sourceCrs = pos.getCoordinateReferenceSystem();
+        if (sourceCrs == null) {
+            return new HorizontalPositionImpl(pos.getX(), pos.getY(), targetCrs);
         }
         // CRS.findMathTransform() caches recently-used transform objects so
         // we should incur no large penalty for multiple invocations
