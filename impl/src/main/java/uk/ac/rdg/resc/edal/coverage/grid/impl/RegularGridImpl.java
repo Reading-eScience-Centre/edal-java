@@ -13,17 +13,19 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
  * @author Jon
  * @author Guy Griffiths
  */
-public final class RegularGridImpl extends AbstractRectilinearGrid implements RegularGrid {
+public final class RegularGridImpl extends AbstractRectilinearGrid implements RegularGrid
+{
     private final RegularAxis xAxis;
     private final RegularAxis yAxis;
+    private final CoordinateReferenceSystem crs;
 
     public RegularGridImpl(RegularAxis xAxis, RegularAxis yAxis, CoordinateReferenceSystem crs) {
-        super(crs);
         if (xAxis == null || yAxis == null) {
             throw new NullPointerException("Axes cannot be null");
         }
         this.xAxis = xAxis;
         this.yAxis = yAxis;
+        this.crs = crs;
     }
 
     /**
@@ -98,10 +100,11 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
      */
     public RegularGridImpl(double minx, double miny, double maxx, double maxy,
             CoordinateReferenceSystem crs, int width, int height) {
-        super(crs);
         if (maxx < minx || maxy < miny) {
             throw new IllegalArgumentException("Invalid bounding box");
         }
+        
+        this.crs = crs;
 
         double xSpacing = (maxx - minx) / width;
         double ySpacing = (maxy - miny) / height;
@@ -138,6 +141,11 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
     @Override
     public RegularAxis getYAxis() {
         return yAxis;
+    }
+
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return this.crs;
     }
 
     @Override

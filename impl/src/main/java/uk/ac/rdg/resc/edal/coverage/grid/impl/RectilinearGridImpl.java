@@ -10,9 +10,11 @@ import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
  * 
  * @author Guy Griffiths
  */
-public final class RectilinearGridImpl extends AbstractRectilinearGrid {
+public final class RectilinearGridImpl extends AbstractRectilinearGrid
+{
     private final ReferenceableAxis<Double> xAxis;
     private final ReferenceableAxis<Double> yAxis;
+    private final CoordinateReferenceSystem crs;
 
     /**
      * Instantiates a new rectilinear grid from the given axes
@@ -26,12 +28,12 @@ public final class RectilinearGridImpl extends AbstractRectilinearGrid {
      */
     public RectilinearGridImpl(ReferenceableAxis<Double> xAxis, ReferenceableAxis<Double> yAxis,
             CoordinateReferenceSystem crs) {
-        super(crs);
         if (xAxis == null || yAxis == null) {
             throw new NullPointerException("Axes cannot be null");
         }
         this.xAxis = xAxis;
         this.yAxis = yAxis;
+        this.crs = crs;
     }
 
     /**
@@ -55,6 +57,11 @@ public final class RectilinearGridImpl extends AbstractRectilinearGrid {
     @Override
     public ReferenceableAxis<Double> getYAxis() {
         return yAxis;
+    }
+    
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return this.crs;
     }
 
     @Override
