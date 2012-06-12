@@ -1,7 +1,5 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
@@ -10,6 +8,7 @@ import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.AbstractBigList;
 import uk.ac.rdg.resc.edal.util.BigList;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Abstract superclass that partially implements a two-dimensional
@@ -19,16 +18,6 @@ import uk.ac.rdg.resc.edal.util.BigList;
  */
 public abstract class AbstractHorizontalGrid extends AbstractGrid implements HorizontalGrid
 {
-    private final CoordinateReferenceSystem crs;
-
-    protected AbstractHorizontalGrid(CoordinateReferenceSystem crs) {
-        this.crs = crs;
-    }
-
-    @Override
-    public final CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return crs;
-    }
 
     @Override
     public HorizontalPosition transformCoordinates(GridCoordinates2D coords) {
@@ -122,5 +111,44 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
         GridCoordinates2D coords = this.findContainingCell(pos);
         return coords == null ? -1 : this.getIndex(coords);
     }
+    
+    @Override
+    public final GridCoordinates2D findContainingCell(HorizontalPosition pos) {
+        if(pos.getCoordinateReferenceSystem() != getCoordinateReferenceSystem()){
+            pos = GISUtils.transformPosition(pos, getCoordinateReferenceSystem());
+        }
+        return findContainingCell(pos.getX(), pos.getY());
+    }
+    
+    /**
+     * <p>Finds the grid cell containing the given position by exhaustive search of
+     * all the cells in the grid.  The coordinates of the position must be in
+     * this Grid's CRS.</p>
+     * <p>This will generally be very inefficient, and so is only recommended
+     * for testing purposes.</p>
+     * @return the {@link GridCoordinates2D} containing the desired coordinates,
+     *         or <code>null</code> if the position is outside of the grid
+     */
+    protected final GridCoordinates2D findContainingCellExhaustive(double x, double y)
+    {
+        for (GridCell2D cell : this.getDomainObjects())
+        {
+            if (cell.getFootprint().contains(x, y))
+            {
+                return cell.getGridCoordinates();
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Finds the grid cell containing the given x,y point, whose coordinates are
+     * in the CRS of this grid.  This is called by
+     * {@link #findContainingCell(uk.ac.rdg.resc.edal.position.HorizontalPosition)}
+     * once the coordinates have been transformed to this CRS.
+     * @return the {@link GridCoordinates2D} containing the desired coordinates,
+     *         or <code>null</code> if the position is outside of the grid
+     */
+    protected abstract GridCoordinates2D findContainingCell(double x, double y);
     
 }

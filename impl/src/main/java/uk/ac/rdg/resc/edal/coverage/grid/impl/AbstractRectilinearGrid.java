@@ -1,7 +1,6 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
@@ -11,7 +10,6 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Abstract superclass that partially implements a two-dimensional
@@ -19,11 +17,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * 
  * @author Guy Griffiths
  */
-public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid implements RectilinearGrid {
-
-    protected AbstractRectilinearGrid(CoordinateReferenceSystem crs) {
-        super(crs);
-    }
+public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid implements RectilinearGrid
+{
 
     @Override
     public GridExtent getGridExtent() {
@@ -41,13 +36,10 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     }
 
     @Override
-    public GridCoordinates2D findContainingCell(HorizontalPosition pos) {
-        if(pos.getCoordinateReferenceSystem() != getCoordinateReferenceSystem()){
-            pos = GISUtils.transformPosition(pos, getCoordinateReferenceSystem());
-        }
-        int xIndex = getXAxis().findIndexOf(pos.getX());
-        int yIndex = getYAxis().findIndexOf(pos.getY());
-        if(xIndex < 0 || yIndex < 0){
+    protected GridCoordinates2D findContainingCell(double x, double y) {
+        int xIndex = getXAxis().findIndexOf(x);
+        int yIndex = getYAxis().findIndexOf(y);
+        if(xIndex < 0 || yIndex < 0) {
             return null;
         }
         return new GridCoordinates2DImpl(xIndex, yIndex);
