@@ -31,8 +31,8 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.CurvilinearCoords.Cell;
@@ -43,11 +43,10 @@ import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractHorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridExtentImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.geometry.impl.AbstractPolygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Partial implementation of a {@link HorizontalGrid} that is based upon a
@@ -65,8 +64,6 @@ public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid
     private final BoundingBox coordinateExtent;
 
     protected AbstractCurvilinearGrid(CurvilinearCoords curvGrid) {
-        // All points will be returned in WGS84 lon-lat
-        super(DefaultGeographicCRS.WGS84);
         this.curvGrid = curvGrid;
         this.gridExtent = new GridExtentImpl(curvGrid.getNi()-1, curvGrid.getNj()-1);
         this.coordinateExtent = curvGrid.getBoundingBox();
@@ -91,7 +88,7 @@ public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid
         }
         final List<HorizontalPosition> iVertices = Collections.unmodifiableList(vertices);
         
-        return new Polygon()
+        return new AbstractPolygon()
         {
             @Override
             public CoordinateReferenceSystem getCoordinateReferenceSystem() {
@@ -104,9 +101,9 @@ public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid
             }
 
             @Override
-            public boolean contains(HorizontalPosition position) {
-                LonLatPosition lonLat = GISUtils.transformToWgs84LonLat(position);
-                return cell.contains(lonLat);
+            public boolean contains(double x, double y) {
+                // The x and y coordinates will already have been transformed to lon and lat
+                return cell.contains(x, y);
             }
         };
     }
@@ -165,5 +162,10 @@ public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid
     @Override
     public BoundingBox getCoordinateExtent() {
         return this.coordinateExtent;
+    }
+    
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return DefaultGeographicCRS.WGS84;
     }
 }
