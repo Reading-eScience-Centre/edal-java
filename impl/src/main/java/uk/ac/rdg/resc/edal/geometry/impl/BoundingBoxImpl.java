@@ -186,7 +186,7 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
      * Provides a more efficient contains() method than the one in AbstractPolygon
      */
     @Override
-    protected boolean contains(double x, double y) {
+    public boolean contains(double x, double y) {
         return (x >= minx && x <= maxx && y >= miny && y <= maxy);
     }
     
