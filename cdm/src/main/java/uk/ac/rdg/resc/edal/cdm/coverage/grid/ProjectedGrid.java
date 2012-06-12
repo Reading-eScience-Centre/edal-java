@@ -51,11 +51,11 @@ import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractHorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.geometry.impl.AbstractPolygon;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.position.impl.LonLatPositionImpl;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * A two-dimensional {@link HorizontalGrid} that uses a {@link Projection} to
@@ -79,7 +79,6 @@ public class ProjectedGrid extends AbstractHorizontalGrid
      * @param coordSys
      */
     public ProjectedGrid(GridCoordSystem coordSys) {
-        super(DefaultGeographicCRS.WGS84);
         this.proj = coordSys.getProjection();
         // If this is a rotated-pole projection then the x axis is longitude and
         // hence wraps at 0/360 degrees.
@@ -118,7 +117,7 @@ public class ProjectedGrid extends AbstractHorizontalGrid
         vertices.add(new LonLatPositionImpl(xExtent.getLow(), yExtent.getHigh()));
         final List<HorizontalPosition> iVertices = Collections.unmodifiableList(vertices);
         
-        return new Polygon()
+        return new AbstractPolygon()
         {
             @Override
             public CoordinateReferenceSystem getCoordinateReferenceSystem() {
@@ -131,8 +130,9 @@ public class ProjectedGrid extends AbstractHorizontalGrid
             }
 
             @Override
-            public boolean contains(HorizontalPosition position) {
-                GridCoordinates2D coords = findContainingCell(position);
+            public boolean contains(double x, double y) {
+                // The x,y coordinates are in the external CRS of this grid
+                GridCoordinates2D coords = findContainingCell(x, y);
                 if (coords == null)
                     return false;
                 return (coords.getXIndex() == i && coords.getYIndex() == j);
@@ -141,28 +141,20 @@ public class ProjectedGrid extends AbstractHorizontalGrid
     }
 
     @Override
-    public GridCoordinates2D findContainingCell(HorizontalPosition pos) {
-        ProjectionPoint point = this.getProjectionPoint(pos);
+    protected GridCoordinates2D findContainingCell(double x, double y) {
+        // The incoming x and y coordinates are in the external CRS of this grid,
+        // i.e. WGS84.  Now we go from lon-lat to the coordinate system of the axes.
+        ProjectionPoint point;
+        synchronized (this.proj) {
+            // ProjectionImpls are not thread-safe. Thanks to Marcos
+            // Hermida of Meteogalicia for pointing this out!
+            point = this.proj.latLonToProj(y, x);
+        }
         int i = this.xAxis.findIndexOf(point.getX());
         int j = this.yAxis.findIndexOf(point.getY());
         if (i < 0 || j < 0)
             return null;
         return new GridCoordinates2DImpl(i, j);
-    }
-
-    /**
-     * Gets the projection point (in the CRS of this grid's axes) that
-     * corresponds with the given horizontal position
-     */
-    private ProjectionPoint getProjectionPoint(HorizontalPosition pos) {
-        // Translate the point into lat-lon coordinates
-        pos = GISUtils.transformPosition(pos, this.getCoordinateReferenceSystem());
-        // Now we go from lon-lat to the coordinate system of the axes.
-        // ProjectionImpls are not thread-safe. Thanks to Marcos
-        // Hermida of Meteogalicia for pointing this out!
-        synchronized (this.proj) {
-            return this.proj.latLonToProj(pos.getY(), pos.getX());
-        }
     }
 
     @Override
@@ -194,5 +186,14 @@ public class ProjectedGrid extends AbstractHorizontalGrid
         } else {
             return false;
         }
+    }
+
+    /**
+     * Always returns {@link DefaultGeographicCRS#WGS84}.
+     * @return 
+     */
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return DefaultGeographicCRS.WGS84;
     }
 }
