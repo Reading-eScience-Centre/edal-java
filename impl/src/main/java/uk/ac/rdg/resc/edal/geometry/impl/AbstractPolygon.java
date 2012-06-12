@@ -18,7 +18,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  */
 public abstract class AbstractPolygon implements Polygon
 {
-
+    
     @Override
     public final boolean contains(HorizontalPosition pos)
     {
@@ -28,13 +28,13 @@ public abstract class AbstractPolygon implements Polygon
     }
     
     /**
-     * <p>Returns true if the given position is contained within this polygon.
-     * The coordinates are given in this polygon's CRS.</p>
+     * {@inheritDoc}
      * <p>This default implementation constructs a {@link Path2D} consisting of
      * the vertices of the polygon, and uses this to test for containment.
      * Subclasses may be able to override with a more efficient method.</p>
      */
-    protected boolean contains(double x, double y)
+    @Override
+    public boolean contains(double x, double y)
     {
         Path2D path = this.getBoundaryPath();
         return path.contains(x, y);
@@ -59,14 +59,11 @@ public abstract class AbstractPolygon implements Polygon
     @Override
     public int hashCode()
     {
-        int hash = 17;
-        for (HorizontalPosition pos : this.getVertices())
-        {
-            // TODO: we could just use the hashCode of the x and y coordinates
-            hash = 31 * hash + pos.hashCode();
-        }
+        int hash = this.getVertices().hashCode();
         CoordinateReferenceSystem crs = this.getCoordinateReferenceSystem();
-        hash = hash * 31 + (crs == null ? 0 : crs.hashCode());
+        if (crs != null) {
+            hash += crs.hashCode();
+        }
         return hash;
     }
     
