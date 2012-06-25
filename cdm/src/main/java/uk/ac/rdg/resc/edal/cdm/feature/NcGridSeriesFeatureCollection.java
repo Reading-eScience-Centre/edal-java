@@ -27,160 +27,283 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.feature;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+
+import ucar.nc2.dataset.NetcdfDataset;
+import ucar.nc2.dataset.VariableDS;
+import ucar.nc2.dt.GridCoordSystem;
+import ucar.nc2.dt.GridDataset;
+import ucar.nc2.dt.GridDataset.Gridset;
+import ucar.nc2.dt.GridDatatype;
+import uk.ac.rdg.resc.edal.Phenomenon;
+import uk.ac.rdg.resc.edal.Unit;
+import uk.ac.rdg.resc.edal.UnitVocabulary;
+import uk.ac.rdg.resc.edal.cdm.coverage.grid.LookUpTableGrid;
+import uk.ac.rdg.resc.edal.cdm.coverage.grid.NcGridValuesMatrix4D;
+import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
+import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
+import uk.ac.rdg.resc.edal.coverage.Record;
+import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
+import uk.ac.rdg.resc.edal.coverage.domain.impl.GridSeriesDomainImpl;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
+import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
+import uk.ac.rdg.resc.edal.coverage.impl.GridSeriesCoverageImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.impl.AbstractFeatureCollection;
+import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.position.impl.GeoPositionImpl;
+import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
+import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
 /**
  * An implementation of {@link FeatureCollection} which contains
  * {@link GridSeriesFeature} objects which hold {@link Float} data.
  * 
- * NEEDS TO BE REWORKED INTO NEW STRUCTURE
  * @author Guy Griffiths
  * 
  */
-public class NcGridSeriesFeatureCollection
+public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<GridSeriesFeature>
+        implements FeatureCollection<GridSeriesFeature> {
 
-//extends AbstractFeatureCollection<GridSeriesFeature> implements FeatureCollection<GridSeriesFeature>
+    /**
+     * Instantiates a collection of features from one or more NetCDF files.
+     * 
+     * @param collectionId
+     *            The ID of the collection (comparable to the Dataset ID in old
+     *            ncWMS)
+     * @param collectionName
+     *            The name of the collection (comparable to the Dataset name in
+     *            old ncWMS)
+     * @param location
+     *            The location of the NetCDF file(s)
+     * @throws IOException
+     *             If there is a problem reading the file
+     */
+    public NcGridSeriesFeatureCollection(String collectionId, String collectionName, String location)
+            throws IOException {
+        super(collectionId, collectionName);
 
-{
+        List<GridSeriesCoverageImpl> coverages = new ArrayList<GridSeriesCoverageImpl>();
 
-//    /**
-//     * Instantiates a collection of features from one or more NetCDF files.
-//     * 
-//     * @param collectionId
-//     *            The ID of the collection (comparable to the Dataset ID in old
-//     *            ncWMS)
-//     * @param collectionName
-//     *            The name of the collection (comparable to the Dataset name in
-//     *            old ncWMS)
-//     * @param location
-//     *            The location of the NetCDF file(s)
-//     * @throws IOException
-//     *             If there is a problem reading the file
-//     */
-//    public NcGridSeriesFeatureCollection(String collectionId, String collectionName, String location)
-//            throws IOException {
-//        super(collectionId, collectionName);
-//
-//        class CompoundData{
-//            NcGridSeriesCoverage xCoverage;
-//            NcGridSeriesCoverage yCoverage;
-//            String xVarId;
-//            String yVarId;
-//            DataReadingStrategy dataReadingStrategy;
-//        }
-//        Map<String, CompoundData> compoundsCoverageComponents = new HashMap<String, CompoundData>();
-//
-//        List<File> files = FileUtils.expandGlobExpression(location);
-//        if(files.size() == 0){
-//            throw new FileNotFoundException("No files found at " + location);
-//        }
-//        for (File file : files) {
-//            String filename = file.getPath();
-//            NetcdfDataset ncDataset = CdmUtils.openDataset(filename);
-//
-//            GridDataset gridDS = CdmUtils.getGridDataset(ncDataset);
-//            DataReadingStrategy dataReadingStrategy = CdmUtils.getOptimumDataReadingStrategy(ncDataset);
-//
-//            for (Gridset gridset : gridDS.getGridsets()) {
-//                /*
-//                 * Get everything from the GridCoordSystem that is needed for
-//                 * making an NcGridSeriesFeature, and keep locally until...
-//                 */
-//                GridCoordSystem coordSys = gridset.getGeoCoordSystem();
-//                HorizontalGrid hGrid = CdmUtils.createHorizontalGrid(coordSys);
-//                if(hGrid instanceof LookUpTableGrid){
-//                    dataReadingStrategy = DataReadingStrategy.BOUNDING_BOX;
-//                }
-//                VerticalAxis vAxis = CdmUtils.createVerticalAxis(coordSys);
-//                TimeAxis tAxis = null;
-//                if (coordSys.hasTimeAxis1D()) {
-//                    tAxis = CdmUtils.createTimeAxis(coordSys);
-//                }
-//
-//                List<GridDatatype> grids = gridset.getGrids();
-//                for (GridDatatype gridDT : grids) {
-//                    /*
-//                     * ...here, where we can get each variable and construct the
-//                     * NcGridSeriesFeature add add it to the collection
-//                     */
-//                    VariableDS var = gridDT.getVariable();
-//                    String name = CdmUtils.getVariableTitle(var);
-//                    String varId = var.getName();
-//                    String description = var.getDescription();
-//
-//                    if (id2Feature.containsKey(varId)) {
-//                        ((NcGridSeriesCoverage) id2Feature.get(varId).getCoverage())
-//                                .addToCoverage(filename, varId, tAxis);
-//                    } else {
-//                        NcGridSeriesCoverage coverage = new NcGridSeriesCoverage(filename, varId,
-//                                hGrid, vAxis, tAxis, description, var.getUnitsString());
-//                        GridSeriesFeature feature = new GridSeriesFeatureImpl(name,
-//                                varId, this, coverage, dataReadingStrategy);
-//                        id2Feature.put(varId, feature);
-//                    }
-//                    
-//                    /*
-//                     * Now deal with elements which may be part of a compound coverage
-//                     */
-//                    if (name.contains("eastward")) {
-//                        String compoundName = name.replaceFirst("eastward_", "");
-//                        CompoundData cData;
-//                        if (!compoundsCoverageComponents.containsKey(compoundName)) {
-//                            cData = new CompoundData();
-//                            compoundsCoverageComponents.put(compoundName, cData);
-//                        }
-//                        cData = compoundsCoverageComponents.get(compoundName);
-//                        /*
-//                         * By doing this, we will end up with the merged coverage
-//                         */
-//                        cData.xCoverage = (NcGridSeriesCoverage) id2Feature.get(varId).getCoverage();
-//                        cData.xVarId = varId;
-//                        cData.dataReadingStrategy = dataReadingStrategy;
-//                    } else if (name.contains("northward")) {
-//                        String compoundName = name.replaceFirst("northward_", "");
-//                        CompoundData cData;
-//                        if (!compoundsCoverageComponents.containsKey(compoundName)) {
-//                            cData = new CompoundData();
-//                            compoundsCoverageComponents.put(compoundName, cData);
-//                        }
-//                        cData = compoundsCoverageComponents.get(compoundName);
-//                        /*
-//                         * By doing this, we will end up with the merged coverage
-//                         */
-//                        cData.yCoverage = (NcGridSeriesCoverage) id2Feature.get(varId).getCoverage();
-//                        cData.yVarId = varId;
-//                    }
-//                }
-//            }
-//            CdmUtils.closeDataset(ncDataset);
-//        }
-//        for (String compoundVar : compoundsCoverageComponents.keySet()) {
-//            CompoundData cData = compoundsCoverageComponents.get(compoundVar);
-//            String id = cData.xVarId+cData.yVarId;
-//            if (!id2Feature.containsKey(id)) {
-//                try {
-//                    GridSeriesCoverage<Vector2D<Float>> coverage = new NcVectorGridSeriesCoverage(
-//                            cData.xCoverage, cData.yCoverage);
-//                    GridSeriesFeature<Vector2D<Float>> feature = new GridSeriesFeatureImpl<Vector2D<Float>>(
-//                            compoundVar, id, this, coverage,
-//                            cData.dataReadingStrategy);
-//                    id2Feature.put(id, feature);
-//                } catch (InstantiationException e) {
-//                    /*
-//                     * If we get this error, it means that the components do not
-//                     * match properly, and can't make a Vector coverage.
-//                     */
-//                    // TODO log the error
-//                    System.out.println("Cannot merge data from different grids");
-//                    continue;
-//                }
-//            } else {
-//                System.out.println("Already have a feature with this ID.  THIS IS A PROBLEM");
-//                assert false;
-//            }
-//        }
-//    }
+        final class XYVarIDs {
+            String xVarId;
+            String yVarId;
+        }
 
+        DataReadingStrategy dataReadingStrategy = null;
+        File file = new File(location);
+
+        String filename = file.getPath();
+        NetcdfDataset ncDataset = CdmUtils.openDataset(filename);
+
+        GridDataset gridDS = CdmUtils.getGridDataset(ncDataset);
+        dataReadingStrategy = CdmUtils.getOptimumDataReadingStrategy(ncDataset);
+
+        int gridNo = 0;
+        for (Gridset gridset : gridDS.getGridsets()) {
+            gridNo++;
+            /*
+             * Get everything from the GridCoordSystem that is needed for making
+             * an NcGridSeriesFeature, and keep locally until...
+             */
+            GridCoordSystem coordSys = gridset.getGeoCoordSystem();
+            HorizontalGrid hGrid = CdmUtils.createHorizontalGrid(coordSys);
+            if (hGrid instanceof LookUpTableGrid) {
+                dataReadingStrategy = DataReadingStrategy.BOUNDING_BOX;
+            }
+            VerticalAxis vAxis = CdmUtils.createVerticalAxis(coordSys);
+            TimeAxis tAxis = null;
+            if (coordSys.hasTimeAxis1D()) {
+                tAxis = CdmUtils.createTimeAxis(coordSys);
+            }
+
+            GridSeriesDomain domain = new GridSeriesDomainImpl(hGrid, vAxis, tAxis);
+            GridSeriesCoverageImpl coverage = new GridSeriesCoverageImpl("grid" + gridNo, domain,
+                    dataReadingStrategy);
+
+            Map<String, XYVarIDs> xyComponents = new HashMap<String, XYVarIDs>();
+
+            if (!coverages.contains(coverage)) {
+                /*
+                 * Coverage doesn't exist.
+                 */
+                List<GridDatatype> grids = gridset.getGrids();
+                /*
+                 * Now add all of the variables to the coverage
+                 */
+                for (GridDatatype gridDT : grids) {
+                    VariableDS var = gridDT.getVariable();
+                    Phenomenon phenomenon = CdmUtils.getPhenomenon(var);
+                    Unit units = Unit.getUnit(gridDT.getUnitsString(), UnitVocabulary.UDUNITS2);
+                    String name = phenomenon.getStandardName();
+                    String varId = var.getName();
+                    String description = var.getDescription();
+
+                    GridValuesMatrix<Float> gridValueMatrix = new NcGridValuesMatrix4D(
+                            hGrid.getXAxis(), hGrid.getYAxis(), vAxis, tAxis, filename, varId);
+                    coverage.addMember(varId, domain, description, phenomenon, units,
+                            gridValueMatrix);
+
+                    /*
+                     * Now deal with elements which may be part of a compound
+                     * coverage
+                     */
+                    if (name.contains("eastward")) {
+                        String compoundName = name.replaceFirst("eastward_", "");
+                        XYVarIDs cData;
+                        if (!xyComponents.containsKey(compoundName)) {
+                            cData = new XYVarIDs();
+                            xyComponents.put(compoundName, cData);
+                        }
+                        cData = xyComponents.get(compoundName);
+                        /*
+                         * By doing this, we will end up with the merged
+                         * coverage
+                         */
+                        cData.xVarId = varId;
+                    } else if (name.contains("northward")) {
+                        String compoundName = name.replaceFirst("northward_", "");
+                        XYVarIDs cData;
+                        if (!xyComponents.containsKey(compoundName)) {
+                            cData = new XYVarIDs();
+                            xyComponents.put(compoundName, cData);
+                        }
+                        cData = xyComponents.get(compoundName);
+                        /*
+                         * By doing this, we will end up with the merged
+                         * coverage
+                         */
+                        cData.yVarId = varId;
+                    }
+                }
+                coverages.add(coverage);
+            } else {
+                throw new IllegalArgumentException("We already have this coverage...");
+                /*
+                 * This was previously where coverages could be extended, but we
+                 * no longer allow this.
+                 */
+            }
+
+            for (String xyVarIDs : xyComponents.keySet()) {
+                XYVarIDs xyData = xyComponents.get(xyVarIDs);
+                VectorPlugin vectorPlugin = new VectorPlugin(xyData.xVarId, xyData.yVarId,
+                        xyVarIDs, "Vector for " + xyVarIDs);
+                coverage.addPlugin(vectorPlugin);
+            }
+        }
+
+        /*
+         * We have now processed all of the files into coverages. Now make them
+         * into features
+         */
+        for (GridSeriesCoverage coverage : coverages) {
+            GridSeriesFeature feature = new GridSeriesFeatureImpl("", "", this, coverage);
+            id2Feature.put(coverage.getDescription(), feature);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
+                "testcollection", "Test Collection",
+                "/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090320.nc");
+        for (String featureId : featureCollection.getFeatureIds()) {
+            System.out.println("Feature: " + featureId);
+            GridSeriesFeature f = featureCollection.getFeatureById(featureId);
+
+            for (String s : f.getCoverage().getMemberNames()) {
+                System.out.println("Member of coverage: " + s);
+            }
+            RangeMetadata metadata = f.getCoverage().getRangeMetadata();
+            for (String memberName : metadata.getMemberNames()) {
+                int size = metadata.getMemberMetadata(memberName).getMemberNames().size();
+                System.out.println(memberName + " is a member of the metadata.  It has " + size
+                        + " children:");
+                if (size > 0) {
+                    for (String m : metadata.getMemberMetadata(memberName).getMemberNames()) {
+                        System.out.println("\t" + m);
+                        RangeMetadata thisM = metadata.getMemberMetadata(memberName)
+                                .getMemberMetadata(m);
+                        System.out.println("\t\t" + thisM.getName());
+                        System.out.println("\t\t" + thisM.getDescription());
+                        if (thisM instanceof ScalarMetadata) {
+                            ScalarMetadata scalarMetadata = (ScalarMetadata) thisM;
+                            System.out.println("\t\t" + scalarMetadata.getParameter());
+                            System.out.println("\t\t" + scalarMetadata.getUnits().getUnitString());
+                            System.out.println("\t\t" + scalarMetadata.getValueType());
+                        }
+                        int size2 = metadata.getMemberMetadata(memberName).getMemberMetadata(m)
+                                .getMemberNames().size();
+                        System.out.println("\t\t" + m + " has " + size2 + " children:");
+                        if (size2 > 0) {
+                            for (String m2 : metadata.getMemberMetadata(memberName)
+                                    .getMemberMetadata(m).getMemberNames()) {
+                                System.out.println("\t\t" + m2);
+                                RangeMetadata thisM2 = metadata.getMemberMetadata(memberName)
+                                        .getMemberMetadata(m).getMemberMetadata(m2);
+                                System.out.println("\t\t\t" + thisM2.getName());
+                                System.out.println("\t\t\t" + thisM2.getDescription());
+                                if (thisM2 instanceof ScalarMetadata) {
+                                    ScalarMetadata scalarMetadata = (ScalarMetadata) thisM2;
+                                    System.out.println("\t\t\t" + scalarMetadata.getParameter());
+                                    System.out.println("\t\t\t"
+                                            + scalarMetadata.getUnits().getUnitString());
+                                    System.out.println("\t\t\t" + scalarMetadata.getValueType());
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            GridSeriesCoverage coverage = f.getCoverage();
+            GridSeriesDomain domain = coverage.getDomain();
+            System.out.println(domain.getHorizontalGrid().getXAxis().size() + ","
+                    + domain.getHorizontalGrid().getYAxis().size() + ","
+                    + (domain.getVerticalAxis() == null ? "1" : domain.getVerticalAxis().size())
+                    + "," + (domain.getTimeAxis() == null ? "1" : domain.getTimeAxis().size()));
+            VerticalPosition vPos = null;
+            try {
+                vPos = new VerticalPositionImpl(domain.getVerticalAxis().getCoordinateValue(0),
+                        domain.getVerticalCrs());
+            } catch (NullPointerException e) {
+            }
+            TimePosition tPos = null;
+            try {
+                tPos = domain.getTimeAxis().getCoordinateValue(0);
+            } catch (NullPointerException e) {
+            }
+
+            GridCell4D cell = domain
+                    .findContainingCell(new GeoPositionImpl(new HorizontalPositionImpl(-5.0, 52.5,
+                            DefaultGeographicCRS.WGS84), vPos, tPos));
+            if (cell != null) {
+                GeoPosition newPos = new GeoPositionImpl(cell.getCentre(), vPos, tPos);
+                Record r = coverage.evaluate(newPos);
+                System.out.println("Evaluated!");
+                for (String member : r.getMemberNames()) {
+                    System.out.println("Member: " + member + ", Value: " + r.getValue(member));
+                }
+            }
+        }
+    }
 }
