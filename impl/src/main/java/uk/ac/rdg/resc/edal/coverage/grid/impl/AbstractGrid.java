@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import uk.ac.rdg.resc.edal.coverage.grid.Grid;
+import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 
@@ -51,8 +52,14 @@ public abstract class AbstractGrid implements Grid {
         int[] low = new int[getNDim()];
         int[] high = new int[getNDim()];
         for (int i = 0; i < getNDim(); i++) {
-            low[i] = getAxis(i).getIndexExtent().getLow();
-            high[i] = getAxis(i).getIndexExtent().getHigh();
+            GridAxis axis = getAxis(i);
+            if (axis == null) {
+                low[i] = -1;
+                high[i] = -1;
+            } else {
+                low[i] = axis.getIndexExtent().getLow();
+                high[i] = axis.getIndexExtent().getHigh();
+            }
         }
         return new GridExtentImpl(new GridCoordinatesImpl(low), new GridCoordinatesImpl(high));
     }
