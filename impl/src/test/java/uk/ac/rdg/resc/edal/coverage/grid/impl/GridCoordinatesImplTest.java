@@ -28,10 +28,14 @@
 
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Arrays;
+
 import org.junit.Test;
+
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
-import static org.junit.Assert.*;
 
 /**
  * Test of the {@link GridCoordinates2DImpl} class.
@@ -43,7 +47,8 @@ public class GridCoordinatesImplTest {
     /** Tests attempt to create GridCoordinates2DImpl with null coordinates */
     @Test(expected=NullPointerException.class)
     public void nullPointerTest() {
-        new GridCoordinates2DImpl(null);
+        int[] a = null;
+        new GridCoordinates2DImpl(a);
     }
 
     /** Tests attempt to create GridCoordinates2DImpl with zero-length coordinates */

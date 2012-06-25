@@ -149,12 +149,34 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof RegularGridImpl) {
-            RegularGridImpl grid = (RegularGridImpl) obj;
-            return grid.xAxis.equals(xAxis) && grid.yAxis.equals(yAxis) && super.equals(obj);
-        } else {
-            return false;
-        }
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((xAxis == null) ? 0 : xAxis.hashCode());
+        result = prime * result + ((yAxis == null) ? 0 : yAxis.hashCode());
+        return result;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RegularGridImpl other = (RegularGridImpl) obj;
+        if (xAxis == null) {
+            if (other.xAxis != null)
+                return false;
+        } else if (!xAxis.equals(other.xAxis))
+            return false;
+        if (yAxis == null) {
+            if (other.yAxis != null)
+                return false;
+        } else if (!yAxis.equals(other.yAxis))
+            return false;
+        return true;
+    }
+
 }

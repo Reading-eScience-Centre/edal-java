@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2010 The University of Reading
  * All rights reserved.
  *
@@ -32,20 +32,20 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-//import java.util.logging.Logger;
 import java.util.NoSuchElementException;
+
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.RArray;
 import uk.ac.rdg.resc.edal.util.RLongArray;
 import uk.ac.rdg.resc.edal.util.RUByteArray;
 import uk.ac.rdg.resc.edal.util.RUIntArray;
 import uk.ac.rdg.resc.edal.util.RUShortArray;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  *<p>Maps real-world points to i and j indices of corresponding
@@ -79,8 +79,6 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  */
 final class PixelMap implements Iterable<PixelMap.PixelMapEntry>
 {
-//    private static final Logger logger = LoggerFactory.getLogger(PixelMap.class);
-
     /** Stores the source grid indices */
     private final RArray sourceGridIndices;
     /** Stores the target grid indices */

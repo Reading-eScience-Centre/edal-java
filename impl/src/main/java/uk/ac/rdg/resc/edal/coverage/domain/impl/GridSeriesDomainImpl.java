@@ -7,6 +7,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
+import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
@@ -14,6 +15,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCell4DRectangle;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates4DImpl;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
@@ -34,7 +36,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * @author Guy Griffiths
  * 
  */
-public class GridSeriesDomainImpl implements GridSeriesDomain {
+public class GridSeriesDomainImpl extends AbstractGrid implements GridSeriesDomain {
 
     private final HorizontalGrid hGrid;
     private final VerticalAxis vAxis;
@@ -200,7 +202,7 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         if(tAxis != null){
             tSize = tAxis.size();
         }
-        return (long) (hGrid.size() * vSize * tSize);
+        return (hGrid.size() * vSize * tSize);
     }
 
     @Override
@@ -255,5 +257,60 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         int yComp = (int) ((index-tComp*xSize*ySize*zSize-zComp*xSize*ySize-(index%xSize))/(xSize));
         int xComp = (int) (index-tComp*xSize*ySize*zSize-zComp*xSize*ySize-yComp*xSize);
         return new GridCoordinates4DImpl(xComp, yComp, zComp, tComp);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((hGrid == null) ? 0 : hGrid.hashCode());
+        result = prime * result + ((tAxis == null) ? 0 : tAxis.hashCode());
+        result = prime * result + ((vAxis == null) ? 0 : vAxis.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GridSeriesDomainImpl other = (GridSeriesDomainImpl) obj;
+        if (hGrid == null) {
+            if (other.hGrid != null)
+                return false;
+        } else if (!hGrid.equals(other.hGrid))
+            return false;
+        if (tAxis == null) {
+            if (other.tAxis != null)
+                return false;
+        } else if (!tAxis.equals(other.tAxis))
+            return false;
+        if (vAxis == null) {
+            if (other.vAxis != null)
+                return false;
+        } else if (!vAxis.equals(other.vAxis))
+            return false;
+        return true;
+    }
+
+    @Override
+    public GridAxis getAxis(int n) {
+        if (n == 0)
+            return getHorizontalGrid().getXAxis();
+        if (n == 1)
+            return getHorizontalGrid().getYAxis();
+        if (n == 2)
+            return getVerticalAxis();
+        if (n == 3)
+            return getTimeAxis();
+        throw new IndexOutOfBoundsException("This GridValuesMatrix has 4 axes");
+    }
+
+    @Override
+    public int getNDim() {
+        return 4;
     }
 }

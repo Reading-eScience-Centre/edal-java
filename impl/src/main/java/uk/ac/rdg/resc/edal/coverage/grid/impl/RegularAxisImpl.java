@@ -115,4 +115,38 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     protected Double extendLastValue(Double lastVal, Double secondLastVal) {
         return lastVal + 0.5 * (lastVal - secondLastVal);
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        long temp;
+        temp = Double.doubleToLongBits(firstValue);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        result = prime * result + (isLongitude ? 1231 : 1237);
+        result = prime * result + size;
+        temp = Double.doubleToLongBits(spacing);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RegularAxisImpl other = (RegularAxisImpl) obj;
+        if (Double.doubleToLongBits(firstValue) != Double.doubleToLongBits(other.firstValue))
+            return false;
+        if (isLongitude != other.isLongitude)
+            return false;
+        if (size != other.size)
+            return false;
+        if (Double.doubleToLongBits(spacing) != Double.doubleToLongBits(other.spacing))
+            return false;
+        return true;
+    }
 }

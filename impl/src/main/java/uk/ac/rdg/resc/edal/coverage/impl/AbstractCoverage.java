@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2011 The University of Reading
  * All rights reserved.
  *
@@ -28,30 +28,34 @@
 
 package uk.ac.rdg.resc.edal.coverage.impl;
 
-
 import java.util.Set;
+
 import uk.ac.rdg.resc.edal.coverage.Coverage;
 import uk.ac.rdg.resc.edal.coverage.RecordType;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
 /**
- * <p>Partial implementation of a {@link Coverage}, providing a simpler way for
- * subclasses to provide key items of metadata.</p>
- * @param <P> The type of object used to identify positions within the coverage's domain.
- * This may be a spatial, temporal, or combined spatiotemporal position.
+ * <p>
+ * Partial implementation of a {@link Coverage}, providing a simpler way for
+ * subclasses to provide key items of metadata.
+ * </p>
+ * 
+ * @param <P>
+ *            The type of object used to identify positions within the
+ *            coverage's domain. This may be a spatial, temporal, or combined
+ *            spatiotemporal position.
  * @author Jon
+ * @author Guy Griffiths
  */
-public abstract class AbstractCoverage<P> implements Coverage<P>
-{
+public abstract class AbstractCoverage<P> implements Coverage<P> {
 
     @Override
     public boolean isDefinedAt(P pos) {
         return this.getDomain().contains(pos);
     }
-    
-    private final RecordType rangeType = new RecordType()
-    {
+
+    private final RecordType rangeType = new RecordType() {
         @Override
         public Class<?> getValueType(String memberName) {
             checkMemberName(memberName);
@@ -63,19 +67,23 @@ public abstract class AbstractCoverage<P> implements Coverage<P>
             return AbstractCoverage.this.getMemberNames();
         }
     };
-    
+
     @Override
     public RecordType getRangeType() {
         return this.rangeType;
     }
-    
+
     /**
      * {@inheritDoc}
-     * <p>This default implementation returns a "plain" RangeMetadata object
+     * <p>
+     * This default implementation returns a "plain" RangeMetadata object
      * containing all the ScalarMetadata objects as direct children in a flat
-     * hierarchy.  Subclasses should override where appropriate to provide more accurate and
-     * expressive metadata relationships using the RangeMetadata subclasses.</p>
-     * @return 
+     * hierarchy. Subclasses should override where appropriate to provide more
+     * accurate and expressive metadata relationships using the RangeMetadata
+     * subclasses.
+     * </p>
+     * 
+     * @return
      */
     @Override
     public RangeMetadata getRangeMetadata() {
@@ -107,14 +115,24 @@ public abstract class AbstractCoverage<P> implements Coverage<P>
                 // This is the top-level metadata object: there is no parent
                 return null;
             }
-            
+
+            @Override
+            public RangeMetadata removeMember(String memberName) {
+                throw new UnsupportedOperationException("This RangeMetadata is immutable");
+            }
+
+            @Override
+            public void addMember(RangeMetadata metadata) {
+                throw new UnsupportedOperationException("This RangeMetadata is immutable");
+            }
+
         };
     }
-    
+
     protected void checkMemberName(String memberName) {
         if (!this.getMemberNames().contains(memberName)) {
-            throw new IllegalArgumentException("Member name " + memberName +
-                    " not present in coverage");
+            throw new IllegalArgumentException("Member name " + memberName
+                    + " not present in coverage");
         }
     }
 
