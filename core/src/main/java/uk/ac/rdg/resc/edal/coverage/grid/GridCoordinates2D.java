@@ -38,7 +38,7 @@ package uk.ac.rdg.resc.edal.coverage.grid;
  * 
  * @author Jon Blower
  */
-public interface GridCoordinates2D extends Comparable<GridCoordinates2D> {
+public interface GridCoordinates2D extends GridCoordinates {
 
     /**
      * The index of the point on the {@link HorizontalGrid#getXAxis() x axis of
@@ -51,15 +51,4 @@ public interface GridCoordinates2D extends Comparable<GridCoordinates2D> {
      * the grid}
      */
     public int getYIndex();
-
-    /**
-     * Compares first on the basis of the y index, then the x index. Hence the
-     * coordinates (x=1, y=2) are taken to be "less than" (x=2, y=1).
-     * 
-     * @param coords
-     * @return
-     */
-    @Override
-    public int compareTo(GridCoordinates2D coords);
-
 }

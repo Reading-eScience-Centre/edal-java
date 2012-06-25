@@ -29,7 +29,8 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
+
+import uk.ac.rdg.resc.edal.coverage.domain.GridDomain;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.BigList;
@@ -42,7 +43,7 @@ import uk.ac.rdg.resc.edal.util.BigList;
  * 
  * @author Jon Blower
  */
-public interface HorizontalGrid extends Grid, DiscreteDomain<HorizontalPosition, GridCell2D> {
+public interface HorizontalGrid extends GridDomain<HorizontalPosition, GridCell2D> {
 
     /**
      * {@inheritDoc}
@@ -52,7 +53,6 @@ public interface HorizontalGrid extends Grid, DiscreteDomain<HorizontalPosition,
      * system}.
      * </p>
      */
-    @Override
     public GridAxis getXAxis();
 
     /**
@@ -63,7 +63,6 @@ public interface HorizontalGrid extends Grid, DiscreteDomain<HorizontalPosition,
      * system}.
      * </p>
      */
-    @Override
     public GridAxis getYAxis();
 
     /**
@@ -146,10 +145,6 @@ public interface HorizontalGrid extends Grid, DiscreteDomain<HorizontalPosition,
      */
     public GridCell2D getGridCell(int xIndex, int yIndex);
 
-    /**
-     * The number of grid cells in this grid
-     */
     @Override
-    public long size();
-
+    public GridCoordinates2D getCoords(long index);
 }

@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2012 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -24,42 +24,52 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- ******************************************************************************/
+ *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.coverage.metadata;
-
-import uk.ac.rdg.resc.edal.Phenomenon;
+package uk.ac.rdg.resc.edal.coverage.grid;
 
 /**
- * A descriptor for a component of a {@link ProbabilityDistribution}.
+ * The coordinates of a grid cell within a {@link HorizontalGrid}. It is usually
+ * assumed that the x index varies faster than the y index in underlying
+ * storage, hence we define
+ * {@link #compareTo(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates)
+ * compareTo()} so that coordinates may be sorted in a manner that reflects
+ * this.
  * 
- * @param <N>
- *            the type of the values used to describe the component (will
- *            usually be Double, maybe occasionally Float or even BigDecimal).
- * @author Jon
+ * @author Jon Blower
  */
-public interface PdfComponent extends ScalarMetadata {
+public interface GridCoordinates extends Comparable<GridCoordinates> {
 
     /**
-     * Returns an identifier indicating the type of the component (mean,
-     * variance, etc).
+     * The index of the point on an axis
      * 
-     * @todo return a stronger type, e.g. from UncertML
+     * @param dim
+     *            The axis number to return the index for
      */
-    public String getComponentType();
-
-    @Override
-    public ProbabilityDistribution getParent();
+    public int getIndex(int dim);
 
     /**
-     * {@inheritDoc}
-     * <p>
-     * This will usually match the Phenomenon of the parent
-     * {@link ProbabilityDistribution}. However, in some vocabularies, different
-     * components may be expressed using different terms.
-     * </p>
+     * All indices of the {@link GridCoordinates}
+     * 
+     * @return
+     */
+    public int[] getIndices();
+
+    /**
+     * The number of dimensions in this {@link GridCoordinates}
+     * 
+     * @return the number of dimensions
+     */
+    public int getNDim();
+
+    /**
+     * Compares first on the basis of the y index, then the x index. Hence the
+     * coordinates (x=1, y=2) are taken to be "less than" (x=2, y=1).
+     * 
+     * @param coords
+     * @return
      */
     @Override
-    public Phenomenon getParameter();
+    public int compareTo(GridCoordinates coords);
 
 }
