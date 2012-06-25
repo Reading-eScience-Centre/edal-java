@@ -1,11 +1,13 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
+import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.util.AbstractBigList;
 import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.GISUtils;
@@ -15,9 +17,15 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * {@link HorizontalGrid}.
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public abstract class AbstractHorizontalGrid extends AbstractGrid implements HorizontalGrid
 {
+
+    @Override
+    public int getNDim() {
+        return 2;
+    }
 
     @Override
     public HorizontalPosition transformCoordinates(GridCoordinates2D coords) {
@@ -133,7 +141,7 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
     {
         for (GridCell2D cell : this.getDomainObjects())
         {
-            if (cell.getFootprint().contains(x, y))
+            if (cell.getFootprint().contains(new HorizontalPositionImpl(x, y)))
             {
                 return cell.getGridCoordinates();
             }
@@ -150,5 +158,18 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
      *         or <code>null</code> if the position is outside of the grid
      */
     protected abstract GridCoordinates2D findContainingCell(double x, double y);
-    
+
+    @Override
+    public GridCoordinates2D getCoords(long index) {
+        return new GridCoordinates2DImpl(super.getCoords(index));
+    }
+
+    @Override
+    public GridAxis getAxis(int n) {
+        if (n == 0)
+            return getXAxis();
+        if (n == 1)
+            return getXAxis();
+        throw new IndexOutOfBoundsException("There are only 2 axes in a horizontal grid");
+    }
 }

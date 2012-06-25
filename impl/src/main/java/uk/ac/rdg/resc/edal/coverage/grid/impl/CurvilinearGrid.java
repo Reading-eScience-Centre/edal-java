@@ -31,11 +31,14 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import javax.measure.unit.Unit;
+
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.cs.RangeMeaning;
+
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
@@ -51,11 +54,12 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * A horizontal (2D) grid that is defined by explicitly specifying the x and y
  * coordinates of each of its cells.
  * 
- * @todo Probably not ready to use yet - need to check functionality, particularly
- * to see if longitude wrapping is handled correctly.  Will findContainingCell
- * work correctly?
+ * @todo Probably not ready to use yet - need to check functionality,
+ *       particularly to see if longitude wrapping is handled correctly. Will
+ *       findContainingCell work correctly?
  * 
  * @author Jon Blower
+ * @author Guy Griffiths
  */
 public final class CurvilinearGrid extends AbstractHorizontalGrid
 {
@@ -67,8 +71,8 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
     private final FloatArrayGridValuesMatrix yCorners;
     private final BoundingBox extent;
     
-    public CurvilinearGrid(GridValuesMatrix<Double> xCoords,
-            GridValuesMatrix<Double> yCoords, CoordinateReferenceSystem crs)
+    public CurvilinearGrid(GridValuesMatrix<Double> xCoords, GridValuesMatrix<Double> yCoords,
+            CoordinateReferenceSystem crs)
     {
         // Sanity check
         if (!xCoords.getGridExtent().equals(yCoords.getGridExtent())) {
@@ -76,8 +80,8 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
         }
         this.crs = crs;
         
-        int ni = xCoords.getXAxis().size();
-        int nj = xCoords.getYAxis().size();
+        int ni = xCoords.getAxis(0).size();
+        int nj = xCoords.getAxis(1).size();
         
         // Detect whether either of the axes is longitude
         boolean xIsLongitude = false;
@@ -103,8 +107,8 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
         double maxY = Double.NaN;
         for (int j = 0; j < nj; j++) {
             for (int i = 0; i < ni; i++) {
-                double x = xCoords.readPoint(i, j);
-                double y = yCoords.readPoint(i, j);
+                double x = xCoords.readPoint(new int[] { i, j });
+                double y = yCoords.readPoint(new int[] { i, j });
                 boolean isNaN = Double.isNaN(x) || Double.isNaN(y);
                 if (!isNaN) {
                     if (xIsLongitude) {
@@ -137,10 +141,11 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
     /**
      * Calculates the positions of the corners of the grid
      */
-    private FloatArrayGridValuesMatrix makeCorners(FloatArrayGridValuesMatrix centres, boolean isLongitude)
+    private FloatArrayGridValuesMatrix makeCorners(FloatArrayGridValuesMatrix centres,
+            boolean isLongitude)
     {
-        int ni = centres.getXAxis().size();
-        int nj = centres.getYAxis().size();
+        int ni = centres.getAxis(0).size();
+        int nj = centres.getAxis(1).size();
         
         FloatArrayGridValuesMatrix edges = new FloatArrayGridValuesMatrix(ni + 1, nj + 1);
 
@@ -148,10 +153,10 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
             for (int i = 0; i < ni - 1; i++) {
                 // the interior edges are the average of the 4 surrounding
                 // midpoints
-                double midpoint1 = centres.readPoint(i, j);
-                double midpoint2 = centres.readPoint(i + 1, j);
-                double midpoint3 = centres.readPoint(i, j + 1);
-                double midpoint4 = centres.readPoint(i + 1, j + 1);
+                double midpoint1 = centres.readPoint(new int[] { i, j });
+                double midpoint2 = centres.readPoint(new int[] { i + 1, j });
+                double midpoint3 = centres.readPoint(new int[] { i, j + 1 });
+                double midpoint4 = centres.readPoint(new int[] { i + 1, j + 1 });
                 if (isLongitude) {
                     // Make sure that all corners are as close together as
                     // possible,
@@ -211,8 +216,8 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
 
     @Override
     protected HorizontalPosition getGridCellCentreNoBoundsCheck(int i, int j) {
-        double x = this.xCoords.readPoint(i, j);
-        double y = this.yCoords.readPoint(i, j);
+        double x = this.xCoords.readPoint(new int[] { i, j });
+        double y = this.yCoords.readPoint(new int[] { i, j });
         return new HorizontalPositionImpl(x, y, this.crs);
     }
 
@@ -242,8 +247,8 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
     
     private HorizontalPosition getCorner(int i, int j)
     {
-        double x = this.xCorners.readPoint(i, j);
-        double y = this.yCorners.readPoint(i, j);
+        double x = this.xCorners.readPoint(new int[] { i, j });
+        double y = this.yCorners.readPoint(new int[] { i, j });
         return new HorizontalPositionImpl(x, y, this.getCoordinateReferenceSystem());
     }
 
@@ -259,12 +264,12 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
 
     @Override
     public GridAxis getXAxis() {
-        return this.xCoords.getXAxis();
+        return this.xCoords.getAxis(0);
     }
 
     @Override
     public GridAxis getYAxis() {
-        return this.xCoords.getYAxis();
+        return this.xCoords.getAxis(1);
     }
     
     @Override

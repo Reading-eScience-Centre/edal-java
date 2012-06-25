@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import uk.ac.rdg.resc.edal.Extent;
@@ -10,27 +6,32 @@ import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Simple immutable implementation of a {@link GridAxis}
+ * 
  * @author Jon
  */
-public class GridAxisImpl implements GridAxis
-{
+public class GridAxisImpl implements GridAxis {
     private final String name;
     private final int size;
-    
-    public GridAxisImpl(String name, int size)
-    {
-        if (size < 1) throw new IllegalArgumentException("Grid axis size must be >= 1");
+
+    public GridAxisImpl(String name, int size) {
+        if (size < 1)
+            throw new IllegalArgumentException("Grid axis size must be >= 1");
         this.name = name;
         this.size = size;
     }
 
     @Override
-    public String getName() { return this.name; }
+    public String getName() {
+        return this.name;
+    }
 
     /**
      * {@inheritDoc}
-     * <p>This implementation returns an Extent from 0 to size -1.</p>
-     * @return 
+     * <p>
+     * This implementation returns an Extent from 0 to size -1.
+     * </p>
+     * 
+     * @return
      */
     @Override
     public Extent<Integer> getIndexExtent() {
@@ -38,6 +39,8 @@ public class GridAxisImpl implements GridAxis
     }
 
     @Override
-    public int size() { return this.size; }
-    
+    public int size() {
+        return this.size;
+    }
+
 }

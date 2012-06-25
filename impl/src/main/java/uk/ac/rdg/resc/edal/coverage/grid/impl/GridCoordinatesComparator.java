@@ -2,7 +2,7 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import java.util.Comparator;
 
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
 
 /**
  * <p>
@@ -20,8 +20,9 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
  * </p>
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
-public enum GridCoordinatesComparator implements Comparator<GridCoordinates2D> {
+public enum GridCoordinatesComparator implements Comparator<GridCoordinates> {
 
     /** Singleton instance */
     INSTANCE;
@@ -32,6 +33,8 @@ public enum GridCoordinatesComparator implements Comparator<GridCoordinates2D> {
      * ordering as follows:
      * </p>
      * <ul>
+     * <li>If the two objects have a different number of dimensions, the one
+     * with more dimensions is considered to be larger
      * <li>If the x-index of c1 is greater than the x-index of c2, then c1 is
      * considered to be larger than c1</li>
      * <li>If the x-indices of c1 and c2 are identical, comparison is done on
@@ -50,13 +53,15 @@ public enum GridCoordinatesComparator implements Comparator<GridCoordinates2D> {
      *         less than, equal to, or greater than {@code c2}.
      */
     @Override
-    public int compare(GridCoordinates2D c1, GridCoordinates2D c2) {
-        int diff = c1.getXIndex() - c2.getXIndex();
-        if (diff != 0)
-            return diff;
-        diff = c1.getYIndex() - c2.getYIndex();
-        if (diff != 0)
-            return diff;
+    public int compare(GridCoordinates c1, GridCoordinates c2) {
+        if (c1.getNDim() != c2.getNDim()) {
+            return new Integer(c1.getNDim()).compareTo(c2.getNDim());
+        }
+        for (int i = 0; i < c1.getNDim(); i++) {
+            int diff = c1.getIndex(i) - c2.getIndex(i);
+            if (diff != 0)
+                return diff;
+        }
         return 0; // If we get this far the objects are equal
     }
 

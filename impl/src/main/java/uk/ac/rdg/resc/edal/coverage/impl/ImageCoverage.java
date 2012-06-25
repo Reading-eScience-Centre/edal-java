@@ -1,15 +1,14 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Set;
+
 import javax.imageio.ImageIO;
+
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
@@ -26,14 +25,20 @@ import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 /**
- * <p>A {@link GridCoverage2D} that wraps a {@link BufferedImage}, which is
- * georeferenced through the addition of a {@link BoundingBox}.</p>
- * <p>The coverage contains members for each of the four RGBA components of the
- * image (with integer values) and a Composite member, which returns a {@link Color}
- * for each pixel.</p>
+ * <p>
+ * A {@link GridCoverage2D} that wraps a {@link BufferedImage}, which is
+ * georeferenced through the addition of a {@link BoundingBox}.
+ * </p>
+ * <p>
+ * The coverage contains members for each of the four RGBA components of the
+ * image (with integer values) and a Composite member, which returns a
+ * {@link Color} for each pixel.
+ * </p>
+ * 
  * @author Jon
+ * @author Guy Griffiths
  */
-public class ImageCoverage extends AbstractGridCoverage2D
+public class ImageCoverage extends GridCoverage2DImpl
 {
     private static final String RED   = "red";
     private static final String GREEN = "green";
@@ -42,15 +47,15 @@ public class ImageCoverage extends AbstractGridCoverage2D
     private static final String COMPOSITE = "composite";
     
     private final BufferedImage im;
-    private final HorizontalGrid domain;
     
     private static final Set<String> MEMBER_NAMES =
             CollectionUtils.setOf(RED, GREEN, BLUE, ALPHA, COMPOSITE);
     
     public ImageCoverage(BufferedImage im, BoundingBox bbox)
     {
+        super("2D Grid Coverage generated from a BufferedImage", new RegularGridImpl(bbox,
+                im.getWidth(), im.getHeight()), DataReadingStrategy.PIXEL_BY_PIXEL);
         this.im = im;
-        this.domain = new RegularGridImpl(bbox, im.getWidth(), im.getHeight());
     }
 
     @Override
@@ -61,11 +66,6 @@ public class ImageCoverage extends AbstractGridCoverage2D
     @Override
     public Set<String> getMemberNames() {
         return MEMBER_NAMES;
-    }
-
-    @Override
-    public HorizontalGrid getDomain() {
-        return this.domain;
     }
     
     /**
@@ -90,43 +90,46 @@ public class ImageCoverage extends AbstractGridCoverage2D
     }
 
     @Override
-    protected DataReadingStrategy getDataReadingStrategy() {
-        // This is an in-memory GVM and so this strategy is most efficient
-        return DataReadingStrategy.PIXEL_BY_PIXEL;
-    }
-
-    @Override
-    public GridValuesMatrix<?> getGridValues(final String memberName)
+    public GridValuesMatrix<Object> getGridValues(final String memberName)
     {
         this.checkMemberName(memberName);
         
-        return new InMemoryGridValuesMatrix<Object>()
-        {
-            @Override public GridAxis getXAxis() {
-                return new GridAxisImpl("x", im.getWidth());
-            }
-
-            @Override public GridAxis getYAxis() {
-                return new GridAxisImpl("y", im.getHeight());
+        return new InMemoryGridValuesMatrix<Object>() {
+            @Override
+            public Class<Object> getValueType() {
+                return (Class<Object>) ImageCoverage.getValueType(memberName);
             }
 
             @Override
-            public Object readPoint(int i, int j) {
-                // We have to reverse the y-axis because coordinates in image
-                // space run from top to bottom
-                j = getYAxis().size() - j - 1;
-                Color color = new Color(im.getRGB(i, j));
+            public GridAxis doGetAxis(int n) {
+                switch (n) {
+                case 0:
+                    return new GridAxisImpl("x", im.getWidth());
+                case 1:
+                    return new GridAxisImpl("y", im.getHeight());
+                default:
+                    /*
+                     * We should never reach this code, because getAxis will already have checked the bounds
+                     */
+                    throw new IllegalStateException("Axis index out of bounds");
+                }
+            }
+
+            @Override
+            public int getNDim() {
+                return 2;
+            }
+
+            @Override
+            protected Object doReadPoint(int[] coords) {
+                coords[1] = getAxis(1).size() - coords[1] - 1;
+                Color color = new Color(im.getRGB(coords[0], coords[1]));
                 if (COMPOSITE.equals(memberName)) return color;
                 if (RED.equals(memberName)) return color.getRed();
                 if (GREEN.equals(memberName)) return color.getGreen();
                 if (BLUE.equals(memberName)) return color.getBlue();
                 if (ALPHA.equals(memberName)) return color.getAlpha();
                 throw new IllegalStateException("Member name " + memberName + " not recognized");
-            }
-
-            @Override
-            public Class<Object> getValueType() {
-                return (Class<Object>)(Class)ImageCoverage.getValueType(memberName);
             }
         };
     }
@@ -146,8 +149,8 @@ public class ImageCoverage extends AbstractGridCoverage2D
         String memberName = COMPOSITE;
         GridValuesMatrix<?> gvm = subset.getGridValues(memberName);
         System.out.println(gvm.getValueType());
-        int xSize = gvm.getXAxis().size();
-        int ySize = gvm.getYAxis().size();
+        int xSize = gvm.getAxis(0).size();
+        int ySize = gvm.getAxis(1).size();
         System.out.printf("%d, %d%n", xSize, ySize);
         
         BufferedImage im2 = new BufferedImage(xSize, ySize, BufferedImage.TYPE_INT_ARGB);
@@ -159,7 +162,7 @@ public class ImageCoverage extends AbstractGridCoverage2D
                 //Color col = new Color(comp, comp, comp);
                 // We have to reverse the y-axis because coordinates in image
                 // space run from top to bottom
-                Color col = (Color)gvm.readPoint(i, j);
+                Color col = (Color) gvm.readPoint(new int[] { i, j });
                 im2.setRGB(i, ySize - j - 1, col.getRGB());
             }
         }

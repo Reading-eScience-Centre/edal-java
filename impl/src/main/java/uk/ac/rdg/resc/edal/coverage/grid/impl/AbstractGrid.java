@@ -1,23 +1,17 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import uk.ac.rdg.resc.edal.coverage.grid.Grid;
-import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 
 /**
- * Abstract superclass that implements the {@link #size()} and
- * {@link #getGridExtent()} methods of a Grid
- * based upon the {@link GridAxis GridAxes} that are supplied by subclasses
- * @author Jon
+ * Partial implementation of a {@link Grid}
+ * 
+ * @author Guy Griffiths
+ * 
  */
-public abstract class AbstractGrid implements Grid
-{
-    /**
-     * {@inheritDoc}
-     * <p>This implementation uses the {@link #getGridExtent() GridEnvelope}
-     * provided by subclasses.</p>
-     */
+public abstract class AbstractGrid implements Grid {
+
     @Override
     public long size() {
         // We reuse code in GridExtentImpl to calculate the size
@@ -26,63 +20,66 @@ public abstract class AbstractGrid implements Grid
 
     @Override
     public GridExtent getGridExtent() {
-        return new GridExtentImpl(getXAxis().getIndexExtent(), getYAxis().getIndexExtent());
-    }
-    
-    /**
-     * Gets the long index of the given coordinates, assuming that the i
-     * coordinate varies fastest
-     */
-    @Override
-    public long getIndex(int i, int j)
-    {
-        if (!this.getXAxis().getIndexExtent().contains(i) ||
-            !this.getYAxis().getIndexExtent().contains(j))
-        {
-            // TODO more helpful message
-            throw new IndexOutOfBoundsException();
+        int[] low = new int[getNDim()];
+        int[] high = new int[getNDim()];
+        for (int i = 0; i < getNDim(); i++) {
+            low[i] = getAxis(i).getIndexExtent().getLow();
+            high[i] = getAxis(i).getIndexExtent().getHigh();
         }
-        // First remove the offsets in the i and j directions
-        i -= getXMin();
-        j -= getYMin();
-        
-        return j * (long)this.getXAxis().size() + i;
-    }
-    
-    private int getXMin() { return this.getXAxis().getIndexExtent().getLow(); }
-    private int getYMin() { return this.getYAxis().getIndexExtent().getLow(); }
-    
-    /**
-     * Gets the long index of the given coordinates, assuming that the i
-     * coordinate varies fastest
-     */
-    @Override
-    public long getIndex(GridCoordinates2D coords) {
-        return this.getIndex(coords.getXIndex(), coords.getYIndex());
-    }
-    
-    /**
-     * Gets the grid coordinates of the cell at the given index in the grid
-     * (the index is constructed so that the i direction varies fastest).
-     * @throws IndexOutOfBoundsException if index >= size()
-     * @return 
-     */
-    @Override
-    public GridCoordinates2D getCoords(long index) {
-        if (index < 0 || index >= this.size()) {
-            throw new IndexOutOfBoundsException();
-        }
-        
-        // Calculate the indices assuming that the grid starts at (0,0)
-        int xAxisSize = getXAxis().size();
-        int i = (int)(index % xAxisSize);
-        int j = (int)(index / xAxisSize);
-
-        // Add the offsets (which will usually be zero)
-        i += getXMin();
-        j += getYMin();
-        
-        return new GridCoordinates2DImpl(i, j);
+        return new GridExtentImpl(new GridCoordinatesImpl(low), new GridCoordinatesImpl(high));
     }
 
+    @Override
+    public GridCoordinates getCoords(long index) {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException("Index must be between 0 and " + size());
+        }
+        int[] coords = new int[getNDim()];
+        for (int i = 0; i < getNDim(); i++) {
+            int size = 1;
+            if (getAxis(i) != null) {
+                size = getAxis(i).size();
+            }
+            coords[i] = (int) (index % size) + getMin(i);
+
+            index = (index - coords[i]) / getAxisSize(i);
+        }
+        return new GridCoordinatesImpl(coords);
+    }
+
+    @Override
+    public long getIndex(GridCoordinates coords) {
+        long index = 0;
+        for (int i = 0; i < getNDim(); i++) {
+            if (!getAxis(i).getIndexExtent().contains(coords.getIndex(i))) {
+                throw new IndexOutOfBoundsException("Index out of bounds on axis " + i);
+            }
+
+            int thisIndex = coords.getIndex(i) - getMin(i);
+
+            int size = 1;
+            for (int j = 0; j < i; j++) {
+                size *= getAxisSize(j);
+            }
+            index += thisIndex * size;
+        }
+        return index;
+    }
+
+    private int getMin(int dim) {
+        if (getAxis(dim) == null)
+            return 0;
+        return this.getAxis(dim).getIndexExtent().getLow();
+    }
+
+    private int getAxisSize(int dim) {
+        if (getAxis(dim) == null)
+            return 1;
+        return this.getAxis(dim).size();
+    }
+
+    @Override
+    public long getIndex(int... indices) {
+        return getIndex(new GridCoordinatesImpl(indices));
+    }
 }

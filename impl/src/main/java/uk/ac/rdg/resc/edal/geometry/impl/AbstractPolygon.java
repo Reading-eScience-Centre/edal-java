@@ -1,11 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package uk.ac.rdg.resc.edal.geometry.impl;
 
 import java.awt.geom.Path2D;
+
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.GISUtils;
@@ -33,7 +31,6 @@ public abstract class AbstractPolygon implements Polygon
      * the vertices of the polygon, and uses this to test for containment.
      * Subclasses may be able to override with a more efficient method.</p>
      */
-    @Override
     public boolean contains(double x, double y)
     {
         Path2D path = this.getBoundaryPath();
@@ -75,5 +72,4 @@ public abstract class AbstractPolygon implements Polygon
         Polygon other = (Polygon)obj;
         return this.getVertices().equals(other.getVertices());
     }
-    
 }

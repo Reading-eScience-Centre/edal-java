@@ -18,8 +18,10 @@ import uk.ac.rdg.resc.edal.util.Extents;
  *       this dangerous, given that some model grid cells are constructed with
  *       latitudes outside this range?
  * @author Jon
+ * @author Guy Griffiths
  */
-public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>> implements ReferenceableAxis<T> {
+public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>> implements
+        ReferenceableAxis<T> {
 
     private final CoordinateSystemAxis coordSysAxis;
     private final String name;
@@ -52,7 +54,9 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
         return getCoordinateValue(0);
     }
 
-    /** Gets the value of the axis at index (size - 1) */
+    /**
+     * Gets the value of the axis at index (size - 1)
+     */
     protected final T getLastValue() {
         return getCoordinateValue(this.size() - 1);
     }
@@ -135,10 +139,11 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
         };
         return ret;
     }
-    
+
     /**
      * This should return the lower bound of the first value of the axis, based
-     * on the first and second values. This will generally be equivalent to:<p>
+     * on the first and second values. This will generally be equivalent to:
+     * <p>
      * firstVal - (nextVal-firstVal)/2
      * 
      * @param firstVal
@@ -149,7 +154,8 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
 
     /**
      * This should return the upper bound of the last value of the axis, based
-     * on the last two values. This will generally be equivalent to:<p>
+     * on the last two values. This will generally be equivalent to:
+     * <p>
      * lastVal + (lastVal-secondLastVal)/2
      * 
      * @param firstVal
@@ -157,23 +163,30 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
      * @return
      */
     protected abstract T extendLastValue(T lastVal, T secondLastVal);
-    
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
+
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof AbstractReferenceableAxis<?>){
-            AbstractReferenceableAxis<?> axis = (AbstractReferenceableAxis<?>) obj;
-            boolean ret = name.equals(axis.name);
-            if(coordSysAxis == null){
-                if(axis.coordSysAxis != null)
-                    return false;
-            } else if(axis.coordSysAxis == null){
-                return false;
-            } else {
-                ret = ret && coordSysAxis.equals(axis.coordSysAxis);
-            }
-            return ret;
-        } else {
+        if (this == obj)
+            return true;
+        if (obj == null)
             return false;
-        }
+        if (getClass() != obj.getClass())
+            return false;
+        @SuppressWarnings("unchecked")
+        AbstractReferenceableAxis<T> other = (AbstractReferenceableAxis<T>) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        return true;
     }
 }

@@ -1,13 +1,23 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import java.util.Arrays;
-
 import java.util.List;
+
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
+/**
+ * Partial implementation of an irregular axis.
+ * 
+ * @author Jon
+ * @author Guy Griffiths
+ * 
+ * @param <T>
+ *            The type of value the axis contains
+ */
 public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> extends
         AbstractReferenceableAxis<T> {
     /**
@@ -41,10 +51,12 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
         }
 
         if (axisValues.size() == 1) {
-            this.axisValues = (T[])axisValues.toArray();
+            @SuppressWarnings("unchecked")
+            T[] array = axisValues.toArray((T[]) new Comparable[0]);
+            this.axisValues = array;
             return;
         }
-        
+
         /*
          * This is not recommended behaviour for Java (hence the
          * SuppressWarnings), but in this case it is a choice between this,
