@@ -29,9 +29,7 @@
 package uk.ac.rdg.resc.edal.feature;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
@@ -74,11 +72,11 @@ public interface GridSeriesFeature extends Feature {
      *            {@link PointSeriesFeature}
      * @return the extracted {@link PointSeriesFeature}
      */
-    public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos,
-            VerticalPosition z, Extent<? extends TimePosition> tRange);
+    public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
+            Extent<TimePosition> tRange);
 
     /**
-     * Convenience method to extract a horizontal layer for plotting purposes
+     * Convenience method to extract a horizontal feature
      * 
      * @param tindex
      *            The index of the time dimension required
@@ -86,25 +84,8 @@ public interface GridSeriesFeature extends Feature {
      *            The index of the elevation dimension required
      * @param targetDomain
      *            The desired domain of the resultant coverage
-     * @return A list of values, with x varying first
+     * @return A {@link GridFeature} on the target domain
      */
-    public GridCoverage2D extractHorizontalGrid(int tindex, int zindex,
-            HorizontalGrid targetDomain);
-
-    /**
-     * Convenience method to extract a horizontal layer for plotting purposes
-     * 
-     * @param tPos
-     *            The time value required
-     * @param zPos
-     *            The elevation value required
-     * @param targetDomain
-     *            The desired domain of the resultant coverage
-     * @return A list of values, with x varying first
-     */
-    public GridCoverage2D extractHorizontalGrid(TimePosition tPos, VerticalPosition zPos,
-            HorizontalGrid targetDomain);
-    
-//    public TransectFeature extractTransectFeature(Arguments gohere);
-    
+    public GridFeature extractGridFeature(HorizontalGrid targetDomain, VerticalPosition zPos,
+            TimePosition tPos);
 }

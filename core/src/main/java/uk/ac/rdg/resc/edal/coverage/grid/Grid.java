@@ -29,28 +29,20 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 /**
- * A two-dimensional grid composed of an X and Y axis. This top-level type
- * contains no georeferencing information, and so the X and Y axes are
- * arbitrarily chosen, however, the x index is usually assumed to vary faster in
- * underlying storage. Hence the natural order of grid coordinates is (x0, y0),
- * (x1, y0), (x2, y0), (x0, y1) etc.
+ * An N-dimensional grid. This top-level type contains no georeferencing
+ * information, and axes are arbitrarily chosen.
  * 
- * @author Jon Blower
+ * @author Jon Blower, Guy Griffiths
  */
 public interface Grid {
     /**
-     * Gets the X axis of the grid.
+     * Gets the nth axis of the grid.
      * 
-     * @return the X axis of the grid.
+     * @param n
+     *            the desired axis number
+     * @return the requested axis
      */
-    public GridAxis getXAxis();
-
-    /**
-     * Gets the Y axis of the grid.
-     * 
-     * @return the Y axis of the grid.
-     */
-    public GridAxis getYAxis();
+    public GridAxis getAxis(int n);
 
     /**
      * The extent of the grid in integer coordinates.
@@ -58,23 +50,31 @@ public interface Grid {
     public GridExtent getGridExtent();
 
     /**
+     * Gets the number of axes in the grid
+     */
+    public int getNDim();
+
+    /**
      * The number of grid cells in this grid (equivalent to
      * {@link GridExtent#size()}).
      */
     public long size();
-    
+
     /**
-     * @throws IndexOutOfBoundsException if the index is out of range for this grid
+     * @throws IndexOutOfBoundsException
+     *             if the index is out of range for this grid
      */
-    public GridCoordinates2D getCoords(long index);
-    
+    public GridCoordinates getCoords(long index);
+
     /**
-     * @throws IndexOutOfBoundsException if i or j is out of range for this grid
+     * @throws IndexOutOfBoundsException
+     *             if any of the coords are out of range for this grid
      */
-    public long getIndex(GridCoordinates2D coords);
-    
+    public long getIndex(GridCoordinates coords);
+
     /**
-     * @throws IndexOutOfBoundsException if i or j is out of range for this grid
+     * @throws IndexOutOfBoundsException
+     *             if any of the coords are out of range for this grid
      */
-    public long getIndex(int i, int j);
+    public long getIndex(int... indices);
 }

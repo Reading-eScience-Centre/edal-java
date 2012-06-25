@@ -31,28 +31,29 @@ package uk.ac.rdg.resc.edal.coverage.grid;
 import uk.ac.rdg.resc.edal.Extent;
 
 /**
- * The extent of a {@link HorizontalGrid} in index space
+ * The extent of a {@link Grid} in index space
  * 
  * @author Jon Blower
  */
-public interface GridExtent extends Extent<GridCoordinates2D> {
+public interface GridExtent extends Extent<GridCoordinates> {
 
     /**
-     * @return the {@link Extent} of the x-axis
+     * Returns the {@link Extent} of an axis
+     * 
+     * @param dim
+     *            the axis whose {@link Extent} is desired
+     * 
+     * @return the {@link Extent} of an axis
      */
-    public Extent<Integer> getXExtent();
+    public Extent<Integer> getExtent(int dim);
 
-    /**
-     * @return the {@link Extent} of the y-axis
-     */
-    public Extent<Integer> getYExtent();
-    
     /**
      * Returns true if the grid extent contains the point with the given
      * coordinates.
-     * @see #contains(java.lang.Object) 
+     * 
+     * @see #contains(java.lang.Object)
      */
-    public boolean contains(int i, int j);
+    public boolean contains(int... coords);
 
     /**
      * The number of grid points in the grid

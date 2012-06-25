@@ -29,15 +29,17 @@
 package uk.ac.rdg.resc.edal.coverage.domain;
 
 import java.util.List;
+
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
@@ -47,7 +49,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
  * @todo Explain that GridCoordinates are 4D and explain ordering.
  * @author Jon Blower
  */
-public interface GridSeriesDomain extends DiscreteDomain<GeoPosition, GridCell4D> {
+public interface GridSeriesDomain extends GridDomain<GeoPosition, GridCell4D> {
 
     /**
      * @return the horizontal component of this domain

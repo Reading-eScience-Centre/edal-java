@@ -28,46 +28,62 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.Set;
-
-import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.coverage.domain.GridDomain;
+import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
+import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
- * A two-dimensional grid that returns single values for points in its domain.
- * Objects of this type can be rendered simply into maps (e.g. for WMS GetMap
- * operations), and may commonly be created by extracting data from a larger
- * GridSeriesFeature.
+ * A {@link Coverage} whose domain is a {@link GridDomain}
  * 
- * @author Jon Blower
+ * @author Guy Griffiths
+ * 
+ * @param <P>
+ *            The type of object used to identify positions within the
+ *            coverage's domain. This may be a spatial, temporal, or combined
+ *            spatiotemporal position.
+ * @param <DO>
+ *            The type of domain object
  */
-public interface GridCoverage2D extends BaseGridCoverage<HorizontalPosition, GridCell2D> {
+public interface BaseGridCoverage<P, DO> extends DiscreteCoverage<P, DO> {
 
     @Override
-    public HorizontalGrid getDomain();
+    public GridDomain<P, DO> getDomain();
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Grids can be large, so we specialize the return type to {@link BigList}.
+     * </p>
+     */
+    @Override
+    public BigList<Record> getValues();
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Grids can be large, so we specialize the return type to {@link BigList}.
+     * </p>
+     */
+    @Override
+    public BigList<?> getValues(String memberName);
 
     /**
      * <p>
-     * Extracts a GridCoverage2D whose domain matches the passed-in target grid
-     * for the given member names. The returned GridCoverage2D will be
-     * memory-resident.
+     * Gets an object through which the values of the given coverage member can
+     * be accessed.
      * </p>
      * <p>
-     * The values in the returned Coverage are taken from the source Coverage
-     * (i.e. this Coverage) according to the following pseudocode:
+     * For disk-based storage, this method will usually return a new object with
+     * each invocation. When the user has finished with the GridValuesMatrix,
+     * close() must be called to free any resources. Following this, the
+     * GridValuesMatrix may no longer be usable and a new one must be retrieved
+     * using this method.
      * </p>
-     * 
-     * <pre>
-     * for (GridCell2D targetGridCell : targetGrid.getDomainObjects()) {
-     *     Object value = this.evaluate(targetGridCell.getCentre(), memberNames);
-     *     addValueToCoverage(value);
-     * }
-     * </pre>
-     * 
-     * @return a memory-resident GridCoverage2D whose domain matches the
-     *         passed-in target grid and whose range includes the given coverage
-     *         members.
+     * <p>
+     * For in-memory storage, this method may choose to return the same object
+     * with each invocation, and the call to GridValuesMatrix.close() may be
+     * ignored.
+     * </p>
      */
-    public GridCoverage2D extractGridCoverage(HorizontalGrid targetGrid, Set<String> memberNames);
+    public GridValuesMatrix<? extends Object> getGridValues(String memberName);
 }

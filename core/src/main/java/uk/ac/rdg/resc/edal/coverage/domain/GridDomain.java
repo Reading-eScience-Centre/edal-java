@@ -25,41 +25,22 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
+package uk.ac.rdg.resc.edal.coverage.domain;
 
-package uk.ac.rdg.resc.edal.coverage.metadata;
-
-import uk.ac.rdg.resc.edal.Phenomenon;
+import uk.ac.rdg.resc.edal.coverage.grid.Grid;
 
 /**
- * A descriptor for a component of a {@link ProbabilityDistribution}.
+ * A grid domain. This interface simply specifies that both a
+ * {@link DiscreteDomain} and a {@link Grid} are required for a
+ * {@link GridDomain}
  * 
- * @param <N>
- *            the type of the values used to describe the component (will
- *            usually be Double, maybe occasionally Float or even BigDecimal).
- * @author Jon
+ * @author Guy Griffiths
+ * 
+ * @param <P>
+ *            The type of object used to identify positions within this domain
+ * @param <DO>
+ *            The type of the domain object
  */
-public interface PdfComponent extends ScalarMetadata {
-
-    /**
-     * Returns an identifier indicating the type of the component (mean,
-     * variance, etc).
-     * 
-     * @todo return a stronger type, e.g. from UncertML
-     */
-    public String getComponentType();
-
-    @Override
-    public ProbabilityDistribution getParent();
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This will usually match the Phenomenon of the parent
-     * {@link ProbabilityDistribution}. However, in some vocabularies, different
-     * components may be expressed using different terms.
-     * </p>
-     */
-    @Override
-    public Phenomenon getParameter();
+public interface GridDomain<P, DO> extends Grid, DiscreteDomain<P, DO> {
 
 }

@@ -28,52 +28,86 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.List;
+import java.util.Set;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A multidimensional grid.
+ * 
  * @author Jon Blower
  */
-public interface GridSeriesCoverage extends DiscreteCoverage<GeoPosition, GridCell4D> {
+public interface GridSeriesCoverage extends BaseGridCoverage<GeoPosition, GridCell4D> {
 
     @Override
     public GridSeriesDomain getDomain();
 
     /**
-     * Get the value of the coverage at a particular point, specified by the
-     * integer indices of the coverage
+     * <p>
+     * Extracts a GridCoverage2D whose domain matches the passed-in target grid
+     * for the given member names. The returned GridCoverage2D will be
+     * memory-resident.
+     * </p>
+     * <p>
+     * The values in the returned Coverage are taken from the source Coverage
+     * (i.e. this Coverage) according to the following pseudocode:
+     * </p>
      * 
-     * @param tindex
-     *            the time index
-     * @param zindex
-     *            the vertical index
-     * @param yindex
-     *            the y index
-     * @param xindex
-     *            the x index
-     * @return the value from the coverage
+     * <pre>
+     * for (GridCell2D targetGridCell : targetGrid.getDomainObjects()) {
+     *     Object value = this.evaluate(targetGridCell.getCentre(), memberNames);
+     *     addValueToCoverage(value);
+     * }
+     * </pre>
+     * 
+     * @return a memory-resident GridCoverage2D whose domain matches the
+     *         passed-in target grid and whose range includes the given coverage
+     *         members.
      */
-    public Record evaluate(int tindex, int zindex, int yindex, int xindex);
+    public GridCoverage2D extractGridCoverage(HorizontalGrid targetGrid, VerticalPosition zPos,
+            TimePosition tPos, Set<String> memberNames);
 
     /**
-     * Gets a list of values in the coverage over a range of points
+     * Extract a {@link ProfileCoverage} whose vertical domain is the same as
+     * the parent grid, and whose 3D (2D spatial, 1D time) position is specified
+     * in the arguments
      * 
-     * @param tindexExtent
-     *            the {@link Extent} of the time axis integers
-     * @param zindexExtent
-     *            the {@link Extent} of the vertical axis integers
-     * @param yindexExtent
-     *            the {@link Extent} of the y-axis integers
-     * @param xindexExtent
-     *            the {@link Extent} of the x-axis integers
-     * @return a list of values from the coverage
+     * @param pos
+     *            the {@link HorizontalPosition} of the profile
+     * @param time
+     *            the {@link TimePosition} of the profile
+     * @param memberNames
+     *            the coverage members to extract
+     * @return a memory-resident {@link ProfileCoverage}
      */
-    public List<Record> evaluate(Extent<Integer> tindexExtent, Extent<Integer> zindexExtent,
-            Extent<Integer> yindexExtent, Extent<Integer> xindexExtent);
+    public ProfileCoverage extractProfileCoverage(HorizontalPosition pos, TimePosition time,
+            Set<String> memberNames);
 
+    /**
+     * Extract a {@link PointSeriesCoverage} whose domain is specified by the
+     * arguments
+     * 
+     * @param pos
+     *            the {@link HorizontalPosition} of the domain of the
+     *            {@link PointSeriesCoverage}
+     * @param zPos
+     *            the {@link VerticalPosition} of the domain of the
+     *            {@link PointSeriesCoverage}
+     * @param tExtent
+     *            the {@link Extent} of the {@link TimeAxis} required for the
+     *            domain of the {@link PointSeriesCoverage}
+     * @param memberNames
+     *            the coverage members to extract
+     * @return a memory-resident {@link PointSeriesCoverage}
+     */
+    public PointSeriesCoverage extractPointSeriesCoverage(HorizontalPosition pos,
+            VerticalPosition zPos, Extent<? extends TimePosition> tExtent, Set<String> memberNames);
 }

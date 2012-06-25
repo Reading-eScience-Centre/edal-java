@@ -29,7 +29,6 @@
 package uk.ac.rdg.resc.edal.feature;
 
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
@@ -37,7 +36,7 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * A measurement of a vertical profile at a point
  * @author Jon Blower
  */
-public interface ProfileFeature<R> extends Feature {
+public interface ProfileFeature extends Feature {
     /**
      * Gets the horizontal location of this profile feature.
      * 
