@@ -107,16 +107,32 @@ public class NcGridValuesMatrix4D extends AbstractGridValuesMatrix<Float> {
     }
 
     @Override
-    protected GridValuesMatrix<Float> doReadBlock(int[] mins, int[] maxes) {
+    protected GridValuesMatrix<Float> doReadBlock(final int[] mins, int[] maxes) {
         final int iSize = maxes[0] - mins[0] + 1;
         final int jSize = maxes[1] - mins[1] + 1;
         final int kSize = maxes[2] - mins[2] + 1;
         final int lSize = maxes[3] - mins[3] + 1;
         final long size = (long) iSize * jSize * kSize * lSize;
-        final GridAxis newXAxis = new GridAxisImpl(this.getAxis(0).getName(), iSize);
-        final GridAxis newYAxis = new GridAxisImpl(this.getAxis(1).getName(), jSize);
-        final GridAxis newZAxis = new GridAxisImpl(this.getAxis(2).getName(), kSize);
-        final GridAxis newTAxis = new GridAxisImpl(this.getAxis(3).getName(), lSize);
+        final GridAxis newXAxis;
+        if (this.getAxis(0) != null)
+            newXAxis = new GridAxisImpl(this.getAxis(0).getName(), iSize);
+        else
+            newXAxis = null;
+        final GridAxis newYAxis;
+        if (this.getAxis(1) != null)
+            newYAxis = new GridAxisImpl(this.getAxis(1).getName(), jSize);
+        else
+            newYAxis = null;
+        final GridAxis newZAxis;
+        if (this.getAxis(2) != null)
+            newZAxis = new GridAxisImpl(this.getAxis(2).getName(), kSize);
+        else
+            newZAxis = null;
+        final GridAxis newTAxis;
+        if (this.getAxis(3) != null)
+            newTAxis = new GridAxisImpl(this.getAxis(3).getName(), lSize);
+        else
+            newTAxis = null;
 
         // Read the data from disk into memory
         RangesList ranges = this.getRangesList(mins[0], mins[1], mins[2], mins[3], maxes[0],
@@ -165,12 +181,56 @@ public class NcGridValuesMatrix4D extends AbstractGridValuesMatrix<Float> {
             @Override
             protected Float doReadPoint(int[] coords) {
                 Index arrayIndex = dataChunk.getIndex();
-                arrayIndex.setDim(iIndexInArray, coords[0]);
-                arrayIndex.setDim(jIndexInArray, coords[1]);
-                arrayIndex.setDim(kIndexInArray, coords[2]);
-                arrayIndex.setDim(lIndexInArray, coords[3]);
+                if (iIndexInArray >= 0)
+                    arrayIndex.setDim(iIndexInArray, coords[0]);
+                if (jIndexInArray >= 0)
+                    arrayIndex.setDim(jIndexInArray, coords[1]);
+                if (kIndexInArray >= 0)
+                    arrayIndex.setDim(kIndexInArray, coords[2]);
+                if (lIndexInArray >= 0)
+                    arrayIndex.setDim(lIndexInArray, coords[3]);
                 return dataChunk.readFloatValue(arrayIndex);
             }
+            
+//            @Override
+//            public GridValuesMatrix<Float> doReadBlock(final int[] mins, final int[] maxes) {
+//                int[] sizes = new int[mins.length];
+//                final GridAxis[] axes = new GridAxis[mins.length];
+//                for (int i = 0; i < mins.length; i++) {
+//                    sizes[i] = maxes[i] - mins[i] + 1;
+//                    if (getAxis(i) == null)
+//                        axes[i] = null;
+//                    else
+//                        axes[i] = new GridAxisImpl(this.getAxis(i).getName(), sizes[i]);
+//                }
+//
+//                // This GridValuesMatrix wraps the parent one, without allocating new
+//                // storage
+//                return new InMemoryGridValuesMatrix<Float>() {
+//                    @Override
+//                    public Float doReadPoint(int[] indices) {
+//                        for (int i = 0; i < indices.length; i++) {
+//                            indices[i] += mins[i];
+//                        }
+//                        return NcGridValuesMatrix4D.this.readPoint(indices);
+//                    }
+//
+//                    @Override
+//                    public Class<Float> getValueType() {
+//                        return NcGridValuesMatrix4D.this.getValueType();
+//                    }
+//
+//                    @Override
+//                    protected GridAxis doGetAxis(int n) {
+//                        return axes[n];
+//                    }
+//
+//                    @Override
+//                    public int getNDim() {
+//                        return NcGridValuesMatrix4D.this.getNDim();
+//                    }
+//                };
+//            }
         };
     }
 }

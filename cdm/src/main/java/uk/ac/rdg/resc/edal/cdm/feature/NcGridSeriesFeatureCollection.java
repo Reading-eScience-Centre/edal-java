@@ -34,8 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
@@ -49,29 +47,19 @@ import uk.ac.rdg.resc.edal.cdm.coverage.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.NcGridValuesMatrix4D;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.GridSeriesDomainImpl;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.impl.GridSeriesCoverageImpl;
-import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.impl.AbstractFeatureCollection;
 import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
-import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.position.impl.GeoPositionImpl;
-import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
-import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
 /**
  * An implementation of {@link FeatureCollection} which contains
@@ -136,6 +124,7 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Gri
             }
 
             GridSeriesDomain domain = new GridSeriesDomainImpl(hGrid, vAxis, tAxis);
+            // TODO more meaningful description
             GridSeriesCoverageImpl coverage = new GridSeriesCoverageImpl("grid" + gridNo, domain,
                     dataReadingStrategy);
 
@@ -216,94 +205,9 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Gri
          * into features
          */
         for (GridSeriesCoverage coverage : coverages) {
-            GridSeriesFeature feature = new GridSeriesFeatureImpl("", "", this, coverage);
+            // TODO more meaningful name/ID
+            GridSeriesFeature feature = new GridSeriesFeatureImpl("Feature for "+coverage.getDescription(), coverage.getDescription(), this, coverage);
             id2Feature.put(coverage.getDescription(), feature);
-        }
-    }
-
-    public static void main(String[] args) throws IOException {
-        NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
-                "testcollection", "Test Collection",
-                "/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090320.nc");
-        for (String featureId : featureCollection.getFeatureIds()) {
-            System.out.println("Feature: " + featureId);
-            GridSeriesFeature f = featureCollection.getFeatureById(featureId);
-
-            for (String s : f.getCoverage().getMemberNames()) {
-                System.out.println("Member of coverage: " + s);
-            }
-            RangeMetadata metadata = f.getCoverage().getRangeMetadata();
-            for (String memberName : metadata.getMemberNames()) {
-                int size = metadata.getMemberMetadata(memberName).getMemberNames().size();
-                System.out.println(memberName + " is a member of the metadata.  It has " + size
-                        + " children:");
-                if (size > 0) {
-                    for (String m : metadata.getMemberMetadata(memberName).getMemberNames()) {
-                        System.out.println("\t" + m);
-                        RangeMetadata thisM = metadata.getMemberMetadata(memberName)
-                                .getMemberMetadata(m);
-                        System.out.println("\t\t" + thisM.getName());
-                        System.out.println("\t\t" + thisM.getDescription());
-                        if (thisM instanceof ScalarMetadata) {
-                            ScalarMetadata scalarMetadata = (ScalarMetadata) thisM;
-                            System.out.println("\t\t" + scalarMetadata.getParameter());
-                            System.out.println("\t\t" + scalarMetadata.getUnits().getUnitString());
-                            System.out.println("\t\t" + scalarMetadata.getValueType());
-                        }
-                        int size2 = metadata.getMemberMetadata(memberName).getMemberMetadata(m)
-                                .getMemberNames().size();
-                        System.out.println("\t\t" + m + " has " + size2 + " children:");
-                        if (size2 > 0) {
-                            for (String m2 : metadata.getMemberMetadata(memberName)
-                                    .getMemberMetadata(m).getMemberNames()) {
-                                System.out.println("\t\t" + m2);
-                                RangeMetadata thisM2 = metadata.getMemberMetadata(memberName)
-                                        .getMemberMetadata(m).getMemberMetadata(m2);
-                                System.out.println("\t\t\t" + thisM2.getName());
-                                System.out.println("\t\t\t" + thisM2.getDescription());
-                                if (thisM2 instanceof ScalarMetadata) {
-                                    ScalarMetadata scalarMetadata = (ScalarMetadata) thisM2;
-                                    System.out.println("\t\t\t" + scalarMetadata.getParameter());
-                                    System.out.println("\t\t\t"
-                                            + scalarMetadata.getUnits().getUnitString());
-                                    System.out.println("\t\t\t" + scalarMetadata.getValueType());
-                                }
-                            }
-                        }
-                    }
-                }
-
-            }
-
-            GridSeriesCoverage coverage = f.getCoverage();
-            GridSeriesDomain domain = coverage.getDomain();
-            System.out.println(domain.getHorizontalGrid().getXAxis().size() + ","
-                    + domain.getHorizontalGrid().getYAxis().size() + ","
-                    + (domain.getVerticalAxis() == null ? "1" : domain.getVerticalAxis().size())
-                    + "," + (domain.getTimeAxis() == null ? "1" : domain.getTimeAxis().size()));
-            VerticalPosition vPos = null;
-            try {
-                vPos = new VerticalPositionImpl(domain.getVerticalAxis().getCoordinateValue(0),
-                        domain.getVerticalCrs());
-            } catch (NullPointerException e) {
-            }
-            TimePosition tPos = null;
-            try {
-                tPos = domain.getTimeAxis().getCoordinateValue(0);
-            } catch (NullPointerException e) {
-            }
-
-            GridCell4D cell = domain
-                    .findContainingCell(new GeoPositionImpl(new HorizontalPositionImpl(-5.0, 52.5,
-                            DefaultGeographicCRS.WGS84), vPos, tPos));
-            if (cell != null) {
-                GeoPosition newPos = new GeoPositionImpl(cell.getCentre(), vPos, tPos);
-                Record r = coverage.evaluate(newPos);
-                System.out.println("Evaluated!");
-                for (String member : r.getMemberNames()) {
-                    System.out.println("Member: " + member + ", Value: " + r.getValue(member));
-                }
-            }
         }
     }
 }

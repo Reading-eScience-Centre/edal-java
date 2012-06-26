@@ -9,12 +9,22 @@ import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.util.BigList;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 public class ImageGenerators {
+
+    public static BufferedImage plotFeature(final GridFeature feature, String memberName,
+            MapStyleDescriptor style) {
+        return plotGrid(feature.getCoverage().getGridValues(memberName), style);
+    }
+
     public static BufferedImage plotGrid(final GridValuesMatrix<?> gridVals, MapStyleDescriptor style) {
         
-        int width = gridVals.getXAxis().size();
-        int height = gridVals.getYAxis().size();
+        int width = gridVals.getAxis(0).size();
+        int height = gridVals.getAxis(1).size();
         
         return plotGrid(gridVals, style, width, height);
     }
@@ -32,8 +42,11 @@ public class ImageGenerators {
          * MapStyleDescriptor)
          */
         if(style.isAutoScale()){
-            throw new UnsupportedOperationException(
-                    "Scale range cannot be automatically determined.  You must provide a non-empty scale range.");
+            @SuppressWarnings("unchecked")
+            BigList<Number> values = (BigList<Number>) gridVals.getValues();
+            style.setScaleRange(Extents.newExtent(
+                    new Float(CollectionUtils.minIgnoringNullsAndNans(values)), new Float(
+                            CollectionUtils.maxIgnoringNullsAndNans(values))));
         }
         
         byte[] pixels = new byte[width * height];

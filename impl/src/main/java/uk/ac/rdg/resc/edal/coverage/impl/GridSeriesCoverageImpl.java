@@ -92,15 +92,27 @@ public class GridSeriesCoverageImpl extends
         // Read the data from the source coverage
         Extent<Integer> xExtent = getDomain().getHorizontalGrid().getXAxis().getIndexExtent();
         Extent<Integer> yExtent = getDomain().getHorizontalGrid().getYAxis().getIndexExtent();
-        int zIndex = getDomain().getVerticalAxis().findIndexOf(zPos.getZ());
-        int tIndex = getDomain().getTimeAxis().findIndexOf(tPos);
+        int zIndex = 0;
+        if (getDomain().getVerticalAxis() != null)
+            zIndex = getDomain().getVerticalAxis().findIndexOf(zPos.getZ());
+        int tIndex = 0;
+        if (getDomain().getTimeAxis() != null)
+            zIndex = getDomain().getTimeAxis().findIndexOf(tPos);
 
         for (String name : memberNames) {
-            List<Object> values = strategy.readValues(
-                    this.getGridValues(name).readBlock(
-                            new int[] { xExtent.getLow(), yExtent.getLow(), zIndex, tIndex },
-                            new int[] { xExtent.getHigh(), yExtent.getHigh(), zIndex, tIndex }),
-                    this.getDomain().getHorizontalGrid(), targetGrid);
+            /*
+             * This GVM is either a NcGVM4D, or a PluginWrappedGVM.
+             */
+            GridValuesMatrix<?> gridValues = getGridValues(name);
+            /*
+             * This should now be an in-memory GVM...?
+             */
+            GridValuesMatrix<?> readBlock = gridValues.readBlock(new int[] { xExtent.getLow(),
+                    yExtent.getLow(), zIndex, tIndex },
+                    new int[] { xExtent.getHigh(), yExtent.getHigh(), zIndex, tIndex });
+
+            List<Object> values = strategy.readValues(readBlock, this.getDomain()
+                    .getHorizontalGrid(), targetGrid);
 
             valuesMap.put(name, values);
             metadataMap.put(name, this.getRangeMetadata(name));

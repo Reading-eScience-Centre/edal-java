@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.feature.impl;
 
+import java.util.Set;
+
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
@@ -58,36 +60,37 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
         super(name, id, coverage.getDescription(), parentCollection);
         this.coverage = coverage;
     }
-
-    @Override
-    public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
-            Extent<TimePosition> tRange) {
-        PointSeriesCoverage psCoverage = coverage.extractPointSeriesCoverage(pos, z, tRange,
-                coverage.getMemberNames());
-        return new PointSeriesFeatureImpl(getName() + " -> PointSeries", "PS-" + getId(),
-                "Point series extraction of " + getDescription(), psCoverage, pos, z,
-                getFeatureCollection());
-    }
-
-    @Override
-    public ProfileFeature extractProfileFeature(HorizontalPosition pos, TimePosition t) {
-        ProfileCoverage pCoverage = coverage.extractProfileCoverage(pos, t,
-                coverage.getMemberNames());
-        return new ProfileFeatureImpl(getName() + " -> Profile", "PF-" + getId(),
-                "Profile extraction of " + getDescription(), pCoverage, pos, t,
-                getFeatureCollection());
-    }
-
+    
     @Override
     public GridSeriesCoverage getCoverage() {
         return coverage;
     }
 
     @Override
+    public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
+            Extent<TimePosition> tRange, Set<String> members) {
+        PointSeriesCoverage psCoverage = coverage.extractPointSeriesCoverage(pos, z, tRange,
+                members == null ? coverage.getMemberNames() : members);
+        return new PointSeriesFeatureImpl(getName() + " -> PointSeries", "PS-" + getId(),
+                "Point series extraction of " + getDescription(), psCoverage, pos, z,
+                getFeatureCollection());
+    }
+
+    @Override
+    public ProfileFeature extractProfileFeature(HorizontalPosition pos, TimePosition t,
+            Set<String> members) {
+        ProfileCoverage pCoverage = coverage.extractProfileCoverage(pos, t,
+                members == null ? coverage.getMemberNames() : members);
+        return new ProfileFeatureImpl(getName() + " -> Profile", "PF-" + getId(),
+                "Profile extraction of " + getDescription(), pCoverage, pos, t,
+                getFeatureCollection());
+    }
+
+    @Override
     public GridFeature extractGridFeature(HorizontalGrid targetDomain, VerticalPosition zPos,
-            TimePosition tPos) {
+            TimePosition tPos, Set<String> members) {
         GridCoverage2D gridCoverage = coverage.extractGridCoverage(targetDomain, zPos, tPos,
-                coverage.getMemberNames());
+                members == null ? coverage.getMemberNames() : members);
         return new GridFeatureImpl(getName() + " -> GridFeature", "GF-" + getId(),
                 getFeatureCollection(), gridCoverage);
     }
