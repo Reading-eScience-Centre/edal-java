@@ -164,6 +164,10 @@ public class MapStyleDescriptor {
         }
     }
     
+    public Extent<Float> getScaleRange(){
+        return scaleRange;
+    }
+    
     public boolean isAutoScale(){
         return scaleRange == null || scaleRange.isEmpty();
     }

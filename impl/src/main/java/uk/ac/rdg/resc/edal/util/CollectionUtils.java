@@ -31,7 +31,9 @@ package uk.ac.rdg.resc.edal.util;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -201,7 +203,7 @@ public final class CollectionUtils {
      * Returns an unmodifiable Set containing a single null value
      */
     public static <T> Set<T> setOfSingleNullValue() {
-        return (Set<T>)SET_OF_SINGLE_NULL_VALUE;
+        return SET_OF_SINGLE_NULL_VALUE;
     }
     
     /**
@@ -227,4 +229,45 @@ public final class CollectionUtils {
         };
     }
 
+    
+    
+    public static Double minIgnoringNullsAndNans(Collection<Number> coll){
+        Comparator<Number> minC = new Comparator<Number>() {
+            @Override
+            public int compare(Number arg0, Number arg1) {
+                if(arg0 == null)
+                    return 1;
+                if(arg1 == null)
+                    return -1;
+                Float f1 = arg0.floatValue();
+                Float f2 = arg1.floatValue();
+                if(f1.equals(Float.NaN))
+                    return 1;
+                if(f2.equals(Float.NaN))
+                    return -1;
+                return f1.compareTo(f2);
+            }
+        };
+        return Collections.min(coll, minC).doubleValue();
+    }
+    
+    public static Double maxIgnoringNullsAndNans(Collection<Number> coll){
+        Comparator<Number> maxC = new Comparator<Number>() {
+            @Override
+            public int compare(Number arg0, Number arg1) {
+                if(arg0 == null)
+                    return -1;
+                if(arg1 == null)
+                    return 1;
+                Float f1 = arg0.floatValue();
+                Float f2 = arg1.floatValue();
+                if(f1.equals(Float.NaN))
+                    return -1;
+                if(f2.equals(Float.NaN))
+                    return 1;
+                return f1.compareTo(f2);
+            }
+        };
+        return Collections.max(coll, maxC).doubleValue();
+    }
 }

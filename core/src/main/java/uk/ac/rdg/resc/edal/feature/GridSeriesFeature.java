@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Set;
+
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
@@ -53,9 +55,12 @@ public interface GridSeriesFeature extends Feature {
      *            {@link ProfileFeature}
      * @param time
      *            the {@link TimePosition} of the desired {@link ProfileFeature}
+     * @param members
+     *            the coverage members to extract. If this is null, extract all
+     *            members
      * @return the extracted {@link ProfileFeature}
      */
-    public ProfileFeature extractProfileFeature(HorizontalPosition pos, TimePosition time);
+    public ProfileFeature extractProfileFeature(HorizontalPosition pos, TimePosition time, Set<String> members);
 
     /**
      * Convenience method to extract a {@link PointSeriesFeature} for plotting
@@ -70,10 +75,13 @@ public interface GridSeriesFeature extends Feature {
      * @param tRange
      *            the range of {@link TimePosition}s of the desired
      *            {@link PointSeriesFeature}
+     * @param members
+     *            the coverage members to extract. If this is null, extract all
+     *            members            
      * @return the extracted {@link PointSeriesFeature}
      */
     public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
-            Extent<TimePosition> tRange);
+            Extent<TimePosition> tRange, Set<String> members);
 
     /**
      * Convenience method to extract a horizontal feature
@@ -84,8 +92,11 @@ public interface GridSeriesFeature extends Feature {
      *            The index of the elevation dimension required
      * @param targetDomain
      *            The desired domain of the resultant coverage
+     * @param members
+     *            the coverage members to extract. If this is null, extract all
+     *            members
      * @return A {@link GridFeature} on the target domain
      */
     public GridFeature extractGridFeature(HorizontalGrid targetDomain, VerticalPosition zPos,
-            TimePosition tPos);
+            TimePosition tPos, Set<String> members);
 }

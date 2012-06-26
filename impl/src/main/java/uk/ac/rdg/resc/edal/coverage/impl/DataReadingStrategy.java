@@ -50,9 +50,11 @@ public enum DataReadingStrategy {
         @Override
         protected void extractCoverageValues(GridValuesMatrix<?> gridValues, PixelMap pixelMap,
                 List<Object> values) {
+            int[] point = new int[gridValues.getNDim()];
             for (PixelMapEntry pme : pixelMap) {
-                Object value = gridValues.readPoint(new int[] { pme.getSourceGridIIndex(),
-                        pme.getSourceGridJIndex() });
+                point[0] = pme.getSourceGridIIndex();
+                point[1] = pme.getSourceGridJIndex();
+                Object value = gridValues.readPoint(point);
                 for (int index : pme.getTargetGridPoints()) {
                     values.set(index, value);
                 }
@@ -74,20 +76,31 @@ public enum DataReadingStrategy {
                 int imin = entries.get(0).getSourceGridIIndex();
                 int imax = entries.get(entriesSize - 1).getSourceGridIIndex();
 
-                GridValuesMatrix<?> block = gridValues.readBlock(new int[] { imin, j }, new int[] {
-                        imax, j });
+                int nDim = gridValues.getNDim();
+                int[] mins = new int[nDim];
+                mins[0] = imin;
+                mins[1] = j;
+                int[] maxes = new int[nDim];
+                maxes[0] = imax;
+                maxes[1] = j;
+                
+                GridValuesMatrix<?> block = gridValues.readBlock(mins, maxes);
 
+                int[] point = new int[nDim];
                 for (PixelMapEntry pme : entries) {
-                    int i = pme.getSourceGridIIndex() - imin;
-                    Object val = block.readPoint(new int[] { i, 0 });
+                    point[0] = pme.getSourceGridIIndex() - imin;
+                    for(int i=1; i<point.length; i++){
+                        point[i] = 0;
+                    }
+                    Object val = block.readPoint(point);
                     for (int p : pme.getTargetGridPoints()) {
                         values.set(p, val);
                     }
                 }
-                // This will probably do nothing, because the result of
-                // readBlock()
-                // will
-                // be an in-memory structure.
+                /*
+                 * This will probably do nothing, because the result of
+                 * readBlock() will be an in-memory structure.
+                 */
                 block.close();
             }
         }
@@ -101,14 +114,22 @@ public enum DataReadingStrategy {
             int imax = pixelMap.getMaxIIndex();
             int jmin = pixelMap.getMinJIndex();
             int jmax = pixelMap.getMaxJIndex();
+            
+            int nDim = gridValues.getNDim();
+            int[] mins = new int[nDim];
+            mins[0] = imin;
+            mins[1] = jmin;
+            int[] maxes = new int[nDim];
+            maxes[0] = imax;
+            maxes[1] = jmax;
 
-            GridValuesMatrix<?> block = gridValues.readBlock(new int[] { imin, jmin }, new int[] {
-                    imax, jmax });
+            GridValuesMatrix<?> block = gridValues.readBlock(mins, maxes);
 
+            int[] point = new int[nDim];
             for (PixelMapEntry pme : pixelMap) {
-                int i = pme.getSourceGridIIndex() - imin;
-                int j = pme.getSourceGridJIndex() - jmin;
-                Object val = block.readPoint(new int[] { i, j });
+                point[0] = pme.getSourceGridIIndex() - imin;
+                point[1] = pme.getSourceGridJIndex() - jmin;
+                Object val = block.readPoint(point);
                 for (int targetGridPoint : pme.getTargetGridPoints()) {
                     values.set(targetGridPoint, val);
                 }

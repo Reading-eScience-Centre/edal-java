@@ -71,7 +71,7 @@ public abstract class AbstractMultimemberDiscreteGridCoverage<P, DO, GD extends 
 
     @Override
     public GridValuesMatrix<?> getGridValues(final String memberName) {
-        if (!gridValuesMatrices.containsKey(memberName)) {
+        if (!gridValuesMatrices.containsKey(memberName) && !plugins.containsKey(memberName)) {
             throw new IllegalArgumentException(memberName + " is not present in this coverage");
         }
         if (plugins.containsKey(memberName)) {

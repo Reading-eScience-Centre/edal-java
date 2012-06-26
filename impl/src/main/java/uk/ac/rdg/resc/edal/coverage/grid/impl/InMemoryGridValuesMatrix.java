@@ -40,14 +40,16 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
  * @author Guy Griffiths
  */
 public abstract class InMemoryGridValuesMatrix<E> extends AbstractGridValuesMatrix<E> {
-
     @Override
     public GridValuesMatrix<E> doReadBlock(final int[] mins, final int[] maxes) {
         int[] sizes = new int[mins.length];
         final GridAxis[] axes = new GridAxis[mins.length];
         for (int i = 0; i < mins.length; i++) {
             sizes[i] = maxes[i] - mins[i] + 1;
-            axes[i] = new GridAxisImpl(this.getAxis(i).getName(), sizes[i]);
+            if (getAxis(i) == null)
+                axes[i] = null;
+            else
+                axes[i] = new GridAxisImpl(this.getAxis(i).getName(), sizes[i]);
         }
 
         // This GridValuesMatrix wraps the parent one, without allocating new
@@ -56,7 +58,7 @@ public abstract class InMemoryGridValuesMatrix<E> extends AbstractGridValuesMatr
             @Override
             public E doReadPoint(int[] indices) {
                 for (int i = 0; i < indices.length; i++) {
-                    indices[i] -= mins[i];
+                    indices[i] += mins[i];
                 }
                 return InMemoryGridValuesMatrix.this.readPoint(indices);
             }
@@ -77,7 +79,7 @@ public abstract class InMemoryGridValuesMatrix<E> extends AbstractGridValuesMatr
             }
         };
     }
-
+    
     @Override
     public void close() { /* Do nothing */
     }
