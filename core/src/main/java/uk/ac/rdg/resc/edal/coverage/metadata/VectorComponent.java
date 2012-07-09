@@ -36,12 +36,14 @@ package uk.ac.rdg.resc.edal.coverage.metadata;
  */
 public interface VectorComponent extends ScalarMetadata {
 
+    public enum VectorDirection {
+        X, Y, MAGNITUDE, DIRECTION
+    }
+    
     /**
      * Returns an identifier indicating the direction of the vector component.
-     * 
-     * @todo Use a stronger type here (e.g. enumeration or code list).
      */
-    public String getDirection();
+    public VectorDirection getDirection();
 
     @Override
     public VectorMetadata getParent();

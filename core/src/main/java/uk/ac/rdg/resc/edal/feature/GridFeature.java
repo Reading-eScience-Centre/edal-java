@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Set;
+
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 
@@ -51,7 +53,9 @@ public interface GridFeature extends Feature {
      * 
      * @param targetDomain
      *            The desired domain of the resultant coverage
+     * @param memberNames
+     *            The set of members to extract from this {@link GridFeature}
      * @return A grid feature with the target domain
      */
-    public GridFeature extractGridFeature(HorizontalGrid targetDomain);
+    public GridFeature extractGridFeature(HorizontalGrid targetDomain, Set<String> memberNames);
 }

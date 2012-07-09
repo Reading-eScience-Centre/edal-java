@@ -42,7 +42,7 @@ public interface RecordType {
      * 
      * @param memberName
      *            The name of a member of this record as provided by the
-     *            Coverage's {@link Coverage#getMemberNames() set of
+     *            Coverage's {@link Coverage#getScalarMemberNames() set of
      *            member names}.
      * @return the runtime type of the given member.
      * @throws IllegalArgumentException
