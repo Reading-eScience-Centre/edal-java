@@ -36,7 +36,6 @@ public class DefaultGridSeriesFeatureCollectionFactory extends GridSeriesFeature
 
     @Override
     public FeatureCollection<GridSeriesFeature> read(String location, String id, String name) throws IOException {
-        //return new NcGridSeriesFeatureCollection(id, name, location);
-        throw new UnsupportedOperationException("Need to reimplement");
+        return new NcGridSeriesFeatureCollection(id, name, location);
     }
 }
