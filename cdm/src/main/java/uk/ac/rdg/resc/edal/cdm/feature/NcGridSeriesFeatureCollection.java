@@ -207,7 +207,7 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Gri
         for (GridSeriesCoverage coverage : coverages) {
             // TODO more meaningful name/ID
             GridSeriesFeature feature = new GridSeriesFeatureImpl("Feature for "+coverage.getDescription(), coverage.getDescription(), this, coverage);
-            id2Feature.put(coverage.getDescription(), feature);
+            addFeature(feature);
         }
     }
 }
