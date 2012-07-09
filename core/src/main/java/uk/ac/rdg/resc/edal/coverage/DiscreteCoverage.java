@@ -66,7 +66,7 @@ public interface DiscreteCoverage<P, DO> extends Coverage<P> {
      * Gets the list of values for the given coverage member.
      * 
      * @param memberName
-     *            The identifier from the {@link #getMemberNames() set of member
+     *            The identifier from the {@link #getScalarMemberNames() set of member
      *            names}.
      * @return
      */

@@ -38,7 +38,7 @@ import uk.ac.rdg.resc.edal.coverage.Coverage;
  * 
  * @author Jon
  */
-public interface RangeMetadata {
+public interface RangeMetadata extends Cloneable {
 
     /**
      * Returns the identifier of this element, unique among its siblings, but
@@ -93,4 +93,10 @@ public interface RangeMetadata {
      * @return the removed member
      */
     public RangeMetadata removeMember(String memberName);
+    
+    /**
+     * Overrides the clone() method.  This is convenient for extracting
+     * sub-features which share metadata.
+     */
+    public RangeMetadata clone() throws CloneNotSupportedException;
 }

@@ -68,7 +68,7 @@ public interface Coverage<P> extends PartialFunction<P, Record> {
      * @return a Set of unique identifiers, one for
      *         each member of the coverage
      */
-    public Set<String> getMemberNames();
+    public Set<String> getScalarMemberNames();
     
     /**
      * Returns the top-level metadata descriptor. This object describes all the
@@ -87,9 +87,9 @@ public interface Coverage<P> extends PartialFunction<P, Record> {
      *         particular scalar member.
      * @throws IllegalArgumentException
      *             if {@code memberName} is not present in the
-     *             {@link #getMemberNames() set of member names}.
+     *             {@link #getScalarMemberNames() set of member names}.
      */
-    public ScalarMetadata getRangeMetadata(String memberName);
+    public ScalarMetadata getScalarMetadata(String memberName);
     
     /**
      * Returns a descriptor of the runtime types of the members of the
