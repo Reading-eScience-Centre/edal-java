@@ -168,4 +168,9 @@ public class ScalarMetadataImpl implements ScalarMetadata {
             return false;
         return true;
     }
+    
+    @Override
+    public ScalarMetadata clone() throws CloneNotSupportedException {
+        return (ScalarMetadata) super.clone();
+    }
 }

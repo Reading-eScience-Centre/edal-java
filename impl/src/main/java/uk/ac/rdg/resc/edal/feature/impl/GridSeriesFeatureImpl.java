@@ -70,7 +70,7 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
     public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
             Extent<TimePosition> tRange, Set<String> members) {
         PointSeriesCoverage psCoverage = coverage.extractPointSeriesCoverage(pos, z, tRange,
-                members == null ? coverage.getMemberNames() : members);
+                members == null ? coverage.getScalarMemberNames() : members);
         return new PointSeriesFeatureImpl(getName() + " -> PointSeries", "PS-" + getId(),
                 "Point series extraction of " + getDescription(), psCoverage, pos, z,
                 getFeatureCollection());
@@ -80,7 +80,7 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
     public ProfileFeature extractProfileFeature(HorizontalPosition pos, TimePosition t,
             Set<String> members) {
         ProfileCoverage pCoverage = coverage.extractProfileCoverage(pos, t,
-                members == null ? coverage.getMemberNames() : members);
+                members == null ? coverage.getScalarMemberNames() : members);
         return new ProfileFeatureImpl(getName() + " -> Profile", "PF-" + getId(),
                 "Profile extraction of " + getDescription(), pCoverage, pos, t,
                 getFeatureCollection());
@@ -89,8 +89,7 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
     @Override
     public GridFeature extractGridFeature(HorizontalGrid targetDomain, VerticalPosition zPos,
             TimePosition tPos, Set<String> members) {
-        GridCoverage2D gridCoverage = coverage.extractGridCoverage(targetDomain, zPos, tPos,
-                members == null ? coverage.getMemberNames() : members);
+        GridCoverage2D gridCoverage = coverage.extractGridCoverage(targetDomain, zPos, tPos,members);
         return new GridFeatureImpl(getName() + " -> GridFeature", "GF-" + getId(),
                 getFeatureCollection(), gridCoverage);
     }

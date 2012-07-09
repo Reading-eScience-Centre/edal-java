@@ -108,7 +108,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
     }
 
     @Override
-    public Set<String> getMemberNames() {
+    public Set<String> getScalarMemberNames() {
         return varId2Metadata.keySet();
     }
 
@@ -122,8 +122,8 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
     }
 
     @Override
-    public ScalarMetadata getRangeMetadata(String memberName) {
-        if (!getMemberNames().contains(memberName)) {
+    public ScalarMetadata getScalarMetadata(String memberName) {
+        if (!getScalarMemberNames().contains(memberName)) {
             throw new IllegalArgumentException("Cannot get metadata for " + memberName
                     + " - it is not present in this coverage");
         }
@@ -135,7 +135,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
         /*
          * Throw an exception if we already have this variable in the coverage
          */
-        if (getMemberNames().contains(memberName)) {
+        if (getScalarMemberNames().contains(memberName)) {
             throw new IllegalArgumentException(
                     "This coverage already contains a member with the ID " + memberName);
         } else {
@@ -203,12 +203,6 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
             parentMetadata = metadata;
         }
 
-        /*
-         * Create the parent metadata for all of the fields the plugin provides
-         */
-        RangeMetadataImpl newMetadata = new RangeMetadataImpl(parentMetadata,
-                plugin.getParentName(), plugin.getDescription());
-
         List<ScalarMetadata> oldMetadata = new ArrayList<ScalarMetadata>();
 
         /*
@@ -231,20 +225,29 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
             }
             varId2Metadata.remove(oldMember);
         }
-        /*
-         * These are the components we now want to add to our SPECIAL list, and
-         * put into our metadata tree
-         */
-        Set<String> newMembers = plugin.provides();
-        for (String newMember : newMembers) {
-            plugins.put(newMember, plugin);
-            RangeMetadata metadata = plugin.getProcessedMetadata(newMember, oldMetadata,
-                    newMetadata);
-            newMetadata.addMember(metadata);
-            varId2Metadata.put(newMember, (ScalarMetadata) metadata);
-        }
 
-        parentMetadata.addMember(newMetadata);
+        /*
+         * Generate the full metadata tree
+         */
+        RangeMetadata rangeMetadata = plugin.generateMetadataTree(oldMetadata, parentMetadata);
+        /*
+         * Add the metadata tree to its parent
+         */
+        parentMetadata.addMember(rangeMetadata);
+        
+        /*
+         * Now:
+         * 
+         * Add the plugin to the map of plugins
+         * 
+         * Get the individual member metadata and put it in the
+         * variable->metadata map
+         */
+        for(String newMember : plugin.provides()){
+            plugins.put(newMember, plugin);
+            ScalarMetadata memberMetadata = plugin.getMemberMetadata(newMember);
+            varId2Metadata.put(newMember, memberMetadata);
+        }
     }
 
     private RangeMetadata removeFromTree(RangeMetadata metadata, String name) {
@@ -267,7 +270,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
         /*
          * Get the queryable members
          */
-        Set<String> allMembers = new HashSet<String>(getMemberNames());
+        Set<String> allMembers = new HashSet<String>(getScalarMemberNames());
         for (Plugin p : new HashSet<Plugin>(plugins.values())) {
             /*
              * Add any members previously removed by a plugin
@@ -279,7 +282,6 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
          * member name PLUS all raw+virtual members names, but NOT any parent
          * (i.e. non-queryable members)
          */
-        System.out.println("All members:" + allMembers);
         return allMembers;
     }
 
@@ -303,30 +305,4 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
     }
 
     public abstract BigList<?> getValuesList(String memberName);
-
-//        return new AbstractBigList2<Object>() {
-//            @Override
-//            public Object get(long index) {
-//                GridValuesMatrix<Object> gridValues = getGridValues(memberName);
-//                GridCoordinates coords = gridValues.getCoords(index);
-//                Object value = gridValues.readPoint(coords.getIndices());
-//                gridValues.close();
-//                return value;
-//            }
-//
-//            @Override
-//            public List<Object> getAll(List<Long> indices) {
-//                GridValuesMatrix<?> gridValues = getGridValues(memberName);
-//                List<Object> values = new ArrayList<Object>(indices.size());
-//                for (long index : indices) {
-//                    GridCoordinates coords = gridValues.getCoords(index);
-//                    Object value = gridValues.readPoint(coords.getIndices());
-//                    values.add(value);
-//                }
-//                gridValues.close();
-//                return values;
-//            }
-//        };
-//    }
-
 }

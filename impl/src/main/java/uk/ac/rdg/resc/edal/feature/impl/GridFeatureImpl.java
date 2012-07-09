@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.feature.impl;
 
+import java.util.Set;
+
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.feature.Feature;
@@ -55,9 +57,8 @@ public class GridFeatureImpl extends AbstractFeature implements GridFeature {
     }
 
     @Override
-    public GridFeature extractGridFeature(HorizontalGrid targetDomain) {
-        GridCoverage2D gridCoverage = coverage.extractGridCoverage(targetDomain,
-                coverage.getMemberNames());
+    public GridFeature extractGridFeature(HorizontalGrid targetDomain, Set<String> memberNames) {
+        GridCoverage2D gridCoverage = coverage.extractGridCoverage(targetDomain, memberNames);
         return new GridFeatureImpl(getName() + " -> GridFeature", "GF-" + getId(),
                 getFeatureCollection(), gridCoverage);
     }

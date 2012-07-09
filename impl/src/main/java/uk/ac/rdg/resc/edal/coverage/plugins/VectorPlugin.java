@@ -37,6 +37,12 @@ import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.UnitVocabulary;
 import uk.ac.rdg.resc.edal.coverage.impl.AbstractMultimemberDiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent;
+import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent.VectorDirection;
+import uk.ac.rdg.resc.edal.coverage.metadata.VectorMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.VectorComponentImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.VectorMetadataImpl;
 
 /**
  * A {@link Plugin} which takes two members and replaces them with X, Y, MAG,
@@ -93,57 +99,6 @@ public class VectorPlugin extends Plugin {
     }
 
     @Override
-    protected String generateDescription(String component, List<String> descriptions) {
-        if ("X".equals(component)) {
-            return descriptions.get(0);
-        } else if ("Y".equals(component)) {
-            return descriptions.get(1);
-        } else if ("MAG".equals(component)) {
-            return "Magnitude of (" + descriptions.get(0) + "," + descriptions.get(1) + ")";
-        } else if ("DIR".equals(component)) {
-            return "Direction of (" + descriptions.get(0) + "," + descriptions.get(1) + ")";
-        } else {
-            throw new IllegalArgumentException("This Plugin does not provide the field "
-                    + component);
-        }
-    }
-
-    @Override
-    protected Phenomenon generatePhenomenon(String component, List<Phenomenon> phenomenons) {
-        if ("X".equals(component)) {
-            return phenomenons.get(0);
-        } else if ("Y".equals(component)) {
-            return phenomenons.get(1);
-        } else if ("MAG".equals(component)) {
-            return Phenomenon.getPhenomenon(commonStandardName.replaceFirst("velocity", "speed"),
-                    PhenomenonVocabulary.CLIMATE_AND_FORECAST);
-        } else if ("DIR".equals(component)) {
-            return Phenomenon.getPhenomenon(
-                    commonStandardName.replaceFirst("velocity", "direction"),
-                    PhenomenonVocabulary.UNKNOWN);
-        } else {
-            throw new IllegalArgumentException("This Plugin does not provide the field "
-                    + component);
-        }
-    }
-
-    @Override
-    protected Unit generateUnits(String component, List<Unit> unit) {
-        if ("X".equals(component)) {
-            return unit.get(0);
-        } else if ("Y".equals(component)) {
-            return unit.get(1);
-        } else if ("MAG".equals(component)) {
-            return unit.get(0);
-        } else if ("DIR".equals(component)) {
-            return Unit.getUnit("rad", UnitVocabulary.UDUNITS2);
-        } else {
-            throw new IllegalArgumentException("This Plugin does not provide the field "
-                    + component);
-        }
-    }
-
-    @Override
     protected Class<?> generateValueType(String component, List<Class<?>> classes) {
         if ("X".equals(component)) {
             return classes.get(0);
@@ -156,6 +111,71 @@ public class VectorPlugin extends Plugin {
         } else {
             throw new IllegalArgumentException("This Plugin does not provide the field "
                     + component);
+        }
+    }
+    
+    private VectorComponent xMetadata = null;
+    private VectorComponent yMetadata = null;
+    private VectorComponent magMetadata = null;
+    private VectorComponent dirMetadata = null;
+    
+    @Override
+    protected RangeMetadata generateRangeMetadata(List<ScalarMetadata> metadataList,
+            RangeMetadata parentMetadata) {
+        VectorMetadata metadata = new VectorMetadataImpl(parentMetadata, getParentName(), getDescription());
+        if (xMetadata == null) {
+            ScalarMetadata sMetadata = metadataList.get(0);
+            xMetadata = new VectorComponentImpl(metadata, getParentName() + "_X",
+                    sMetadata.getDescription(), sMetadata.getParameter(), sMetadata.getUnits(),
+                    sMetadata.getValueType(), VectorDirection.X);
+        }
+        if (yMetadata == null) {
+            ScalarMetadata sMetadata = metadataList.get(1);
+            yMetadata = new VectorComponentImpl(metadata, getParentName() + "_Y",
+                    sMetadata.getDescription(), sMetadata.getParameter(), sMetadata.getUnits(),
+                    sMetadata.getValueType(), VectorDirection.Y);
+        }
+        if (magMetadata == null) {
+            ScalarMetadata xComponentMetadata = metadataList.get(0);
+            ScalarMetadata yComponentMetadata = metadataList.get(1);
+            magMetadata = new VectorComponentImpl(metadata, getParentName() + "_MAG",
+                    "Magnitude of (" + xComponentMetadata.getDescription() + ", "
+                            + yComponentMetadata.getDescription() + ")", Phenomenon.getPhenomenon(
+                            commonStandardName.replaceFirst("velocity", "speed"),
+                            PhenomenonVocabulary.CLIMATE_AND_FORECAST),
+                    xComponentMetadata.getUnits(), xComponentMetadata.getValueType(),
+                    VectorDirection.MAGNITUDE);
+        }
+        if (dirMetadata == null) {
+            ScalarMetadata xComponentMetadata = metadataList.get(0);
+            ScalarMetadata yComponentMetadata = metadataList.get(1);
+            dirMetadata = new VectorComponentImpl(metadata, getParentName() + "_DIR",
+                    "Direction of (" + xComponentMetadata.getDescription() + ", "
+                            + yComponentMetadata.getDescription() + ")", Phenomenon.getPhenomenon(
+                            commonStandardName.replaceFirst("velocity", "direction"),
+                            PhenomenonVocabulary.UNKNOWN), Unit.getUnit("rad",
+                            UnitVocabulary.UDUNITS2), xComponentMetadata.getValueType(),
+                    VectorDirection.DIRECTION);
+        }
+        metadata.addMember(xMetadata);
+        metadata.addMember(yMetadata);
+        metadata.addMember(magMetadata);
+        metadata.addMember(dirMetadata);
+        return metadata;
+    }
+
+    @Override
+    protected ScalarMetadata getScalarMetadata(String memberName) {
+        if ("X".equals(memberName)) {
+            return xMetadata;
+        } else if ("Y".equals(memberName)) {
+            return yMetadata;
+        } else if ("MAG".equals(memberName)) {
+            return magMetadata;
+        } else if ("DIR".equals(memberName)) {
+            return dirMetadata;
+        } else {
+            throw new IllegalArgumentException(memberName + " is not provided by this plugin");
         }
     }
 }

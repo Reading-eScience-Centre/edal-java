@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
 /**
  * An implementation of a general {@link RangeMetadata}
@@ -118,5 +119,44 @@ public class RangeMetadataImpl implements RangeMetadata {
             }
         }
         return children;
+    }
+    
+    @Override
+    public RangeMetadata clone() throws CloneNotSupportedException {
+        return (RangeMetadata) super.clone();
+    }
+    
+    /**
+     * This removes all members of the metadata which do not appear in members
+     * 
+     * @param metadata
+     *            the {@link RangeMetadata} object
+     * @param members
+     *            the members to keep
+     */
+    public static RangeMetadata getCopyOfMetadataContaining(RangeMetadata metadata, Set<String> members){
+        RangeMetadata newMetadata = null;
+        try {
+            newMetadata = metadata.clone();
+        
+            Set<String> memberNames = new HashSet<String>(newMetadata.getMemberNames());
+            for(String memberName : memberNames){
+                RangeMetadata memberMetadata = newMetadata.getMemberMetadata(memberName);
+                if(memberMetadata instanceof ScalarMetadata){
+                    if(!members.contains(memberName)){
+                        newMetadata.removeMember(memberName);
+                    }
+                } else {
+                    memberMetadata = getCopyOfMetadataContaining(memberMetadata, members);
+                    if(memberMetadata.getMemberNames().size() == 0){
+                        newMetadata.removeMember(memberName);
+                    }
+                }
+            }
+        } catch (CloneNotSupportedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return newMetadata;
     }
 }

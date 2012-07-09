@@ -59,12 +59,12 @@ public abstract class AbstractCoverage<P> implements Coverage<P> {
         @Override
         public Class<?> getValueType(String memberName) {
             checkMemberName(memberName);
-            return AbstractCoverage.this.getRangeMetadata(memberName).getValueType();
+            return AbstractCoverage.this.getScalarMetadata(memberName).getValueType();
         }
 
         @Override
         public Set<String> getMemberNames() {
-            return AbstractCoverage.this.getMemberNames();
+            return AbstractCoverage.this.getScalarMemberNames();
         }
     };
 
@@ -102,12 +102,12 @@ public abstract class AbstractCoverage<P> implements Coverage<P> {
 
             @Override
             public Set<String> getMemberNames() {
-                return cov.getMemberNames();
+                return cov.getScalarMemberNames();
             }
 
             @Override
             public ScalarMetadata getMemberMetadata(String name) {
-                return cov.getRangeMetadata(name);
+                return cov.getScalarMetadata(name);
             }
 
             @Override
@@ -126,13 +126,17 @@ public abstract class AbstractCoverage<P> implements Coverage<P> {
                 throw new UnsupportedOperationException("This RangeMetadata is immutable");
             }
 
+            @Override
+            public RangeMetadata clone() throws CloneNotSupportedException {
+                return AbstractCoverage.this.getRangeMetadata();
+            }
         };
     }
 
     protected void checkMemberName(String memberName) {
-        if (!this.getMemberNames().contains(memberName)) {
+        if (!this.getScalarMemberNames().contains(memberName)) {
             throw new IllegalArgumentException("Member name " + memberName
-                    + " not present in coverage");
+                    + " is not a scalar member of this coverage");
         }
     }
 
