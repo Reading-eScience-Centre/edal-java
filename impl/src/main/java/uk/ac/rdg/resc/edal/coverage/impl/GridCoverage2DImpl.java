@@ -36,7 +36,9 @@ import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.RangeMetadataImpl;
 import uk.ac.rdg.resc.edal.coverage.plugins.Plugin;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
@@ -79,17 +81,25 @@ public class GridCoverage2DImpl extends
 
         Map<String, List<Object>> valuesMap = CollectionUtils.newLinkedHashMap();
         Map<String, ScalarMetadata> metadataMap = CollectionUtils.newLinkedHashMap();
+        
+        if(memberNames == null){
+            memberNames = getScalarMemberNames();
+        }
+        
         // Read the data from the source coverage
         for (String name : memberNames) {
             List<Object> values = strategy.readValues(this.getGridValues(name), this.getDomain(),
                     targetGrid);
 
             valuesMap.put(name, values);
-            metadataMap.put(name, this.getRangeMetadata(name));
+            metadataMap.put(name, this.getScalarMetadata(name));
         }
+        
+        RangeMetadata rangeMetadata = getRangeMetadata();
+        RangeMetadataImpl.getCopyOfMetadataContaining(rangeMetadata, memberNames);
 
         // Now assemble the remaining properties of the target coverage
-        return new InMemoryGridCoverage2D(targetGrid, valuesMap, metadataMap,
+        return new InMemoryGridCoverage2D(targetGrid, valuesMap, metadataMap, rangeMetadata,
                 "Interpolated grid from " + getDescription());
     }
 }

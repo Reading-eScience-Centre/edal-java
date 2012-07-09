@@ -36,8 +36,8 @@ import java.util.List;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs.PositiveDirection;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
@@ -58,7 +58,12 @@ public class ProfileDomainImpl implements ProfileDomain {
         if(values.size() >= 2){
             if(values.get(0) > values.get(1)){
                 reversed = true;
-                Collections.reverse(values);
+                /*
+                 * We may have an abstract list, so make it concrete...
+                 */
+                List<Double> tempValues = new ArrayList<Double>(values);
+                Collections.reverse(tempValues);
+                values = tempValues;
             }
         }
         Double lastVal = Double.NEGATIVE_INFINITY; 

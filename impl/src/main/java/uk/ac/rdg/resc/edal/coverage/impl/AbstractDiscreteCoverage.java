@@ -90,14 +90,14 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
 
         @Override
         public ScalarMetadata getRangeMetadata(String memberName) {
-            return AbstractDiscreteCoverage.this.getRangeMetadata(memberName);
+            return AbstractDiscreteCoverage.this.getScalarMetadata(memberName);
         }
     }
 
     private final BigList<Record> recordList = new AbstractBigList2<Record>() {
         @Override
         public Record get(long index) {
-            return getRecord(index, getMemberNames());
+            return getRecord(index, getScalarMemberNames());
         }
     };
 
@@ -173,7 +173,7 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
 
     @Override
     public Record evaluate(P pos) {
-        return this.evaluate(pos, this.getMemberNames());
+        return this.evaluate(pos, this.getScalarMemberNames());
     }
 
     @Override
@@ -204,7 +204,6 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
         for (String memberName : memberNames) {
             this.checkMemberName(memberName);
             BigList<?> memberValues = this.getValues(memberName);
-            System.out.println(memberName + "," + index);
             Object value = memberValues.get(index);
             map.put(memberName, value);
         }

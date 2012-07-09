@@ -28,18 +28,14 @@
 
 package uk.ac.rdg.resc.edal.coverage.plugins;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import uk.ac.rdg.resc.edal.Phenomenon;
-import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.impl.AbstractMultimemberDiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
 
 /**
  * A generic class defining a plugin for coverages. This can be used with
@@ -97,7 +93,7 @@ public abstract class Plugin {
     }
 
     private void checkValidRequest(String memberName, int numberOfValues) {
-        if (!provides.contains(memberName) || !memberName.startsWith(baseName)) {
+        if (memberName != null && (!provides.contains(memberName) || !memberName.startsWith(baseName))) {
             throw new IllegalArgumentException("This Plugin does not provide the field "
                     + memberName);
         }
@@ -116,39 +112,32 @@ public abstract class Plugin {
     public GridValuesMatrix<?> getProcessedValues(String memberName,
             final List<? extends GridValuesMatrix<?>> gvmInputs) {
         checkValidRequest(memberName, gvmInputs.size());
-//        final String reducedName = memberName.substring(baseName.length() + 1);
 
         return new PluginWrappedGridValuesMatrix(this, gvmInputs, memberName);
     }
 
-    public RangeMetadata getProcessedMetadata(String memberName, final List<ScalarMetadata> metadataList,
+    private boolean metadataGenerated = false;
+    
+    public RangeMetadata generateMetadataTree(List<ScalarMetadata> metadataList,
             RangeMetadata parentMetadata) {
-        checkValidRequest(memberName, metadataList.size());
-        String reducedName = memberName.substring(baseName.length() + 1);
-        
-        List<String> descs = new ArrayList<String>();
-        List<Phenomenon> phens = new ArrayList<Phenomenon>();
-        List<Unit> units = new ArrayList<Unit>();
-        List<Class<?>> classes = new ArrayList<Class<?>>();
-        
-        for(ScalarMetadata sMeta : metadataList){
-            descs.add(sMeta.getDescription());
-            phens.add(sMeta.getParameter());
-            units.add(sMeta.getUnits());
-            classes.add(sMeta.getValueType());
+        checkValidRequest(null, metadataList.size());
+        metadataGenerated = true;
+        return generateRangeMetadata(metadataList, parentMetadata);
+    }
+    
+    public ScalarMetadata getMemberMetadata(String memberName){
+        if(!metadataGenerated){
+            throw new IllegalStateException("Call generateMetadataTree first to generate the metadata");
         }
-        
-        return new ScalarMetadataImpl(parentMetadata, baseName + "_" + memberName,
-                generateDescription(reducedName, descs), generatePhenomenon(reducedName, phens),
-                generateUnits(reducedName, units), generateValueType(reducedName, classes));
+        String reducedName = memberName.substring(baseName.length() + 1);
+        return getScalarMetadata(reducedName);
     }
 
-    protected abstract String generateDescription(String component, List<String> descriptions);
+    protected abstract RangeMetadata generateRangeMetadata(List<ScalarMetadata> metadataList,
+            RangeMetadata parentMetadata);
 
-    protected abstract Phenomenon generatePhenomenon(String component, List<Phenomenon> phenomenons);
-
-    protected abstract Unit generateUnits(String component, List<Unit> unit);
-
+    protected abstract ScalarMetadata getScalarMetadata(String memberName);
+    
     protected abstract Class<?> generateValueType(String component, List<Class<?>> classes);
 
     protected abstract Object generateValue(String component, List<Object> values);

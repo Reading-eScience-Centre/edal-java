@@ -92,7 +92,7 @@ public class ImageCoverage extends GridCoverage2DImpl
     }
 
     @Override
-    public Set<String> getMemberNames() {
+    public Set<String> getScalarMemberNames() {
         return MEMBER_NAMES;
     }
     
@@ -104,7 +104,7 @@ public class ImageCoverage extends GridCoverage2DImpl
     }
 
     @Override
-    public ScalarMetadata getRangeMetadata(String memberName) {
+    public ScalarMetadata getScalarMetadata(String memberName) {
         this.checkMemberName(memberName);
         return new ScalarMetadataImpl(this.getRangeMetadata(), memberName, memberName,
             Phenomenon.getPhenomenon("none"), Unit.getUnit("none"), getValueType(memberName));

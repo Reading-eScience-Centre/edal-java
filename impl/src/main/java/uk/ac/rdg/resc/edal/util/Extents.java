@@ -51,7 +51,7 @@ public final class Extents {
     /**
      * Creates an Extent whose minimum is the lowest value in the passed
      * collection and whose maximum is the highest value in the passed
-     * collection, according to the natural order of its elements. Null values
+     * collection, according to the natural order of its elements. Null values and NaNs
      * in the passed collection are ignored; if the collection consists entirely
      * of null values the returned Extent will have null minimum and maximum
      * values (an empty extent).
@@ -79,7 +79,7 @@ public final class Extents {
 
         while (i.hasNext()) {
             T next = i.next();
-            if (next != null) {
+            if (next != null && !next.equals(Float.NaN) && !next.equals(Double.NaN)) {
                 if (minCandidate == null || next.compareTo(minCandidate) < 0) {
                     minCandidate = next;
                 }

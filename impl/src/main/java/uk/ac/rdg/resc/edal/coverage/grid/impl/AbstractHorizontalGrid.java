@@ -197,7 +197,7 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
         if (n == 0)
             return getXAxis();
         if (n == 1)
-            return getXAxis();
+            return getYAxis();
         throw new IndexOutOfBoundsException("There are only 2 axes in a horizontal grid");
     }
 }

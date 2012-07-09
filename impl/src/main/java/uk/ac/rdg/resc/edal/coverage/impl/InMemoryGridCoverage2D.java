@@ -37,6 +37,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.InMemoryGridValuesMatrix;
+import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
@@ -51,6 +52,7 @@ public class InMemoryGridCoverage2D extends GridCoverage2DImpl {
 
     private final Map<String, ScalarMetadata> metadata;
     private final Map<String, List<Object>> values;
+    private final RangeMetadata metadataTree;
 
     /**
      * Instantiates a new {@link InMemoryGridCoverage2D}
@@ -59,20 +61,21 @@ public class InMemoryGridCoverage2D extends GridCoverage2DImpl {
      *            the domain of the coverage
      * @param values
      *            a {@link Map} of member names to {@link List}s of values
-     * @param metadata
+     * @param scalarMetadataMap
      *            a {@link Map} of member names to {@link ScalarMetadata}
      * @param description
      *            a description of the coverage
      */
     public InMemoryGridCoverage2D(HorizontalGrid domain, Map<String, List<Object>> values,
-            Map<String, ScalarMetadata> metadata, String description) {
+            Map<String, ScalarMetadata> scalarMetadataMap, RangeMetadata metadataTree, String description) {
         super(description, domain, DataReadingStrategy.PIXEL_BY_PIXEL);
-        if (values.size() != metadata.size() || !values.keySet().equals(metadata.keySet())) {
+        if (values.size() != scalarMetadataMap.size() || !values.keySet().equals(scalarMetadataMap.keySet())) {
             throw new IllegalArgumentException(
                     "Both values and metadata must contain the same members");
         }
         this.values = values;
-        this.metadata = metadata;
+        this.metadata = scalarMetadataMap;
+        this.metadataTree = metadataTree;
     }
 
     @Override
@@ -122,13 +125,18 @@ public class InMemoryGridCoverage2D extends GridCoverage2DImpl {
     }
 
     @Override
-    public Set<String> getMemberNames() {
+    public Set<String> getScalarMemberNames() {
         return values.keySet();
     }
 
     @Override
-    public ScalarMetadata getRangeMetadata(String memberName) {
+    public ScalarMetadata getScalarMetadata(String memberName) {
         this.checkMemberName(memberName);
         return this.metadata.get(memberName);
+    }
+    
+    @Override
+    public RangeMetadata getRangeMetadata() {
+        return metadataTree;
     }
 }

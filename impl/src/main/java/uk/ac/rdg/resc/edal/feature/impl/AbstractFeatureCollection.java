@@ -40,7 +40,7 @@ import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 public abstract class AbstractFeatureCollection<R extends Feature> implements FeatureCollection<R> {
     private String collectionId;
     private String name;
-    protected Map<String, R> id2Feature;
+    private Map<String, R> id2Feature;
 
     public AbstractFeatureCollection(String collectionId, String collectionName) {
         this.collectionId = collectionId;
@@ -83,5 +83,9 @@ public abstract class AbstractFeatureCollection<R extends Feature> implements Fe
     @Override
     public Class<R> getFeatureType() {
         return (Class<R>) Feature.class;
+    }
+    
+    protected void addFeature(R feature){
+        id2Feature.put(feature.getId(), feature);
     }
 }
