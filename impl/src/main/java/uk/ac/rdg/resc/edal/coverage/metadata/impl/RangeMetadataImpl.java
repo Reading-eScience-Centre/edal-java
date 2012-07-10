@@ -61,14 +61,44 @@ public class RangeMetadataImpl implements RangeMetadata {
     public void addMember(RangeMetadata metadata) {
         if (metadata == null)
             throw new IllegalArgumentException("Null metadata is not allowed");
+        if (getChildrenOf(getTopParentOf(this)).contains(metadata.getName())) {
+            throw new IllegalArgumentException("This metadata already contains a member named "
+                    + metadata.getName());
+        }
         members.put(metadata.getName(), metadata);
+    }
+
+    /*
+     * Finds the top level parent of this metadata tree
+     */
+    private static RangeMetadata getTopParentOf(RangeMetadata metadata){
+        if(metadata.getParent() == null){
+            return metadata;
+        } else {
+            return getTopParentOf(metadata.getParent());
+        }
+    }
+    
+    /*
+     * Finds all members below the specified metadata
+     */
+    private static Set<String> getChildrenOf(RangeMetadata metadata) {
+        Set<String> children = new HashSet<String>();
+    
+        Set<String> set = metadata.getMemberNames();
+        for (String member : set) {
+            RangeMetadata memberMetadata = metadata.getMemberMetadata(member);
+            if (!memberMetadata.getMemberNames().isEmpty()) {
+                children.addAll(getChildrenOf(memberMetadata));
+            } else {
+                children.add(member);
+            }
+        }
+        return children;
     }
 
     @Override
     public RangeMetadata removeMember(String name) {
-        /*
-         * This should remove a member however deeply it is nested.
-         */
         RangeMetadata removed = members.remove(name);
         if (removed == null) {
             throw new IllegalArgumentException(name + " is not a child of this metadata");
@@ -102,25 +132,6 @@ public class RangeMetadataImpl implements RangeMetadata {
         return parent;
     }
 
-    public Set<String> getFlattenedMemberNames() {
-        return getChildrenOf(this);
-    }
-
-    private Set<String> getChildrenOf(RangeMetadata metadata) {
-        Set<String> children = new HashSet<String>();
-
-        Set<String> set = metadata.getMemberNames();
-        for (String member : set) {
-            RangeMetadata memberMetadata = metadata.getMemberMetadata(member);
-            if (!memberMetadata.getMemberNames().isEmpty()) {
-                children.addAll(getChildrenOf(memberMetadata));
-            } else {
-                children.add(member);
-            }
-        }
-        return children;
-    }
-    
     @Override
     public RangeMetadata clone() throws CloneNotSupportedException {
         RangeMetadataImpl rangeMetadata = new RangeMetadataImpl(parent, name, description);
