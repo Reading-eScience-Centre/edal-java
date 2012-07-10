@@ -171,6 +171,6 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     
     @Override
     public ScalarMetadata clone() throws CloneNotSupportedException {
-        return (ScalarMetadata) super.clone();
+        return new ScalarMetadataImpl(parent, name, description, parameter, units, clazz);
     }
 }

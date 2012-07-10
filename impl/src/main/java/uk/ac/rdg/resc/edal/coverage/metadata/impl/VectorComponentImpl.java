@@ -24,5 +24,11 @@ public class VectorComponentImpl extends ScalarMetadataImpl implements VectorCom
     public VectorDirection getDirection() {
         return direction;
     }
+    
+    @Override
+    public VectorComponent clone() throws CloneNotSupportedException {
+        return new VectorComponentImpl(getParent(), getName(), getDescription(), getParameter(),
+                getUnits(), getValueType(), direction);
+    }
 
 }
