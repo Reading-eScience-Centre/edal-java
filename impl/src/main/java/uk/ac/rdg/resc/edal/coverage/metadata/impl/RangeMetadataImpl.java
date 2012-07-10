@@ -45,7 +45,7 @@ import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 public class RangeMetadataImpl implements RangeMetadata {
 
     private final RangeMetadata parent;
-    private final Map<String, RangeMetadata> members;
+    protected final Map<String, RangeMetadata> members;
     private final String name;
     private final String description;
 
@@ -123,7 +123,11 @@ public class RangeMetadataImpl implements RangeMetadata {
     
     @Override
     public RangeMetadata clone() throws CloneNotSupportedException {
-        return (RangeMetadata) super.clone();
+        RangeMetadataImpl rangeMetadata = new RangeMetadataImpl(parent, name, description);
+        for(RangeMetadata member : members.values()){
+            rangeMetadata.addMember(member.clone());
+        }
+        return rangeMetadata;
     }
     
     /**

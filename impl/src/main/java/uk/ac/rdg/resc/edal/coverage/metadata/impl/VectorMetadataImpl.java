@@ -21,6 +21,10 @@ public class VectorMetadataImpl extends RangeMetadataImpl implements VectorMetad
     
     @Override
     public VectorMetadata clone() throws CloneNotSupportedException {
-        return (VectorMetadata) super.clone();
+        VectorMetadataImpl vectorMetadata = new VectorMetadataImpl(getParent(), getName(), getDescription());
+        for(RangeMetadata member : members.values()){
+            vectorMetadata.addMember(member.clone());
+        }
+        return vectorMetadata;
     }
 }
