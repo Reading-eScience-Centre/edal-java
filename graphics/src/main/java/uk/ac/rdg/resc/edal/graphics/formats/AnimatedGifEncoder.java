@@ -1,8 +1,9 @@
-package uk.ac.rdg.resc.edal.graphics;
+package uk.ac.rdg.resc.edal.graphics.formats;
 
 import java.io.*;
 import java.awt.*;
 import java.awt.image.*;
+
 
 /**
  * Class AnimatedGifEncoder - Encodes a GIF file consisting of one or more

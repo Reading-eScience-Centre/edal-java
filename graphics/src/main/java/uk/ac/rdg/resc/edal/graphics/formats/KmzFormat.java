@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.graphics;
+package uk.ac.rdg.resc.edal.graphics.formats;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -84,7 +84,7 @@ public class KmzFormat extends ImageFormat {
      */
     @Override
     public void writeImage(List<BufferedImage> frames, OutputStream out,
-            GridSeriesFeature<?> feature, double[] bbox, List<String> tValues, String zValue,
+            GridSeriesFeature feature, double[] bbox, List<String> tValues, String zValue,
             BufferedImage legend) throws IOException {
         StringBuffer kml = new StringBuffer();
         for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++) {

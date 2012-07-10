@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.graphics;
+package uk.ac.rdg.resc.edal.graphics.formats;
 
 import java.io.OutputStream;
 import java.io.IOException;

@@ -14,17 +14,12 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public class MapStyleDescriptor {
-    public static enum Style {
-        BOXFILL, VECTOR, POINT, TRAJECTORY, DEFAULT
-    };
-    
     private ColorPalette colorPalette = ColorPalette.get(null);
     /*
      * Colour scale range of the picture. An {@link Extent#isEmpty() empty
      * Range} means that the picture will be auto-scaled.
      */
     private Extent<Float> scaleRange = Extents.emptyExtent(Float.class);
-    private Style style;
     private boolean transparent = true;
     private int opacity = 100;
     private int numColourBands = 254;
@@ -60,10 +55,6 @@ public class MapStyleDescriptor {
                     "Cannot read required icons.  Ensure that JAR is packaged correctly, or that your project is set up correctly in your IDE");
         }
     }
-    
-    public Style getStyle() {
-        return style;
-    }
 
     public void setColorPalette(String colorPaletteName) {
         ColorPalette pal = ColorPalette.get(colorPaletteName);
@@ -75,10 +66,6 @@ public class MapStyleDescriptor {
 
     public void setScaleRange(Extent<Float> scaleRange) {
         this.scaleRange = scaleRange;
-    }
-
-    public void setStyle(Style style) {
-        this.style = style;
     }
 
     public void setTransparent(boolean transparent) {

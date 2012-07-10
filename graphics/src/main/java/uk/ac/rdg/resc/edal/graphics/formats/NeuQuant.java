@@ -20,7 +20,7 @@
 
 // Ported to Java 12/00 K Weiner
 
-package uk.ac.rdg.resc.edal.graphics;
+package uk.ac.rdg.resc.edal.graphics.formats;
 
 class NeuQuant {
 
