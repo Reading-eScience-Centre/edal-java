@@ -106,7 +106,7 @@ public class ImageCoverage extends GridCoverage2DImpl
     @Override
     public ScalarMetadata getScalarMetadata(String memberName) {
         this.checkMemberName(memberName);
-        return new ScalarMetadataImpl(this.getRangeMetadata(), memberName, memberName,
+        return new ScalarMetadataImpl(memberName, memberName,
             Phenomenon.getPhenomenon("none"), Unit.getUnit("none"), getValueType(memberName));
     }
     

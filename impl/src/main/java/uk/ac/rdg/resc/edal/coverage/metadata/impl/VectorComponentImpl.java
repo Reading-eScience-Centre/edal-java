@@ -9,9 +9,9 @@ public class VectorComponentImpl extends ScalarMetadataImpl implements VectorCom
 
     private VectorDirection direction;
 
-    public VectorComponentImpl(VectorMetadata parent, String name, String description,
+    public VectorComponentImpl(String name, String description,
             Phenomenon parameter, Unit units, Class<?> clazz, VectorDirection direction) {
-        super(parent, name, description, parameter, units, clazz);
+        super(name, description, parameter, units, clazz);
         this.direction = direction;
     }
     
@@ -27,7 +27,7 @@ public class VectorComponentImpl extends ScalarMetadataImpl implements VectorCom
     
     @Override
     public VectorComponent clone() throws CloneNotSupportedException {
-        return new VectorComponentImpl(getParent(), getName(), getDescription(), getParameter(),
+        return new VectorComponentImpl(getName(), getDescription(), getParameter(),
                 getUnits(), getValueType(), direction);
     }
 

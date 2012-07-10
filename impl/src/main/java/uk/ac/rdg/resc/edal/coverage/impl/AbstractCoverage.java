@@ -130,6 +130,11 @@ public abstract class AbstractCoverage<P> implements Coverage<P> {
             public RangeMetadata clone() throws CloneNotSupportedException {
                 return AbstractCoverage.this.getRangeMetadata();
             }
+
+            @Override
+            public void setParentMetadata(RangeMetadata metadata) {
+                throw new UnsupportedOperationException("This is a top-level RangeMetadata object");
+            }
         };
     }
 

@@ -50,11 +50,10 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     private final Phenomenon parameter;
     private final Unit units;
     private final Class<?> clazz;
-    private final RangeMetadata parent;
+    private RangeMetadata parent = null;
 
-    public ScalarMetadataImpl(RangeMetadata parent, String name, String description,
+    public ScalarMetadataImpl(String name, String description,
             Phenomenon parameter, Unit units, Class<?> clazz) {
-        this.parent = parent;
         this.name = name;
         this.description = description;
         this.parameter = parameter;
@@ -100,6 +99,11 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     @Override
     public RangeMetadata getParent() {
         return this.parent;
+    }
+    
+    @Override
+    public void setParentMetadata(RangeMetadata parent) {
+        this.parent = parent;
     }
 
     @Override
@@ -171,6 +175,6 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     
     @Override
     public ScalarMetadata clone() throws CloneNotSupportedException {
-        return new ScalarMetadataImpl(parent, name, description, parameter, units, clazz);
+        return new ScalarMetadataImpl(name, description, parameter, units, clazz);
     }
 }
