@@ -41,8 +41,8 @@ import uk.ac.rdg.resc.edal.coverage.Coverage;
 public interface RangeMetadata extends Cloneable {
 
     /**
-     * Returns the identifier of this element, unique among its siblings, but
-     * not necessarily unique within the whole metadata hierarchy.
+     * Returns the identifier of this element, unique within the whole metadata
+     * hierarchy.
      */
     public String getName();
 
@@ -78,7 +78,8 @@ public interface RangeMetadata extends Cloneable {
      * 
      * @param metadata
      * @throws IllegalArgumentException
-     *             if metadata is null
+     *             if metadata is null, or a member with this name already
+     *             exists within this {@link RangeMetadata}
      */
     public void addMember(RangeMetadata metadata);
 
