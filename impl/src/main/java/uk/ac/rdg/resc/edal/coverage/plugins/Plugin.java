@@ -118,11 +118,10 @@ public abstract class Plugin {
 
     private boolean metadataGenerated = false;
     
-    public RangeMetadata generateMetadataTree(List<ScalarMetadata> metadataList,
-            RangeMetadata parentMetadata) {
+    public RangeMetadata generateMetadataTree(List<ScalarMetadata> metadataList) {
         checkValidRequest(null, metadataList.size());
         metadataGenerated = true;
-        return generateRangeMetadata(metadataList, parentMetadata);
+        return generateRangeMetadata(metadataList);
     }
     
     public ScalarMetadata getMemberMetadata(String memberName){
@@ -133,8 +132,7 @@ public abstract class Plugin {
         return getScalarMetadata(reducedName);
     }
 
-    protected abstract RangeMetadata generateRangeMetadata(List<ScalarMetadata> metadataList,
-            RangeMetadata parentMetadata);
+    protected abstract RangeMetadata generateRangeMetadata(List<ScalarMetadata> metadataList);
 
     protected abstract ScalarMetadata getScalarMetadata(String memberName);
     

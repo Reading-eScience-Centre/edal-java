@@ -6,8 +6,8 @@ import uk.ac.rdg.resc.edal.coverage.metadata.VectorMetadata;
 
 public class VectorMetadataImpl extends RangeMetadataImpl implements VectorMetadata {
 
-    public VectorMetadataImpl(RangeMetadata parent, String name, String description) {
-        super(parent, name, description);
+    public VectorMetadataImpl(String name, String description) {
+        super(name, description);
     }
 
     @Override
@@ -21,7 +21,7 @@ public class VectorMetadataImpl extends RangeMetadataImpl implements VectorMetad
     
     @Override
     public VectorMetadata clone() throws CloneNotSupportedException {
-        VectorMetadataImpl vectorMetadata = new VectorMetadataImpl(getParent(), getName(), getDescription());
+        VectorMetadataImpl vectorMetadata = new VectorMetadataImpl(getName(), getDescription());
         for(RangeMetadata member : members.values()){
             vectorMetadata.addMember(member.clone());
         }

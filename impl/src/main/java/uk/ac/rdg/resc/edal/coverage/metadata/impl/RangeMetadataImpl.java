@@ -44,13 +44,12 @@ import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
  */
 public class RangeMetadataImpl implements RangeMetadata {
 
-    private final RangeMetadata parent;
+    private RangeMetadata parent = null;
     protected final Map<String, RangeMetadata> members;
     private final String name;
     private final String description;
 
-    public RangeMetadataImpl(RangeMetadata parent, String name, String description) {
-        this.parent = parent;
+    public RangeMetadataImpl(String name, String description) {
         this.name = name;
         this.description = description;
 
@@ -65,6 +64,7 @@ public class RangeMetadataImpl implements RangeMetadata {
             throw new IllegalArgumentException("This metadata already contains a member named "
                     + metadata.getName());
         }
+        metadata.setParentMetadata(this);
         members.put(metadata.getName(), metadata);
     }
 
@@ -131,10 +131,15 @@ public class RangeMetadataImpl implements RangeMetadata {
     public RangeMetadata getParent() {
         return parent;
     }
+    
+    @Override
+    public void setParentMetadata(RangeMetadata parent){
+        this.parent = parent;
+    }
 
     @Override
     public RangeMetadata clone() throws CloneNotSupportedException {
-        RangeMetadataImpl rangeMetadata = new RangeMetadataImpl(parent, name, description);
+        RangeMetadataImpl rangeMetadata = new RangeMetadataImpl(name, description);
         for(RangeMetadata member : members.values()){
             rangeMetadata.addMember(member.clone());
         }

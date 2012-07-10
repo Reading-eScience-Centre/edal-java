@@ -120,42 +120,39 @@ public class VectorPlugin extends Plugin {
     private VectorComponent dirMetadata = null;
     
     @Override
-    protected RangeMetadata generateRangeMetadata(List<ScalarMetadata> metadataList,
-            RangeMetadata parentMetadata) {
-        VectorMetadata metadata = new VectorMetadataImpl(parentMetadata, getParentName(), getDescription());
+    protected RangeMetadata generateRangeMetadata(List<ScalarMetadata> metadataList) {
+        VectorMetadata metadata = new VectorMetadataImpl(getParentName(), getDescription());
         if (xMetadata == null) {
             ScalarMetadata sMetadata = metadataList.get(0);
-            xMetadata = new VectorComponentImpl(metadata, getParentName() + "_X",
-                    sMetadata.getDescription(), sMetadata.getParameter(), sMetadata.getUnits(),
-                    sMetadata.getValueType(), VectorDirection.X);
+            xMetadata = new VectorComponentImpl(getParentName() + "_X", sMetadata.getDescription(),
+                    sMetadata.getParameter(), sMetadata.getUnits(), sMetadata.getValueType(),
+                    VectorDirection.X);
         }
         if (yMetadata == null) {
             ScalarMetadata sMetadata = metadataList.get(1);
-            yMetadata = new VectorComponentImpl(metadata, getParentName() + "_Y",
-                    sMetadata.getDescription(), sMetadata.getParameter(), sMetadata.getUnits(),
-                    sMetadata.getValueType(), VectorDirection.Y);
+            yMetadata = new VectorComponentImpl(getParentName() + "_Y", sMetadata.getDescription(),
+                    sMetadata.getParameter(), sMetadata.getUnits(), sMetadata.getValueType(),
+                    VectorDirection.Y);
         }
         if (magMetadata == null) {
             ScalarMetadata xComponentMetadata = metadataList.get(0);
             ScalarMetadata yComponentMetadata = metadataList.get(1);
-            magMetadata = new VectorComponentImpl(metadata, getParentName() + "_MAG",
-                    "Magnitude of (" + xComponentMetadata.getDescription() + ", "
-                            + yComponentMetadata.getDescription() + ")", Phenomenon.getPhenomenon(
-                            commonStandardName.replaceFirst("velocity", "speed"),
-                            PhenomenonVocabulary.CLIMATE_AND_FORECAST),
-                    xComponentMetadata.getUnits(), xComponentMetadata.getValueType(),
-                    VectorDirection.MAGNITUDE);
+            magMetadata = new VectorComponentImpl(getParentName() + "_MAG", "Magnitude of ("
+                    + xComponentMetadata.getDescription() + ", "
+                    + yComponentMetadata.getDescription() + ")", Phenomenon.getPhenomenon(
+                    commonStandardName.replaceFirst("velocity", "speed"),
+                    PhenomenonVocabulary.CLIMATE_AND_FORECAST), xComponentMetadata.getUnits(),
+                    xComponentMetadata.getValueType(), VectorDirection.MAGNITUDE);
         }
         if (dirMetadata == null) {
             ScalarMetadata xComponentMetadata = metadataList.get(0);
             ScalarMetadata yComponentMetadata = metadataList.get(1);
-            dirMetadata = new VectorComponentImpl(metadata, getParentName() + "_DIR",
-                    "Direction of (" + xComponentMetadata.getDescription() + ", "
-                            + yComponentMetadata.getDescription() + ")", Phenomenon.getPhenomenon(
-                            commonStandardName.replaceFirst("velocity", "direction"),
-                            PhenomenonVocabulary.UNKNOWN), Unit.getUnit("rad",
-                            UnitVocabulary.UDUNITS2), xComponentMetadata.getValueType(),
-                    VectorDirection.DIRECTION);
+            dirMetadata = new VectorComponentImpl(getParentName() + "_DIR", "Direction of ("
+                    + xComponentMetadata.getDescription() + ", "
+                    + yComponentMetadata.getDescription() + ")", Phenomenon.getPhenomenon(
+                    commonStandardName.replaceFirst("velocity", "direction"),
+                    PhenomenonVocabulary.UNKNOWN), Unit.getUnit("rad", UnitVocabulary.UDUNITS2),
+                    xComponentMetadata.getValueType(), VectorDirection.DIRECTION);
         }
         metadata.addMember(xMetadata);
         metadata.addMember(yMetadata);

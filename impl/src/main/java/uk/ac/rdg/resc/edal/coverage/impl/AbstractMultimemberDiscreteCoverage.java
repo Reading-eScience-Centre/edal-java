@@ -93,7 +93,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
         this.description = description;
         this.domain = domain;
         varId2Metadata = new HashMap<String, ScalarMetadata>();
-        metadata = new RangeMetadataImpl(null, "Root", description);
+        metadata = new RangeMetadataImpl("Root", description);
         plugins = new HashMap<String, Plugin>();
     }
 
@@ -148,8 +148,8 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
                  * If so, create some metadata for the variable, and add it to
                  * the parent metadata, and the flat variable->metadata map
                  */
-                ScalarMetadataImpl scalarMetadata = new ScalarMetadataImpl(metadata, memberName,
-                        description, parameter, units, Float.class);
+                ScalarMetadataImpl scalarMetadata = new ScalarMetadataImpl(memberName, description,
+                        parameter, units, Float.class);
                 metadata.addMember(scalarMetadata);
                 varId2Metadata.put(memberName, scalarMetadata);
             } else {
@@ -229,7 +229,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
         /*
          * Generate the full metadata tree
          */
-        RangeMetadata rangeMetadata = plugin.generateMetadataTree(oldMetadata, parentMetadata);
+        RangeMetadata rangeMetadata = plugin.generateMetadataTree(oldMetadata);
         /*
          * Add the metadata tree to its parent
          */

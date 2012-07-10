@@ -69,7 +69,8 @@ public interface RangeMetadata extends Cloneable {
 
     /**
      * Returns the parent metadata, or null if this is the top-level metadata
-     * object.
+     * object. The parent metadata should only get set when it is added to
+     * another {@link RangeMetadata}
      */
     public RangeMetadata getParent();
 
@@ -100,4 +101,10 @@ public interface RangeMetadata extends Cloneable {
      * sub-features which share metadata.
      */
     public RangeMetadata clone() throws CloneNotSupportedException;
+    
+    /**
+     * Sets the parent metadata.
+     * @param metadata
+     */
+    void setParentMetadata(RangeMetadata metadata);
 }
