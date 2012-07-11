@@ -31,7 +31,7 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
@@ -64,13 +64,13 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     }
 
     @Override
-    protected GridCoordinates2D findContainingCell(double x, double y) {
+    protected GridCell2D findContainingCell(double x, double y) {
         int xIndex = getXAxis().findIndexOf(x);
         int yIndex = getYAxis().findIndexOf(y);
         if(xIndex < 0 || yIndex < 0) {
             return null;
         }
-        return new GridCoordinates2DImpl(xIndex, yIndex);
+        return getGridCell(xIndex, yIndex);
     }
     
     @Override

@@ -38,7 +38,6 @@ import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
@@ -158,10 +157,9 @@ public class GridSeriesDomainImpl extends AbstractGrid implements GridSeriesDoma
                                         (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
         }
         
-        GridCoordinates2D hCoords = hGrid.findContainingCell(pos.getHorizontalPosition());
-        if(hCoords == null)
+        GridCell2D hCell = hGrid.findContainingCell(pos.getHorizontalPosition());
+        if(hCell == null)
             return null;
-        GridCell2D hCell = hGrid.getGridCell(hCoords);
         
         return new GridCell4DRectangle(this, hCell, tExtent, tIndex, vExtent, vIndex);
     }

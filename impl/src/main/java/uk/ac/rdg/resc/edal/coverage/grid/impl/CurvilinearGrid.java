@@ -40,7 +40,7 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.cs.RangeMeaning;
 
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
@@ -253,7 +253,7 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
     }
 
     @Override
-    protected GridCoordinates2D findContainingCell(double x, double y) {
+    protected GridCell2D findContainingCell(double x, double y) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

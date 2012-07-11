@@ -72,7 +72,7 @@ import org.jfree.ui.TextAnchor;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.HorizontalDomain;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
@@ -391,9 +391,9 @@ final public class Charting {
              * GridCoordinates
              */
             HorizontalGrid hGrid = feature.getCoverage().getDomain().getHorizontalGrid();
-            Set<GridCoordinates2D> gridCoords = new HashSet<GridCoordinates2D>();
+            Set<GridCell2D> gridCoords = new HashSet<GridCell2D>();
             for (HorizontalPosition pos : testPointList.getDomainObjects()) {
-                GridCoordinates2D gridCoord = hGrid.findContainingCell(pos);
+                GridCell2D gridCoord = hGrid.findContainingCell(pos);
                 if (gridCoord != null)
                     gridCoords.add(hGrid.findContainingCell(pos));
             }

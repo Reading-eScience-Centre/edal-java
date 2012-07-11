@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import ucar.nc2.dt.GridCoordSystem;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.CurvilinearCoords.Cell;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
@@ -120,7 +120,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid
      *         layer's domain.
      */
     @Override
-    protected GridCoordinates2D findContainingCell(double x, double y)
+    protected GridCell2D findContainingCell(double x, double y)
     {
         // Find the "first guess" at the containing cell according to the
         // look-up table
@@ -132,7 +132,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid
         // the neighbours
         Cell cell = this.curvGrid.getCell(lutCoords[0], lutCoords[1]);
         if (cell.contains(x, y))
-            return new GridCoordinates2DImpl(lutCoords);
+            return getGridCell(new GridCoordinates2DImpl(lutCoords));
 
         // We do a gradient-descent method to find the true nearest
         // neighbour
@@ -163,11 +163,11 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid
         // We now have the nearest neighbour, but sometimes the position is
         // actually contained within one of the cell's neighbours
         if (cell.contains(x, y)) {
-            return new GridCoordinates2DImpl(cell.getI(), cell.getJ());
+            return getGridCell(cell.getI(), cell.getJ());
         }
         for (Cell neighbour : cell.getNeighbours()) {
             if (neighbour.contains(x, y)) {
-                return new GridCoordinates2DImpl(neighbour.getI(), neighbour.getJ());
+                return getGridCell(neighbour.getI(), neighbour.getJ());
             }
         }
 
@@ -176,7 +176,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid
          * the contains() checks. This is probably OK in the middle of a grid,
          * but we might need to be careful at the edges
          */
-        return new GridCoordinates2DImpl(cell.getI(), cell.getJ());
+        return getGridCell(cell.getI(), cell.getJ());
     }
 
 }
