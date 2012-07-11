@@ -51,7 +51,15 @@ public class NcGridValuesMatrix4D extends AbstractGridValuesMatrix<Float> {
         return ranges;
     }
 
-    private DataChunk readDataChunk(RangesList ranges) {
+    /*
+     * This method is synchronized because thread-unsafe things happen when
+     * reading from a Variable. If you're editing this and you disagree, try
+     * removing it and doing some simultaneous reads on a Curvilinear grid.
+     * 
+     * I'm not saying there's not a better place for the synchronized modifier -
+     * there may well be - but it needs to go somewhere
+     */
+    private synchronized DataChunk readDataChunk(RangesList ranges) {
         try {
             return DataChunk.readDataChunk(gridDatatype.getVariable(), ranges);
         } catch (IOException ioe) {
@@ -191,46 +199,6 @@ public class NcGridValuesMatrix4D extends AbstractGridValuesMatrix<Float> {
                     arrayIndex.setDim(lIndexInArray, coords[3]);
                 return dataChunk.readFloatValue(arrayIndex);
             }
-            
-//            @Override
-//            public GridValuesMatrix<Float> doReadBlock(final int[] mins, final int[] maxes) {
-//                int[] sizes = new int[mins.length];
-//                final GridAxis[] axes = new GridAxis[mins.length];
-//                for (int i = 0; i < mins.length; i++) {
-//                    sizes[i] = maxes[i] - mins[i] + 1;
-//                    if (getAxis(i) == null)
-//                        axes[i] = null;
-//                    else
-//                        axes[i] = new GridAxisImpl(this.getAxis(i).getName(), sizes[i]);
-//                }
-//
-//                // This GridValuesMatrix wraps the parent one, without allocating new
-//                // storage
-//                return new InMemoryGridValuesMatrix<Float>() {
-//                    @Override
-//                    public Float doReadPoint(int[] indices) {
-//                        for (int i = 0; i < indices.length; i++) {
-//                            indices[i] += mins[i];
-//                        }
-//                        return NcGridValuesMatrix4D.this.readPoint(indices);
-//                    }
-//
-//                    @Override
-//                    public Class<Float> getValueType() {
-//                        return NcGridValuesMatrix4D.this.getValueType();
-//                    }
-//
-//                    @Override
-//                    protected GridAxis doGetAxis(int n) {
-//                        return axes[n];
-//                    }
-//
-//                    @Override
-//                    public int getNDim() {
-//                        return NcGridValuesMatrix4D.this.getNDim();
-//                    }
-//                };
-//            }
         };
     }
 }
