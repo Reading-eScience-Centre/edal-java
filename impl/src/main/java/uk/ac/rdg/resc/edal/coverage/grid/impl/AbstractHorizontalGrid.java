@@ -138,18 +138,18 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
 
     @Override
     public boolean contains(HorizontalPosition position) {
-        GridCoordinates2D coords = this.findContainingCell(position);
+        GridCell2D coords = this.findContainingCell(position);
         return coords != null;
     }
 
     @Override
     public long findIndexOf(HorizontalPosition pos) {
-        GridCoordinates2D coords = this.findContainingCell(pos);
-        return coords == null ? -1 : this.getIndex(coords);
+        GridCell2D coords = this.findContainingCell(pos);
+        return coords == null ? -1 : this.getIndex(coords.getGridCoordinates());
     }
     
     @Override
-    public final GridCoordinates2D findContainingCell(HorizontalPosition pos) {
+    public final GridCell2D findContainingCell(HorizontalPosition pos) {
         if(pos.getCoordinateReferenceSystem() != getCoordinateReferenceSystem()){
             pos = GISUtils.transformPosition(pos, getCoordinateReferenceSystem());
         }
@@ -165,13 +165,13 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
      * @return the {@link GridCoordinates2D} containing the desired coordinates,
      *         or <code>null</code> if the position is outside of the grid
      */
-    protected final GridCoordinates2D findContainingCellExhaustive(double x, double y)
+    protected final GridCell2D findContainingCellExhaustive(double x, double y)
     {
         for (GridCell2D cell : this.getDomainObjects())
         {
             if (cell.getFootprint().contains(new HorizontalPositionImpl(x, y)))
             {
-                return cell.getGridCoordinates();
+                return cell;
             }
         }
         return null;
@@ -185,7 +185,7 @@ public abstract class AbstractHorizontalGrid extends AbstractGrid implements Hor
      * @return the {@link GridCoordinates2D} containing the desired coordinates,
      *         or <code>null</code> if the position is outside of the grid
      */
-    protected abstract GridCoordinates2D findContainingCell(double x, double y);
+    protected abstract GridCell2D findContainingCell(double x, double y);
 
     @Override
     public GridCoordinates2D getCoords(long index) {

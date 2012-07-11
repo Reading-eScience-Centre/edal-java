@@ -209,7 +209,7 @@ final class PixelMap implements Iterable<PixelMap.PixelMapEntry>
         // Find the nearest grid coordinates to all the points in the domain
         for (HorizontalPosition pos : targetList)
         {
-            GridCoordinates2D gridCoords = sourceGrid.findContainingCell(pos);
+            GridCoordinates2D gridCoords = sourceGrid.findContainingCell(pos).getGridCoordinates();
             if (gridCoords != null)
             {
                 pm.put(

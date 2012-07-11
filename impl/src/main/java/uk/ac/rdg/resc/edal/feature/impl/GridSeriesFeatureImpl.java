@@ -35,6 +35,7 @@ import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
+import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
@@ -45,6 +46,7 @@ import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
 /**
  * An implementation of a {@link GridSeriesFeature}
@@ -71,8 +73,13 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
             Extent<TimePosition> tRange, Set<String> members) {
         PointSeriesCoverage psCoverage = coverage.extractPointSeriesCoverage(pos, z, tRange,
                 members == null ? coverage.getScalarMemberNames() : members);
+        GridSeriesDomain domain = coverage.getDomain();
+        HorizontalPosition centre = domain.getHorizontalGrid().findContainingCell(pos).getCentre();
+        int zIndex = domain.getVerticalAxis().findIndexOf(z.getZ());
+        VerticalPosition vCentre = new VerticalPositionImpl(domain.getVerticalAxis()
+                .getCoordinateValue(zIndex), domain.getVerticalCrs());
         return new PointSeriesFeatureImpl(getName() + " -> PointSeries", "PS-" + getId(),
-                "Point series extraction of " + getDescription(), psCoverage, pos, z,
+                "Point series extraction of " + getDescription(), psCoverage, centre, vCentre,
                 getFeatureCollection());
     }
 
@@ -81,8 +88,12 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
             Set<String> members) {
         ProfileCoverage pCoverage = coverage.extractProfileCoverage(pos, t,
                 members == null ? coverage.getScalarMemberNames() : members);
+        GridSeriesDomain domain = coverage.getDomain();
+        HorizontalPosition centre = domain.getHorizontalGrid().findContainingCell(pos).getCentre();
+        int tIndex = domain.getTimeAxis().findIndexOf(t);
+        TimePosition tCentre = domain.getTimeAxis().getCoordinateValue(tIndex);
         return new ProfileFeatureImpl(getName() + " -> Profile", "PF-" + getId(),
-                "Profile extraction of " + getDescription(), pCoverage, pos, t,
+                "Profile extraction of " + getDescription(), pCoverage, centre, tCentre,
                 getFeatureCollection());
     }
 

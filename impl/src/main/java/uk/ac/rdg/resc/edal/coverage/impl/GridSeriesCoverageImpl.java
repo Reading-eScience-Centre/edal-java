@@ -139,7 +139,7 @@ public class GridSeriesCoverageImpl extends
             throw new IllegalArgumentException(
                     "Cannot extract a profile coverage from a coverage with no z-axis");
         }
-        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos);
+        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos).getGridCoordinates();
         int x = hPos.getXIndex();
         int y = hPos.getYIndex();
         int t = 0;
@@ -169,7 +169,7 @@ public class GridSeriesCoverageImpl extends
             throw new IllegalArgumentException(
                     "Cannot extract a point series coverage from a coverage with no time axis");
         }
-        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos);
+        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos).getGridCoordinates();
         int x = hPos.getXIndex();
         int y = hPos.getYIndex();
         int z = 0;

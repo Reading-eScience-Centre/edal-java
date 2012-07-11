@@ -31,9 +31,10 @@ package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
 import ucar.nc2.dataset.CoordinateAxis1D;
 import ucar.nc2.dt.GridCoordSystem;
 import ucar.unidata.geoloc.LatLonPoint;
@@ -44,11 +45,11 @@ import ucar.unidata.geoloc.projection.RotatedPole;
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractHorizontalGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.geometry.impl.AbstractPolygon;
@@ -132,7 +133,7 @@ public class ProjectedGrid extends AbstractHorizontalGrid
             @Override
             public boolean contains(double x, double y) {
                 // The x,y coordinates are in the external CRS of this grid
-                GridCoordinates2D coords = findContainingCell(x, y);
+                GridCoordinates2D coords = findContainingCell(x, y).getGridCoordinates();
                 if (coords == null)
                     return false;
                 return (coords.getXIndex() == i && coords.getYIndex() == j);
@@ -141,7 +142,7 @@ public class ProjectedGrid extends AbstractHorizontalGrid
     }
 
     @Override
-    protected GridCoordinates2D findContainingCell(double x, double y) {
+    protected GridCell2D findContainingCell(double x, double y) {
         // The incoming x and y coordinates are in the external CRS of this grid,
         // i.e. WGS84.  Now we go from lon-lat to the coordinate system of the axes.
         ProjectionPoint point;
@@ -154,7 +155,7 @@ public class ProjectedGrid extends AbstractHorizontalGrid
         int j = this.yAxis.findIndexOf(point.getY());
         if (i < 0 || j < 0)
             return null;
-        return new GridCoordinates2DImpl(i, j);
+        return getGridCell(i, j);
     }
 
     @Override
