@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.ncwms.controller;
+package uk.ac.rdg.resc.edal.graphics;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -79,7 +79,6 @@ import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.impl.LineString;
-import uk.ac.rdg.resc.edal.graphics.ColorPalette;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
@@ -89,7 +88,6 @@ import uk.ac.rdg.resc.edal.position.impl.GeoPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
-import uk.ac.rdg.resc.ncwms.util.WmsUtils;
 
 /**
  * Code to produce various types of chart. Used by the
@@ -194,7 +192,7 @@ final public class Charting {
 
         elevationAxis.setAutoRangeIncludesZero(false);
 
-        String axisName = WmsUtils.removeDuplicatedWhiteSpace(feature.getName()) + " ("
+        String axisName = feature.getName() + " ("
                 + feature.getCoverage().getScalarMetadata(memberName).getUnits().getUnitString()
                 + ")";
         NumberAxis valueAxis = new NumberAxis(axisName);
@@ -244,7 +242,7 @@ final public class Charting {
     }
 
     private static String getAxisLabel(GridSeriesFeature feature, String memberName) {
-        return WmsUtils.removeDuplicatedWhiteSpace(feature.getName()) + " ("
+        return feature.getName() + " ("
                 + feature.getCoverage().getScalarMetadata(memberName).getUnits().getUnitString()
                 + ")";
     }
