@@ -12,40 +12,53 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.util.Extents;
 
+/**
+ * Class representing a single map overlay image. This can contain
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class Frame {
-    private List<DataStylePair> layers;
+    private List<FrameData> layers;
     private int width;
     private int height;
     private String label;
+    /*
+     * We cache a colourable icon for speed - TODO is this worth it?
+     */
+    private ColourableIcon pointIcon = null;
 
-    private class DataStylePair{
-        private PlotStyle plotStyle;
-        private Number[] data;
-        
-        public DataStylePair(PlotStyle plotStyle, Number[] data) {
-            this.plotStyle = plotStyle;
-            this.data = data;
-        }
-    }
-    
     public Frame(int width, int height, String label) {
+        if (width == 0 || height == 0) {
+            throw new IllegalArgumentException("You can't make a frame with zero width or height");
+        }
         this.width = width;
         this.height = height;
         this.label = label;
-        layers = new ArrayList<DataStylePair>();
+        layers = new ArrayList<FrameData>();
     }
 
-    public void addData(Number[] data, PlotStyle style) {
-        if (data.length != width * height) {
-            throw new IllegalArgumentException("Can only add data with size " + (width * height));
+    public void addGriddedData(Number[][] data, PlotStyle style) {
+        if (data.length != width) {
+            throw new IllegalArgumentException("Can only add data with width " + width);
         }
-        layers.add(new DataStylePair(style, data));
+        if (data[0].length != height) {
+            throw new IllegalArgumentException("Can only add data with height " + height);
+        }
+        layers.add(new GriddedFrameData(style, data));
+    }
+    
+    public void addPointData(Number value, int x, int y, PlotStyle style) {
+        layers.add(new PointFrameData(style, x, y, value));
     }
 
     public BufferedImage renderLayers(MapStyleDescriptor style) {
@@ -56,23 +69,23 @@ public class Frame {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics graphics = image.getGraphics();
 
-        for (DataStylePair dataStylePair : layers) {
+        for (FrameData frameData : layers) {
             BufferedImage frameImage = null;
-            switch (dataStylePair.plotStyle) {
+            switch (frameData.getPlotStyle()) {
             case BOXFILL:
-                frameImage = drawGriddedImage(dataStylePair.data, style);
+                frameImage = drawGriddedImage(frameData, style);
                 break;
             case VECTOR:
-                frameImage = drawVectorArrows(dataStylePair.data, style);
+                frameImage = drawVectorArrows(frameData, style);
                 break;
             case TRAJECTORY:
-                throw new IllegalArgumentException("Trajectory plots not yet supported");
+                throw new UnsupportedOperationException("Trajectory plots not yet supported");
 //                break;
             case POINT:
-                throw new IllegalArgumentException("Point plots not yet supported");
-//                break;
+                frameImage = drawPointImage(frameData, style);
+                break;
             case CONTOUR:
-                throw new IllegalArgumentException("Contour plots not yet supported");
+                throw new UnsupportedOperationException("Contour plots not yet supported");
 //                break;
             default:
                 throw new IllegalArgumentException("Unrecognised plotting style");
@@ -80,8 +93,8 @@ public class Frame {
 
             graphics.drawImage(frameImage, 0, 0, null);
         }
-        
-        if(label != null && !label.equals("")){
+
+        if (label != null && !label.equals("")) {
             Graphics2D gfx = (Graphics2D) image.getGraphics();
             gfx.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                     RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
@@ -91,82 +104,146 @@ public class Frame {
             gfx.drawRect(0, image.getHeight() - 20, image.getWidth() - 1, 19);
             gfx.drawString(label, 10, image.getHeight() - 5);
         }
-        
+
         return image;
     }
-    
-    private BufferedImage drawGriddedImage(Number[] data, MapStyleDescriptor style){
-        byte[] pixels = new byte[width * height];
-        for (int i = 0; i < pixels.length; i++) {
-            Number datum = data[i];
-            pixels[i] = (byte) style.getColourIndex(datum);
-        }
-        // Create a ColorModel for the image
-        ColorModel colorModel = style.getColorModel();
 
-        // Create the Image
-        DataBuffer buf = new DataBufferByte(pixels, pixels.length);
-        SampleModel sampleModel = colorModel.createCompatibleSampleModel(width, height);
-        WritableRaster raster = Raster.createWritableRaster(sampleModel, buf, null);
-        return new BufferedImage(colorModel, raster, false, null);
-    }
-    
-    private BufferedImage drawVectorArrows(Number[] data, MapStyleDescriptor style){
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        // We superimpose direction arrows on top of the background
-        // TODO: only do this for lat-lon projections!
-        Graphics2D g = image.createGraphics();
-        // TODO: control the colour of the arrows with an attribute
-        g.setColor(Color.BLACK);
-
-        float arrowLength = style.getArrowLength();
-        for (int i = 0; i < width; i += Math.ceil(arrowLength * 1.2)) {
-            for (int j = 0; j < height; j += Math.ceil(arrowLength * 1.2)) {
-                int dataIndex = j * width + i;
-                Number angle = data[dataIndex];
-                if (angle != null) {
-                    // Calculate the end point of the arrow
-                    double iEnd = i + arrowLength * Math.cos(angle.doubleValue());
-                    // Screen coordinates go down, but north is up, hence
-                    // the minus sign
-                    double jEnd = j - arrowLength * Math.sin(angle.doubleValue());
-                    // Draw a dot representing the data location
-                    g.fillOval(i - 2, j - 2, 4, 4);
-                    // Draw a line representing the vector direction and
-                    // magnitude
-                    g.setStroke(new BasicStroke(1));
-                    g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
+    private BufferedImage drawGriddedImage(FrameData frameData, MapStyleDescriptor style) {
+        byte[] pixels = new byte[width*height];
+        if (frameData instanceof GriddedFrameData) {
+            Number[][] data = ((GriddedFrameData) frameData).getData();
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    Number datum = data[i][j];
+                    pixels[i + width * j] = (byte) style.getColourIndex(datum);
                 }
             }
+            ColorModel colorModel = style.getColorModel();
+            
+            // Create the Image
+            DataBuffer buf = new DataBufferByte(pixels, width*height);
+            SampleModel sampleModel = colorModel.createCompatibleSampleModel(width, height);
+            WritableRaster raster = Raster.createWritableRaster(sampleModel, buf, null);
+            return new BufferedImage(colorModel, raster, false, null);
+        } else {
+            throw new UnsupportedOperationException("Can only plot gridded images with gridded data");
         }
-        return image;
     }
 
-    public Extent<Float> getAutoRange() {
-        Float min = Float.MAX_VALUE;
-        Float max = Float.MIN_VALUE;
-        for (DataStylePair layer : layers) {
-            /*
-             * Directional data doesn't need to have the same range as
-             * everything else.
-             * 
-             * If new data types are defined which may be plotted without
-             * worrying about their ranges matching, add them to this list
-             */
-            if(layer.plotStyle != PlotStyle.VECTOR){
-                for (Number f : layer.data) {
-                    if (f != null && !f.equals(Float.NaN) && !f.equals(Double.NaN)) {
-                        if (f.floatValue() < min)
-                            min = f.floatValue();
-                        if (f.floatValue() > max)
-                            max = f.floatValue();
+    private BufferedImage drawVectorArrows(FrameData frameData, MapStyleDescriptor style) {
+        if (frameData instanceof GriddedFrameData) {
+            Number[][] data = ((GriddedFrameData) frameData).getData();
+            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            // We superimpose direction arrows on top of the background
+            // TODO: only do this for lat-lon projections!
+            Graphics2D g = image.createGraphics();
+            // TODO: control the colour of the arrows with an attribute
+            g.setColor(Color.BLACK);
+
+            float arrowLength = style.getArrowLength();
+            for (int i = 0; i < width; i += Math.ceil(arrowLength * 1.2)) {
+                for (int j = 0; j < height; j += Math.ceil(arrowLength * 1.2)) {
+                    Number angle = data[i][j];
+                    if (angle != null) {
+                        // Calculate the end point of the arrow
+                        double iEnd = i + arrowLength * Math.cos(angle.doubleValue());
+                        // Screen coordinates go down, but north is up, hence
+                        // the minus sign
+                        double jEnd = j - arrowLength * Math.sin(angle.doubleValue());
+                        // Draw a dot representing the data location
+                        g.fillOval(i - 2, j - 2, 4, 4);
+                        // Draw a line representing the vector direction and
+                        // magnitude
+                        g.setStroke(new BasicStroke(1));
+                        g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
                     }
                 }
             }
+            return image;
+        } else {
+            throw new UnsupportedOperationException("Can only plot vector arrows for gridded data");
         }
-        if(min.equals(Float.MAX_VALUE) || max.equals(Float.MIN_VALUE)){
+    }
+
+    private BufferedImage drawPointImage(FrameData frameData, MapStyleDescriptor style){
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D canvas = image.createGraphics();
+        if(frameData instanceof PointFrameData){
+            PointFrameData pointFrameData = (PointFrameData) frameData;
+            Color color = style.getColorForValue(pointFrameData.getValue().floatValue());
+            canvas.drawImage(getPointIcon().getColouredIcon(color), pointFrameData.getX()
+                    - getPointIcon().getWidth() / 2, height - (pointFrameData.getY()
+                    - getPointIcon().getHeight() / 2) - 1, null);
+        } else {
             /*
-             * We have no data where the ranges matter.  Return something anyway
+             * TODO implement a regular grid of points for gridded data.
+             */
+            throw new UnsupportedOperationException(
+                    "Point images are currently only supported for non-gridded data");
+        }
+        return image;
+    }
+    
+    private ColourableIcon getPointIcon(){
+        if(pointIcon  == null){
+            BufferedImage iconImage;
+            try {
+                /*
+                 * This will work when the files are packaged as a JAR. For running
+                 * within an IDE, you may need to add the root directory of the project
+                 * to the classpath
+                 */
+                iconImage = ImageIO.read(this.getClass().getResource("/img/circle.png"));
+                pointIcon = new ColourableIcon(iconImage);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return pointIcon;
+    }
+    
+    public Extent<Float> getAutoRange() {
+        Float min = Float.MAX_VALUE;
+        Float max = Float.MIN_VALUE;
+        for (FrameData layer : layers) {
+            if (layer instanceof GriddedFrameData) {
+                GriddedFrameData griddedFrameData = (GriddedFrameData) layer;
+                Number[][] data = griddedFrameData.getData();
+                /*
+                 * Directional data doesn't need to have the same range as
+                 * everything else.
+                 * 
+                 * If new data types are defined which may be plotted without
+                 * worrying about their ranges matching, add them to this list
+                 */
+                if (layer.getPlotStyle() != PlotStyle.VECTOR) {
+                    for (int i = 0; i < data.length; i++) {
+                        for (int j = 0; j < data[i].length; j++) {
+                            Number value = data[i][j];
+                            if (value != null && !value.equals(Float.NaN)
+                                    && !value.equals(Double.NaN)) {
+                                if (value.floatValue() < min)
+                                    min = value.floatValue();
+                                if (value.floatValue() > max)
+                                    max = value.floatValue();
+                            }
+                        }
+                    }
+                }
+            } else if (layer instanceof PointFrameData) {
+                PointFrameData pointFrameData = (PointFrameData) layer;
+                Number value = pointFrameData.getValue();
+                if (value != null && !value.equals(Float.NaN) && !value.equals(Double.NaN)) {
+                    if (value.floatValue() < min)
+                        min = value.floatValue();
+                    if (value.floatValue() > max)
+                        max = value.floatValue();
+                }
+            }
+        }
+        if (min.equals(Float.MAX_VALUE) || max.equals(Float.MIN_VALUE)) {
+            /*
+             * We have no data where the ranges matter. Return something anyway
              */
             return Extents.newExtent(0.0f, 1.0f);
         }
