@@ -10,7 +10,9 @@ import java.util.Map;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
+import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
@@ -19,6 +21,7 @@ import uk.ac.rdg.resc.edal.coverage.metadata.VectorMetadata;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
@@ -71,8 +74,7 @@ public class MapPlotter {
      */
     public void addToFrame(Feature feature, String memberName, VerticalPosition vPos,
             TimePosition tPos, String label, PlotStyle plotStyle) {
-
-        Number[] data;
+        Number[][] data;
         Frame frame = frameData.get(tPos);
         if (frame == null) {
             frame = new Frame(width, height, label);
@@ -113,7 +115,7 @@ public class MapPlotter {
                  * We have a scalar field. We just want to plot it.
                  */
                 data = getDataFromGridFeature(gridFeature, memberName);
-                frame.addData(data, plotStyle);
+                frame.addGriddedData(data, plotStyle);
             } else {
                 RangeMetadata rangeMetadata = gridFeature.getCoverage().getRangeMetadata();
                 if (rangeMetadata.getMemberNames().contains(memberName)) {
@@ -135,9 +137,9 @@ public class MapPlotter {
                         }
                         if(magnitudeMember != null && directionMember != null){
                             data = getDataFromGridFeature(gridFeature, magnitudeMember);
-                            frame.addData(data, PlotStyle.BOXFILL);
+                            frame.addGriddedData(data, PlotStyle.BOXFILL);
                             data = getDataFromGridFeature(gridFeature, directionMember);
-                            frame.addData(data, PlotStyle.VECTOR);
+                            frame.addGriddedData(data, PlotStyle.VECTOR);
                         } else {
                             throw new IllegalArgumentException(
                                     "This vector is missing either a magnitude or a direction");
@@ -153,11 +155,29 @@ public class MapPlotter {
                                     + " is not present as either a scalar member of this coverage, or as a direct child");
                 }
             }
-
-//        } else if(feature instanceof GridSeriesFeature){
-//            data = null;
-//        } else if(feature instanceof PointSeriesFeature){
-//            data = null;
+        } else if(feature instanceof PointSeriesFeature){
+            PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) feature;
+            HorizontalGrid targetDomain = new RegularGridImpl(bbox, width,height);
+            GridCoordinates2D gridCoordinates = targetDomain.findContainingCell(pointSeriesFeature.getHorizontalPosition()).getGridCoordinates();
+            
+            boolean scalarField = pointSeriesFeature.getCoverage().getScalarMemberNames().contains(memberName);
+            if(scalarField){
+                ScalarMetadata scalarMetadata = pointSeriesFeature.getCoverage().getScalarMetadata(memberName);
+                Class<?> clazz = scalarMetadata.getValueType();
+                Number value = null;
+                if (Number.class.isAssignableFrom(clazz)) {
+                    /*
+                     * We can plot non-numerical values of point series
+                     * features. We just plot them as an out-of-range number.
+                     */
+                    value = (Number) pointSeriesFeature.getCoverage().evaluate(tPos, memberName);
+                }
+                frame.addPointData(value, gridCoordinates.getXIndex(), gridCoordinates.getYIndex(), plotStyle);
+            } else {
+                throw new UnsupportedOperationException(
+                        "Plotting of non-scalar members of PointSeriesFeatures is not yet supported");
+            }
+            
         } else {
             throw new UnsupportedOperationException("Plotting of features of the type "
                     + feature.getClass() + " on a map is not yet supported");
@@ -213,7 +233,7 @@ public class MapPlotter {
         return images;
     }
 
-    private Number[] getDataFromGridFeature(final GridFeature feature, String memberName) {
+    private Number[][] getDataFromGridFeature(final GridFeature feature, String memberName) {
         GridValuesMatrix<?> gridVals = feature.getCoverage().getGridValues(memberName);
 
         Class<?> clazz = gridVals.getValueType();
@@ -222,33 +242,19 @@ public class MapPlotter {
                     "Can only add frames from GridValuesMatrix objects which contain numbers");
         }
 
-        Number[] data = new Number[width * height];
+        Number[][] data = new Number[width][height];
 
-        for (int i = 0; i < data.length; i++) {
-            /*
-             * The image coordinate system has the vertical axis increasing
-             * downward, but the data's coordinate system has the vertical axis
-             * increasing upwards. The method below flips the axis
-             */
-            int dataIndex = getDataIndex(i, width, height);
-            Number num = (Number) gridVals.getValues().get(dataIndex);
-            if (num != null && (num.equals(Float.NaN) || num.equals(Double.NaN))) {
-                num = null;
-            }
-            data[i] = num;
+        for(int i=0;i<width; i++){
+            for(int j=0;j<height; j++){
+                int dataIndex = getDataIndex(i, j, width, height);
+                Number num = (Number) gridVals.getValues().get(dataIndex);
+                if (num != null && (num.equals(Float.NaN) || num.equals(Double.NaN))) {
+                    num = null;
+                }
+                data[i][j] = num;
+            }            
         }
         return data;
-    }
-
-    /**
-     * Calculates the index of the data point in a data array that corresponds
-     * with the given index in the image array, taking into account that the
-     * vertical axis is flipped.
-     */
-    static int getDataIndex(int imageIndex, int width, int height) {
-        int imageI = imageIndex % width;
-        int imageJ = imageIndex / width;
-        return getDataIndex(imageI, imageJ, width, height);
     }
 
     /**

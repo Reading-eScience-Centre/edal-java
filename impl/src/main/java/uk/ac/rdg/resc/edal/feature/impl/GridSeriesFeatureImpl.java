@@ -75,9 +75,12 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
                 members == null ? coverage.getScalarMemberNames() : members);
         GridSeriesDomain domain = coverage.getDomain();
         HorizontalPosition centre = domain.getHorizontalGrid().findContainingCell(pos).getCentre();
-        int zIndex = domain.getVerticalAxis().findIndexOf(z.getZ());
-        VerticalPosition vCentre = new VerticalPositionImpl(domain.getVerticalAxis()
-                .getCoordinateValue(zIndex), domain.getVerticalCrs());
+        VerticalPosition vCentre = null;
+        if (domain.getVerticalAxis() != null) {
+            int zIndex = domain.getVerticalAxis().findIndexOf(z.getZ());
+            vCentre = new VerticalPositionImpl(domain.getVerticalAxis().getCoordinateValue(zIndex),
+                    domain.getVerticalCrs());
+        }
         return new PointSeriesFeatureImpl(getName() + " -> PointSeries", "PS-" + getId(),
                 "Point series extraction of " + getDescription(), psCoverage, centre, vCentre,
                 getFeatureCollection());

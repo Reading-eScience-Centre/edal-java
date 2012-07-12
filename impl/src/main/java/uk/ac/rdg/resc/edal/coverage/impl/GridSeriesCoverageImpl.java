@@ -101,6 +101,11 @@ public class GridSeriesCoverageImpl extends
         if (getDomain().getTimeAxis() != null)
             zIndex = getDomain().getTimeAxis().findIndexOf(tPos);
         
+        /*
+         * TODO - We may want to extract a parent member - i.e. one that is not
+         * a scalar member, but represents all of its children
+         */
+        
         if(memberNames == null){
             memberNames = getScalarMemberNames();
         }
