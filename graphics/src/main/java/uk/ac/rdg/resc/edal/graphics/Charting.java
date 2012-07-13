@@ -74,7 +74,8 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.HorizontalDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
@@ -84,7 +85,6 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrs.PositiveDirection;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.position.impl.GeoPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
@@ -241,15 +241,14 @@ final public class Charting {
         return new JFreeChart(title, null, plot, false);
     }
 
-    private static String getAxisLabel(GridSeriesFeature feature, String memberName) {
+    private static String getAxisLabel(Feature feature, String memberName) {
         return feature.getName() + " ("
                 + feature.getCoverage().getScalarMetadata(memberName).getUnits().getUnitString()
                 + ")";
     }
 
-    public static JFreeChart createTransectPlot(GridSeriesFeature feature, String memberName,
-            LineString transectDomain, VerticalPosition zPos, TimePosition tPos,
-            String copyrightStatement) {
+    public static JFreeChart createTransectPlot(GridFeature feature, String memberName,
+            LineString transectDomain, String copyrightStatement, boolean hasVerticalAxis) {
 
         if (!Number.class.isAssignableFrom(feature.getCoverage().getScalarMetadata(memberName)
                 .getValueType())) {
@@ -260,14 +259,11 @@ final public class Charting {
         XYPlot plot;
         XYSeries series = new XYSeries("data", true);
 
-        HorizontalDomain optimalTransectDomain = getOptimalTransectDomain(feature, transectDomain);
+        HorizontalDomain optimalTransectDomain = getOptimalTransectDomain(feature.getCoverage().getDomain(), transectDomain);
 
         int k = 0;
         for (HorizontalPosition pos : optimalTransectDomain.getDomainObjects()) {
-            series.add(
-                    k++,
-                    (Number) feature.getCoverage().evaluate(new GeoPositionImpl(pos, zPos, tPos),
-                            memberName));
+            series.add(k++, (Number) feature.getCoverage().evaluate(pos, memberName));
         }
 
         XYSeriesCollection xySeriesColl = new XYSeriesCollection();
@@ -278,8 +274,7 @@ final public class Charting {
          * transect chart using standard XYItem Renderer to keep the plot
          * renderer consistent with that of vertical section plot
          */
-        VerticalAxis vAxis = feature.getCoverage().getDomain().getVerticalAxis();
-        if (vAxis != null && vAxis.size() > 1) {
+        if (hasVerticalAxis) {
             final XYItemRenderer renderer1 = new StandardXYItemRenderer();
             final NumberAxis rangeAxis1 = new NumberAxis(getAxisLabel(feature, memberName));
             plot = new XYPlot(xySeriesColl, new NumberAxis(), rangeAxis1, renderer1);
@@ -366,7 +361,7 @@ final public class Charting {
      * @return a HorizontalDomain that contains (near) the minimum necessary
      *         number of points to sample a layer's source grid of data.
      */
-    private static HorizontalDomain getOptimalTransectDomain(GridSeriesFeature feature,
+    public static HorizontalDomain getOptimalTransectDomain(HorizontalGrid hGrid,
             LineString transect) {
         // We need to work out how many points we need to include in order to
         // completely sample the data grid (i.e. we need the resolution of the
@@ -390,7 +385,6 @@ final public class Charting {
              * Relies on equals() being implemented correctly for the
              * GridCoordinates
              */
-            HorizontalGrid hGrid = feature.getCoverage().getDomain().getHorizontalGrid();
             Set<GridCell2D> gridCoords = new HashSet<GridCell2D>();
             for (HorizontalPosition pos : testPointList.getDomainObjects()) {
                 GridCell2D gridCoord = hGrid.findContainingCell(pos);
@@ -529,7 +523,8 @@ final public class Charting {
         double maxElValue = 1.0;
 
         List<List<Number>> sectionData = new ArrayList<List<Number>>();
-        HorizontalDomain optimalTransectDomain = getOptimalTransectDomain(feature, horizPath);
+        HorizontalDomain optimalTransectDomain = getOptimalTransectDomain(feature.getCoverage()
+                .getDomain().getHorizontalGrid(), horizPath);
         List<HorizontalPosition> controlPoints = optimalTransectDomain.getDomainObjects();
         for (HorizontalPosition pos : controlPoints) {
             /*

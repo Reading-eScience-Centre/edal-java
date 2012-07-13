@@ -31,19 +31,19 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
-import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 
-public abstract class GridSeriesFeatureCollectionFactory {
+public abstract class FeatureCollectionFactory {
 
-    public abstract FeatureCollection<GridSeriesFeature> read(String location, String id,
+    public abstract FeatureCollection<Feature> read(String location, String id,
             String name) throws IOException;
 
     /**
      * Maps class names to GridSeriesFeatureCollectionFactory objects. Only one
      * DataReader object of each class will ever be created.
      */
-    private static Map<String, GridSeriesFeatureCollectionFactory> readers = new HashMap<String, GridSeriesFeatureCollectionFactory>();
+    private static Map<String, FeatureCollectionFactory> readers = new HashMap<String, FeatureCollectionFactory>();
 
     /**
      * Gets a DataReader of the given class. Only one instance of each class
@@ -57,7 +57,7 @@ public abstract class GridSeriesFeatureCollectionFactory {
      *             if {@code dataReaderClassName} isn't the name of a valid
      *             DataReader subclass
      */
-    public static GridSeriesFeatureCollectionFactory forName(String factoryClassName)
+    public static FeatureCollectionFactory forName(String factoryClassName)
             throws Exception {
         String clazz = DefaultGridSeriesFeatureCollectionFactory.class.getName();
         if (factoryClassName != null && !factoryClassName.trim().equals("")) {
@@ -70,7 +70,7 @@ public abstract class GridSeriesFeatureCollectionFactory {
             // Create the DataReader object
             Object factoryObj = Class.forName(clazz).newInstance();
             // this will throw a ClassCastException if drObj is not a DataReader
-            readers.put(clazz, (GridSeriesFeatureCollectionFactory) factoryObj);
+            readers.put(clazz, (FeatureCollectionFactory) factoryObj);
         }
         return readers.get(clazz);
     }

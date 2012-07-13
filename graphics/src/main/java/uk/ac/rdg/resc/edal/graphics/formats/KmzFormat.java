@@ -38,7 +38,14 @@ import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
+import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
+import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.VerticalAxisImpl;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 
@@ -84,7 +91,7 @@ public class KmzFormat extends ImageFormat {
      */
     @Override
     public void writeImage(List<BufferedImage> frames, OutputStream out,
-            GridSeriesFeature feature, double[] bbox, List<String> tValues, String zValue,
+            Feature feature, double[] bbox, List<String> tValues, String zValue,
             BufferedImage legend) throws IOException {
         StringBuffer kml = new StringBuffer();
         for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++) {
@@ -124,24 +131,35 @@ public class KmzFormat extends ImageFormat {
                  * convert to a DateTime and back again.
                  */
                 try {
-                    TimePosition dt = TimeUtils.iso8601ToDateTime(tValues.get(frameIndex), feature
-                            .getCoverage().getDomain().getCalendarSystem());
+                    CalendarSystem calSys = null;
+                    if (feature instanceof GridSeriesFeature) {
+                        calSys = ((GridSeriesFeature) feature).getCoverage().getDomain()
+                                .getCalendarSystem();
+                    } else if (feature instanceof PointSeriesFeature) {
+                        calSys = ((PointSeriesFeature) feature).getCoverage().getDomain()
+                                .getCalendarSystem();
+                    }
+                    TimePosition dt = TimeUtils.iso8601ToDateTime(tValues.get(frameIndex), calSys);
                     timestamp = TimeUtils.dateTimeToISO8601(dt);
                     kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
             }
-            if (zValue != null && !zValue.equals("")
-                    && feature.getCoverage().getDomain().getVerticalAxis() != null) {
+            VerticalAxis vAxis = null;
+            if (feature instanceof GridSeriesFeature) {
+                vAxis = ((GridSeriesFeature) feature).getCoverage().getDomain().getVerticalAxis();
+            } else if (feature instanceof ProfileFeature) {
+                ProfileDomain domain = ((ProfileFeature) feature).getCoverage().getDomain();
+                vAxis = new VerticalAxisImpl("z axis", domain.getZValues(), domain.getVerticalCrs());
+            }
+
+            if (zValue != null && !zValue.equals("") && vAxis != null) {
                 z = "";
                 if (timestamp != null)
                     z += "<br />";
-                z += "Elevation: "
-                        + zValue
-                        + " "
-                        + feature.getCoverage().getDomain().getVerticalCrs().getUnits()
-                                .getUnitString();
+                z += "Elevation: " + zValue + " "
+                        + vAxis.getVerticalCrs().getUnits().getUnitString();
             }
             kml.append("<name>");
             if (timestamp == null && z == null) {
