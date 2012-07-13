@@ -37,8 +37,8 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
-import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.graphics.exceptions.InvalidFormatException;
 
 /**
@@ -154,7 +154,7 @@ public abstract class ImageFormat {
      *             BufferedImages.
      */
     public abstract void writeImage(List<BufferedImage> frames, OutputStream out,
-            GridSeriesFeature feature, double[] bbox, List<String> tValues, String zValue,
+            Feature feature, double[] bbox, List<String> tValues, String zValue,
             BufferedImage legend) throws IOException;
 
 }

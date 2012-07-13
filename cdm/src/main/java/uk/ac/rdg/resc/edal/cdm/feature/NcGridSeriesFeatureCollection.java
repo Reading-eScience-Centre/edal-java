@@ -56,6 +56,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.impl.GridSeriesCoverageImpl;
 import uk.ac.rdg.resc.edal.coverage.plugins.VectorPlugin;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.impl.AbstractFeatureCollection;
@@ -68,8 +69,8 @@ import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
  * @author Guy Griffiths
  * 
  */
-public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<GridSeriesFeature>
-        implements FeatureCollection<GridSeriesFeature> {
+public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Feature>
+        implements FeatureCollection<Feature> {
 
     /**
      * Instantiates a collection of features from one or more NetCDF files.
