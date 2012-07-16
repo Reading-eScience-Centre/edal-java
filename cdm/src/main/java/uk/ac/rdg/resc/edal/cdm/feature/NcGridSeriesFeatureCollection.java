@@ -69,8 +69,7 @@ import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
  * @author Guy Griffiths
  * 
  */
-public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Feature>
-        implements FeatureCollection<Feature> {
+public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Feature> {
 
     /**
      * Instantiates a collection of features from one or more NetCDF files.

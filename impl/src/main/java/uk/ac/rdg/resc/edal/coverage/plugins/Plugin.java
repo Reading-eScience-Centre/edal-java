@@ -92,26 +92,36 @@ public abstract class Plugin {
         return provides;
     }
 
-    private void checkValidRequest(String memberName, int numberOfValues) {
+    private void checkValidRequest(String memberName, List<?> supplied) {
         if (memberName != null && (!provides.contains(memberName) || !memberName.startsWith(baseName))) {
             throw new IllegalArgumentException("This Plugin does not provide the field "
                     + memberName);
         }
-        if (numberOfValues != uses.size()) {
-            throw new IllegalArgumentException("This Plugin needs " + uses.size()
-                    + " fields, but you have provided " + numberOfValues);
+        if (supplied == null) {
+            if ((uses != null && uses.size() > 0)) {
+                throw new IllegalArgumentException(
+                        "This Plugin needs some data, but you have supplied none");
+            }
+        } else {
+            if (uses == null && supplied.size() > 0) {
+                throw new IllegalArgumentException(
+                        "This Plugin needs no data, but you have supplied some");
+            } else if (uses != null && supplied.size() != uses.size()) {
+                throw new IllegalArgumentException("This Plugin needs " + uses.size()
+                        + " fields, but you have provided " + supplied.size());
+            }
         }
     }
 
     public Object getProcessedValue(String memberName, List<Object> values) {
-        checkValidRequest(memberName, values.size());
+        checkValidRequest(memberName, values);
         String reducedName = memberName.substring(baseName.length() + 1);
         return generateValue(reducedName, values);
     }
 
     public GridValuesMatrix<?> getProcessedValues(String memberName,
             final List<? extends GridValuesMatrix<?>> gvmInputs) {
-        checkValidRequest(memberName, gvmInputs.size());
+        checkValidRequest(memberName, gvmInputs);
 
         return new PluginWrappedGridValuesMatrix(this, gvmInputs, memberName);
     }
@@ -119,7 +129,7 @@ public abstract class Plugin {
     private boolean metadataGenerated = false;
     
     public RangeMetadata generateMetadataTree(List<ScalarMetadata> metadataList) {
-        checkValidRequest(null, metadataList.size());
+        checkValidRequest(null, metadataList);
         metadataGenerated = true;
         return generateRangeMetadata(metadataList);
     }
