@@ -74,6 +74,7 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.HorizontalDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
@@ -121,8 +122,9 @@ final public class Charting {
         HorizontalPosition lonLat = feature.getHorizontalPosition();
         // Create a chart with no legend, tooltips or URLs
         String title = "Lon: " + lonLat.getX() + ", Lat: " + lonLat.getY();
-        String yLabel = feature.getName() + " ("
-                + feature.getCoverage().getScalarMetadata(memberName).getUnits().getUnitString()
+        ScalarMetadata scalarMetadata = feature.getCoverage().getScalarMetadata(memberName);
+        String yLabel = scalarMetadata.getDescription() + " ("
+                + scalarMetadata.getUnits().getUnitString()
                 + ")";
         JFreeChart chart = ChartFactory.createTimeSeriesChart(title, "Date / time", yLabel,
                 xydataset, false, false, false);
