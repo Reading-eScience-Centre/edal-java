@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
@@ -87,7 +88,7 @@ public class MapPlotter {
          * that member name
          */
         Set<String> memberNamesToExtract = getAllScalarChildrenOf(feature.getCoverage()
-                .getRangeMetadata(), memberName);
+                .getRangeMetadata().getMemberMetadata(memberName));
         
         if(feature instanceof GridSeriesFeature){
             feature = ((GridSeriesFeature) feature).extractGridFeature(new RegularGridImpl(bbox, width,
@@ -158,26 +159,31 @@ public class MapPlotter {
         } else if(feature instanceof PointSeriesFeature){
             PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) feature;
             HorizontalGrid targetDomain = new RegularGridImpl(bbox, width,height);
-            GridCoordinates2D gridCoordinates = targetDomain.findContainingCell(pointSeriesFeature.getHorizontalPosition()).getGridCoordinates();
+            GridCell2D containingCell = targetDomain.findContainingCell(pointSeriesFeature.getHorizontalPosition());
+            /*
+             * If the features is outside of our box, don't do anything.
+             */
+            if(containingCell != null){
+                GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
             
-            boolean scalarField = pointSeriesFeature.getCoverage().getScalarMemberNames().contains(memberName);
-            if(scalarField){
-                ScalarMetadata scalarMetadata = pointSeriesFeature.getCoverage().getScalarMetadata(memberName);
-                Class<?> clazz = scalarMetadata.getValueType();
-                Number value = null;
-                if (Number.class.isAssignableFrom(clazz)) {
-                    /*
-                     * We can plot non-numerical values of point series
-                     * features. We just plot them as an out-of-range number.
-                     */
-                    value = (Number) pointSeriesFeature.getCoverage().evaluate(tPos, memberName);
+                boolean scalarField = pointSeriesFeature.getCoverage().getScalarMemberNames().contains(memberName);
+                if(scalarField){
+                    ScalarMetadata scalarMetadata = pointSeriesFeature.getCoverage().getScalarMetadata(memberName);
+                    Class<?> clazz = scalarMetadata.getValueType();
+                    Number value = null;
+                    if (Number.class.isAssignableFrom(clazz)) {
+                        /*
+                         * We can plot non-numerical values of point series
+                         * features. We just plot them as an out-of-range number.
+                         */
+                        value = (Number) pointSeriesFeature.getCoverage().evaluate(tPos, memberName);
+                    }
+                    frame.addPointData(value, gridCoordinates.getXIndex(), gridCoordinates.getYIndex(), plotStyle);
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Plotting of non-scalar members of PointSeriesFeatures is not yet supported");
                 }
-                frame.addPointData(value, gridCoordinates.getXIndex(), gridCoordinates.getYIndex(), plotStyle);
-            } else {
-                throw new UnsupportedOperationException(
-                        "Plotting of non-scalar members of PointSeriesFeatures is not yet supported");
             }
-            
         } else {
             throw new UnsupportedOperationException("Plotting of features of the type "
                     + feature.getClass() + " on a map is not yet supported");
@@ -191,15 +197,19 @@ public class MapPlotter {
     /*
      * This gets all scalar children of the desired member.
      */
-    private Set<String> getAllScalarChildrenOf(RangeMetadata rangeMetadata, String memberName){
+    private Set<String> getAllScalarChildrenOf(RangeMetadata rangeMetadata){
         Set<String> returnSet = new HashSet<String>();
         
-        for(String subMember : rangeMetadata.getMemberNames()){
-            RangeMetadata memberMetadata = rangeMetadata.getMemberMetadata(subMember);
-            if(memberMetadata instanceof ScalarMetadata){
-                returnSet.add(subMember);
-            } else {
-                returnSet.addAll(getAllScalarChildrenOf(memberMetadata, memberName));
+        if(rangeMetadata instanceof ScalarMetadata){
+            returnSet.add(rangeMetadata.getName());
+        } else {
+            for(String subMember : rangeMetadata.getMemberNames()){
+                RangeMetadata memberMetadata = rangeMetadata.getMemberMetadata(subMember);
+                if(memberMetadata instanceof ScalarMetadata){
+                    returnSet.add(subMember);
+                } else {
+                    returnSet.addAll(getAllScalarChildrenOf(memberMetadata));
+                }
             }
         }
         return returnSet;
