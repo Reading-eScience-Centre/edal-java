@@ -143,7 +143,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
              * Otherwise, check that this variable has the same grid as the
              * coverage
              */
-            if (getDomain().equals(domain)) {
+            if (this.domain.equals(domain)) {
                 /*
                  * If so, create some metadata for the variable, and add it to
                  * the parent metadata, and the flat variable->metadata map

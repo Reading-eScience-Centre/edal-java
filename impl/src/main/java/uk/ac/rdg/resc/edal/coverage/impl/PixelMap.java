@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
@@ -209,12 +208,12 @@ final class PixelMap implements Iterable<PixelMap.PixelMapEntry>
         // Find the nearest grid coordinates to all the points in the domain
         for (HorizontalPosition pos : targetList)
         {
-            GridCoordinates2D gridCoords = sourceGrid.findContainingCell(pos).getGridCoordinates();
-            if (gridCoords != null)
+            GridCell2D gridCell = sourceGrid.findContainingCell(pos);
+            if (gridCell != null)
             {
                 pm.put(
-                    gridCoords.getXIndex(),
-                    gridCoords.getYIndex(),
+                    gridCell.getGridCoordinates().getXIndex(),
+                    gridCell.getGridCoordinates().getYIndex(),
                     pixelIndex
                 );
             }
