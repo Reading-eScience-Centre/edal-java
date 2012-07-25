@@ -125,7 +125,7 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
 
             GridSeriesDomain domain = new GridSeriesDomainImpl(hGrid, vAxis, tAxis);
             // TODO more meaningful description
-            GridSeriesCoverageImpl coverage = new GridSeriesCoverageImpl("grid" + gridNo, domain,
+            GridSeriesCoverageImpl coverage = new GridSeriesCoverageImpl(collectionId + gridNo, domain,
                     dataReadingStrategy);
 
             Map<String, XYVarIDs> xyComponents = new HashMap<String, XYVarIDs>();
@@ -206,7 +206,7 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
          */
         for (GridSeriesCoverage coverage : coverages) {
             // TODO more meaningful name/ID
-            GridSeriesFeature feature = new GridSeriesFeatureImpl("Feature for "+coverage.getDescription(), coverage.getDescription(), this, coverage);
+            GridSeriesFeature feature = new GridSeriesFeatureImpl(collectionName, coverage.getDescription(), this, coverage);
             addFeature(feature);
         }
     }
