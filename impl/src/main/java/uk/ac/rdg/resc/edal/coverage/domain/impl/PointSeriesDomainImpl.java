@@ -56,19 +56,27 @@ public class PointSeriesDomainImpl implements PointSeriesDomain {
      *            the {@link List} of {@link TimePosition}s
      */
     public PointSeriesDomainImpl(List<TimePosition> times) {
-        this.times = times;
-        long lastTime = 0L;
-        if (times.size() == 0) {
-            throw new IllegalArgumentException(
-                    "Must have at least one time value for a PointSeriesDomain");
-        }
-        for (TimePosition time : times) {
-            if (time.getValue() < lastTime) {
-                throw new IllegalArgumentException("List of times must be in ascending order");
+        if(times != null){
+            this.times = times;
+            long lastTime = 0L;
+            if (times.size() == 0) {
+                throw new IllegalArgumentException(
+                        "Must have at least one time value for a PointSeriesDomain");
             }
-            lastTime = time.getValue();
+            for (TimePosition time : times) {
+                if (time.getValue() < lastTime) {
+                    throw new IllegalArgumentException("List of times must be in ascending order");
+                }
+                lastTime = time.getValue();
+            }
+            calSys = times.get(0).getCalendarSystem();
+        } else {
+            /*
+             * We may want an empty point series domain
+             */
+            this.times = Collections.emptyList();
+            calSys = null;
         }
-        calSys = times.get(0).getCalendarSystem();
     }
 
     @Override
@@ -119,5 +127,33 @@ public class PointSeriesDomainImpl implements PointSeriesDomain {
     @Override
     public List<TimePosition> getTimes() {
         return times;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((calSys == null) ? 0 : calSys.hashCode());
+        result = prime * result + ((times == null) ? 0 : times.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PointSeriesDomainImpl other = (PointSeriesDomainImpl) obj;
+        if (calSys != other.calSys)
+            return false;
+        if (times == null) {
+            if (other.times != null)
+                return false;
+        } else if (!times.equals(other.times))
+            return false;
+        return true;
     }
 }
