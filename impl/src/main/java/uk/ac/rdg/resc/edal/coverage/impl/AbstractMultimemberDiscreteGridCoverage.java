@@ -88,7 +88,7 @@ public abstract class AbstractMultimemberDiscreteGridCoverage<P, DO, GD extends 
 
     public void addMember(String memberName, GD domain, String description, Phenomenon parameter,
             Unit units, GridValuesMatrix<?> gridValueMatrix) {
-        addMemberToMetadata(memberName, domain, description, parameter, units);
+        addMemberToMetadata(memberName, domain, description, parameter, units, gridValueMatrix.getValueType());
         gridValuesMatrices.put(memberName, gridValueMatrix);
     }
 

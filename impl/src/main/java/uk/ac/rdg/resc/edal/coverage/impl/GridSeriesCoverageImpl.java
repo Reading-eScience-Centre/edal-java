@@ -162,7 +162,7 @@ public class GridSeriesCoverageImpl extends
             ScalarMetadata memberMetadata = getScalarMetadata(memberName);
             pCoverage.addMember(memberName, domain, memberMetadata.getDescription(),
                     memberMetadata.getParameter(), memberMetadata.getUnits(),
-                    memberCoverage.getValues());
+                    memberCoverage.getValues(), memberMetadata.getValueType());
         }
         return pCoverage;
     }
@@ -196,7 +196,7 @@ public class GridSeriesCoverageImpl extends
             ScalarMetadata memberMetadata = getScalarMetadata(memberName);
             psCoverage.addMember(memberName, domain, memberMetadata.getDescription(),
                     memberMetadata.getParameter(), memberMetadata.getUnits(),
-                    memberCoverage.getValues());
+                    memberCoverage.getValues(), memberMetadata.getValueType());
         }
         return psCoverage;
     }
