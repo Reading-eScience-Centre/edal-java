@@ -57,8 +57,8 @@ public class ProfileCoverageImpl extends
     }
 
     public void addMember(String memberName, ProfileDomain domain, String description,
-            Phenomenon parameter, Unit units, BigList<?> values) {
-        addMemberToMetadata(memberName, domain, description, parameter, units);
+            Phenomenon parameter, Unit units, BigList<?> values, Class<?> valueType) {
+        addMemberToMetadata(memberName, domain, description, parameter, units, valueType);
         memberName2Values.put(memberName, values);
     }
 

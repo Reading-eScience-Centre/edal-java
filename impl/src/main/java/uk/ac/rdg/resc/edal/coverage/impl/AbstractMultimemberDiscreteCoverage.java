@@ -131,7 +131,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
     }
 
     protected void addMemberToMetadata(String memberName, GD domain, String description,
-            Phenomenon parameter, Unit units) {
+            Phenomenon parameter, Unit units, Class<?> valueType) {
         /*
          * Throw an exception if we already have this variable in the coverage
          */
@@ -149,7 +149,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
                  * the parent metadata, and the flat variable->metadata map
                  */
                 ScalarMetadataImpl scalarMetadata = new ScalarMetadataImpl(memberName, description,
-                        parameter, units, Float.class);
+                        parameter, units, valueType);
                 metadata.addMember(scalarMetadata);
                 varId2Metadata.put(memberName, scalarMetadata);
             } else {
