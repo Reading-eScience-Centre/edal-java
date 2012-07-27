@@ -12,6 +12,7 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,8 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
@@ -35,7 +38,8 @@ public class Frame {
     /*
      * We cache a colourable icon for speed - TODO is this worth it?
      */
-    private ColourableIcon pointIcon = null;
+    private ColourableIcon circleIcon = null;
+    private ColourableIcon squareIcon = null;
 
     public Frame(int width, int height, String label) {
         if (width == 0 || height == 0) {
@@ -45,6 +49,10 @@ public class Frame {
         this.height = height;
         this.label = label;
         layers = new ArrayList<FrameData>();
+    }
+    
+    public void addGridPoints(List<GridCoordinates2D> coords){
+        layers.add(new GridPointsFrameData(coords));
     }
 
     public void addGriddedData(Number[][] data, PlotStyle style) {
@@ -57,8 +65,13 @@ public class Frame {
         layers.add(new GriddedFrameData(style, data));
     }
     
-    public void addPointData(Number value, int x, int y, PlotStyle style) {
-        layers.add(new PointFrameData(style, x, y, value));
+    public void addPointData(Number value, GridCoordinates2D coords, PlotStyle style) {
+        layers.add(new PointFrameData(style, coords.getXIndex(), coords.getYIndex(), value));
+    }
+
+    public void addMultipointData(List<Number> values, List<GridCoordinates2D> coords,
+            PlotStyle plotStyle) {
+        layers.add(new MultiPointFrameData(plotStyle, coords, values));
     }
 
     public BufferedImage renderLayers(MapStyleDescriptor style) {
@@ -87,6 +100,9 @@ public class Frame {
             case CONTOUR:
                 throw new UnsupportedOperationException("Contour plots not yet supported");
 //                break;
+            case GRID_POINTS:
+                frameImage = drawGridPoints(frameData);
+                break;
             default:
                 throw new IllegalArgumentException("Unrecognised plotting style");
             }
@@ -170,22 +186,30 @@ public class Frame {
         Graphics2D canvas = image.createGraphics();
         if(frameData instanceof PointFrameData){
             PointFrameData pointFrameData = (PointFrameData) frameData;
-            Color color = style.getColorForValue(pointFrameData.getValue().floatValue());
-            canvas.drawImage(getPointIcon().getColouredIcon(color), pointFrameData.getX()
-                    - getPointIcon().getWidth() / 2, height - (pointFrameData.getY()
-                    - getPointIcon().getHeight() / 2) - 1, null);
+            doPointPlot(pointFrameData, canvas, style, getCircleIcon());
+        } else if(frameData instanceof MultiPointFrameData){
+            MultiPointFrameData multiPointFrameData = (MultiPointFrameData) frameData;
+            for(int i=0; i< multiPointFrameData.size(); i++){
+                doPointPlot(multiPointFrameData.getPointData(i), canvas, style, getSquareIcon());
+            }
         } else {
-            /*
-             * TODO implement a regular grid of points for gridded data.
-             */
             throw new UnsupportedOperationException(
                     "Point images are currently only supported for non-gridded data");
         }
         return image;
     }
     
-    private ColourableIcon getPointIcon(){
-        if(pointIcon  == null){
+    private void doPointPlot(PointFrameData pointFrameData, Graphics2D canvas, MapStyleDescriptor style, ColourableIcon pointIcon){
+        if(!pointFrameData.getValue().equals(Float.NaN)) {
+            Color color = style.getColorForValue(pointFrameData.getValue().floatValue());
+            canvas.drawImage(pointIcon.getColouredIcon(color), pointFrameData.getX()
+                    - pointIcon.getWidth() / 2, height - (pointFrameData.getY()
+                            - pointIcon.getHeight() / 2) - 1, null);
+        }
+    }
+    
+    private ColourableIcon getCircleIcon(){
+        if(circleIcon  == null){
             BufferedImage iconImage;
             try {
                 /*
@@ -194,14 +218,49 @@ public class Frame {
                  * to the classpath
                  */
                 iconImage = ImageIO.read(this.getClass().getResource("/img/circle.png"));
-                pointIcon = new ColourableIcon(iconImage);
+                circleIcon = new ColourableIcon(iconImage);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        return pointIcon;
+        return circleIcon;
     }
     
+    private ColourableIcon getSquareIcon(){
+        if(squareIcon  == null){
+            BufferedImage iconImage;
+            try {
+                /*
+                 * This will work when the files are packaged as a JAR. For running
+                 * within an IDE, you may need to add the root directory of the project
+                 * to the classpath
+                 */
+                iconImage = ImageIO.read(this.getClass().getResource("/img/square.png"));
+                squareIcon = new ColourableIcon(iconImage);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return squareIcon;
+    }
+    
+    private BufferedImage drawGridPoints(FrameData frameData) {
+        if(!(frameData instanceof GridPointsFrameData)){
+            throw new IllegalArgumentException("We need grid point data to plot grid points");
+        } else {
+            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            GridPointsFrameData gridPointsFrameData = (GridPointsFrameData) frameData;
+            int black = Color.BLACK.getRGB();
+            for(GridCoordinates2D gridCoord : gridPointsFrameData.getPointData()){
+                int x = gridCoord.getXIndex();
+                int y = gridCoord.getYIndex();
+                if(x >= 0 && x < width && y >= 0 && y < height)
+                    image.setRGB(x, y, black);
+            }
+            return image;
+        }
+    }
+
     public Extent<Float> getAutoRange() {
         Float min = Float.MAX_VALUE;
         Float max = Float.MIN_VALUE;
@@ -248,5 +307,18 @@ public class Frame {
             return Extents.newExtent(0.0f, 1.0f);
         }
         return Extents.newExtent(min, max);
+    }
+    
+    public static void main(String[] args) throws InstantiationException, IOException {
+        Frame f = new Frame(500, 500, null);        
+        List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
+        for(int xIndex = 0; xIndex < 500; xIndex += 10){
+            for(int yIndex = 0; yIndex < 500; yIndex += 10){
+                coords.add(new GridCoordinates2DImpl(xIndex, yIndex));
+            }
+        }
+        f.addGridPoints(coords);
+        BufferedImage renderLayers = f.renderLayers(new MapStyleDescriptor());
+        ImageIO.write(renderLayers, "png", new File("/home/guy/grid.png"));
     }
 }
