@@ -83,14 +83,22 @@ public class MapPlotter {
         }
 
         if (feature instanceof GridSeriesFeature) {
+            if(plotStyle == PlotStyle.DEFAULT)
+                plotStyle = PlotStyle.BOXFILL;
             addGridSeriesFeatureToFrame((GridSeriesFeature) feature, memberName, vPos, tPos, label,
                     plotStyle, frame);
         } else if (feature instanceof GridFeature) {
+            if(plotStyle == PlotStyle.DEFAULT)
+                plotStyle = PlotStyle.BOXFILL;
             addGridFeatureToFrame((GridFeature) feature, memberName, label, plotStyle, frame);
         } else if (feature instanceof PointSeriesFeature) {
+            if(plotStyle == PlotStyle.DEFAULT)
+                plotStyle = PlotStyle.POINT;
             addPointSeriesFeatureToFrame((PointSeriesFeature) feature, memberName, tPos, label,
                     plotStyle, frame);
         } else if (feature instanceof ProfileFeature) {
+            if(plotStyle == PlotStyle.DEFAULT)
+                plotStyle = PlotStyle.POINT;
             addProfileFeatureToFrame((ProfileFeature) feature, memberName, vPos, label, plotStyle,
                     frame);
         } else {
@@ -177,23 +185,12 @@ public class MapPlotter {
                 HorizontalPosition hPos;
                 HorizontalGrid hGrid = feature.getCoverage().getDomain();
                 List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
-//                boolean transformCoord = false;
-//                if (!hGrid.getCoordinateReferenceSystem().equals(
-//                        bbox.getCoordinateReferenceSystem())) {
-//                    transformCoord = true;
-//                }
                 for (GridCell2D gridCell : hGrid.getDomainObjects()) {
                     hPos = gridCell.getCentre();
                     GridCell2D containingCell = targetDomain.findContainingCell(hPos);
                     if(containingCell == null)
                         continue;
                     coords.add(containingCell.getGridCoordinates());
-                    
-//                    if (transformCoord)
-//                        hPos = GISUtils
-//                                .transformPosition(hPos, bbox.getCoordinateReferenceSystem());
-//                    coords.add(new GridCoordinates2DImpl(getXIndexInImage(hPos.getX()),
-//                            getYIndexInImage(hPos.getY())));
                 }
                 frame.addGridPoints(coords);
                 return;
@@ -208,22 +205,12 @@ public class MapPlotter {
                 HorizontalGrid hGrid = feature.getCoverage().getDomain();
                 List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
                 List<Number> values = new ArrayList<Number>();
-//                boolean transformCoord = false;
-//                if (!hGrid.getCoordinateReferenceSystem().equals(
-//                        bbox.getCoordinateReferenceSystem())) {
-//                    transformCoord = true;
-//                }
                 for (GridCell2D gridCell : hGrid.getDomainObjects()) {
                     hPos = gridCell.getCentre();
                     GridCell2D containingCell = targetDomain.findContainingCell(hPos);
                     if(containingCell == null)
                         continue;
                     coords.add(containingCell.getGridCoordinates());
-//                    if (transformCoord)
-//                        hPos = GISUtils
-//                        .transformPosition(hPos, bbox.getCoordinateReferenceSystem());
-//                    coords.add(new GridCoordinates2DImpl(getXIndexInImage(hPos.getX()),
-//                            getYIndexInImage(hPos.getY())));
                     values.add((Number)feature.getCoverage().evaluate(hPos, memberName));
                 }
                 frame.addMultipointData(values, coords, plotStyle);
@@ -291,27 +278,34 @@ public class MapPlotter {
          */
         if (containingCell != null) {
             GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
-
-            boolean scalarField = feature.getCoverage().getScalarMemberNames()
-                    .contains(memberName);
-            if (scalarField) {
-                ScalarMetadata scalarMetadata = feature.getCoverage()
-                        .getScalarMetadata(memberName);
-                Class<?> clazz = scalarMetadata.getValueType();
-                Number value = null;
-                if (Number.class.isAssignableFrom(clazz)) {
-                    /*
-                     * We can plot non-numerical values of point series
-                     * features. We just plot them as an out-of-range
-                     * number.
-                     */
-                    value = (Number) feature.getCoverage()
-                            .evaluate(tPos, memberName);
+            if(plotStyle == PlotStyle.POINT){
+    
+                boolean scalarField = feature.getCoverage().getScalarMemberNames()
+                        .contains(memberName);
+                if (scalarField) {
+                    ScalarMetadata scalarMetadata = feature.getCoverage()
+                            .getScalarMetadata(memberName);
+                    Class<?> clazz = scalarMetadata.getValueType();
+                    Number value = null;
+                    if (Number.class.isAssignableFrom(clazz)) {
+                        /*
+                         * We can plot non-numerical values of point series
+                         * features. We just plot them as an out-of-range
+                         * number.
+                         */
+                        value = (Number) feature.getCoverage()
+                                .evaluate(tPos, memberName);
+                    }
+                    frame.addPointData(value, gridCoordinates, plotStyle);
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Plotting of non-scalar members of PointSeriesFeatures is not yet supported");
                 }
-                frame.addPointData(value, gridCoordinates, plotStyle);
+            } else if(plotStyle == PlotStyle.GRID_POINTS){
+                List<GridCoordinates2D> coord = new ArrayList<GridCoordinates2D>();
+                frame.addGridPoints(coord);
             } else {
-                throw new UnsupportedOperationException(
-                        "Plotting of non-scalar members of PointSeriesFeatures is not yet supported");
+                throw new IllegalArgumentException("Cannot plot a PointSeriesFeature in the style "+plotStyle);
             }
         }
     }
@@ -326,42 +320,36 @@ public class MapPlotter {
          */
         if (containingCell != null) {
             GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
-            
-            boolean scalarField = feature.getCoverage().getScalarMemberNames()
-                    .contains(memberName);
-            if (scalarField) {
-                ScalarMetadata scalarMetadata = feature.getCoverage()
-                        .getScalarMetadata(memberName);
-                Class<?> clazz = scalarMetadata.getValueType();
-                Number value = null;
-                if (Number.class.isAssignableFrom(clazz)) {
-                    /*
-                     * We can plot non-numerical values of point series
-                     * features. We just plot them as an out-of-range
-                     * number.
-                     */
-                    value = (Number) feature.getCoverage()
-                            .evaluate(vPos, memberName);
+            if(plotStyle == PlotStyle.POINT){
+                
+                boolean scalarField = feature.getCoverage().getScalarMemberNames()
+                        .contains(memberName);
+                if (scalarField) {
+                    ScalarMetadata scalarMetadata = feature.getCoverage()
+                            .getScalarMetadata(memberName);
+                    Class<?> clazz = scalarMetadata.getValueType();
+                    Number value = null;
+                    if (Number.class.isAssignableFrom(clazz)) {
+                        /*
+                         * We can plot non-numerical values of point series
+                         * features. We just plot them as an out-of-range
+                         * number.
+                         */
+                        value = (Number) feature.getCoverage()
+                                .evaluate(vPos, memberName);
+                    }
+                    frame.addPointData(value, gridCoordinates, plotStyle);
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Plotting of non-scalar members of ProfileFeatures is not yet supported");
                 }
-                frame.addPointData(value, gridCoordinates, plotStyle);
+            } else if(plotStyle == PlotStyle.GRID_POINTS){
+                List<GridCoordinates2D> coord = new ArrayList<GridCoordinates2D>();
+                frame.addGridPoints(coord);
             } else {
-                throw new UnsupportedOperationException(
-                        "Plotting of non-scalar members of ProfileFeatures is not yet supported");
+                throw new IllegalArgumentException("Cannot plot a ProfileFeature in the style "+plotStyle);
             }
         }
-    }
-
-    /*
-     * Determines whether a particular combination of Feature type and PlotStyle
-     * will give a source-push or a destination-pull algorithm.
-     * 
-     * Source-push means every available grid point in the feature will be plotted
-     * 
-     * Destination-pull means that every available pixel in the image will be plotted
-     */
-    private boolean isSourcePush(Feature feature, PlotStyle plotStyle) {
-        // TODO Auto-generated method stub
-        return false;
     }
 
     /*
@@ -402,11 +390,7 @@ public class MapPlotter {
 
         List<BufferedImage> images = new ArrayList<BufferedImage>();
         List<TimePosition> times = new ArrayList<TimePosition>(frameData.keySet());
-        /*
-         * TODO does this sort correctly if just one null value is present
-         */
         Collections.sort(times);
-//        if (times.size() == 1 && times.get(0) == null)
         for (TimePosition time : times) {
             images.add(frameData.get(time).renderLayers(style));
         }
