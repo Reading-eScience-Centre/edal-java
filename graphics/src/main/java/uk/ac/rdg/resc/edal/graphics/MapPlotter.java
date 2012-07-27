@@ -23,7 +23,9 @@ import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
@@ -75,137 +77,305 @@ public class MapPlotter {
      */
     public void addToFrame(Feature feature, String memberName, VerticalPosition vPos,
             TimePosition tPos, String label, PlotStyle plotStyle) {
-        Number[][] data;
         Frame frame = frameData.get(tPos);
         if (frame == null) {
             frame = new Frame(width, height, label);
         }
-        
-        /*
-         * If our feature is not yet plottable, we need to know which members to
-         * extract. This will be dependent on the type of value that memberName
-         * has. If the member is scalar, it will just return a set containing
-         * that member name
-         */
-        Set<String> memberNamesToExtract = getAllScalarChildrenOf(feature.getCoverage()
-                .getRangeMetadata().getMemberMetadata(memberName));
-        
-        if(feature instanceof GridSeriesFeature){
-            feature = ((GridSeriesFeature) feature).extractGridFeature(new RegularGridImpl(bbox, width,
-                    height), vPos, tPos, memberNamesToExtract);
-        }
-        
-        if (feature instanceof GridFeature) {
-            GridFeature gridFeature = (GridFeature) feature;
-            BoundingBox coordinateExtent = gridFeature.getCoverage().getDomain()
-                    .getCoordinateExtent();
-            int fWidth = gridFeature.getCoverage().getDomain().getXAxis().size();
-            int fHeight = gridFeature.getCoverage().getDomain().getYAxis().size();
-            if (fWidth != width || fHeight != height || !coordinateExtent.equals(bbox)) {
-                /*
-                 * The input feature is not suitable for this map. Convert it
-                 */
-                gridFeature = gridFeature.extractGridFeature(new RegularGridImpl(bbox, width,
-                        height), memberNamesToExtract);
-            }
 
-            boolean scalarField = gridFeature.getCoverage().getScalarMemberNames().contains(memberName);
-            
-            if (scalarField) {
-                /*
-                 * We have a scalar field. We just want to plot it.
-                 */
-                data = getDataFromGridFeature(gridFeature, memberName);
-                frame.addGriddedData(data, plotStyle);
-            } else {
-                RangeMetadata rangeMetadata = gridFeature.getCoverage().getRangeMetadata();
-                if (rangeMetadata.getMemberNames().contains(memberName)) {
-                    /*
-                     * We have a direct child with this name. It is NOT a scalar
-                     * field.
-                     */
-                    RangeMetadata memberMetadata = rangeMetadata.getMemberMetadata(memberName);
-                    if(memberMetadata instanceof VectorMetadata){
-                        VectorMetadata vectorMetadata = (VectorMetadata) memberMetadata;
-                        String magnitudeMember = null;
-                        String directionMember = null;
-                        for(String vectorComponentMember : memberMetadata.getMemberNames()){
-                            if(vectorMetadata.getMemberMetadata(vectorComponentMember).getDirection() == VectorDirection.DIRECTION)
-                                directionMember = vectorComponentMember;
-                            else if(vectorMetadata.getMemberMetadata(vectorComponentMember).getDirection() == VectorDirection.MAGNITUDE)
-                                magnitudeMember = vectorComponentMember;
-                            
-                        }
-                        if(magnitudeMember != null && directionMember != null){
-                            data = getDataFromGridFeature(gridFeature, magnitudeMember);
-                            frame.addGriddedData(data, PlotStyle.BOXFILL);
-                            data = getDataFromGridFeature(gridFeature, directionMember);
-                            frame.addGriddedData(data, PlotStyle.VECTOR);
-                        } else {
-                            throw new IllegalArgumentException(
-                                    "This vector is missing either a magnitude or a direction");
-                        }
-                    } else {
-                        throw new UnsupportedOperationException(
-                                "Currently only scalar fields and vector fields can be plotted");
-                    }
-                } else {
-                    throw new IllegalArgumentException(
-                            "The member "
-                                    + memberName
-                                    + " is not present as either a scalar member of this coverage, or as a direct child");
-                }
-            }
-        } else if(feature instanceof PointSeriesFeature){
-            PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) feature;
-            HorizontalGrid targetDomain = new RegularGridImpl(bbox, width,height);
-            GridCell2D containingCell = targetDomain.findContainingCell(pointSeriesFeature.getHorizontalPosition());
-            /*
-             * If the features is outside of our box, don't do anything.
-             */
-            if(containingCell != null){
-                GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
-            
-                boolean scalarField = pointSeriesFeature.getCoverage().getScalarMemberNames().contains(memberName);
-                if(scalarField){
-                    ScalarMetadata scalarMetadata = pointSeriesFeature.getCoverage().getScalarMetadata(memberName);
-                    Class<?> clazz = scalarMetadata.getValueType();
-                    Number value = null;
-                    if (Number.class.isAssignableFrom(clazz)) {
-                        /*
-                         * We can plot non-numerical values of point series
-                         * features. We just plot them as an out-of-range number.
-                         */
-                        value = (Number) pointSeriesFeature.getCoverage().evaluate(tPos, memberName);
-                    }
-                    frame.addPointData(value, gridCoordinates.getXIndex(), gridCoordinates.getYIndex(), plotStyle);
-                } else {
-                    throw new UnsupportedOperationException(
-                            "Plotting of non-scalar members of PointSeriesFeatures is not yet supported");
-                }
-            }
+        if (feature instanceof GridSeriesFeature) {
+            addGridSeriesFeatureToFrame((GridSeriesFeature) feature, memberName, vPos, tPos, label,
+                    plotStyle, frame);
+        } else if (feature instanceof GridFeature) {
+            addGridFeatureToFrame((GridFeature) feature, memberName, label, plotStyle, frame);
+        } else if (feature instanceof PointSeriesFeature) {
+            addPointSeriesFeatureToFrame((PointSeriesFeature) feature, memberName, tPos, label,
+                    plotStyle, frame);
+        } else if (feature instanceof ProfileFeature) {
+            addProfileFeatureToFrame((ProfileFeature) feature, memberName, vPos, label, plotStyle,
+                    frame);
         } else {
             throw new UnsupportedOperationException("Plotting of features of the type "
                     + feature.getClass() + " on a map is not yet supported");
         }
-
+        
         if (!frameData.containsKey(tPos)) {
             frameData.put(tPos, frame);
         }
     }
 
+    private void addGridSeriesFeatureToFrame(GridSeriesFeature feature, String memberName,
+            VerticalPosition vPos, TimePosition tPos, String label, PlotStyle plotStyle, Frame frame) {
+        Set<String> memberNamesToExtract = getAllScalarChildrenOf(feature.getCoverage()
+                .getRangeMetadata().getMemberMetadata(memberName));
+        GridFeature gridFeature;
+        if (plotStyle == PlotStyle.TRAJECTORY) {
+            throw new UnsupportedOperationException("Cannot plot this type of feature as a trajectory");
+        } else if (plotStyle == PlotStyle.POINT || plotStyle == PlotStyle.GRID_POINTS) {
+            /*
+             * We are using a plot style which needs the entire grid. Usually
+             * this will be lower resolution than the image anyway, so it's not
+             * necessarily slow
+             */
+            HorizontalGrid horizontalGrid = feature.getCoverage().getDomain()
+                    .getHorizontalGrid();
+            gridFeature = feature.extractGridFeature(horizontalGrid, vPos,
+                    tPos, memberNamesToExtract);
+        } else {
+            gridFeature = feature.extractGridFeature(new RegularGridImpl(
+                    bbox, width, height), vPos, tPos, memberNamesToExtract);
+        }
+        addGridFeatureToFrame(gridFeature, memberName, label, plotStyle, frame);
+    }
+
+    private void addGridFeatureToFrame(GridFeature feature, String memberName, String label,
+            PlotStyle plotStyle, Frame frame) {
+
+        /*
+         * First, make sure that we have a suitable grid feature.
+         */
+        if (plotStyle == PlotStyle.TRAJECTORY) {
+            throw new UnsupportedOperationException(
+                    "Cannot plot this type of feature as a trajectory");
+        } else if (plotStyle == PlotStyle.POINT || plotStyle == PlotStyle.GRID_POINTS) {
+            /*
+             * We are using a plot style which needs the entire grid. Usually
+             * this will be lower resolution than the image anyway, so it's not
+             * necessarily slow
+             */
+        } else {
+            /*
+             * Otherwise we want the grid feature to have the same dimensions as
+             * the image
+             */
+            BoundingBox coordinateExtent = feature.getCoverage().getDomain().getCoordinateExtent();
+            int fWidth = feature.getCoverage().getDomain().getXAxis().size();
+            int fHeight = feature.getCoverage().getDomain().getYAxis().size();
+            if (fWidth != width || fHeight != height || !coordinateExtent.equals(bbox)) {
+                /*
+                 * The input feature is not the right size. Convert it
+                 */
+                Set<String> memberNamesToExtract = getAllScalarChildrenOf(feature.getCoverage()
+                        .getRangeMetadata().getMemberMetadata(memberName));
+                feature = feature.extractGridFeature(new RegularGridImpl(bbox, width, height),
+                        memberNamesToExtract);
+            }
+        }
+
+        /*
+         * We now have a grid feature suitable for plotting
+         */
+
+        Number[][] data;
+        boolean scalarField = feature.getCoverage().getScalarMemberNames().contains(memberName);
+
+        if (scalarField) {
+            /*
+             * We have a scalar field. We just want to plot it.
+             */
+            if (plotStyle == PlotStyle.GRID_POINTS) {
+                HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
+                HorizontalPosition hPos;
+                HorizontalGrid hGrid = feature.getCoverage().getDomain();
+                List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
+//                boolean transformCoord = false;
+//                if (!hGrid.getCoordinateReferenceSystem().equals(
+//                        bbox.getCoordinateReferenceSystem())) {
+//                    transformCoord = true;
+//                }
+                for (GridCell2D gridCell : hGrid.getDomainObjects()) {
+                    hPos = gridCell.getCentre();
+                    GridCell2D containingCell = targetDomain.findContainingCell(hPos);
+                    if(containingCell == null)
+                        continue;
+                    coords.add(containingCell.getGridCoordinates());
+                    
+//                    if (transformCoord)
+//                        hPos = GISUtils
+//                                .transformPosition(hPos, bbox.getCoordinateReferenceSystem());
+//                    coords.add(new GridCoordinates2DImpl(getXIndexInImage(hPos.getX()),
+//                            getYIndexInImage(hPos.getY())));
+                }
+                frame.addGridPoints(coords);
+                return;
+            } else if (plotStyle == PlotStyle.POINT) {
+                if (!(Number.class.isAssignableFrom(feature.getCoverage()
+                        .getScalarMetadata(memberName).getValueType()))) {
+                    throw new UnsupportedOperationException(
+                            "Cannot plot non-numerical data as coloured points");
+                }
+                HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
+                HorizontalPosition hPos;
+                HorizontalGrid hGrid = feature.getCoverage().getDomain();
+                List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
+                List<Number> values = new ArrayList<Number>();
+//                boolean transformCoord = false;
+//                if (!hGrid.getCoordinateReferenceSystem().equals(
+//                        bbox.getCoordinateReferenceSystem())) {
+//                    transformCoord = true;
+//                }
+                for (GridCell2D gridCell : hGrid.getDomainObjects()) {
+                    hPos = gridCell.getCentre();
+                    GridCell2D containingCell = targetDomain.findContainingCell(hPos);
+                    if(containingCell == null)
+                        continue;
+                    coords.add(containingCell.getGridCoordinates());
+//                    if (transformCoord)
+//                        hPos = GISUtils
+//                        .transformPosition(hPos, bbox.getCoordinateReferenceSystem());
+//                    coords.add(new GridCoordinates2DImpl(getXIndexInImage(hPos.getX()),
+//                            getYIndexInImage(hPos.getY())));
+                    values.add((Number)feature.getCoverage().evaluate(hPos, memberName));
+                }
+                frame.addMultipointData(values, coords, plotStyle);
+                frame.addGridPoints(coords);
+                return;
+            } else {
+                data = getDataFromGridFeature(feature, memberName);
+                frame.addGriddedData(data, plotStyle);
+            }
+        } else {
+            /*
+             * We have a non-scalar field. We ignore plotting style here and use
+             * whatever is best.
+             * 
+             * TODO Is this the best behaviour?
+             */
+            RangeMetadata rangeMetadata = feature.getCoverage().getRangeMetadata();
+            if (rangeMetadata.getMemberNames().contains(memberName)) {
+                /*
+                 * We have a direct child with this name. It is NOT a scalar
+                 * field.
+                 */
+                RangeMetadata memberMetadata = rangeMetadata.getMemberMetadata(memberName);
+                if (memberMetadata instanceof VectorMetadata) {
+                    VectorMetadata vectorMetadata = (VectorMetadata) memberMetadata;
+                    String magnitudeMember = null;
+                    String directionMember = null;
+                    for (String vectorComponentMember : memberMetadata.getMemberNames()) {
+                        if (vectorMetadata.getMemberMetadata(vectorComponentMember).getDirection() == VectorDirection.DIRECTION)
+                            directionMember = vectorComponentMember;
+                        else if (vectorMetadata.getMemberMetadata(vectorComponentMember)
+                                .getDirection() == VectorDirection.MAGNITUDE)
+                            magnitudeMember = vectorComponentMember;
+
+                    }
+                    if (magnitudeMember != null && directionMember != null) {
+                        data = getDataFromGridFeature(feature, magnitudeMember);
+                        frame.addGriddedData(data, PlotStyle.BOXFILL);
+                        data = getDataFromGridFeature(feature, directionMember);
+                        frame.addGriddedData(data, PlotStyle.VECTOR);
+                    } else {
+                        throw new IllegalArgumentException(
+                                "This vector is missing either a magnitude or a direction");
+                    }
+                } else {
+                    throw new UnsupportedOperationException(
+                            "Currently only scalar fields and vector fields can be plotted");
+                }
+            } else {
+                throw new IllegalArgumentException(
+                        "The member "
+                                + memberName
+                                + " is not present as either a scalar member of this coverage, or as a direct child");
+            }
+        }
+    }
+    
+    private void addPointSeriesFeatureToFrame(PointSeriesFeature feature, String memberName,
+            TimePosition tPos, String label, PlotStyle plotStyle, Frame frame) {
+        HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
+        GridCell2D containingCell = targetDomain.findContainingCell(feature
+                .getHorizontalPosition());
+        /*
+         * If the feature is outside of our box, don't do anything.
+         */
+        if (containingCell != null) {
+            GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
+
+            boolean scalarField = feature.getCoverage().getScalarMemberNames()
+                    .contains(memberName);
+            if (scalarField) {
+                ScalarMetadata scalarMetadata = feature.getCoverage()
+                        .getScalarMetadata(memberName);
+                Class<?> clazz = scalarMetadata.getValueType();
+                Number value = null;
+                if (Number.class.isAssignableFrom(clazz)) {
+                    /*
+                     * We can plot non-numerical values of point series
+                     * features. We just plot them as an out-of-range
+                     * number.
+                     */
+                    value = (Number) feature.getCoverage()
+                            .evaluate(tPos, memberName);
+                }
+                frame.addPointData(value, gridCoordinates, plotStyle);
+            } else {
+                throw new UnsupportedOperationException(
+                        "Plotting of non-scalar members of PointSeriesFeatures is not yet supported");
+            }
+        }
+    }
+
+    private void addProfileFeatureToFrame(ProfileFeature feature, String memberName,
+            VerticalPosition vPos, String label, PlotStyle plotStyle, Frame frame) {
+        HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
+        GridCell2D containingCell = targetDomain.findContainingCell(feature
+                .getHorizontalPosition());
+        /*
+         * If the feature is outside of our box, don't do anything.
+         */
+        if (containingCell != null) {
+            GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
+            
+            boolean scalarField = feature.getCoverage().getScalarMemberNames()
+                    .contains(memberName);
+            if (scalarField) {
+                ScalarMetadata scalarMetadata = feature.getCoverage()
+                        .getScalarMetadata(memberName);
+                Class<?> clazz = scalarMetadata.getValueType();
+                Number value = null;
+                if (Number.class.isAssignableFrom(clazz)) {
+                    /*
+                     * We can plot non-numerical values of point series
+                     * features. We just plot them as an out-of-range
+                     * number.
+                     */
+                    value = (Number) feature.getCoverage()
+                            .evaluate(vPos, memberName);
+                }
+                frame.addPointData(value, gridCoordinates, plotStyle);
+            } else {
+                throw new UnsupportedOperationException(
+                        "Plotting of non-scalar members of ProfileFeatures is not yet supported");
+            }
+        }
+    }
+
+    /*
+     * Determines whether a particular combination of Feature type and PlotStyle
+     * will give a source-push or a destination-pull algorithm.
+     * 
+     * Source-push means every available grid point in the feature will be plotted
+     * 
+     * Destination-pull means that every available pixel in the image will be plotted
+     */
+    private boolean isSourcePush(Feature feature, PlotStyle plotStyle) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
     /*
      * This gets all scalar children of the desired member.
      */
-    private Set<String> getAllScalarChildrenOf(RangeMetadata rangeMetadata){
+    private Set<String> getAllScalarChildrenOf(RangeMetadata rangeMetadata) {
         Set<String> returnSet = new HashSet<String>();
-        
-        if(rangeMetadata instanceof ScalarMetadata){
+
+        if (rangeMetadata instanceof ScalarMetadata) {
             returnSet.add(rangeMetadata.getName());
         } else {
-            for(String subMember : rangeMetadata.getMemberNames()){
+            for (String subMember : rangeMetadata.getMemberNames()) {
                 RangeMetadata memberMetadata = rangeMetadata.getMemberMetadata(subMember);
-                if(memberMetadata instanceof ScalarMetadata){
+                if (memberMetadata instanceof ScalarMetadata) {
                     returnSet.add(subMember);
                 } else {
                     returnSet.addAll(getAllScalarChildrenOf(memberMetadata));
@@ -214,7 +384,7 @@ public class MapPlotter {
         }
         return returnSet;
     }
-    
+
     public List<BufferedImage> getRenderedFrames() {
         /*
          * We have an animation and we want auto-scaling on it...
@@ -237,9 +407,9 @@ public class MapPlotter {
          */
         Collections.sort(times);
 //        if (times.size() == 1 && times.get(0) == null)
-            for (TimePosition time : times) {
-                images.add(frameData.get(time).renderLayers(style));
-            }
+        for (TimePosition time : times) {
+            images.add(frameData.get(time).renderLayers(style));
+        }
         return images;
     }
 
@@ -252,17 +422,19 @@ public class MapPlotter {
                     "Can only add frames from GridValuesMatrix objects which contain numbers");
         }
 
+        int width = feature.getCoverage().getDomain().getXAxis().size();
+        int height = feature.getCoverage().getDomain().getYAxis().size();
         Number[][] data = new Number[width][height];
 
-        for(int i=0;i<width; i++){
-            for(int j=0;j<height; j++){
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
                 int dataIndex = getDataIndex(i, j, width, height);
                 Number num = (Number) gridVals.getValues().get(dataIndex);
                 if (num != null && (num.equals(Float.NaN) || num.equals(Double.NaN))) {
                     num = null;
                 }
                 data[i][j] = num;
-            }            
+            }
         }
         return data;
     }
