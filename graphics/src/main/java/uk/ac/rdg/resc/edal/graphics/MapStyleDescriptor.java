@@ -100,7 +100,7 @@ public class MapStyleDescriptor {
         return arrowLength;
     }
 
-    public Color getColorForValue(Float value){
+    public Color getColorForValue(Number value){
         return new Color(getColorModel().getRGB(getColourIndex(value)));
     }
     

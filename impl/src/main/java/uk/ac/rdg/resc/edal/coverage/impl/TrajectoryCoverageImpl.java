@@ -28,22 +28,22 @@
 
 package uk.ac.rdg.resc.edal.coverage.impl;
 
-import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
+import uk.ac.rdg.resc.edal.coverage.domain.TrajectoryDomain;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * A mutable (only adding new members is supported) in-memory implementation of
- * {@link ProfileCoverage}
+ * {@link TracjectoryCoverage}
  * 
  * @author Guy Griffiths
  * 
  */
-public class ProfileCoverageImpl extends
-        AbstractBigListBackedCoverage<VerticalPosition, VerticalPosition, ProfileDomain>
-        implements ProfileCoverage {
+public class TrajectoryCoverageImpl extends
+        AbstractBigListBackedCoverage<GeoPosition, GeoPosition, TrajectoryDomain> implements
+        TrajectoryCoverage {
 
-    public ProfileCoverageImpl(String description, ProfileDomain domain) {
+    public TrajectoryCoverageImpl(String description, TrajectoryDomain domain) {
         super(description, domain);
     }
 }
