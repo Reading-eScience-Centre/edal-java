@@ -21,11 +21,12 @@ import javax.imageio.ImageIO;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
- * Class representing a single map overlay image. This can contain
+ * Class representing a single map overlay image. This can contain any number of
+ * layers containing {@link FrameData}. All data to be plotted is free of
+ * geo-referencing by this point.
  * 
  * @author Guy Griffiths
  * 
@@ -35,9 +36,6 @@ public class Frame {
     private int width;
     private int height;
     private String label;
-    /*
-     * We cache a colourable icon for speed - TODO is this worth it?
-     */
     private ColourableIcon circleIcon = null;
     private ColourableIcon squareIcon = null;
 
@@ -92,8 +90,8 @@ public class Frame {
                 frameImage = drawVectorArrows(frameData, style);
                 break;
             case TRAJECTORY:
-                throw new UnsupportedOperationException("Trajectory plots not yet supported");
-//                break;
+                frameImage = drawTrajectory(frameData, style);
+                break;
             case POINT:
                 frameImage = drawPointImage(frameData, style);
                 break;
@@ -181,6 +179,77 @@ public class Frame {
         }
     }
 
+    private BufferedImage drawTrajectory(FrameData frameData, MapStyleDescriptor style) {
+        if(frameData instanceof MultiPointFrameData){
+            MultiPointFrameData multiPointFrameData = (MultiPointFrameData) frameData;
+            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D canvas = image.createGraphics();
+            
+            canvas.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            double r = 10.0;
+            
+            PointFrameData lastPointData =  multiPointFrameData.getPointData(0);
+            int lastArrowX = lastPointData.getX();
+            int lastArrowY = lastPointData.getY();
+            
+            canvas.setPaint(style.getColorForValue(lastPointData.getValue()));
+            for(int i=1; i < multiPointFrameData.size(); i++){
+                
+                PointFrameData pointData = multiPointFrameData.getPointData(i);
+                
+                /*
+                 * Get image co-ordinates and calculate midpoint of line
+                 */
+                int midX = (lastPointData.getX()+pointData.getX())/2;
+                int midY = (lastPointData.getY()+pointData.getY())/2;
+                
+                /*
+                 * Draw a line from the last point to the mid point, in the colour
+                 * representing the last point's value
+                 */
+                canvas.drawLine(lastPointData.getX(), lastPointData.getY(), midX, midY);
+
+                /*
+                 * Set the paint to the colour for the current point
+                 */
+                canvas.setPaint(style.getColorForValue(pointData.getValue()));
+                /*
+                 * Draw the line from the midpoint to the end of the line
+                 */
+                canvas.drawLine(midX, midY, pointData.getX(), pointData.getY());
+                
+                /*
+                 * Puts arrow heads on the line segments
+                 */
+                double distFromLastArrow = Math.sqrt((pointData.getX() - lastArrowX)
+                        * (pointData.getX() - lastArrowX) + (pointData.getY() - lastArrowY)
+                        * (pointData.getY() - lastArrowY));
+                if(distFromLastArrow > 30){
+                    double lineAngle = 2*Math.PI-Math.atan2((pointData.getY() - lastPointData.getY()),
+                            (pointData.getX() - lastPointData.getX()));
+                    double headAngle1 = lineAngle+0.3;
+                    double headAngle2 = lineAngle-0.3;
+                    double xh1 = r*Math.cos(headAngle1); 
+                    double xh2 = r*Math.cos(headAngle2); 
+                    double yh1 = r*Math.sin(headAngle1); 
+                    double yh2 = r*Math.sin(headAngle2);
+                    canvas.drawLine(-(int)xh1+pointData.getX(), (int)yh1+pointData.getY(), pointData.getX(), pointData.getY());
+                    canvas.drawLine(-(int)xh2+pointData.getX(), (int)yh2+pointData.getY(), pointData.getX(), pointData.getY());
+                    lastArrowX = pointData.getX();
+                    lastArrowY = pointData.getY();
+                }
+                /*
+                 * Store the imageCoords for the next loop
+                 */
+                lastPointData = pointData;
+            }
+            return image;
+        } else {
+            throw new UnsupportedOperationException(
+                    "Can only plot trajectories for data with more than one point");
+        }
+    }
+
     private BufferedImage drawPointImage(FrameData frameData, MapStyleDescriptor style){
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D canvas = image.createGraphics();
@@ -201,7 +270,7 @@ public class Frame {
     
     private void doPointPlot(PointFrameData pointFrameData, Graphics2D canvas, MapStyleDescriptor style, ColourableIcon pointIcon){
         if(!pointFrameData.getValue().equals(Float.NaN)) {
-            Color color = style.getColorForValue(pointFrameData.getValue().floatValue());
+            Color color = style.getColorForValue(pointFrameData.getValue());
             canvas.drawImage(pointIcon.getColouredIcon(color), pointFrameData.getX()
                     - pointIcon.getWidth() / 2, height - (pointFrameData.getY()
                             - pointIcon.getHeight() / 2) - 1, null);
@@ -298,6 +367,18 @@ public class Frame {
                     if (value.floatValue() > max)
                         max = value.floatValue();
                 }
+            } else if (layer instanceof MultiPointFrameData) {
+                MultiPointFrameData multiPointFrameData = (MultiPointFrameData) layer;
+                for(int i=0; i< multiPointFrameData.size(); i++){
+                    PointFrameData pointFrameData = multiPointFrameData.getPointData(i);
+                    Number value = pointFrameData.getValue();
+                    if (value != null && !value.equals(Float.NaN) && !value.equals(Double.NaN)) {
+                        if (value.floatValue() < min)
+                            min = value.floatValue();
+                        if (value.floatValue() > max)
+                            max = value.floatValue();
+                    }
+                }
             }
         }
         if (min.equals(Float.MAX_VALUE) || max.equals(Float.MIN_VALUE)) {
@@ -310,15 +391,20 @@ public class Frame {
     }
     
     public static void main(String[] args) throws InstantiationException, IOException {
-        Frame f = new Frame(500, 500, null);        
-        List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
-        for(int xIndex = 0; xIndex < 500; xIndex += 10){
-            for(int yIndex = 0; yIndex < 500; yIndex += 10){
-                coords.add(new GridCoordinates2DImpl(xIndex, yIndex));
-            }
-        }
-        f.addGridPoints(coords);
-        BufferedImage renderLayers = f.renderLayers(new MapStyleDescriptor());
-        ImageIO.write(renderLayers, "png", new File("/home/guy/grid.png"));
+//        Frame f = new Frame(500, 500, null);        
+//        List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
+//        for(int xIndex = 0; xIndex < 500; xIndex += 10){
+//            for(int yIndex = 0; yIndex < 500; yIndex += 10){
+//                coords.add(new GridCoordinates2DImpl(xIndex, yIndex));
+//            }
+//        }
+//        f.addGridPoints(coords);
+//        BufferedImage renderLayers = f.renderLayers(new MapStyleDescriptor());
+//        ImageIO.write(renderLayers, "png", new File("/home/guy/grid.png"));
+        
+        BufferedImage image = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.drawLine(-10, 250, 490, 250);
+        ImageIO.write(image, "png", new File("/home/guy/00line.png"));
     }
 }
