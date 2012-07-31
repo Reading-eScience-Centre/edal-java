@@ -46,10 +46,29 @@ public class VerticalAxisImpl extends ReferenceableAxisImpl implements VerticalA
     public VerticalCrs getVerticalCrs() {
         return vCrs;
     }
-    
+
     @Override
-    public boolean equals(Object arg0) {
-        VerticalAxisImpl axis = (VerticalAxisImpl) arg0;
-        return super.equals(arg0) && axis.vCrs.equals(vCrs);
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((vCrs == null) ? 0 : vCrs.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        VerticalAxisImpl other = (VerticalAxisImpl) obj;
+        if (vCrs == null) {
+            if (other.vCrs != null)
+                return false;
+        } else if (!vCrs.equals(other.vCrs))
+            return false;
+        return true;
     }
 }

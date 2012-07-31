@@ -85,14 +85,6 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         return firstValue + index * spacing;
     }
 
-    /**
-     * Gets the index of the given value as a double-precision number that is
-     * not necessarily an integer.
-     */
-    private Double getIndex(Double value) {
-        return (value - firstValue) / spacing;
-    }
-
     @Override
     public int size() {
         return size;
@@ -125,15 +117,20 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         // We find the (non-integer) index of the given value
         Double indexDbl = getIndex(position);
         // We round to the nearest integer
-        int index = (int)Math.round(indexDbl);
-        // Check the extremes (probably not strictly necessary?)
-//        if (index < 0) return 0;
-//        if (index == this.size) return this.size - 1;
+        int index = (int) Math.round(indexDbl);
         if (index < 0 || index >= size)
             return -1;
         return index;
     }
 
+    /*
+     * Gets the index of the given value as a double-precision number that is
+     * not necessarily an integer.
+     */
+    private Double getIndex(Double value) {
+        return (value - firstValue) / spacing;
+    }
+    
     @Override
     protected Double extendFirstValue(Double firstVal, Double nextVal) {
         return firstVal - 0.5 * (nextVal - firstVal);

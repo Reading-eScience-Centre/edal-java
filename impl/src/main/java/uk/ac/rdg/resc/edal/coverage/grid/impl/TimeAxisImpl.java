@@ -79,4 +79,26 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<TimePosition> impl
     protected TimePosition getMidpoint(TimePosition pos1, TimePosition pos2) {
         return new TimePositionJoda((long) (0.5 * (pos1.getValue() + pos2.getValue())));
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((calSys == null) ? 0 : calSys.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TimeAxisImpl other = (TimeAxisImpl) obj;
+        if (calSys != other.calSys)
+            return false;
+        return true;
+    }
 }

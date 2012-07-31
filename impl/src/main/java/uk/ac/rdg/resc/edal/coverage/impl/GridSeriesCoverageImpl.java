@@ -99,7 +99,7 @@ public class GridSeriesCoverageImpl extends
             zIndex = getDomain().getVerticalAxis().findIndexOf(zPos.getZ());
         int tIndex = 0;
         if (getDomain().getTimeAxis() != null)
-            zIndex = getDomain().getTimeAxis().findIndexOf(tPos);
+            tIndex = getDomain().getTimeAxis().findIndexOf(tPos);
         
         /*
          * TODO - We may want to extract a parent member - i.e. one that is not
