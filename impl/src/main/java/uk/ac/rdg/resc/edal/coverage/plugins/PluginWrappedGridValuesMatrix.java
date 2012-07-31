@@ -141,9 +141,6 @@ public class PluginWrappedGridValuesMatrix extends AbstractGridValuesMatrix<Obje
 
             @Override
             protected Object doReadPoint(final int[] coords) {
-                for (int i = 0; i < coords.length; i++) {
-                    coords[i] += mins[i];
-                }
                 return plugin.getProcessedValue(memberName, new AbstractList<Object>() {
 
                     @Override
