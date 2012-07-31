@@ -199,7 +199,6 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
      * @throws IllegalArgumentException
      *             if the reference longitude is not in the range [-180,180]
      * @todo unit tests for this
-     * @todo move to Longitude class?
      */
     private static double harmonizeLongitudes(double ref, double test) {
         if (ref < -180.0 || ref > 180.0) {
@@ -216,9 +215,9 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
 
     @Override
     protected HorizontalPosition getGridCellCentreNoBoundsCheck(int i, int j) {
-        double x = this.xCoords.readPoint(new int[] { i, j });
-        double y = this.yCoords.readPoint(new int[] { i, j });
-        return new HorizontalPositionImpl(x, y, this.crs);
+        double x = xCoords.readPoint(new int[] { i, j });
+        double y = yCoords.readPoint(new int[] { i, j });
+        return new HorizontalPositionImpl(x, y, crs);
     }
 
     @Override
@@ -247,8 +246,8 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
     
     private HorizontalPosition getCorner(int i, int j)
     {
-        double x = this.xCorners.readPoint(new int[] { i, j });
-        double y = this.yCorners.readPoint(new int[] { i, j });
+        double x = xCorners.readPoint(new int[] { i, j });
+        double y = yCorners.readPoint(new int[] { i, j });
         return new HorizontalPositionImpl(x, y, this.getCoordinateReferenceSystem());
     }
 
@@ -259,43 +258,76 @@ public final class CurvilinearGrid extends AbstractHorizontalGrid
 
     @Override
     public BoundingBox getCoordinateExtent() {
-        return this.extent;
+        return extent;
     }
 
     @Override
     public GridAxis getXAxis() {
-        return this.xCoords.getAxis(0);
+        return xCoords.getAxis(0);
     }
 
     @Override
     public GridAxis getYAxis() {
-        return this.xCoords.getAxis(1);
+        return xCoords.getAxis(1);
     }
     
     @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return this.crs;
-    }
-    
-    @Override
-    public int hashCode() {
-        int hash = 17;
-        hash = hash * 31 + this.xCoords.hashCode();
-        hash = hash * 31 + this.yCoords.hashCode();
-        if (this.crs != null) {
-            hash = hash * 31 + this.crs.hashCode();
-        }
-        return hash;
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (!(obj instanceof CurvilinearGrid)) return false;
-        CurvilinearGrid other = (CurvilinearGrid)obj;
-        return this.xCoords.equals(other.xCoords) &&
-               this.yCoords.equals(other.yCoords) &&
-               this.crs == null ? other.crs == null : this.crs.equals(other.crs);
+        return crs;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((crs == null) ? 0 : crs.hashCode());
+        result = prime * result + ((extent == null) ? 0 : extent.hashCode());
+        result = prime * result + ((xCoords == null) ? 0 : xCoords.hashCode());
+        result = prime * result + ((xCorners == null) ? 0 : xCorners.hashCode());
+        result = prime * result + ((yCoords == null) ? 0 : yCoords.hashCode());
+        result = prime * result + ((yCorners == null) ? 0 : yCorners.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CurvilinearGrid other = (CurvilinearGrid) obj;
+        if (crs == null) {
+            if (other.crs != null)
+                return false;
+        } else if (!crs.equals(other.crs))
+            return false;
+        if (extent == null) {
+            if (other.extent != null)
+                return false;
+        } else if (!extent.equals(other.extent))
+            return false;
+        if (xCoords == null) {
+            if (other.xCoords != null)
+                return false;
+        } else if (!xCoords.equals(other.xCoords))
+            return false;
+        if (xCorners == null) {
+            if (other.xCorners != null)
+                return false;
+        } else if (!xCorners.equals(other.xCorners))
+            return false;
+        if (yCoords == null) {
+            if (other.yCoords != null)
+                return false;
+        } else if (!yCoords.equals(other.yCoords))
+            return false;
+        if (yCorners == null) {
+            if (other.yCorners != null)
+                return false;
+        } else if (!yCorners.equals(other.yCorners))
+            return false;
+        return true;
+    }
 }
