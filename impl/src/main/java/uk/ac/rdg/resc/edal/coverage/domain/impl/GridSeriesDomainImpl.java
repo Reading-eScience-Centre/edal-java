@@ -253,6 +253,8 @@ public class GridSeriesDomainImpl extends AbstractGrid implements GridSeriesDoma
     @Override
     public long findIndexOf(GeoPosition position) {
         long hIndex = hGrid.findIndexOf(position.getHorizontalPosition());
+        if(hIndex < 0)
+            return -1;
         long hSize = hGrid.getGridExtent().size();
         int vIndex = 0;
         int vSize = 1;

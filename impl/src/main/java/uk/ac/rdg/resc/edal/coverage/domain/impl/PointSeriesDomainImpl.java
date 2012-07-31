@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain.impl;
 
-import java.util.Collections;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.Extent;
@@ -43,9 +42,9 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * @author Guy Griffiths
  * 
  */
-public class PointSeriesDomainImpl implements PointSeriesDomain {
+public class PointSeriesDomainImpl extends AbstractPointDomain<TimePosition> implements
+        PointSeriesDomain {
 
-    private final List<TimePosition> times;
     private final CalendarSystem calSys;
 
     /**
@@ -56,8 +55,8 @@ public class PointSeriesDomainImpl implements PointSeriesDomain {
      *            the {@link List} of {@link TimePosition}s
      */
     public PointSeriesDomainImpl(List<TimePosition> times) {
-        if(times != null){
-            this.times = times;
+        super(times);
+        if (times != null) {
             long lastTime = 0L;
             if (times.size() == 0) {
                 throw new IllegalArgumentException(
@@ -71,10 +70,6 @@ public class PointSeriesDomainImpl implements PointSeriesDomain {
             }
             calSys = times.get(0).getCalendarSystem();
         } else {
-            /*
-             * We may want an empty point series domain
-             */
-            this.times = Collections.emptyList();
             calSys = null;
         }
     }
@@ -85,75 +80,13 @@ public class PointSeriesDomainImpl implements PointSeriesDomain {
     }
 
     @Override
-    public List<TimePosition> getDomainObjects() {
-        return times;
-    }
-
-    @Override
     public Extent<TimePosition> getExtent() {
-        return Extents.newExtent(times.get(0), times.get(times.size() - 1));
-    }
-
-    @Override
-    public boolean contains(TimePosition position) {
-        return (position.getValue() >= times.get(0).getValue() && position.getValue() <= times.get(
-                times.size() - 1).getValue());
-    }
-
-    @Override
-    public long findIndexOf(TimePosition time) {
-        int index = Collections.binarySearch(times, time);
-        if (index >= 0) {
-            return index;
-        } else {
-            int insertionPoint = -(index + 1);
-            if (insertionPoint == times.size() || insertionPoint == 0) {
-                return -1;
-            }
-            if (Math.abs(times.get(insertionPoint).getValue() - time.getValue()) < Math.abs(times
-                    .get(insertionPoint - 1).getValue() - time.getValue())) {
-                return insertionPoint;
-            } else {
-                return insertionPoint - 1;
-            }
-        }
-    }
-
-    @Override
-    public long size() {
-        return times.size();
+        return Extents.newExtent(getDomainObjects().get(0),
+                getDomainObjects().get(getDomainObjects().size() - 1));
     }
 
     @Override
     public List<TimePosition> getTimes() {
-        return times;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((calSys == null) ? 0 : calSys.hashCode());
-        result = prime * result + ((times == null) ? 0 : times.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        PointSeriesDomainImpl other = (PointSeriesDomainImpl) obj;
-        if (calSys != other.calSys)
-            return false;
-        if (times == null) {
-            if (other.times != null)
-                return false;
-        } else if (!times.equals(other.times))
-            return false;
-        return true;
+        return getDomainObjects();
     }
 }
