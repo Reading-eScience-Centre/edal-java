@@ -223,4 +223,29 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
      * @return the value corresponding to pos1 - pos2
      */
     protected abstract double difference(T pos1, T pos2);
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + Arrays.hashCode(axisValues);
+        result = prime * result + (reversed ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AbstractIrregularAxis<?> other = (AbstractIrregularAxis<?>) obj;
+        if (!Arrays.equals(axisValues, other.axisValues))
+            return false;
+        if (reversed != other.reversed)
+            return false;
+        return true;
+    }
 }

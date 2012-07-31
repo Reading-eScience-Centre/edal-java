@@ -123,13 +123,24 @@ public class ReferenceableAxisImpl extends AbstractIrregularAxis<Double> {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + (isLongitude ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
     public boolean equals(Object obj) {
-        if(obj instanceof ReferenceableAxisImpl){
-            ReferenceableAxisImpl axis = (ReferenceableAxisImpl) obj;
-            return super.equals(obj) && (axis.getCoordinateValues().equals(getCoordinateValues()))
-                    && (reversed == axis.reversed) && (isLongitude == axis.isLongitude);
-        } else {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
             return false;
-        }
+        if (getClass() != obj.getClass())
+            return false;
+        ReferenceableAxisImpl other = (ReferenceableAxisImpl) obj;
+        if (isLongitude != other.isLongitude)
+            return false;
+        return true;
     }
 }

@@ -29,3 +29,7 @@ syntax: regexp
 ^ncwms/src/main/webapp/META-INF/maven$
 syntax: regexp
 ^ncwms/gwt-unitCache$
+syntax: regexp
+\.aux$
+syntax: regexp
+\.idx$
