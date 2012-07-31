@@ -68,6 +68,9 @@ public class PluginWrappedGridValuesMatrix extends AbstractGridValuesMatrix<Obje
 
     @Override
     protected GridValuesMatrix<Object> doReadBlock(final int[] mins, final int[] maxes) {
+        /*
+         * First we create some axis objects to populate our new GridValuesMatrix with
+         */
         int[] sizes = new int[mins.length];
         final GridAxis[] axes = new GridAxis[mins.length];
         for (int i = 0; i < mins.length; i++) {
@@ -78,24 +81,52 @@ public class PluginWrappedGridValuesMatrix extends AbstractGridValuesMatrix<Obje
                 axes[i] = new GridAxisImpl(this.getAxis(i).getName(), sizes[i]);
         }
 
-        // This GridValuesMatrix wraps the parent one, without allocating new
-        // storage
+        /*
+         * Now we create an AbstractList which performs the readBlock method on
+         * all of the plugin inputs.
+         * 
+         * Note that this could be done by simply populating a normal list, but
+         * with this AbstractList we only read the blocks if and when needed,
+         * caching them in an array
+         */
+        final List<GridValuesMatrix<?>> subMatrices = new AbstractList<GridValuesMatrix<?>>() {
+            private GridValuesMatrix<?>[] accessedGVMs = new GridValuesMatrix<?>[gvmInputs.size()];
+            
+            @Override
+            public GridValuesMatrix<?> get(int index) {
+                if(accessedGVMs[index] == null){
+                    accessedGVMs[index] = gvmInputs.get(index).readBlock(mins, maxes);
+                }
+                return accessedGVMs[index];
+            }
+
+            @Override
+            public int size() {
+                return accessedGVMs.length;
+            }
+        };
+        
+        /*
+         * Now we return an InMemoryGridValuesMatrix which refers to the axes
+         * and subMatrices we just defined
+         */
         return new InMemoryGridValuesMatrix<Object>() {
 
             @Override
             @SuppressWarnings("unchecked")
             public Class<Object> getValueType() {
-                return (Class<Object>) plugin.generateValueType(memberName, new AbstractList<Class<?>>() {
-                    @Override
-                    public Class<?> get(int index) {
-                        return gvmInputs.get(index).getValueType();
-                    }
+                return (Class<Object>) plugin.generateValueType(memberName,
+                        new AbstractList<Class<?>>() {
+                            @Override
+                            public Class<?> get(int index) {
+                                return gvmInputs.get(index).getValueType();
+                            }
 
-                    @Override
-                    public int size() {
-                        return gvmInputs.size();
-                    }
-                });
+                            @Override
+                            public int size() {
+                                return gvmInputs.size();
+                            }
+                        });
             }
 
             @Override
@@ -109,14 +140,23 @@ public class PluginWrappedGridValuesMatrix extends AbstractGridValuesMatrix<Obje
             }
 
             @Override
-            protected Object doReadPoint(int[] coords) {
+            protected Object doReadPoint(final int[] coords) {
                 for (int i = 0; i < coords.length; i++) {
                     coords[i] += mins[i];
                 }
-                return PluginWrappedGridValuesMatrix.this.readPoint(coords);
+                return plugin.getProcessedValue(memberName, new AbstractList<Object>() {
+
+                    @Override
+                    public Object get(int index) {
+                        return subMatrices.get(index).readPoint(coords);
+                    }
+
+                    @Override
+                    public int size() {
+                        return subMatrices.size();
+                    }
+                });
             }
         };
     }
-
-
 }
