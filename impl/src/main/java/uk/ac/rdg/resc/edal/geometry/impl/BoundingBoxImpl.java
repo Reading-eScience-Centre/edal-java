@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.geometry.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -229,5 +230,47 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
     @Override
     public final double getSpan(int i) {
         return this.getMaximum(i) - this.getMinimum(i);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((crs == null) ? 0 : crs.hashCode());
+        long temp;
+        temp = Double.doubleToLongBits(maxx);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(maxy);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(minx);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(miny);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        BoundingBoxImpl other = (BoundingBoxImpl) obj;
+        if (crs == null) {
+            if (other.crs != null)
+                return false;
+        } else if (!crs.equals(other.crs))
+            return false;
+        if (Double.doubleToLongBits(maxx) != Double.doubleToLongBits(other.maxx))
+            return false;
+        if (Double.doubleToLongBits(maxy) != Double.doubleToLongBits(other.maxy))
+            return false;
+        if (Double.doubleToLongBits(minx) != Double.doubleToLongBits(other.minx))
+            return false;
+        if (Double.doubleToLongBits(miny) != Double.doubleToLongBits(other.miny))
+            return false;
+        return true;
     }
 }
