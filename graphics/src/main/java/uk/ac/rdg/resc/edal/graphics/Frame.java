@@ -155,8 +155,32 @@ public class Frame {
             g.setColor(Color.BLACK);
 
             float arrowLength = style.getArrowLength();
-            for (int i = 0; i < width; i += Math.ceil(arrowLength * 1.2)) {
-                for (int j = 0; j < height; j += Math.ceil(arrowLength * 1.2)) {
+            int minXMod = Integer.MAX_VALUE;
+            int minYMod = Integer.MAX_VALUE;
+            double spacingX = (int) Math.ceil(arrowLength * 1.5);
+            double spacingY = (int) Math.ceil(arrowLength * 1.5);
+            for(int s=((int)(arrowLength * 1.5)); s <(arrowLength * 2.5); s++){
+                int modX = width % s; 
+                if(modX < minXMod) {
+                    spacingX = s;
+                    minXMod = modX;
+                }
+                int modY = height % s;
+                if(modY < minYMod){
+                    spacingY = s;
+                    minYMod = modY;
+                }
+            }
+            if(minXMod != 0){
+                spacingX = ((double)width)/((int)(width/spacingX)); 
+            }
+            if(minYMod != 0){
+                spacingY = ((double)height)/((int)(height/spacingY)); 
+            }
+            for (double di = 0.5*spacingX; di < width; di += spacingX) {
+                int i = (int) di;
+                for (double dj = 0.5*spacingY; dj < height; dj += spacingY) {
+                    int j = (int) dj;
                     Number angle = data[i][j];
                     if (angle != null) {
                         // Calculate the end point of the arrow
@@ -166,8 +190,8 @@ public class Frame {
                         double jEnd = j - arrowLength * Math.sin(angle.doubleValue());
                         // Draw a dot representing the data location
                         g.fillOval(i - 2, j - 2, 4, 4);
-                        // Draw a line representing the vector direction and
-                        // magnitude
+                        // Draw a line representing the vector direction
+                        g.setColor(Color.BLACK);
                         g.setStroke(new BasicStroke(1));
                         g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
                     }

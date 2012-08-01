@@ -29,7 +29,7 @@ public class MapStyleDescriptor {
     /*
      * The length of arrows in pixels, only used for vector plots
      */
-    private float arrowLength = 10.0f;
+    private float arrowLength = 6.0f;
     
     public MapStyleDescriptor() throws InstantiationException {
         icons = new HashMap<String, ColourableIcon>();
