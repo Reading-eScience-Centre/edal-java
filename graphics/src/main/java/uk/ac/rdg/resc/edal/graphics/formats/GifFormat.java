@@ -58,18 +58,20 @@ public class GifFormat extends SimpleFormat {
         byte[] rgbPalette = null;
         IndexColorModel icm = null;
         for (BufferedImage frame : frames) {
+            BufferedImage gifFrame = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_BYTE_INDEXED);
+            gifFrame.createGraphics().drawImage(frame, 0, 0, null);
             if (rgbPalette == null) {
                 // This is the first frame
                 e.setSize(frame.getWidth(), frame.getHeight());
                 // Get the colour palette. We assume that we have used an
                 // IndexColorModel that is the same for all frames
-                icm = (IndexColorModel) frame.getColorModel();
+                icm = (IndexColorModel) gifFrame.getColorModel();
                 rgbPalette = getRGBPalette(icm);
             }
             // Get the indices of each pixel in the image. We do this after the
             // frames have been created because we might have added a label to
             // the image.
-            byte[] indices = ((DataBufferByte) frame.getRaster().getDataBuffer()).getData();
+            byte[] indices = ((DataBufferByte) gifFrame.getRaster().getDataBuffer()).getData();
             e.addFrame(rgbPalette, indices, icm.getTransparentPixel());
         }
         e.finish();
