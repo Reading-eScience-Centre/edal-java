@@ -31,6 +31,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageProducer;
 import java.awt.image.IndexColorModel;
 import java.io.BufferedReader;
 import java.io.File;
@@ -77,11 +78,6 @@ public class ColorPalette {
      * The height of the legend in pixels that will be created by createLegend()
      */
     public static final int LEGEND_HEIGHT = 264;
-    
-    /*
-     * This gets cached to avoid the creation cost each time it's used
-     */
-    private IndexColorModel colorModel = null;
 
     /**
      * This is the palette that will be used if no specific palette has been
@@ -341,50 +337,47 @@ public class ColorPalette {
      */
     public IndexColorModel getColorModel(int numColorBands, int opacity, Color bgColor,
             boolean transparent) {
-        if(colorModel == null){
-            // Gets an interpolated/subsampled version of this palette with the
-            // given number of colour bands
-            Color[] newPalette = this.getPalette(numColorBands);
-            // Compute the alpha value based on the percentage transparency
-            int alpha;
-            // Here we are playing safe and avoiding rounding errors that might
-            // cause the alpha to be set to zero instead of 255
-            if (opacity >= 100)
-                alpha = 255;
-            else if (opacity <= 0)
-                alpha = 0;
-            else
-                alpha = (int) (2.55 * opacity);
-    
-            // Now simply copy the target palette to arrays of r,g,b and a
-            byte[] r = new byte[numColorBands + 2];
-            byte[] g = new byte[numColorBands + 2];
-            byte[] b = new byte[numColorBands + 2];
-            byte[] a = new byte[numColorBands + 2];
-            for (int i = 0; i < numColorBands; i++) {
-                r[i] = (byte) newPalette[i].getRed();
-                g[i] = (byte) newPalette[i].getGreen();
-                b[i] = (byte) newPalette[i].getBlue();
-                a[i] = (byte) alpha;
-            }
-    
-            // The next index represents the background colour (which may be
-            // transparent)
-            r[numColorBands] = (byte) bgColor.getRed();
-            g[numColorBands] = (byte) bgColor.getGreen();
-            b[numColorBands] = (byte) bgColor.getBlue();
-            a[numColorBands] = transparent ? 0 : (byte) alpha;
-    
-            // The next represents out-of-range pixels (black)
-            r[numColorBands + 1] = 0;
-            g[numColorBands + 1] = 0;
-            b[numColorBands + 1] = 0;
-            a[numColorBands + 1] = (byte) alpha;
-    
-            // Now we can create the color model
-            colorModel = new IndexColorModel(8, r.length, r, g, b, a);
+        // Gets an interpolated/subsampled version of this palette with the
+        // given number of colour bands
+        Color[] newPalette = this.getPalette(numColorBands);
+        // Compute the alpha value based on the percentage transparency
+        int alpha;
+        // Here we are playing safe and avoiding rounding errors that might
+        // cause the alpha to be set to zero instead of 255
+        if (opacity >= 100)
+            alpha = 255;
+        else if (opacity <= 0)
+            alpha = 0;
+        else
+            alpha = (int) (2.55 * opacity);
+
+        // Now simply copy the target palette to arrays of r,g,b and a
+        byte[] r = new byte[numColorBands + 2];
+        byte[] g = new byte[numColorBands + 2];
+        byte[] b = new byte[numColorBands + 2];
+        byte[] a = new byte[numColorBands + 2];
+        for (int i = 0; i < numColorBands; i++) {
+            r[i] = (byte) newPalette[i].getRed();
+            g[i] = (byte) newPalette[i].getGreen();
+            b[i] = (byte) newPalette[i].getBlue();
+            a[i] = (byte) alpha;
         }
-        return colorModel;
+
+        // The next index represents the background colour (which may be
+        // transparent)
+        r[numColorBands] = (byte) bgColor.getRed();
+        g[numColorBands] = (byte) bgColor.getGreen();
+        b[numColorBands] = (byte) bgColor.getBlue();
+        a[numColorBands] = transparent ? 0 : (byte) alpha;
+
+        // The next represents out-of-range pixels (black)
+        r[numColorBands + 1] = 0;
+        g[numColorBands + 1] = 0;
+        b[numColorBands + 1] = 0;
+        a[numColorBands + 1] = (byte) alpha;
+
+        // Now we can create the color model
+        return new IndexColorModel(8, r.length, r, g, b, a);
     }
 
     /**

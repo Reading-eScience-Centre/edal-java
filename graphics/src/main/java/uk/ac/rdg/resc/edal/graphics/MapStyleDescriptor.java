@@ -159,8 +159,12 @@ public class MapStyleDescriptor {
         return scaleRange == null || scaleRange.isEmpty();
     }
     
+    IndexColorModel indexColorModel = null;
+    
     public IndexColorModel getColorModel(){
-        return colorPalette.getColorModel(numColourBands, opacity, bgColor, transparent);
+        if(indexColorModel == null)
+            indexColorModel = colorPalette.getColorModel(numColourBands, opacity, bgColor, transparent); 
+        return indexColorModel;
     }
     
     public BufferedImage getLegend(String title, String units) {
