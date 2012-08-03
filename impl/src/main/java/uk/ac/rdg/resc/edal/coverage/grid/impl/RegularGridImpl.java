@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.referencing.cs.RangeMeaning;
 
 import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
@@ -141,23 +142,28 @@ public final class RegularGridImpl extends AbstractRectilinearGrid implements Re
         double firstXAxisValue = minx + (0.5 * xSpacing);
         double firstYAxisValue = miny + (0.5 * ySpacing);
 
-        // TODO: identify whether the axis is longitude
-        // Can we use axis.rangemeaning == WRAPS for this? Do we also have
-        // to check that the units of the axis are correct (degrees rather than
-        // radians) and that the axis is really longitude?
-        boolean isLongitude = false;
-
         if (crs == null) {
+            /*
+             * If we don't have a crs, we can't tell if an axis is longitude
+             */
             xAxis = new RegularAxisImpl("Unknown X axis", firstXAxisValue, xSpacing, width,
-                    isLongitude);
-            // y axis is very unlikely to be longitude
+                    false);
             yAxis = new RegularAxisImpl("Unknown Y axis", firstYAxisValue, ySpacing, height, false);
         } else {
+            /*
+             * If we do have a crs, we can use rangeMeaning==WRAPAROUND to
+             * determine whether the axis is longitude
+             * 
+             * TODO There may be wrapped axes where this is inappropriate.
+             * Perhaps change isLongitude to wraps in RegularAxisImpl, and set a
+             * wrap value?
+             */
             CoordinateSystem cs = crs.getCoordinateSystem();
             xAxis = new RegularAxisImpl(cs.getAxis(0), firstXAxisValue, xSpacing, width,
-                    isLongitude);
+                    (cs.getAxis(0).getRangeMeaning()==RangeMeaning.WRAPAROUND));
             // y axis is very unlikely to be longitude
-            yAxis = new RegularAxisImpl(cs.getAxis(1), firstYAxisValue, ySpacing, height, false);
+            yAxis = new RegularAxisImpl(cs.getAxis(1), firstYAxisValue, ySpacing, height, (cs
+                    .getAxis(1).getRangeMeaning() == RangeMeaning.WRAPAROUND));
         }
     }
 
