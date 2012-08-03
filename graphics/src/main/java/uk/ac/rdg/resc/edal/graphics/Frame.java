@@ -12,12 +12,8 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
@@ -36,8 +32,6 @@ public class Frame {
     private int width;
     private int height;
     private String label;
-    private ColourableIcon circleIcon = null;
-    private ColourableIcon squareIcon = null;
 
     public Frame(int width, int height, String label) {
         if (width == 0 || height == 0) {
@@ -279,11 +273,11 @@ public class Frame {
         Graphics2D canvas = image.createGraphics();
         if(frameData instanceof PointFrameData){
             PointFrameData pointFrameData = (PointFrameData) frameData;
-            doPointPlot(pointFrameData, canvas, style, getCircleIcon());
+            doPointPlot(pointFrameData, canvas, style, "circle");
         } else if(frameData instanceof MultiPointFrameData){
             MultiPointFrameData multiPointFrameData = (MultiPointFrameData) frameData;
             for(int i=0; i< multiPointFrameData.size(); i++){
-                doPointPlot(multiPointFrameData.getPointData(i), canvas, style, getSquareIcon());
+                doPointPlot(multiPointFrameData.getPointData(i), canvas, style, "square");
             }
         } else {
             throw new UnsupportedOperationException(
@@ -292,49 +286,14 @@ public class Frame {
         return image;
     }
     
-    private void doPointPlot(PointFrameData pointFrameData, Graphics2D canvas, MapStyleDescriptor style, ColourableIcon pointIcon){
+    private void doPointPlot(PointFrameData pointFrameData, Graphics2D canvas, MapStyleDescriptor style, String iconName){
         if(!pointFrameData.getValue().equals(Float.NaN)) {
             Color color = style.getColorForValue(pointFrameData.getValue());
+            ColourableIcon pointIcon = style.getIcon(iconName);
             canvas.drawImage(pointIcon.getColouredIcon(color), pointFrameData.getX()
                     - pointIcon.getWidth() / 2, height - (pointFrameData.getY()
-                            - pointIcon.getHeight() / 2) - 1, null);
+                            + pointIcon.getHeight() / 2) - 1, null);
         }
-    }
-    
-    private ColourableIcon getCircleIcon(){
-        if(circleIcon  == null){
-            BufferedImage iconImage;
-            try {
-                /*
-                 * This will work when the files are packaged as a JAR. For running
-                 * within an IDE, you may need to add the root directory of the project
-                 * to the classpath
-                 */
-                iconImage = ImageIO.read(this.getClass().getResource("/img/circle.png"));
-                circleIcon = new ColourableIcon(iconImage);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return circleIcon;
-    }
-    
-    private ColourableIcon getSquareIcon(){
-        if(squareIcon  == null){
-            BufferedImage iconImage;
-            try {
-                /*
-                 * This will work when the files are packaged as a JAR. For running
-                 * within an IDE, you may need to add the root directory of the project
-                 * to the classpath
-                 */
-                iconImage = ImageIO.read(this.getClass().getResource("/img/square.png"));
-                squareIcon = new ColourableIcon(iconImage);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return squareIcon;
     }
     
     private BufferedImage drawGridPoints(FrameData frameData) {
@@ -346,7 +305,7 @@ public class Frame {
             int black = Color.BLACK.getRGB();
             for(GridCoordinates2D gridCoord : gridPointsFrameData.getPointData()){
                 int x = gridCoord.getXIndex();
-                int y = gridCoord.getYIndex();
+                int y = height-gridCoord.getYIndex()-1;
                 if(x >= 0 && x < width && y >= 0 && y < height)
                     image.setRGB(x, y, black);
             }
@@ -412,23 +371,5 @@ public class Frame {
             return Extents.newExtent(0.0f, 1.0f);
         }
         return Extents.newExtent(min, max);
-    }
-    
-    public static void main(String[] args) throws InstantiationException, IOException {
-//        Frame f = new Frame(500, 500, null);        
-//        List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
-//        for(int xIndex = 0; xIndex < 500; xIndex += 10){
-//            for(int yIndex = 0; yIndex < 500; yIndex += 10){
-//                coords.add(new GridCoordinates2DImpl(xIndex, yIndex));
-//            }
-//        }
-//        f.addGridPoints(coords);
-//        BufferedImage renderLayers = f.renderLayers(new MapStyleDescriptor());
-//        ImageIO.write(renderLayers, "png", new File("/home/guy/grid.png"));
-        
-        BufferedImage image = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = image.createGraphics();
-        graphics.drawLine(-10, 250, 490, 250);
-        ImageIO.write(image, "png", new File("/home/guy/00line.png"));
     }
 }

@@ -31,6 +31,11 @@ public class MapStyleDescriptor {
      */
     private float arrowLength = 6.0f;
     
+    /*
+     * We cache this for speed
+     */
+    private IndexColorModel indexColorModel = null;
+
     public MapStyleDescriptor() throws InstantiationException {
         icons = new HashMap<String, ColourableIcon>();
 
@@ -158,8 +163,6 @@ public class MapStyleDescriptor {
     public boolean isAutoScale(){
         return scaleRange == null || scaleRange.isEmpty();
     }
-    
-    IndexColorModel indexColorModel = null;
     
     public IndexColorModel getColorModel(){
         if(indexColorModel == null)

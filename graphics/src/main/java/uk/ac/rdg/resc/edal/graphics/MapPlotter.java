@@ -31,6 +31,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.TrajectoryCoverageImpl;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent;
 import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent.VectorDirection;
 import uk.ac.rdg.resc.edal.coverage.metadata.VectorMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
@@ -126,28 +127,22 @@ public class MapPlotter {
             frame = new Frame(width, height, label);
         }
 
+        if(plotStyle == PlotStyle.DEFAULT){
+            plotStyle = getDefaultPlotStyle(feature, memberName);
+        }
+        
         if (feature instanceof GridSeriesFeature) {
-            if (plotStyle == PlotStyle.DEFAULT)
-                plotStyle = PlotStyle.BOXFILL;
             addGridSeriesFeatureToFrame((GridSeriesFeature) feature, memberName, vPos, tPos, label,
                     plotStyle, frame);
         } else if (feature instanceof GridFeature) {
-            if (plotStyle == PlotStyle.DEFAULT)
-                plotStyle = PlotStyle.BOXFILL;
             addGridFeatureToFrame((GridFeature) feature, memberName, label, plotStyle, frame);
         } else if (feature instanceof PointSeriesFeature) {
-            if (plotStyle == PlotStyle.DEFAULT)
-                plotStyle = PlotStyle.POINT;
             addPointSeriesFeatureToFrame((PointSeriesFeature) feature, memberName, tPos, label,
                     plotStyle, frame);
         } else if (feature instanceof ProfileFeature) {
-            if (plotStyle == PlotStyle.DEFAULT)
-                plotStyle = PlotStyle.POINT;
             addProfileFeatureToFrame((ProfileFeature) feature, memberName, vPos, label, plotStyle,
                     frame);
         } else if (feature instanceof TrajectoryFeature) {
-            if (plotStyle == PlotStyle.DEFAULT)
-                plotStyle = PlotStyle.TRAJECTORY;
             addTrajectoryFeatureToFrame((TrajectoryFeature) feature, memberName, label, plotStyle,
                     frame);
         } else {
@@ -158,6 +153,48 @@ public class MapPlotter {
         if (!frameData.containsKey(tPos)) {
             frameData.put(tPos, frame);
         }
+    }
+    
+    private PlotStyle getDefaultPlotStyle(Feature feature, String memberName) {
+        /*
+         * Start with BOXFILL as a default
+         */
+        PlotStyle plotStyle = PlotStyle.BOXFILL;
+        
+        /*
+         * Now narrow down by feature type
+         */
+        if (feature instanceof GridSeriesFeature) {
+            plotStyle = PlotStyle.BOXFILL;
+        } else if (feature instanceof GridFeature) {
+            plotStyle = PlotStyle.BOXFILL;
+        } else if (feature instanceof PointSeriesFeature) {
+            plotStyle = PlotStyle.POINT;
+        } else if (feature instanceof ProfileFeature) {
+            plotStyle = PlotStyle.POINT;
+        } else if (feature instanceof TrajectoryFeature) {
+            plotStyle = PlotStyle.TRAJECTORY;
+        }
+        /*
+         * Now specialise by checking if we have numbers or only directional data
+         */
+        if (feature.getCoverage().getScalarMemberNames().contains(memberName)) {
+            ScalarMetadata scalarMetadata = feature.getCoverage().getScalarMetadata(memberName);
+            if (scalarMetadata.getValueType().equals(Object.class)) {
+                /*
+                 * We have non-numeric data. All we can do here is plot the grid
+                 * points
+                 */
+                plotStyle = PlotStyle.GRID_POINTS;
+            } else if (scalarMetadata instanceof VectorComponent
+                    && ((VectorComponent) scalarMetadata).getDirection() == VectorDirection.DIRECTION) {
+                /*
+                 * We always plot direction fields with vector style
+                 */
+                plotStyle = PlotStyle.VECTOR;
+            }
+        }
+        return plotStyle;
     }
 
     private void addGridSeriesFeatureToFrame(GridSeriesFeature feature, String memberName,
@@ -239,7 +276,9 @@ public class MapPlotter {
                 for (GridCell2D gridCell : hGrid.getDomainObjects()) {
                     hPos = gridCell.getCentre();
                     GridCell2D containingCell = targetDomain.findContainingCell(hPos);
-                    if (containingCell == null)
+                    Object val = feature.getCoverage().evaluate(hPos, memberName);
+                    if (containingCell == null || val == null || val.equals(Float.NaN)
+                            || val.equals(Double.NaN))
                         continue;
                     coords.add(containingCell.getGridCoordinates());
                 }
@@ -251,21 +290,41 @@ public class MapPlotter {
                     throw new UnsupportedOperationException(
                             "Cannot plot non-numerical data as coloured points");
                 }
-                HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
+                /*
+                 * The size of border to add to the target domain (this means
+                 * that when tiled, point icons don't get cut off).
+                 * 
+                 * This needs to be at least half the size of the icon used to
+                 * plot the point, but it doesn't matter if it's a bit large. We
+                 * use 16, because an icon of 32x32 is pretty massive
+                 */
+                int extraPixels = 16;
+                double xGrowth = ((double)extraPixels)/width;
+                double yGrowth = ((double)extraPixels)/height;
+                double xExtra = bbox.getWidth()*xGrowth;
+                double yExtra = bbox.getHeight()*yGrowth;
+                BoundingBox bboxBordered = new BoundingBoxImpl(new double[] {
+                        bbox.getMinX() - xExtra, bbox.getMinY() - yExtra, bbox.getMaxX() + xExtra,
+                        bbox.getMaxY() + yExtra }, bbox.getCoordinateReferenceSystem());
+                RegularGrid targetDomain = new RegularGridImpl(bboxBordered, width+2*extraPixels, height+2*extraPixels);
+
                 HorizontalPosition hPos;
                 HorizontalGrid hGrid = feature.getCoverage().getDomain();
                 List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
                 List<Number> values = new ArrayList<Number>();
                 for (GridCell2D gridCell : hGrid.getDomainObjects()) {
                     hPos = gridCell.getCentre();
+
                     GridCell2D containingCell = targetDomain.findContainingCell(hPos);
                     if (containingCell == null)
                         continue;
-                    coords.add(containingCell.getGridCoordinates());
+                    GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
+                    coords.add(new GridCoordinates2DImpl(gridCoordinates.getXIndex() - extraPixels,
+                            gridCoordinates.getYIndex() - extraPixels));
+                    
                     values.add((Number) feature.getCoverage().evaluate(hPos, memberName));
                 }
                 frame.addMultipointData(values, coords, plotStyle);
-                frame.addGridPoints(coords);
                 return;
             } else {
                 data = getDataFromGridFeature(feature, memberName);
@@ -431,34 +490,34 @@ public class MapPlotter {
                     "Plotting of non-scalar members of TrajectoryFeatures is not yet supported");
         }
 
-        double xMin = targetDomain.getXAxis().getCoordinateExtent().getLow();
-        double xMax = targetDomain.getXAxis().getCoordinateExtent().getHigh();
-        double yMin = targetDomain.getYAxis().getCoordinateExtent().getLow();
-        double yMay = targetDomain.getYAxis().getCoordinateExtent().getHigh();
 
         for (GeoPosition geoPos : positions) {
             HorizontalPosition pos = geoPos.getHorizontalPosition();
 
             /*
-             * Usually we delegate to targetDomain.findContainingCell for this
-             * kind of thing
+             * Usually we delegate to targetDomain.findContainingCell for this kind
+             * of thing
              * 
-             * The reason we don't do that here is that we DO care about
-             * negative indices - we want to plot line sections which may
-             * start/end outside the bounding box of the image
+             * However, for trajectory plots we want to know what the
+             * index is, even if it's outside the targetDomain
              */
             if (pos.getCoordinateReferenceSystem() != targetDomain.getCoordinateReferenceSystem()) {
                 pos = GISUtils.transformPosition(pos, targetDomain.getCoordinateReferenceSystem());
             }
 
-            double fracAlongX = (pos.getX() - xMin) / (xMax - xMin);
+            double fracAlongX = (pos.getX() - targetDomain.getXAxis().getCoordinateExtent().getLow())
+                    / (targetDomain.getXAxis().getCoordinateExtent().getHigh() - targetDomain
+                            .getXAxis().getCoordinateExtent().getLow());
             int xIndex = (int) (fracAlongX * width);
 
-            double fracAlongY = 1.0 - (pos.getY() - yMin) / (yMay - yMin);
-            int yIndex = (int) (fracAlongY * height);
-            System.out.println(xIndex + "," + yIndex);
+            double fracAlongY = 1.0
+                    - (pos.getY() - targetDomain.getYAxis().getCoordinateExtent().getLow())
+                    / (targetDomain.getYAxis().getCoordinateExtent().getHigh() - targetDomain
+                            .getYAxis().getCoordinateExtent().getLow());
+            int yIndex = height - 1 - (int) (fracAlongY * height);
 
             coords.add(new GridCoordinates2DImpl(xIndex, yIndex));
+            
             if (numberField) {
                 values.add((Number) coverage.evaluate(geoPos, memberName));
             } else {
@@ -468,7 +527,7 @@ public class MapPlotter {
 
         frame.addMultipointData(values, coords, plotStyle);
     }
-
+    
     /*
      * This gets all scalar children of the desired member.
      */
