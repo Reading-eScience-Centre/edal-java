@@ -100,10 +100,7 @@ public class ProjectedGrid extends AbstractHorizontalGrid
         double x = this.xAxis.getCoordinateValue(i);
         double y = this.yAxis.getCoordinateValue(j);
         // Translate this point to lon-lat coordinates
-        LatLonPoint latLon;
-        synchronized (this.proj) {
-            latLon = this.proj.projToLatLon(x, y);
-        }
+        LatLonPoint latLon = this.proj.projToLatLon(x, y);
         return new LonLatPositionImpl(latLon.getLongitude(), latLon.getLatitude());
     }
 
@@ -145,12 +142,7 @@ public class ProjectedGrid extends AbstractHorizontalGrid
     protected GridCell2D findContainingCell(double x, double y) {
         // The incoming x and y coordinates are in the external CRS of this grid,
         // i.e. WGS84.  Now we go from lon-lat to the coordinate system of the axes.
-        ProjectionPoint point;
-        synchronized (this.proj) {
-            // ProjectionImpls are not thread-safe. Thanks to Marcos
-            // Hermida of Meteogalicia for pointing this out!
-            point = this.proj.latLonToProj(y, x);
-        }
+        ProjectionPoint point = this.proj.latLonToProj(y, x);
         int i = this.xAxis.findIndexOf(point.getX());
         int j = this.yAxis.findIndexOf(point.getY());
         if (i < 0 || j < 0)
