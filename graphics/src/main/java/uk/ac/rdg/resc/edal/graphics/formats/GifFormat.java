@@ -28,6 +28,7 @@
 package uk.ac.rdg.resc.edal.graphics.formats;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 import java.io.IOException;
@@ -55,18 +56,17 @@ public class GifFormat extends SimpleFormat {
             e.setRepeat(0);
             e.setDelay(150); // delay between frames in milliseconds
         }
-        byte[] rgbPalette = null;
-        IndexColorModel icm = null;
+        boolean sizeSet = false;
+        IndexColorModel icm = getGeneralIndexedColorModelWithTransparency();
+        byte[] rgbPalette = getRGBPalette(icm);
         for (BufferedImage frame : frames) {
-            BufferedImage gifFrame = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_BYTE_INDEXED);
+            
+            
+            BufferedImage gifFrame = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_BYTE_INDEXED, icm);
             gifFrame.createGraphics().drawImage(frame, 0, 0, null);
-            if (rgbPalette == null) {
-                // This is the first frame
+            if (!sizeSet) {
                 e.setSize(frame.getWidth(), frame.getHeight());
-                // Get the colour palette. We assume that we have used an
-                // IndexColorModel that is the same for all frames
-                icm = (IndexColorModel) gifFrame.getColorModel();
-                rgbPalette = getRGBPalette(icm);
+                sizeSet = true;
             }
             // Get the indices of each pixel in the image. We do this after the
             // frames have been created because we might have added a label to
@@ -77,6 +77,39 @@ public class GifFormat extends SimpleFormat {
         e.finish();
     }
 
+    private static IndexColorModel getGeneralIndexedColorModelWithTransparency() {
+        /*
+         * This was nabbed from the source of BufferedImage. This is the default
+         * IndexColorModel generated when we create a BufferedImage of type
+         * TYPE_BYTE_INDEXED without specifying an IndexColorModel, with the
+         * difference that we add a single transparent pixel.
+         */
+        
+        // Create a 6x6x6 color cube
+        int[] cmap = new int[256];
+        int i=0;
+        cmap[i++] = 255 << 32 | (255 << 16) | (255 << 8) | (255);
+        for (int r=0; r < 256; r += 51) {
+            for (int g=0; g < 256; g += 51) {
+                for (int b=0; b < 256; b += 51) {
+                    cmap[i++] = (r<<16)|(g<<8)|b;
+                }
+            }
+        }
+        // And populate the rest of the cmap with gray values
+        int grayIncr = 256/(256-i);
+
+        // The gray ramp will be between 18 and 252
+        int gray = grayIncr*3;
+        for (; i < 255; i++) {
+            cmap[i] = (gray<<16)|(gray<<8)|gray;
+            gray += grayIncr;
+        }
+
+        IndexColorModel colorModel = new IndexColorModel(8, 256, cmap, 0, true, 0, DataBuffer.TYPE_BYTE);
+        return colorModel;
+    }
+    
     /**
      * Gets the RGB palette as an array of 256*3 bytes (i.e. 256 colours in RGB
      * order). If the given IndexColorModel contains less than 256 colours the
