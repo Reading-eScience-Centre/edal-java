@@ -28,10 +28,10 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Set;
+
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
@@ -39,16 +39,12 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * Represents data held on a multidimensional grid.
- * 
- * @param <R>
- *            The type of the value returned by the coverage; for a compound
- *            coverage this type will be {@link Record}.
  * @author Jon Blower
  */
-public interface GridSeriesFeature<R> extends Feature {
+public interface GridSeriesFeature extends Feature {
 
     @Override
-    public GridSeriesCoverage<R> getCoverage();
+    public GridSeriesCoverage getCoverage();
 
     /**
      * Convenience method to extract a {@link ProfileFeature} for plotting
@@ -59,9 +55,12 @@ public interface GridSeriesFeature<R> extends Feature {
      *            {@link ProfileFeature}
      * @param time
      *            the {@link TimePosition} of the desired {@link ProfileFeature}
+     * @param members
+     *            the coverage members to extract. If this is null, extract all
+     *            members
      * @return the extracted {@link ProfileFeature}
      */
-    public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition time);
+    public ProfileFeature extractProfileFeature(HorizontalPosition pos, TimePosition time, Set<String> members);
 
     /**
      * Convenience method to extract a {@link PointSeriesFeature} for plotting
@@ -76,13 +75,16 @@ public interface GridSeriesFeature<R> extends Feature {
      * @param tRange
      *            the range of {@link TimePosition}s of the desired
      *            {@link PointSeriesFeature}
+     * @param members
+     *            the coverage members to extract. If this is null, extract all
+     *            members            
      * @return the extracted {@link PointSeriesFeature}
      */
-    public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos,
-            VerticalPosition z, Extent<? extends TimePosition> tRange);
+    public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
+            Extent<TimePosition> tRange, Set<String> members);
 
     /**
-     * Convenience method to extract a horizontal layer for plotting purposes
+     * Convenience method to extract a horizontal feature
      * 
      * @param tindex
      *            The index of the time dimension required
@@ -90,25 +92,11 @@ public interface GridSeriesFeature<R> extends Feature {
      *            The index of the elevation dimension required
      * @param targetDomain
      *            The desired domain of the resultant coverage
-     * @return A list of values, with x varying first
+     * @param members
+     *            the coverage members to extract. If this is null, extract all
+     *            members
+     * @return A {@link GridFeature} on the target domain
      */
-    public GridCoverage2D<R> extractHorizontalGrid(int tindex, int zindex,
-            HorizontalGrid targetDomain);
-
-    /**
-     * Convenience method to extract a horizontal layer for plotting purposes
-     * 
-     * @param tPos
-     *            The time value required
-     * @param zPos
-     *            The elevation value required
-     * @param targetDomain
-     *            The desired domain of the resultant coverage
-     * @return A list of values, with x varying first
-     */
-    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, VerticalPosition zPos,
-            HorizontalGrid targetDomain);
-    
-//    public TransectFeature extractTransectFeature(Arguments gohere);
-    
+    public GridFeature extractGridFeature(HorizontalGrid targetDomain, VerticalPosition zPos,
+            TimePosition tPos, Set<String> members);
 }

@@ -27,28 +27,18 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ucar.nc2.dt.GridCoordSystem;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
-import uk.ac.rdg.resc.edal.geometry.Polygon;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.LonLatPosition;
-import uk.ac.rdg.resc.edal.position.impl.LonLatPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * A HorizontalGrid that is created from a "curvilinear" coordinate system,
@@ -62,7 +52,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * 
  * @author Jon Blower
  */
-public final class LookUpTableGrid extends AbstractCurvilinearGrid {
+public final class LookUpTableGrid extends AbstractCurvilinearGrid
+{
     private static final Logger logger = LoggerFactory.getLogger(LookUpTableGrid.class);
 
     /**
@@ -120,22 +111,28 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     }
 
     /**
-     * @return the nearest grid point to the given lat-lon point, or null if the
-     *         lat-lon point is not contained within this layer's domain.
+     * @param x The longitude of the point to test (we know in advance that the
+     *          x and y coordinates will already have been transformed to the
+     *          external CRS of this grid).
+     * @param y The latitude of the point to test.
+     * @return the coordinates of the grid cell that contains the given lat-lon
+     *         point, or null if the lat-lon point is not contained within this
+     *         layer's domain.
      */
     @Override
-    public GridCoordinates2D findContainingCell(HorizontalPosition pos) {
-        LonLatPosition lonLatPos = GISUtils.transformToWgs84LonLat(pos);
-        int[] lutCoords = this.lut.getGridCoordinates(lonLatPos.getLongitude(),
-                lonLatPos.getLatitude());
+    protected GridCell2D findContainingCell(double x, double y)
+    {
+        // Find the "first guess" at the containing cell according to the
+        // look-up table
+        int[] lutCoords = this.lut.getGridCoordinates(x, y);
         // Return null if the latLonPoint does not match a valid grid point
         if (lutCoords == null)
             return null;
         // Check that this cell really contains this point, if not, check
         // the neighbours
         Cell cell = this.curvGrid.getCell(lutCoords[0], lutCoords[1]);
-        if (cell.contains(lonLatPos))
-            return new GridCoordinates2DImpl(lutCoords);
+        if (cell.contains(x, y))
+            return getGridCell(new GridCoordinates2DImpl(lutCoords));
 
         // We do a gradient-descent method to find the true nearest
         // neighbour
@@ -144,7 +141,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
         examined.add(cell);
         // find the Euclidean distance from the cell centre to the target
         // position
-        double shortestDistanceSq = cell.findDistanceSq(lonLatPos);
+        double shortestDistanceSq = cell.findDistanceSq(x, y);
 
         boolean found = true;
         int maxIterations = 100; // prevent the search going on forever
@@ -152,7 +149,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
             found = false;
             for (Cell neighbour : cell.getNeighbours()) {
                 if (!examined.contains(neighbour)) {
-                    double distanceSq = neighbour.findDistanceSq(lonLatPos);
+                    double distanceSq = neighbour.findDistanceSq(x, y);
                     if (distanceSq < shortestDistanceSq) {
                         cell = neighbour;
                         shortestDistanceSq = distanceSq;
@@ -164,14 +161,13 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
         }
 
         // We now have the nearest neighbour, but sometimes the position is
-        // actually
-        // contained within one of the cell's neighbours
-        if (cell.contains(lonLatPos)) {
-            return new GridCoordinates2DImpl(cell.getI(), cell.getJ());
+        // actually contained within one of the cell's neighbours
+        if (cell.contains(x, y)) {
+            return getGridCell(cell.getI(), cell.getJ());
         }
         for (Cell neighbour : cell.getNeighbours()) {
-            if (neighbour.contains(lonLatPos)) {
-                return new GridCoordinates2DImpl(neighbour.getI(), neighbour.getJ());
+            if (neighbour.contains(x, y)) {
+                return getGridCell(neighbour.getI(), neighbour.getJ());
             }
         }
 
@@ -180,142 +176,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
          * the contains() checks. This is probably OK in the middle of a grid,
          * but we might need to be careful at the edges
          */
-        return new GridCoordinates2DImpl(cell.getI(), cell.getJ());
+        return getGridCell(cell.getI(), cell.getJ());
     }
 
-    @Override
-    public List<GridCell2D> getDomainObjects() {
-        List<GridCell2D> ret = new ArrayList<GridCell2D>();
-        int imax = getXAxis().getIndexExtent().getHigh();
-        int imin = getXAxis().getIndexExtent().getLow();
-        int jmax = getYAxis().getIndexExtent().getHigh();
-        int jmin = getYAxis().getIndexExtent().getLow();
-        // TODO should this be i<=imax?
-        for (int j = jmin; j < jmax; j++) {
-            for (int i = imin; i < imax; i++) {
-                // TODO should this be i<=imax?
-                ret.add(getGridCell(i, j));
-            }
-        }
-        return ret;
-    }
-
-    @Override
-    public GridCell2D getGridCell(int xIndex, int yIndex) {
-        final Cell cell = curvGrid.getCell(xIndex, yIndex);
-        return new GridCell2D() {
-            @Override
-            public boolean contains(HorizontalPosition position) {
-                return cell.contains(new LonLatPositionImpl(position.getX(), position.getY()));
-            }
-            
-            @Override
-            public GridCoordinates2D getGridCoordinates() {
-                return new GridCoordinates2DImpl(cell.getI(), cell.getJ());
-            }
-            
-            @Override
-            public HorizontalGrid getGrid() {
-                return LookUpTableGrid.this;
-            }
-            
-            @Override
-            public Polygon getFootprint() {
-                return new Polygon() {
-                    @Override
-                    public boolean contains(HorizontalPosition position) {
-                        return cell.contains(new LonLatPositionImpl(position.getX(), position.getY()));
-                    }
-                    
-                    @Override
-                    public List<HorizontalPosition> getVertices() {
-                        throw new UnsupportedOperationException("Not yet implemented");
-                    }
-                    
-                    @Override
-                    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-                        throw new UnsupportedOperationException("Not yet implemented");
-                    }
-                };
-            }
-            
-            @Override
-            public HorizontalPosition getCentre() {
-                return cell.getCentre();
-            }
-        };
-    }
-
-    @Override
-    public boolean contains(HorizontalPosition position) {
-        LonLatPosition lonLatPos = GISUtils.transformToWgs84LonLat(position);
-        int[] lutCoords = this.lut.getGridCoordinates(lonLatPos.getLongitude(),
-                lonLatPos.getLatitude());
-        return (lutCoords != null);
-    }
-
-    @Override
-    public long findIndexOf(HorizontalPosition pos) {
-        LonLatPosition lonLatPos = GISUtils.transformToWgs84LonLat(pos);
-        int[] lutCoords =
-                this.lut.getGridCoordinates(lonLatPos.getLongitude(), lonLatPos.getLatitude());
-        // Return null if the latLonPoint does not match a valid grid point
-        if (lutCoords == null) return -1L;
-        // Check that this cell really contains this point, if not, check
-        // the neighbours
-        Cell cell = this.curvGrid.getCell(lutCoords[0], lutCoords[1]);
-        
-        int iRange = getXAxis().getIndexExtent().getHigh() + 1 - getXAxis().getIndexExtent().getLow();
-        
-        if (cell.contains(lonLatPos)) return (lutCoords[0] + iRange * lutCoords[1]);
-
-        // We do a gradient-descent method to find the true nearest neighbour
-        // We store the grid coordinates that we have already examined.
-        Set<Cell> examined = new HashSet<Cell>();
-        examined.add(cell);
-        // find the Euclidean distance from the cell centre to the target position
-        double shortestDistanceSq = cell.findDistanceSq(lonLatPos);
-
-        boolean found = true;
-        int maxIterations = 100; // prevent the search going on forever
-        for (int i = 0; found && i < maxIterations; i++)
-        {
-            found = false;
-            for (Cell neighbour : cell.getNeighbours())
-            {
-                if(!examined.contains(neighbour))
-                {
-                    double distanceSq = neighbour.findDistanceSq(lonLatPos);
-                    if (distanceSq < shortestDistanceSq)
-                    {
-                        cell = neighbour;
-                        shortestDistanceSq = distanceSq;
-                        found = true;
-                    }
-                    examined.add(neighbour);
-                }
-            }
-        }
-
-        // We now have the nearest neighbour, but sometimes the position is actually
-        // contained within one of the cell's neighbours
-        if (cell.contains(lonLatPos))
-        {
-            return (cell.getI() + iRange * cell.getJ());
-        }
-        for (Cell neighbour : cell.getNeighbours())
-        {
-            if (neighbour.contains(lonLatPos))
-            {
-                return (neighbour.getI() + iRange * neighbour.getJ());
-            }
-        }
-
-        /*
-         * TODO The point is probably on the edge between grid cells and failing
-         * the contains() checks. This is probably OK in the middle of a grid,
-         * but we might need to be careful at the edges.
-         */
-        return (cell.getI() + iRange * cell.getJ());
-    }
 }

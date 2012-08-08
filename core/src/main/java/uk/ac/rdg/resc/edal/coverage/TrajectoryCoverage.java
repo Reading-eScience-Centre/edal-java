@@ -34,13 +34,9 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 /**
  * A {@link DiscretePointCoverage} that represents a trajectory, i.e. a list of
  * positions in space and time.
- * 
- * @param <R>
- *            The type of the value returned by the coverage; for a compound
- *            coverage this type will be {@link Record}.
  * @author Jon Blower
  */
-public interface TrajectoryCoverage<R> extends DiscreteCoverage<GeoPosition, GeoPosition, R> {
+public interface TrajectoryCoverage extends DiscreteCoverage<GeoPosition, GeoPosition> {
 
     @Override
     public TrajectoryDomain getDomain();

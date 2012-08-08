@@ -47,12 +47,9 @@ import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
  *            spatiotemporal position.
  * @param <DO>
  *            The type of domain object
- * @param <R>
- *            The type of the value returned by the coverage; for a compound
- *            coverage this type will be {@link Record}.
  * @author Jon Blower
  */
-public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R> {
+public interface DiscreteCoverage<P, DO> extends Coverage<P> {
     /** {@inheritDoc} */
     @Override
     public DiscreteDomain<P, DO> getDomain();
@@ -63,16 +60,14 @@ public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R> {
      * 
      * @return the list of objects that comprise this coverage's range.
      */
-    public List<R> getValues();
+    public List<Record> getValues();
 
     /**
      * Gets the list of values for the given coverage member.
      * 
      * @param memberName
-     *            The identifier from the {@link #getMemberNames() set of member
-     *            names}. For a simple coverage only {@code null} is a valid
-     *            argument, in which case this method behaves identically to
-     *            {@link #getValues()}.
+     *            The identifier from the {@link #getScalarMemberNames() set of member
+     *            names}.
      * @return
      */
     public List<?> getValues(String memberName);
@@ -92,7 +87,7 @@ public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R> {
      *         given position, or null if the position is outside the coverage's
      *         domain.
      */
-    public DomainObjectValuePair<DO, R> locate(P position);
+    public DomainObjectValuePair<DO> locate(P position);
 
     /**
      * <p>
@@ -104,7 +99,7 @@ public interface DiscreteCoverage<P, DO, R> extends Coverage<P, R> {
      * 
      * @return all the domain-object/record pairs in the coverage
      */
-    public List<DomainObjectValuePair<DO, R>> list();
+    public List<DomainObjectValuePair<DO>> list();
 
     /**
      * Gets the number of distinct values in this coverage. (Equivalent to

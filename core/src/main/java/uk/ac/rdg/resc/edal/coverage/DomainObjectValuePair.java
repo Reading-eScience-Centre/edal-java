@@ -35,11 +35,9 @@ package uk.ac.rdg.resc.edal.coverage;
  * 
  * @param <DO>
  *            The type of domain object
- * @param <R>
- *            The type of the value
  * @author Jon Blower
  */
-public interface DomainObjectValuePair<DO, R> {
+public interface DomainObjectValuePair<DO> {
 
     /**
      * Returns the domain object from the {@link DiscreteCoverage}'s domain.
@@ -53,6 +51,6 @@ public interface DomainObjectValuePair<DO, R> {
      * 
      * @return the value from the {@link DiscreteCoverage}'s range.
      */
-    public R getValue();
+    public Record getValue();
 
 }

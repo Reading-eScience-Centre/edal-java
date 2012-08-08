@@ -1,6 +1,35 @@
+/*******************************************************************************
+ * Copyright (c) 2012 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
@@ -8,6 +37,15 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
+/**
+ * Partial implementation of an irregular axis.
+ * 
+ * @author Jon
+ * @author Guy Griffiths
+ * 
+ * @param <T>
+ *            The type of value the axis contains
+ */
 public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> extends
         AbstractReferenceableAxis<T> {
     /**
@@ -21,12 +59,12 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
      */
     protected boolean reversed;
 
-    protected AbstractIrregularAxis(CoordinateSystemAxis coordSysAxis, T[] axisValues) {
+    protected AbstractIrregularAxis(CoordinateSystemAxis coordSysAxis, List<T> axisValues) {
         super(coordSysAxis);
         init(axisValues);
     }
 
-    protected AbstractIrregularAxis(String name, T[] axisValues) {
+    protected AbstractIrregularAxis(String name, List<T> axisValues) {
         super(name);
         init(axisValues);
     }
@@ -35,30 +73,35 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
      * Sets all the fields and checks that the axis values ascend or descend
      * monotonically, throwing an IllegalArgumentException if not.
      */
-    @SuppressWarnings("unchecked")
-    protected void init(T[] axisValues) {
-        if (axisValues.length == 0) {
+    private void init(List<T> axisValues) {
+        if (axisValues.isEmpty()) {
             throw new IllegalArgumentException("Zero-length array");
         }
 
-        if (axisValues.length == 1) {
-            this.axisValues = axisValues.clone();
+        if (axisValues.size() == 1) {
+            @SuppressWarnings("unchecked")
+            T[] array = axisValues.toArray((T[]) new Comparable[0]);
+            this.axisValues = array;
             return;
         }
 
-        reversed = axisValues[1].compareTo(axisValues[0]) < 0;
+        /*
+         * This is not recommended behaviour for Java (hence the
+         * SuppressWarnings), but in this case it is a choice between this,
+         * unnecessary abstraction, or heavy repetition of code.
+         */
+        @SuppressWarnings("unchecked")
+        T[] vals = (T[]) new Comparable[axisValues.size()];
+        this.axisValues = vals;
+
+        reversed = axisValues.get(1).compareTo(axisValues.get(0)) < 0;
         if (reversed) {
-            /*
-             * This is not recommended behaviour for Java (hence the
-             * SuppressWarnings), but in this case it is a choice between this,
-             * unnecessary abstraction, or heavy repetition of code.
-             */
-            this.axisValues = (T[]) new Comparable[axisValues.length];
-            for (int i = 0; i < axisValues.length; i++) {
-                this.axisValues[i] = axisValues[axisValues.length - 1 - i];
+            // Reverse the coordinates so that they are in increasing order
+            for (int i = 0; i < axisValues.size(); i++) {
+                this.axisValues[i] = axisValues.get(axisValues.size() - 1 - i);
             }
         } else {
-            this.axisValues = axisValues.clone();
+            axisValues.toArray(this.axisValues);
         }
 
         checkAscending();
@@ -103,14 +146,14 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
             int insertionPoint = -(index + 1);
             if (insertionPoint == 0) {
                 if (getCoordinateBounds(0).contains(value)) {
-                    return 0;
+                    return maybeReverseIndex(0);
                 } else {
                     return -1;
                 }
             }
             if (insertionPoint == axisValues.length) {
                 if (getCoordinateBounds(axisValues.length - 1).contains(value)) {
-                    return axisValues.length - 1;
+                    return maybeReverseIndex(axisValues.length - 1);
                 } else {
                     return -1;
                 }
@@ -180,4 +223,29 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
      * @return the value corresponding to pos1 - pos2
      */
     protected abstract double difference(T pos1, T pos2);
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + Arrays.hashCode(axisValues);
+        result = prime * result + (reversed ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AbstractIrregularAxis<?> other = (AbstractIrregularAxis<?>) obj;
+        if (!Arrays.equals(axisValues, other.axisValues))
+            return false;
+        if (reversed != other.reversed)
+            return false;
+        return true;
+    }
 }

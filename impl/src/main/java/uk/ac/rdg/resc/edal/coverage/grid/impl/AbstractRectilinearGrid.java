@@ -1,20 +1,43 @@
+/*******************************************************************************
+ * Copyright (c) 2012 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
-import java.util.AbstractList;
-import java.util.List;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Abstract superclass that partially implements a two-dimensional
@@ -22,11 +45,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * 
  * @author Guy Griffiths
  */
-public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid implements RectilinearGrid {
-
-    protected AbstractRectilinearGrid(CoordinateReferenceSystem crs) {
-        super(crs);
-    }
+public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid implements RectilinearGrid
+{
 
     @Override
     public GridExtent getGridExtent() {
@@ -37,91 +57,32 @@ public abstract class AbstractRectilinearGrid extends AbstractHorizontalGrid imp
     }
 
     @Override
-    protected final HorizontalPosition transformCoordinatesNoBoundsCheck(int i, int j) {
+    protected final HorizontalPosition getGridCellCentreNoBoundsCheck(int i, int j) {
         double x = getXAxis().getCoordinateValue(i);
         double y = getYAxis().getCoordinateValue(j);
         return new HorizontalPositionImpl(x, y, getCoordinateReferenceSystem());
     }
 
     @Override
-    public GridCoordinates2D findContainingCell(HorizontalPosition pos) {
-        if(pos.getCoordinateReferenceSystem() != getCoordinateReferenceSystem()){
-            pos = GISUtils.transformPosition(pos, getCoordinateReferenceSystem());
-        }
-        int xIndex = getXAxis().findIndexOf(pos.getX());
-        int yIndex = getYAxis().findIndexOf(pos.getY());
-        if(xIndex < 0 || yIndex < 0){
+    protected GridCell2D findContainingCell(double x, double y) {
+        int xIndex = getXAxis().findIndexOf(x);
+        int yIndex = getYAxis().findIndexOf(y);
+        if(xIndex < 0 || yIndex < 0) {
             return null;
         }
-        return new GridCoordinates2DImpl(xIndex, yIndex);
-    }
-
-    @Override
-    public List<GridCell2D> getDomainObjects() {
-        int xIMin = getXAxis().getIndexExtent().getLow();
-        // +1 because extents are INCLUSIVE
-        int xIMax = getXAxis().getIndexExtent().getHigh() + 1;
-        int yIMin = getYAxis().getIndexExtent().getLow();
-        // +1 because extents are INCLUSIVE
-        int yIMax = getYAxis().getIndexExtent().getHigh() + 1;
-        final int xSize = (xIMax-xIMin);
-        final int size = xSize*(yIMax-yIMin);
-        List<GridCell2D> gridCells = new AbstractList<GridCell2D>() {
-            @Override
-            public GridCell2D get(int index) {
-                int xIndex = index % xSize;
-                int yIndex = (index - xIndex) / xSize;
-                return new GridCell2DRectangle(new GridCoordinates2DImpl(xIndex, yIndex),
-                                                   getXAxis().getCoordinateBounds(xIndex).getLow(),
-                                                   getYAxis().getCoordinateBounds(yIndex).getLow(),
-                                                   getXAxis().getCoordinateBounds(xIndex).getHigh(),
-                                                   getYAxis().getCoordinateBounds(yIndex).getHigh(),
-                                                   getCoordinateReferenceSystem(),AbstractRectilinearGrid.this);
-            }
-
-            @Override
-            public int size() {
-                return size;
-            }
-        };
-        return gridCells;
-    }
-
-    @Override
-    public long findIndexOf(HorizontalPosition position) {
-        int xIndex = getXAxis().findIndexOf(position.getX());
-        int yIndex = getYAxis().findIndexOf(position.getY());
-        if(xIndex < 0 || yIndex < 0){
-            return -1;
-        }
-        // +1 because extents are INCLUSIVE
-        int xRange = getXAxis().getIndexExtent().getHigh() + 1 - getXAxis().getIndexExtent().getLow();
-        return xIndex + xRange * yIndex;
-    }
-
-    @Override
-    public boolean contains(HorizontalPosition position) {
-        return (getXAxis().getCoordinateExtent().contains(position.getX()) && 
-                    getYAxis().getCoordinateExtent().contains(position.getY()));
+        return getGridCell(xIndex, yIndex);
     }
     
     @Override
     public BoundingBox getCoordinateExtent() {
-        return new BoundingBoxImpl(getXAxis().getCoordinateExtent(), getYAxis().getCoordinateExtent(), getCoordinateReferenceSystem());
-    }
-    
-    @Override
-    public GridCell2D getGridCell(GridCoordinates2D coords) {
-        return getGridCell(coords.getXIndex(), coords.getYIndex());
+        return new BoundingBoxImpl(getXAxis().getCoordinateExtent(),
+            getYAxis().getCoordinateExtent(), getCoordinateReferenceSystem());
     }
 
     @Override
-    public GridCell2D getGridCell(int xIndex, int yIndex) {
-        GridCoordinates2D gridCoords = new GridCoordinates2DImpl(xIndex,yIndex);
+    protected BoundingBox getGridCellFootprintNoBoundsCheck(int xIndex, int yIndex) {
         Extent<Double> xExtents = getXAxis().getCoordinateBounds(xIndex);
         Extent<Double> yExtents = getYAxis().getCoordinateBounds(yIndex);
-        return new GridCell2DRectangle(gridCoords, xExtents.getLow(), yExtents.getLow(),
-                                                   xExtents.getHigh(), yExtents.getHigh(),
-                                                   getCoordinateReferenceSystem(), this);
+        return new BoundingBoxImpl(xExtents, yExtents);
     }
 }

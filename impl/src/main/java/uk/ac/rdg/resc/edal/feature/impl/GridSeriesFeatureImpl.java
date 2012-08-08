@@ -1,206 +1,110 @@
+/*******************************************************************************
+ * Copyright (c) 2012 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.edal.feature.impl;
 
-import java.io.IOException;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.coverage.impl.GridCoverage2DImpl;
-import uk.ac.rdg.resc.edal.coverage.impl.PointSeriesSimpleCoverage;
-import uk.ac.rdg.resc.edal.coverage.impl.ProfileSimpleCoverage;
-import uk.ac.rdg.resc.edal.coverage.util.DataReadingStrategy;
-import uk.ac.rdg.resc.edal.coverage.util.PixelMap;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.ArrayBackedList;
-import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.FastDoubleList;
-import uk.ac.rdg.resc.edal.util.FastFloatList;
+import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
-public class GridSeriesFeatureImpl<R> extends AbstractFeature implements GridSeriesFeature<R> {
+/**
+ * An implementation of a {@link GridSeriesFeature}
+ * 
+ * @author Guy Griffiths
+ */
+public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeriesFeature {
 
-    private FeatureCollection<? extends Feature> parentCollection;
-    private GridSeriesCoverage<R> coverage;
-    private DataReadingStrategy dataReadingStrategy;
+    private final GridSeriesCoverage coverage;
 
     public GridSeriesFeatureImpl(String name, String id,
-            FeatureCollection<? extends Feature> parentCollection, GridSeriesCoverage<R> coverage,
-            DataReadingStrategy dataReadingStrategy) {
-        super(name, id, coverage.getDescription());
-        this.parentCollection = parentCollection;
+            FeatureCollection<? extends Feature> parentCollection, GridSeriesCoverage coverage) {
+        super(name, id, coverage.getDescription(), parentCollection);
         this.coverage = coverage;
-        this.dataReadingStrategy = dataReadingStrategy;
     }
-
+    
     @Override
-    public PointSeriesFeature<R> extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
-            Extent<? extends TimePosition> tRange) {
-        Extent<Integer> tExtent = Extents.emptyExtent(Integer.class);
-        if(coverage.getDomain().getTimeAxis() != null){
-            tExtent = coverage.getDomain().getTimeAxis().getIndexExtent();
-        }
-        GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
-        HorizontalPosition actualPos = coverage.getDomain().getHorizontalGrid().getGridCell(gridCell).getCentre();
-        int xIndex = gridCell.getXIndex();
-        int yIndex = gridCell.getYIndex();
-        int zIndex = 0;
-        VerticalAxis vAxis = coverage.getDomain().getVerticalAxis();
-        if(vAxis != null && z != null){
-            zIndex = vAxis.findIndexOf(z.getZ());
-        }
-        if(zIndex < 0){
-            throw new IllegalArgumentException(
-                    "Cannot extract grid, because z position is invalid in this feature");
-        }
-
-        List<R> values;
-        if(xIndex < 0 || yIndex < 0){
-            /*
-             * If we are outside the coverage, do not evaluate
-             */
-            values = new ArrayList<R>();
-        } else {
-            values = coverage.evaluate(tExtent, Extents.newExtent(zIndex, zIndex), Extents.newExtent(yIndex,
-                    yIndex), Extents.newExtent(xIndex, xIndex));
-        }
-
-        PointSeriesCoverage<R> pointCoverage = new PointSeriesSimpleCoverage<R>(coverage, values);
-        // TODO Check whether we just want default values for name, id, etc.
-        PointSeriesFeature<R> feature = new PointSeriesFeatureImpl<R>(getName(), getId(), getDescription(),
-                pointCoverage, actualPos, z, parentCollection);
-        return feature;
-    }
-
-    @Override
-    public ProfileFeature<R> extractProfileFeature(HorizontalPosition pos, TimePosition t) {
-        Extent<Integer> vExtent = Extents.emptyExtent(Integer.class);
-        if(coverage.getDomain().getVerticalAxis() != null){
-            vExtent = coverage.getDomain().getVerticalAxis().getIndexExtent();
-        }
-        GridCoordinates2D gridCell = coverage.getDomain().getHorizontalGrid().findContainingCell(pos);
-        HorizontalPosition actualPos = coverage.getDomain().getHorizontalGrid().getGridCell(gridCell).getCentre();
-        List<R> values = null;
-        if(gridCell != null){
-            int xIndex = gridCell.getXIndex();
-            int yIndex = gridCell.getYIndex();
-            int tIndex = coverage.getDomain().getTimeAxis().findIndexOf(t);
-            values = coverage.evaluate(Extents.newExtent(tIndex, tIndex), vExtent, Extents.newExtent(yIndex,
-                    yIndex), Extents.newExtent(xIndex, xIndex));
-        } else {
-            throw new IllegalArgumentException(
-                    "Cannot extract grid, because horizontal position is invalid in this feature");
-        }
-        ProfileCoverage<R> profileCoverage = new ProfileSimpleCoverage<R>(coverage, values);
-        ProfileFeature<R> feature = new ProfileFeatureImpl<R>(getName(), getId(), getDescription(),
-                profileCoverage, actualPos, t, parentCollection);
-        return feature;
-    }
-
-    @Override
-    public GridSeriesCoverage<R> getCoverage() {
+    public GridSeriesCoverage getCoverage() {
         return coverage;
     }
 
     @Override
-    public FeatureCollection<? extends Feature> getFeatureCollection() {
-        return parentCollection;
-    }
-    
-    @Override
-    public GridCoverage2D<R> extractHorizontalGrid(TimePosition tPos, VerticalPosition zPos,
-            HorizontalGrid targetDomain) {
-        int tindex = 0;
-        int zindex = 0;
-        TimeAxis tAxis = getCoverage().getDomain().getTimeAxis();
-        if(tAxis != null && tPos != null)
-            tindex = tAxis.findIndexOf(tPos);
-        if(tindex < 0){
-            throw new IllegalArgumentException(
-                    "Cannot extract grid, because time is invalid in this feature");
+    public PointSeriesFeature extractPointSeriesFeature(HorizontalPosition pos, VerticalPosition z,
+            Extent<TimePosition> tRange, Set<String> members) {
+        PointSeriesCoverage psCoverage = coverage.extractPointSeriesCoverage(pos, z, tRange,
+                members == null ? coverage.getScalarMemberNames() : members);
+        GridSeriesDomain domain = coverage.getDomain();
+        HorizontalPosition centre = domain.getHorizontalGrid().findContainingCell(pos).getCentre();
+        VerticalPosition vCentre = null;
+        if (domain.getVerticalAxis() != null) {
+            int zIndex = domain.getVerticalAxis().findIndexOf(z.getZ());
+            vCentre = new VerticalPositionImpl(domain.getVerticalAxis().getCoordinateValue(zIndex),
+                    domain.getVerticalCrs());
         }
-        VerticalAxis vAxis = getCoverage().getDomain().getVerticalAxis();
-        if(vAxis != null)
-            zindex = vAxis.findIndexOf(zPos.getZ());
-        if(zindex < 0){
-            throw new IllegalArgumentException(
-                    "Cannot extract grid, because z position is invalid in this feature");
-        }
-        return extractHorizontalGrid(tindex, zindex, targetDomain);
+        return new PointSeriesFeatureImpl(getName() + " -> PointSeries", "PS-" + getId(),
+                "Point series extraction of " + getDescription(), psCoverage, centre, vCentre,
+                getFeatureCollection());
     }
-    
-    @Override
-    public GridCoverage2D<R> extractHorizontalGrid(int tindex, int zindex,
-            final HorizontalGrid targetDomain) {
-        HorizontalGrid sourceGrid = coverage.getDomain().getHorizontalGrid();
-        PixelMap pixelMap = new PixelMap(sourceGrid, targetDomain);
 
-        List<R> dataList;
-        if (pixelMap.isEmpty()) {
-            /*
-             * There is no overlap between the source data grid and the target
-             * domain. Return a list of null values. It's very unlikely that the
-             * target domain will be bigger than Integer.MAX_VALUE
-             */
-            dataList = new AbstractList<R>() {
-                @Override
-                public R get(int index) {
-                    if (index < 0 || index >= (int) targetDomain.size())
-                        throw new IndexOutOfBoundsException();
-                    return null;
-                }
-
-                @Override
-                public int size() {
-                    return (int) targetDomain.size();
-                }
-            };
-        } else {
-            dataList = getDataList((int) targetDomain.size());
-            try {
-                dataReadingStrategy.readHorizontalData(tindex, zindex, coverage, pixelMap, dataList);
-            } catch (IOException e) {
-                // TODO deal with this better
-                e.printStackTrace();
-            }
-        }
-        return new GridCoverage2DImpl<R>(getCoverage().getRangeMetadata(null), getDescription(), targetDomain, dataList);
+    @Override
+    public ProfileFeature extractProfileFeature(HorizontalPosition pos, TimePosition t,
+            Set<String> members) {
+        ProfileCoverage pCoverage = coverage.extractProfileCoverage(pos, t,
+                members == null ? coverage.getScalarMemberNames() : members);
+        GridSeriesDomain domain = coverage.getDomain();
+        HorizontalPosition centre = domain.getHorizontalGrid().findContainingCell(pos).getCentre();
+        int tIndex = domain.getTimeAxis().findIndexOf(t);
+        TimePosition tCentre = domain.getTimeAxis().getCoordinateValue(tIndex);
+        return new ProfileFeatureImpl(getName() + " -> Profile", "PF-" + getId(),
+                "Profile extraction of " + getDescription(), pCoverage, centre, tCentre,
+                getFeatureCollection());
     }
-    
-    @SuppressWarnings("unchecked") 
-    private List<R> getDataList(final int size) {
-        Class<?> valueType = coverage.getRangeMetadata(null).getValueType(); 
-        List<R> ret; 
-        /*
-         * These are unchecked conversions, but they will be fine (because
-         * valueType==R)
-         */
-        if (valueType == Float.class) {
-            ret = (List<R>) new FastFloatList(size);
-        } else if (valueType ==  Double.class) {
-            ret = (List<R>) new FastDoubleList(size);
-        } else {
-            /*
-             * Worst case scenario. ArrayBackedList is different to ArrayList in
-             * that it is not resizeable, and it's initial state is the correct
-             * size filled with nulls
-             */
-            ret = new ArrayBackedList<R>(size);
-        }
-        return ret;
+
+    @Override
+    public GridFeature extractGridFeature(HorizontalGrid targetDomain, VerticalPosition zPos,
+            TimePosition tPos, Set<String> members) {
+        GridCoverage2D gridCoverage = coverage.extractGridCoverage(targetDomain, zPos, tPos,members);
+        return new GridFeatureImpl(getName() + " -> GridFeature", "GF-" + getId(),
+                getFeatureCollection(), gridCoverage);
     }
 }

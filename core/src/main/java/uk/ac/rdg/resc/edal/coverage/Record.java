@@ -29,9 +29,10 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.Set;
+import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 
 /**
- * Contains the data values returned by a {@link CompoundCoverage}.
+ * Contains the data values returned by a {@link Coverage}.
  * 
  * @author Jon Blower
  */
@@ -48,7 +49,7 @@ public interface Record {
      * 
      * @param memberName
      *            The name of a member of this record as provided by the
-     *            Coverage's {@link Coverage#getMemberNames() set of
+     *            Coverage's {@link Coverage#getScalarMemberNames() set of
      *            member names}.
      * @return the value of the given member. The runtime type of the value is
      *         given by the {@link RangeMetadata} object associated with the
@@ -68,7 +69,7 @@ public interface Record {
 
     /**
      * Returns a description of the values returned by the coverage (including
-     * their units, runtime type and the phenomenon they represent) for a
+     * their units and the phenomenon they represent) for a
      * particular member.
      * 
      * @param memberName

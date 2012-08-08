@@ -13,23 +13,31 @@ response.setDateHeader ("Expires", 0); //prevents caching at the proxy server
      See MetadataController.showLayerDetails().
      
      Data (models) passed in to this page:
-         layer = Layer object
+         feature = feature object
+         featureMetadata = the plotting metadata
+         memberName = the member to be plotted
+         dataset = the dataset which the feature belongs to
          datesWithData = Map<Integer, Map<Integer, List<Integer>>>.  Contains
                 information about which days contain data for the Layer.  Maps
                 years to a map of months to an array of day numbers.
+         units = the units
          nearestTimeIso = ISO8601 String representing the point along the time
                 axis that is closest to the required date (as passed to the server)
+         paletteNames = the available palettes
 --%>
+
 <json:object>
     <json:property name="units" value="${units}"/>
 
     <c:set var="bbox" value="${utils:getWmsBoundingBox(feature)}"/>
-    <json:array name="bbox">
-        <json:property>${bbox.minX}</json:property>
-        <json:property>${bbox.minY}</json:property>
-        <json:property>${bbox.maxX}</json:property>
-        <json:property>${bbox.maxY}</json:property>
-    </json:array>
+    <c:if test="${not empty bbox}">
+	    <json:array name="bbox">
+	        <json:property>${bbox.minX}</json:property>
+	        <json:property>${bbox.minY}</json:property>
+	        <json:property>${bbox.maxX}</json:property>
+	        <json:property>${bbox.maxY}</json:property>
+	    </json:array>
+    </c:if>
 
     <json:array name="scaleRange">
         <json:property>${featureMetadata.colorScaleRange.low}</json:property>
@@ -39,20 +47,19 @@ response.setDateHeader ("Expires", 0); //prevents caching at the proxy server
     <json:property name="numColorBands" value="${featureMetadata.numColorBands}"/>
 
     <c:set var="styles" value="boxfill"/>
-    <c:if test="${utils:isVectorLayer(feature.coverage)}">
-        <c:set var="styles" value="vector,boxfill"/>
-    </c:if>
-    <json:array name="supportedStyles" items="${styles}"/>
+    <json:array name="supportedStyles" items="${utils:getBaseStyles(feature, memberName)}"/>
 
-    <c:if test="${not empty feature.coverage.domain.verticalAxis}">
+    <c:set var="vaxis" value="${utils:getVerticalAxis(feature)}"/>
+    <c:if test="${not empty vaxis}">
         <json:object name="zaxis">
-            <json:property name="units" value="${feature.coverage.domain.verticalAxis.verticalCrs.units.unitString}"/>
-            <json:property name="positive" value="${feature.coverage.domain.verticalAxis.verticalCrs.positiveDirection.positive}"/>
-            <json:array name="values" items="${feature.coverage.domain.verticalAxis.coordinateValues}"/>
+            <json:property name="units" value="${vaxis.verticalCrs.units.unitString}"/>
+            <json:property name="positive" value="${vaxis.verticalCrs.positiveDirection.positive}"/>
+            <json:array name="values" items="${vaxis.coordinateValues}"/>
         </json:object>
     </c:if>
 
-    <c:if test="${not empty feature.coverage.domain.timeAxis}">
+    <c:set var="taxis" value="${utils:getTimeAxis(feature)}"/>
+    <c:if test="${not empty taxis}">
         <json:object name="datesWithData">
             <c:forEach var="year" items="${datesWithData}">
                 <json:object name="${year.key}">
@@ -67,7 +74,7 @@ response.setDateHeader ("Expires", 0); //prevents caching at the proxy server
         <json:property name="nearestTimeIso" value="${nearestTimeIso}"/>
         <%-- The time axis units: "ISO8601" for "normal" axes, "360_day" for
              axes that use the 360-day calendar, etc. --%>
-        <json:property name="timeAxisUnits" value="${utils:getTimeAxisUnits(feature.coverage.domain.timeAxis.calendarSystem)}"/>
+        <json:property name="timeAxisUnits" value="${utils:getTimeAxisUnits(taxis.calendarSystem)}"/>
     </c:if>
     
     <json:property name="moreInfo" value="${dataset.moreInfoUrl}"/>

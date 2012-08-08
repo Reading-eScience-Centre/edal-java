@@ -14,17 +14,12 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public class MapStyleDescriptor {
-    public static enum Style {
-        BOXFILL, VECTOR, POINT, TRAJECTORY, DEFAULT
-    };
-    
     private ColorPalette colorPalette = ColorPalette.get(null);
     /*
      * Colour scale range of the picture. An {@link Extent#isEmpty() empty
      * Range} means that the picture will be auto-scaled.
      */
     private Extent<Float> scaleRange = Extents.emptyExtent(Float.class);
-    private Style style;
     private boolean transparent = true;
     private int opacity = 100;
     private int numColourBands = 254;
@@ -34,8 +29,13 @@ public class MapStyleDescriptor {
     /*
      * The length of arrows in pixels, only used for vector plots
      */
-    private float arrowLength = 10.0f;
+    private float arrowLength = 6.0f;
     
+    /*
+     * We cache this for speed
+     */
+    private IndexColorModel indexColorModel = null;
+
     public MapStyleDescriptor() throws InstantiationException {
         icons = new HashMap<String, ColourableIcon>();
 
@@ -60,10 +60,6 @@ public class MapStyleDescriptor {
                     "Cannot read required icons.  Ensure that JAR is packaged correctly, or that your project is set up correctly in your IDE");
         }
     }
-    
-    public Style getStyle() {
-        return style;
-    }
 
     public void setColorPalette(String colorPaletteName) {
         ColorPalette pal = ColorPalette.get(colorPaletteName);
@@ -75,10 +71,6 @@ public class MapStyleDescriptor {
 
     public void setScaleRange(Extent<Float> scaleRange) {
         this.scaleRange = scaleRange;
-    }
-
-    public void setStyle(Style style) {
-        this.style = style;
     }
 
     public void setTransparent(boolean transparent) {
@@ -108,12 +100,20 @@ public class MapStyleDescriptor {
     public void addIcon(String name, ColourableIcon pointIcon) {
         icons.put(name, pointIcon);
     }
+    
+    public boolean isTransparent(){
+        return transparent;
+    }
+    
+    public Color getBgColor(){
+        return bgColor;
+    }
 
     public float getArrowLength() {
         return arrowLength;
     }
 
-    public Color getColorForValue(Float value){
+    public Color getColorForValue(Number value){
         return new Color(getColorModel().getRGB(getColourIndex(value)));
     }
     
@@ -138,17 +138,17 @@ public class MapStyleDescriptor {
     /**
      * @return the colour index that corresponds to the given value
      */
-    public int getColourIndex(Float value) {
+    public int getColourIndex(Number value) {
         if (value == null) {
             return numColourBands; // represents a background pixel
-        } else if (!scaleRange.contains(value)) {
+        } else if (!scaleRange.contains(value.floatValue())) {
             return numColourBands + 1; // represents an out-of-range pixel
         } else {
             float scaleMin = scaleRange.getLow().floatValue();
             float scaleMax = scaleRange.getHigh().floatValue();
             double min = logarithmic ? Math.log(scaleMin) : scaleMin;
             double max = logarithmic ? Math.log(scaleMax) : scaleMax;
-            double val = logarithmic ? Math.log(value) : value;
+            double val = logarithmic ? Math.log(value.doubleValue()) : value.doubleValue();
             double frac = (val - min) / (max - min);
             // Compute and return the index of the corresponding colour
             int index = (int) (frac * numColourBands);
@@ -164,12 +164,18 @@ public class MapStyleDescriptor {
         }
     }
     
+    public Extent<Float> getScaleRange(){
+        return scaleRange;
+    }
+    
     public boolean isAutoScale(){
         return scaleRange == null || scaleRange.isEmpty();
     }
     
     public IndexColorModel getColorModel(){
-        return colorPalette.getColorModel(numColourBands, opacity, bgColor, transparent);
+        if(indexColorModel == null)
+            indexColorModel = colorPalette.getColorModel(numColourBands, opacity); 
+        return indexColorModel;
     }
     
     public BufferedImage getLegend(String title, String units) {

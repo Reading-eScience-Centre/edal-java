@@ -38,11 +38,11 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * 
  * @author Jon Blower
  */
-public interface ProfileFeatureCollection<R> extends FeatureCollection<ProfileFeature<R>> {
+public interface ProfileFeatureCollection extends FeatureCollection<ProfileFeature> {
     /**
      * Returns all the profiles in the collection whose horizontal position lies
      * within the given polygon, and which were measured within the given time
      * range.
      */
-    public Collection<ProfileFeature<R>> findProfiles(Polygon polygon, Extent<TimePosition> tRange);
+    public Collection<ProfileFeature> findProfiles(Polygon polygon, Extent<TimePosition> tRange);
 }

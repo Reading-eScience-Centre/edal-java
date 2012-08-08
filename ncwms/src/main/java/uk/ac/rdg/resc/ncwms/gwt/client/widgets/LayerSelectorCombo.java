@@ -10,11 +10,6 @@ import uk.ac.rdg.resc.ncwms.gwt.client.requests.LayerMenuItem;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.logical.shared.OpenEvent;
-import com.google.gwt.event.logical.shared.OpenHandler;
-import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
@@ -29,6 +24,8 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     private Tree tree;
     private Map<String, String> layerIdToTitle;
     private String selectedLayer;
+    private boolean firstUse = true;
+    private String firstTitle = null;
 
     public LayerSelectorCombo(LayerSelectionHandler layerHandler) {
         super("Loading");
@@ -49,12 +46,16 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
                                 + LayerSelectorCombo.this.getOffsetHeight());
                 if (!popup.isShowing()) {
                     popup.show();
-                } else {
-//                    popup.hide();
+                }
+                if(firstUse) {
+                    setHTML("<big>" + firstTitle + "</big>");
+                    firstUse = false;
                 }
             }
         });
 
+        setHTML("<big>Click here to start</big>");
+        
         VerticalPanel vPanel = new VerticalPanel();
         PushButton button = new PushButton("Refresh");
         button.setTitle("Click to refresh the layers list");
@@ -65,68 +66,71 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             }
         });
         tree = new Tree();
-        tree.addOpenHandler(new OpenHandler<TreeItem>() {
-            @Override
-            public void onOpen(OpenEvent<TreeItem> event) {
-                TreeItem selected = event.getTarget();
-                for(int i=0; i< tree.getItemCount(); i++){
-                    TreeItem other = tree.getItem(i);
-                    if(!other.equals(selected) && other.getState()){
-                        other.setState(false);
-                    }
-                }
-                
-            }
-        });
         vPanel.add(tree);
         vPanel.add(button);
         popup.add(vPanel);
     }
 
     
+    @Override
     public void populateLayers(LayerMenuItem topItem){
         tree.clear();
         String nodeLabel = topItem.getTitle();
+        if(firstUse){
+            firstTitle = nodeLabel;
+        } else {
+            setHTML("<big>" + nodeLabel + "</big>");
+        }
         List<LayerMenuItem> children = topItem.getChildren();
-        setHTML("<big>" + nodeLabel + "</big>");
-        for(LayerMenuItem child : children){
-            addNode(child, null);
+        if(children != null){
+            for(LayerMenuItem child : children){
+                addNode(child, null);
+            }
         }
     }
     
     private void addNode(LayerMenuItem item, final TreeItem parentNode) {
+        if(parentNode == null && item.isLeaf()){
+            /*
+             * This is an empty dataset (probably it is still loading)
+             */
+            String nodeLabel = item.getTitle();
+            TreeItem nextNode = new TreeItem(nodeLabel);
+            tree.addItem(nextNode);
+            return;
+        }
+        
+        String label = item.getTitle();
+        final String id = item.getId();
+        
+        Label node = new Label(label);
+        if(parentNode != null){
+            final String parentName = parentNode.getText();
+            layerIdToTitle.put(id, "<big>" + parentName + "</big> > " + label);
+            /*
+             * We don't want to be able to plot the top layer item
+             */
+            node.addClickHandler(new ClickHandler() {
+                @Override
+                public void onClick(ClickEvent event) {
+                    setSelectedLayer(id);
+                    layerSelectionHandler.layerSelected(id, true);
+                }
+            });
+        }
+        
         if(item.isLeaf()){
             /*
              * We have a leaf node
              */
-            if(parentNode == null){
-                /*
-                 * This is an empty dataset (probably it is still loading)
-                 */
-                String nodeLabel = item.getTitle();
-                TreeItem nextNode = new TreeItem(nodeLabel);
-                tree.addItem(nextNode);
-            }
-            
-            final String parentName = parentNode.getText();
-            final String label = item.getTitle();
-            final String id = item.getId();
-            layerIdToTitle.put(id, "<big>" + parentName + "</big> > " + label);
-            Label leaf = new Label(label);
-            leaf.addClickHandler(new ClickHandler() {
-                @Override
-                public void onClick(ClickEvent event) {
-                    setSelectedLayer(id);
-                    layerSelectionHandler.layerSelected(id);
-                }
-            });
-            parentNode.addItem(leaf);
+            parentNode.addItem(node);
         } else {
             /*
              * We have a branch node
              */
-            String nodeLabel = item.getTitle();
-            TreeItem nextNode = new TreeItem(nodeLabel);
+            
+            TreeItem nextNode = new TreeItem(node);
+            
             if (parentNode == null) {
                 tree.addItem(nextNode);
             } else {
@@ -138,12 +142,14 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         }
     }
 
+    @Override
     public List<String> getSelectedIds() {
         List<String> ret = new ArrayList<String>();
         ret.add(selectedLayer);
         return ret;
     }
 
+    @Override
     public void setSelectedLayer(String id) {
         selectedLayer = id;
         setHTML(layerIdToTitle.get(id));

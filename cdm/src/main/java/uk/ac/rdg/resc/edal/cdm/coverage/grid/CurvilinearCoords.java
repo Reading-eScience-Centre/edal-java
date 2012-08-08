@@ -601,10 +601,10 @@ public final class CurvilinearCoords {
          * Finds the square of the distance between the centre of this cell and
          * the given LonLatPosition
          */
-        public double findDistanceSq(LonLatPosition pos) {
+        public double findDistanceSq(double lon, double lat) {
             LonLatPosition centre = this.getCentre();
-            double dx = pos.getLongitude() - centre.getLongitude();
-            double dy = pos.getLatitude() - centre.getLatitude();
+            double dx = lon - centre.getLongitude();
+            double dy = lat - centre.getLatitude();
             return dx * dx + dy * dy;
         }
 
@@ -614,10 +614,10 @@ public final class CurvilinearCoords {
          * 
          * @todo what happens if this cell is represented by NaNs?
          */
-        public boolean contains(LonLatPosition lonLatPos) {
+        public boolean contains(double lon, double lat) {
+            lon = this.harmonizeWithCentre(lon);
             Path2D path = this.getBoundaryPath();
-            double lon = this.harmonizeWithCentre(lonLatPos.getLongitude());
-            return path.contains(lon, lonLatPos.getLatitude());
+            return path.contains(lon, lat);
         }
 
         /**
