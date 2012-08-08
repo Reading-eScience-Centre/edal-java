@@ -13,27 +13,17 @@ target/
 
 syntax: regexp
 \.springBeans$
-syntax: regexp
 ^ncwms/src/main/webapp/godiva$
-syntax: regexp
 ^ncwms/src/main/gwt-unitCache$
-syntax: regexp
 \.db$
-syntax: regexp
 ^ncwms/src/main/webapp/WEB-INF/classes$
-syntax: regexp
 ^ncwms/src/main/webapp/WEB-INF/lib$
-syntax: regexp
 ^ncwms/src/main/webapp/WEB-INF/deploy$
-syntax: regexp
 ^ncwms/src/main/webapp/META-INF/maven$
-syntax: regexp
 ^ncwms/gwt-unitCache$
-syntax: regexp
 \.aux$
-syntax: regexp
 \.idx$
-syntax: regexp
 \.dvi$
-syntax: regexp
 \.toc$
+\.ilg$
+\.ind$
