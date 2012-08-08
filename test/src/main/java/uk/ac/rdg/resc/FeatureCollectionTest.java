@@ -1,85 +1,115 @@
 package uk.ac.rdg.resc;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import org.geotoolkit.referencing.CRS;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.NoSuchAuthorityCodeException;
-import org.opengis.util.FactoryException;
-
-import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.Unit;
-import uk.ac.rdg.resc.edal.UnitVocabulary;
 import uk.ac.rdg.resc.edal.cdm.feature.NcGridSeriesFeatureCollection;
-import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
-import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
+import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
-import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
-import uk.ac.rdg.resc.edal.graphics.MapRenderer;
+import uk.ac.rdg.resc.edal.graphics.ColorPalette;
+import uk.ac.rdg.resc.edal.graphics.MapPlotter;
 import uk.ac.rdg.resc.edal.graphics.MapStyleDescriptor;
-import uk.ac.rdg.resc.edal.graphics.MapStyleDescriptor.Style;
+import uk.ac.rdg.resc.edal.graphics.PlotStyle;
 import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalCrs.PositiveDirection;
-import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
-import uk.ac.rdg.resc.edal.position.impl.TimePositionJoda;
-import uk.ac.rdg.resc.edal.position.impl.VerticalCrsImpl;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 public class FeatureCollectionTest {
-    public static void main(String[] args) throws IOException, NoSuchAuthorityCodeException, FactoryException, InstantiationException {
-        NcGridSeriesFeatureCollection fs = new NcGridSeriesFeatureCollection("testcollection",
-                "Test Collection", "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
-        // NcGridSeriesFeatureCollection fs = new
-        // NcGridSeriesFeatureCollection("testcollection", "Test Collection",
-        // "/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090320.nc");
-
-//        for (String fId : fs.getFeatureIds()) {
-//            System.out.println(fId);
-//        }
-        String fId = "TMP";
-        GridSeriesFeature<?> feature = fs.getFeatureById(fId);
-//        BoundingBox bbox = new BoundingBoxImpl(new double[]{ -18.0, -18.0, 18.0, 18.0 }, DefaultGeographicCRS.WGS84);
-        BoundingBox bbox = new BoundingBoxImpl(new double[]{ 0, -80.0, 360, 80.0 }, DefaultGeographicCRS.WGS84);
-//        BoundingBox bbox = new BoundingBoxImpl(new double[]{ -4350000, -4350000, 8350000, 8350000 }, CRS.decode("EPSG:32661", true));
-//        double[] bbox = { -9.9, -9.99, -0.1, -0.05 };
-        int width = 900;
-        int height = 900;
-        HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
-        feature.getCoverage().getDomain().getDomainObjects();
+    public static void main(String[] args) throws IOException, InstantiationException {
+        NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
+                "testcollection", "Test Collection",
+//                "/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090320.nc");
+                "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
         
-        GridCoverage2D<?> gridCoverage = feature.extractHorizontalGrid(0, 0, targetDomain);
-        if (gridCoverage != null) {
-            MapStyleDescriptor style = new MapStyleDescriptor();
-            style.setStyle(Style.POINT);
-            MapRenderer mapRenderer = new MapRenderer(style, width, height, bbox);
-            TimePosition okTime = feature.getCoverage().getDomain().getTimeAxis().getCoordinateValues().get(0);
-            VerticalCrs vCrs = new VerticalCrsImpl(Unit.getUnit("m", UnitVocabulary.UDUNITS),
-                    PositiveDirection.UP, false);
-            mapRenderer.addData(feature, okTime, new VerticalPositionImpl(-150.0, vCrs), null);
-            Extent<TimePositionJoda> tExtent = Extents.newExtent(new TimePositionJoda(0L),
-                    new TimePositionJoda());
-//            for(int i=-90;i<90;i+=5){
-//                for(int j=-45;j<45;j+=5){
-//                    PointSeriesFeature<?> pointFeature = feature.extractPointSeriesFeature(
-//                            new HorizontalPositionImpl(i, j, DefaultGeographicCRS.WGS84),
-//                            new VerticalPositionImpl(0.0, vCrs), tExtent);
-//                    mapRenderer.addData(pointFeature, okTime, new VerticalPositionImpl(0.0, vCrs), null);
-//                }
-//            }
-
-            List<BufferedImage> images = mapRenderer.getRenderedFrames();
-            ImageIO.write(images.get(0), "png", new File(fId + ".png"));
+        System.out.println(featureCollection.getId()+"=>"+featureCollection.getName()+":"+featureCollection.getFeatureIds());
+        MapStyleDescriptor style = new MapStyleDescriptor();
+        ColorPalette.loadPalettes(new File("/home/guy/Workspace/edal-java/ncwms/src/main/webapp/WEB-INF/conf/palettes/"));
+//        System.out.println(ColorPalette.getAvailablePaletteNames());
+//        style.setNumColourBands(20);
+//        style.setColorPalette("greyscale");
+        GridSeriesFeature feature = (GridSeriesFeature) featureCollection.getFeatureById("testcollection2");
+        GridSeriesDomain domain = feature.getCoverage().getDomain();
+        
+        VerticalPosition vPos = null;
+        try {
+            vPos = new VerticalPositionImpl(domain.getVerticalAxis().getCoordinateValue(0),
+                    domain.getVerticalCrs());
+        } catch (NullPointerException e) {
         }
-//        }
+        TimePosition tPos = null;
+        try {
+            tPos = domain.getTimeAxis().getCoordinateValue(0);
+        } catch (NullPointerException e) {
+        }
+        
+        int width = 500;
+        int height = 500;
+        
+        BoundingBox bbox = domain.getHorizontalGrid().getCoordinateExtent();
+        RegularGrid simpleTargetDomain = new RegularGridImpl(bbox, width, height);
+//        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { -180,
+//                -180, 180, 180 }, bbox.getCoordinateReferenceSystem()), width, height);
+        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { 0, 0,
+                50, 50 }, bbox.getCoordinateReferenceSystem()), width, height);
+        MapPlotter plotter = new MapPlotter(style, targetDomain);
+
+        String member = "UV_MAG";
+        PlotStyle plotStyle = PlotStyle.POINT;
+        plotter.addToFrame(feature, member, vPos, tPos, "", plotStyle);
+        
+//        BoundingBox bbox = new BoundingBoxImpl(new double[]{-180,-45,-170,-15}, domain.getHorizontalCrs());
+//        BufferedImage image = new BufferedImage(width*2, height*2, BufferedImage.TYPE_INT_ARGB);
+//        Graphics2D graphics = image.createGraphics();
+//        
+//        RegularGrid targetDomain1 = new RegularGridImpl(new BoundingBoxImpl(new double[] {
+//                bbox.getMinX(), bbox.getMinY(), bbox.getMinX() + 0.5 * bbox.getWidth(),
+//                bbox.getMinY() + 0.5 * bbox.getHeight() }, bbox.getCoordinateReferenceSystem()),
+//                width, height);
+//        RegularGrid targetDomain2 = new RegularGridImpl(new BoundingBoxImpl(new double[] {
+//                bbox.getMinX() + 0.5 * bbox.getWidth(), bbox.getMinY(), bbox.getMaxX(),
+//                bbox.getMinY() + 0.5 * bbox.getHeight() }, bbox.getCoordinateReferenceSystem()),
+//                width, height);
+//        RegularGrid targetDomain3 = new RegularGridImpl(new BoundingBoxImpl(new double[] {
+//                bbox.getMinX(), bbox.getMinY() + 0.5 * bbox.getHeight(),
+//                bbox.getMinX() + 0.5 * bbox.getWidth(), bbox.getMaxY() },
+//                bbox.getCoordinateReferenceSystem()), width, height);
+//        RegularGrid targetDomain4 = new RegularGridImpl(new BoundingBoxImpl(new double[] {
+//                bbox.getMinX() + 0.5 * bbox.getWidth(), bbox.getMinY() + 0.5 * bbox.getHeight(),
+//                bbox.getMaxX(), bbox.getMaxY() }, bbox.getCoordinateReferenceSystem()), width,
+//                height);
+//        
+//        MapPlotter plotter1 = new MapPlotter(style, targetDomain1);
+//        GridFeature subFeature1 = feature.extractGridFeature(targetDomain1, vPos, tPos, CollectionUtils.setOf(member));
+//        plotter1.addToFrame(subFeature1, member, vPos, tPos, null, plotStyle);
+//        BufferedImage image1 = plotter1.getRenderedFrames().get(0);
+//        
+//        MapPlotter plotter2 = new MapPlotter(style, targetDomain2);
+//        GridFeature subFeature2 = feature.extractGridFeature(targetDomain2, vPos, tPos, CollectionUtils.setOf(member));
+//        plotter2.addToFrame(subFeature2, member, vPos, tPos, null, plotStyle);
+//        BufferedImage image2 = plotter2.getRenderedFrames().get(0);
+//        
+//        MapPlotter plotter3 = new MapPlotter(style, targetDomain3);
+//        GridFeature subFeature3 = feature.extractGridFeature(targetDomain3, vPos, tPos, CollectionUtils.setOf(member));
+//        plotter3.addToFrame(subFeature3, member, vPos, tPos, null, plotStyle);
+//        BufferedImage image3 = plotter3.getRenderedFrames().get(0);
+//        
+//        MapPlotter plotter4 = new MapPlotter(style, targetDomain4);
+//        GridFeature subFeature4 = feature.extractGridFeature(targetDomain4, vPos, tPos, CollectionUtils.setOf(member));
+//        plotter4.addToFrame(subFeature4, member, vPos, tPos, null, plotStyle);
+//        BufferedImage image4 = plotter4.getRenderedFrames().get(0);
+//        
+//        graphics.drawImage(image4, 0, 0, null);
+//        graphics.drawImage(image3, width, 0, null);
+//        graphics.drawImage(image2, 0, height, null);
+//        graphics.drawImage(image1, width, height, null);
+        
+        ImageIO.write(plotter.getRenderedFrames().get(0), "png", new File("/home/guy/00feature.png"));
+        
     }
 }

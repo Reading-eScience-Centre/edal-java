@@ -28,9 +28,9 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
-import java.util.List;
+import java.util.Set;
+
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
@@ -40,32 +40,34 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * operations), and may commonly be created by extracting data from a larger
  * GridSeriesFeature.
  * 
- * @param <R>
- *            The type of the value returned by the coverage; for a compound
- *            coverage this type will be {@link Record}.
  * @author Jon Blower
  */
-public interface GridCoverage2D<R> extends DiscreteCoverage<HorizontalPosition, GridCell2D, R> {
+public interface GridCoverage2D extends BaseGridCoverage<HorizontalPosition, GridCell2D> {
 
     @Override
     public HorizontalGrid getDomain();
 
     /**
-     * Gets the value of the coverage at given coordinates
+     * <p>
+     * Extracts a GridCoverage2D whose domain matches the passed-in target grid
+     * for the given member names. The returned GridCoverage2D will be
+     * memory-resident.
+     * </p>
+     * <p>
+     * The values in the returned Coverage are taken from the source Coverage
+     * (i.e. this Coverage) according to the following pseudocode:
+     * </p>
      * 
-     * @param coords
-     *            the grid coordinates of the desired value
-     * @return the value of the coverage
-     */
-    public R evaluate(GridCoordinates2D coords);
-
-    /**
-     * Gets the values of the coverage at a given list of coordinates
+     * <pre>
+     * for (GridCell2D targetGridCell : targetGrid.getDomainObjects()) {
+     *     Object value = this.evaluate(targetGridCell.getCentre(), memberNames);
+     *     addValueToCoverage(value);
+     * }
+     * </pre>
      * 
-     * @param coords
-     *            the grid coordinates of the desired values
-     * @return a list of values at the given coordinates
+     * @return a memory-resident GridCoverage2D whose domain matches the
+     *         passed-in target grid and whose range includes the given coverage
+     *         members.
      */
-    public List<R> evaluate(List<GridCoordinates2D> coords);
-
+    public GridCoverage2D extractGridCoverage(HorizontalGrid targetGrid, Set<String> memberNames);
 }

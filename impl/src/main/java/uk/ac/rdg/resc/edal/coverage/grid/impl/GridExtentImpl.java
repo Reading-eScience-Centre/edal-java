@@ -1,16 +1,52 @@
+/*******************************************************************************
+ * Copyright (c) 2012 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.util.Extents;
 
+/**
+ * 
+ * Implementation of {@link GridExtent}
+ * 
+ * @author Jon
+ * @author Guy Griffiths
+ * 
+ */
 public final class GridExtentImpl implements GridExtent {
 
-    private final GridCoordinates2DImpl low;
-    private final GridCoordinates2DImpl high;
+    private final GridCoordinatesImpl low;
+    private final GridCoordinatesImpl high;
     // These are calculated from the GridCoordinates upon construction
-    private transient final long size;
+    private transient long size;
 
     /**
      * Creates a new GridExtent with the given low and high coordinates. Note
@@ -27,27 +63,49 @@ public final class GridExtentImpl implements GridExtent {
      *             any of the high coordinates is lower than its corresponding
      *             low coordinate.
      */
-    public GridExtentImpl(GridCoordinates2D low, GridCoordinates2D high) {
-        if (high.getXIndex() < low.getXIndex() || high.getYIndex() < low.getYIndex()) {
-            String msg = String.format("A high coordinate is lower" + " than a low coordinate");
-            throw new IllegalArgumentException(msg);
+    public GridExtentImpl(GridCoordinates low, GridCoordinates high) {
+        if (low.getNDim() != high.getNDim()) {
+            throw new IllegalArgumentException(
+                    "High and low coordinates must have the same dimensionality");
         }
-        // We ensure that the internal GridCoordinates objects are instances of
-        // GridCoordinatesImpl to ensure that they are immutable
-        this.low = GridCoordinates2DImpl.convert(low);
-        this.high = GridCoordinates2DImpl.convert(high);
 
+        size = 1L;
         /*
          * int * int -> int, EVEN WHEN RESULT IS TOO BIG
          * 
          * Therefore we must cast (at least one of the values) to long
          */
-        size = (long) getXSpan() * (long) getYSpan();
+        for (int i = 0; i < low.getNDim(); i++) {
+            if (high.getIndex(i) < low.getIndex(i)) {
+                throw new IllegalArgumentException(String.format("A high coordinate is lower"
+                        + " than a low coordinate"));
+            }
+            size *= (high.getIndex(i) - low.getIndex(i) + 1);
+        }
+        // We ensure that the internal GridCoordinates objects are instances of
+        // GridCoordinatesImpl to ensure that they are immutable
+        this.low = GridCoordinatesImpl.convert(low);
+        this.high = GridCoordinatesImpl.convert(high);
+    }
+
+    public GridExtentImpl(Extent<Integer>... extents) {
+        this(new GridCoordinatesImpl(getLows(extents)), new GridCoordinatesImpl(getHighs(extents)));
     }
     
-    public GridExtentImpl(Extent<Integer> xExtent, Extent<Integer> yExtent) {
-        this(new GridCoordinates2DImpl(xExtent.getLow(), yExtent.getLow()),
-                new GridCoordinates2DImpl(xExtent.getHigh(),yExtent.getHigh()));
+    private static int[] getLows(Extent<Integer>... extents) {
+        int[] lows = new int[extents.length];
+        for (int i = 0; i < extents.length; i++) {
+            lows[i] = extents[i].getLow();
+        }
+        return lows;
+    }
+    
+    private static int[] getHighs(Extent<Integer>... extents) {
+        int[] highs = new int[extents.length];
+        for (int i = 0; i < extents.length; i++) {
+            highs[i] = extents[i].getHigh();
+        }
+        return highs;
     }
 
     /**
@@ -59,8 +117,8 @@ public final class GridExtentImpl implements GridExtent {
      * @throws IllegalArgumentException
      *             if any of the high coordinates is less than zero.
      */
-    public GridExtentImpl(GridCoordinates2D high) {
-        this(GridCoordinates2DImpl.zero(), high);
+    public GridExtentImpl(GridCoordinates high) {
+        this(GridCoordinatesImpl.zero(high.getNDim()), high);
     }
 
     /**
@@ -74,8 +132,8 @@ public final class GridExtentImpl implements GridExtent {
      * @throws IllegalArgumentException
      *             if any of the high coordinates is less than zero.
      */
-    public GridExtentImpl(int highCoordX, int highCoordY) {
-        this(new GridCoordinates2DImpl(highCoordX, highCoordY));
+    public GridExtentImpl(int... highCoords) {
+        this(new GridCoordinatesImpl(highCoords));
     }
 
     /**
@@ -86,8 +144,12 @@ public final class GridExtentImpl implements GridExtent {
      * @return true if this envelope contains the given coordinates.
      */
     @Override
-    public boolean contains(GridCoordinates2D coords) {
-        return contains(coords.getXIndex(), coords.getYIndex());
+    public boolean contains(GridCoordinates coords) {
+        int[] components = new int[coords.getNDim()];
+        for (int i = 0; i < coords.getNDim(); i++) {
+            components[i] = coords.getIndex(i);
+        }
+        return this.contains(components);
     }
 
     /**
@@ -100,9 +162,22 @@ public final class GridExtentImpl implements GridExtent {
      *             dimensionality of the grid
      * @return true if this envelope contains the given coordinates
      */
-    public boolean contains(int xIndex, int yIndex) {
-        return (xIndex >= getLow().getXIndex() && xIndex <= getHigh().getXIndex() &&
-                yIndex >= getLow().getYIndex() && yIndex <= getHigh().getYIndex());
+    @Override
+    public boolean contains(int... coords) {
+        /*
+         * We can use the size of low or high, since they are guaranteed to have
+         * the same length
+         */
+        if (low.getNDim() != coords.length) {
+            throw new IllegalArgumentException("Wrong number of coordinates supplied.  Need "
+                    + low.getNDim() + ", but you supplied " + coords.length);
+        }
+        boolean contains = true;
+        for(int i=0; i<coords.length; i++){
+            contains = contains && coords[i] >= getLow().getIndex(i)
+                    && coords[i] <= getHigh().getIndex(i);
+        }
+        return contains;
     }
 
     /**
@@ -135,7 +210,7 @@ public final class GridExtentImpl implements GridExtent {
      *         <b>inclusive</b>.
      */
     @Override
-    public GridCoordinates2DImpl getLow() {
+    public GridCoordinates getLow() {
         return low;
     }
 
@@ -147,16 +222,8 @@ public final class GridExtentImpl implements GridExtent {
      *         <b>inclusive</b>.
      */
     @Override
-    public GridCoordinates2DImpl getHigh() {
+    public GridCoordinates getHigh() {
         return high;
-    }
-    
-    private int getXSpan(){
-        return getHigh().getXIndex() - getLow().getXIndex() + 1;
-    }
-    
-    private int getYSpan(){
-        return getHigh().getYIndex() - getLow().getYIndex() + 1;
     }
 
     private int hashCode = Integer.MAX_VALUE;
@@ -199,17 +266,12 @@ public final class GridExtentImpl implements GridExtent {
     }
 
     @Override
-    public Extent<Integer> getXExtent() {
-        return Extents.newExtent(low.getXIndex(), high.getXIndex());
-    }
-
-    @Override
-    public Extent<Integer> getYExtent() {
-        return Extents.newExtent(low.getYIndex(), high.getYIndex());
-    }
-
-    @Override
     public long size() {
         return size;
+    }
+
+    @Override
+    public Extent<Integer> getExtent(int dim) {
+        return Extents.newExtent(low.getIndex(dim), high.getIndex(dim));
     }
 }

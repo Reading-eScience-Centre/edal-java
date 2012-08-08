@@ -1,3 +1,31 @@
+/*******************************************************************************
+ * Copyright (c) 2012 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.edal.coverage.domain.impl;
 
 import java.util.AbstractList;
@@ -7,13 +35,14 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
+import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates4D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCell4DRectangle;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates4DImpl;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
@@ -34,7 +63,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * @author Guy Griffiths
  * 
  */
-public class GridSeriesDomainImpl implements GridSeriesDomain {
+public class GridSeriesDomainImpl extends AbstractGrid implements GridSeriesDomain {
 
     private final HorizontalGrid hGrid;
     private final VerticalAxis vAxis;
@@ -128,10 +157,9 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
                                         (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
         }
         
-        GridCoordinates2D hCoords = hGrid.findContainingCell(pos.getHorizontalPosition());
-        if(hCoords == null)
+        GridCell2D hCell = hGrid.findContainingCell(pos.getHorizontalPosition());
+        if(hCell == null)
             return null;
-        GridCell2D hCell = hGrid.getGridCell(hCoords);
         
         return new GridCell4DRectangle(this, hCell, tExtent, tIndex, vExtent, vIndex);
     }
@@ -200,7 +228,7 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         if(tAxis != null){
             tSize = tAxis.size();
         }
-        return (long) (hGrid.size() * vSize * tSize);
+        return (hGrid.size() * vSize * tSize);
     }
 
     @Override
@@ -225,6 +253,8 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
     @Override
     public long findIndexOf(GeoPosition position) {
         long hIndex = hGrid.findIndexOf(position.getHorizontalPosition());
+        if(hIndex < 0)
+            return -1;
         long hSize = hGrid.getGridExtent().size();
         int vIndex = 0;
         int vSize = 1;
@@ -255,5 +285,60 @@ public class GridSeriesDomainImpl implements GridSeriesDomain {
         int yComp = (int) ((index-tComp*xSize*ySize*zSize-zComp*xSize*ySize-(index%xSize))/(xSize));
         int xComp = (int) (index-tComp*xSize*ySize*zSize-zComp*xSize*ySize-yComp*xSize);
         return new GridCoordinates4DImpl(xComp, yComp, zComp, tComp);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((hGrid == null) ? 0 : hGrid.hashCode());
+        result = prime * result + ((tAxis == null) ? 0 : tAxis.hashCode());
+        result = prime * result + ((vAxis == null) ? 0 : vAxis.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GridSeriesDomainImpl other = (GridSeriesDomainImpl) obj;
+        if (hGrid == null) {
+            if (other.hGrid != null)
+                return false;
+        } else if (!hGrid.equals(other.hGrid))
+            return false;
+        if (tAxis == null) {
+            if (other.tAxis != null)
+                return false;
+        } else if (!tAxis.equals(other.tAxis))
+            return false;
+        if (vAxis == null) {
+            if (other.vAxis != null)
+                return false;
+        } else if (!vAxis.equals(other.vAxis))
+            return false;
+        return true;
+    }
+
+    @Override
+    public GridAxis getAxis(int n) {
+        if (n == 0)
+            return getHorizontalGrid().getXAxis();
+        if (n == 1)
+            return getHorizontalGrid().getYAxis();
+        if (n == 2)
+            return getVerticalAxis();
+        if (n == 3)
+            return getTimeAxis();
+        throw new IndexOutOfBoundsException("This GridValuesMatrix has 4 axes");
+    }
+
+    @Override
+    public int getNDim() {
+        return 4;
     }
 }

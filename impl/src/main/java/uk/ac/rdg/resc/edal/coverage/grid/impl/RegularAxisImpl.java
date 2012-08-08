@@ -1,3 +1,31 @@
+/*******************************************************************************
+ * Copyright (c) 2012 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import org.opengis.referencing.cs.CoordinateSystemAxis;
@@ -57,14 +85,6 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         return firstValue + index * spacing;
     }
 
-    /**
-     * Gets the index of the given value as a double-precision number that is
-     * not necessarily an integer.
-     */
-    private Double getIndex(Double value) {
-        return (value - firstValue) / spacing;
-    }
-
     @Override
     public int size() {
         return size;
@@ -97,15 +117,20 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         // We find the (non-integer) index of the given value
         Double indexDbl = getIndex(position);
         // We round to the nearest integer
-        int index = (int)Math.round(indexDbl);
-        // Check the extremes (probably not strictly necessary?)
-//        if (index < 0) return 0;
-//        if (index == this.size) return this.size - 1;
+        int index = (int) Math.round(indexDbl);
         if (index < 0 || index >= size)
             return -1;
         return index;
     }
 
+    /*
+     * Gets the index of the given value as a double-precision number that is
+     * not necessarily an integer.
+     */
+    private Double getIndex(Double value) {
+        return (value - firstValue) / spacing;
+    }
+    
     @Override
     protected Double extendFirstValue(Double firstVal, Double nextVal) {
         return firstVal - 0.5 * (nextVal - firstVal);
@@ -114,5 +139,39 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     @Override
     protected Double extendLastValue(Double lastVal, Double secondLastVal) {
         return lastVal + 0.5 * (lastVal - secondLastVal);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        long temp;
+        temp = Double.doubleToLongBits(firstValue);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        result = prime * result + (isLongitude ? 1231 : 1237);
+        result = prime * result + size;
+        temp = Double.doubleToLongBits(spacing);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RegularAxisImpl other = (RegularAxisImpl) obj;
+        if (Double.doubleToLongBits(firstValue) != Double.doubleToLongBits(other.firstValue))
+            return false;
+        if (isLongitude != other.isLongitude)
+            return false;
+        if (size != other.size)
+            return false;
+        if (Double.doubleToLongBits(spacing) != Double.doubleToLongBits(other.spacing))
+            return false;
+        return true;
     }
 }

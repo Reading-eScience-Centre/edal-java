@@ -28,11 +28,11 @@
 
 package uk.ac.rdg.resc.edal.coverage.domain;
 
-import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
 import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
@@ -42,13 +42,6 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
  * @author Jon Blower
  */
 public interface TrajectoryDomain extends DiscreteDomain<GeoPosition, GeoPosition> {
-    /**
-     * @return the positions in space and time that comprise the domain, in
-     *         ascending order of time. This is exactly equivalent to
-     *         {@link #getDomainObjects()}.
-     */
-    public List<GeoPosition> getPositions();
-
     /**
      * @return the vertical coordinate reference system used to reference the
      *         {@link #getDomainObjects() positions}.

@@ -24,11 +24,12 @@
     <function-signature>java.lang.String formatUTCTimeOnly(uk.ac.rdg.resc.edal.position.TimePosition)</function-signature>
   </function>
   <function>
-    <description>Returns true if the given layer is a vector layer</description>
-    <name>isVectorLayer</name>
-    <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
-    <function-signature>boolean isVectorLayer(uk.ac.rdg.resc.edal.coverage.Coverage)</function-signature>
+    <description>Formats a TimePosition object as the date only</description>
+    <name>formatUTCDateOnly</name>
+    <function-class>uk.ac.rdg.resc.edal.util.TimeUtils</function-class>
+    <function-signature>java.lang.String formatUTCDateOnly(uk.ac.rdg.resc.edal.position.TimePosition)</function-signature>
   </function>
+
   <function>
     <description>Returns exception name</description>
     <name>getExceptionName</name>
@@ -54,7 +55,7 @@
     <description>Returns the uppermost elevation (i.e. the default)</description>
     <name>getDefaultElevation</name>
     <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
-    <function-signature>java.lang.Double getUppermostElevation(uk.ac.rdg.resc.edal.feature.GridSeriesFeature)</function-signature>
+    <function-signature>java.lang.Double getUppermostElevation(uk.ac.rdg.resc.edal.feature.Feature)</function-signature>
   </function>
 
   <function>
@@ -68,8 +69,57 @@
     <description>Sets the bounding box to conform with GIS standards</description>
     <name>getWmsBoundingBox</name>
     <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
-    <function-signature>uk.ac.rdg.resc.edal.geometry.BoundingBox getWmsBoundingBox(uk.ac.rdg.resc.edal.feature.GridSeriesFeature)</function-signature>
+    <function-signature>uk.ac.rdg.resc.edal.geometry.BoundingBox getWmsBoundingBox(uk.ac.rdg.resc.edal.feature.Feature)</function-signature>
   </function>
-  
+
+  <function>
+    <description>Tests if a member of a RangeMetadata is scalar</description>
+    <name>memberIsScalar</name>
+    <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
+    <function-signature>boolean memberIsScalar(uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata, java.lang.String)</function-signature>
+  </function>
+
+  <function>
+    <description>Gets the child metadata of a RangeMetadata</description>
+    <name>getChildMetadata</name>
+    <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
+    <function-signature>uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata getChildMetadata(uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata, java.lang.String)</function-signature>
+  </function>
+
+  <function>
+    <description>Gets the vertical axis, if available</description>
+    <name>getVerticalAxis</name>
+    <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
+    <function-signature>uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis getVerticalAxis(uk.ac.rdg.resc.edal.feature.Feature)</function-signature>
+  </function>
+
+  <function>
+    <description>Gets the time axis, if available</description>
+    <name>getTimeAxis</name>
+    <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
+    <function-signature>uk.ac.rdg.resc.edal.coverage.grid.TimeAxis getTimeAxis(uk.ac.rdg.resc.edal.feature.Feature)</function-signature>
+  </function>
+
+  <function>
+    <description>Gets plottable layer metadata for a given feature</description>
+    <name>getPlottableLayers</name>
+    <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
+    <function-signature>java.util.List getPlottableLayers(uk.ac.rdg.resc.edal.feature.Feature)</function-signature>
+  </function>
+
+  <function>
+    <description>Gets the available styles for a given feature</description>
+    <name>getFullStyles</name>
+    <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
+    <function-signature>java.util.List getStylesWithPalettes(uk.ac.rdg.resc.edal.feature.Feature, java.lang.String, java.util.Set)</function-signature>
+  </function>
+
+  <function>
+    <description>Gets the available base styles for a given feature</description>
+    <name>getBaseStyles</name>
+    <function-class>uk.ac.rdg.resc.ncwms.util.WmsUtils</function-class>
+    <function-signature>java.util.Set getBaseStyles(uk.ac.rdg.resc.edal.feature.Feature, java.lang.String)</function-signature>
+  </function>
+
   
 </taglib>

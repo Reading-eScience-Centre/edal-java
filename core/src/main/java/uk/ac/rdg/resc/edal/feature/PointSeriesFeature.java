@@ -29,19 +29,14 @@
 package uk.ac.rdg.resc.edal.feature;
 
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
-import uk.ac.rdg.resc.edal.coverage.Record;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A measurement of a time series at a point
- * 
- * @param <R>
- *            The type of the value returned by the coverage; for a compound
- *            coverage this type will be {@link Record}.
  * @author Jon Blower
  */
-public interface PointSeriesFeature<R> extends Feature {
+public interface PointSeriesFeature extends Feature {
     /**
      * Gets the horizontal location of this point series feature.
      * 
@@ -57,5 +52,5 @@ public interface PointSeriesFeature<R> extends Feature {
     public VerticalPosition getVerticalPosition();
 
     @Override
-    public PointSeriesCoverage<R> getCoverage();
+    public PointSeriesCoverage getCoverage();
 }

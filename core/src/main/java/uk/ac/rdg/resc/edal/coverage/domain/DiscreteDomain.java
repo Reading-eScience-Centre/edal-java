@@ -64,7 +64,8 @@ public interface DiscreteDomain<P, DO> extends Domain<P> {
     public List<DO> getDomainObjects();
 
     /**
-     * Finds the index of the first domain object that contains the given
+     * Finds the index of the first domain object within the
+     * {@link #getDomainObjects() list of domain objects} that contains the given
      * position.
      * 
      * @return the index of the domain object, or -1 if the position is outside

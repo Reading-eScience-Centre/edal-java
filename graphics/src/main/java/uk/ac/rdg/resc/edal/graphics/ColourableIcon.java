@@ -36,7 +36,6 @@ public class ColourableIcon {
                 int g = currentColour.getGreen();
                 int b = currentColour.getBlue();
                 float y = 0.3f*r + 0.59f*g + 0.11f*b;
-//                Color final_color = new Color((int)(red+y)/2,(int)(green+y)/2,(int)(blue+y)/2, alpha);
                 Color final_color = new Color((int)(3*red+y)/4,(int)(3*green+y)/4,(int)(3*blue+y)/4, alpha);
                 colouredIcon.setRGB(i, j, final_color.getRGB());
             }

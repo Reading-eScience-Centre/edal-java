@@ -57,7 +57,7 @@ public class Colorize {
                 float r = color.getRed()/255f;
                 float g = color.getGreen()/255f;
                 float b = color.getBlue()/255f;
-                float a = color.getAlpha()/255f;
+//                float a = color.getAlpha()/255f;
                 float y = 0.3f*r + 0.59f*g + 0.11f*b;
                 Color final_color = new Color(0.5f*(red+y), 0.5f*(green+y), 0.5f*(blue+y), oldAlpha/255f);
                 

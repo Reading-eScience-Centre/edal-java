@@ -27,18 +27,25 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.coverage.grid;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.cdm.coverage.grid.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.AbstractHorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridExtentImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.geometry.impl.AbstractPolygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
@@ -47,24 +54,58 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * explicitly specifying the latitude and longitude coordinates of each grid
  * point.
  * 
+ * @todo Relax restriction that CRS must be WGS84.
  * @author Jon Blower
  */
-public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
+public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid
+{
     protected final CurvilinearCoords curvGrid;
     private final GridExtent gridExtent;
-    private BoundingBox coordinateExtent;
+    private final BoundingBox coordinateExtent;
 
     protected AbstractCurvilinearGrid(CurvilinearCoords curvGrid) {
-        // All points will be returned in WGS84 lon-lat
-        super(DefaultGeographicCRS.WGS84);
         this.curvGrid = curvGrid;
         this.gridExtent = new GridExtentImpl(curvGrid.getNi()-1, curvGrid.getNj()-1);
-        coordinateExtent = curvGrid.getBoundingBox();
+        this.coordinateExtent = curvGrid.getBoundingBox();
     }
 
     @Override
-    protected HorizontalPosition transformCoordinatesNoBoundsCheck(int i, int j) {
+    protected HorizontalPosition getGridCellCentreNoBoundsCheck(int i, int j) {
         return this.curvGrid.getMidpoint(i, j);
+    }
+    
+    @Override
+    protected Polygon getGridCellFootprintNoBoundsCheck(int i, int j)
+    {
+        final Cell cell = this.curvGrid.getCell(i, j);
+        
+        List<Point2D> corners = cell.getCorners();
+        List<HorizontalPosition> vertices = new ArrayList<HorizontalPosition>(corners.size());
+        for (Point2D corner : corners)
+        {
+            vertices.add(new HorizontalPositionImpl(corner.getX(), corner.getY(),
+                    this.getCoordinateReferenceSystem()));
+        }
+        final List<HorizontalPosition> iVertices = Collections.unmodifiableList(vertices);
+        
+        return new AbstractPolygon()
+        {
+            @Override
+            public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+                return AbstractCurvilinearGrid.this.getCoordinateReferenceSystem();
+            }
+
+            @Override
+            public List<HorizontalPosition> getVertices() {
+                return iVertices;
+            }
+
+            @Override
+            public boolean contains(double x, double y) {
+                // The x and y coordinates will already have been transformed to lon and lat
+                return cell.contains(x, y);
+            }
+        };
     }
 
     @Override
@@ -120,12 +161,11 @@ public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid {
 
     @Override
     public BoundingBox getCoordinateExtent() {
-//        return curvGrid.getBoundingBox();
-        return coordinateExtent;
+        return this.coordinateExtent;
     }
-
+    
     @Override
-    public GridCell2D getGridCell(GridCoordinates2D coords) {
-        return getGridCell(coords.getXIndex(), coords.getYIndex());
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return DefaultGeographicCRS.WGS84;
     }
 }

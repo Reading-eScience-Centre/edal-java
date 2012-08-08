@@ -37,15 +37,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.servlet.ModelAndView;
 
-import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.ncwms.cache.TileCache;
+import uk.ac.rdg.resc.ncwms.controller.AbstractMetadataController;
 import uk.ac.rdg.resc.ncwms.controller.AbstractWmsController;
 import uk.ac.rdg.resc.ncwms.controller.RequestParams;
-import uk.ac.rdg.resc.ncwms.exceptions.FeatureNotDefinedException;
 import uk.ac.rdg.resc.ncwms.exceptions.OperationNotSupportedException;
 import uk.ac.rdg.resc.ncwms.exceptions.WmsException;
-import uk.ac.rdg.resc.ncwms.usagelog.UsageLogEntry;
 import uk.ac.rdg.resc.ncwms.wms.Dataset;
 
 /**
@@ -56,47 +54,19 @@ import uk.ac.rdg.resc.ncwms.wms.Dataset;
 public final class NcwmsController extends AbstractWmsController
 {
     // This object handles requests for non-standard metadata
-    private NcwmsMetadataController metadataController;
+    private AbstractMetadataController metadataController;
 
     // Cache of recently-extracted data arrays: will be set by Spring
     private TileCache tileCache;
 
-    // Object that extracts layers from the config object, given a layer name
-    private final FeatureFactory FEATURE_FACTORY = new FeatureFactory() {
-        @Override
-        public GridSeriesFeature<?> getFeature(String layerName) throws FeatureNotDefinedException {
-            // Split the layer name on the slash character
-            int slashIndex = layerName.lastIndexOf("/");
-            if (slashIndex > 0) {
-                String datasetId = layerName.substring(0, slashIndex);
-                Dataset ds = NcwmsController.this.getConfig().getDatasetById(datasetId);
-                if (ds == null)
-                    throw new FeatureNotDefinedException(layerName);
+    private FeatureFactory featureFactory;
 
-                String featureId = layerName.substring(slashIndex + 1);
-                GridSeriesFeature<?> feature = ds.getFeatureById(featureId);
-                if (feature == null)
-                    throw new FeatureNotDefinedException(layerName);
-
-                return feature;
-            } else {
-                // We don't bother looking for the position in the string where
-                // the parse error occurs
-                throw new FeatureNotDefinedException(layerName);
-            }
-        }
-    };
-
-    /**
-     * Called automatically by Spring after all the dependencies have been
-     * injected.
-     */
-    @Override
-    public void init() throws Exception
-    {
-        // Create a NcwmsMetadataController for handling non-standard metadata request
-        this.metadataController = new NcwmsMetadataController(this.getConfig(), FEATURE_FACTORY);
-        super.init();
+    public void setMetadataController(AbstractMetadataController metadataController){
+        this.metadataController = metadataController;
+    }
+    
+    public void setFeatureFactory(FeatureFactory featureFactory){
+        this.featureFactory = featureFactory;
     }
 
     @Override
@@ -104,16 +74,15 @@ public final class NcwmsController extends AbstractWmsController
             String request,
             RequestParams params,
             HttpServletRequest httpServletRequest,
-            HttpServletResponse httpServletResponse,
-            UsageLogEntry usageLogEntry) throws Exception
+            HttpServletResponse httpServletResponse) throws Exception
     {
         if (request.equals("GetCapabilities"))
         {
-            return this.getCapabilities(params, httpServletRequest, usageLogEntry);
+            return this.getCapabilities(params, httpServletRequest);
         }
         else if (request.equals("GetMap"))
         {
-            return getMap(params, FEATURE_FACTORY, httpServletResponse, usageLogEntry);
+            return getMap(params, featureFactory, httpServletResponse);
         }
         else if (request.equals("GetFeatureInfo"))
         {
@@ -121,12 +90,11 @@ public final class NcwmsController extends AbstractWmsController
             String url = params.getString("url");
             if (url != null && !url.trim().equals(""))
             {
-                usageLogEntry.setRemoteServerUrl(url);
                 NcwmsMetadataController.proxyRequest(url, httpServletRequest, httpServletResponse);
                 return null;
             }
-            return getFeatureInfo(params, FEATURE_FACTORY, httpServletRequest,
-                    httpServletResponse, usageLogEntry);
+            return getFeatureInfo(params, featureFactory, httpServletRequest,
+                    httpServletResponse);
         }
         // The REQUESTs below are non-standard and could be refactored into
         // a different servlet endpoint
@@ -136,13 +104,13 @@ public final class NcwmsController extends AbstractWmsController
             // day be replaced by queries to Capabilities fragments, if possible.)
             // Delegate to the NcwmsMetadataController
             return this.metadataController.handleRequest(httpServletRequest,
-                    httpServletResponse, usageLogEntry);
+                    httpServletResponse);
         }
         else if (request.equals("GetLegendGraphic"))
         {
             // This is a request for an image that contains the colour scale
             // and range for a given layer
-            return getLegendGraphic(params, FEATURE_FACTORY, httpServletResponse);
+            return getLegendGraphic(params, featureFactory, httpServletResponse);
         /*} else if (request.equals("GetKML")) {
             // This is a request for a KML document that allows the selected
             // layer(s) to be displayed in Google Earth in a manner that
@@ -157,17 +125,21 @@ public final class NcwmsController extends AbstractWmsController
             logUsage = false; // We don't log usage for this operation
             return getKMLRegion(params, httpServletRequest); */
         }
+        else if (request.equals("GetTimeseries"))
+        {
+            return getTimeseries(params, featureFactory, httpServletResponse);
+        }
         else if (request.equals("GetTransect"))
         {
-            return getTransect(params, FEATURE_FACTORY, httpServletResponse, usageLogEntry);
+            return getTransect(params, featureFactory, httpServletResponse);
         }
         else if (request.equals("GetVerticalProfile"))
         {
-            return getVerticalProfile(params, FEATURE_FACTORY, httpServletResponse, usageLogEntry);
+            return getVerticalProfile(params, featureFactory, httpServletResponse);
         }
         else if (request.equals("GetVerticalSection"))
         {
-            return getVerticalSection(params, FEATURE_FACTORY, httpServletResponse, usageLogEntry);
+            return getVerticalSection(params, featureFactory, httpServletResponse);
         }
         else
         {
@@ -179,7 +151,7 @@ public final class NcwmsController extends AbstractWmsController
      * Performs the GetCapabilities operation.
      */
     private ModelAndView getCapabilities(RequestParams params,
-            HttpServletRequest httpServletRequest, UsageLogEntry usageLogEntry)
+            HttpServletRequest httpServletRequest)
             throws WmsException, IOException
     {
         TimePosition lastUpdate;
@@ -230,58 +202,8 @@ public final class NcwmsController extends AbstractWmsController
         }
 
         return this.getCapabilities(datasets, lastUpdate, params,
-                httpServletRequest, usageLogEntry);
+                httpServletRequest);
     }
-
-    /**
-     * <p>This implementation uses a {@link TileCache} to store data arrays,
-     * speeding up repeat requests.</p>
-     */
-    /*
-     * TODO Remove completely - see superclass comment
-     */
-//    @Override
-//    protected List<Float> readDataGrid(ScalarLayer layer, DateTime dateTime,
-//        double elevation, RegularGrid grid, UsageLogEntry usageLogEntry)
-//        throws InvalidDimensionValueException, IOException
-//    {
-//        // We know that this Config object only returns LayerImpl objects
-//        LayerImpl layerImpl = (LayerImpl)layer;
-//        // Find which file contains this time, and which index it is within the file
-//        LayerImpl.FilenameAndTimeIndex fti = layerImpl.findAndCheckFilenameAndTimeIndex(dateTime);
-//        // Find the z index within the file
-//        int zIndex = layerImpl.findAndCheckElevationIndex(elevation);
-//
-//        // Create a key for searching the cache
-//        TileCacheKey key = new TileCacheKey(
-//            fti.filename,
-//            layer,
-//            grid,
-//            fti.tIndexInFile,
-//            zIndex
-//        );
-//
-//        List<Float> data = null;
-//        // Search the cache.  Returns null if key is not found
-//        boolean cacheEnabled = this.getConfig().getCache().isEnabled();
-//        if (cacheEnabled) data = this.tileCache.get(key);
-//
-//        // Record whether or not we got a hit in the cache
-//        usageLogEntry.setUsedCache(data != null);
-//
-//        if (data == null)
-//        {
-//            // We didn't get any data from the cache, so we have to read from
-//            // the source data.
-//            // We call layerImpl.readHorizDomain() directly to save repeating
-//            // the call to findAndCheckFilenameAndTimeIndex().
-//            data = layerImpl.readHorizontalDomain(fti, zIndex, grid);
-//            // Put the data in the tile cache
-//            if (cacheEnabled) this.tileCache.put(key, data);
-//        }
-//
-//        return data;
-//    }
 
     /**
      * Called by Spring to shut down the controller.  This shuts down the tile
@@ -294,7 +216,7 @@ public final class NcwmsController extends AbstractWmsController
     }
 
     /** Returns the server configuration cast down to a {@link Config} object */
-    private Config getConfig()
+    Config getConfig()
     {
         return (Config)this.serverConfig;
     }
