@@ -39,6 +39,7 @@ import java.util.Set;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
 
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
@@ -59,6 +60,9 @@ public class TimeUtils {
     private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
     private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date();
     private static final DateTimeFormatter ISO_TIME_FORMATTER = ISODateTimeFormat.time();
+    private static final DateTimeFormatter UTC_TIME_FORMATTER = (new DateTimeFormatterBuilder())
+            .appendHourOfDay(2).appendLiteral(":").appendMinuteOfHour(2).appendLiteral(":")
+            .appendSecondOfMinute(2).toFormatter();
     
     /**
      * <p>A {@link Comparator} that compares {@link DateTime} objects based only
@@ -144,7 +148,15 @@ public class TimeUtils {
      * "14:53:03". Time zone offset is zero (UTC).
      */
     public static String formatUTCTimeOnly(TimePosition dateTime) {
-        return ISO_TIME_FORMATTER.print(dateTime.getValue());
+        return UTC_TIME_FORMATTER.print(dateTime.getValue());
+    }
+    
+    /**
+     * Formats a DateTime as the time only in the format "HH:mm:ss", e.g.
+     * "14:53:03". Time zone offset is zero (UTC).
+     */
+    public static String formatUTCDateOnly(TimePosition dateTime) {
+        return ISO_DATE_FORMATTER.print(dateTime.getValue());
     }
 
     /**

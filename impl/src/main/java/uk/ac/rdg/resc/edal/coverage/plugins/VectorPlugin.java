@@ -137,22 +137,41 @@ public class VectorPlugin extends Plugin {
         if (magMetadata == null) {
             ScalarMetadata xComponentMetadata = metadataList.get(0);
             ScalarMetadata yComponentMetadata = metadataList.get(1);
-            magMetadata = new VectorComponentImpl(getParentName() + "_MAG", "Magnitude of ("
-                    + xComponentMetadata.getDescription() + ", "
-                    + yComponentMetadata.getDescription() + ")", Phenomenon.getPhenomenon(
-                    commonStandardName.replaceFirst("velocity", "speed"),
-                    PhenomenonVocabulary.CLIMATE_AND_FORECAST), xComponentMetadata.getUnits(),
-                    xComponentMetadata.getValueType(), VectorDirection.MAGNITUDE);
+            String description;
+            String xDesc = xComponentMetadata.getDescription(); 
+            String yDesc = yComponentMetadata.getDescription(); 
+            if (xDesc.toLowerCase().contains("current") && yDesc.toLowerCase().contains("current")) {
+                description = "Current Magnitude";
+            } else if (xDesc.toLowerCase().contains("wind") && yDesc.toLowerCase().contains("wind")) {
+                description = "Wind Velocity";
+            } else {
+                description = "Magnitude of (" + xDesc + ", " + yDesc + ")";
+            }
+            magMetadata = new VectorComponentImpl(getParentName() + "_MAG", description,
+                    Phenomenon.getPhenomenon(commonStandardName.replaceFirst("velocity", "speed"),
+                            PhenomenonVocabulary.CLIMATE_AND_FORECAST),
+                    xComponentMetadata.getUnits(), xComponentMetadata.getValueType(),
+                    VectorDirection.MAGNITUDE);
         }
         if (dirMetadata == null) {
             ScalarMetadata xComponentMetadata = metadataList.get(0);
             ScalarMetadata yComponentMetadata = metadataList.get(1);
-            dirMetadata = new VectorComponentImpl(getParentName() + "_DIR", "Direction of ("
-                    + xComponentMetadata.getDescription() + ", "
-                    + yComponentMetadata.getDescription() + ")", Phenomenon.getPhenomenon(
-                    commonStandardName.replaceFirst("velocity", "direction"),
-                    PhenomenonVocabulary.UNKNOWN), Unit.getUnit("rad", UnitVocabulary.UDUNITS2),
-                    xComponentMetadata.getValueType(), VectorDirection.DIRECTION);
+            String description;
+            String xDesc = xComponentMetadata.getDescription(); 
+            String yDesc = yComponentMetadata.getDescription(); 
+            if (xDesc.toLowerCase().contains("current") && yDesc.toLowerCase().contains("current")) {
+                description = "Current Direction";
+            } else if (xDesc.toLowerCase().contains("wind") && yDesc.toLowerCase().contains("wind")) {
+                description = "Wind Direction";
+            } else {
+                description = "Direction of (" + xDesc + ", " + yDesc + ")";
+            }
+            dirMetadata = new VectorComponentImpl(getParentName() + "_DIR", description,
+                    Phenomenon.getPhenomenon(
+                            commonStandardName.replaceFirst("velocity", "direction"),
+                            PhenomenonVocabulary.UNKNOWN), Unit.getUnit("rad",
+                            UnitVocabulary.UDUNITS2), xComponentMetadata.getValueType(),
+                    VectorDirection.DIRECTION);
         }
         metadata.addMember(xMetadata);
         metadata.addMember(yMetadata);
