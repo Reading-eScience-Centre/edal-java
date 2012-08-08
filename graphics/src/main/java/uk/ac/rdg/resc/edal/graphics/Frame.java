@@ -73,6 +73,11 @@ public class Frame {
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics graphics = image.getGraphics();
+        
+        if(!style.isTransparent()){
+            graphics.setColor(style.getBgColor());
+            graphics.fillRect(0, 0, width, height);
+        }
 
         for (FrameData frameData : layers) {
             BufferedImage frameImage = null;
