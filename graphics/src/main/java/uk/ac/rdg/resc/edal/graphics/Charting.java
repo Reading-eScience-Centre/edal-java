@@ -729,8 +729,7 @@ final public class Charting {
     public static PaintScale createPaintScale(ColorPalette colorPalette,
             final Extent<Float> colourScaleRange, final int numColourBands,
             final boolean logarithmic) {
-        final IndexColorModel cm = colorPalette.getColorModel(numColourBands, 100, Color.white,
-                true);
+        final IndexColorModel cm = colorPalette.getColorModel(numColourBands, 100);
 
         return new PaintScale() {
             @Override

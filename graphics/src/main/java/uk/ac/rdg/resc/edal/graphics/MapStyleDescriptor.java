@@ -100,6 +100,14 @@ public class MapStyleDescriptor {
     public void addIcon(String name, ColourableIcon pointIcon) {
         icons.put(name, pointIcon);
     }
+    
+    public boolean isTransparent(){
+        return transparent;
+    }
+    
+    public Color getBgColor(){
+        return bgColor;
+    }
 
     public float getArrowLength() {
         return arrowLength;
@@ -166,7 +174,7 @@ public class MapStyleDescriptor {
     
     public IndexColorModel getColorModel(){
         if(indexColorModel == null)
-            indexColorModel = colorPalette.getColorModel(numColourBands, opacity, bgColor, transparent); 
+            indexColorModel = colorPalette.getColorModel(numColourBands, opacity); 
         return indexColorModel;
     }
     

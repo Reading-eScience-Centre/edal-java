@@ -327,16 +327,11 @@ public class ColorPalette {
      *            for out-of-range pixels and one for transparent pixels)
      * @param opacity
      *            The opacity of each pixel as a percentage
-     * @param bgColor
-     *            The color to use for background pixels if transparent=false
-     * @param transparent
-     *            If true, then the background will be fully-transparent.
      * @throws IllegalArgumentException
      *             if the requested number of colour bands is less than one or
      *             greater than {@link #MAX_NUM_COLOURS}.
      */
-    public IndexColorModel getColorModel(int numColorBands, int opacity, Color bgColor,
-            boolean transparent) {
+    public IndexColorModel getColorModel(int numColorBands, int opacity) {
         // Gets an interpolated/subsampled version of this palette with the
         // given number of colour bands
         Color[] newPalette = this.getPalette(numColorBands);
@@ -363,12 +358,17 @@ public class ColorPalette {
             a[i] = (byte) alpha;
         }
 
-        // The next index represents the background colour (which may be
-        // transparent)
-        r[numColorBands] = (byte) bgColor.getRed();
-        g[numColorBands] = (byte) bgColor.getGreen();
-        b[numColorBands] = (byte) bgColor.getBlue();
-        a[numColorBands] = transparent ? 0 : (byte) alpha;
+        /*
+         * The next index represents the background colour.
+         * 
+         * This is transparent. To support multiple layers, the background is
+         * always transparent. For a non-transparent background, this is
+         * rendered over a filled image of the desired colour
+         */
+        r[numColorBands] = 0;
+        g[numColorBands] = 0;
+        b[numColorBands] = 0;
+        a[numColorBands] = 0;
 
         // The next represents out-of-range pixels (black)
         r[numColorBands + 1] = 0;
