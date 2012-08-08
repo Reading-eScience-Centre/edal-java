@@ -27,7 +27,10 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.cdm.feature;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +73,8 @@ import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
  * 
  */
 public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Feature> {
+    
+    private final static String NCML_AGGREGATION_NAME = "ncWMS-auto_agg.ncml";
 
     /**
      * Instantiates a collection of features from one or more NetCDF files.
@@ -99,6 +104,10 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
         DataReadingStrategy dataReadingStrategy = null;
         File file = new File(location);
 
+        if (!file.exists()) {
+            file = aggregate(location);
+        }
+
         String filename = file.getPath();
         NetcdfDataset ncDataset = CdmUtils.openDataset(filename);
 
@@ -125,8 +134,8 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
 
             GridSeriesDomain domain = new GridSeriesDomainImpl(hGrid, vAxis, tAxis);
             // TODO more meaningful description
-            GridSeriesCoverageImpl coverage = new GridSeriesCoverageImpl(collectionId + gridNo, domain,
-                    dataReadingStrategy);
+            GridSeriesCoverageImpl coverage = new GridSeriesCoverageImpl(collectionId + gridNo,
+                    domain, dataReadingStrategy);
 
             Map<String, XYVarIDs> xyComponents = new HashMap<String, XYVarIDs>();
 
@@ -207,8 +216,147 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
          */
         for (GridSeriesCoverage coverage : coverages) {
             // TODO more meaningful name/ID
-            GridSeriesFeature feature = new GridSeriesFeatureImpl(collectionName, coverage.getDescription(), this, coverage);
+            GridSeriesFeature feature = new GridSeriesFeatureImpl(collectionName,
+                    coverage.getDescription(), this, coverage);
             addFeature(feature);
+        }
+    }
+
+    private File aggregate(String location) throws IOException{
+        /*
+         * The file doesn't exist. The user is *probably* trying to perform
+         * an aggregation of all NetCDF files along the time axis. Let's see
+         * if that seems to be the case, and then create an ncml file for
+         * them.
+         */
+        /*
+         * First get the components of the path
+         */
+        String[] pathElements = location.split(File.separator);
+        String filePart = pathElements[pathElements.length - 1].toLowerCase();
+        int finalPathIndex = pathElements.length - 1;
+        /*
+         * Are we searching for all NetCDF files?
+         */
+        if (filePart.equals("*.nc")) {
+            /*
+             * Are we searching recursively?
+             */
+            boolean recurse = false;
+            if (pathElements.length > 1 && pathElements[pathElements.length - 2].equals("**")) {
+                recurse = true;
+                finalPathIndex--;
+            }
+            /*
+             * Get the base path we're searching in
+             */
+            StringBuilder basePath = new StringBuilder();
+            for (int i = 0; i < finalPathIndex; i++) {
+                basePath.append(pathElements[i] + File.separator);
+            }
+            /*
+             * Now find an example file to open, so that we can determine
+             * the name of the time dimension
+             */
+            File basePathFile = new File(basePath.toString());
+            
+            File ncFile = findANetCDFFile(basePathFile, recurse);
+            if (ncFile == null) {
+                throw new FileNotFoundException("No NetCDF files in the location: " + location);
+            }
+            String timeDimensionName = getTimeDimensionName(ncFile);
+            if(timeDimensionName == null){
+                throw new IllegalArgumentException(
+                        "You have specified wildcards in the path, but the NetCDF files don't all have time axes.  We can only automatically aggregate along time axes.");
+            }
+            System.out.println(ncFile);
+            System.out.println(timeDimensionName);
+            /*
+             * Now that we have the name of the time dimension, write an
+             * ncml file, and set the location to that
+             */
+            File ncmlFile = new File(basePathFile, NCML_AGGREGATION_NAME);
+            if(!ncmlFile.exists()){
+                /*
+                 * If it already exists, we won't overwrite it
+                 */
+                BufferedWriter writer = new BufferedWriter(new FileWriter(ncmlFile));
+                writer.write("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">\n");
+                writer.write("<aggregation dimName=\""+timeDimensionName+"\" type=\"joinExisting\" recheckEvery=\"5 min\">\n");
+                writer.write("<scan location=\"./\" suffix=\".nc\" subdirs=\""+recurse+"\"/>\n");
+                writer.write("</aggregation>\n");
+                writer.write("</netcdf>\n");
+                writer.close();
+            }
+            return ncmlFile;
+        } else {
+            throw new FileNotFoundException("Cannot process the location: " + location);
+        }
+    }
+    
+    private File findANetCDFFile(File file, boolean recurse) {
+        File[] files = file.listFiles();
+        if (files != null) {
+            for (File subFile : files) {
+                if (subFile.getName().toLowerCase().endsWith(".nc")) {
+                    return subFile;
+                }
+            }
+        } else {
+            return null;
+        }
+        /*
+         * There are no files in the current path. Check if we're recursing and
+         * then see if there are any subdirs.
+         */
+        if (recurse) {
+            /*
+             * Go through all objects in this directory
+             */
+            for (File newDir : files) {
+                /*
+                 * Is this object a directory?
+                 */
+                if (newDir.isDirectory()) {
+                    /*
+                     * If so, repeat the whole process on this new directory
+                     */
+                    File fileInSubdir = findANetCDFFile(newDir, true);
+                    /*
+                     * If we found a file in the subdir, return it, otherwise
+                     * keep searching
+                     */
+                    if (fileInSubdir != null) {
+                        return fileInSubdir;
+                    }
+                }
+            }
+            /*
+             * Nothing in any subdirs.
+             */
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+    private String getTimeDimensionName(File ncFile) throws IOException {
+        NetcdfDataset ncDataset = CdmUtils.openDataset(ncFile.getAbsolutePath());
+        GridDataset gridDS = CdmUtils.getGridDataset(ncDataset);
+        List<Gridset> gridsets = gridDS.getGridsets();
+        if(gridsets != null && gridsets.size() > 0){
+            Gridset gridset = gridsets.get(0);
+            GridCoordSystem geoCoordSystem = gridset.getGeoCoordSystem();
+            if(geoCoordSystem.hasTimeAxis()){
+                CdmUtils.closeDataset(ncDataset);
+                return geoCoordSystem.getTimeAxis().getName();
+            } else {
+                CdmUtils.closeDataset(ncDataset);
+                return null;
+            }
+        } else {
+            CdmUtils.closeDataset(ncDataset);
+            return null;
         }
     }
 }
