@@ -194,8 +194,9 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
 
             for (String xyVarIDs : xyComponents.keySet()) {
                 XYVarIDs xyData = xyComponents.get(xyVarIDs);
+                String description = xyVarIDs.replaceAll("_", " ");
                 VectorPlugin vectorPlugin = new VectorPlugin(xyData.xVarId, xyData.yVarId,
-                        xyVarIDs, "Vector for " + xyVarIDs);
+                        xyVarIDs, description);
                 coverage.addPlugin(vectorPlugin);
             }
         }
