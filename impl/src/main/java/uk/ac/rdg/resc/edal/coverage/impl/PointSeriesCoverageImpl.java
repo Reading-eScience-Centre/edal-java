@@ -28,9 +28,18 @@
 
 package uk.ac.rdg.resc.edal.coverage.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
+import uk.ac.rdg.resc.edal.coverage.domain.impl.PointSeriesDomainImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.util.BigList;
+import uk.ac.rdg.resc.edal.util.LittleBigList;
 
 /**
  * A mutable (only adding new members is supported) in-memory implementation of
@@ -40,10 +49,37 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
  * 
  */
 public class PointSeriesCoverageImpl extends
-        AbstractBigListBackedCoverage<TimePosition, TimePosition, PointSeriesDomain>
-        implements PointSeriesCoverage {
+        AbstractBigListBackedCoverage<TimePosition, TimePosition, PointSeriesDomain> implements
+        PointSeriesCoverage {
 
     public PointSeriesCoverageImpl(String description, PointSeriesDomain domain) {
         super(description, domain);
+    }
+
+    @Override
+    public PointSeriesCoverage extractSubCoverage(Extent<TimePosition> tExtent,
+            Set<String> memberNames) {
+        List<TimePosition> times = new ArrayList<TimePosition>();
+        for (TimePosition time : getDomain().getTimes()) {
+            if (time.compareTo(tExtent.getLow()) >= 0
+                    && time.compareTo(tExtent.getHigh()) <= 0) {
+                times.add(time);
+            }
+        }
+        PointSeriesDomain domain = new PointSeriesDomainImpl(times);
+        PointSeriesCoverageImpl subCoverage = new PointSeriesCoverageImpl(getDescription(), domain);
+
+        long fromIndex = getDomain().findIndexOf(times.get(0));
+        long toIndex = getDomain().findIndexOf(times.get(times.size()-1))+1;
+        for (String memberName : memberNames) {
+            BigList<?> allValues = getValues(memberName);
+            LittleBigList<Object> requiredValues = new LittleBigList<Object>(); 
+            requiredValues.addAll(allValues.getAll(fromIndex, toIndex));
+            ScalarMetadata scalarMetadata = getScalarMetadata(memberName);
+            subCoverage.addMember(memberName, domain, scalarMetadata.getDescription(),
+                    scalarMetadata.getParameter(), scalarMetadata.getUnits(),
+                    requiredValues, scalarMetadata.getValueType());
+        }
+        return subCoverage;
     }
 }

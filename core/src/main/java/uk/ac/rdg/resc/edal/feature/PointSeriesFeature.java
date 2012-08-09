@@ -28,8 +28,12 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Set;
+
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
@@ -53,4 +57,6 @@ public interface PointSeriesFeature extends Feature {
 
     @Override
     public PointSeriesCoverage getCoverage();
+    
+    public PointSeriesFeature extractSubFeature(Extent<TimePosition> tExtent, Set<String> memberNames);
 }
