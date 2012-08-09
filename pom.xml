@@ -180,6 +180,7 @@
         <module>graphics</module>
         <module>ncwms</module>
         <module>test</module>
+        <module>ncwms-based-webapp-archetype</module>
     </modules>
     <repositories>
         <repository>

@@ -1,0 +1,15 @@
+<archetype>
+  <id>edal-ncwms-based-webapp</id>
+  <sources>
+    <source>src/main/java/AppController.java</source>
+  </sources>
+  <resources>
+    <resource>src/main/webapp/WEB-INF/app-beans.xml</resource>
+    <resource>src/main/webapp/WEB-INF/WMS-servlet.xml</resource>
+    <resource>src/main/webapp/WEB-INF/app-web.xml</resource>
+    <resource>src/main/webapp/WEB-INF/web.xml</resource>
+  </resources>
+  <testSources>
+    <source>src/test/java/AppTest.java</source>
+  </testSources>
+</archetype>

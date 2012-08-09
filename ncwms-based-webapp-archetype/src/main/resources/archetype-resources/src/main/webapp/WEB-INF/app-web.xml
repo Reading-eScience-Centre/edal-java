@@ -1,0 +1,3 @@
+<!-- Any application-specific web.xml configuration (e.g. servlet definitions) 
+	should go in this file. Note that you already get all of the ncWMS webapps 
+	included from the overlay -->
