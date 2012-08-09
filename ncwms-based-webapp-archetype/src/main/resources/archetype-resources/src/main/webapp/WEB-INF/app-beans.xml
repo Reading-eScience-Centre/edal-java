@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Handles application-specific configuration -->
+<beans xmlns='http://www.springframework.org/schema/beans'
+	xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+	xsi:schemaLocation='http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd'>
+
+	<!-- The following is a skeletal implementation of a webapp -->
+
+	<!-- The web.xml vendor mapping is already handled by ncWMS, so this comes 
+		for free. -->
+	<bean parent="urlMapper">
+		<property name="mappings">
+			<value>
+				/vendor/**/* = appController
+			</value>
+		</property>
+	</bean>
+
+	<!-- Maps the URL http://server/webapp-name/vendor/test to the method doTest 
+		in the AppController -->
+	<bean id="appMethodNameResolver"
+		class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+		<property name="mappings">
+			<value>
+				/test = doTest
+			</value>
+		</property>
+	</bean>
+
+	<!-- A sample application controller -->
+	<bean id="appController" class="${groupId}.AppController">
+		<constructor-arg>
+			<ref bean="config" />
+		</constructor-arg>
+		<property name="methodNameResolver">
+			<ref local="appMethodNameResolver" />
+		</property>
+	</bean>
+
+	<!-- We overwrite the workingDirectory property of the ncwmsContext bean 
+		in case we also have ncWMS on this system -->
+	<bean id="ncwmsContext" class="uk.ac.rdg.resc.ncwms.config.NcwmsContext"
+		init-method="init">
+		<property name="workingDirectory" value="$HOME/.ncWMS-app" />
+	</bean>
+</beans>
