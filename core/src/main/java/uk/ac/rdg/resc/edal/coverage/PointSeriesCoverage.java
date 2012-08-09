@@ -28,20 +28,34 @@
 
 package uk.ac.rdg.resc.edal.coverage;
 
+import java.util.Set;
+
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
 /**
- * <p>
  * A Coverage that contains values for a timeseries of data at a fixed point in
- * space. We model this as a {@link CompoundCoverage} since usually instruments
- * record many values at the same time.
- * </p>
- * @author Jon Blower
+ * space.
+ * 
+ * @author Guy Griffiths
  */
 public interface PointSeriesCoverage extends DiscreteCoverage<TimePosition, TimePosition> {
 
     @Override
     public PointSeriesDomain getDomain();
 
+    /**
+     * Extract a {@link PointSeriesCoverage} from this coverage which contains
+     * only a subset of the values, and is in-memory.
+     * 
+     * @param tExtent
+     *            The range of times to extract
+     * @param memberNames
+     *            The members to extract
+     * @return An in-memory {@link PointSeriesCoverage} whose domain covers the
+     *         specified time range
+     */
+    public PointSeriesCoverage extractSubCoverage(Extent<TimePosition> tExtent,
+            Set<String> memberNames);
 }

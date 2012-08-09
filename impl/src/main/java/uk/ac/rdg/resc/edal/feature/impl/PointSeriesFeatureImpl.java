@@ -28,11 +28,15 @@
 
 package uk.ac.rdg.resc.edal.feature.impl;
 
+import java.util.Set;
+
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
@@ -68,5 +72,14 @@ public class PointSeriesFeatureImpl extends AbstractFeature implements PointSeri
     @Override
     public VerticalPosition getVerticalPosition() {
         return vPos;
+    }
+
+    @Override
+    public PointSeriesFeature extractSubFeature(Extent<TimePosition> tExtent,
+            Set<String> memberNames) {
+        PointSeriesCoverage subCoverage = coverage.extractSubCoverage(tExtent,
+                memberNames == null ? coverage.getScalarMemberNames() : memberNames);
+        return new PointSeriesFeatureImpl(getName() + " sub-feature", getId() + "-subset",
+                getDescription(), subCoverage, hPos, vPos, getFeatureCollection());
     }
 }
