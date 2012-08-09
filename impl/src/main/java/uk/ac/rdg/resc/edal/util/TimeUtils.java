@@ -144,6 +144,13 @@ public class TimeUtils {
     }
     
     /**
+     * Formats a DateTime as the time only in ISO format Time zone offset is zero (UTC).
+     */
+    public static String formatUTCIsoTimeOnly(TimePosition dateTime) {
+        return ISO_TIME_FORMATTER.print(dateTime.getValue());
+    }
+    
+    /**
      * Formats a DateTime as the time only in the format "HH:mm:ss", e.g.
      * "14:53:03". Time zone offset is zero (UTC).
      */
