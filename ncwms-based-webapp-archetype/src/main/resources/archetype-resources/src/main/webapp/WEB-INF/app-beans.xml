@@ -31,6 +31,7 @@
 	<!-- A sample application controller -->
 	<bean id="appController" class="${groupId}.AppController">
 		<constructor-arg>
+		    <!-- The bean "config" is already defined in edal-ncwms. -->
 			<ref bean="config" />
 		</constructor-arg>
 		<property name="methodNameResolver">
