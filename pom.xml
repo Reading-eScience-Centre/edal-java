@@ -1,192 +1,211 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Top-level POM for Java-CSML library -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>uk.ac.rdg.resc</groupId>
-    <version>0.2.0-SNAPSHOT</version>
-    <artifactId>edal</artifactId>
-    <name>Environmental Data Abstraction Library</name>
-    <packaging>pom</packaging>
-    <url>http://code.google.com/p/edal-java/</url>
-    <inceptionYear>2010</inceptionYear>
-    <description>EDAL (Environmental Data Abstraction Library) is a set of Java libararies that provide a consistent means for accessing and manipulating environmental data. The core concepts are based on the standards-compliant data model of the Climate Science Modelling Language.</description>
-    <organization>
-        <name>Reading e-Science Centre, University of Reading, UK</name>
-        <url>http://www.resc.reading.ac.uk</url>
-    </organization>
-    <licenses>
-        <license>
-            <url>http://edal-java.googlecode.com/hg/licence.txt</url>
-            <name>Modified BSD licence</name>
-            <comments>Permits redistribution and use in source and binary form
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<!-- We inherit from oss-parent so we can deploy to sonatype.org -->
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>uk.ac.rdg.resc</groupId>
+	<version>0.2.0-SNAPSHOT</version>
+	<artifactId>edal</artifactId>
+	<name>Environmental Data Abstraction Library</name>
+	<packaging>pom</packaging>
+	<url>http://code.google.com/p/edal-java/</url>
+	<inceptionYear>2010</inceptionYear>
+	<description>EDAL (Environmental Data Abstraction Library) is a set of Java libararies that provide a consistent means for accessing and manipulating environmental data. The core concepts are based on the standards-compliant data model of the Climate Science Modelling Language.</description>
+	<organization>
+		<name>Reading e-Science Centre, University of Reading, UK</name>
+		<url>http://www.resc.reading.ac.uk</url>
+	</organization>
+	<licenses>
+		<license>
+			<url>http://edal-java.googlecode.com/hg/licence.txt</url>
+			<name>Modified BSD licence</name>
+			<comments>Permits redistribution and use in source and binary form
             provided that the copyright notice is retained (see licence for
             full details).</comments>
-        </license>
-    </licenses>
-    <!-- groupId, developers and build sections are all inherited by child modules -->
-    <developers>
-        <developer>
-            <name>Jon Blower</name>
-            <organization>Reading e-Science Centre, University of Reading, UK</organization>
-            <organizationUrl>http://www.resc.reading.ac.uk</organizationUrl>
-            <email>j.d.blower@reading.ac.uk</email>
-        </developer>
-        <developer>
-            <name>Guy Griffiths</name>
-            <organization>Reading e-Science Centre, University of Reading, UK</organization>
-            <organizationUrl>http://www.resc.reading.ac.uk</organizationUrl>
-            <email>guy.griffiths@reading.ac.uk</email>
-        </developer>
-    </developers>
-    <build>
-        <plugins>
-            <plugin>
-                <!-- Sets the source version to 1.6 -->
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
+		</license>
+	</licenses>
+	<!-- groupId, developers and build sections are all inherited by child modules -->
+	<developers>
+		<developer>
+			<name>Jon Blower</name>
+			<organization>Reading e-Science Centre, University of Reading, UK</organization>
+			<organizationUrl>http://www.resc.reading.ac.uk</organizationUrl>
+			<email>j.d.blower@reading.ac.uk</email>
+		</developer>
+		<developer>
+			<name>Guy Griffiths</name>
+			<organization>Reading e-Science Centre, University of Reading, UK</organization>
+			<organizationUrl>http://www.resc.reading.ac.uk</organizationUrl>
+			<email>guy.griffiths@reading.ac.uk</email>
+		</developer>
+	</developers>
+	<build>
+		<plugins>
+			<plugin>
+				<!-- Sets the source version to 1.6 -->
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
 				<version>2.1</version>
 				<configuration>
-                    <goals>install</goals>
+					<goals>install</goals>
 					<mavenExecutorId>forked-path</mavenExecutorId>
 					<useReleaseProfile>false</useReleaseProfile>
 				</configuration>
 			</plugin>
-        </plugins>
-        <extensions>
-            <!-- Enabling the use of SCP deployment of artefacts -->
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh-external</artifactId>
-            </extension>
-        </extensions>
-    </build>
-    <issueManagement>
-        <system>Google Code</system>
-        <url>http://code.google.com/p/edal-java/issues</url>
-    </issueManagement>
-    <!--<mailingLists>
-        <mailingList>
-            <name>CSML Discussion mailing list</name>
-            <post>csmldiscuss@badc.nerc.ac.uk</post>
-            <subscribe>http://badc.nerc.ac.uk/mailman/listinfo/csmldiscuss</subscribe>
-            <unsubscribe>http://badc.nerc.ac.uk/mailman/listinfo/csmldiscuss</unsubscribe>
-            <archive>http://badc.nerc.ac.uk/pipermail/csmldiscuss/</archive>
-        </mailingList>
-    </mailingLists>-->
-    <reporting>
-        <plugins>
-            <plugin>
-                <!-- Create aggregated javadoc for all modules -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <aggregate>true</aggregate>
-                    <!-- These links really belong in the child POMs but if
-                    we put them there, they don't seem to get picked up when
-                    building the javadoc for the aggregated project.  Therefore
-                    if the versions of any of the dependencies change these
-                    links will also have to be updated. -->
-                    <links>
-                        <link>http://java.sun.com/j2se/1.6.0/docs/api/</link>
-                        <link>http://joda-time.sourceforge.net/api-1.6/</link>
-                        <link>http://geoapi.sourceforge.net/2.2/javadoc/</link>
-                    </links>
-                </configuration>
-            </plugin>
-            <plugin>
-                <!-- Cross-referenced source code, aggregated -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <configuration>
-                    <aggregate>true</aggregate>
-                </configuration>
-            </plugin>
-            <plugin>
-                <!-- Run unit tests and create aggregated report -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <configuration>
-                    <aggregate>true</aggregate>
-                </configuration>
-            </plugin>
-            <plugin>
-                <!-- Generate aggregated TODO list -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>taglist-maven-plugin</artifactId>
-                <configuration>
-                    <aggregate>true</aggregate>
-                    <tags>
-                        <tag>TODO</tag>
-                        <tag>@todo</tag>
-                    </tags>
-                </configuration>
-            </plugin>
-            <plugin>
-                <!-- PMD checks for potential problems in source code -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <configuration>
-                    <aggregate>true</aggregate>
-                    <targetJdk>1.6</targetJdk>
-                </configuration>
-            </plugin>
-            <plugin>
-                <!-- Checkstyle plugin - looks for naughtiness in source code -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <!-- I think the plugin ignores the "aggregate" instruction... -->
-                <configuration>
-                    <aggregate>true</aggregate>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.5</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-    <scm>
-        <connection>scm:hg:https://edal-java.googlecode.com/hg/</connection>
-        <developerConnection>scm:hg:https://edal-java.googlecode.com/hg/</developerConnection>
-        <url>http://code.google.com/p/edal-java/source/browse/</url>
-    </scm>
-    <distributionManagement>
-        <!-- use the following if you're not using a snapshot version. -->
-        <repository>
-            <id>edal-java-release</id>
-            <url>https://edal-java.googlecode.com/hg/repo</url>
-        </repository>
-        <snapshotRepository>
-            <id>edal-snapshots</id>
-            <url>scpexe://sweeney.nerc-essc.ac.uk/users/resc/website/maven</url>
-        </snapshotRepository>
-     </distributionManagement>
-    <modules>
-        <!-- Note that these are relative directory paths, not artifactIds! -->
-        <module>core</module>
-        <module>impl</module>
-        <module>cdm</module>
-        <module>graphics</module>
-        <module>ncwms</module>
-        <module>test</module>
-        <module>ncwms-based-webapp-archetype</module>
-    </modules>
-    <repositories>
-        <repository>
-            <id>geotoolkit</id>
-            <name>Geotoolkit.org project</name>
-            <url>http://maven.geotoolkit.org</url>
-        </repository>
-    </repositories>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<extensions>
+			<!-- Enabling the use of SCP deployment of artefacts -->
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh-external</artifactId>
+			</extension>
+		</extensions>
+	</build>
+	<issueManagement>
+		<system>Google Code</system>
+		<url>http://code.google.com/p/edal-java/issues</url>
+	</issueManagement>
+	<!--<mailingLists> <mailingList> <name>CSML Discussion mailing list</name> 
+		<post>csmldiscuss@badc.nerc.ac.uk</post> <subscribe>http://badc.nerc.ac.uk/mailman/listinfo/csmldiscuss</subscribe> 
+		<unsubscribe>http://badc.nerc.ac.uk/mailman/listinfo/csmldiscuss</unsubscribe> 
+		<archive>http://badc.nerc.ac.uk/pipermail/csmldiscuss/</archive> </mailingList> 
+		</mailingLists> -->
+	<reporting>
+		<plugins>
+			<plugin>
+				<!-- Create aggregated javadoc for all modules -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+					<!-- These links really belong in the child POMs but if we put them 
+						there, they don't seem to get picked up when building the javadoc for the 
+						aggregated project. Therefore if the versions of any of the dependencies 
+						change these links will also have to be updated. -->
+					<links>
+						<link>http://java.sun.com/j2se/1.6.0/docs/api/</link>
+						<link>http://joda-time.sourceforge.net/api-1.6/</link>
+						<link>http://geoapi.sourceforge.net/2.2/javadoc/</link>
+					</links>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Cross-referenced source code, aggregated -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Run unit tests and create aggregated report -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Generate aggregated TODO list -->
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>taglist-maven-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+					<tags>
+						<tag>TODO</tag>
+						<tag>@todo</tag>
+					</tags>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- PMD checks for potential problems in source code -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+					<targetJdk>1.6</targetJdk>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Checkstyle plugin - looks for naughtiness in source code -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<!-- I think the plugin ignores the "aggregate" instruction... -->
+				<configuration>
+					<aggregate>true</aggregate>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.5</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<scm>
+		<connection>scm:hg:https://edal-java.googlecode.com/hg/</connection>
+		<developerConnection>scm:hg:https://edal-java.googlecode.com/hg/</developerConnection>
+		<url>http://code.google.com/p/edal-java/source/browse/</url>
+	</scm>
+	<distributionManagement>
+		<!-- use the following if you're not using a snapshot version. -->
+		<repository>
+			<id>edal-java-release</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+		<snapshotRepository>
+			<id>edal-snapshots</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<modules>
+		<!-- Note that these are relative directory paths, not artifactIds! -->
+		<module>core</module>
+		<module>impl</module>
+		<module>cdm</module>
+		<module>graphics</module>
+		<module>ncwms</module>
+		<module>test</module>
+		<module>ncwms-based-webapp-archetype</module>
+	</modules>
 </project>
