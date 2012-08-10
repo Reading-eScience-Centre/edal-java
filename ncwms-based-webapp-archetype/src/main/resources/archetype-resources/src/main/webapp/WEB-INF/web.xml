@@ -8,13 +8,17 @@
 
 <!-- This web.xml file just delegates to the main ncWMS web.xml and an additional 
 	app-web.xml. If no additional web.xml configuration is required for your 
-	project, you can safely delete this file and the app-web.xml. If you do want 
+	project, you can safely delete this file and app-web.xml. If you do want 
 	app-specific web.xml configuration, it should be put in the app-web.xml file -->
 
-<web-app xmlns="http://java.sun.com/xml/ns/javaee"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-      version="3.0">
+<!-- Note that the main ncWMS web.xml sends all requests of the form http://server/webapp/vendor/* 
+	to the main WMS servlet, so if you want to use those URLs to extend the WMS 
+	servlet, no additional configuration is needed here or in app-web.xml. See 
+	app-beans.xml for an example -->
+
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	version="3.0">
 
 	&ncwms;
 	&app;
