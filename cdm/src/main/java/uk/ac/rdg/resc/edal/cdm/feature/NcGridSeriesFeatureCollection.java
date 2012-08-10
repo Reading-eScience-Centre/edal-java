@@ -203,9 +203,12 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
 
             for (String xyVarIDs : xyComponents.keySet()) {
                 XYVarIDs xyData = xyComponents.get(xyVarIDs);
+                coverage.getScalarMetadata(xyData.xVarId);
+                coverage.getScalarMetadata(xyData.yVarId);
                 String description = xyVarIDs.replaceAll("_", " ");
-                VectorPlugin vectorPlugin = new VectorPlugin(xyData.xVarId, xyData.yVarId,
-                        xyVarIDs, description);
+                VectorPlugin vectorPlugin = new VectorPlugin(
+                        coverage.getScalarMetadata(xyData.xVarId),
+                        coverage.getScalarMetadata(xyData.yVarId), xyVarIDs, description);
                 coverage.addPlugin(vectorPlugin);
             }
         }
@@ -269,8 +272,6 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
                 throw new IllegalArgumentException(
                         "You have specified wildcards in the path, but the NetCDF files don't all have time axes.  We can only automatically aggregate along time axes.");
             }
-            System.out.println(ncFile);
-            System.out.println(timeDimensionName);
             /*
              * Now that we have the name of the time dimension, write an
              * ncml file, and set the location to that
