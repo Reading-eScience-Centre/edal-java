@@ -33,6 +33,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.impl.GridSeriesCoverageImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
@@ -157,8 +159,12 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
 
                     GridValuesMatrix<Float> gridValueMatrix = new NcGridValuesMatrix4D(
                             hGrid.getXAxis(), hGrid.getYAxis(), vAxis, tAxis, filename, varId);
+                    /*
+                     * We want to be able to plot gridded data as boxfill, point, contour, or grid points
+                     */
                     coverage.addMember(varId, domain, description, phenomenon, units,
-                            gridValueMatrix);
+                            gridValueMatrix, Arrays.asList(PlotStyle.BOXFILL, PlotStyle.POINT,
+                                    PlotStyle.CONTOUR, PlotStyle.GRID_POINTS));
 
                     /*
                      * Now deal with elements which may be part of a compound

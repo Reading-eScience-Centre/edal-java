@@ -40,6 +40,7 @@ import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.Coverage;
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
+import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.RangeMetadataImpl;
@@ -131,7 +132,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
     }
 
     protected void addMemberToMetadata(String memberName, GD domain, String description,
-            Phenomenon parameter, Unit units, Class<?> valueType) {
+            Phenomenon parameter, Unit units, Class<?> valueType, List<PlotStyle> availablePlotStyles) {
         /*
          * Throw an exception if we already have this variable in the coverage
          */
@@ -149,7 +150,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
                  * the parent metadata, and the flat variable->metadata map
                  */
                 ScalarMetadataImpl scalarMetadata = new ScalarMetadataImpl(memberName, description,
-                        parameter, units, valueType);
+                        parameter, units, valueType, availablePlotStyles);
                 metadata.addMember(scalarMetadata);
                 varId2Metadata.put(memberName, scalarMetadata);
             } else {

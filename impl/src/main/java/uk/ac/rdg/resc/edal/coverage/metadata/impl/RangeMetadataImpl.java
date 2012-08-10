@@ -28,8 +28,10 @@
 
 package uk.ac.rdg.resc.edal.coverage.metadata.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -71,20 +73,20 @@ public class RangeMetadataImpl implements RangeMetadata {
     /*
      * Finds the top level parent of this metadata tree
      */
-    private static RangeMetadata getTopParentOf(RangeMetadata metadata){
-        if(metadata.getParent() == null){
+    private static RangeMetadata getTopParentOf(RangeMetadata metadata) {
+        if (metadata.getParent() == null) {
             return metadata;
         } else {
             return getTopParentOf(metadata.getParent());
         }
     }
-    
+
     /*
      * Finds all members below the specified metadata
      */
     private static Set<String> getChildrenOf(RangeMetadata metadata) {
         Set<String> children = new HashSet<String>();
-    
+
         Set<String> set = metadata.getMemberNames();
         for (String member : set) {
             RangeMetadata memberMetadata = metadata.getMemberMetadata(member);
@@ -131,52 +133,47 @@ public class RangeMetadataImpl implements RangeMetadata {
     public RangeMetadata getParent() {
         return parent;
     }
-    
+
     @Override
-    public void setParentMetadata(RangeMetadata parent){
+    public void setParentMetadata(RangeMetadata parent) {
         this.parent = parent;
     }
 
     @Override
     public RangeMetadata clone() throws CloneNotSupportedException {
         RangeMetadataImpl rangeMetadata = new RangeMetadataImpl(name, description);
-        for(RangeMetadata member : members.values()){
+        for (RangeMetadata member : members.values()) {
             rangeMetadata.addMember(member.clone());
         }
         return rangeMetadata;
     }
-    
-    /**
-     * This removes all members of the metadata which do not appear in members
-     * 
-     * @param metadata
-     *            the {@link RangeMetadata} object
-     * @param members
-     *            the members to keep
-     */
-    public static RangeMetadata getCopyOfMetadataContaining(RangeMetadata metadata, Set<String> members){
-        RangeMetadata newMetadata = null;
-        try {
-            newMetadata = metadata.clone();
-        
-            Set<String> memberNames = new HashSet<String>(newMetadata.getMemberNames());
-            for(String memberName : memberNames){
-                RangeMetadata memberMetadata = newMetadata.getMemberMetadata(memberName);
-                if(memberMetadata instanceof ScalarMetadata){
-                    if(!members.contains(memberName)){
-                        newMetadata.removeMember(memberName);
-                    }
-                } else {
-                    memberMetadata = getCopyOfMetadataContaining(memberMetadata, members);
-                    if(memberMetadata.getMemberNames().size() == 0){
-                        newMetadata.removeMember(memberName);
-                    }
-                }
+
+    private List<ScalarMetadata> plottableChildren = null;
+
+    public void setChildrenToPlot(List<String> plottableChildrenIds) {
+        plottableChildren = new ArrayList<ScalarMetadata>();
+        plottableChildren.addAll(getScalarRepresentatives(this, plottableChildrenIds));
+    }
+
+    private List<ScalarMetadata> getScalarRepresentatives(RangeMetadata parentMetadata,
+            List<String> representativeChildren) {
+        List<ScalarMetadata> ret = new ArrayList<ScalarMetadata>();
+
+        for (String representativeChild : representativeChildren) {
+            RangeMetadata memberMetadata = parentMetadata.getMemberMetadata(representativeChild);
+            if (memberMetadata == null) {
+                continue;
+            } else if (memberMetadata instanceof ScalarMetadata) {
+                ret.add((ScalarMetadata) memberMetadata);
+            } else {
+                ret.addAll(getScalarRepresentatives(memberMetadata, representativeChildren));
             }
-        } catch (CloneNotSupportedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
-        return newMetadata;
+        return ret;
+    }
+
+    @Override
+    public List<ScalarMetadata> getRepresentativeChildren() {
+        return plottableChildren;
     }
 }

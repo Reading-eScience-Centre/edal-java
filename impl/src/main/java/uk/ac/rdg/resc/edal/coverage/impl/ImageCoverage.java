@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.coverage.impl;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -46,6 +47,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.InMemoryGridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
@@ -106,8 +108,8 @@ public class ImageCoverage extends GridCoverage2DImpl
     @Override
     public ScalarMetadata getScalarMetadata(String memberName) {
         this.checkMemberName(memberName);
-        return new ScalarMetadataImpl(memberName, memberName,
-            Phenomenon.getPhenomenon("none"), Unit.getUnit("none"), getValueType(memberName));
+        return new ScalarMetadataImpl(memberName, memberName, Phenomenon.getPhenomenon("none"),
+                Unit.getUnit("none"), getValueType(memberName), Arrays.asList(PlotStyle.BOXFILL));
     }
     
     private static Class<?> getValueType(String memberName)
@@ -124,6 +126,7 @@ public class ImageCoverage extends GridCoverage2DImpl
         
         return new InMemoryGridValuesMatrix<Object>() {
             @Override
+            @SuppressWarnings("unchecked")
             public Class<Object> getValueType() {
                 return (Class<Object>) ImageCoverage.getValueType(memberName);
             }

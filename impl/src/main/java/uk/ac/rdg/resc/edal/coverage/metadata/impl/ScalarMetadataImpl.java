@@ -29,10 +29,12 @@
 package uk.ac.rdg.resc.edal.coverage.metadata.impl;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
+import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
@@ -52,13 +54,36 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     private final Class<?> clazz;
     private RangeMetadata parent = null;
 
-    public ScalarMetadataImpl(String name, String description,
-            Phenomenon parameter, Unit units, Class<?> clazz) {
+    private final List<PlotStyle> allowedPlotStyles;
+
+    /**
+     * Instantiates the {@link ScalarMetadata} object
+     * 
+     * @param name
+     *            The unique identifier of the field
+     * @param description
+     *            A human-readable description of the field
+     * @param parameter
+     *            The {@link Phenomenon} this field represents
+     * @param units
+     *            The {@link Unit}s of the data represented by this field
+     * @param clazz
+     *            The {@link Class} returned by calls to evaluate on this field
+     * @param allowedPlotStyles
+     *            The available plotting styles for this field, with the first
+     *            being the default. Must contain at least one style
+     */
+    public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units,
+            Class<?> clazz, List<PlotStyle> allowedPlotStyles) {
+        if(allowedPlotStyles == null || allowedPlotStyles.size() == 0){
+            throw new IllegalArgumentException("You must provide at least one allowed plotting style");
+        }
         this.name = name;
         this.description = description;
         this.parameter = parameter;
         this.units = units;
         this.clazz = clazz;
+        this.allowedPlotStyles = allowedPlotStyles;
     }
 
     @Override
@@ -100,7 +125,7 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     public RangeMetadata getParent() {
         return this.parent;
     }
-    
+
     @Override
     public void setParentMetadata(RangeMetadata parent) {
         this.parent = parent;
@@ -172,9 +197,27 @@ public class ScalarMetadataImpl implements ScalarMetadata {
             return false;
         return true;
     }
-    
+
     @Override
     public ScalarMetadata clone() throws CloneNotSupportedException {
-        return new ScalarMetadataImpl(name, description, parameter, units, clazz);
+        return new ScalarMetadataImpl(name, description, parameter, units, clazz, allowedPlotStyles);
+    }
+
+    @Override
+    public List<ScalarMetadata> getRepresentativeChildren() {
+        /*
+         * This is scalar, so it never has any children to plot
+         */
+        return null;
+    }
+
+    @Override
+    public PlotStyle getDefaultPlotStyle() {
+        return allowedPlotStyles.get(0);
+    }
+
+    @Override
+    public List<PlotStyle> getAllowedPlotStyles() {
+        return allowedPlotStyles;
     }
 }

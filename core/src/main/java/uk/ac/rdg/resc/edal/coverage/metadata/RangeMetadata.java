@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.metadata;
 
+import java.util.List;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.coverage.Coverage;
@@ -95,16 +96,38 @@ public interface RangeMetadata extends Cloneable {
      * @return the removed member
      */
     public RangeMetadata removeMember(String memberName);
-    
+
     /**
-     * Overrides the clone() method.  This is convenient for extracting
+     * Overrides the clone() method. This is convenient for extracting
      * sub-features which share metadata.
      */
     public RangeMetadata clone() throws CloneNotSupportedException;
-    
+
     /**
      * Sets the parent metadata.
+     * 
      * @param metadata
      */
-    void setParentMetadata(RangeMetadata metadata);
+    public void setParentMetadata(RangeMetadata metadata);
+
+    /**
+     * Gets the children (direct and indirect) of this {@link RangeMetadata}
+     * which can be layered to create a plot representative of this parent
+     * object.
+     * 
+     * The first object will be representative of the values (i.e. what you
+     * would expect to return if you evaluated the member), units, etc
+     * 
+     * The order should represent the order of plotting, from bottom to top
+     * where possible.
+     * 
+     * For example, if this is a VectorMetadata, we will likely return the
+     * magnitude and direction children, in that order.
+     * 
+     * In many cases, this will return null. This indicates that we should never
+     * pass this member to a plottiing routine
+     * 
+     * @return
+     */
+    public List<ScalarMetadata> getRepresentativeChildren();
 }

@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.metadata;
 
+import java.util.List;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.Phenomenon;
@@ -70,4 +71,15 @@ public interface ScalarMetadata extends RangeMetadata {
      */
     public Class<?> getValueType();
 
+    /**
+     * Gets the default {@link PlotStyle} for this field
+     * @return
+     */
+    public PlotStyle getDefaultPlotStyle();
+    
+    /**
+     * Gets the {@link PlotStyle}s which make sense for this field
+     * @return
+     */
+    public List<PlotStyle> getAllowedPlotStyles();
 }

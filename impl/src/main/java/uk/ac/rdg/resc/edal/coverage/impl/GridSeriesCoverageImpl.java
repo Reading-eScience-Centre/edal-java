@@ -48,7 +48,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.impl.RangeMetadataImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
 import uk.ac.rdg.resc.edal.coverage.plugins.Plugin;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -100,13 +100,13 @@ public class GridSeriesCoverageImpl extends
         int tIndex = 0;
         if (getDomain().getTimeAxis() != null)
             tIndex = getDomain().getTimeAxis().findIndexOf(tPos);
-        
+
         /*
          * TODO - We may want to extract a parent member - i.e. one that is not
          * a scalar member, but represents all of its children
          */
-        
-        if(memberNames == null){
+
+        if (memberNames == null) {
             memberNames = getScalarMemberNames();
         }
 
@@ -128,9 +128,9 @@ public class GridSeriesCoverageImpl extends
             valuesMap.put(name, values);
             metadataMap.put(name, this.getScalarMetadata(name));
         }
-        
-        RangeMetadata rangeMetadata = RangeMetadataImpl.getCopyOfMetadataContaining(getRangeMetadata(),
-                memberNames);
+
+        RangeMetadata rangeMetadata = MetadataUtils.getCopyOfMetadataContaining(
+                getRangeMetadata(), memberNames);
 
         // Now assemble the remaining properties of the target coverage
         return new InMemoryGridCoverage2D(targetGrid, valuesMap, metadataMap, rangeMetadata,
@@ -140,11 +140,12 @@ public class GridSeriesCoverageImpl extends
     @Override
     public ProfileCoverage extractProfileCoverage(HorizontalPosition pos, TimePosition time,
             Set<String> memberNames) {
-        if(getDomain().getVerticalAxis() == null){
+        if (getDomain().getVerticalAxis() == null) {
             throw new IllegalArgumentException(
                     "Cannot extract a profile coverage from a coverage with no z-axis");
         }
-        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos).getGridCoordinates();
+        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos)
+                .getGridCoordinates();
         int x = hPos.getXIndex();
         int y = hPos.getYIndex();
         int t = 0;
@@ -162,7 +163,8 @@ public class GridSeriesCoverageImpl extends
             ScalarMetadata memberMetadata = getScalarMetadata(memberName);
             pCoverage.addMember(memberName, domain, memberMetadata.getDescription(),
                     memberMetadata.getParameter(), memberMetadata.getUnits(),
-                    memberCoverage.getValues(), memberMetadata.getValueType());
+                    memberCoverage.getValues(), memberMetadata.getValueType(),
+                    memberMetadata.getAllowedPlotStyles());
         }
         return pCoverage;
     }
@@ -170,11 +172,12 @@ public class GridSeriesCoverageImpl extends
     @Override
     public PointSeriesCoverage extractPointSeriesCoverage(HorizontalPosition pos,
             VerticalPosition zPos, Extent<? extends TimePosition> tExtent, Set<String> memberNames) {
-        if(getDomain().getTimeAxis() == null){
+        if (getDomain().getTimeAxis() == null) {
             throw new IllegalArgumentException(
                     "Cannot extract a point series coverage from a coverage with no time axis");
         }
-        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos).getGridCoordinates();
+        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos)
+                .getGridCoordinates();
         int x = hPos.getXIndex();
         int y = hPos.getYIndex();
         int z = 0;
@@ -187,7 +190,7 @@ public class GridSeriesCoverageImpl extends
          * We use tmax+1 because subList is exclusive of the last value
          */
         PointSeriesDomain domain = new PointSeriesDomainImpl(getDomain().getTimeAxis()
-                .getCoordinateValues().subList(tmin, tmax+1));
+                .getCoordinateValues().subList(tmin, tmax + 1));
         PointSeriesCoverageImpl psCoverage = new PointSeriesCoverageImpl("Point series coverage",
                 domain);
         for (String memberName : memberNames) {
@@ -196,7 +199,8 @@ public class GridSeriesCoverageImpl extends
             ScalarMetadata memberMetadata = getScalarMetadata(memberName);
             psCoverage.addMember(memberName, domain, memberMetadata.getDescription(),
                     memberMetadata.getParameter(), memberMetadata.getUnits(),
-                    memberCoverage.getValues(), memberMetadata.getValueType());
+                    memberCoverage.getValues(), memberMetadata.getValueType(),
+                    memberMetadata.getAllowedPlotStyles());
         }
         return psCoverage;
     }
