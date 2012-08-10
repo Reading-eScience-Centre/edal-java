@@ -32,7 +32,7 @@ import uk.ac.rdg.resc.edal.coverage.impl.TrajectoryCoverageImpl;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent;
-import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent.VectorDirection;
+import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent.VectorComponentType;
 import uk.ac.rdg.resc.edal.coverage.metadata.VectorMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
 import uk.ac.rdg.resc.edal.feature.Feature;
@@ -187,9 +187,9 @@ public class MapPlotter {
                  */
                 plotStyle = PlotStyle.GRID_POINTS;
             } else if (scalarMetadata instanceof VectorComponent
-                    && ((VectorComponent) scalarMetadata).getDirection() == VectorDirection.DIRECTION) {
+                    && ((VectorComponent) scalarMetadata).getComponentType() == VectorComponentType.DIRECTION) {
                 /*
-                 * We always plot direction fields with vector style
+                 * We plot direction fields with vector style as default
                  */
                 plotStyle = PlotStyle.VECTOR;
             }
@@ -349,10 +349,10 @@ public class MapPlotter {
                     String magnitudeMember = null;
                     String directionMember = null;
                     for (String vectorComponentMember : memberMetadata.getMemberNames()) {
-                        if (vectorMetadata.getMemberMetadata(vectorComponentMember).getDirection() == VectorDirection.DIRECTION)
+                        if (vectorMetadata.getMemberMetadata(vectorComponentMember).getComponentType() == VectorComponentType.DIRECTION)
                             directionMember = vectorComponentMember;
                         else if (vectorMetadata.getMemberMetadata(vectorComponentMember)
-                                .getDirection() == VectorDirection.MAGNITUDE)
+                                .getComponentType() == VectorComponentType.MAGNITUDE)
                             magnitudeMember = vectorComponentMember;
 
                     }

@@ -7,10 +7,10 @@ import uk.ac.rdg.resc.edal.coverage.metadata.VectorMetadata;
 
 public class VectorComponentImpl extends ScalarMetadataImpl implements VectorComponent {
 
-    private VectorDirection direction;
+    private VectorComponentType direction;
 
     public VectorComponentImpl(String name, String description,
-            Phenomenon parameter, Unit units, Class<?> clazz, VectorDirection direction) {
+            Phenomenon parameter, Unit units, Class<?> clazz, VectorComponentType direction) {
         super(name, description, parameter, units, clazz);
         this.direction = direction;
     }
@@ -21,7 +21,7 @@ public class VectorComponentImpl extends ScalarMetadataImpl implements VectorCom
     }
 
     @Override
-    public VectorDirection getDirection() {
+    public VectorComponentType getComponentType() {
         return direction;
     }
     
