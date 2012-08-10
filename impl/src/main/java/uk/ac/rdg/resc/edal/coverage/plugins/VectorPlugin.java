@@ -56,7 +56,12 @@ import uk.ac.rdg.resc.edal.coverage.metadata.impl.VectorMetadataImpl;
  */
 public class VectorPlugin extends Plugin {
 
+    private final String description;
     private final String commonStandardName;
+    private final String xName;
+    private final String yName;
+    private final String magName;
+    private final String dirName;
 
     /**
      * Instantiate a new {@link VectorPlugin}
@@ -75,22 +80,27 @@ public class VectorPlugin extends Plugin {
      * @param description
      *            a description of the new {@link RangeMetadata}
      */
-    public VectorPlugin(String xCompId, String yCompId, String commonStandardName,
+    public VectorPlugin(ScalarMetadata xCompMetadata, ScalarMetadata yCompMetadata, String commonStandardName,
             String description) {
-        super(Arrays.asList(xCompId, yCompId), Arrays.asList("X", "Y", "MAG", "DIR"), description);
+        super(Arrays.asList((RangeMetadata) xCompMetadata, (RangeMetadata) yCompMetadata));
+        this.description = description;
         this.commonStandardName = commonStandardName;
+        this.xName = getParentName() + "_X";
+        this.yName = getParentName() + "_Y";
+        this.magName = getParentName() + "_MAG";
+        this.dirName = getParentName() + "_DIR";
     }
 
     @Override
     protected Object generateValue(String component, List<Object> values) {
-        if ("X".equals(component)) {
+        if (xName.equals(component)) {
             return values.get(0);
-        } else if ("Y".equals(component)) {
+        } else if (yName.equals(component)) {
             return values.get(1);
-        } else if ("MAG".equals(component)) {
+        } else if (magName.equals(component)) {
             return (float) Math.sqrt(Math.pow((Float) values.get(0), 2)
                     + Math.pow((Float) values.get(1), 2));
-        } else if ("DIR".equals(component)) {
+        } else if (dirName.equals(component)) {
             return (float) Math.atan2((Float) values.get(1), (Float) values.get(0));
         } else {
             throw new IllegalArgumentException("This Plugin does not provide the field "
@@ -100,13 +110,13 @@ public class VectorPlugin extends Plugin {
 
     @Override
     protected Class<?> generateValueType(String component, List<Class<?>> classes) {
-        if ("X".equals(component)) {
+        if (xName.equals(component)) {
             return classes.get(0);
-        } else if ("Y".equals(component)) {
+        } else if (yName.equals(component)) {
             return classes.get(1);
-        } else if ("MAG".equals(component)) {
+        } else if (magName.equals(component)) {
             return Float.class;
-        } else if ("DIR".equals(component)) {
+        } else if (dirName.equals(component)) {
             return Float.class;
         } else {
             throw new IllegalArgumentException("This Plugin does not provide the field "
@@ -120,23 +130,26 @@ public class VectorPlugin extends Plugin {
     private VectorComponent dirMetadata = null;
     
     @Override
-    protected RangeMetadata generateRangeMetadata(List<ScalarMetadata> metadataList) {
-        VectorMetadata metadata = new VectorMetadataImpl(getParentName(), getDescription());
+    protected RangeMetadata generateRangeMetadata(List<RangeMetadata> metadataList) {
+        /*
+         * The casts to ScalarMetadata are fine, because
+         */
+        VectorMetadata metadata = new VectorMetadataImpl(getParentName(), description);
         if (xMetadata == null) {
-            ScalarMetadata sMetadata = metadataList.get(0);
-            xMetadata = new VectorComponentImpl(getParentName() + "_X", sMetadata.getDescription(),
+            ScalarMetadata sMetadata = (ScalarMetadata) metadataList.get(0);
+            xMetadata = new VectorComponentImpl(xName, sMetadata.getDescription(),
                     sMetadata.getParameter(), sMetadata.getUnits(), sMetadata.getValueType(),
                     VectorDirection.X);
         }
         if (yMetadata == null) {
-            ScalarMetadata sMetadata = metadataList.get(1);
-            yMetadata = new VectorComponentImpl(getParentName() + "_Y", sMetadata.getDescription(),
+            ScalarMetadata sMetadata = (ScalarMetadata) metadataList.get(1);
+            yMetadata = new VectorComponentImpl(yName, sMetadata.getDescription(),
                     sMetadata.getParameter(), sMetadata.getUnits(), sMetadata.getValueType(),
                     VectorDirection.Y);
         }
         if (magMetadata == null) {
-            ScalarMetadata xComponentMetadata = metadataList.get(0);
-            ScalarMetadata yComponentMetadata = metadataList.get(1);
+            ScalarMetadata xComponentMetadata = (ScalarMetadata) metadataList.get(0);
+            ScalarMetadata yComponentMetadata = (ScalarMetadata) metadataList.get(1);
             String description;
             String xDesc = xComponentMetadata.getDescription(); 
             String yDesc = yComponentMetadata.getDescription(); 
@@ -147,15 +160,15 @@ public class VectorPlugin extends Plugin {
             } else {
                 description = "Magnitude of (" + xDesc + ", " + yDesc + ")";
             }
-            magMetadata = new VectorComponentImpl(getParentName() + "_MAG", description,
+            magMetadata = new VectorComponentImpl(magName, description,
                     Phenomenon.getPhenomenon(commonStandardName.replaceFirst("velocity", "speed"),
                             PhenomenonVocabulary.CLIMATE_AND_FORECAST),
                     xComponentMetadata.getUnits(), xComponentMetadata.getValueType(),
                     VectorDirection.MAGNITUDE);
         }
         if (dirMetadata == null) {
-            ScalarMetadata xComponentMetadata = metadataList.get(0);
-            ScalarMetadata yComponentMetadata = metadataList.get(1);
+            ScalarMetadata xComponentMetadata = (ScalarMetadata) metadataList.get(0);
+            ScalarMetadata yComponentMetadata = (ScalarMetadata) metadataList.get(1);
             String description;
             String xDesc = xComponentMetadata.getDescription(); 
             String yDesc = yComponentMetadata.getDescription(); 
@@ -166,7 +179,7 @@ public class VectorPlugin extends Plugin {
             } else {
                 description = "Direction of (" + xDesc + ", " + yDesc + ")";
             }
-            dirMetadata = new VectorComponentImpl(getParentName() + "_DIR", description,
+            dirMetadata = new VectorComponentImpl(dirName, description,
                     Phenomenon.getPhenomenon(
                             commonStandardName.replaceFirst("velocity", "direction"),
                             PhenomenonVocabulary.UNKNOWN), Unit.getUnit("rad",
@@ -182,13 +195,13 @@ public class VectorPlugin extends Plugin {
 
     @Override
     protected ScalarMetadata getScalarMetadata(String memberName) {
-        if ("X".equals(memberName)) {
+        if (xName.equals(memberName)) {
             return xMetadata;
-        } else if ("Y".equals(memberName)) {
+        } else if (yName.equals(memberName)) {
             return yMetadata;
-        } else if ("MAG".equals(memberName)) {
+        } else if (magName.equals(memberName)) {
             return magMetadata;
-        } else if ("DIR".equals(memberName)) {
+        } else if (dirName.equals(memberName)) {
             return dirMetadata;
         } else {
             throw new IllegalArgumentException(memberName + " is not provided by this plugin");

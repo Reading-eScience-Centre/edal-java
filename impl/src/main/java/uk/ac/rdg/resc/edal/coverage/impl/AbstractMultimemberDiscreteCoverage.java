@@ -168,6 +168,12 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
      */
     public void addPlugin(Plugin plugin) {
         /*
+         * Initialise the plugin. This will build the metadata tree and
+         * calculate what the plugin provides
+         */
+        plugin.init();
+
+        /*
          * Check that we have the variables needed for this plugin. We use
          * getAllMembers() to allow plugins to use variables that are already
          * provided by other plugins. This automatically allows us to create
@@ -229,12 +235,12 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
         /*
          * Generate the full metadata tree
          */
-        RangeMetadata rangeMetadata = plugin.generateMetadataTree(oldMetadata);
+        RangeMetadata rangeMetadata = plugin.getRangeMetadata();
         /*
          * Add the metadata tree to its parent
          */
         parentMetadata.addMember(rangeMetadata);
-        
+
         /*
          * Now:
          * 
@@ -243,7 +249,7 @@ public abstract class AbstractMultimemberDiscreteCoverage<P, DO, GD extends Disc
          * Get the individual member metadata and put it in the
          * variable->metadata map
          */
-        for(String newMember : plugin.provides()){
+        for (String newMember : plugin.provides()) {
             plugins.put(newMember, plugin);
             ScalarMetadata memberMetadata = plugin.getMemberMetadata(newMember);
             varId2Metadata.put(newMember, memberMetadata);
