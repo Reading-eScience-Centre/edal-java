@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.impl;
 
+import java.util.List;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.coverage.Coverage;
@@ -134,6 +135,12 @@ public abstract class AbstractCoverage<P> implements Coverage<P> {
             @Override
             public void setParentMetadata(RangeMetadata metadata) {
                 throw new UnsupportedOperationException("This is a top-level RangeMetadata object");
+            }
+
+            @Override
+            public List<ScalarMetadata> getRepresentativeChildren() {
+                // By default, a parent object is not plottable
+                return null;
             }
         };
     }

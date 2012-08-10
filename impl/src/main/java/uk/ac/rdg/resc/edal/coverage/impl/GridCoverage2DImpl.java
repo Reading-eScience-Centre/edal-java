@@ -38,7 +38,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.impl.RangeMetadataImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
 import uk.ac.rdg.resc.edal.coverage.plugins.Plugin;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
@@ -96,7 +96,7 @@ public class GridCoverage2DImpl extends
         }
         
         RangeMetadata rangeMetadata = getRangeMetadata();
-        RangeMetadataImpl.getCopyOfMetadataContaining(rangeMetadata, memberNames);
+        MetadataUtils.getCopyOfMetadataContaining(rangeMetadata, memberNames);
 
         // Now assemble the remaining properties of the target coverage
         return new InMemoryGridCoverage2D(targetGrid, valuesMap, metadataMap, rangeMetadata,

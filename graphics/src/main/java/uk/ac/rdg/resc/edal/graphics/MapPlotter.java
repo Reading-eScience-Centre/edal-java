@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,9 +30,9 @@ import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.TrajectoryCoverageImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent;
 import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent.VectorComponentType;
 import uk.ac.rdg.resc.edal.coverage.metadata.VectorMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
@@ -126,11 +127,32 @@ public class MapPlotter {
         if (frame == null) {
             frame = new Frame(width, height, label);
         }
-
-        if(plotStyle == PlotStyle.DEFAULT){
-            plotStyle = getDefaultPlotStyle(feature, memberName);
-        }
         
+        RangeMetadata metadata = MetadataUtils.getMetadataForFeatureMember(feature, memberName);
+        if(metadata instanceof ScalarMetadata){
+            addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, (ScalarMetadata) metadata);
+        } else {
+            List<ScalarMetadata> representativeChildren = metadata.getRepresentativeChildren();
+            if(representativeChildren != null){
+                for(ScalarMetadata representativeChildMetadata : representativeChildren){
+                    addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, representativeChildMetadata);
+                }
+            }
+        }
+
+        
+
+        if (!frameData.containsKey(tPos)) {
+            frameData.put(tPos, frame);
+        }
+    }
+    
+    private void addScalarMemberToFrame(Frame frame, Feature feature,VerticalPosition vPos,
+            TimePosition tPos, String label, PlotStyle plotStyle, ScalarMetadata metadata){
+        if(plotStyle == PlotStyle.DEFAULT){
+            plotStyle = metadata.getDefaultPlotStyle();
+        }
+        String memberName = metadata.getName();
         if (feature instanceof GridSeriesFeature) {
             addGridSeriesFeatureToFrame((GridSeriesFeature) feature, memberName, vPos, tPos, label,
                     plotStyle, frame);
@@ -149,52 +171,6 @@ public class MapPlotter {
             throw new UnsupportedOperationException("Plotting of features of the type "
                     + feature.getClass() + " on a map is not yet supported");
         }
-
-        if (!frameData.containsKey(tPos)) {
-            frameData.put(tPos, frame);
-        }
-    }
-    
-    private PlotStyle getDefaultPlotStyle(Feature feature, String memberName) {
-        /*
-         * Start with BOXFILL as a default
-         */
-        PlotStyle plotStyle = PlotStyle.BOXFILL;
-        
-        /*
-         * Now narrow down by feature type
-         */
-        if (feature instanceof GridSeriesFeature) {
-            plotStyle = PlotStyle.BOXFILL;
-        } else if (feature instanceof GridFeature) {
-            plotStyle = PlotStyle.BOXFILL;
-        } else if (feature instanceof PointSeriesFeature) {
-            plotStyle = PlotStyle.POINT;
-        } else if (feature instanceof ProfileFeature) {
-            plotStyle = PlotStyle.POINT;
-        } else if (feature instanceof TrajectoryFeature) {
-            plotStyle = PlotStyle.TRAJECTORY;
-        }
-        /*
-         * Now specialise by checking if we have numbers or only directional data
-         */
-        if (feature.getCoverage().getScalarMemberNames().contains(memberName)) {
-            ScalarMetadata scalarMetadata = feature.getCoverage().getScalarMetadata(memberName);
-            if (scalarMetadata.getValueType().equals(Object.class)) {
-                /*
-                 * We have non-numeric data. All we can do here is plot the grid
-                 * points
-                 */
-                plotStyle = PlotStyle.GRID_POINTS;
-            } else if (scalarMetadata instanceof VectorComponent
-                    && ((VectorComponent) scalarMetadata).getComponentType() == VectorComponentType.DIRECTION) {
-                /*
-                 * We plot direction fields with vector style as default
-                 */
-                plotStyle = PlotStyle.VECTOR;
-            }
-        }
-        return plotStyle;
     }
 
     private void addGridSeriesFeatureToFrame(GridSeriesFeature feature, String memberName,
@@ -648,7 +624,7 @@ public class MapPlotter {
                     public long sizeAsLong() {
                         return values.size();
                     }
-                }, Float.class);
+                }, Float.class, Arrays.asList(PlotStyle.TRAJECTORY, PlotStyle.POINT, PlotStyle.GRID_POINTS));
         MapStyleDescriptor style = new MapStyleDescriptor();
         TrajectoryFeature feature = new TrajectoryFeatureImpl("Trajectory feature", "tfeature",
                 "long winded description", coverage, null);

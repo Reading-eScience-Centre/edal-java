@@ -61,8 +61,7 @@ public class PointSeriesCoverageImpl extends
             Set<String> memberNames) {
         List<TimePosition> times = new ArrayList<TimePosition>();
         for (TimePosition time : getDomain().getTimes()) {
-            if (time.compareTo(tExtent.getLow()) >= 0
-                    && time.compareTo(tExtent.getHigh()) <= 0) {
+            if (time.compareTo(tExtent.getLow()) >= 0 && time.compareTo(tExtent.getHigh()) <= 0) {
                 times.add(time);
             }
         }
@@ -70,15 +69,15 @@ public class PointSeriesCoverageImpl extends
         PointSeriesCoverageImpl subCoverage = new PointSeriesCoverageImpl(getDescription(), domain);
 
         long fromIndex = getDomain().findIndexOf(times.get(0));
-        long toIndex = getDomain().findIndexOf(times.get(times.size()-1))+1;
+        long toIndex = getDomain().findIndexOf(times.get(times.size() - 1)) + 1;
         for (String memberName : memberNames) {
             BigList<?> allValues = getValues(memberName);
-            LittleBigList<Object> requiredValues = new LittleBigList<Object>(); 
+            LittleBigList<Object> requiredValues = new LittleBigList<Object>();
             requiredValues.addAll(allValues.getAll(fromIndex, toIndex));
             ScalarMetadata scalarMetadata = getScalarMetadata(memberName);
             subCoverage.addMember(memberName, domain, scalarMetadata.getDescription(),
-                    scalarMetadata.getParameter(), scalarMetadata.getUnits(),
-                    requiredValues, scalarMetadata.getValueType());
+                    scalarMetadata.getParameter(), scalarMetadata.getUnits(), requiredValues,
+                    scalarMetadata.getValueType(), scalarMetadata.getAllowedPlotStyles());
         }
         return subCoverage;
     }
