@@ -98,7 +98,7 @@ public class Frame {
             case CONTOUR:
                 throw new UnsupportedOperationException("Contour plots not yet supported");
 //                break;
-            case GRID_POINTS:
+            case GRIDPOINT:
                 frameImage = drawGridPoints(frameData);
                 break;
             default:
