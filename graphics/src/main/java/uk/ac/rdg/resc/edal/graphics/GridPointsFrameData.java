@@ -9,7 +9,7 @@ public class GridPointsFrameData extends FrameData {
     private List<GridCoordinates2D> pointData;
 
     public GridPointsFrameData(List<GridCoordinates2D> pointData) {
-        super(PlotStyle.GRID_POINTS);
+        super(PlotStyle.GRIDPOINT);
         this.pointData = pointData;
     }
 

@@ -164,7 +164,7 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
                      */
                     coverage.addMember(varId, domain, description, phenomenon, units,
                             gridValueMatrix, Arrays.asList(PlotStyle.BOXFILL, PlotStyle.POINT,
-                                    PlotStyle.CONTOUR, PlotStyle.GRID_POINTS));
+                                    PlotStyle.CONTOUR, PlotStyle.GRIDPOINT));
 
                     /*
                      * Now deal with elements which may be part of a compound

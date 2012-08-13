@@ -184,7 +184,7 @@ public class VectorPlugin extends Plugin {
                             commonStandardName.replaceFirst("velocity", "direction"),
                             PhenomenonVocabulary.UNKNOWN), Unit.getUnit("rad",
                             UnitVocabulary.UDUNITS2), xComponentMetadata.getValueType(),
-                    VectorComponentType.DIRECTION, Arrays.asList(PlotStyle.VECTOR, PlotStyle.GRID_POINTS));
+                    VectorComponentType.DIRECTION, Arrays.asList(PlotStyle.VECTOR, PlotStyle.GRIDPOINT));
         }
         metadata.addMember(xMetadata);
         metadata.addMember(yMetadata);

@@ -182,7 +182,7 @@ public class MapPlotter {
         if (plotStyle == PlotStyle.TRAJECTORY) {
             throw new UnsupportedOperationException(
                     "Cannot plot this type of feature as a trajectory");
-        } else if (plotStyle == PlotStyle.POINT || plotStyle == PlotStyle.GRID_POINTS) {
+        } else if (plotStyle == PlotStyle.POINT || plotStyle == PlotStyle.GRIDPOINT) {
             /*
              * We are using a plot style which needs the entire grid. Usually
              * this will be lower resolution than the image anyway, so it's not
@@ -207,7 +207,7 @@ public class MapPlotter {
         if (plotStyle == PlotStyle.TRAJECTORY) {
             throw new UnsupportedOperationException(
                     "Cannot plot this type of feature as a trajectory");
-        } else if (plotStyle == PlotStyle.POINT || plotStyle == PlotStyle.GRID_POINTS) {
+        } else if (plotStyle == PlotStyle.POINT || plotStyle == PlotStyle.GRIDPOINT) {
             /*
              * We are using a plot style which needs the entire grid. Usually
              * this will be lower resolution than the image anyway, so it's not
@@ -244,7 +244,7 @@ public class MapPlotter {
             /*
              * We have a scalar field. We just want to plot it.
              */
-            if (plotStyle == PlotStyle.GRID_POINTS) {
+            if (plotStyle == PlotStyle.GRIDPOINT) {
                 HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
                 HorizontalPosition hPos;
                 HorizontalGrid hGrid = feature.getCoverage().getDomain();
@@ -386,7 +386,7 @@ public class MapPlotter {
                     throw new UnsupportedOperationException(
                             "Plotting of non-scalar members of PointSeriesFeatures is not yet supported");
                 }
-            } else if (plotStyle == PlotStyle.GRID_POINTS) {
+            } else if (plotStyle == PlotStyle.GRIDPOINT) {
                 List<GridCoordinates2D> coord = new ArrayList<GridCoordinates2D>();
                 frame.addGridPoints(coord);
             } else {
@@ -428,7 +428,7 @@ public class MapPlotter {
                     throw new UnsupportedOperationException(
                             "Plotting of non-scalar members of ProfileFeatures is not yet supported");
                 }
-            } else if (plotStyle == PlotStyle.GRID_POINTS) {
+            } else if (plotStyle == PlotStyle.GRIDPOINT) {
                 List<GridCoordinates2D> coord = new ArrayList<GridCoordinates2D>();
                 frame.addGridPoints(coord);
             } else {
@@ -441,7 +441,7 @@ public class MapPlotter {
     private void addTrajectoryFeatureToFrame(TrajectoryFeature feature, String memberName,
             String label, PlotStyle plotStyle, Frame frame) {
 
-        if (plotStyle != PlotStyle.TRAJECTORY && plotStyle != PlotStyle.GRID_POINTS
+        if (plotStyle != PlotStyle.TRAJECTORY && plotStyle != PlotStyle.GRIDPOINT
                 && plotStyle != PlotStyle.POINT) {
             throw new IllegalArgumentException("Cannot plot a TrajectoryFeature in the style "
                     + plotStyle);
@@ -624,7 +624,7 @@ public class MapPlotter {
                     public long sizeAsLong() {
                         return values.size();
                     }
-                }, Float.class, Arrays.asList(PlotStyle.TRAJECTORY, PlotStyle.POINT, PlotStyle.GRID_POINTS));
+                }, Float.class, Arrays.asList(PlotStyle.TRAJECTORY, PlotStyle.POINT, PlotStyle.GRIDPOINT));
         MapStyleDescriptor style = new MapStyleDescriptor();
         TrajectoryFeature feature = new TrajectoryFeatureImpl("Trajectory feature", "tfeature",
                 "long winded description", coverage, null);
