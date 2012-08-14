@@ -34,7 +34,6 @@ import java.util.Set;
 
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
-import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
@@ -54,8 +53,6 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     private final Class<?> clazz;
     private RangeMetadata parent = null;
 
-    private final List<PlotStyle> allowedPlotStyles;
-
     /**
      * Instantiates the {@link ScalarMetadata} object
      * 
@@ -74,16 +71,12 @@ public class ScalarMetadataImpl implements ScalarMetadata {
      *            being the default. Must contain at least one style
      */
     public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units,
-            Class<?> clazz, List<PlotStyle> allowedPlotStyles) {
-        if(allowedPlotStyles == null || allowedPlotStyles.size() == 0){
-            throw new IllegalArgumentException("You must provide at least one allowed plotting style");
-        }
+            Class<?> clazz) {
         this.name = name;
         this.description = description;
         this.parameter = parameter;
         this.units = units;
         this.clazz = clazz;
-        this.allowedPlotStyles = allowedPlotStyles;
     }
 
     @Override
@@ -200,7 +193,7 @@ public class ScalarMetadataImpl implements ScalarMetadata {
 
     @Override
     public ScalarMetadata clone() throws CloneNotSupportedException {
-        return new ScalarMetadataImpl(name, description, parameter, units, clazz, allowedPlotStyles);
+        return new ScalarMetadataImpl(name, description, parameter, units, clazz);
     }
 
     @Override
@@ -209,15 +202,5 @@ public class ScalarMetadataImpl implements ScalarMetadata {
          * This is scalar, so it never has any children to plot
          */
         return null;
-    }
-
-    @Override
-    public PlotStyle getDefaultPlotStyle() {
-        return allowedPlotStyles.get(0);
-    }
-
-    @Override
-    public List<PlotStyle> getAllowedPlotStyles() {
-        return allowedPlotStyles;
     }
 }

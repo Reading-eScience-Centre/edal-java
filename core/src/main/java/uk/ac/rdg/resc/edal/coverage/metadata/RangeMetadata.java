@@ -119,13 +119,13 @@ public interface RangeMetadata extends Cloneable {
      * would expect to return if you evaluated the member), units, etc
      * 
      * The order should represent the order of plotting, from bottom to top
-     * where possible.
      * 
      * For example, if this is a VectorMetadata, we will likely return the
      * magnitude and direction children, in that order.
      * 
      * In many cases, this will return null. This indicates that we should never
-     * pass this member to a plottiing routine
+     * pass this member to a plotting routine, or try to evaluate it - i.e. it
+     * is just a parent node for organisational/grouping reasons
      * 
      * @return
      */

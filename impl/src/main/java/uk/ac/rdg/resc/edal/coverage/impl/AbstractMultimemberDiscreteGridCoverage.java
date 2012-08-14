@@ -39,7 +39,6 @@ import uk.ac.rdg.resc.edal.coverage.BaseGridCoverage;
 import uk.ac.rdg.resc.edal.coverage.domain.GridDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
-import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.plugins.Plugin;
 import uk.ac.rdg.resc.edal.util.BigList;
 
@@ -88,9 +87,9 @@ public abstract class AbstractMultimemberDiscreteGridCoverage<P, DO, GD extends 
     }
 
     public void addMember(String memberName, GD domain, String description, Phenomenon parameter,
-            Unit units, GridValuesMatrix<?> gridValueMatrix, List<PlotStyle> availablePlotStyles) {
+            Unit units, GridValuesMatrix<?> gridValueMatrix) {
         addMemberToMetadata(memberName, domain, description, parameter, units,
-                gridValueMatrix.getValueType(), availablePlotStyles);
+                gridValueMatrix.getValueType());
         gridValuesMatrices.put(memberName, gridValueMatrix);
     }
 
