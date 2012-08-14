@@ -77,7 +77,7 @@ public class PointSeriesCoverageImpl extends
             ScalarMetadata scalarMetadata = getScalarMetadata(memberName);
             subCoverage.addMember(memberName, domain, scalarMetadata.getDescription(),
                     scalarMetadata.getParameter(), scalarMetadata.getUnits(), requiredValues,
-                    scalarMetadata.getValueType(), scalarMetadata.getAllowedPlotStyles());
+                    scalarMetadata.getValueType());
         }
         return subCoverage;
     }

@@ -1,6 +1,5 @@
 package uk.ac.rdg.resc.edal.graphics;
 
-import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 
 public class PointFrameData extends FrameData {
 

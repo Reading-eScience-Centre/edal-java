@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,7 +29,6 @@ import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.TrajectoryCoverageImpl;
-import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent.VectorComponentType;
@@ -140,19 +138,17 @@ public class MapPlotter {
             }
         }
 
-        
-
         if (!frameData.containsKey(tPos)) {
             frameData.put(tPos, frame);
         }
     }
     
-    private void addScalarMemberToFrame(Frame frame, Feature feature,VerticalPosition vPos,
+    private void addScalarMemberToFrame(Frame frame, Feature feature, VerticalPosition vPos,
             TimePosition tPos, String label, PlotStyle plotStyle, ScalarMetadata metadata){
-        if(plotStyle == PlotStyle.DEFAULT){
-            plotStyle = metadata.getDefaultPlotStyle();
-        }
         String memberName = metadata.getName();
+        if(plotStyle == PlotStyle.DEFAULT){
+            plotStyle = PlotStyle.getDefaultPlotStyle(feature, metadata);
+        }
         if (feature instanceof GridSeriesFeature) {
             addGridSeriesFeatureToFrame((GridSeriesFeature) feature, memberName, vPos, tPos, label,
                     plotStyle, frame);
@@ -624,7 +620,7 @@ public class MapPlotter {
                     public long sizeAsLong() {
                         return values.size();
                     }
-                }, Float.class, Arrays.asList(PlotStyle.TRAJECTORY, PlotStyle.POINT, PlotStyle.GRIDPOINT));
+                }, Float.class);
         MapStyleDescriptor style = new MapStyleDescriptor();
         TrajectoryFeature feature = new TrajectoryFeatureImpl("Trajectory feature", "tfeature",
                 "long winded description", coverage, null);

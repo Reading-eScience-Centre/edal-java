@@ -36,7 +36,6 @@ import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.UnitVocabulary;
 import uk.ac.rdg.resc.edal.coverage.impl.AbstractMultimemberDiscreteCoverage;
-import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.VectorComponent;
@@ -139,13 +138,13 @@ public class VectorPlugin extends Plugin {
             ScalarMetadata sMetadata = (ScalarMetadata) metadataList.get(0);
             xMetadata = new VectorComponentImpl(xName, sMetadata.getDescription(),
                     sMetadata.getParameter(), sMetadata.getUnits(), sMetadata.getValueType(),
-                    VectorComponentType.X, sMetadata.getAllowedPlotStyles());
+                    VectorComponentType.X);
         }
         if (yMetadata == null) {
             ScalarMetadata sMetadata = (ScalarMetadata) metadataList.get(1);
             yMetadata = new VectorComponentImpl(yName, sMetadata.getDescription(),
                     sMetadata.getParameter(), sMetadata.getUnits(), sMetadata.getValueType(),
-                    VectorComponentType.Y, sMetadata.getAllowedPlotStyles());
+                    VectorComponentType.Y);
         }
         if (magMetadata == null) {
             ScalarMetadata xComponentMetadata = (ScalarMetadata) metadataList.get(0);
@@ -164,7 +163,7 @@ public class VectorPlugin extends Plugin {
                     Phenomenon.getPhenomenon(commonStandardName.replaceFirst("velocity", "speed"),
                             PhenomenonVocabulary.CLIMATE_AND_FORECAST),
                     xComponentMetadata.getUnits(), xComponentMetadata.getValueType(),
-                    VectorComponentType.MAGNITUDE, xComponentMetadata.getAllowedPlotStyles());
+                    VectorComponentType.MAGNITUDE);
         }
         if (dirMetadata == null) {
             ScalarMetadata xComponentMetadata = (ScalarMetadata) metadataList.get(0);
@@ -184,7 +183,7 @@ public class VectorPlugin extends Plugin {
                             commonStandardName.replaceFirst("velocity", "direction"),
                             PhenomenonVocabulary.UNKNOWN), Unit.getUnit("rad",
                             UnitVocabulary.UDUNITS2), xComponentMetadata.getValueType(),
-                    VectorComponentType.DIRECTION, Arrays.asList(PlotStyle.VECTOR, PlotStyle.GRIDPOINT));
+                    VectorComponentType.DIRECTION);
         }
         metadata.addMember(xMetadata);
         metadata.addMember(yMetadata);

@@ -4,13 +4,11 @@
 package uk.ac.rdg.resc.edal.coverage.impl;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.coverage.metadata.PlotStyle;
 import uk.ac.rdg.resc.edal.util.BigList;
 
 /**
@@ -34,9 +32,8 @@ public class AbstractBigListBackedCoverage<P, DO, GD extends DiscreteDomain<P, D
     }
 
     public void addMember(String memberName, GD domain, String description, Phenomenon parameter,
-            Unit units, BigList<?> values, Class<?> valueType, List<PlotStyle> availablePlotStyles) {
-        addMemberToMetadata(memberName, domain, description, parameter, units, valueType,
-                availablePlotStyles);
+            Unit units, BigList<?> values, Class<?> valueType) {
+        addMemberToMetadata(memberName, domain, description, parameter, units, valueType);
         memberName2Values.put(memberName, values);
     }
 
