@@ -76,14 +76,15 @@ public final class Extents {
         Iterator<? extends T> i = coll.iterator();
         T minCandidate = i.next();
         T maxCandidate = minCandidate;
-
+        
         while (i.hasNext()) {
             T next = i.next();
             if (next != null && !next.equals(Float.NaN) && !next.equals(Double.NaN)) {
                 if (minCandidate == null || next.compareTo(minCandidate) < 0) {
                     minCandidate = next;
                 }
-                if (maxCandidate == null || next.compareTo(maxCandidate) > 0) {
+                if (maxCandidate == null || next.compareTo(maxCandidate) > 0
+                        || maxCandidate.equals(Float.NaN) || maxCandidate.equals(Double.NaN)) {
                     maxCandidate = next;
                 }
             }
