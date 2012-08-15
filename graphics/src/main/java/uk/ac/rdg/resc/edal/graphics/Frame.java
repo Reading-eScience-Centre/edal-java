@@ -1,7 +1,23 @@
 package uk.ac.rdg.resc.edal.graphics;
 
+import gov.noaa.pmel.sgt.CartesianGraph;
+import gov.noaa.pmel.sgt.CartesianRenderer;
+import gov.noaa.pmel.sgt.ContourLevels;
+import gov.noaa.pmel.sgt.ContourLineAttribute;
+import gov.noaa.pmel.sgt.DefaultContourLineAttribute;
+import gov.noaa.pmel.sgt.GridAttribute;
+import gov.noaa.pmel.sgt.JPane;
+import gov.noaa.pmel.sgt.Layer;
+import gov.noaa.pmel.sgt.LinearTransform;
+import gov.noaa.pmel.sgt.dm.SGTData;
+import gov.noaa.pmel.sgt.dm.SGTGrid;
+import gov.noaa.pmel.sgt.dm.SimpleGrid;
+import gov.noaa.pmel.util.Dimension2D;
+import gov.noaa.pmel.util.Range2D;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -95,8 +111,8 @@ public class Frame {
                 frameImage = drawPointImage(frameData, style);
                 break;
             case CONTOUR:
-                throw new UnsupportedOperationException("Contour plots not yet supported");
-//                break;
+                frameImage = drawContourImage(frameData, style);
+                break;
             case GRIDPOINT:
                 frameImage = drawGridPoints(frameData);
                 break;
@@ -299,6 +315,101 @@ public class Frame {
                     - pointIcon.getWidth() / 2, height - (pointFrameData.getY()
                             + pointIcon.getHeight() / 2) - 1, null);
         }
+    }
+    
+    private BufferedImage drawContourImage(FrameData frameData, MapStyleDescriptor style) {
+        if (frameData instanceof GriddedFrameData) {
+            Number[][] data = ((GriddedFrameData) frameData).getData();
+
+            int count = 0;
+            double[] values = new double[width * height];
+            double[] xAxis = new double[width];
+            double[] yAxis = new double[height];
+            double minValue = Double.MAX_VALUE;
+            double maxValue = Double.MIN_VALUE;
+
+            for (int i = 0; i < width; i++) {
+                xAxis[i] = i;
+                for (int j = 0; j < height; j++) {
+                    yAxis[j] = height - j - 1;
+                    if (data[i][j] == null) {
+                        values[count] = Double.NaN;
+                    } else {
+                        values[count] = data[i][j].doubleValue();
+                        maxValue = Math.max(maxValue, values[count]);
+                        minValue = Math.min(minValue, values[count]);
+                    }
+                    count++;
+                }
+            }
+
+            SGTGrid sgtGrid = new SimpleGrid(values, xAxis, yAxis, null);
+
+            CartesianGraph cg = getCartesianGraph(sgtGrid);
+
+            double min = style.getScaleRange().getLow();
+            double max = style.getScaleRange().getHigh();
+
+            double contourSpacing = (max - min) / (style.getNumberOfContours() - 1);
+
+            Range2D contourValues = new Range2D(min, max, contourSpacing);
+
+            ContourLevels clevels = ContourLevels.getDefault(contourValues);
+
+            DefaultContourLineAttribute defAttr = new DefaultContourLineAttribute();
+
+            /*
+             * TODO customise these based on the style
+             */
+            defAttr.setColor(Color.BLACK);
+            defAttr.setStyle(ContourLineAttribute.DASHED);
+            defAttr.setLabelEnabled(true);
+            clevels.setDefaultContourLineAttribute(defAttr);
+
+            GridAttribute attr = new GridAttribute(clevels);
+            attr.setStyle(GridAttribute.CONTOUR);
+
+            CartesianRenderer renderer = CartesianRenderer.getRenderer(cg, sgtGrid, attr);
+
+            BufferedImage im = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics g = im.getGraphics();
+            renderer.draw(g);
+            
+            return im;
+        } else {
+            throw new UnsupportedOperationException("Can only plot contour images with gridded data");
+        }
+    }
+    
+    private CartesianGraph getCartesianGraph(SGTData data) {
+        // For some reason that I don't understand, we have to set a physical
+        // width and height that is considerably smaller than the w/h of the
+        // image. If this factor is too small, the contour labels are plotted
+        // too small to be seen.
+
+        // Increasing the factor increases the effective font size used to draw
+        // the contour labels We find that a factor of around 1/3 of the image
+        // width gives contour labels of a sensible size.
+        double factor = width / 3.0;
+        double physWidth = width / factor;
+        double physHeight = height / factor;
+
+        Layer layer = new Layer("", new Dimension2D(physWidth, physHeight));
+        JPane pane = new JPane("id", new Dimension(width, height));
+        layer.setPane(pane);
+        layer.setBounds(0, 0, width, height);
+
+        CartesianGraph graph = new CartesianGraph();
+        // Create Ranges representing the size of the image
+        Range2D physXRange = new Range2D(0, physWidth);
+        Range2D physYRange = new Range2D(0, physHeight);
+        // These transforms convert x and y coordinates to pixel indices
+        LinearTransform xt = new LinearTransform(physXRange, data.getXRange());
+        LinearTransform yt = new LinearTransform(physYRange, data.getYRange());
+        graph.setXTransform(xt);
+        graph.setYTransform(yt);
+        layer.setGraph(graph);
+        return graph;
     }
     
     private BufferedImage drawGridPoints(FrameData frameData) {

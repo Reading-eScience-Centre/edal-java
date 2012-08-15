@@ -30,6 +30,10 @@ public class MapStyleDescriptor {
      * The length of arrows in pixels, only used for vector plots
      */
     private float arrowLength = 6.0f;
+    /*
+     * The number of contours to show on a contour plot
+     */
+    private int numberOfContours = 10;
     
     /*
      * We cache this for speed
@@ -95,6 +99,10 @@ public class MapStyleDescriptor {
 
     public void setArrowLength(float arrowLength) {
         this.arrowLength = arrowLength;
+    }
+    
+    public void setNumberOfContour(int numberOfContours) {
+        this.numberOfContours= numberOfContours;
     }
 
     public void addIcon(String name, ColourableIcon pointIcon) {
@@ -180,5 +188,9 @@ public class MapStyleDescriptor {
     
     public BufferedImage getLegend(String title, String units) {
         return colorPalette.createLegend(numColourBands, title, units, logarithmic, scaleRange);
+    }
+    
+    public int getNumberOfContours(){
+        return numberOfContours;
     }
 }
