@@ -89,7 +89,7 @@ public enum PlotStyle {
                      * Gridded features can be plotted in the boxfill or contour styles (when implemented)
                      */
                     allowedPlotStyles.add(BOXFILL);
-//                    allowedPlotStyles.add(CONTOUR);
+                    allowedPlotStyles.add(CONTOUR);
                 } else if ((feature instanceof TrajectoryFeature)) {
                     /*
                      * Trajectory features can be plotted as a trajectory
