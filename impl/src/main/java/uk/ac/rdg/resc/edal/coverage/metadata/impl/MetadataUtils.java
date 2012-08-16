@@ -105,7 +105,8 @@ public class MetadataUtils {
     }
     
     public static String getUnitsString(Feature feature, String memberName){
-        RangeMetadata rangeMetadata = feature.getCoverage().getRangeMetadata();
+        RangeMetadata rangeMetadata = getDescendentMetadata(feature.getCoverage()
+                .getRangeMetadata(), memberName);
         if(rangeMetadata instanceof ScalarMetadata){
             ScalarMetadata scalarMetadata = (ScalarMetadata) rangeMetadata;
             return scalarMetadata.getUnits().getUnitString();
