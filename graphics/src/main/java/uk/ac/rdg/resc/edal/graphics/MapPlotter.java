@@ -132,7 +132,21 @@ public class MapPlotter {
         } else {
             List<ScalarMetadata> representativeChildren = metadata.getRepresentativeChildren();
             if(representativeChildren != null){
+                boolean plottedBoxfill = false;
                 for(ScalarMetadata representativeChildMetadata : representativeChildren){
+                    PlotStyle defaultPlotStyle = PlotStyle.getDefaultPlotStyle(feature, representativeChildMetadata);
+                    /*
+                     * If we have already plotted something in boxfill style, we
+                     * don't want to do so again (because it would obscure the
+                     * original).  For the time being, we use the contour style instead
+                     */
+                    if(defaultPlotStyle == PlotStyle.BOXFILL){
+                        if(plottedBoxfill){
+                            plotStyle = PlotStyle.CONTOUR;
+                        } else {
+                            plottedBoxfill = true;
+                        }
+                    }
                     addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, representativeChildMetadata);
                 }
             }
