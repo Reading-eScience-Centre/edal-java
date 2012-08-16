@@ -53,7 +53,7 @@ public enum PlotStyle {
     DEFAULT {
         @Override
         public boolean usesPalette() {
-            return false;
+            return true;
         }
     };
 

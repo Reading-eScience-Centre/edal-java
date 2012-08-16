@@ -120,7 +120,7 @@ public class MetadataUtils {
     }
     
     public static String getScalarMemberName(Feature feature, String memberName){
-        RangeMetadata rangeMetadata = feature.getCoverage().getRangeMetadata().getMemberMetadata(memberName);
+        RangeMetadata rangeMetadata = getDescendentMetadata(feature.getCoverage().getRangeMetadata(), memberName);
         if(rangeMetadata instanceof ScalarMetadata){
             return rangeMetadata.getName();
         } else {

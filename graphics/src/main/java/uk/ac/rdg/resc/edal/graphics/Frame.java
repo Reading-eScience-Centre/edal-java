@@ -382,15 +382,20 @@ public class Frame {
     }
     
     private CartesianGraph getCartesianGraph(SGTData data) {
-        // For some reason that I don't understand, we have to set a physical
-        // width and height that is considerably smaller than the w/h of the
-        // image. If this factor is too small, the contour labels are plotted
-        // too small to be seen.
-
-        // Increasing the factor increases the effective font size used to draw
-        // the contour labels We find that a factor of around 1/3 of the image
-        // width gives contour labels of a sensible size.
-        double factor = width / 3.0;
+        /*
+         * To get fixed size labels we need to set a physical size much smaller
+         * than the pixel size (since pixels can't represent physical size).
+         * Since the SGT code is so heavily tied into the display mechanism, and
+         * a factor of around 100 seems to produce decent results, it's almost
+         * certainly measured in inches (96dpi being a fairly reasonable monitor
+         * resolution).
+         * 
+         * Anyway, setting the physical size as a constant factor of the pixel
+         * size gives good results.
+         * 
+         * Font size seems to be ignored.
+         */
+        double factor = 96;
         double physWidth = width / factor;
         double physHeight = height / factor;
 
