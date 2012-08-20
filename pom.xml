@@ -58,7 +58,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
-				<version>2.1</version>
 				<configuration>
 					<goals>install</goals>
 					<mavenExecutorId>forked-path</mavenExecutorId>
@@ -144,15 +143,16 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
-					<aggregate>true</aggregate>
+				    <goal>javadoc:aggregate</goal>
+<!-- 					<aggregate>true</aggregate> -->
 					<!-- These links really belong in the child POMs but if we put them 
 						there, they don't seem to get picked up when building the javadoc for the 
 						aggregated project. Therefore if the versions of any of the dependencies 
 						change these links will also have to be updated. -->
 					<links>
 						<link>http://java.sun.com/j2se/1.6.0/docs/api/</link>
-						<link>http://joda-time.sourceforge.net/api-1.6/</link>
-						<link>http://geoapi.sourceforge.net/2.2/javadoc/</link>
+						<link>http://joda-time.sourceforge.net/api-2.0/</link>
+						<link>http://www.geoapi.org/3.0/javadoc/</link>
 					</links>
 				</configuration>
 			</plugin>
