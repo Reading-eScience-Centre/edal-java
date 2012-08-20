@@ -29,7 +29,8 @@ public class MultiPointFrameData extends FrameData {
         if(i < 0 || i >= size){
             throw new IndexOutOfBoundsException();
         }
+        Number n = values.get(i);
         return new PointFrameData(getPlotStyle(), coords.get(i).getXIndex(), coords.get(i)
-                .getYIndex(), values.get(i));
+                .getYIndex(), n != null ? n : Float.NaN);
     }
 }
