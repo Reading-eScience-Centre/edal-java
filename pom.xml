@@ -143,8 +143,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
-				    <goal>javadoc:aggregate</goal>
-<!-- 					<aggregate>true</aggregate> -->
+					<goal>javadoc:aggregate</goal>
 					<!-- These links really belong in the child POMs but if we put them 
 						there, they don't seem to get picked up when building the javadoc for the 
 						aggregated project. Therefore if the versions of any of the dependencies 
