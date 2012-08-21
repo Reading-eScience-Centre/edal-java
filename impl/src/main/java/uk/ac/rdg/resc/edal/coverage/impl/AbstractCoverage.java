@@ -90,7 +90,8 @@ public abstract class AbstractCoverage<P> implements Coverage<P> {
     public RangeMetadata getRangeMetadata() {
         final AbstractCoverage<P> cov = AbstractCoverage.this;
         return new RangeMetadata() {
-
+            private String title = cov.getDescription();
+            
             @Override
             public String getName() {
                 return "TODO not sure what to put here!";
@@ -141,6 +142,16 @@ public abstract class AbstractCoverage<P> implements Coverage<P> {
             public List<ScalarMetadata> getRepresentativeChildren() {
                 // By default, a parent object is not plottable
                 return null;
+            }
+
+            @Override
+            public String getTitle() {
+                return title;
+            }
+
+            @Override
+            public void setTitle(String title) {
+                this.title = title;
             }
         };
     }

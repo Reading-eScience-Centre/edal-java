@@ -47,6 +47,7 @@ import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 public class ScalarMetadataImpl implements ScalarMetadata {
 
     private final String name;
+    private String title;
     private final String description;
     private final Phenomenon parameter;
     private final Unit units;
@@ -73,6 +74,7 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units,
             Class<?> clazz) {
         this.name = name;
+        this.title = description;
         this.description = description;
         this.parameter = parameter;
         this.units = units;
@@ -102,6 +104,16 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Override

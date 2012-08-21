@@ -209,6 +209,14 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
                 coverage.getScalarMetadata(xyData.xVarId);
                 coverage.getScalarMetadata(xyData.yVarId);
                 String description = xyVarIDs.replaceAll("_", " ");
+                /*
+                 * Some common cases
+                 */
+                if(description.toLowerCase().contains("current")){
+                    description = "Current";
+                } else if(description.toLowerCase().contains("wind")){
+                    description = "Wind";
+                }
                 VectorPlugin vectorPlugin = new VectorPlugin(
                         coverage.getScalarMetadata(xyData.xVarId),
                         coverage.getScalarMetadata(xyData.yVarId), xyVarIDs, description);
