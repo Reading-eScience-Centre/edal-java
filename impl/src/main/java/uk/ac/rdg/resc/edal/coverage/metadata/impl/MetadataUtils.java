@@ -138,4 +138,17 @@ public class MetadataUtils {
                 || (metadata.getRepresentativeChildren() != null && metadata
                         .getRepresentativeChildren().size() > 0);
     }
+    
+    public static ScalarMetadata getScalarMetadata(Feature feature, String memberName){
+        RangeMetadata rangeMetadata = getDescendentMetadata(feature.getCoverage().getRangeMetadata(), memberName);
+        if(rangeMetadata instanceof ScalarMetadata){
+            return (ScalarMetadata) rangeMetadata;
+        } else {
+            List<ScalarMetadata> representativeChildren = rangeMetadata.getRepresentativeChildren();
+            if(representativeChildren != null && representativeChildren.size() > 0){
+                return representativeChildren.get(0);
+            }
+        }
+        return null;
+    }
 }

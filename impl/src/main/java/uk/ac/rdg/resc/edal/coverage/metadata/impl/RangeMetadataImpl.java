@@ -29,8 +29,8 @@
 package uk.ac.rdg.resc.edal.coverage.metadata.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,13 +49,15 @@ public class RangeMetadataImpl implements RangeMetadata {
     private RangeMetadata parent = null;
     protected final Map<String, RangeMetadata> members;
     private final String name;
+    private String title;
     private final String description;
 
     public RangeMetadataImpl(String name, String description) {
         this.name = name;
+        this.title = description;
         this.description = description;
 
-        this.members = new HashMap<String, RangeMetadata>();
+        this.members = new LinkedHashMap<String, RangeMetadata>();
     }
 
     @Override
@@ -112,6 +114,16 @@ public class RangeMetadataImpl implements RangeMetadata {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Override

@@ -38,6 +38,7 @@ import uk.ac.rdg.resc.edal.coverage.Coverage;
  * metadata elements.
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public interface RangeMetadata extends Cloneable {
 
@@ -46,6 +47,21 @@ public interface RangeMetadata extends Cloneable {
      * hierarchy.
      */
     public String getName();
+
+    /**
+     * Returns a human-readable title for this element. This should only be used
+     * for display purposes and is mutable
+     */
+    public String getTitle();
+
+    /**
+     * Sets the title for this element. This can be used by clients to set a
+     * title without changing any important metadata
+     * 
+     * @param title
+     *            the desired title
+     */
+    public void setTitle(String title);
 
     /**
      * Returns a human-readable description of the metadata.
