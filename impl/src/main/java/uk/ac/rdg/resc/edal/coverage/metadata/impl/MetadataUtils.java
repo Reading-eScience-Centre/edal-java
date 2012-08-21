@@ -132,4 +132,10 @@ public class MetadataUtils {
         }
         throw new IllegalArgumentException("Cannot get a scalar member corresponding to the name "+memberName);
     }
+    
+    public static boolean isPlottable(RangeMetadata metadata){
+        return (metadata instanceof ScalarMetadata)
+                || (metadata.getRepresentativeChildren() != null && metadata
+                        .getRepresentativeChildren().size() > 0);
+    }
 }
