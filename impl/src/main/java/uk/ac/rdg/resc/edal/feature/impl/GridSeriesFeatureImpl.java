@@ -93,8 +93,11 @@ public class GridSeriesFeatureImpl extends AbstractFeature implements GridSeries
                 members == null ? coverage.getScalarMemberNames() : members);
         GridSeriesDomain domain = coverage.getDomain();
         HorizontalPosition centre = domain.getHorizontalGrid().findContainingCell(pos).getCentre();
-        int tIndex = domain.getTimeAxis().findIndexOf(t);
-        TimePosition tCentre = domain.getTimeAxis().getCoordinateValue(tIndex);
+        TimePosition tCentre = null;
+        if(domain.getTimeAxis() != null){
+            int tIndex = domain.getTimeAxis().findIndexOf(t);
+            tCentre = domain.getTimeAxis().getCoordinateValue(tIndex);
+        }
         return new ProfileFeatureImpl(getName() + " -> Profile", "PF-" + getId(),
                 "Profile extraction of " + getDescription(), pCoverage, centre, tCentre,
                 getFeatureCollection());
