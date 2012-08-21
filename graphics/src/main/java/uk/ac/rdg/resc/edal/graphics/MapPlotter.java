@@ -183,7 +183,7 @@ public class MapPlotter {
 
     private void addGridSeriesFeatureToFrame(GridSeriesFeature feature, String memberName,
             VerticalPosition vPos, TimePosition tPos, String label, PlotStyle plotStyle, Frame frame) {
-        RangeMetadata memberMetadata = MetadataUtils.getDescendentMetadata(feature.getCoverage()
+        RangeMetadata memberMetadata = MetadataUtils.getDescendantMetadata(feature.getCoverage()
                 .getRangeMetadata(), memberName);
         Set<String> memberNamesToExtract = getAllScalarChildrenOf(memberMetadata);
         GridFeature gridFeature;
@@ -274,7 +274,7 @@ public class MapPlotter {
             }
 
             if(extract){
-                RangeMetadata memberMetadata = MetadataUtils.getDescendentMetadata(feature
+                RangeMetadata memberMetadata = MetadataUtils.getDescendantMetadata(feature
                         .getCoverage().getRangeMetadata(), memberName);
                 Set<String> memberNamesToExtract = getAllScalarChildrenOf(memberMetadata);
                 HorizontalGrid horizontalGrid = new RegularGridImpl(bbox, xPointsToExtract, yPointsToExtract);
@@ -292,7 +292,7 @@ public class MapPlotter {
                 /*
                  * The input feature is not the right size. Convert it
                  */
-                RangeMetadata memberMetadata = MetadataUtils.getDescendentMetadata(feature
+                RangeMetadata memberMetadata = MetadataUtils.getDescendantMetadata(feature
                         .getCoverage().getRangeMetadata(), memberName);
                 Set<String> memberNamesToExtract = getAllScalarChildrenOf(memberMetadata);
                 feature = feature.extractGridFeature(new RegularGridImpl(bbox, width, height),
