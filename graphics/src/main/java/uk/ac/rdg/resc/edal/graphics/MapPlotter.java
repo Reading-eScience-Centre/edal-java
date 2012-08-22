@@ -126,12 +126,15 @@ public class MapPlotter {
         
         RangeMetadata metadata = MetadataUtils.getMetadataForFeatureMember(feature, memberName);
         if(metadata instanceof ScalarMetadata){
-            addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, (ScalarMetadata) metadata);
+            addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, (ScalarMetadata) metadata, style.getScaleRange());
         } else {
             List<ScalarMetadata> representativeChildren = metadata.getRepresentativeChildren();
             if(representativeChildren != null){
                 boolean plottedBoxfill = false;
                 for(ScalarMetadata representativeChildMetadata : representativeChildren){
+                    /*
+                     * We need to supply a scale range for the contour plot.
+                     */
                     PlotStyle defaultPlotStyle = PlotStyle.getDefaultPlotStyle(feature, representativeChildMetadata);
                     /*
                      * If we have already plotted something in boxfill style, we
@@ -145,7 +148,11 @@ public class MapPlotter {
                             plottedBoxfill = true;
                         }
                     }
-                    addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, representativeChildMetadata);
+                    Extent<Float> contourScaleRange = style.getScaleRange();
+                    if (plotStyle == PlotStyle.CONTOUR) {
+                        contourScaleRange = GISUtils.estimateValueRange(feature, representativeChildMetadata.getName());
+                    }
+                    addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, representativeChildMetadata, contourScaleRange);
                 }
             }
         }
@@ -156,16 +163,16 @@ public class MapPlotter {
     }
     
     private void addScalarMemberToFrame(Frame frame, Feature feature, VerticalPosition vPos,
-            TimePosition tPos, String label, PlotStyle plotStyle, ScalarMetadata metadata){
+            TimePosition tPos, String label, PlotStyle plotStyle, ScalarMetadata metadata, Extent<Float> contourScaleRange){
         String memberName = metadata.getName();
         if(plotStyle == PlotStyle.DEFAULT){
             plotStyle = PlotStyle.getDefaultPlotStyle(feature, metadata);
         }
         if (feature instanceof GridSeriesFeature) {
             addGridSeriesFeatureToFrame((GridSeriesFeature) feature, memberName, vPos, tPos, label,
-                    plotStyle, frame);
+                    plotStyle, frame, contourScaleRange);
         } else if (feature instanceof GridFeature) {
-            addGridFeatureToFrame((GridFeature) feature, memberName, label, plotStyle, frame);
+            addGridFeatureToFrame((GridFeature) feature, memberName, label, plotStyle, frame, contourScaleRange);
         } else if (feature instanceof PointSeriesFeature) {
             addPointSeriesFeatureToFrame((PointSeriesFeature) feature, memberName, tPos, label,
                     plotStyle, frame);
@@ -182,7 +189,7 @@ public class MapPlotter {
     }
 
     private void addGridSeriesFeatureToFrame(GridSeriesFeature feature, String memberName,
-            VerticalPosition vPos, TimePosition tPos, String label, PlotStyle plotStyle, Frame frame) {
+            VerticalPosition vPos, TimePosition tPos, String label, PlotStyle plotStyle, Frame frame, Extent<Float> contourScaleRange) {
         RangeMetadata memberMetadata = MetadataUtils.getDescendantMetadata(feature.getCoverage()
                 .getRangeMetadata(), memberName);
         Set<String> memberNamesToExtract = getAllScalarChildrenOf(memberMetadata);
@@ -231,11 +238,11 @@ public class MapPlotter {
             gridFeature = feature.extractGridFeature(new RegularGridImpl(bbox, width, height),
                     vPos, tPos, memberNamesToExtract);
         }
-        addGridFeatureToFrame(gridFeature, memberName, label, plotStyle, frame);
+        addGridFeatureToFrame(gridFeature, memberName, label, plotStyle, frame, contourScaleRange);
     }
 
     private void addGridFeatureToFrame(GridFeature feature, String memberName, String label,
-            PlotStyle plotStyle, Frame frame) {
+            PlotStyle plotStyle, Frame frame, Extent<Float> contourScaleRange) {
 
         /*
          * First, make sure that we have a suitable grid feature.
@@ -368,7 +375,7 @@ public class MapPlotter {
             return;
         } else {
             data = getDataFromGridFeature(feature, memberName);
-            frame.addGriddedData(data, plotStyle);
+            frame.addGriddedData(data, plotStyle, contourScaleRange);
         }
     }
 

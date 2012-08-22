@@ -63,14 +63,14 @@ public class Frame {
         layers.add(new GridPointsFrameData(coords));
     }
 
-    public void addGriddedData(Number[][] data, PlotStyle style) {
+    public void addGriddedData(Number[][] data, PlotStyle style, Extent<Float> contourScaleRange) {
         if (data.length != width) {
             throw new IllegalArgumentException("Can only add data with width " + width);
         }
         if (data[0].length != height) {
             throw new IllegalArgumentException("Can only add data with height " + height);
         }
-        layers.add(new GriddedFrameData(style, data));
+        layers.add(new GriddedFrameData(style, data, contourScaleRange));
     }
     
     public void addPointData(Number value, GridCoordinates2D coords, PlotStyle style) {
@@ -319,14 +319,21 @@ public class Frame {
     
     private BufferedImage drawContourImage(FrameData frameData, MapStyleDescriptor style) {
         if (frameData instanceof GriddedFrameData) {
-            Number[][] data = ((GriddedFrameData) frameData).getData();
+            GriddedFrameData griddedFrameData = (GriddedFrameData) frameData;
+            Number[][] data = griddedFrameData.getData();
 
             int count = 0;
             double[] values = new double[width * height];
             double[] xAxis = new double[width];
             double[] yAxis = new double[height];
-            double minValue = Double.MAX_VALUE;
-            double maxValue = Double.MIN_VALUE;
+            Extent<Float> scaleRange;
+            if(griddedFrameData.getContourScaleRange() != null){
+                scaleRange = griddedFrameData.getContourScaleRange();
+            } else {
+                scaleRange = style.getScaleRange();
+            }
+            double minValue = scaleRange.getLow();
+            double maxValue = scaleRange.getHigh();
 
             for (int i = 0; i < width; i++) {
                 xAxis[i] = i;
@@ -336,8 +343,6 @@ public class Frame {
                         values[count] = Double.NaN;
                     } else {
                         values[count] = data[i][j].doubleValue();
-                        maxValue = Math.max(maxValue, values[count]);
-                        minValue = Math.min(minValue, values[count]);
                     }
                     count++;
                 }
@@ -347,12 +352,9 @@ public class Frame {
 
             CartesianGraph cg = getCartesianGraph(sgtGrid);
 
-            double min = style.getScaleRange().getLow();
-            double max = style.getScaleRange().getHigh();
+            double contourSpacing = (maxValue - minValue) / (style.getNumberOfContours() - 1);
 
-            double contourSpacing = (max - min) / (style.getNumberOfContours() - 1);
-
-            Range2D contourValues = new Range2D(min, max, contourSpacing);
+            Range2D contourValues = new Range2D(minValue, maxValue, contourSpacing);
 
             ContourLevels clevels = ContourLevels.getDefault(contourValues);
 
