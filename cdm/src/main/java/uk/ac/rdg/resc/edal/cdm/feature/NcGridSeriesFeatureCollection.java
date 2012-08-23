@@ -58,6 +58,9 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.impl.GridSeriesCoverageImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.plugins.AssociationPlugin;
 import uk.ac.rdg.resc.edal.coverage.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
@@ -154,6 +157,15 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
                     String name = phenomenon.getStandardName();
                     String varId = var.getName();
                     String description = var.getDescription();
+                    
+                    if(description == null || description.equals("")){
+                        if(name != null && !name.equals("")){
+                            description = name;
+                        } else {
+                            description = varId;
+                        }
+                    }
+                    
 
                     GridValuesMatrix<Float> gridValueMatrix = new NcGridValuesMatrix4D(
                             hGrid.getXAxis(), hGrid.getYAxis(), vAxis, tAxis, filename, varId);
@@ -167,32 +179,34 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
                      * Now deal with elements which may be part of a compound
                      * coverage
                      */
-                    if (name.contains("eastward")) {
-                        String compoundName = name.replaceFirst("eastward_", "");
-                        XYVarIDs cData;
-                        if (!xyComponents.containsKey(compoundName)) {
-                            cData = new XYVarIDs();
-                            xyComponents.put(compoundName, cData);
+                    if(name != null){
+                        if (name.contains("eastward")) {
+                            String compoundName = name.replaceFirst("eastward_", "");
+                            XYVarIDs cData;
+                            if (!xyComponents.containsKey(compoundName)) {
+                                cData = new XYVarIDs();
+                                xyComponents.put(compoundName, cData);
+                            }
+                            cData = xyComponents.get(compoundName);
+                            /*
+                             * By doing this, we will end up with the merged
+                             * coverage
+                             */
+                            cData.xVarId = varId;
+                        } else if (name.contains("northward")) {
+                            String compoundName = name.replaceFirst("northward_", "");
+                            XYVarIDs cData;
+                            if (!xyComponents.containsKey(compoundName)) {
+                                cData = new XYVarIDs();
+                                xyComponents.put(compoundName, cData);
+                            }
+                            cData = xyComponents.get(compoundName);
+                            /*
+                             * By doing this, we will end up with the merged
+                             * coverage
+                             */
+                            cData.yVarId = varId;
                         }
-                        cData = xyComponents.get(compoundName);
-                        /*
-                         * By doing this, we will end up with the merged
-                         * coverage
-                         */
-                        cData.xVarId = varId;
-                    } else if (name.contains("northward")) {
-                        String compoundName = name.replaceFirst("northward_", "");
-                        XYVarIDs cData;
-                        if (!xyComponents.containsKey(compoundName)) {
-                            cData = new XYVarIDs();
-                            xyComponents.put(compoundName, cData);
-                        }
-                        cData = xyComponents.get(compoundName);
-                        /*
-                         * By doing this, we will end up with the merged
-                         * coverage
-                         */
-                        cData.yVarId = varId;
                     }
                 }
                 coverages.add(coverage);
@@ -221,6 +235,21 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
                         coverage.getScalarMetadata(xyData.xVarId),
                         coverage.getScalarMetadata(xyData.yVarId), xyVarIDs, description);
                 coverage.addPlugin(vectorPlugin);
+            }
+            
+            try{
+                ScalarMetadata scalarMetadata = coverage.getScalarMetadata("analysed_sst");
+                ScalarMetadata scalarMetadata2 = coverage.getScalarMetadata("analysis_error");
+                ScalarMetadata scalarMetadata3 = coverage.getScalarMetadata("SST");
+                if(scalarMetadata != null && scalarMetadata2 != null && scalarMetadata3 != null){
+                    List<RangeMetadata> m = new ArrayList<RangeMetadata>();
+                    m.add(scalarMetadata);
+                    m.add(scalarMetadata2);
+                    m.add(scalarMetadata3);
+                    coverage.addPlugin(new AssociationPlugin(m, "ssst", "assocplugin"));
+                }
+            } catch (IllegalArgumentException iae){
+                
             }
         }
 
