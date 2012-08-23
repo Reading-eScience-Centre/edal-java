@@ -58,9 +58,6 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.impl.GridSeriesCoverageImpl;
-import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
-import uk.ac.rdg.resc.edal.coverage.plugins.AssociationPlugin;
 import uk.ac.rdg.resc.edal.coverage.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
@@ -235,21 +232,6 @@ public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Fea
                         coverage.getScalarMetadata(xyData.xVarId),
                         coverage.getScalarMetadata(xyData.yVarId), xyVarIDs, description);
                 coverage.addPlugin(vectorPlugin);
-            }
-            
-            try{
-                ScalarMetadata scalarMetadata = coverage.getScalarMetadata("analysed_sst");
-                ScalarMetadata scalarMetadata2 = coverage.getScalarMetadata("analysis_error");
-                ScalarMetadata scalarMetadata3 = coverage.getScalarMetadata("SST");
-                if(scalarMetadata != null && scalarMetadata2 != null && scalarMetadata3 != null){
-                    List<RangeMetadata> m = new ArrayList<RangeMetadata>();
-                    m.add(scalarMetadata);
-                    m.add(scalarMetadata2);
-                    m.add(scalarMetadata3);
-                    coverage.addPlugin(new AssociationPlugin(m, "ssst", "assocplugin"));
-                }
-            } catch (IllegalArgumentException iae){
-                
             }
         }
 
