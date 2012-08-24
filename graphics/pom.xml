@@ -37,6 +37,11 @@
 			<artifactId>sgt</artifactId>
 			<version>3.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.monte</groupId>
+			<artifactId>monte</artifactId>
+			<version>0.7.3</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>

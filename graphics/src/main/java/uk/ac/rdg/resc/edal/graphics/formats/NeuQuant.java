@@ -24,7 +24,7 @@ package uk.ac.rdg.resc.edal.graphics.formats;
 
 class NeuQuant {
 
-	protected static final int netsize = 256; /* number of colours used */
+	protected static final int netsize = 255; /* number of colours used */
 
 	/* four primes near 500 - assume no image has a length so large */
 	/* that it is divisible by all four primes */
@@ -57,9 +57,9 @@ class NeuQuant {
 
 	/* defs for freq and bias */
 	protected static final int intbiasshift = 16; /* bias for fractions */
-	protected static final int intbias = (((int) 1) << intbiasshift);
+	protected static final int intbias = (1 << intbiasshift);
 	protected static final int gammashift = 10; /* gamma = 1024 */
-	protected static final int gamma = (((int) 1) << gammashift);
+	protected static final int gamma = (1 << gammashift);
 	protected static final int betashift = 10;
 	protected static final int beta = (intbias >> betashift); /* beta = 1/1024 */
 	protected static final int betagamma =
@@ -68,21 +68,21 @@ class NeuQuant {
 	/* defs for decreasing radius factor */
 	protected static final int initrad = (netsize >> 3); /* for 256 cols, radius starts */
 	protected static final int radiusbiasshift = 6; /* at 32.0 biased by 6 bits */
-	protected static final int radiusbias = (((int) 1) << radiusbiasshift);
+	protected static final int radiusbias = (1 << radiusbiasshift);
 	protected static final int initradius = (initrad * radiusbias); /* and decreases by a */
 	protected static final int radiusdec = 30; /* factor of 1/30 each cycle */
 
 	/* defs for decreasing alpha factor */
 	protected static final int alphabiasshift = 10; /* alpha starts at 1.0 */
-	protected static final int initalpha = (((int) 1) << alphabiasshift);
+	protected static final int initalpha = (1 << alphabiasshift);
 
 	protected int alphadec; /* biased by 10 bits */
 
 	/* radbias and alpharadbias used for radpower calculation */
 	protected static final int radbiasshift = 8;
-	protected static final int radbias = (((int) 1) << radbiasshift);
+	protected static final int radbias = (1 << radbiasshift);
 	protected static final int alpharadbshift = (alphabiasshift + radbiasshift);
-	protected static final int alpharadbias = (((int) 1) << alpharadbshift);
+	protected static final int alpharadbias = (1 << alpharadbshift);
 
 	/* Types and Global Variables
 	-------------------------- */
@@ -421,7 +421,7 @@ class NeuQuant {
 		int bestpos, bestbiaspos, bestd, bestbiasd;
 		int[] n;
 
-		bestd = ~(((int) 1) << 31);
+		bestd = ~(1 << 31);
 		bestbiasd = bestd;
 		bestpos = -1;
 		bestbiaspos = bestpos;

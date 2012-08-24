@@ -75,8 +75,8 @@ public abstract class SimpleFormat extends ImageFormat {
     @Override
     public void writeImage(List<BufferedImage> frames, OutputStream out,
             Feature feature, double[] bbox, List<String> tValues, String zValue,
-            BufferedImage legend) throws IOException {
-        this.writeImage(frames, out);
+            BufferedImage legend, Integer frameRate) throws IOException {
+        this.writeImage(frames, out, frameRate);
     }
 
     /**
@@ -95,6 +95,6 @@ public abstract class SimpleFormat extends ImageFormat {
      *             if this ImageFormat cannot render all of the given
      *             BufferedImages.
      */
-    public abstract void writeImage(List<BufferedImage> frames, OutputStream out)
+    public abstract void writeImage(List<BufferedImage> frames, OutputStream out, Integer frameRate)
             throws IOException;
 }

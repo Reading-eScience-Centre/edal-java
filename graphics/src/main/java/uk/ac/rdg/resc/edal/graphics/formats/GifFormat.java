@@ -48,21 +48,26 @@ public class GifFormat extends SimpleFormat {
     }
 
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out) throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out, Integer frameRate)
+            throws IOException {
         AnimatedGifEncoder e = new AnimatedGifEncoder();
         e.start(out);
         if (frames.size() > 1) {
             // this is an animated GIF. Set to loop infinitely.
             e.setRepeat(0);
-            e.setDelay(150); // delay between frames in milliseconds
+            if (frameRate != null) {
+                e.setDelay(1000 / frameRate);
+            } else {
+                e.setDelay(150); // delay between frames in milliseconds
+            }
         }
         boolean sizeSet = false;
         IndexColorModel icm = getGeneralIndexedColorModelWithTransparency();
         byte[] rgbPalette = getRGBPalette(icm);
         for (BufferedImage frame : frames) {
-            
-            
-            BufferedImage gifFrame = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_BYTE_INDEXED, icm);
+
+            BufferedImage gifFrame = new BufferedImage(frame.getWidth(), frame.getHeight(),
+                    BufferedImage.TYPE_BYTE_INDEXED, icm);
             gifFrame.createGraphics().drawImage(frame, 0, 0, null);
             if (!sizeSet) {
                 e.setSize(frame.getWidth(), frame.getHeight());
@@ -84,32 +89,33 @@ public class GifFormat extends SimpleFormat {
          * TYPE_BYTE_INDEXED without specifying an IndexColorModel, with the
          * difference that we add a single transparent pixel.
          */
-        
+
         // Create a 6x6x6 color cube
         int[] cmap = new int[256];
-        int i=0;
+        int i = 0;
         cmap[i++] = 255 << 32 | (255 << 16) | (255 << 8) | (255);
-        for (int r=0; r < 256; r += 51) {
-            for (int g=0; g < 256; g += 51) {
-                for (int b=0; b < 256; b += 51) {
-                    cmap[i++] = (r<<16)|(g<<8)|b;
+        for (int r = 0; r < 256; r += 51) {
+            for (int g = 0; g < 256; g += 51) {
+                for (int b = 0; b < 256; b += 51) {
+                    cmap[i++] = (r << 16) | (g << 8) | b;
                 }
             }
         }
         // And populate the rest of the cmap with gray values
-        int grayIncr = 256/(256-i);
+        int grayIncr = 256 / (256 - i);
 
         // The gray ramp will be between 18 and 252
-        int gray = grayIncr*3;
+        int gray = grayIncr * 3;
         for (; i < 255; i++) {
-            cmap[i] = (gray<<16)|(gray<<8)|gray;
+            cmap[i] = (gray << 16) | (gray << 8) | gray;
             gray += grayIncr;
         }
 
-        IndexColorModel colorModel = new IndexColorModel(8, 256, cmap, 0, true, 0, DataBuffer.TYPE_BYTE);
+        IndexColorModel colorModel = new IndexColorModel(8, 256, cmap, 0, true, 0,
+                DataBuffer.TYPE_BYTE);
         return colorModel;
     }
-    
+
     /**
      * Gets the RGB palette as an array of 256*3 bytes (i.e. 256 colours in RGB
      * order). If the given IndexColorModel contains less than 256 colours the

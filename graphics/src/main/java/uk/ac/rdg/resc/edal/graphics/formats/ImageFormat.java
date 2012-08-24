@@ -155,6 +155,6 @@ public abstract class ImageFormat {
      */
     public abstract void writeImage(List<BufferedImage> frames, OutputStream out,
             Feature feature, double[] bbox, List<String> tValues, String zValue,
-            BufferedImage legend) throws IOException;
+            BufferedImage legend, Integer frameRate) throws IOException;
 
 }
