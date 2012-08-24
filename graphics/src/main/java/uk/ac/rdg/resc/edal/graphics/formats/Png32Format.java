@@ -29,9 +29,8 @@ package uk.ac.rdg.resc.edal.graphics.formats;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
-
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,12 +56,12 @@ public class Png32Format extends PngFormat {
     }
 
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out) throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out, Integer frameRate) throws IOException {
         List<BufferedImage> frames32bit = new ArrayList<BufferedImage>(frames.size());
         for (BufferedImage source : frames) {
             frames32bit.add(convertARGB(source));
         }
-        super.writeImage(frames32bit, out);
+        super.writeImage(frames32bit, out, frameRate);
     }
 
     /**

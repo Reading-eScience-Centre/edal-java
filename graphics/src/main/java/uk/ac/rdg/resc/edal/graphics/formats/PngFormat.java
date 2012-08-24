@@ -28,11 +28,11 @@
 package uk.ac.rdg.resc.edal.graphics.formats;
 
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
-
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 /**
  * Writes PNG images using the ImageIO class. Only one instance of this class
@@ -69,7 +69,7 @@ public class PngFormat extends SimpleFormat {
     }
 
     @Override
-    public synchronized void writeImage(List<BufferedImage> frames, OutputStream out) throws IOException {
+    public synchronized void writeImage(List<BufferedImage> frames, OutputStream out, Integer frameRate) throws IOException {
         if (frames.size() > 1) {
             throw new IllegalArgumentException("Cannot render animations in PNG format");
         }

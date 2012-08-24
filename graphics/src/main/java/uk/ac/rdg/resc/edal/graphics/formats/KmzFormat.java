@@ -92,7 +92,7 @@ public class KmzFormat extends ImageFormat {
     @Override
     public void writeImage(List<BufferedImage> frames, OutputStream out,
             Feature feature, double[] bbox, List<String> tValues, String zValue,
-            BufferedImage legend) throws IOException {
+            BufferedImage legend, Integer frameRate) throws IOException {
         StringBuffer kml = new StringBuffer();
         for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++) {
             if (frameIndex == 0) {
