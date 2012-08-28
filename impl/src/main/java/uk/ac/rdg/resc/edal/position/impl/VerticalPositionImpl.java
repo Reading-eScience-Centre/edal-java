@@ -83,6 +83,6 @@ public class VerticalPositionImpl implements VerticalPosition {
 
     @Override
     public String toString() {
-        return z+crs.getUnits().getUnitString();
+        return z + (crs != null ? crs.getUnits().getUnitString() : "");
     }
 }
