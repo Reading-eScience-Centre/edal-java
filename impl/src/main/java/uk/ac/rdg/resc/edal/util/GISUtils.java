@@ -323,7 +323,7 @@ public final class GISUtils {
         return tAxis.getCoordinateValue(index);
     }
     
-    private static VerticalPosition getUppermostElevation(Feature feature) {
+    public static VerticalPosition getUppermostElevation(Feature feature) {
         VerticalAxis vAxis = getVerticalAxis(feature);
         // We must access the elevation values via the accessor method in case
         // subclasses override it.
