@@ -16,7 +16,7 @@ import org.monte.media.math.Rational;
 /**
  * "Image" format for outputting to AVI.  Uses the
  * <a href="http://www.randelshofer.ch/monte/">Monte Media Library</a>
- * to do the rendering to AVI.
+ * by Werner Randelshofer to do the rendering to AVI.
  * 
  * @author Guy Griffiths
  *
