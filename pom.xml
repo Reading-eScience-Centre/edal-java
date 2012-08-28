@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Top-level POM for Java-CSML library -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<!-- We inherit from oss-parent so we can deploy to sonatype.org -->
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
@@ -10,7 +9,7 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>uk.ac.rdg.resc</groupId>
-	<version>0.2.0-SNAPSHOT</version>
+	<version>0.2</version>
 	<artifactId>edal</artifactId>
 	<name>Environmental Data Abstraction Library</name>
 	<packaging>pom</packaging>
