@@ -170,16 +170,6 @@ final public class Charting {
             invertYAxis = true;
         } else {
             zAxisLabel = "Depth";
-            /*
-             * 
-             * If this is a depth axis, all the values in elevationValues will
-             * be negative, so we must reverse this (see CdmUtils.getZValues())
-             */
-            List<Double> newElValues = new ArrayList<Double>(elevationValues.size());
-            for (Double zVal : elevationValues) {
-                newElValues.add(-zVal);
-            }
-            elevationValues = newElValues;
             invertYAxis = true;
         }
 

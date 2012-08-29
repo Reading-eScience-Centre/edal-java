@@ -219,12 +219,7 @@ public final class CdmUtils {
 
             List<Double> zValues = CollectionUtils.newArrayList();
             for (double zVal : zAxis.getCoordValues()) {
-                // Pressure axes have "positive = down" but we don't want to
-                // reverse the sign of the values.
-                if (isPositive || isPressure)
-                    zValues.add(zVal);
-                else
-                    zValues.add(-zVal); // This is probably a depth axis
+                zValues.add(zVal);
             }
             values = Collections.unmodifiableList(zValues);
         } else {
@@ -399,45 +394,5 @@ public final class CdmUtils {
         FeatureType fType = featureDS.getFeatureType();
         assert (fType == FeatureType.GRID);
         return (GridDataset) featureDS;
-    }
-    
-    public static void main(String[] args) throws IOException {
-        String slowFilename = "/home/guy/Data/Signell_curvilinear/useast/useast_his_0001.nc";
-        String slowVarId = "ubar";
-        String fastFilename = "/home/guy/Data/OSTIA/20100715-UKMO-L4HRfnd-GLOB-v01-fv02-OSTIA.nc";
-        String fastVarId = "analysed_sst";
-        
-        String varId;
-        NetcdfDataset nc;
-        
-        System.out.println("Press something");
-        System.in.read();
-        int runs = 1000;
-        
-        
-        varId = fastVarId;
-        long starttime1 = System.currentTimeMillis();
-        nc = openDataset(fastFilename);
-        for(int i=0;i<runs;i++){
-            getGridDatatype(nc, varId);
-        }
-        closeDataset(nc);
-        long endtime1 = System.currentTimeMillis();
-        
-        varId = slowVarId;
-        long starttime2 = System.currentTimeMillis();
-        nc = openDataset(slowFilename);
-        for(int i=0;i<runs;i++){
-            getGridDatatype(nc, varId);
-        }
-        closeDataset(nc);
-        long endtime2 = System.currentTimeMillis();
-        
-        double diff1 = (endtime1-starttime1)/1000.0;
-        double diff2 = (endtime2-starttime2)/1000.0;
-        
-        System.out.println("Fast: "+diff1+"\nSlow: "+diff2);
-        System.out.println("Press something");
-        System.in.read();
     }
 }
