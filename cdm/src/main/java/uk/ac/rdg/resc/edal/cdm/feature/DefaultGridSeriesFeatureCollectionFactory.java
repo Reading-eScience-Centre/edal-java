@@ -29,13 +29,21 @@ package uk.ac.rdg.resc.edal.cdm.feature;
 
 import java.io.IOException;
 
+import ucar.ma2.InvalidRangeException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 
 public class DefaultGridSeriesFeatureCollectionFactory extends FeatureCollectionFactory {
 
     @Override
-    public FeatureCollection<Feature> read(String location, String id, String name) throws IOException {
+    public FeatureCollection<? extends Feature> read(String location, String id, String name) throws IOException {
+        if(location.toLowerCase().contains("en3")){
+            try {
+                return new EN3ProfileFeatureCollection(id, name, location);
+            } catch (InvalidRangeException e) {
+                e.printStackTrace();
+            }
+        }
         return new NcGridSeriesFeatureCollection(id, name, location);
     }
 }
