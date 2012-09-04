@@ -29,8 +29,8 @@
 package uk.ac.rdg.resc.edal.feature.impl;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,7 +46,7 @@ public abstract class AbstractFeatureCollection<R extends Feature> implements Fe
         this.collectionId = collectionId;
         this.name = collectionName;
 
-        id2Feature = new HashMap<String, R>();
+        id2Feature = new LinkedHashMap<String, R>();
     }
 
     @Override

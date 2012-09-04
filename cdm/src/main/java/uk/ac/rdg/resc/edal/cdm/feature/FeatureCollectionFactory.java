@@ -36,7 +36,7 @@ import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 
 public abstract class FeatureCollectionFactory {
 
-    public abstract FeatureCollection<Feature> read(String location, String id,
+    public abstract FeatureCollection<? extends Feature> read(String location, String id,
             String name) throws IOException;
 
     /**

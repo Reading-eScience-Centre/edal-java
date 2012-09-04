@@ -59,7 +59,6 @@ import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.impl.GridSeriesCoverageImpl;
 import uk.ac.rdg.resc.edal.coverage.plugins.VectorPlugin;
-import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.impl.AbstractFeatureCollection;
@@ -72,7 +71,7 @@ import uk.ac.rdg.resc.edal.feature.impl.GridSeriesFeatureImpl;
  * @author Guy Griffiths
  * 
  */
-public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<Feature> {
+public class NcGridSeriesFeatureCollection extends AbstractFeatureCollection<GridSeriesFeature> {
     
     private final static String NCML_AGGREGATION_NAME = "ncWMS-auto_agg.ncml";
 
