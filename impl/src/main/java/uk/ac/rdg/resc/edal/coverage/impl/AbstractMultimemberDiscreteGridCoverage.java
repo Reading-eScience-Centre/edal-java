@@ -86,6 +86,24 @@ public abstract class AbstractMultimemberDiscreteGridCoverage<P, DO, GD extends 
         }
     }
 
+    /**
+     * Adds a member to this coverage, adding the metadata and storing the
+     * {@link GridValuesMatrix} for extracting the data
+     * 
+     * @param memberName
+     *            The member name
+     * @param domain
+     *            The domain of the member - must match the domain of the
+     *            coverage
+     * @param description
+     *            The description for the metadata
+     * @param parameter
+     *            The {@link Phenomenon} for the metadata
+     * @param units
+     *            The {@link Unit} for the metadata
+     * @param gridValueMatrix
+     *            The {@link GridValuesMatrix} to access the data
+     */
     public void addMember(String memberName, GD domain, String description, Phenomenon parameter,
             Unit units, GridValuesMatrix<?> gridValueMatrix) {
         addMemberToMetadata(memberName, domain, description, parameter, units,
