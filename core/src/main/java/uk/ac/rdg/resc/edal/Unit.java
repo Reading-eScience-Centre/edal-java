@@ -95,12 +95,30 @@ public final class Unit {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((unitString == null) ? 0 : unitString.hashCode());
+        result = prime * result + ((unitVocabulary == null) ? 0 : unitVocabulary.hashCode());
+        return result;
+    }
+
+    @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Unit) {
-            Unit unit = (Unit) obj;
-            return unit.unitString.equals(unitString) && unit.unitVocabulary == unitVocabulary;
-        } else {
+        if (this == obj)
+            return true;
+        if (obj == null)
             return false;
-        }
+        if (getClass() != obj.getClass())
+            return false;
+        Unit other = (Unit) obj;
+        if (unitString == null) {
+            if (other.unitString != null)
+                return false;
+        } else if (!unitString.equals(other.unitString))
+            return false;
+        if (unitVocabulary != other.unitVocabulary)
+            return false;
+        return true;
     }
 }
