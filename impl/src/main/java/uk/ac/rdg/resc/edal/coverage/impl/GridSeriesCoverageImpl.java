@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.coverage.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -183,13 +184,26 @@ public class GridSeriesCoverageImpl extends
         if (getDomain().getVerticalAxis() != null) {
             z = getDomain().getVerticalAxis().findIndexOf(zPos.getZ());
         }
-        int tmin = getDomain().getTimeAxis().findIndexOf((TimePosition) tExtent.getLow());
-        int tmax = getDomain().getTimeAxis().findIndexOf((TimePosition) tExtent.getHigh());
-        /*
-         * We use tmax+1 because subList is exclusive of the last value
-         */
-        PointSeriesDomain domain = new PointSeriesDomainImpl(getDomain().getTimeAxis()
-                .getCoordinateValues().subList(tmin, tmax + 1));
+        
+        List<TimePosition> times = new ArrayList<TimePosition>();
+        int tmin = 0;
+        int tmax = 0;
+        int i = 0;
+        boolean setLow = false;
+        for(TimePosition time : getDomain().getTimeAxis().getCoordinateValues()){
+            if (time.compareTo((TimePosition) tExtent.getLow()) >= 0
+                    && time.compareTo((TimePosition) tExtent.getHigh()) <= 0) {
+                times.add(time);
+                if(!setLow){
+                    tmin = i;
+                    setLow = true;
+                }
+                tmax = i;
+            }
+            i++;
+        }
+
+        PointSeriesDomain domain = new PointSeriesDomainImpl(times);
         PointSeriesCoverageImpl psCoverage = new PointSeriesCoverageImpl("Point series coverage",
                 domain);
         for (String memberName : memberNames) {

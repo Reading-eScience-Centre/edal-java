@@ -59,8 +59,9 @@ public class PointSeriesDomainImpl extends AbstractPointDomain<TimePosition> imp
         if (times != null) {
             long lastTime = 0L;
             if (times.size() == 0) {
-                throw new IllegalArgumentException(
-                        "Must have at least one time value for a PointSeriesDomain");
+                calSys = CalendarSystem.CAL_ISO_8601;
+            } else {
+                calSys = times.get(0).getCalendarSystem();
             }
             for (TimePosition time : times) {
                 if (time.getValue() < lastTime) {
@@ -68,7 +69,6 @@ public class PointSeriesDomainImpl extends AbstractPointDomain<TimePosition> imp
                 }
                 lastTime = time.getValue();
             }
-            calSys = times.get(0).getCalendarSystem();
         } else {
             calSys = null;
         }
