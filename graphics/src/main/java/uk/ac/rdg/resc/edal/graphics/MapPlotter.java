@@ -316,7 +316,7 @@ public class MapPlotter {
             if(containingCell == null)
                 continue;
             Object val = evaluator.evaluate(hPos);
-            if (val == null || Float.isNaN((Float)val)){
+            if (val == null || (Float.class.isAssignableFrom(val.getClass()) && Float.isNaN((Float)val))){
                 continue;
             }
             coords.add(containingCell.getGridCoordinates());
