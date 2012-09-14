@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,10 +15,13 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
+import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
+import uk.ac.rdg.resc.edal.coverage.GridSeriesCoverage;
 import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
 import uk.ac.rdg.resc.edal.coverage.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.TrajectoryDomainImpl;
@@ -25,6 +29,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
@@ -125,6 +130,9 @@ public class MapPlotter {
         }
         
         RangeMetadata metadata = MetadataUtils.getMetadataForFeatureMember(feature, memberName);
+        if(metadata == null){
+            throw new IllegalArgumentException("Member "+memberName+" does not exist.  Cannot plot.");
+        }
         if(metadata instanceof ScalarMetadata){
             addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, (ScalarMetadata) metadata, style.getScaleRange());
         } else {
@@ -172,7 +180,7 @@ public class MapPlotter {
             addGridSeriesFeatureToFrame((GridSeriesFeature) feature, memberName, vPos, tPos, label,
                     plotStyle, frame, contourScaleRange);
         } else if (feature instanceof GridFeature) {
-            addGridFeatureToFrame((GridFeature) feature, memberName, label, plotStyle, frame, contourScaleRange);
+            addGridFeatureToFrame((GridFeature) feature, memberName, label, plotStyle, frame, contourScaleRange, false);
         } else if (feature instanceof PointSeriesFeature) {
             addPointSeriesFeatureToFrame((PointSeriesFeature) feature, memberName, tPos, label,
                     plotStyle, frame);
@@ -188,8 +196,8 @@ public class MapPlotter {
         }
     }
 
-    private void addGridSeriesFeatureToFrame(GridSeriesFeature feature, String memberName,
-            VerticalPosition vPos, TimePosition tPos, String label, PlotStyle plotStyle, Frame frame, Extent<Float> contourScaleRange) {
+    private void addGridSeriesFeatureToFrame(GridSeriesFeature feature, final String memberName,
+            final VerticalPosition vPos, final TimePosition tPos, String label, PlotStyle plotStyle, Frame frame, Extent<Float> contourScaleRange) {
         RangeMetadata memberMetadata = MetadataUtils.getDescendantMetadata(feature.getCoverage()
                 .getRangeMetadata(), memberName);
         Set<String> memberNamesToExtract = getAllScalarChildrenOf(memberMetadata);
@@ -197,52 +205,36 @@ public class MapPlotter {
         if (plotStyle == PlotStyle.TRAJECTORY) {
             throw new UnsupportedOperationException(
                     "Cannot plot this type of feature as a trajectory");
-        } else if (plotStyle == PlotStyle.POINT || plotStyle == PlotStyle.GRIDPOINT) {
-            /*
-             * These plot styles theoretically need the entire grid - that's the
-             * point. However, if we have higher resolution data than the grid,
-             * there is no point evaluating it all (and it can be *far* too slow).
-             * 
-             * Therefore, we check the size of the grid and extract the minimum
-             * needed
-             */
-            
-            BoundingBox featureBbox = feature.getCoverage().getDomain().getHorizontalGrid()
-                    .getCoordinateExtent();
-            Extent<Integer> xExtent = feature.getCoverage().getDomain().getHorizontalGrid()
-                    .getGridExtent().getExtent(0);
-            Extent<Integer> yExtent = feature.getCoverage().getDomain().getHorizontalGrid()
-                    .getGridExtent().getExtent(1);
-            int fullXPoints = (int) ((xExtent.getHigh() - xExtent.getLow() - 1) * (bbox.getWidth() / featureBbox
-                    .getWidth()));
-            int fullYPoints = (int) ((yExtent.getHigh() - yExtent.getLow() - 1) * (bbox.getHeight() / featureBbox
-                    .getHeight()));
-            
-            int xPointsToExtract;
-            if(fullXPoints > width){
-                xPointsToExtract = width;
-            } else {
-                xPointsToExtract = fullXPoints;
+        } else if (plotStyle == PlotStyle.GRIDPOINT) {
+            final GridSeriesCoverage coverage = feature.getCoverage();
+            addGridpoints(frame, feature.getCoverage().getDomain().getHorizontalGrid(), new Evaluator() {
+                @Override
+                public Object evaluate(HorizontalPosition hPos) {
+                    return coverage.evaluate(new GeoPositionImpl(hPos, vPos, tPos), memberName);
+                }
+            });
+        } else if (plotStyle == PlotStyle.POINT) {
+            if (!(Number.class.isAssignableFrom(feature.getCoverage()
+                    .getScalarMetadata(memberName).getValueType()))) {
+                throw new UnsupportedOperationException(
+                        "Cannot plot non-numerical data as coloured points");
             }
-            int yPointsToExtract;
-            if(fullYPoints > height){
-                yPointsToExtract = height;
-            } else {
-                yPointsToExtract = fullYPoints;
-            }
-            
-            HorizontalGrid horizontalGrid = new RegularGridImpl(bbox, xPointsToExtract, yPointsToExtract);
-            gridFeature = feature.extractGridFeature(horizontalGrid, vPos, tPos,
-                    memberNamesToExtract);
+            final GridSeriesCoverage coverage = feature.getCoverage();
+            addColouredPoints(frame, feature.getCoverage().getDomain().getHorizontalGrid(), new Evaluator() {
+                @Override
+                public Object evaluate(HorizontalPosition hPos) {
+                    return coverage.evaluate(new GeoPositionImpl(hPos, vPos, tPos), memberName);
+                }
+            }, plotStyle);
         } else {
             gridFeature = feature.extractGridFeature(new RegularGridImpl(bbox, width, height),
                     vPos, tPos, memberNamesToExtract);
+            addGridFeatureToFrame(gridFeature, memberName, label, plotStyle, frame, contourScaleRange, true);
         }
-        addGridFeatureToFrame(gridFeature, memberName, label, plotStyle, frame, contourScaleRange);
     }
-
-    private void addGridFeatureToFrame(GridFeature feature, String memberName, String label,
-            PlotStyle plotStyle, Frame frame, Extent<Float> contourScaleRange) {
+    
+    private void addGridFeatureToFrame(GridFeature feature, final String memberName, String label,
+            PlotStyle plotStyle, Frame frame, Extent<Float> contourScaleRange, boolean alreadyExtracted) {
 
         /*
          * First, make sure that we have a suitable grid feature.
@@ -250,43 +242,27 @@ public class MapPlotter {
         if (plotStyle == PlotStyle.TRAJECTORY) {
             throw new UnsupportedOperationException(
                     "Cannot plot this type of feature as a trajectory");
-        } else if (plotStyle == PlotStyle.POINT || plotStyle == PlotStyle.GRIDPOINT) {
-            /*
-             * We are using a plot style which needs the entire grid. Usually
-             * this will be lower resolution than the image anyway, so it's not
-             * necessarily slow
-             */
-            BoundingBox featureBbox = feature.getCoverage().getDomain().getCoordinateExtent();
-            Extent<Integer> xExtent = feature.getCoverage().getDomain().getGridExtent().getExtent(0);
-            Extent<Integer> yExtent = feature.getCoverage().getDomain().getGridExtent().getExtent(1);
-            int fullXPoints = (int) ((xExtent.getHigh() - xExtent.getLow() - 1) * (bbox.getWidth() / featureBbox
-                    .getWidth()));
-            int fullYPoints = (int) ((yExtent.getHigh() - yExtent.getLow() - 1) * (bbox.getHeight() / featureBbox
-                    .getHeight()));
-            
-            int xPointsToExtract;
-            boolean extract = false;
-            if(fullXPoints > width){
-                xPointsToExtract = width;
-                extract = true;
-            } else {
-                xPointsToExtract = fullXPoints;
+        } else if (plotStyle == PlotStyle.GRIDPOINT) {
+            final GridCoverage2D coverage = feature.getCoverage();
+            addGridpoints(frame, feature.getCoverage().getDomain(), new Evaluator() {
+                @Override
+                public Object evaluate(HorizontalPosition hPos) {
+                    return coverage.evaluate(hPos, memberName);
+                }
+            });
+        } else if (plotStyle == PlotStyle.POINT) {
+            if (!(Number.class.isAssignableFrom(feature.getCoverage()
+                    .getScalarMetadata(memberName).getValueType()))) {
+                throw new UnsupportedOperationException(
+                        "Cannot plot non-numerical data as coloured points");
             }
-            int yPointsToExtract;
-            if(fullYPoints > height){
-                yPointsToExtract = height;
-                extract = true;
-            } else {
-                yPointsToExtract = fullYPoints;
-            }
-
-            if(extract){
-                RangeMetadata memberMetadata = MetadataUtils.getDescendantMetadata(feature
-                        .getCoverage().getRangeMetadata(), memberName);
-                Set<String> memberNamesToExtract = getAllScalarChildrenOf(memberMetadata);
-                HorizontalGrid horizontalGrid = new RegularGridImpl(bbox, xPointsToExtract, yPointsToExtract);
-                feature = feature.extractGridFeature(horizontalGrid, memberNamesToExtract);
-            }
+            final GridCoverage2D coverage = feature.getCoverage();
+            addColouredPoints(frame, feature.getCoverage().getDomain(), new Evaluator() {
+                @Override
+                public Object evaluate(HorizontalPosition hPos) {
+                    return coverage.evaluate(hPos, memberName);
+                }
+            }, plotStyle);
         } else {
             /*
              * Otherwise we want the grid feature to have the same dimensions as
@@ -305,78 +281,95 @@ public class MapPlotter {
                 feature = feature.extractGridFeature(new RegularGridImpl(bbox, width, height),
                         memberNamesToExtract);
             }
-        }
-
-        /*
-         * We now have a grid feature suitable for plotting
-         */
-
-        Number[][] data;
-        /*
-         * We have a scalar field. We just want to plot it.
-         */
-        if (plotStyle == PlotStyle.GRIDPOINT) {
-            HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
-            HorizontalPosition hPos;
-            HorizontalGrid hGrid = feature.getCoverage().getDomain();
-            List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
-            for (GridCell2D gridCell : hGrid.getDomainObjects()) {
-                hPos = gridCell.getCentre();
-                GridCell2D containingCell = targetDomain.findContainingCell(hPos);
-                Object val = feature.getCoverage().evaluate(hPos, memberName);
-                if (containingCell == null || val == null || val.equals(Float.NaN)
-                        || val.equals(Double.NaN))
-                    continue;
-                coords.add(containingCell.getGridCoordinates());
-            }
-            frame.addGridPoints(coords);
-            return;
-        } else if (plotStyle == PlotStyle.POINT) {
-            if (!(Number.class.isAssignableFrom(feature.getCoverage()
-                    .getScalarMetadata(memberName).getValueType()))) {
-                throw new UnsupportedOperationException(
-                        "Cannot plot non-numerical data as coloured points");
-            }
             /*
-             * The size of border to add to the target domain (this means
-             * that when tiled, point icons don't get cut off).
-             * 
-             * This needs to be at least half the size of the icon used to
-             * plot the point, but it doesn't matter if it's a bit large. We
-             * use 16, because an icon of 32x32 is pretty massive
+             * We now have a grid feature suitable for plotting
              */
-            int extraPixels = 16;
-            double xGrowth = ((double)extraPixels)/width;
-            double yGrowth = ((double)extraPixels)/height;
-            double xExtra = bbox.getWidth()*xGrowth;
-            double yExtra = bbox.getHeight()*yGrowth;
-            BoundingBox bboxBordered = new BoundingBoxImpl(new double[] {
-                    bbox.getMinX() - xExtra, bbox.getMinY() - yExtra, bbox.getMaxX() + xExtra,
-                    bbox.getMaxY() + yExtra }, bbox.getCoordinateReferenceSystem());
-            RegularGrid targetDomain = new RegularGridImpl(bboxBordered, width+2*extraPixels, height+2*extraPixels);
-
-            HorizontalPosition hPos;
-            HorizontalGrid hGrid = feature.getCoverage().getDomain();
-            List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
-            List<Number> values = new ArrayList<Number>();
-            for (GridCell2D gridCell : hGrid.getDomainObjects()) {
-                hPos = gridCell.getCentre();
-
-                GridCell2D containingCell = targetDomain.findContainingCell(hPos);
-                if (containingCell == null)
-                    continue;
-                GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
-                coords.add(new GridCoordinates2DImpl(gridCoordinates.getXIndex() - extraPixels,
-                        gridCoordinates.getYIndex() - extraPixels));
-                
-                values.add((Number) feature.getCoverage().evaluate(hPos, memberName));
-            }
-            frame.addMultipointData(values, coords, plotStyle);
-            return;
-        } else {
-            data = getDataFromGridFeature(feature, memberName);
+            Number[][] data = getDataFromGridFeature(feature, memberName);
             frame.addGriddedData(data, plotStyle, contourScaleRange);
         }
+
+    }
+
+    private interface Evaluator {
+        Object evaluate(HorizontalPosition hPos);
+    }
+
+    private void addGridpoints(Frame frame, HorizontalGrid featureGrid, Evaluator evaluator){
+        RegularGridImpl targetDomain = new RegularGridImpl(bbox, width, height);
+        RegularAxis xAxis = targetDomain.getXAxis();
+        RegularAxis yAxis = targetDomain.getYAxis();
+        CoordinateReferenceSystem crs = bbox.getCoordinateReferenceSystem();
+        Set<Long> neededIndices = new HashSet<Long>();
+        for(double x : xAxis.getCoordinateValues()){
+            for(double y : yAxis.getCoordinateValues()){
+                long index = featureGrid.findIndexOf(new HorizontalPositionImpl(x, y, crs));
+                if(index > 0){
+                    neededIndices.add(index);
+                }
+            }                
+        }
+        Set<GridCoordinates2D> coords = new HashSet<GridCoordinates2D>();
+        for(long index : neededIndices){
+            GridCoordinates2D gridCoords = featureGrid.getCoords(index);
+            HorizontalPosition hPos = featureGrid.getGridCell(gridCoords).getCentre();
+            GridCell2D containingCell = targetDomain.findContainingCell(hPos);
+            if(containingCell == null)
+                continue;
+            Object val = evaluator.evaluate(hPos);
+            if (val == null || Float.isNaN((Float)val)){
+                continue;
+            }
+            coords.add(containingCell.getGridCoordinates());
+        }
+        frame.addGridPoints(coords);
+        return;
+    }
+
+    private void addColouredPoints(Frame frame, HorizontalGrid featureGrid, Evaluator evaluator, PlotStyle plotStyle){
+        /*
+         * The size of border to add to the target domain (this means
+         * that when tiled, point icons don't get cut off).
+         * 
+         * This needs to be at least half the size of the icon used to
+         * plot the point, but it doesn't matter if it's a bit large. We
+         * use 16, because an icon of 32x32 is pretty massive
+         */
+        int extraPixels = 16;
+        double xGrowth = ((double)extraPixels)/width;
+        double yGrowth = ((double)extraPixels)/height;
+        double xExtra = bbox.getWidth()*xGrowth;
+        double yExtra = bbox.getHeight()*yGrowth;
+        BoundingBox bboxBordered = new BoundingBoxImpl(new double[] {
+                bbox.getMinX() - xExtra, bbox.getMinY() - yExtra, bbox.getMaxX() + xExtra,
+                bbox.getMaxY() + yExtra }, bbox.getCoordinateReferenceSystem());
+        RegularGrid targetDomain = new RegularGridImpl(bboxBordered, width+2*extraPixels, height+2*extraPixels);
+        
+        RegularAxis xAxis = targetDomain.getXAxis();
+        RegularAxis yAxis = targetDomain.getYAxis();
+        CoordinateReferenceSystem crs = bbox.getCoordinateReferenceSystem();
+        Set<Long> neededIndices = new LinkedHashSet<Long>();
+        for(double x : xAxis.getCoordinateValues()){
+            for(double y : yAxis.getCoordinateValues()){
+                long index = featureGrid.findIndexOf(new HorizontalPositionImpl(x, y, crs));
+                if(index > 0){
+                    neededIndices.add(index);
+                }
+            }                
+        }
+        List<GridCoordinates2D> coords = new ArrayList<GridCoordinates2D>();
+        List<Number> values = new ArrayList<Number>();
+        for(long index : neededIndices){
+            GridCoordinates2D gridCoords = featureGrid.getCoords(index);
+            HorizontalPosition hPos = featureGrid.getGridCell(gridCoords).getCentre();
+            GridCell2D containingCell = targetDomain.findContainingCell(hPos);
+            if(containingCell == null)
+                continue;
+            GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
+            coords.add(new GridCoordinates2DImpl(gridCoordinates.getXIndex() - extraPixels,
+                    gridCoordinates.getYIndex() - extraPixels));
+            values.add((Number) evaluator.evaluate(hPos));
+        }
+        frame.addMultipointData(values, coords, plotStyle);
     }
 
     private void addPointSeriesFeatureToFrame(PointSeriesFeature feature, String memberName,

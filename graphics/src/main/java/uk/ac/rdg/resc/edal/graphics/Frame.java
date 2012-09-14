@@ -29,6 +29,7 @@ import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.Extent;
@@ -59,7 +60,7 @@ public class Frame {
         layers = new ArrayList<FrameData>();
     }
     
-    public void addGridPoints(List<GridCoordinates2D> coords){
+    public void addGridPoints(Collection<GridCoordinates2D> coords){
         layers.add(new GridPointsFrameData(coords));
     }
 
@@ -94,7 +95,6 @@ public class Frame {
             graphics.setColor(style.getBgColor());
             graphics.fillRect(0, 0, width, height);
         }
-
         for (FrameData frameData : layers) {
             BufferedImage frameImage = null;
             switch (frameData.getPlotStyle()) {
@@ -133,7 +133,6 @@ public class Frame {
             gfx.drawRect(0, image.getHeight() - 20, image.getWidth() - 1, 19);
             gfx.drawString(label, 10, image.getHeight() - 5);
         }
-
         return image;
     }
 
