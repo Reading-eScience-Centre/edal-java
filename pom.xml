@@ -191,15 +191,15 @@
 					<targetJdk>1.6</targetJdk>
 				</configuration>
 			</plugin>
-			<plugin>
-				<!-- Checkstyle plugin - looks for naughtiness in source code -->
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<!-- I think the plugin ignores the "aggregate" instruction... -->
-				<configuration>
-					<aggregate>true</aggregate>
-				</configuration>
-			</plugin>
+<!-- 			<plugin> -->
+<!-- 				Checkstyle plugin - looks for naughtiness in source code -->
+<!-- 				<groupId>org.apache.maven.plugins</groupId> -->
+<!-- 				<artifactId>maven-checkstyle-plugin</artifactId> -->
+<!-- 				I think the plugin ignores the "aggregate" instruction... -->
+<!-- 				<configuration> -->
+<!-- 					<aggregate>true</aggregate> -->
+<!-- 				</configuration> -->
+<!-- 			</plugin> -->
 		</plugins>
 	</reporting>
 	<dependencies>
@@ -225,6 +225,11 @@
 			<id>edal-snapshots</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
+		<site>
+		  <id>website</id>
+		  <name>ReSC Website</name>
+		  <url>scp://fakewebsite.xxx/maven</url>
+		</site>
 	</distributionManagement>
 	<modules>
 		<!-- Note that these are relative directory paths, not artifactIds! -->

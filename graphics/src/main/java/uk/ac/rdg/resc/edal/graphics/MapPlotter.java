@@ -31,6 +31,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.BorderedGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.TrajectoryCoverageImpl;
@@ -326,23 +327,7 @@ public class MapPlotter {
     }
 
     private void addColouredPoints(Frame frame, HorizontalGrid featureGrid, Evaluator evaluator, PlotStyle plotStyle){
-        /*
-         * The size of border to add to the target domain (this means
-         * that when tiled, point icons don't get cut off).
-         * 
-         * This needs to be at least half the size of the icon used to
-         * plot the point, but it doesn't matter if it's a bit large. We
-         * use 16, because an icon of 32x32 is pretty massive
-         */
-        int extraPixels = 16;
-        double xGrowth = ((double)extraPixels)/width;
-        double yGrowth = ((double)extraPixels)/height;
-        double xExtra = bbox.getWidth()*xGrowth;
-        double yExtra = bbox.getHeight()*yGrowth;
-        BoundingBox bboxBordered = new BoundingBoxImpl(new double[] {
-                bbox.getMinX() - xExtra, bbox.getMinY() - yExtra, bbox.getMaxX() + xExtra,
-                bbox.getMaxY() + yExtra }, bbox.getCoordinateReferenceSystem());
-        RegularGrid targetDomain = new RegularGridImpl(bboxBordered, width+2*extraPixels, height+2*extraPixels);
+        RegularGrid targetDomain = new BorderedGrid(bbox, width, height);
         
         RegularAxis xAxis = targetDomain.getXAxis();
         RegularAxis yAxis = targetDomain.getYAxis();
@@ -364,9 +349,7 @@ public class MapPlotter {
             GridCell2D containingCell = targetDomain.findContainingCell(hPos);
             if(containingCell == null)
                 continue;
-            GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
-            coords.add(new GridCoordinates2DImpl(gridCoordinates.getXIndex() - extraPixels,
-                    gridCoordinates.getYIndex() - extraPixels));
+            coords.add(containingCell.getGridCoordinates());
             values.add((Number) evaluator.evaluate(hPos));
         }
         frame.addMultipointData(values, coords, plotStyle);
@@ -374,7 +357,7 @@ public class MapPlotter {
 
     private void addPointSeriesFeatureToFrame(PointSeriesFeature feature, String memberName,
             TimePosition tPos, String label, PlotStyle plotStyle, Frame frame) {
-        HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
+        HorizontalGrid targetDomain = new BorderedGrid(bbox, width, height);
         GridCell2D containingCell = targetDomain
                 .findContainingCell(feature.getHorizontalPosition());
         /*
@@ -416,7 +399,7 @@ public class MapPlotter {
 
     private void addProfileFeatureToFrame(ProfileFeature feature, String memberName,
             VerticalPosition vPos, String label, PlotStyle plotStyle, Frame frame) {
-        HorizontalGrid targetDomain = new RegularGridImpl(bbox, width, height);
+        HorizontalGrid targetDomain = new BorderedGrid(bbox, width, height);
         GridCell2D containingCell = targetDomain
                 .findContainingCell(feature.getHorizontalPosition());
         /*
