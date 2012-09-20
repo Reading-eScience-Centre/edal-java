@@ -42,7 +42,7 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
  * @author Jon
  * @author Guy Griffiths
  */
-public final class RegularGridImpl extends AbstractRectilinearGrid implements RegularGrid
+public class RegularGridImpl extends AbstractRectilinearGrid implements RegularGrid
 {
     private final RegularAxis xAxis;
     private final RegularAxis yAxis;

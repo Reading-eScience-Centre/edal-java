@@ -352,6 +352,20 @@ public final class GISUtils {
     }
     
 
+    public static VerticalPosition getClosestElevationTo(float targetDepth, ProfileFeature profile) {
+        List<Double> values = profile.getCoverage().getDomain().getZValues();
+        int index = Collections.binarySearch(values, (double) targetDepth);
+        if(index < 0){
+            index = -(index + 1);
+            if(index == values.size() || index == 0){
+                return null;
+            }
+        }
+        
+        return new VerticalPositionImpl(profile.getCoverage().getDomain().getZValues()
+                .get(index), profile.getCoverage().getDomain().getVerticalCrs());
+    }
+
     /**
      * Utility to get the vertical axis of a feature, if it exists
      * 

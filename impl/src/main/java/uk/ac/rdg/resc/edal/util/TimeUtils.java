@@ -43,6 +43,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
 
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.impl.TimePositionJoda;
@@ -61,6 +62,11 @@ public class TimeUtils {
     private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);
     private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date().withZone(DateTimeZone.UTC);
     private static final DateTimeFormatter ISO_TIME_FORMATTER = ISODateTimeFormat.time().withZone(DateTimeZone.UTC);
+    private static final DateTimeFormatter NICE_DATE_TIME_FORMATTER = (new DateTimeFormatterBuilder())
+            .appendHourOfDay(2).appendLiteral(":").appendMinuteOfHour(2).appendLiteral(":")
+            .appendSecondOfMinute(2).appendLiteral(" ").appendDayOfMonth(1).appendLiteral("-")
+            .appendMonthOfYearShortText().appendLiteral("-").appendYear(4, 4).toFormatter()
+            .withZone(DateTimeZone.UTC);
     private static final DateTimeFormatter UTC_TIME_FORMATTER = (new DateTimeFormatterBuilder())
             .appendHourOfDay(2).appendLiteral(":").appendMinuteOfHour(2).appendLiteral(":")
             .appendSecondOfMinute(2).toFormatter().withZone(DateTimeZone.UTC);
@@ -157,6 +163,13 @@ public class TimeUtils {
      */
     public static String formatUTCTimeOnly(TimePosition dateTime) {
         return UTC_TIME_FORMATTER.print(dateTime.getValue());
+    }
+    
+    /**
+     * Formats a DateTime in a nice human-readable manner.
+     */
+    public static String formatUTCHumanReadableDateTime(TimePosition dateTime){
+        return NICE_DATE_TIME_FORMATTER.print(dateTime.getValue());
     }
     
     /**
@@ -440,5 +453,18 @@ public class TimeUtils {
             s = s.substring(0, s.length() - 1);
         }
         return s;
+    }
+
+    public static Extent<TimePosition> getTimeRangeForString(String timeString,
+            CalendarSystem calSys) throws ParseException {
+        List<TimePosition> times = new ArrayList<TimePosition>();
+        String[] elements = timeString.split(",");
+        for (String element : elements) {
+            String[] startStop = element.split("/");
+            for (String time : startStop) {
+                times.add(iso8601ToDateTime(time, calSys));
+            }
+        }
+        return Extents.findMinMax(times);
     }
 }

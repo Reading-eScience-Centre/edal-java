@@ -29,9 +29,12 @@
 package uk.ac.rdg.resc.edal.feature;
 
 import java.util.Collection;
+
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A collection of ProfileFeatures.
@@ -41,8 +44,14 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 public interface ProfileFeatureCollection extends FeatureCollection<ProfileFeature> {
     /**
      * Returns all the profiles in the collection whose horizontal position lies
-     * within the given polygon, and which were measured within the given time
-     * range.
+     * within the given polygon, which were measured within the given time
+     * range, and which contain the given member name.
      */
-    public Collection<ProfileFeature> findProfiles(Polygon polygon, Extent<TimePosition> tRange);
+    public Collection<ProfileFeature> findProfiles(Polygon polygon, Extent<TimePosition> tRange, String memberName);
+    
+    public BoundingBox getBoundingBox();
+    
+    public Extent<VerticalPosition> getVerticalExtent();
+    
+    public Extent<TimePosition> getTimeExtent();
 }
