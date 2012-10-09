@@ -28,25 +28,31 @@
 
 package uk.ac.rdg.resc.edal.feature.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 
-public abstract class AbstractFeatureCollection<R extends Feature> implements FeatureCollection<R> {
+public class FeatureCollectionImpl<R extends Feature> implements FeatureCollection<R> {
     private String collectionId;
     private String name;
     private Map<String, R> id2Feature;
+    private Map<String, Collection<R>> member2Features;
 
-    public AbstractFeatureCollection(String collectionId, String collectionName) {
+    public FeatureCollectionImpl(String collectionId, String collectionName) {
         this.collectionId = collectionId;
         this.name = collectionName;
 
         id2Feature = new LinkedHashMap<String, R>();
+        member2Features = new LinkedHashMap<String, Collection<R>>();
     }
 
     @Override
@@ -87,5 +93,25 @@ public abstract class AbstractFeatureCollection<R extends Feature> implements Fe
     
     protected void addFeature(R feature){
         id2Feature.put(feature.getId(), feature);
+        List<RangeMetadata> allMetadata = MetadataUtils.getAllTreeMembers(feature.getCoverage().getRangeMetadata());
+        for(RangeMetadata metadata : allMetadata){
+            String memberName = metadata.getName();
+            Collection<R> features = member2Features.get(memberName);
+            if(features == null){
+                features = new ArrayList<R>();
+            }
+            features.add(feature);
+            member2Features.put(memberName, features);
+        }
+    }
+    
+    @Override
+    public Set<String> getMemberIdsInCollection() {
+        return member2Features.keySet();
+    }
+    
+    @Override
+    public Collection<R> getFeaturesWithMember(String memberName) {
+        return member2Features.get(memberName);
     }
 }

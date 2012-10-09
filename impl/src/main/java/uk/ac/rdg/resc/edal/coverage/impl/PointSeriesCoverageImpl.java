@@ -70,6 +70,9 @@ public class PointSeriesCoverageImpl extends
 
         long fromIndex = getDomain().findIndexOf(times.get(0));
         long toIndex = getDomain().findIndexOf(times.get(times.size() - 1)) + 1;
+        if(memberNames == null){
+            memberNames = getScalarMemberNames();
+        }
         for (String memberName : memberNames) {
             BigList<?> allValues = getValues(memberName);
             LittleBigList<Object> requiredValues = new LittleBigList<Object>();
