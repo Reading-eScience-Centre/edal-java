@@ -53,6 +53,7 @@
 					<source>1.6</source>
 					<target>1.6</target>
 				</configuration>
+				<version>2.5.1</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -61,7 +62,7 @@
 					<mavenExecutorId>forked-path</mavenExecutorId>
 					<useReleaseProfile>false</useReleaseProfile>
 				</configuration>
-			</plugin>
+				</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
@@ -73,6 +74,7 @@
 						</goals>
 					</execution>
 				</executions>
+				<version>2.8.1</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -152,6 +154,7 @@
 						<link>http://www.geoapi.org/3.0/javadoc/</link>
 					</links>
 				</configuration>
+				<version>2.8.1</version>
 			</plugin>
 			<plugin>
 				<!-- Cross-referenced source code, aggregated -->
@@ -160,6 +163,7 @@
 				<configuration>
 					<aggregate>true</aggregate>
 				</configuration>
+				<version>2.3</version>
 			</plugin>
 			<plugin>
 				<!-- Run unit tests and create aggregated report -->
@@ -168,6 +172,7 @@
 				<configuration>
 					<aggregate>true</aggregate>
 				</configuration>
+				<version>2.12</version>
 			</plugin>
 			<plugin>
 				<!-- Generate aggregated TODO list -->
@@ -180,6 +185,7 @@
 						<tag>@todo</tag>
 					</tags>
 				</configuration>
+				<version>2.4</version>
 			</plugin>
 			<plugin>
 				<!-- PMD checks for potential problems in source code -->
@@ -189,6 +195,7 @@
 					<aggregate>true</aggregate>
 					<targetJdk>1.6</targetJdk>
 				</configuration>
+				<version>2.7.1</version>
 			</plugin>
 <!-- 			<plugin> -->
 <!-- 				Checkstyle plugin - looks for naughtiness in source code -->

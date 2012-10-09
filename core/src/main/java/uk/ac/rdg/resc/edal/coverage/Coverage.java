@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.Set;
+
 import uk.ac.rdg.resc.edal.PartialFunction;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
@@ -74,7 +75,7 @@ public interface Coverage<P> extends PartialFunction<P, Record> {
      * Returns the top-level metadata descriptor. This object describes all the
      * members of the Coverage, using nesting where necessary to express semantic
      * relationships between the members.
-     * @see the types in the coverage.metadata package
+     * @see RangeMetadata the types in the coverage.metadata package
      */
     public RangeMetadata getRangeMetadata();
 

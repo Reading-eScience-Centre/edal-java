@@ -32,7 +32,7 @@ package uk.ac.rdg.resc.edal.coverage.grid;
  * The coordinates of a grid cell within a {@link HorizontalGrid}. It is usually
  * assumed that the x index varies faster than the y index in underlying
  * storage, hence we define
- * {@link #compareTo(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D)
+ * {@link #compareTo(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates)
  * compareTo()} so that coordinates may be sorted in a manner that reflects
  * this.
  * 

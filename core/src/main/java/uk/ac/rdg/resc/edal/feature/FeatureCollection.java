@@ -80,7 +80,19 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
      */
     public Collection<F> getFeatures();
     
+    /**
+     * Gets the {@link Set} of all member names present in {@link Feature}s in
+     * this collection
+     * 
+     * @return
+     */
     public Set<String> getMemberIdsInCollection();
+
+    /**
+     * Returns a {@link Collection} of {@link Feature}s
+     * @param memberName
+     * @return
+     */
     public Collection<F> getFeaturesWithMember(String memberName);
 
     /**
