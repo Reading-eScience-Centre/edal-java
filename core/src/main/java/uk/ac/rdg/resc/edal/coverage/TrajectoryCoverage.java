@@ -32,7 +32,7 @@ import uk.ac.rdg.resc.edal.coverage.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
- * A {@link DiscretePointCoverage} that represents a trajectory, i.e. a list of
+ * A {@link DiscreteCoverage} that represents a trajectory, i.e. a list of
  * positions in space and time.
  * @author Jon Blower
  */

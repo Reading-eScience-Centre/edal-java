@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage.grid;
 
 /**
- * The coordinates of a grid cell within a {@link HorizontalGrid}. It is usually
+ * The coordinates of a grid cell within a {@link Grid}. It is usually
  * assumed that the x index varies faster than the y index in underlying
  * storage, hence we define
  * {@link #compareTo(uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates)
@@ -63,11 +63,16 @@ public interface GridCoordinates extends Comparable<GridCoordinates> {
     public int getNDim();
 
     /**
-     * Compares first on the basis of the y index, then the x index. Hence the
-     * coordinates (x=1, y=2) are taken to be "less than" (x=2, y=1).
+     * Compares first on the basis of the highest dimension's index, then
+     * decreasing through the dimensions. For a 4D case, this means we compare
+     * t, z, y, then x. Hence the coordinates (x=1, y=2, z=2, t=2) are taken to
+     * be "less than" (x=2, y=1, z=2, t=2).
      * 
      * @param coords
-     * @return
+     * @return a negative number if the current {@link GridCoordinates} is
+     *         "less than" the supplied one, 0 if they are equivalent, and a
+     *         positive nubmer if the current {@link GridCoordinates} is
+     *         "more than" the supplied one
      */
     @Override
     public int compareTo(GridCoordinates coords);

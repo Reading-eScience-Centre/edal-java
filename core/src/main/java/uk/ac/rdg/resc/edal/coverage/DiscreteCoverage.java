@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.List;
+
 import uk.ac.rdg.resc.edal.coverage.domain.DiscreteDomain;
 
 /**
@@ -68,7 +69,7 @@ public interface DiscreteCoverage<P, DO> extends Coverage<P> {
      * @param memberName
      *            The identifier from the {@link #getScalarMemberNames() set of member
      *            names}.
-     * @return
+     * @return the list of values for the requested member
      */
     public List<?> getValues(String memberName);
 
