@@ -79,6 +79,9 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
      * @return A {@link Collection} of features
      */
     public Collection<F> getFeatures();
+    
+    public Set<String> getMemberIdsInCollection();
+    public Collection<F> getFeaturesWithMember(String memberName);
 
     /**
      * Gets the runtime class of the features within this collection.

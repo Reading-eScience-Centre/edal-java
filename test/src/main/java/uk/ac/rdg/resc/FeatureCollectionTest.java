@@ -25,7 +25,8 @@ public class FeatureCollectionTest {
         NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
                 "testcollection", "Test Collection",
 //                "/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090320.nc");
-                "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
+                "/home/guy/Data/OSTIA/20100715-UKMO-L4HRfnd-GLOB-v01-fv02-OSTIA.nc");
+//                "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
         
         System.out.println(featureCollection.getId()+"=>"+featureCollection.getName()+":"+featureCollection.getFeatureIds());
         MapStyleDescriptor style = new MapStyleDescriptor();
@@ -33,7 +34,7 @@ public class FeatureCollectionTest {
 //        System.out.println(ColorPalette.getAvailablePaletteNames());
 //        style.setNumColourBands(20);
 //        style.setColorPalette("greyscale");
-        GridSeriesFeature feature = (GridSeriesFeature) featureCollection.getFeatureById("testcollection2");
+        GridSeriesFeature feature = featureCollection.getFeatureById("testcollection1");
         GridSeriesDomain domain = feature.getCoverage().getDomain();
         
         VerticalPosition vPos = null;
@@ -48,20 +49,26 @@ public class FeatureCollectionTest {
         } catch (NullPointerException e) {
         }
         
-        int width = 500;
-        int height = 500;
+        int width = 512;
+        int height = 512;
         
         BoundingBox bbox = domain.getHorizontalGrid().getCoordinateExtent();
-        RegularGrid simpleTargetDomain = new RegularGridImpl(bbox, width, height);
-//        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { -180,
-//                -180, 180, 180 }, bbox.getCoordinateReferenceSystem()), width, height);
-        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { 0, 0,
-                50, 50 }, bbox.getCoordinateReferenceSystem()), width, height);
+//        RegularGrid simpleTargetDomain = new RegularGridImpl(bbox, width, height);
+        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { -180,
+                -90, 0, 90 }, bbox.getCoordinateReferenceSystem()), width, height);
+//        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { -50, -50,
+//                0, 0 }, bbox.getCoordinateReferenceSystem()), width, height);
+//        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { -2000000,-4350000,3350000,-200000 }, WmsUtils.getCrs("EPSG:32661")), width, height);
         MapPlotter plotter = new MapPlotter(style, targetDomain);
 
-        String member = "UV_MAG";
-        PlotStyle plotStyle = PlotStyle.POINT;
-        plotter.addToFrame(feature, member, vPos, tPos, "", plotStyle);
+//        String member = "TMP";
+        String member = "analysed_sst";
+//        PlotStyle plotStyle = PlotStyle.POINT;
+//        plotter.addToFrame(feature, member, vPos, tPos, "", PlotStyle.POINT);
+        long nanoTime = System.nanoTime();
+        plotter.addToFrame(feature, member, vPos, tPos, "", PlotStyle.POINT);
+        long nanoTime2 = System.nanoTime();
+        System.out.println("Total add to frame: "+(nanoTime2-nanoTime)/1000000000.0);
         
 //        BoundingBox bbox = new BoundingBoxImpl(new double[]{-180,-45,-170,-15}, domain.getHorizontalCrs());
 //        BufferedImage image = new BufferedImage(width*2, height*2, BufferedImage.TYPE_INT_ARGB);
@@ -109,7 +116,7 @@ public class FeatureCollectionTest {
 //        graphics.drawImage(image2, 0, height, null);
 //        graphics.drawImage(image1, width, height, null);
         
-        ImageIO.write(plotter.getRenderedFrames().get(0), "png", new File("/home/guy/00feature.png"));
+        ImageIO.write(plotter.getRenderedFrames().get(0), "png", new File("/home/guy/0000points.png"));
         
     }
 }

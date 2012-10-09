@@ -22,7 +22,7 @@ import uk.ac.rdg.resc.edal.util.BigList;
  * 
  */
 public class AbstractBigListBackedCoverage<P, DO, GD extends DiscreteDomain<P, DO>> extends
-        AbstractMultimemberDiscreteCoverage<P, DO, GD> {
+        AbstractMultimemberDiscreteCoverage<P, DO, GD> implements AppendableCoverage<P, GD> {
 
     private Map<String, BigList<?>> memberName2Values;
 
@@ -31,6 +31,7 @@ public class AbstractBigListBackedCoverage<P, DO, GD extends DiscreteDomain<P, D
         memberName2Values = new HashMap<String, BigList<?>>();
     }
 
+    @Override
     public void addMember(String memberName, GD domain, String description, Phenomenon parameter,
             Unit units, BigList<?> values, Class<?> valueType) {
         addMemberToMetadata(memberName, domain, description, parameter, units, valueType);

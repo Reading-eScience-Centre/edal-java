@@ -7,10 +7,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
@@ -31,11 +28,9 @@ import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
 import uk.ac.rdg.resc.edal.cdm.util.FileUtils;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.ProfileDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.ProfileCoverageImpl;
-import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
-import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeatureCollection;
-import uk.ac.rdg.resc.edal.feature.impl.AbstractFeatureCollection;
+import uk.ac.rdg.resc.edal.feature.impl.FeatureCollectionImpl;
 import uk.ac.rdg.resc.edal.feature.impl.ProfileFeatureImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
@@ -55,7 +50,7 @@ import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.LittleBigList;
 
-public class EN3ProfileFeatureCollection extends AbstractFeatureCollection<ProfileFeature> implements ProfileFeatureCollection {
+public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFeature> implements ProfileFeatureCollection {
 
     private BoundingBox bbox;
     private Extent<VerticalPosition> vExtent;
@@ -291,15 +286,15 @@ public class EN3ProfileFeatureCollection extends AbstractFeatureCollection<Profi
                 ProfileFeatureImpl feature = new ProfileFeatureImpl("Profile feature " + prof, "prof"
                         + prof, "Profile data for an EN3 buoy", coverage, hPos, time, this);
                 addFeature(feature);
-                for (RangeMetadata memberMetadata : MetadataUtils.getAllTreeMembers(feature
-                        .getCoverage().getRangeMetadata())) {
-                    Set<ProfileFeature> features = member2Features.get(memberMetadata.getName());
-                    if (features == null) {
-                        features = new LinkedHashSet<ProfileFeature>();
-                    }
-                    features.add(feature);
-                    member2Features.put(memberMetadata.getName(), features);
-                }
+//                for (RangeMetadata memberMetadata : MetadataUtils.getAllTreeMembers(feature
+//                        .getCoverage().getRangeMetadata())) {
+//                    Set<ProfileFeature> features = member2Features.get(memberMetadata.getName());
+//                    if (features == null) {
+//                        features = new LinkedHashSet<ProfileFeature>();
+//                    }
+//                    features.add(feature);
+//                    member2Features.put(memberMetadata.getName(), features);
+//                }
             }
         }
         bbox = new BoundingBoxImpl(minx, miny, maxx, maxy, DefaultGeographicCRS.WGS84);
@@ -309,12 +304,14 @@ public class EN3ProfileFeatureCollection extends AbstractFeatureCollection<Profi
                 (TimePosition) new TimePositionJoda(maxt));
     }
     
-    private Map<String, Set<ProfileFeature>> member2Features = new LinkedHashMap<String, Set<ProfileFeature>>();
+//    private Map<String, Set<ProfileFeature>> member2Features = new LinkedHashMap<String, Set<ProfileFeature>>();
 
     @Override
     public Collection<ProfileFeature> findProfiles(Polygon polygon, Extent<TimePosition> tRange,
             String memberName) {
-        Set<ProfileFeature> profileFeatures = member2Features.get(memberName);
+//        Set<ProfileFeature> profileFeatures = member2Features.get(memberName);
+        Collection<ProfileFeature> profileFeatures = getFeaturesWithMember(memberName);
+        
         Set<ProfileFeature> includedFeatures = new HashSet<ProfileFeature>();
         for (ProfileFeature profileFeature : profileFeatures) {
             if (polygon.contains(profileFeature.getHorizontalPosition())
@@ -339,8 +336,8 @@ public class EN3ProfileFeatureCollection extends AbstractFeatureCollection<Profi
     public Extent<TimePosition> getTimeExtent() {
         return tExtent;
     }
-    
-    public static void main(String[] args) throws IOException, InvalidRangeException {
-        EN3ProfileFeatureCollection fc = new EN3ProfileFeatureCollection("test", "Test", "/home/guy/Data/EN3/*.nc");
-    }
+//    
+//    public static void main(String[] args) throws IOException, InvalidRangeException {
+//        EN3ProfileFeatureCollection fc = new EN3ProfileFeatureCollection("test", "Test", "/home/guy/Data/EN3/*.nc");
+//    }
 }
