@@ -244,6 +244,7 @@
 		<module>cdm</module>
 		<module>graphics</module>
 		<module>ncwms</module>
+		<module>godiva</module>
 		<module>test</module>
 		<module>ncwms-based-webapp-archetype</module>
 	</modules>
