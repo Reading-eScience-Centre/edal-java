@@ -122,6 +122,9 @@ public class MapStyleDescriptor {
     }
 
     public Color getColorForValue(Number value){
+        if(value == null){
+            return Color.white;
+        }
         return new Color(getColorModel().getRGB(getColourIndex(value)));
     }
     
@@ -147,7 +150,7 @@ public class MapStyleDescriptor {
      * @return the colour index that corresponds to the given value
      */
     public int getColourIndex(Number value) {
-        if (value == null) {
+        if (value == null || Float.isNaN(value.floatValue())) {
             return numColourBands; // represents a background pixel
         } else if (!scaleRange.contains(value.floatValue())) {
             return numColourBands + 1; // represents an out-of-range pixel

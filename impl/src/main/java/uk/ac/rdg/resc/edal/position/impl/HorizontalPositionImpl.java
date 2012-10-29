@@ -92,4 +92,5 @@ public class HorizontalPositionImpl extends DirectPositionImpl implements Horizo
         this(x, y, null);
     }
 
+    
 }

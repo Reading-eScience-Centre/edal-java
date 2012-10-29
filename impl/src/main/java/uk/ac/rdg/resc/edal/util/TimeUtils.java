@@ -457,6 +457,9 @@ public class TimeUtils {
 
     public static Extent<TimePosition> getTimeRangeForString(String timeString,
             CalendarSystem calSys) throws ParseException {
+        if(timeString == null){
+            return null;
+        }
         List<TimePosition> times = new ArrayList<TimePosition>();
         String[] elements = timeString.split(",");
         for (String element : elements) {

@@ -59,6 +59,12 @@ public class MetadataUtils {
      *         exist
      */
     public static RangeMetadata getDescendantMetadata(RangeMetadata topMetadata, String memberName) {
+        /*
+         * Check for memberName=* and just return the top-level metadata
+         */
+        if(memberName != null && memberName.equals("*")){
+            return topMetadata;
+        }
         if (topMetadata.getMemberNames().contains(memberName)) {
             return topMetadata.getMemberMetadata(memberName);
         } else {
@@ -200,7 +206,8 @@ public class MetadataUtils {
      * Gets the {@link ScalarMetadata} descendant represented by
      * <code>memberName</code>. This will either be the <code>memberName</code>
      * metadata, or the representative child metadata, if
-     * <code>memberName</code> represents a parent metadata object
+     * <code>memberName</code> represents a parent metadata object, or
+     * <code>null</code> otherwise
      * 
      * @param feature
      *            The {@link Feature}

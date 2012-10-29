@@ -159,6 +159,9 @@ public class TimePositionJoda implements TimePosition {
 
     @Override
     public int compareTo(TimePosition t) {
+        if(t == null){
+            return 1;
+        }
         return new Long(getValue()).compareTo(t.getValue());
     }
     

@@ -3,6 +3,7 @@ package uk.ac.rdg.resc;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Set;
 
 import org.jfree.chart.ChartUtilities;
@@ -30,7 +31,7 @@ public class EN3Test {
                 System.out.println(zVal);
             }
             
-            JFreeChart verticalProfilePlot = Charting.createVerticalProfilePlot(profileFeature, "TEMP");
+            JFreeChart verticalProfilePlot = Charting.createVerticalProfilePlot(Arrays.asList(profileFeature), "TEMP");
             ChartUtilities.writeChartAsPNG(new FileOutputStream(new File("/home/guy/00en3test.png")), verticalProfilePlot, 500, 500);
         }
     }

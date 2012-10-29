@@ -29,6 +29,8 @@
 package uk.ac.rdg.resc.edal.coverage.domain;
 
 import java.util.List;
+
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.ProfileCoverage;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
@@ -59,4 +61,8 @@ public interface ProfileDomain extends DiscreteDomain<VerticalPosition, Vertical
      */
     public List<Double> getZValues();
 
+    /**
+     * @return the {@link Extent} of this vertical domain
+     */
+    public Extent<VerticalPosition> getVerticalExtent();
 }

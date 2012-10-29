@@ -3,6 +3,7 @@ package uk.ac.rdg.resc;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartUtilities;
@@ -38,7 +39,7 @@ public class ChartingTests {
         NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
                 "testcollection", "Test Collection", "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
         System.out.println(featureCollection.getFeatureIds());
-        GridSeriesFeature feature = (GridSeriesFeature) featureCollection.getFeatureById("grid1");
+        GridSeriesFeature feature = featureCollection.getFeatureById("grid1");
         System.out.println(feature.getCoverage().getScalarMemberNames());
         String memberName = "TMP";
         HorizontalPosition hPos = new HorizontalPositionImpl(0.0, 0.0,
@@ -51,10 +52,10 @@ public class ChartingTests {
         
         PointSeriesFeature pointSeriesFeature = feature
                 .extractPointSeriesFeature(hPos, zPos, timeAxis.getCoordinateExtent(), null);
-        JFreeChart timeseriesPlot = Charting.createTimeseriesPlot(pointSeriesFeature, memberName);
+        JFreeChart timeseriesPlot = Charting.createTimeseriesPlot(Arrays.asList(pointSeriesFeature), memberName);
         
         ProfileFeature profileFeature = feature.extractProfileFeature(hPos, time, null);
-        JFreeChart verticalProfilePlot = Charting.createVerticalProfilePlot(profileFeature, memberName);
+        JFreeChart verticalProfilePlot = Charting.createVerticalProfilePlot(Arrays.asList(profileFeature), memberName);
         
         LineString transectDomain = new LineString(
                 "-38.671875 38.453125,-16.875 -28.34375,16.875 -54.359375,63.984375 -45.21875",

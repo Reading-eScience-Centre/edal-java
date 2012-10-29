@@ -31,23 +31,11 @@ package uk.ac.rdg.resc.edal.graphics.formats;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.ParseException;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
-
-import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
-import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.VerticalAxisImpl;
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
-import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.position.CalendarSystem;
-import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.util.TimeUtils;
 
 /**
  * Creates KMZ files for importing into Google Earth. Only one instance of this
@@ -91,7 +79,7 @@ public class KmzFormat extends ImageFormat {
      */
     @Override
     public void writeImage(List<BufferedImage> frames, OutputStream out,
-            Feature feature, double[] bbox, List<String> tValues, String zValue,
+            String name, String description, double[] bbox, List<String> tValues, String zValue,
             BufferedImage legend, Integer frameRate) throws IOException {
         StringBuffer kml = new StringBuffer();
         for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++) {
@@ -103,10 +91,8 @@ public class KmzFormat extends ImageFormat {
                 kml.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">");
                 kml.append("<Folder>");
                 kml.append("<visibility>1</visibility>");
-                kml.append("<name>" + feature.getFeatureCollection().getId() + ", "
-                        + feature.getId() + "</name>");
-                kml.append("<description>" + feature.getFeatureCollection().getName() + ", "
-                        + feature.getName() + ": " + feature.getDescription() + "</description>");
+                kml.append("<name>" + name + "</name>");
+                kml.append("<description>" + description + "</description>");
 
                 // Add the screen overlay containing the colour scale
                 kml.append("<ScreenOverlay>");
@@ -130,36 +116,15 @@ public class KmzFormat extends ImageFormat {
                  * seconds, otherwise Google Earth gets confused. This is why we
                  * convert to a DateTime and back again.
                  */
-                try {
-                    CalendarSystem calSys = null;
-                    if (feature instanceof GridSeriesFeature) {
-                        calSys = ((GridSeriesFeature) feature).getCoverage().getDomain()
-                                .getCalendarSystem();
-                    } else if (feature instanceof PointSeriesFeature) {
-                        calSys = ((PointSeriesFeature) feature).getCoverage().getDomain()
-                                .getCalendarSystem();
-                    }
-                    TimePosition dt = TimeUtils.iso8601ToDateTime(tValues.get(frameIndex), calSys);
-                    timestamp = TimeUtils.dateTimeToISO8601(dt);
-                    kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-            VerticalAxis vAxis = null;
-            if (feature instanceof GridSeriesFeature) {
-                vAxis = ((GridSeriesFeature) feature).getCoverage().getDomain().getVerticalAxis();
-            } else if (feature instanceof ProfileFeature) {
-                ProfileDomain domain = ((ProfileFeature) feature).getCoverage().getDomain();
-                vAxis = new VerticalAxisImpl("z axis", domain.getZValues(), domain.getVerticalCrs());
+                timestamp = tValues.get(frameIndex);
+                kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
             }
 
-            if (zValue != null && !zValue.equals("") && vAxis != null) {
+            if (zValue != null && !zValue.equals("")) {
                 z = "";
                 if (timestamp != null)
                     z += "<br />";
-                z += "Elevation: " + zValue + " "
-                        + vAxis.getVerticalCrs().getUnits().getUnitString();
+                z += "Elevation: " + zValue;
             }
             kml.append("<name>");
             if (timestamp == null && z == null) {
@@ -194,8 +159,7 @@ public class KmzFormat extends ImageFormat {
         ZipOutputStream zipOut = new ZipOutputStream(out);
 
         // Write the KML file: todo get filename properly
-        ZipEntry kmlEntry = new ZipEntry(feature.getFeatureCollection().getId() + "_"
-                + feature.getId() + ".kml");
+        ZipEntry kmlEntry = new ZipEntry(name + ".kml");
         kmlEntry.setTime(System.currentTimeMillis());
         zipOut.putNextEntry(kmlEntry);
         zipOut.write(kml.toString().getBytes());

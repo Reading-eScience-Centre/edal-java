@@ -43,6 +43,7 @@ import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.PointSeriesDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.ProfileDomainImpl;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
@@ -96,11 +97,20 @@ public class GridSeriesCoverageImpl extends
         Extent<Integer> xExtent = getDomain().getHorizontalGrid().getXAxis().getIndexExtent();
         Extent<Integer> yExtent = getDomain().getHorizontalGrid().getYAxis().getIndexExtent();
         int zIndex = 0;
-        if (getDomain().getVerticalAxis() != null)
+        if (getDomain().getVerticalAxis() != null) {
             zIndex = getDomain().getVerticalAxis().findIndexOf(zPos.getZ());
+        }
+        if(zIndex < 0){
+            throw new IllegalArgumentException("No data found at depth: "+zPos);
+        }
+        
         int tIndex = 0;
-        if (getDomain().getTimeAxis() != null)
+        if (getDomain().getTimeAxis() != null) {
             tIndex = getDomain().getTimeAxis().findIndexOf(tPos);
+        }
+        if(tIndex < 0){
+            throw new IllegalArgumentException("No data found at time: "+tPos);
+        }
 
         /*
          * TODO - We may want to extract a parent member - i.e. one that is not
@@ -110,7 +120,7 @@ public class GridSeriesCoverageImpl extends
         if (memberNames == null) {
             memberNames = getScalarMemberNames();
         }
-
+        
         for (String name : memberNames) {
             /*
              * This GVM is either a NcGVM4D, or a PluginWrappedGVM.
@@ -176,8 +186,13 @@ public class GridSeriesCoverageImpl extends
             throw new IllegalArgumentException(
                     "Cannot extract a point series coverage from a coverage with no time axis");
         }
-        GridCoordinates2D hPos = getDomain().getHorizontalGrid().findContainingCell(pos)
-                .getGridCoordinates();
+        
+        GridCell2D cell = getDomain().getHorizontalGrid().findContainingCell(pos);
+        if(cell == null) {
+            throw new IllegalArgumentException("Cannot extract a point series coverage - the desired position is outside of the grid domain");
+        }
+        
+        GridCoordinates2D hPos = cell.getGridCoordinates();
         int x = hPos.getXIndex();
         int y = hPos.getYIndex();
         int z = 0;

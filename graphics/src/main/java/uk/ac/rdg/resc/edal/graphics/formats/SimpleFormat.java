@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
-import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 
 /**
@@ -42,6 +41,7 @@ import uk.ac.rdg.resc.edal.feature.FeatureCollection;
  * @author Jon Blower
  */
 public abstract class SimpleFormat extends ImageFormat {
+    
     /**
      * Returns false: simple formats do not require a legend.
      */
@@ -73,8 +73,8 @@ public abstract class SimpleFormat extends ImageFormat {
      *             BufferedImages.
      */
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out,
-            Feature feature, double[] bbox, List<String> tValues, String zValue,
+    public void writeImage(List<BufferedImage> frames, OutputStream out, String name,
+            String description, double[] bbox, List<String> tValues, String zValue,
             BufferedImage legend, Integer frameRate) throws IOException {
         this.writeImage(frames, out, frameRate);
     }
@@ -89,6 +89,8 @@ public abstract class SimpleFormat extends ImageFormat {
      *            List of BufferedImages to render into an image
      * @param out
      *            The OutputStream to which the image will be written
+     * @param frameRate
+     *            The frame rate to use if this is an animation.         
      * @throws IOException
      *             if there was an error writing to the output stream
      * @throws IllegalArgumentException

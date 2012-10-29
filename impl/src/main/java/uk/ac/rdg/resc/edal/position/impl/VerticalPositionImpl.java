@@ -85,4 +85,35 @@ public class VerticalPositionImpl implements VerticalPosition {
     public String toString() {
         return z + (crs != null ? crs.getUnits().getUnitString() : "");
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((crs == null) ? 0 : crs.hashCode());
+        result = prime * result + ((z == null) ? 0 : z.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        VerticalPositionImpl other = (VerticalPositionImpl) obj;
+        if (crs == null) {
+            if (other.crs != null)
+                return false;
+        } else if (!crs.equals(other.crs))
+            return false;
+        if (z == null) {
+            if (other.z != null)
+                return false;
+        } else if (!z.equals(other.z))
+            return false;
+        return true;
+    }
 }

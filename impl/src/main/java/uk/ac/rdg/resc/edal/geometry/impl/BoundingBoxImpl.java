@@ -34,11 +34,14 @@ import java.util.List;
 
 import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.referencing.cs.RangeMeaning;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Immutable implementation of a {@link BoundingBox}.
@@ -88,6 +91,7 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
         this.maxx = bbox[2];
         this.miny = bbox[1];
         this.maxy = bbox[3];
+        
         // Check the bounds of the bbox
         if (this.minx > this.maxx || this.miny > this.maxy) {
             throw new IllegalArgumentException("Invalid bounding box specification");
@@ -216,9 +220,17 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
      */
     @Override
     public boolean contains(double x, double y) {
+        CoordinateSystem coordinateSystem = crs.getCoordinateSystem();
+        if(coordinateSystem.getDimension() >= 2){
+            if(coordinateSystem.getAxis(0).getRangeMeaning() == RangeMeaning.WRAPAROUND){
+                x = GISUtils.getNextEquivalentLongitude(minx, x);
+            }
+            if(coordinateSystem.getAxis(1).getRangeMeaning() == RangeMeaning.WRAPAROUND){
+                y = GISUtils.getNextEquivalentLongitude(miny, y);
+            }
+        }
         return (x >= minx && x <= maxx && y >= miny && y <= maxy);
     }
-    
     
     ///// OVERRIDES FROM ENVELOPE INTERFACE /////
 

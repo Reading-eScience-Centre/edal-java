@@ -102,23 +102,24 @@ public enum PlotStyle {
     }
     
     public static PlotStyle getDefaultPlotStyle(Feature feature, ScalarMetadata metadata) {
-        if(!Number.class.isAssignableFrom(metadata.getValueType())){
+        if(feature instanceof PointSeriesFeature || feature instanceof ProfileFeature){
             /*
-             * Non-numerical data always has the default style of gridpoint.
+             * PointSeries and Profile features have the style of point, even if
+             * non-numerical (will be plotted as white icons)
              */
-            return GRIDPOINT;
+            return POINT;
         }
         if(feature instanceof TrajectoryFeature){
             /*
-             * Trajectory features always have the default style of trajectory, unless they are non-numerical
+             * Trajectory features always have the default style of trajectory, even if they are non-numerical
              */
             return TRAJECTORY;
         }
-        if(feature instanceof PointSeriesFeature || feature instanceof ProfileFeature){
+        if(!Number.class.isAssignableFrom(metadata.getValueType())){
             /*
-             * PointSeries and Profile features have the style of point, unless non-numerical
+             * Otherwise non-numerical data has the default style of gridpoint.
              */
-            return POINT;
+            return GRIDPOINT;
         }
         if(metadata instanceof VectorComponent
                 && (((VectorComponent) metadata).getComponentType() == VectorComponentType.DIRECTION)){
