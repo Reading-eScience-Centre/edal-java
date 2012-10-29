@@ -29,7 +29,9 @@
 package uk.ac.rdg.resc.edal.util;
 
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -38,10 +40,13 @@ import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.referencing.cs.RangeMeaning;
 import org.opengis.referencing.operation.MathTransform;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
+import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
@@ -54,17 +59,30 @@ import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.LonLatPositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.TimePositionJoda;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
+/**
+ * A class containing static methods which are useful for GIS operations. One of
+ * the main purposes of this class is to provide various feature-specific
+ * retrievals (for example getting a time axis of a general feature). This means
+ * that if new feature types are added, much of the work to integrate them will
+ * be in this class
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public final class GISUtils {
 
     private GISUtils() {}
@@ -141,8 +159,10 @@ public final class GISUtils {
         if (sourceCrs == null) {
             return new HorizontalPositionImpl(pos.getX(), pos.getY(), targetCrs);
         }
-        // CRS.findMathTransform() caches recently-used transform objects so
-        // we should incur no large penalty for multiple invocations
+        /*
+         * CRS.findMathTransform() caches recently-used transform objects so we
+         * should incur no large penalty for multiple invocations
+         */
         try {
             MathTransform transform = CRS.findMathTransform(sourceCrs, targetCrs);
             if (transform.isIdentity())
@@ -281,7 +301,7 @@ public final class GISUtils {
             feature = gridSeriesFeature.extractGridFeature(
                     new RegularGridImpl(gridSeriesFeature.getCoverage().getDomain()
                             .getHorizontalGrid().getCoordinateExtent(), 100, 100),
-                    getUppermostElevation(gridSeriesFeature),
+                    getClosestElevationToSurface(gridSeriesFeature),
                     getClosestToCurrentTime(gridSeriesFeature.getCoverage().getDomain()
                             .getTimeAxis()), CollectionUtils.setOf(scalarMemberName));
         }
@@ -306,41 +326,80 @@ public final class GISUtils {
     }
 
     public static TimePosition getClosestToCurrentTime(TimeAxis tAxis) {
-        if (tAxis == null)
-            return null; // no time axis
+        return getClosestTimeTo(new TimePositionJoda(), tAxis);
+    }
+
+    /**
+     * Returns the closest time within a time axis to the given time.
+     * 
+     * @param targetTime
+     *            The target time
+     * @param tAxis
+     *            The time axis to check
+     * @return Either the closest time within that axis, or the closest to the
+     *         current time if the target is <code>null</code>, or
+     *         <code>null</code> if the time axis is <code>null</code>
+     */
+    public static TimePosition getClosestTimeTo(TimePosition targetTime, TimeAxis tAxis) {
+        if(tAxis == null) {
+            return null;
+        }
+        if (targetTime == null) {
+            return getClosestToCurrentTime(tAxis);
+        }
         int index = TimeUtils.findTimeIndex(tAxis.getCoordinateValues(), new TimePositionJoda());
         if (index < 0) {
-            // We can calculate the insertion point
+            /*
+             * We can calculate the insertion point
+             */
             int insertionPoint = -(index + 1);
-            // We set the index to the most recent past time
-            if (insertionPoint > 0)
-                index = insertionPoint - 1; // The most recent past time
-            else
-                index = 0; // All DateTimes on the axis are in the future, so we
-                           // take the earliest
+            /*
+             * We set the index to the most recent past time
+             */
+            if (insertionPoint > 0) {
+                /*
+                 * The most recent past time
+                 */
+                index = insertionPoint - 1;
+            } else {
+                /*
+                 * All DateTimes on the axis are in the future, so we take the
+                 * earliest
+                 */
+                index = 0;
+            }
         }
 
         return tAxis.getCoordinateValue(index);
     }
-    
-    public static VerticalPosition getUppermostElevation(Feature feature) {
+
+    /**
+     * Returns the uppermost elevation of the given feature
+     * 
+     * @param feature
+     *            The feature to test
+     * @return The uppermost elevation, or null if the feature doesn't have a
+     *         vertical axis
+     */
+    public static VerticalPosition getClosestElevationToSurface(Feature feature) {
         VerticalAxis vAxis = getVerticalAxis(feature);
-        // We must access the elevation values via the accessor method in case
-        // subclasses override it.
         if (vAxis == null) {
-            return new VerticalPositionImpl(Double.NaN, null);
+            return null;
         }
 
         double value;
         if (vAxis.getVerticalCrs().isPressure()) {
-            // The vertical axis is pressure. The default (closest to the
-            // surface)
-            // is therefore the maximum value.
+            /*
+             * The vertical axis is pressure. The default (closest to the
+             * surface) is therefore the maximum value.
+             */
             value = Collections.max(vAxis.getCoordinateValues());
         } else {
-            // The vertical axis represents linear height, so we find which
-            // value is closest to zero (the surface), i.e. the smallest
-            // absolute value
+            /*
+             * The vertical axis represents linear height, so we find which
+             * value is closest to zero (the surface), i.e. the smallest
+             * absolute value
+             */
             value = Collections.min(vAxis.getCoordinateValues(), new Comparator<Double>() {
                 @Override
                 public int compare(Double d1, Double d2) {
@@ -351,19 +410,81 @@ public final class GISUtils {
         return new VerticalPositionImpl(value, vAxis.getVerticalCrs());
     }
     
-
-    public static VerticalPosition getClosestElevationTo(float targetDepth, ProfileFeature profile) {
-        List<Double> values = profile.getCoverage().getDomain().getZValues();
-        int index = Collections.binarySearch(values, (double) targetDepth);
+    /**
+     * Gets the closest elevation to the target within the given feature.
+     * 
+     * @param targetDepth
+     *            The target elevation
+     * @param feature
+     *            The feature containing the domain to be searched
+     * @return Either the closest elevation to the target elevation, or the
+     *         closest elevation to the surface if the target is
+     *         <code>null</code>, or null if the {@link Feature} has no
+     *         {@link VerticalAxis}
+     */
+    public static VerticalPosition getClosestElevationTo(Double targetDepth, Feature feature) {
+        if(targetDepth == null) {
+            return getClosestElevationToSurface(feature);
+        }
+        VerticalAxis vAxis = getVerticalAxis(feature);
+        if(vAxis == null) {
+            return null;
+        }
+//        if(vAxis.getCoordinateValues().size() == 1){
+//            /*
+//             * If we only have a single on the axis, return it.
+//             */
+//            return new VerticalPositionImpl(vAxis.getCoordinateValue(0), vAxis.getVerticalCrs());
+//        }
+//        if(!vAxis.getCoordinateExtent().contains(targetDepth)){
+//            return null;
+//        }
+        
+        List<Double> values = vAxis.getCoordinateValues();
+        int index = Collections.binarySearch(values, targetDepth);
         if(index < 0){
             index = -(index + 1);
-            if(index == values.size() || index == 0){
-                return null;
+            if (index == values.size()) {
+                index--;
             }
         }
-        
-        return new VerticalPositionImpl(profile.getCoverage().getDomain().getZValues()
-                .get(index), profile.getCoverage().getDomain().getVerticalCrs());
+        return new VerticalPositionImpl(values.get(index), vAxis.getVerticalCrs());
+    }
+
+    /**
+     * Gets the exact elevation required, or <code>null</code> if it is not
+     * present in the domain of the given feature
+     * 
+     * @param elevationStr
+     *            The desired elevation
+     * @param feature
+     *            The feature containing the domain
+     * @return The {@link VerticalPosition} required, or <code>null</code>
+     */
+    public static VerticalPosition getExactElevation(String elevationStr, Feature feature) {
+        if(elevationStr == null) {
+            return null;
+        }
+        VerticalAxis vAxis = getVerticalAxis(feature);
+        if(vAxis == null){
+            return null;
+        }
+        Double elevation;
+        try {
+            elevation = Double.parseDouble(elevationStr);
+        } catch (Exception e) {
+            /*
+             * If we have any exception here, it means we cannot parse the
+             * string for a double, so we want to return null.
+             */
+            return null;
+        }
+        List<Double> values = vAxis.getCoordinateValues();
+        int index = Collections.binarySearch(values, elevation);
+        if(index < 0){
+            return null;
+        }
+        return new VerticalPositionImpl(vAxis.getCoordinateValue(index), vAxis.getVerticalCrs());
     }
 
     /**
@@ -380,28 +501,313 @@ public final class GISUtils {
             ProfileFeature profileFeature = (ProfileFeature) feature;
             return new VerticalAxisImpl("z", profileFeature.getCoverage().getDomain().getZValues(),
                     profileFeature.getCoverage().getDomain().getVerticalCrs());
-
         } else {
             return null;
         }
     }
     
+    /**
+     * Utility to get the vertical CRS of a feature, if it exists
+     * 
+     * @param feature
+     *            the feature to check
+     * @return the {@link VerticalCrs}, or <code>null</code> if none exists
+     */
+    public static VerticalCrs getVerticalCrs(Feature feature) {
+        if (feature instanceof GridSeriesFeature) {
+            return ((GridSeriesFeature) feature).getCoverage().getDomain().getVerticalAxis().getVerticalCrs();
+        } else if (feature instanceof ProfileFeature) {
+            return ((ProfileFeature) feature).getCoverage().getDomain().getVerticalCrs();
+        } else if (feature instanceof PointSeriesFeature) {
+            return ((PointSeriesFeature) feature).getVerticalPosition().getCoordinateReferenceSystem();
+        } else if (feature instanceof TrajectoryFeature) {
+            return ((TrajectoryFeature) feature).getCoverage().getDomain().getVerticalCrs();
+        } else {
+            return null;
+        }
+    }
+    
+    public static HorizontalPosition getClosestHorizontalPositionTo(HorizontalPosition pos,
+            Feature feature) {
+        if (feature instanceof GridSeriesFeature) {
+            GridCell2D cell = ((GridSeriesFeature) feature).getCoverage().getDomain().getHorizontalGrid().findContainingCell(pos);
+            if(cell != null){
+                return cell.getCentre();
+            }
+        } else if (feature instanceof GridFeature) {
+            GridCell2D cell = ((GridFeature) feature).getCoverage().getDomain().findContainingCell(pos);
+            if(cell != null){
+                return cell.getCentre();
+            }
+        } else if (feature instanceof ProfileFeature) {
+            return ((ProfileFeature) feature).getHorizontalPosition();
+        } else if (feature instanceof PointSeriesFeature) {
+            return ((PointSeriesFeature) feature).getHorizontalPosition();
+        } else if (feature instanceof TrajectoryFeature) {
+            List<GeoPosition> domainObjects = ((TrajectoryFeature) feature).getCoverage().getDomain().getDomainObjects();
+            double dist = Double.MAX_VALUE;
+            GeoPosition ret = null;
+            for(GeoPosition gp : domainObjects) {
+                double tempDist = Math.pow(gp.getHorizontalPosition().getX() - pos.getX(), 2)
+                        + Math.pow(gp.getHorizontalPosition().getY() - pos.getY(), 2); 
+                if(tempDist < dist) {
+                    dist = tempDist;
+                    ret = gp;
+                }
+            }
+            return ret == null ? null : ret.getHorizontalPosition();
+        }
+        return null;
+    }
 
     /**
      * Utility to get the time axis of a feature, if it exists
      * 
      * @param feature
      *            the feature to check
+     * @param force
+     *            whether to create a fake time axis if the feature has a single
+     *            time value
      * @return the {@link TimeAxis}, or <code>null</code> if none exists
      */
-    public static TimeAxis getTimeAxis(Feature feature) {
+    public static TimeAxis getTimeAxis(final Feature feature, boolean force) {
         if (feature instanceof GridSeriesFeature) {
             return ((GridSeriesFeature) feature).getCoverage().getDomain().getTimeAxis();
         } else if (feature instanceof PointSeriesFeature) {
             return new TimeAxisImpl("time", ((PointSeriesFeature) feature).getCoverage()
                     .getDomain().getTimes());
+        } else if (feature instanceof TrajectoryFeature) {
+            return new TimeAxisImpl("time", new AbstractList<TimePosition>() {
+                final List<GeoPosition> positions = ((TrajectoryFeature) feature).getCoverage().getDomain().getDomainObjects();
+                @Override
+                public TimePosition get(int index) {
+                    return positions.get(index).getTimePosition();
+                }
+
+                @Override
+                public int size() {
+                    return positions.size();
+                }
+            });
+        } else {
+            if(force){
+                if (feature instanceof ProfileFeature) {
+                    return new TimeAxisImpl("time", Arrays.asList(((ProfileFeature) feature).getTime()));
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public static BoundingBox getFeatureHorizontalExtent(Feature feature) {
+        if (feature instanceof GridSeriesFeature) {
+            return ((GridSeriesFeature) feature).getCoverage().getDomain().getHorizontalGrid()
+                    .getCoordinateExtent();
+        } else if (feature instanceof GridFeature) {
+            return ((GridFeature) feature).getCoverage().getDomain().getCoordinateExtent();
+        } else if (feature instanceof ProfileFeature) {
+            HorizontalPosition horizontalPosition = ((ProfileFeature) feature)
+                    .getHorizontalPosition();
+            return new BoundingBoxImpl(horizontalPosition, horizontalPosition);
+        } else if (feature instanceof PointSeriesFeature) {
+            HorizontalPosition horizontalPosition = ((PointSeriesFeature) feature)
+                    .getHorizontalPosition();
+            return new BoundingBoxImpl(horizontalPosition, horizontalPosition);
+        } else if (feature instanceof TrajectoryFeature) {
+            return ((TrajectoryFeature) feature).getCoverage().getDomain().getCoordinateBounds();
         } else {
             return null;
         }
+    }
+
+    public static Extent<TimePosition> getFeatureTimeExtent(Feature feature) {
+        if (feature instanceof GridSeriesFeature) {
+            TimeAxis timeAxis = ((GridSeriesFeature) feature).getCoverage().getDomain().getTimeAxis();
+            if(timeAxis != null){
+                return timeAxis.getCoordinateExtent();
+            } else {
+                return null;
+            }
+        } else if (feature instanceof ProfileFeature) {
+            TimePosition time = ((ProfileFeature) feature).getTime();
+            return Extents.newExtent(time, time);
+        } else if (feature instanceof PointSeriesFeature) {
+            return ((PointSeriesFeature) feature).getCoverage().getDomain().getExtent();
+        } else if (feature instanceof TrajectoryFeature) {
+            return ((TrajectoryFeature) feature).getCoverage().getDomain().getTimeExtent();
+        } else {
+            return null;
+        }
+    }
+
+    public static Extent<VerticalPosition> getFeatureVerticalExtent(Feature feature) {
+        if (feature instanceof GridSeriesFeature) {
+            VerticalAxis verticalAxis = ((GridSeriesFeature) feature).getCoverage().getDomain().getVerticalAxis();
+            if(verticalAxis != null){
+                Extent<Double> coordinateExtent = verticalAxis.getCoordinateExtent();
+                return Extents.newExtent(
+                        (VerticalPosition) new VerticalPositionImpl(coordinateExtent.getLow(),
+                                getVerticalCrs(feature)),
+                                new VerticalPositionImpl(coordinateExtent.getHigh(), getVerticalCrs(feature)));
+            } else {
+                return null;
+            }
+        } else if (feature instanceof ProfileFeature) {
+            return ((ProfileFeature) feature).getCoverage().getDomain().getVerticalExtent();
+        } else if (feature instanceof PointSeriesFeature) {
+            VerticalPosition zPos = ((PointSeriesFeature) feature).getVerticalPosition();
+            return Extents.newExtent(zPos, zPos);
+        } else if (feature instanceof TrajectoryFeature) {
+            return ((TrajectoryFeature) feature).getCoverage().getDomain().getVerticalExtent();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Checks whether a bounding box overlaps with a feature's extent
+     * @param bbox The bounding box to check
+     * @param feature The feature to check
+     * @return
+     */
+    public static boolean featureOverlapsBoundingBox(BoundingBox bbox, Feature feature) {
+        /*
+         * Get the feature bounding box
+         */
+        BoundingBox featureBbox = getFeatureHorizontalExtent(feature);
+        
+        /*
+         * Get 2 corners of the bounding box in the feature CRS
+         */
+        CoordinateReferenceSystem crs = featureBbox.getCoordinateReferenceSystem();
+        HorizontalPosition bLowerCorner = transformPosition(bbox.getLowerCorner(), crs);
+        HorizontalPosition bUpperCorner = transformPosition(bbox.getUpperCorner(), crs);
+
+        /*
+         * Check the CRS we are now working in to see if either of the axes wraps
+         */
+        CoordinateSystem coordinateSystem = crs.getCoordinateSystem();
+        boolean wrapX = false;
+        boolean wrapY = false;
+        if(coordinateSystem.getDimension() >= 2){
+            if(coordinateSystem.getAxis(0).getRangeMeaning() == RangeMeaning.WRAPAROUND){
+                wrapX = true;
+            }
+            if(coordinateSystem.getAxis(1).getRangeMeaning() == RangeMeaning.WRAPAROUND){
+                wrapY = true;
+            }
+        }
+        
+        /*
+         * Get some x and y bounds for the feature and the bbox
+         */
+        double xFMin = featureBbox.getMinX();
+        double xFMax = featureBbox.getMaxX();
+        double xBMin = bLowerCorner.getX();
+        double xBMax = bUpperCorner.getX();
+        
+        double yFMin = featureBbox.getMinY();
+        double yFMax = featureBbox.getMaxY();
+        double yBMin = bLowerCorner.getY();
+        double yBMax = bUpperCorner.getY();
+        
+        /*
+         * Our algorithm checks if the x-extent of the feature overlaps with
+         * that of the bounding box, then does the same for the y-extent.
+         * 
+         * If both overlap, we return true.
+         * 
+         * We do 3 checks to determine overlap:
+         * 
+         * The bounding box x-extent contains the minimum value of the feature
+         * x-extent
+         * 
+         * The bounding box x-extent contains the maximum value of the feature
+         * x-extent
+         * 
+         * The feature x-extent contains both values of the bounding box extent
+         * (we only need to check one)
+         * 
+         * However, all of these checks need to ensure that axis wrapping has
+         * been taken into account, so we define 3 checking variables, which are
+         * wrapped in the context of the extent being checked
+         */
+        double xMinCheck = wrapX ? GISUtils.getNextEquivalentLongitude(xBMin, xFMin) : xFMin;
+        double xMaxCheck = wrapX ? GISUtils.getNextEquivalentLongitude(xBMin, xFMax) : xFMax;
+        double xBMinCheck = wrapX ? GISUtils.getNextEquivalentLongitude(xFMin, xBMin) : xBMin;
+
+        if ( !(xBMin <= xMinCheck && xBMax >= xMinCheck)
+                && !(xBMin <= xMaxCheck && xBMax >= xMaxCheck)
+                && !(xFMin <= xBMinCheck && xFMax >= xBMinCheck)) {
+            /*
+             * No need to check the y extents, we've already failed
+             */
+            return false;
+        } else {
+            double yMinCheck = wrapY ? GISUtils.getNextEquivalentLongitude(yBMin, yFMin) : yFMin;
+            double yMaxCheck = wrapY ? GISUtils.getNextEquivalentLongitude(yBMin, yFMax) : yFMax;
+            double yBMinCheck = wrapY ? GISUtils.getNextEquivalentLongitude(yFMin, yBMin) : yBMin;
+            if ((yBMin <= yMinCheck && yBMax >= yMinCheck)
+                    || (yBMin <= yMaxCheck && yBMax >= yMaxCheck)
+                    || (yFMin <= yBMinCheck && yFMax >= yBMinCheck)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public static boolean timeRangeContains(Extent<TimePosition> tRange, Feature feature) {
+        Extent<TimePosition> featureTimeExtent = getFeatureTimeExtent(feature);
+        /*
+         * We check if the feature extent contains one end (it doesn't matter
+         * which) of the desired extent (in case it contains the whole)
+         * 
+         * Then we check if the desired extent contains either end of the
+         * feature extent
+         */
+        return  featureTimeExtent.contains(tRange.getLow())
+                || tRange.contains(featureTimeExtent.getLow())
+                || tRange.contains(featureTimeExtent.getHigh());
+    }
+
+    public static boolean zRangeContains(Extent<Double> zRange, Feature feature) {
+        Extent<VerticalPosition> featureZExtent = getFeatureVerticalExtent(feature);
+        /*
+         * Similar to the time/bounding box situation, except we check in a
+         * different order, since we need to instantiate a new VerticalPosition
+         */
+        return  zRange.contains(featureZExtent.getLow().getZ())
+                || zRange.contains(featureZExtent.getHigh().getZ())
+                || featureZExtent.contains(new VerticalPositionImpl(zRange.getLow(), getVerticalCrs(feature)));
+    }
+
+    public static GeoPosition getTrajectoryPosition(TrajectoryFeature feature, final HorizontalPosition pos,
+            BoundingBox bbox) {
+        List<GeoPosition> potentialMatches = new ArrayList<GeoPosition>();
+        for(GeoPosition pos4d : feature.getCoverage().getDomain().getDomainObjects()){
+            if(bbox.contains(pos4d.getHorizontalPosition())){
+                potentialMatches.add(pos4d);
+            }
+        }
+        if(potentialMatches.size() == 0){
+            return null;
+        }
+        if(potentialMatches.size() > 1){
+            Collections.sort(potentialMatches, new Comparator<GeoPosition>() {
+                @Override
+                public int compare(GeoPosition pos1, GeoPosition pos2) {
+                    Double dist0 = Math.pow(pos1.getHorizontalPosition().getY() - pos.getY(), 2.0)
+                            + Math.pow(pos1.getHorizontalPosition().getX() - pos.getX(), 2.0);
+                    Double dist1 = Math.pow(pos2.getHorizontalPosition().getY() - pos.getY(), 2.0)
+                            + Math.pow(pos2.getHorizontalPosition().getX() - pos.getX(), 2.0);
+                    return dist0.compareTo(dist1);
+                }
+            });
+        }
+        return potentialMatches.get(0);
     }
 }

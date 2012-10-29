@@ -33,13 +33,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import uk.ac.rdg.resc.edal.Unit;
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalCrs.PositiveDirection;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.position.impl.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 public class ProfileDomainImpl implements ProfileDomain {
     
@@ -104,6 +103,9 @@ public class ProfileDomainImpl implements ProfileDomain {
 
     @Override
     public long findIndexOf(VerticalPosition position) {
+        if(position == null){
+            return -1L;
+        }
         int index = Collections.binarySearch(values, position.getZ());
         if(index >= 0){
             return maybeReverseIndex(index);
@@ -148,27 +150,9 @@ public class ProfileDomainImpl implements ProfileDomain {
     public long size() {
         return values.size();
     }
-    
-    public static void main(String[] args) {
-        VerticalCrs crs = new VerticalCrsImpl(Unit.getUnit("m"), PositiveDirection.DOWN, false);
-        List<Double> vVals = new ArrayList<Double>();
-        for (int i = -10; i < 10; i++) {
-            vVals.add(i*1.0);
-        }
-        ProfileDomain dom = new ProfileDomainImpl(vVals, crs);
-        
-        List<Double> vVals2 = new ArrayList<Double>();
-        for (int i = -10; i < 10; i++) {
-            vVals2.add(i*1.3);
-        }
-        ProfileDomain dom2 = new ProfileDomainImpl(vVals2, crs);
-        List<VerticalPosition> domain2Objects = dom2.getDomainObjects();
-        for(VerticalPosition vPos : domain2Objects){
-            System.out.println(vPos+","+dom.findIndexOf(vPos));
-        }
-        List<VerticalPosition> domainObjects = dom.getDomainObjects();
-        for(VerticalPosition vPos : domainObjects){
-            System.out.println(vPos+","+dom.findIndexOf(vPos));
-        }
+
+    @Override
+    public Extent<VerticalPosition> getVerticalExtent() {
+        return Extents.findMinMax(getDomainObjects());
     }
 }

@@ -30,10 +30,14 @@ package uk.ac.rdg.resc.edal.coverage.domain;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * The domain of a {@link TrajectoryCoverage}: a set of positions in space and
@@ -59,5 +63,19 @@ public interface TrajectoryDomain extends DiscreteDomain<GeoPosition, GeoPositio
      *         the {@link #getDomainObjects() positions}.
      */
     public CalendarSystem getCalendarSystem();
-
+    
+    /**
+     * @return a {@link BoundingBox} which fully contains this {@link TrajectoryDomain}
+     */
+    public BoundingBox getCoordinateBounds();
+    
+    /**
+     * @return an {@link Extent} which fully contains this {@link TrajectoryDomain}
+     */
+    public Extent<TimePosition> getTimeExtent();
+    
+    /**
+     * @return an {@link Extent} which fully contains this {@link TrajectoryDomain}
+     */
+    public Extent<VerticalPosition> getVerticalExtent();
 }

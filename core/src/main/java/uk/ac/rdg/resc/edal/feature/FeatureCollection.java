@@ -31,6 +31,11 @@ package uk.ac.rdg.resc.edal.feature;
 import java.util.Collection;
 import java.util.Set;
 
+import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.position.TimePosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
+
 /**
  * FeatureCollections contain a single feature type.
  * 
@@ -89,16 +94,18 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
     public Set<String> getMemberIdsInCollection();
 
     /**
-     * Returns a {@link Collection} of {@link Feature}s
-     * @param memberName
-     * @return
-     */
-    public Collection<F> getFeaturesWithMember(String memberName);
-
-    /**
      * Gets the runtime class of the features within this collection.
      * 
      * @return
      */
     public Class<F> getFeatureType();
+    
+    public Collection<? extends F> findFeatures(BoundingBox boundingBox, Extent<Double> zRange,
+            Extent<TimePosition> tRange, Set<String> memberNames);
+
+    public BoundingBox getCollectionBoundingBox();
+    
+    public Extent<VerticalPosition> getCollectionVerticalExtent();
+    
+    public Extent<TimePosition> getCollectionTimeExtent();
 }

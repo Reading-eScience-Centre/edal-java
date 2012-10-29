@@ -4,11 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
@@ -29,11 +26,9 @@ import uk.ac.rdg.resc.edal.cdm.util.FileUtils;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.ProfileDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.ProfileCoverageImpl;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeatureCollection;
 import uk.ac.rdg.resc.edal.feature.impl.FeatureCollectionImpl;
 import uk.ac.rdg.resc.edal.feature.impl.ProfileFeatureImpl;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePeriod;
@@ -50,7 +45,7 @@ import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.LittleBigList;
 
-public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFeature> implements ProfileFeatureCollection {
+public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFeature> {
 
     private BoundingBox bbox;
     private Extent<VerticalPosition> vExtent;
@@ -71,6 +66,10 @@ public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFe
         
         VerticalCrs vCrs = null;
         List<File> files = FileUtils.expandGlobExpression(location);
+        /*
+         * The ID number of the profile within the collection
+         */
+        int idN = 0;
         for(File file : files){
             String filename = file.getPath();
             NetcdfDataset ncDataset = CdmUtils.openDataset(filename);
@@ -284,17 +283,8 @@ public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFe
                         "sea_water_salinity", PhenomenonVocabulary.CLIMATE_AND_FORECAST), Unit.getUnit(
                         "psu", UnitVocabulary.UDUNITS), psals, Float.class);
                 ProfileFeatureImpl feature = new ProfileFeatureImpl("Profile feature " + prof, "prof"
-                        + prof, "Profile data for an EN3 buoy", coverage, hPos, time, this);
+                        + (idN++), "Profile data for an EN3 buoy", coverage, hPos, time, this);
                 addFeature(feature);
-//                for (RangeMetadata memberMetadata : MetadataUtils.getAllTreeMembers(feature
-//                        .getCoverage().getRangeMetadata())) {
-//                    Set<ProfileFeature> features = member2Features.get(memberMetadata.getName());
-//                    if (features == null) {
-//                        features = new LinkedHashSet<ProfileFeature>();
-//                    }
-//                    features.add(feature);
-//                    member2Features.put(memberMetadata.getName(), features);
-//                }
             }
         }
         bbox = new BoundingBoxImpl(minx, miny, maxx, maxy, DefaultGeographicCRS.WGS84);
@@ -303,41 +293,19 @@ public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFe
         tExtent = Extents.newExtent((TimePosition) new TimePositionJoda(mint),
                 (TimePosition) new TimePositionJoda(maxt));
     }
-    
-//    private Map<String, Set<ProfileFeature>> member2Features = new LinkedHashMap<String, Set<ProfileFeature>>();
 
     @Override
-    public Collection<ProfileFeature> findProfiles(Polygon polygon, Extent<TimePosition> tRange,
-            String memberName) {
-//        Set<ProfileFeature> profileFeatures = member2Features.get(memberName);
-        Collection<ProfileFeature> profileFeatures = getFeaturesWithMember(memberName);
-        
-        Set<ProfileFeature> includedFeatures = new HashSet<ProfileFeature>();
-        for (ProfileFeature profileFeature : profileFeatures) {
-            if (polygon.contains(profileFeature.getHorizontalPosition())
-                    && tRange.contains(profileFeature.getTime())) {
-                includedFeatures.add(profileFeature);
-            }
-        }
-        return includedFeatures;
-    }
-
-    @Override
-    public BoundingBox getBoundingBox() {
+    public BoundingBox getCollectionBoundingBox() {
         return bbox;
     }
 
     @Override
-    public Extent<VerticalPosition> getVerticalExtent() {
+    public Extent<VerticalPosition> getCollectionVerticalExtent() {
         return vExtent;
     }
 
     @Override
-    public Extent<TimePosition> getTimeExtent() {
+    public Extent<TimePosition> getCollectionTimeExtent() {
         return tExtent;
     }
-//    
-//    public static void main(String[] args) throws IOException, InvalidRangeException {
-//        EN3ProfileFeatureCollection fc = new EN3ProfileFeatureCollection("test", "Test", "/home/guy/Data/EN3/*.nc");
-//    }
 }

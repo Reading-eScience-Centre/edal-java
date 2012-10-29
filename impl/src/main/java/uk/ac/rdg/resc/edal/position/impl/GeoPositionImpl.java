@@ -84,4 +84,41 @@ public class GeoPositionImpl implements GeoPosition {
     public VerticalPosition getVerticalPosition() {
         return vPos;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((hPos == null) ? 0 : hPos.hashCode());
+        result = prime * result + ((tPos == null) ? 0 : tPos.hashCode());
+        result = prime * result + ((vPos == null) ? 0 : vPos.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GeoPositionImpl other = (GeoPositionImpl) obj;
+        if (hPos == null) {
+            if (other.hPos != null)
+                return false;
+        } else if (!hPos.equals(other.hPos))
+            return false;
+        if (tPos == null) {
+            if (other.tPos != null)
+                return false;
+        } else if (!tPos.equals(other.tPos))
+            return false;
+        if (vPos == null) {
+            if (other.vPos != null)
+                return false;
+        } else if (!vPos.equals(other.vPos))
+            return false;
+        return true;
+    }
 }

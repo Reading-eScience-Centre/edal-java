@@ -37,7 +37,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.graphics.exceptions.InvalidFormatException;
 
@@ -153,8 +152,8 @@ public abstract class ImageFormat {
      *             if this ImageFormat cannot render all of the given
      *             BufferedImages.
      */
-    public abstract void writeImage(List<BufferedImage> frames, OutputStream out,
-            Feature feature, double[] bbox, List<String> tValues, String zValue,
+    public abstract void writeImage(List<BufferedImage> frames, OutputStream out, String name,
+            String description, double[] bbox, List<String> tValues, String zValue,
             BufferedImage legend, Integer frameRate) throws IOException;
 
 }

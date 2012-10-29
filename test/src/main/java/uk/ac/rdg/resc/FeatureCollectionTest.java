@@ -59,7 +59,7 @@ public class FeatureCollectionTest {
 //        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { -50, -50,
 //                0, 0 }, bbox.getCoordinateReferenceSystem()), width, height);
 //        RegularGrid targetDomain = new RegularGridImpl(new BoundingBoxImpl(new double[] { -2000000,-4350000,3350000,-200000 }, WmsUtils.getCrs("EPSG:32661")), width, height);
-        MapPlotter plotter = new MapPlotter(style, targetDomain);
+        MapPlotter plotter = new MapPlotter(style, targetDomain, false);
 
 //        String member = "TMP";
         String member = "analysed_sst";

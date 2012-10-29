@@ -38,6 +38,7 @@ import uk.ac.rdg.resc.edal.coverage.impl.TrajectoryCoverageImpl;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.ScalarMetadataImpl;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
@@ -75,21 +76,24 @@ public class MapPlotter {
     private BoundingBox bbox;
     private MapStyleDescriptor style;
     private Map<TimePosition, Frame> frameData;
+    private boolean animation;
 
-    public MapPlotter(MapStyleDescriptor style, int width, int height, BoundingBox bbox) {
+    public MapPlotter(MapStyleDescriptor style, int width, int height, BoundingBox bbox, boolean animation) {
         this.style = style;
         this.width = width;
         this.height = height;
         this.bbox = bbox;
+        this.animation = animation;
 
         frameData = new HashMap<TimePosition, Frame>();
     }
 
-    public MapPlotter(MapStyleDescriptor style, HorizontalGrid targetDomain) {
+    public MapPlotter(MapStyleDescriptor style, HorizontalGrid targetDomain, boolean animation) {
         this.style = style;
         this.width = targetDomain.getXAxis().size();
         this.height = targetDomain.getYAxis().size();
         this.bbox = targetDomain.getCoordinateExtent();
+        this.animation = animation;
 
         frameData = new HashMap<TimePosition, Frame>();
     }
@@ -125,7 +129,18 @@ public class MapPlotter {
      */
     public void addToFrame(Feature feature, String memberName, VerticalPosition vPos,
             TimePosition tPos, String label, PlotStyle plotStyle) {
-        Frame frame = frameData.get(tPos);
+        /*
+         * If we have an animation, we want to use the time position as the key
+         * to determine which frames which data should go to.
+         * 
+         * If we don't have an animation, we want all frames to have the same
+         * key (so all data goes here).
+         */
+        TimePosition timeKey = null;
+        if(animation){
+            timeKey = tPos;
+        }
+        Frame frame = frameData.get(timeKey);
         if (frame == null) {
             frame = new Frame(width, height, label);
         }
@@ -163,11 +178,19 @@ public class MapPlotter {
                     }
                     addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle, representativeChildMetadata, contourScaleRange);
                 }
+            } else {
+                /*
+                 * We have a metadata object which is not scalar and does not have any representative children.
+                 * 
+                 * It wants plotting, although it will either be gridpoints or empty points.
+                 */
+                addScalarMemberToFrame(frame, feature, vPos, tPos, label, plotStyle,
+                        new ScalarMetadataImpl("*", "all features", null, null, Object.class), style.getScaleRange());
             }
         }
 
-        if (!frameData.containsKey(tPos)) {
-            frameData.put(tPos, frame);
+        if (!frameData.containsKey(timeKey)) {
+            frameData.put(timeKey, frame);
         }
     }
     
@@ -183,13 +206,13 @@ public class MapPlotter {
         } else if (feature instanceof GridFeature) {
             addGridFeatureToFrame((GridFeature) feature, memberName, label, plotStyle, frame, contourScaleRange, false);
         } else if (feature instanceof PointSeriesFeature) {
-            addPointSeriesFeatureToFrame((PointSeriesFeature) feature, memberName, tPos, label,
+            addPointSeriesFeatureToFrame((PointSeriesFeature) feature, metadata, tPos, label,
                     plotStyle, frame);
         } else if (feature instanceof ProfileFeature) {
-            addProfileFeatureToFrame((ProfileFeature) feature, memberName, vPos, label, plotStyle,
+            addProfileFeatureToFrame((ProfileFeature) feature, metadata, vPos, label, plotStyle,
                     frame);
         } else if (feature instanceof TrajectoryFeature) {
-            addTrajectoryFeatureToFrame((TrajectoryFeature) feature, memberName, label, plotStyle,
+            addTrajectoryFeatureToFrame((TrajectoryFeature) feature, metadata, label, plotStyle,
                     frame);
         } else {
             throw new UnsupportedOperationException("Plotting of features of the type "
@@ -355,7 +378,7 @@ public class MapPlotter {
         frame.addMultipointData(values, coords, plotStyle);
     }
 
-    private void addPointSeriesFeatureToFrame(PointSeriesFeature feature, String memberName,
+    private void addPointSeriesFeatureToFrame(PointSeriesFeature feature, ScalarMetadata metadata,
             TimePosition tPos, String label, PlotStyle plotStyle, Frame frame) {
         HorizontalGrid targetDomain = new BorderedGrid(bbox, width, height);
         GridCell2D containingCell = targetDomain
@@ -366,13 +389,8 @@ public class MapPlotter {
         if (containingCell != null) {
             GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
             if (plotStyle == PlotStyle.POINT) {
-
-                boolean scalarField = feature.getCoverage().getScalarMemberNames()
-                        .contains(memberName);
-                if (scalarField) {
-                    ScalarMetadata scalarMetadata = feature.getCoverage().getScalarMetadata(
-                            memberName);
-                    Class<?> clazz = scalarMetadata.getValueType();
+                if (metadata != null) {
+                    Class<?> clazz = metadata.getValueType();
                     Number value = null;
                     if (Number.class.isAssignableFrom(clazz)) {
                         /*
@@ -380,7 +398,7 @@ public class MapPlotter {
                          * features. We just plot them as an out-of-range
                          * number.
                          */
-                        value = (Number) feature.getCoverage().evaluate(tPos, memberName);
+                        value = (Number) feature.getCoverage().evaluate(tPos, metadata.getName());
                     }
                     frame.addPointData(value, gridCoordinates, plotStyle);
                 } else {
@@ -397,7 +415,7 @@ public class MapPlotter {
         }
     }
 
-    private void addProfileFeatureToFrame(ProfileFeature feature, String memberName,
+    private void addProfileFeatureToFrame(ProfileFeature feature, /*String memberName,*/ ScalarMetadata metadata,
             VerticalPosition vPos, String label, PlotStyle plotStyle, Frame frame) {
         HorizontalGrid targetDomain = new BorderedGrid(bbox, width, height);
         GridCell2D containingCell = targetDomain
@@ -408,13 +426,8 @@ public class MapPlotter {
         if (containingCell != null) {
             GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
             if (plotStyle == PlotStyle.POINT) {
-
-                boolean scalarField = feature.getCoverage().getScalarMemberNames()
-                        .contains(memberName);
-                if (scalarField) {
-                    ScalarMetadata scalarMetadata = feature.getCoverage().getScalarMetadata(
-                            memberName);
-                    Class<?> clazz = scalarMetadata.getValueType();
+                if (metadata != null) {
+                    Class<?> clazz = metadata.getValueType();
                     Number value = null;
                     if (Number.class.isAssignableFrom(clazz)) {
                         /*
@@ -422,7 +435,7 @@ public class MapPlotter {
                          * features. We just plot them as an out-of-range
                          * number.
                          */
-                        value = (Number) feature.getCoverage().evaluate(vPos, memberName);
+                        value = (Number) feature.getCoverage().evaluate(vPos, metadata.getName());
                     }
                     frame.addPointData(value, gridCoordinates, plotStyle);
                 } else {
@@ -431,6 +444,7 @@ public class MapPlotter {
                 }
             } else if (plotStyle == PlotStyle.GRIDPOINT) {
                 List<GridCoordinates2D> coord = new ArrayList<GridCoordinates2D>();
+                coord.add(gridCoordinates);
                 frame.addGridPoints(coord);
             } else {
                 throw new IllegalArgumentException("Cannot plot a ProfileFeature in the style "
@@ -439,7 +453,7 @@ public class MapPlotter {
         }
     }
 
-    private void addTrajectoryFeatureToFrame(TrajectoryFeature feature, String memberName,
+    private void addTrajectoryFeatureToFrame(TrajectoryFeature feature, ScalarMetadata metadata,
             String label, PlotStyle plotStyle, Frame frame) {
 
         if (plotStyle != PlotStyle.TRAJECTORY && plotStyle != PlotStyle.GRIDPOINT
@@ -455,10 +469,8 @@ public class MapPlotter {
         List<Number> values = new ArrayList<Number>();
 
         boolean numberField = false;
-        boolean scalarField = coverage.getScalarMemberNames().contains(memberName);
-        if (scalarField) {
-            ScalarMetadata scalarMetadata = coverage.getScalarMetadata(memberName);
-            Class<?> clazz = scalarMetadata.getValueType();
+        if (metadata != null) {
+            Class<?> clazz = metadata.getValueType();
             if (Number.class.isAssignableFrom(clazz)) {
                 numberField = true;
             }
@@ -487,16 +499,16 @@ public class MapPlotter {
                             .getXAxis().getCoordinateExtent().getLow());
             int xIndex = (int) (fracAlongX * width);
 
-            double fracAlongY = 1.0
-                    - (pos.getY() - targetDomain.getYAxis().getCoordinateExtent().getLow())
+            double fracAlongY = (pos.getY() - targetDomain.getYAxis().getCoordinateExtent().getLow())
                     / (targetDomain.getYAxis().getCoordinateExtent().getHigh() - targetDomain
                             .getYAxis().getCoordinateExtent().getLow());
+            
             int yIndex = height - 1 - (int) (fracAlongY * height);
 
             coords.add(new GridCoordinates2DImpl(xIndex, yIndex));
             
             if (numberField) {
-                values.add((Number) coverage.evaluate(geoPos, memberName));
+                values.add((Number) coverage.evaluate(geoPos, metadata.getName()));
             } else {
                 values.add(null);
             }
@@ -547,6 +559,9 @@ public class MapPlotter {
         for (TimePosition time : times) {
             images.add(frameData.get(time).renderLayers(style));
         }
+        if(images.size() == 0){
+            images.add(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
+        }
         return images;
     }
 
@@ -567,9 +582,6 @@ public class MapPlotter {
             for (int j = 0; j < height; j++) {
                 int dataIndex = getDataIndex(i, j, width, height);
                 Number num = (Number) gridVals.getValues().get(dataIndex);
-                if (num != null && (num.equals(Float.NaN) || num.equals(Double.NaN))) {
-                    num = null;
-                }
                 data[i][j] = num;
             }
         }
@@ -631,7 +643,7 @@ public class MapPlotter {
                 "long winded description", coverage, null);
 
         MapPlotter plotter = new MapPlotter(style, 500, 500, new BoundingBoxImpl(new double[] { -5,
-                -5, 5, 5 }, DefaultGeographicCRS.WGS84));
+                -5, 5, 5 }, DefaultGeographicCRS.WGS84), false);
         plotter.addToFrame(feature, "test", null, null, null, PlotStyle.TRAJECTORY);
         ImageIO.write(plotter.getRenderedFrames().get(0), "png", new File("/home/guy/00traj.png"));
 

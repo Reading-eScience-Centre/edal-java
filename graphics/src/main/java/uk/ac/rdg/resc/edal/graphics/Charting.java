@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
@@ -74,7 +73,9 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.HorizontalDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
@@ -87,7 +88,6 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrs.PositiveDirection;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 
 /**
@@ -101,31 +101,54 @@ final public class Charting {
     private static final Locale US_LOCALE = new Locale("us", "US");
     private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
-    public static JFreeChart createTimeseriesPlot(PointSeriesFeature feature, String memberName) {
-        TimeSeries ts = new TimeSeries("Data", Millisecond.class);
-        List<TimePosition> times = feature.getCoverage().getDomain().getTimes();
-        List<?> values = feature.getCoverage().getValues(memberName);
-        if (!Number.class.isAssignableFrom(feature.getCoverage().getScalarMetadata(memberName)
-                .getValueType())) {
-            throw new IllegalArgumentException("Cannot plot a timeseries of a non-numerical member");
-        }
-        if (times.size() != values.size()) {
-            throw new IllegalStateException("Number of times does not equal number of values");
-        }
-
-        for (int i = 0; i < times.size(); i++) {
-            ts.add(new Millisecond(new Date(times.get(i).getValue())), (Number) values.get(i));
-        }
+    public static JFreeChart createTimeseriesPlot(List<PointSeriesFeature> features, String baseMemberName) {
         TimeSeriesCollection xydataset = new TimeSeriesCollection();
-        xydataset.addSeries(ts);
+        
+        String yLabel = "";
+        VerticalPosition vPos = null;
+        ScalarMetadata metadata = null;
+        for(PointSeriesFeature feature : features) {
+            TimeSeries ts = new TimeSeries("Data", Millisecond.class);
+            List<TimePosition> times = feature.getCoverage().getDomain().getTimes();
+            String memberName = MetadataUtils.getScalarMemberName(feature, baseMemberName);
+            metadata = MetadataUtils.getScalarMetadata(feature, memberName);
+            List<?> values = feature.getCoverage().getValues(memberName);
+            
+            if (!Number.class.isAssignableFrom(feature.getCoverage().getScalarMetadata(memberName)
+                    .getValueType())) {
+                continue;
+            }
+            if (times.size() != values.size()) {
+                continue;
+            }
+    
+            for (int i = 0; i < times.size(); i++) {
+                ts.add(new Millisecond(new Date(times.get(i).getValue())), (Number) values.get(i));
+            }
+            
+            xydataset.addSeries(ts);
+            
+            /*
+             * TODO There is usually only one feature for this, but we support
+             * multiple. Get a better title/y-label
+             */
+//            HorizontalPosition lonLat = feature.getHorizontalPosition();
+//            // Create a chart with no legend, tooltips or URLs
+//            title = "Lon: " + lonLat.getX() + ", Lat: " + lonLat.getY();
+            yLabel = getAxisLabel(feature, memberName);
+            vPos = feature.getVerticalPosition();
+        }
+        
+        String title;
+        if(metadata != null){
+            title = "Timeseries of " + metadata.getTitle();
+            if(vPos != null){
+                title += " at " + vPos;
+            }
+        } else {
+            title = "No data";
+        }
 
-        HorizontalPosition lonLat = feature.getHorizontalPosition();
-        // Create a chart with no legend, tooltips or URLs
-        String title = "Lon: " + lonLat.getX() + ", Lat: " + lonLat.getY();
-        ScalarMetadata scalarMetadata = feature.getCoverage().getScalarMetadata(memberName);
-        String yLabel = scalarMetadata.getDescription() + " ("
-                + scalarMetadata.getUnits().getUnitString()
-                + ")";
         JFreeChart chart = ChartFactory.createTimeSeriesChart(title, "Date / time", yLabel,
                 xydataset, false, false, false);
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
@@ -138,77 +161,73 @@ final public class Charting {
         return chart;
     }
 
-    public static JFreeChart createVerticalProfilePlot(ProfileFeature feature, String memberName) {
-        if (!Number.class.isAssignableFrom(feature.getCoverage().getScalarMetadata(memberName)
-                .getValueType())) {
-            throw new IllegalArgumentException("Cannot plot member " + memberName
-                    + " since it cannot be converted to a number");
+    public static JFreeChart createVerticalProfilePlot(List<ProfileFeature> features, String baseMemberName) {
+        XYSeriesCollection xySeriesColl = new XYSeriesCollection();
+        
+        String xAxisLabel = "";
+        TimePosition dateTime = null;
+        ScalarMetadata metadata = null;
+        boolean invertYAxis = false;
+        ZAxisAndValues zAxisAndValues = null;
+        for(ProfileFeature feature : features) {
+            String memberName = MetadataUtils.getScalarMemberName(feature, baseMemberName);
+            metadata = MetadataUtils.getScalarMetadata(feature, memberName);
+            
+            if (!Number.class.isAssignableFrom(feature.getCoverage().getScalarMetadata(memberName)
+                    .getValueType())) {
+                continue;
+            }
+    
+            /*
+             * We can do this conversion, because we have already thrown an
+             * exception if it's invalid
+             */
+            @SuppressWarnings("unchecked")
+            List<Number> dataValues = (List<Number>) feature.getCoverage().getValues(memberName);
+            dateTime = feature.getTime();
+
+            List<Double> elevationValues = feature.getCoverage().getDomain().getZValues();
+            zAxisAndValues = getZAxisAndValues(elevationValues, feature.getCoverage().getDomain().getVerticalCrs());
+    
+            // TODO: more meaningful title
+            XYSeries series = new XYSeries("data", true);
+            for (int i = 0; i < elevationValues.size(); i++) {
+                Number val = dataValues.get(i);
+                if (val.equals(Float.NaN) || val.equals(Double.NaN)) {
+                    /*
+                     * Don't add NaNs to the series
+                     */
+                    continue;
+                }
+                series.add(elevationValues.get(i), dataValues.get(i));
+            }
+            
+            xAxisLabel = getAxisLabel(feature, memberName);
+            
+            xySeriesColl.addSeries(series);
         }
-
-        List<Double> elevationValues = feature.getCoverage().getDomain().getZValues();
-
-        /*
-         * We can do this conversion, because we have already thrown an
-         * exception if it's invalid
-         */
-        @SuppressWarnings("unchecked")
-        List<Number> dataValues = (List<Number>) feature.getCoverage().getValues(memberName);
-        TimePosition dateTime = feature.getTime();
-        HorizontalPosition pos = feature.getHorizontalPosition();
-
-        /*
-         * TODO Factor this out into a new getZAxisAndValues method
-         */
-        VerticalCrs vCrs = feature.getCoverage().getDomain().getVerticalCrs();
-        final String zAxisLabel;
-        final boolean invertYAxis;
-        if (vCrs.getPositiveDirection() == PositiveDirection.UP) {
-            zAxisLabel = "Height";
-            invertYAxis = false;
-        } else if (vCrs.isPressure()) {
-            zAxisLabel = "Pressure";
-            invertYAxis = true;
-        } else {
-            zAxisLabel = "Depth";
-            invertYAxis = true;
+        
+        NumberAxis elevationAxis = null;
+        if(zAxisAndValues != null) {
+            elevationAxis = zAxisAndValues.zAxis;
         }
-
-        NumberAxis elevationAxis = new NumberAxis(zAxisLabel + " ("
-                + vCrs.getUnits().getUnitString() + ")");
         elevationAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         if (invertYAxis)
             elevationAxis.setInverted(true);
-        /*
-         * End of Factoring out
-         */
-
         elevationAxis.setAutoRangeIncludesZero(false);
-
-        String axisName = feature.getName() + " ("
-                + feature.getCoverage().getScalarMetadata(memberName).getUnits().getUnitString()
-                + ")";
-        NumberAxis valueAxis = new NumberAxis(axisName);
+        
+        NumberAxis valueAxis = new NumberAxis(xAxisLabel);
         valueAxis.setAutoRangeIncludesZero(false);
 
-        // TODO: more meaningful title
-        XYSeries series = new XYSeries("data", true);
-        for (int i = 0; i < elevationValues.size(); i++) {
-            Number val = dataValues.get(i);
-            if (val.equals(Float.NaN) || val.equals(Double.NaN)) {
-                /*
-                 * Don't add NaNs to the series
-                 */
-                continue;
-            }
-            series.add(elevationValues.get(i), dataValues.get(i));
-        }
-        XYSeriesCollection xySeriesColl = new XYSeriesCollection();
-        xySeriesColl.addSeries(series);
-
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        renderer.setSeriesShape(0, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
-        renderer.setSeriesPaint(0, Color.RED);
-        renderer.setSeriesShapesVisible(0, true);
+        for(int i=0; i<features.size(); i++){
+            renderer.setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
+            renderer.setSeriesShapesVisible(i, true);
+        }
+        /*
+         * TODO add legend
+         */
+//        renderer.setSeriesPaint(0, Color.RED);
 
         XYPlot plot = new XYPlot(xySeriesColl, elevationAxis, valueAxis, renderer);
         plot.setBackgroundPaint(Color.lightGray);
@@ -216,17 +235,16 @@ final public class Charting {
         plot.setRangeGridlinePaint(Color.white);
         plot.setOrientation(PlotOrientation.HORIZONTAL);
 
-        // Find the position of the profile in lon-lat coordinates for the label
-        HorizontalPosition lonLatPos = GISUtils.transformPosition(pos, DefaultGeographicCRS.WGS84);
-        double lon = lonLatPos.getX();
-        String lonStr = Double.toString(Math.abs(lon)) + ((lon >= 0.0) ? "E" : "W");
-        double lat = lonLatPos.getY();
-        String latStr = Double.toString(Math.abs(lat)) + ((lat >= 0.0) ? "N" : "S");
-        String title = String.format("Profile of %s at %s, %s", feature.getName(), lonStr, latStr);
-        if (dateTime != null) {
-            title += " at " + TimeUtils.dateTimeToISO8601(dateTime);
+        String title;
+        if(metadata != null){
+            title = "Profile of " + metadata.getTitle();
+            if (dateTime != null) {
+                title += " at " + TimeUtils.formatUTCHumanReadableDateTime(dateTime);
+            }
+        } else {
+            title = "No data";
         }
-
+        
         /*
          * Use default font and don't create a legend
          */
@@ -234,9 +252,8 @@ final public class Charting {
     }
 
     private static String getAxisLabel(Feature feature, String memberName) {
-        return feature.getName() + " ("
-                + feature.getCoverage().getScalarMetadata(memberName).getUnits().getUnitString()
-                + ")";
+        ScalarMetadata metadata = MetadataUtils.getScalarMetadata(feature, memberName);
+        return metadata.getTitle() + " (" + metadata.getUnits().getUnitString() + ")";
     }
 
     public static JFreeChart createTransectPlot(GridFeature feature, String memberName,
@@ -282,16 +299,14 @@ final public class Charting {
              * If we have a layer which only has one elevation value, we simply
              * create XY Line chart
              */
-            String xlabel = feature.getName()
-                    + " ("
-                    + feature.getCoverage().getScalarMetadata(memberName).getUnits()
-                            .getUnitString() + ")";
-            chart = ChartFactory.createXYLineChart("Transect for " + feature.getName(),
-                    "distance along transect (arbitrary units)", xlabel, xySeriesColl,
+            String yLabel = getAxisLabel(feature, memberName);
+            chart = ChartFactory.createXYLineChart(
+                    MetadataUtils.getScalarMetadata(feature, memberName).getTitle(),
+                    "distance along transect (arbitrary units)", yLabel, xySeriesColl,
                     PlotOrientation.VERTICAL, false, false, false);
             plot = chart.getXYPlot();
         }
-        if (copyrightStatement != null) {
+        if (copyrightStatement != null && !hasVerticalAxis) {
             final TextTitle textTitle = new TextTitle(copyrightStatement);
             textTitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
             textTitle.setPosition(RectangleEdge.BOTTOM);
@@ -437,15 +452,13 @@ final public class Charting {
      * Creates a vertical axis for plotting the given elevation values from the
      * given layer
      */
-    private static ZAxisAndValues getZAxisAndValues(GridSeriesFeature feature,
-            List<Double> elevationValues) {
+    private static ZAxisAndValues getZAxisAndValues(List<Double> elevationValues, VerticalCrs vCrs) {
         /*
          * We can deal with three types of vertical axis: Height, Depth and
          * Pressure. The code for this is very messy in ncWMS, sorry about
          * that... We should improve this but there are possible knock-on
          * effects, so it's not a very easy job.
          */
-        VerticalCrs vCrs = feature.getCoverage().getDomain().getVerticalAxis().getVerticalCrs();
         final String zAxisLabel;
         final boolean invertYAxis;
         if (vCrs.getPositiveDirection() == PositiveDirection.UP) {
@@ -456,22 +469,12 @@ final public class Charting {
             invertYAxis = true;
         } else {
             zAxisLabel = "Depth";
-            /*
-             * If this is a depth axis, all the values in elevationValues will
-             * be negative, so we must reverse this (see CdmUtils.getZValues())
-             */
-            List<Double> newElValues = new ArrayList<Double>(elevationValues.size());
-            for (Double zVal : elevationValues) {
-                newElValues.add(-zVal);
-            }
-            elevationValues = newElValues;
             invertYAxis = true;
         }
 
         NumberAxis zAxis = new NumberAxis(zAxisLabel + " (" + vCrs.getUnits().getUnitString() + ")");
         zAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-        if (invertYAxis)
-            zAxis.setInverted(true);
+        zAxis.setInverted(invertYAxis);
 
         return new ZAxisAndValues(zAxis, elevationValues);
     }
@@ -506,9 +509,8 @@ final public class Charting {
                     "Cannot create a vertical section chart from a non-numeric field");
         }
 
-        ZAxisAndValues zAxisAndValues = getZAxisAndValues(feature, feature.getCoverage()
-                .getDomain().getVerticalAxis().getCoordinateValues());
-        // The elevation values might have been reversed
+        VerticalAxis vAxis = feature.getCoverage().getDomain().getVerticalAxis();
+        ZAxisAndValues zAxisAndValues = getZAxisAndValues(vAxis.getCoordinateValues(), vAxis.getVerticalCrs());
         List<Double> elevationValues = zAxisAndValues.zValues;
 
         double minElValue = 0.0;

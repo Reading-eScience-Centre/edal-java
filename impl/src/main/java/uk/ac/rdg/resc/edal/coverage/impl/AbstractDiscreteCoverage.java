@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.coverage.impl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
@@ -91,6 +92,16 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
         @Override
         public ScalarMetadata getRangeMetadata(String memberName) {
             return AbstractDiscreteCoverage.this.getScalarMetadata(memberName);
+        }
+        
+        @Override
+        public String toString() {
+            StringBuffer str = new StringBuffer();
+            for(Entry<String, Object> value : map.entrySet()){
+                str.append(value.getKey()+" = "+value.getValue()+"; ");
+            }
+            str.deleteCharAt(str.length() - 1);
+            return str.toString();
         }
     }
 
@@ -178,6 +189,9 @@ public abstract class AbstractDiscreteCoverage<P, DO> extends AbstractCoverage<P
 
     @Override
     public Object evaluate(P pos, String memberName) {
+        if(memberName == null){
+            return evaluate(pos);
+        }
         this.checkMemberName(memberName);
         long i = this.getDomain().findIndexOf(pos);
         if (i < 0)

@@ -137,7 +137,11 @@ public final class Extents {
 
         @Override
         public final String toString() {
-            return String.format("%s,%s", this.min, this.max);
+            if(min == null && max == null){
+                return "";
+            } else {
+                return String.format("%s,%s", this.min, this.max);
+            }
         }
 
         @Override

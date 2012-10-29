@@ -54,6 +54,7 @@ import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
 import uk.ac.rdg.resc.edal.Unit;
+import uk.ac.rdg.resc.edal.UnitVocabulary;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.ProjectedGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
@@ -226,7 +227,7 @@ public final class CdmUtils {
             return null;
         }
 
-        VerticalCrs vCrs = new VerticalCrsImpl(Unit.getUnit(units),
+        VerticalCrs vCrs = new VerticalCrsImpl(Unit.getUnit(units, UnitVocabulary.UDUNITS2),
                 isPositive ? PositiveDirection.UP : PositiveDirection.DOWN, isPressure);
         return new VerticalAxisImpl("Vertical Axis", values, vCrs);
     }
