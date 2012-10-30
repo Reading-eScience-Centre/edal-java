@@ -25,6 +25,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.GodivaWidgets;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.Request;
@@ -100,6 +101,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     @Override
     public void onModuleLoad() {
+        setImagePath(GWT.getModuleBaseURL()+"/js/img/");
         RequestBuilder getConfig = new RequestBuilder(RequestBuilder.GET, "getconfig");
         getConfig.setCallback(new RequestCallback() {
             @Override
@@ -138,6 +140,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             initWithDefaults();
         }
     }
+    
+    public static native void setImagePath(String imagepath)/*-{
+        $wnd.OpenLayers.ImgPath = imagepath;
+    }-*/;
+
 
     /**
      * Initializes the WMS client with some default settings.

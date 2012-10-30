@@ -29,6 +29,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.TimeSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.UnitsInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.UnitsInfoIF;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -131,15 +132,15 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             }
         });
 
-        logo = new Image("img/logo.png");
+        logo = getLogo();
 
-        loadingImage = new Image("img/loading.gif");
+        loadingImage = new Image(GWT.getModuleBaseURL()+"img/loading.gif");
         loadingImage.setVisible(false);
         loadingImage.setStylePrimaryName("loadingImage");
 
         anim = new AnimationButton(mapArea, proxyUrl + wmsUrl, timeSelector, this);
         
-        infoButton = new PushButton(new Image("img/info.png"));
+        infoButton = new PushButton(new Image(GWT.getModuleBaseURL()+"img/info.png"));
         infoButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -172,6 +173,14 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         opacitySelector.setEnabled(false);
     }
     
+    /**
+     * This is something that will almost certainly be changed for custom
+     * clients, so put it in a method which can be overridden
+     */
+    protected Image getLogo() {
+        return new Image(GWT.getModuleBaseURL()+"img/logo.png");
+    }
+
     private void setOpacity() {
         mapArea.setOpacity(WMS_LAYER_ID, opacitySelector.getOpacity());
         updateLinksEtc();
