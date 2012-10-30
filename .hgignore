@@ -27,3 +27,6 @@ syntax: regexp
 \.toc$
 \.ilg$
 \.ind$
+
+syntax: regexp
+^ncwms/src/main/webapp/godiva3$
