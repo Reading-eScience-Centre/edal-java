@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Top-level POM for Java-CSML library -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<!-- We inherit from oss-parent so we can deploy to sonatype.org -->
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
@@ -62,7 +63,8 @@
 					<mavenExecutorId>forked-path</mavenExecutorId>
 					<useReleaseProfile>false</useReleaseProfile>
 				</configuration>
-				</plugin>
+				<version>2.3.2</version>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
@@ -87,6 +89,7 @@
 						</goals>
 					</execution>
 				</executions>
+				<version>2.2.1</version>
 			</plugin>
 
 		</plugins>
@@ -197,15 +200,15 @@
 				</configuration>
 				<version>2.7.1</version>
 			</plugin>
-<!-- 			<plugin> -->
-<!-- 				Checkstyle plugin - looks for naughtiness in source code -->
-<!-- 				<groupId>org.apache.maven.plugins</groupId> -->
-<!-- 				<artifactId>maven-checkstyle-plugin</artifactId> -->
-<!-- 				I think the plugin ignores the "aggregate" instruction... -->
-<!-- 				<configuration> -->
-<!-- 					<aggregate>true</aggregate> -->
-<!-- 				</configuration> -->
-<!-- 			</plugin> -->
+			<!-- <plugin> -->
+			<!-- Checkstyle plugin - looks for naughtiness in source code -->
+			<!-- <groupId>org.apache.maven.plugins</groupId> -->
+			<!-- <artifactId>maven-checkstyle-plugin</artifactId> -->
+			<!-- I think the plugin ignores the "aggregate" instruction... -->
+			<!-- <configuration> -->
+			<!-- <aggregate>true</aggregate> -->
+			<!-- </configuration> -->
+			<!-- </plugin> -->
 		</plugins>
 	</reporting>
 	<dependencies>
@@ -232,9 +235,9 @@
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 		<site>
-		  <id>website</id>
-		  <name>ReSC Website</name>
-		  <url>scp://fakewebsite.xxx/maven</url>
+			<id>website</id>
+			<name>ReSC Website</name>
+			<url>scp://fakewebsite.xxx/maven</url>
 		</site>
 	</distributionManagement>
 	<modules>

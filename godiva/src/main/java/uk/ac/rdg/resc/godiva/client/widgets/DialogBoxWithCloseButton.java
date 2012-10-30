@@ -16,6 +16,7 @@
 
 package uk.ac.rdg.resc.godiva.client.widgets;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -53,7 +54,7 @@ public class DialogBoxWithCloseButton extends DialogBox {
     public DialogBoxWithCloseButton() {
         super();
 
-        closeWidget = new Image("img/cross.png");
+        closeWidget = new Image(GWT.getModuleBaseURL()+"img/cross.png");
 
         // empty header could case a problem!
         setHTML("&nbsp;");

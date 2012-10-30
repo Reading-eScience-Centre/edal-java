@@ -4,6 +4,7 @@ import java.util.List;
 
 import uk.ac.rdg.resc.godiva.client.handlers.PaletteSelectionHandler;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -154,7 +155,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 		minScale.setTitle("The minimum value of the colour range");
 		minScale.setMaxLength(8);
 
-		autoButton = new PushButton(new Image("img/color_wheel.png"));
+		autoButton = new PushButton(new Image(GWT.getModuleBaseURL()+"img/color_wheel.png"));
 		autoButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -163,7 +164,7 @@ public class PaletteSelector implements PaletteSelectorIF {
             }
         });
 		autoButton.setTitle("Auto-adjust the colour range");
-		lockButton = new ToggleButton(new Image("img/lock_open.png"),new Image("img/lock.png"));
+		lockButton = new ToggleButton(new Image(GWT.getModuleBaseURL()+"img/lock_open.png"),new Image(GWT.getModuleBaseURL()+"img/lock.png"));
 		lockButton.setTitle("Lock the colour range");
 		lockButton.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override

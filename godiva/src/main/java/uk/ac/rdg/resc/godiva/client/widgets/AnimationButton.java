@@ -3,6 +3,7 @@ package uk.ac.rdg.resc.godiva.client.widgets;
 import uk.ac.rdg.resc.godiva.client.handlers.AviExportHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.CloseEvent;
@@ -59,7 +60,7 @@ public class AnimationButton extends ToggleButton {
     private final AviExportHandler aviExporter;
 
     public AnimationButton(final MapArea map, final String jsonProxyUrl, final TimeSelectorIF currentTimeSelector, AviExportHandler aviExporter) {
-        super(new Image("img/film.png"), new Image("img/stop.png"));
+        super(new Image(GWT.getModuleBaseURL()+"img/film.png"), new Image(GWT.getModuleBaseURL()+"img/stop.png"));
         super.setTitle("Open the animation wizard");
 
         this.map = map;
