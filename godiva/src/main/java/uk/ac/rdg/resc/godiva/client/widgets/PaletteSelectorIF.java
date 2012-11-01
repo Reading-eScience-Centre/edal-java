@@ -12,11 +12,10 @@ public interface PaletteSelectorIF extends IsWidget {
     public void populateStyles(List<String> availableStyles);
     public String getSelectedStyle();
     public void selectStyle(String styleString);
-    public boolean setScaleRange(String scaleRange);
+    public boolean setScaleRange(String scaleRange, Boolean logScale);
     public String getScaleRange();
     public int getNumColorBands();
     public void setNumColorBands(int nBands);
-    public void setLogScale(boolean logScale);
     public boolean isLogScale();
     public boolean isLocked();
     public void setEnabled(boolean enabled);

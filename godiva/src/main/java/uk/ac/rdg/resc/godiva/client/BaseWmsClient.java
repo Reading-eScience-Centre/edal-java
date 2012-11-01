@@ -15,13 +15,11 @@ import uk.ac.rdg.resc.godiva.client.handlers.TimeDateSelectionHandler;
 import uk.ac.rdg.resc.godiva.client.requests.ConnectionException;
 import uk.ac.rdg.resc.godiva.client.requests.ErrorHandler;
 import uk.ac.rdg.resc.godiva.client.requests.LayerDetails;
-import uk.ac.rdg.resc.godiva.client.requests.LayerMenuItem;
 import uk.ac.rdg.resc.godiva.client.requests.LayerRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.LayerRequestCallback;
-import uk.ac.rdg.resc.godiva.client.requests.LayerTreeJSONParser;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestCallback;
-import uk.ac.rdg.resc.godiva.client.widgets.GodivaWidgets;
+import uk.ac.rdg.resc.godiva.client.widgets.GodivaStateInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 
 import com.google.gwt.core.client.EntryPoint;
@@ -64,7 +62,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     protected int mapHeight;
     protected int mapWidth;
     protected String proxyUrl;
-    protected String wmsUrl;
     protected String docHref;
 
     /*
@@ -168,36 +165,24 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * for layout and initialisation of other widgets
      */
     private void initBaseWms() {
-        wmsUrl = getBaseWmsUrl();
         loadingCount = 0;
-        mapArea = new MapArea(wmsUrl, mapWidth, mapHeight, this);
+        mapArea = new MapArea(mapWidth, mapHeight, this);
 
         /*
          * Call the subclass initialisation
          */
         init();
+
         /*
          * Set this at the last possible moment, so that subclasses can set it
          * if they like
          */
         OpenLayers.setProxyHost(proxyUrl);
-
+        
         /*
          * Now request the menu from the ncWMS server
          */
-        requestMenu();
-    }
-
-    /**
-     * Gets the location of the WMS servlet
-     * 
-     * This can be overridden by subclasses so that e.g. the WMS can be set from
-     * the URL etc. Note that this gets used at the very beginning, and so each
-     * client only has ONE FINAL wms URL. ncWMS supports external WMSs anyway,
-     * so this shouldn't be an issue
-     */
-    protected String getBaseWmsUrl() {
-        return "wms";
+        requestAndPopulateMenu();
     }
 
     /**
@@ -209,13 +194,13 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            a {@link Map} of parameters and their values
      * @return the URL of the request
      */
-    private String getWmsUrl(String request, Map<String, String> parameters) {
+    private String getWmsRequestUrl(String wmsUrl, String request, Map<String, String> parameters) {
         StringBuilder url = new StringBuilder();
         url.append("?request=" + request);
         for (String key : parameters.keySet()) {
             url.append("&" + key + "=" + parameters.get(key));
         }
-        return getUrlFromGetArgs(url.toString());
+        return getUrlFromGetArgs(wmsUrl, url.toString());
     }
 
     /**
@@ -225,7 +210,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            the part of the URL representing the GET arguments
      * @return the encoded URL
      */
-    private String getUrlFromGetArgs(String url) {
+    protected String getUrlFromGetArgs(String wmsUrl, String url) {
         return URL.encode(proxyUrl + wmsUrl + url);
     }
 
@@ -248,47 +233,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     }
 
     /**
-     * Requests the layer menu from the server. When the menu is returned,
-     * menuLoaded will be called
-     */
-    protected void requestMenu() {
-        RequestBuilder getMenuRequest = new RequestBuilder(RequestBuilder.GET,
-                getUrlFromGetArgs("?request=GetMetadata&item=menu"));
-        getMenuRequest.setCallback(new RequestCallback() {
-            @Override
-            public void onResponseReceived(Request req, Response response) {
-                try {
-                    if (response.getStatusCode() != Response.SC_OK) {
-                        throw new ConnectionException("Error contacting server");
-                    }
-                    JSONValue jsonMap = JSONParser.parseLenient(response.getText());
-                    JSONObject parentObj = jsonMap.isObject();
-                    LayerMenuItem menuTree = LayerTreeJSONParser.getTreeFromJson(parentObj);
-
-                    menuLoaded(menuTree);
-                } catch (Exception e) {
-                    invalidJson(e);
-                } finally {
-                    setLoading(false);
-                }
-            }
-
-            @Override
-            public void onError(Request request, Throwable e) {
-                setLoading(false);
-                handleError(e);
-            }
-        });
-
-        try {
-            setLoading(true);
-            getMenuRequest.send();
-        } catch (RequestException e) {
-            handleError(e);
-        }
-    }
-
-    /**
      * Request details about a particular layer. Once loaded, layerDetailsLoaded
      * will be called
      * 
@@ -301,7 +245,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            palette. Note that this will only auto-adjust the palette if
      *            the conditions are right
      */
-    protected void requestLayerDetails(final String layerId, String currentTime,
+    protected void requestLayerDetails(final String wmsUrl, final String layerId, String currentTime,
             final boolean autoZoomAndPalette) {
         if (layerId == null) {
             /*
@@ -397,7 +341,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            whether to perform even if a scale has been set on the server
      */
     protected void maybeRequestAutoRange(final String layerId, boolean force) {
-        GodivaWidgets widgetCollection = getWidgetCollection(layerId);
+        GodivaStateInfo widgetCollection = getWidgetCollection(layerId);
         if(!widgetCollection.getPaletteSelector().isEnabled()){
             /*
              * If the palette is disabled, we don't want to get an auto-range
@@ -468,8 +412,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             parameters.put("time", nearestTime);
         }
 
-        RequestBuilder getMinMaxRequest = new RequestBuilder(RequestBuilder.GET, getWmsUrl(
-                "GetMetadata", parameters));
+        RequestBuilder getMinMaxRequest = new RequestBuilder(RequestBuilder.GET, getWmsRequestUrl(
+                widgetCollection.getWmsUrlProvider().getWmsUrl(), "GetMetadata", parameters));
         getMinMaxRequest.setCallback(new RequestCallback() {
             @Override
             public void onResponseReceived(Request req, Response response) {
@@ -582,7 +526,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     }
 
     /**
-     * Populates a set of widgets. {@link GodivaWidgets} contains all widgets
+     * Populates a set of widgets. {@link GodivaStateInfo} contains all widgets
      * necessary for setting all server options (TODO what about style?).
      * 
      * @param layerDetails
@@ -591,7 +535,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * @param widgetCollection
      *            a collection of widgets to populated.
      */
-    protected void populateWidgets(LayerDetails layerDetails, GodivaWidgets widgetCollection) {
+    protected void populateWidgets(LayerDetails layerDetails, GodivaStateInfo widgetCollection) {
         // TODO Deal with null cases
         widgetCollection.getElevationSelector().setId(layerDetails.getId());
         widgetCollection.getTimeSelector().setId(layerDetails.getId());
@@ -645,9 +589,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                 layerDetails.isZPositive());
 
         if (!widgetCollection.getPaletteSelector().isLocked()) {
-            widgetCollection.getPaletteSelector().setScaleRange(layerDetails.getScaleRange());
+            widgetCollection.getPaletteSelector().setScaleRange(layerDetails.getScaleRange(), layerDetails.isLogScale());
             widgetCollection.getPaletteSelector().setNumColorBands(layerDetails.getNumColorBands());
-            widgetCollection.getPaletteSelector().setLogScale(layerDetails.isLogScale());
         }
     }
 
@@ -661,8 +604,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     }
 
     @Override
-    public void layerSelected(String layerId, boolean autoZoomAndPalette) {
-        requestLayerDetails(layerId, getCurrentTime(), autoZoomAndPalette);
+    public void layerSelected(String wmsUrl, String layerId, boolean autoZoomAndPalette) {
+        requestLayerDetails(wmsUrl, layerId, getCurrentTime(), autoZoomAndPalette);
         updateMapBase(layerId);
     }
 
@@ -675,7 +618,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
 
     @Override
     public void refreshLayerList() {
-        requestMenu();
+        requestAndPopulateMenu();
     }
 
     @Override
@@ -712,7 +655,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         }
         dateTimeDetailsLoaded = false;
         TimeRequestBuilder getTimeRequest = new TimeRequestBuilder(layerId, selectedDate, proxyUrl
-                + wmsUrl);
+                + getWidgetCollection(layerId).getWmsUrlProvider().getWmsUrl());
         getTimeRequest.setCallback(new TimeRequestCallback() {
             @Override
             public void onResponseReceived(Request request, Response response) {
@@ -787,13 +730,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     public abstract void init();
 
     /**
-     * This is called once the menu details have been loaded. Subclasses should
-     * use this to populate the appropriate widget(s)
-     * 
-     * @param menuTree
-     *            the root {@link LayerMenuItem} of the menu tree
+     * This is called at initialisation, and is used to populate the layer
+     * selection menu(s). Subclasses should use this to request any data and
+     * then populate the appropriate widget(s)
      */
-    public abstract void menuLoaded(LayerMenuItem menuTree);
+    protected abstract void requestAndPopulateMenu();
 
     /**
      * This is called once a layer's details have been loaded
@@ -842,11 +783,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     public abstract void loadingFinished();
 
     /**
-     * Gets the {@link GodivaWidgets} for the specified layer
+     * Gets the {@link GodivaStateInfo} for the specified layer
      * 
      * @param layerId
      *            the layer ID
      * @return
      */
-    public abstract GodivaWidgets getWidgetCollection(String layerId);
+    public abstract GodivaStateInfo getWidgetCollection(String layerId);
 }

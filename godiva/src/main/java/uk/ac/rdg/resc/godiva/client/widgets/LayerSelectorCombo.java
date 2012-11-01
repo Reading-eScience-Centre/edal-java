@@ -18,7 +18,7 @@ import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
-public class LayerSelectorCombo extends Button implements LayerSelectorIF {
+public class LayerSelectorCombo extends Button implements LayerSelectorIF, WmsUrlProvider {
     private LayerSelectionHandler layerSelectionHandler;
     private PopupPanel popup;
     private Tree tree;
@@ -28,6 +28,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     private String firstTitle = null;
     
     private LayerMenuItem selectedNode;
+    private String wmsUrl;
 
     public LayerSelectorCombo(LayerSelectionHandler layerHandler) {
         super("Loading");
@@ -121,7 +122,8 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
                 @Override
                 public void onClick(ClickEvent event) {
                     setSelectedLayer(id);
-                    layerSelectionHandler.layerSelected(id, true);
+                    wmsUrl = item.getWmsUrl();
+                    layerSelectionHandler.layerSelected(wmsUrl, id, true);
                     selectedNode = item;
                 }
             });
@@ -188,7 +190,11 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         }
         return title;
     }
-    
-    
+
+
+    @Override
+    public String getWmsUrl() {
+        return wmsUrl;
+    }
     
 }
