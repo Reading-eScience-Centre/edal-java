@@ -1,19 +1,30 @@
 package uk.ac.rdg.resc.godiva.client.requests;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LayerMenuItem {
+public class LayerMenuItem implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String title;
     private String id = null;
     private boolean plottable = true;
+    private String wmsUrl = null;
     private List<LayerMenuItem> childItems = null;
     private LayerMenuItem parent = null;
     
+    protected LayerMenuItem(){
+    }
+    
     public LayerMenuItem(String title, String id, boolean plottable) {
+        this(title, id, plottable, null);
+    }
+    
+    public LayerMenuItem(String title, String id, boolean plottable, String wmsUrl) {
         this.title = title;
         this.id = id;
         this.plottable = plottable;
+        this.wmsUrl = wmsUrl;
     }
     
     public void addChildItem(LayerMenuItem item){
@@ -46,5 +57,17 @@ public class LayerMenuItem {
     
     public boolean isLeaf(){
         return childItems == null || childItems.size() == 0;
+    }
+    
+    public String getWmsUrl() {
+        if (wmsUrl == null) {
+            if (parent == null) {
+                throw new IllegalStateException("A layer menu tree must have a WmsUrl defined");
+            } else {
+                return parent.getWmsUrl();
+            }
+        } else {
+            return wmsUrl;
+        }
     }
 }

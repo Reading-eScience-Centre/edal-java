@@ -7,19 +7,20 @@ import org.gwtopenmaps.openlayers.client.LonLat;
 
 import uk.ac.rdg.resc.godiva.client.handlers.AviExportHandler;
 import uk.ac.rdg.resc.godiva.client.requests.CaseInsensitiveParameterMap;
+import uk.ac.rdg.resc.godiva.client.requests.ConnectionException;
 import uk.ac.rdg.resc.godiva.client.requests.LayerDetails;
 import uk.ac.rdg.resc.godiva.client.requests.LayerMenuItem;
+import uk.ac.rdg.resc.godiva.client.requests.LayerTreeJSONParser;
 import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfoIF;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
 import uk.ac.rdg.resc.godiva.client.widgets.ElevationSelector;
 import uk.ac.rdg.resc.godiva.client.widgets.ElevationSelectorIF;
-import uk.ac.rdg.resc.godiva.client.widgets.GodivaWidgets;
+import uk.ac.rdg.resc.godiva.client.widgets.GodivaStateInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.Info;
 import uk.ac.rdg.resc.godiva.client.widgets.InfoIF;
 import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorCombo;
-import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 import uk.ac.rdg.resc.godiva.client.widgets.OpacitySelector;
 import uk.ac.rdg.resc.godiva.client.widgets.PaletteSelector;
@@ -34,7 +35,15 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.http.client.Request;
+import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.RequestException;
+import com.google.gwt.http.client.Response;
 import com.google.gwt.http.client.URL;
+import com.google.gwt.json.client.JSONObject;
+import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.HTML;
@@ -46,8 +55,8 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 public class Godiva extends BaseWmsClient implements AviExportHandler {
     private static final String WMS_LAYER_ID = "singleLayer";
 
-    private LayerSelectorIF layerSelector;
-    private GodivaWidgets widgetCollection;
+    private LayerSelectorCombo layerSelector;
+    private GodivaStateInfo widgetCollection;
 
     protected Image logo;
     private Image loadingImage;
@@ -117,13 +126,13 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         ElevationSelectorIF elevationSelector = new ElevationSelector("mainLayer", "Depth", this);
         TimeSelectorIF timeSelector = new TimeSelector("mainLayer", this);
         PaletteSelectorIF paletteSelector = new PaletteSelector("mainLayer", getMapHeight(), 30,
-                this, wmsUrl, true);
+                this, layerSelector, true);
         UnitsInfoIF unitsInfo = new UnitsInfo();
         final CopyrightInfoIF copyrightInfo = new CopyrightInfo();
         final InfoIF moreInfo = new Info();
 
-        widgetCollection = new GodivaWidgets(elevationSelector, timeSelector, paletteSelector,
-                unitsInfo, copyrightInfo, moreInfo);
+        widgetCollection = new GodivaStateInfo(elevationSelector, timeSelector, paletteSelector,
+                unitsInfo, copyrightInfo, moreInfo, layerSelector);
 
         opacitySelector = new OpacitySelector(new ChangeHandler() {
             @Override
@@ -138,7 +147,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         loadingImage.setVisible(false);
         loadingImage.setStylePrimaryName("loadingImage");
 
-        anim = new AnimationButton(mapArea, proxyUrl + wmsUrl, timeSelector, this);
+        anim = new AnimationButton(mapArea, proxyUrl, layerSelector, timeSelector, this);
         
         infoButton = new PushButton(new Image(GWT.getModuleBaseURL()+"img/info.png"));
         infoButton.addClickHandler(new ClickHandler() {
@@ -186,10 +195,55 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         updateLinksEtc();
     }
 
+    /**
+     * Requests the layer menu from the server. When the menu is returned,
+     * menuLoaded will be called
+     */
     @Override
-    public void menuLoaded(LayerMenuItem menuTree) {
+    protected void requestAndPopulateMenu() {
+        /*
+         * This is where we define the fact that we are working with a single local server
+         */
+        final String wmsUrl = "wms";
+        RequestBuilder getMenuRequest = new RequestBuilder(RequestBuilder.GET,
+                getUrlFromGetArgs(wmsUrl, "?request=GetMetadata&item=menu"));
+        getMenuRequest.setCallback(new RequestCallback() {
+            @Override
+            public void onResponseReceived(Request req, Response response) {
+                try {
+                    if (response.getStatusCode() != Response.SC_OK) {
+                        throw new ConnectionException("Error contacting server");
+                    }
+                    JSONValue jsonMap = JSONParser.parseLenient(response.getText());
+                    JSONObject parentObj = jsonMap.isObject();
+                    LayerMenuItem menuTree = LayerTreeJSONParser.getTreeFromJson(wmsUrl, parentObj);
+
+                    menuLoaded(menuTree);
+                } catch (Exception e) {
+                    invalidJson(e);
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            @Override
+            public void onError(Request request, Throwable e) {
+                setLoading(false);
+                handleError(e);
+            }
+        });
+
+        try {
+            setLoading(true);
+            getMenuRequest.send();
+        } catch (RequestException e) {
+            handleError(e);
+        }
+    }
+    
+    protected void menuLoaded(LayerMenuItem menuTree) {
         if (menuTree.isLeaf()) {
-            menuTree.addChildItem(new LayerMenuItem("No georeferencing data found!", null, false));
+            menuTree.addChildItem(new LayerMenuItem("No georeferencing data found!", null, false, null));
         }
         layerSelector.populateLayers(menuTree);
 
@@ -199,7 +253,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             String currentLayer = permalinkParamsMap.get("layer");
             if (currentLayer != null) {
                 layerSelector.setSelectedLayer(currentLayer);
-                layerSelected(currentLayer, false);
+                layerSelected(layerSelector.getWmsUrl(), currentLayer, false);
             }
         }
     }
@@ -224,8 +278,13 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         if (permalinking) {
             String scaleRange = permalinkParamsMap.get("scaleRange");
+            String logScaleStr = permalinkParamsMap.get("logScale");
+            Boolean logScale = null;
+            if (logScaleStr != null) {
+                logScale = Boolean.parseBoolean(logScaleStr);
+            }
             if (scaleRange != null) {
-                widgetCollection.getPaletteSelector().setScaleRange(scaleRange);
+                widgetCollection.getPaletteSelector().setScaleRange(scaleRange, logScale);
             }
 
             String numColorBands = permalinkParamsMap.get("numColorBands");
@@ -234,10 +293,6 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                         Integer.parseInt(numColorBands));
             }
 
-            String logScale = permalinkParamsMap.get("logScale");
-            if (logScale != null) {
-                widgetCollection.getPaletteSelector().setLogScale(Boolean.parseBoolean(logScale));
-            }
 
             String currentElevation = permalinkParamsMap.get("elevation");
             if (currentElevation != null) {
@@ -299,11 +354,11 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
     @Override
     public void rangeLoaded(String layerId, double min, double max) {
-        widgetCollection.getPaletteSelector().setScaleRange(min + "," + max);
+        widgetCollection.getPaletteSelector().setScaleRange(min + "," + max, null);
     }
 
     @Override
-    public GodivaWidgets getWidgetCollection(String layerId) {
+    public GodivaStateInfo getWidgetCollection(String layerId) {
         return widgetCollection;
     }
 
@@ -375,7 +430,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String currentScaleRange = widgetCollection.getPaletteSelector().getScaleRange();
         int nColourBands = widgetCollection.getPaletteSelector().getNumColorBands();
         boolean logScale = widgetCollection.getPaletteSelector().isLogScale();
-        mapArea.addLayer(WMS_LAYER_ID, layerSelector.getSelectedIds().get(0), currentTime, colorbyTime,
+        mapArea.addLayer(layerSelector.getWmsUrl(), WMS_LAYER_ID, layerSelector.getSelectedIds().get(0), currentTime, colorbyTime,
                 currentElevation, colorbyElevation, currentStyle, currentPalette, currentScaleRange, nColourBands,
                 logScale, widgetCollection.getElevationSelector().getNElevations() > 1,
                 widgetCollection.getTimeSelector().hasMultipleTimes());
@@ -420,12 +475,12 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     }
 
     @Override
-    protected void requestLayerDetails(String layerId, String currentTime,
+    protected void requestLayerDetails(String wmsUrl, String layerId, String currentTime,
             boolean autoZoomAndPalette) {
         if (permalinking) {
             currentTime = permalinkParamsMap.get("time");
         }
-        super.requestLayerDetails(layerId, currentTime, autoZoomAndPalette);
+        super.requestLayerDetails(wmsUrl, layerId, currentTime, autoZoomAndPalette);
     }
 
     /**
@@ -439,7 +494,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
-        String urlParams = "dataset=" + wmsUrl + "&numColorBands="
+        String urlParams = "dataset=" + layerSelector.getWmsUrl() + "&numColorBands="
                 + paletteSelector.getNumColorBands() + "&logScale=" + paletteSelector.isLogScale()
                 + "&zoom=" + zoom + "&centre=" + centre.lon() + "," + centre.lat();
 
@@ -522,7 +577,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     public String getAviUrl(String times, String frameRate) {
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
-        String urlParams = "dataset=" + wmsUrl + "&numColorBands="
+        String urlParams = "dataset=" + layerSelector.getWmsUrl() + "&numColorBands="
                 + paletteSelector.getNumColorBands() + "&logScale=" + paletteSelector.isLogScale()
                 + "&zoom=" + zoom + "&centre=" + centre.lon() + "," + centre.lat();
 

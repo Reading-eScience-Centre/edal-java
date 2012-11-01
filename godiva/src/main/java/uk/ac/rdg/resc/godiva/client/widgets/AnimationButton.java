@@ -37,6 +37,7 @@ public class AnimationButton extends ToggleButton {
     private StartEndTimePopup popup;
     private String animLayer = null;
     private String jsonProxyUrl;
+    private WmsUrlProvider wmsUrlProvider;
     private String currentElevation;
     private String palette;
     private String scaleRange;
@@ -59,12 +60,16 @@ public class AnimationButton extends ToggleButton {
     
     private final AviExportHandler aviExporter;
 
-    public AnimationButton(final MapArea map, final String jsonProxyUrl, final TimeSelectorIF currentTimeSelector, AviExportHandler aviExporter) {
-        super(new Image(GWT.getModuleBaseURL()+"img/film.png"), new Image(GWT.getModuleBaseURL()+"img/stop.png"));
+    public AnimationButton(final MapArea map, final String jsonProxyUrl,
+            final WmsUrlProvider wmsUrlProvider, final TimeSelectorIF currentTimeSelector,
+            AviExportHandler aviExporter) {
+        super(new Image(GWT.getModuleBaseURL() + "img/film.png"), new Image(GWT.getModuleBaseURL()
+                + "img/stop.png"));
         super.setTitle("Open the animation wizard");
 
         this.map = map;
         this.jsonProxyUrl = jsonProxyUrl;
+        this.wmsUrlProvider = wmsUrlProvider;
         this.currentTimeSelector = currentTimeSelector;
         this.aviExporter = aviExporter;
 
@@ -124,8 +129,8 @@ public class AnimationButton extends ToggleButton {
 
     private void startAnimation(String times, String frameRate, boolean overlay) {
         if(overlay){
-            map.addAnimationLayer(animLayer, times, currentElevation, palette, style, scaleRange,
-                    nColorBands, logScale, frameRate);
+            map.addAnimationLayer(wmsUrlProvider.getWmsUrl(), animLayer, times, currentElevation,
+                    palette, style, scaleRange, nColorBands, logScale, frameRate);
             this.setTitle("Stop animation");
         } else {
             Window.open(aviExporter.getAviUrl(times, frameRate), null, null);
@@ -140,7 +145,7 @@ public class AnimationButton extends ToggleButton {
     }
 
     private StartEndTimePopup getWizard() {
-        popup = new StartEndTimePopup(animLayer, jsonProxyUrl, currentTimeSelector);
+        popup = new StartEndTimePopup(animLayer, jsonProxyUrl + wmsUrlProvider.getWmsUrl(), currentTimeSelector);
         popup.setErrorMessage("Can only create animation where there are multiple times");
         popup.setButtonLabel("Next >");
         popup.addCloseHandler(new CloseHandler<PopupPanel>() {
@@ -159,7 +164,7 @@ public class AnimationButton extends ToggleButton {
         popup.setTimeSelectionHandler(new StartEndTimeHandler() {
             @Override
             public void timesReceived(String startDateTime, String endDateTime) {
-                String url = URL.encode(jsonProxyUrl
+                String url = URL.encode(jsonProxyUrl + wmsUrlProvider.getWmsUrl()
                         + "?request=GetMetadata&item=animationTimesteps&layerName=" + animLayer
                         + "&start=" + startDateTime + "&end=" + endDateTime);
                 RequestBuilder getAnimTimestepsRequest = new RequestBuilder(RequestBuilder.GET, url);
@@ -188,7 +193,6 @@ public class AnimationButton extends ToggleButton {
                     @Override
                     public void onError(Request request, Throwable exception) {
                         // TODO Auto-generated method stub
-
                     }
                 });
                 try {

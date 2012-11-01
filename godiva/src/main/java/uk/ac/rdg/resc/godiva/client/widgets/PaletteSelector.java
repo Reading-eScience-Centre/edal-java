@@ -55,7 +55,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	private int width;
 	
 	private Image paletteImage;
-	private String baseUrl;
+	private WmsUrlProvider wmsUrlProvider;
 	private final PaletteSelectionHandler paletteHandler;
 	
 	private DialogBox popup;
@@ -78,9 +78,9 @@ public class PaletteSelector implements PaletteSelectorIF {
 	 */
 	public PaletteSelector(String id, int height, int width, 
 	                       final PaletteSelectionHandler handler,
-	                       String baseUrl, boolean vertical) {
+	                       WmsUrlProvider wmsUrlProvider, boolean vertical) {
 	    this.id = id;
-		this.baseUrl = baseUrl;
+		this.wmsUrlProvider = wmsUrlProvider;
 		this.height = height;
 		this.width = width;
 		this.paletteHandler = handler;
@@ -254,12 +254,6 @@ public class PaletteSelector implements PaletteSelectorIF {
 	    hp.add(mlLabel);
 	    hp.setCellHorizontalAlignment(mlLabel, HasHorizontalAlignment.ALIGN_RIGHT);
 	    
-//	    hp.add(logScale);
-//	    hp.setCellHeight(logScale, "60px");
-//	    hp.setCellVerticalAlignment(logScale, HasVerticalAlignment.ALIGN_BOTTOM);
-//	    hp.add(buttonsPanel);
-//	    hp.setCellHeight(buttonsPanel, "60px");
-//	    hp.setCellVerticalAlignment(buttonsPanel, HasVerticalAlignment.ALIGN_TOP);
 	    hp.add(buttonsAndLogPanel);
 	    
 	    hp.add(mhLabel);
@@ -338,7 +332,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	        +"&colorbaronly=true"
 	        +"&vertical="+vertical
 	        +"&palette="+paletteName;
-	    return URL.encode(baseUrl+url);
+	    return URL.encode(wmsUrlProvider.getWmsUrl()+url);
 	}
 
     @Override
@@ -369,7 +363,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	}
 	
 	@Override
-    public boolean setScaleRange(String scaleRange) {
+    public boolean setScaleRange(String scaleRange, Boolean isLogScale) {
 	    String[] vals = scaleRange.split(",");
 	    if(vals.length == 0){
 	        /*
@@ -378,13 +372,17 @@ public class PaletteSelector implements PaletteSelectorIF {
 	        setEnabled(false);
 	        return false;
 	    }
+	    if(isLogScale == null){
+	        isLogScale = isLogScale();
+	    }
 	    float minVal = Float.parseFloat(vals[0]);
-	    if(isLogScale() && minVal <= 0){
+	    if(isLogScale && minVal <= 0){
 	        ErrorBox.popupErrorMessage("Cannot use a negative or zero value for logarithmic scale");
 	        return false;
 	    }
 	    minScale.setValue(format.format(minVal));
 	    maxScale.setValue(format.format(Float.parseFloat(vals[1])));
+	    setLogScale(isLogScale);
 	    setScaleLabels();
 	    return true;
 	}
@@ -430,9 +428,8 @@ public class PaletteSelector implements PaletteSelectorIF {
         nColorBands.setSelectedIndex(minIndex);
     }
 
-    @Override
-    public void setLogScale(boolean logScale) {
-        this.logScale.setSelectedIndex(logScale ? 1 : 0);
+    public void setLogScale(boolean isLogScale) {
+        logScale.setSelectedIndex(isLogScale ? 1 : 0);
     }
 
     @Override
@@ -485,7 +482,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     @Override
     public String getSelectedStyle() {
-        if(styles.getSelectedIndex() > 0)
+        if(styles.getSelectedIndex() >= 0)
             return styles.getValue(styles.getSelectedIndex());
         else
             return "default";

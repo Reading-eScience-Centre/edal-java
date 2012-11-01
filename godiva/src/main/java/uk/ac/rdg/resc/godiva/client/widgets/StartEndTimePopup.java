@@ -47,7 +47,6 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
     private Button nextButton;
     private TimeSelector startTimeSelector;
     private TimeSelector endTimeSelector;
-//    private List<String> availableDates;
     private Map<String, List<String>> availableTimes;
     private StartEndTimeHandler timesHandler;
 
@@ -73,14 +72,12 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
             public void onResponseReceived(Request request, Response response) {
                 super.onResponseReceived(request, response);
                 LayerDetails layerDetails = getLayerDetails();
-System.out.println("Got layer details");
                 multiFeature = layerDetails.isMultiFeature();
 
                 final List<String> availableDates;
                 if(multiFeature){
                     availableDates = TimeSelector.getDatesInRange(layerDetails.getStartTime(),
                             layerDetails.getEndTime());
-                    System.out.println("Got available dates: "+availableDates);
                 } else {
                     availableDates = layerDetails.getAvailableDates();
                 }
@@ -187,7 +184,6 @@ System.out.println("Got layer details");
                 new TimeDateSelectionHandler() {
                     @Override
                     public void dateSelected(String id, String selectedDate) {
-                        System.out.println(availableTimes+","+startTimeSelector);
                         startTimeSelector.populateTimes(availableTimes.get(startTimeSelector
                                 .getSelectedDate()));
                         /*
