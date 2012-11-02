@@ -14,6 +14,7 @@ target/
 syntax: regexp
 \.springBeans$
 ^ncwms/src/main/webapp/godiva$
+^ncwms/src/main/webapp/godiva3$
 ^ncwms/src/main/gwt-unitCache$
 \.db$
 ^ncwms/src/main/webapp/WEB-INF/classes$
