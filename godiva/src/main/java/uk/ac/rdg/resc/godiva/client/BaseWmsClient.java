@@ -374,6 +374,12 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         parameters.put("layers", layerId);
         parameters.put("srs", mapArea.getMap().getProjection());
         
+        /*
+         * We put crs as well as srs, because some older versions of THREDDS
+         * seem to still want "CRS" even with 1.1.1...
+         */
+        parameters.put("crs", mapArea.getMap().getProjection());
+        
         if (widgetCollection.getTimeSelector().isContinuous()) {
             if (widgetCollection.getTimeSelector().getSelectedDateTime() != null) {
                 parameters.put("colorby/time", widgetCollection.getTimeSelector()

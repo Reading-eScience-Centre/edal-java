@@ -21,6 +21,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.GodivaStateInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.Info;
 import uk.ac.rdg.resc.godiva.client.widgets.InfoIF;
 import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorCombo;
+import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 import uk.ac.rdg.resc.godiva.client.widgets.OpacitySelector;
 import uk.ac.rdg.resc.godiva.client.widgets.PaletteSelector;
@@ -55,7 +56,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 public class Godiva extends BaseWmsClient implements AviExportHandler {
     private static final String WMS_LAYER_ID = "singleLayer";
 
-    private LayerSelectorCombo layerSelector;
+    private LayerSelectorIF layerSelector;
     private GodivaStateInfo widgetCollection;
 
     protected Image logo;
@@ -83,7 +84,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     private AnimationButton anim;
     
     private PushButton infoButton;
-    
+
     @Override
     public void init() {
         String permalinkString = Window.Location.getParameter("permalinking");
@@ -121,12 +122,24 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         mapArea.setTransectLayerId(WMS_LAYER_ID);
 
-        layerSelector = new LayerSelectorCombo(this);
 
-        ElevationSelectorIF elevationSelector = new ElevationSelector("mainLayer", "Depth", this);
-        TimeSelectorIF timeSelector = new TimeSelector("mainLayer", this);
-        PaletteSelectorIF paletteSelector = new PaletteSelector("mainLayer", getMapHeight(), 30,
-                this, layerSelector, true);
+        /*
+         * We use a get method here, so that subclasses can override and use
+         * their own custom implementations.
+         * 
+         * Currently only these widgets are initialised in this method, since
+         * they are the most complex. The other things such as links can easily
+         * be removed.
+         * 
+         * TODO This should probably be extended to the animation button and
+         * opacity selector at the very least, but first they need to be
+         * interfaceised.  Yes that is a word.
+         */
+        layerSelector = getLayerSelector();
+        ElevationSelectorIF elevationSelector = getElevationSelector();
+        TimeSelectorIF timeSelector = getTimeSelector();
+        PaletteSelectorIF paletteSelector = getPaletteSelector(layerSelector);
+
         UnitsInfoIF unitsInfo = new UnitsInfo();
         final CopyrightInfoIF copyrightInfo = new CopyrightInfo();
         final InfoIF moreInfo = new Info();
@@ -140,6 +153,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 setOpacity();
             }
         });
+        anim = new AnimationButton(mapArea, proxyUrl, layerSelector, timeSelector, this);
 
         logo = getLogo();
 
@@ -147,7 +161,6 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         loadingImage.setVisible(false);
         loadingImage.setStylePrimaryName("loadingImage");
 
-        anim = new AnimationButton(mapArea, proxyUrl, layerSelector, timeSelector, this);
         
         infoButton = new PushButton(new Image(GWT.getModuleBaseURL()+"img/info.png"));
         infoButton.addClickHandler(new ClickHandler() {
@@ -252,8 +265,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         if (permalinking) {
             String currentLayer = permalinkParamsMap.get("layer");
             if (currentLayer != null) {
-                layerSelector.setSelectedLayer(currentLayer);
-                layerSelected(layerSelector.getWmsUrl(), currentLayer, false);
+                layerSelector.selectLayer(currentLayer, false);
             }
         }
     }
@@ -430,7 +442,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String currentScaleRange = widgetCollection.getPaletteSelector().getScaleRange();
         int nColourBands = widgetCollection.getPaletteSelector().getNumColorBands();
         boolean logScale = widgetCollection.getPaletteSelector().isLogScale();
-        mapArea.addLayer(layerSelector.getWmsUrl(), WMS_LAYER_ID, layerSelector.getSelectedIds().get(0), currentTime, colorbyTime,
+        mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID, layerSelector.getSelectedIds().get(0), currentTime, colorbyTime,
                 currentElevation, colorbyElevation, currentStyle, currentPalette, currentScaleRange, nColourBands,
                 logScale, widgetCollection.getElevationSelector().getNElevations() > 1,
                 widgetCollection.getTimeSelector().hasMultipleTimes());
@@ -494,7 +506,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
-        String urlParams = "dataset=" + layerSelector.getWmsUrl() + "&numColorBands="
+        String urlParams = "dataset=" + widgetCollection.getWmsUrlProvider().getWmsUrl() + "&numColorBands="
                 + paletteSelector.getNumColorBands() + "&logScale=" + paletteSelector.isLogScale()
                 + "&zoom=" + zoom + "&centre=" + centre.lon() + "," + centre.lat();
 
@@ -552,9 +564,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         urlParams += "&bbox=" + mapArea.getMap().getExtent().toBBox(6);
         if(layerSelector != null) {
             StringBuilder title = new StringBuilder();
-            if(layerSelector.getTitleElements() != null && layerSelector.getTitleElements().size() > 0) {
-                for(String element : layerSelector.getTitleElements()){
-                    title.append(element+",");
+            if (layerSelector.getTitleElements() != null
+                    && layerSelector.getTitleElements().size() > 0) {
+                for (String element : layerSelector.getTitleElements()) {
+                    title.append(element + ",");
                 }
                 title.deleteCharAt(title.length()-1);
                 urlParams += "&layerTitle=" + title;
@@ -577,9 +590,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     public String getAviUrl(String times, String frameRate) {
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
-        String urlParams = "dataset=" + layerSelector.getWmsUrl() + "&numColorBands="
-                + paletteSelector.getNumColorBands() + "&logScale=" + paletteSelector.isLogScale()
-                + "&zoom=" + zoom + "&centre=" + centre.lon() + "," + centre.lat();
+        String urlParams = "dataset=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
+                + "&numColorBands=" + paletteSelector.getNumColorBands() + "&logScale="
+                + paletteSelector.isLogScale() + "&zoom=" + zoom + "&centre=" + centre.lon() + "," + centre.lat();
 
         ElevationSelectorIF elevationSelector = widgetCollection.getElevationSelector();
         
@@ -627,7 +640,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 urlParams += "&layerTitle=" + title;
             }
         }
-        urlParams += "&crs=EPSG:4326";
+        urlParams += "&srs=EPSG:4326";
         urlParams += "&mapHeight=" + mapHeight;
         urlParams += "&mapWidth=" + mapWidth;
         urlParams += "&style=" + currentStyle;
@@ -654,5 +667,29 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     public void animationStopped() {
         updateLinksEtc();
         screenshot.setText("Export to PNG");
+    }
+
+    /*
+     * We define a set of methods here to get the initial widgets needed. That
+     * way, a subclass can easily override these methods to replace them with
+     * custom implementations, whilst still keeping the Godiva feature set (i.e.
+     * one WMS layer at a time)
+     */
+    protected PaletteSelectorIF getPaletteSelector(LayerSelectorIF wmsUrlProvider) {
+        return new PaletteSelector("mainLayer", getMapHeight(), 30,
+                this, layerSelector, true);
+    }
+
+    protected TimeSelectorIF getTimeSelector() {
+        return new TimeSelector("mainLayer", this);
+    }
+
+    protected ElevationSelectorIF getElevationSelector() {
+        return new ElevationSelector("mainLayer", "Depth", this);
+    }
+    
+
+    protected LayerSelectorIF getLayerSelector() {
+        return new LayerSelectorCombo(this);
     }
 }

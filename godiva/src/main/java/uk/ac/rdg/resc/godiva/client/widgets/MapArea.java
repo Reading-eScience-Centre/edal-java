@@ -12,7 +12,6 @@ import org.gwtopenmaps.openlayers.client.Pixel;
 import org.gwtopenmaps.openlayers.client.Projection;
 import org.gwtopenmaps.openlayers.client.control.EditingToolbar;
 import org.gwtopenmaps.openlayers.client.control.LayerSwitcher;
-import org.gwtopenmaps.openlayers.client.control.MousePosition;
 import org.gwtopenmaps.openlayers.client.control.WMSGetFeatureInfo;
 import org.gwtopenmaps.openlayers.client.control.WMSGetFeatureInfoOptions;
 import org.gwtopenmaps.openlayers.client.event.EventHandler;
@@ -134,7 +133,7 @@ public class MapArea extends MapWidget {
             String palette, String style, String scaleRange, int nColorBands, boolean logScale, String frameRate) {
         StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.1.1");
         url.append("&format=image/gif" + "&transparent=true" + "&styles=" + style + "/" + palette
-                + "&layers=" + layerId + "&time=" + timeList + "&logscale=" + logScale + "&srs="
+                + "&layers=" + layerId + "&time=" + timeList + "&logscale=" + logScale + "&crs="
                 + currentProjection + "&bbox=" + map.getExtent().toBBox(6) + "&width="
                 + ((int) map.getSize().getWidth()) + "&height=" + ((int) map.getSize().getHeight())
                 + "&animation=true");
@@ -217,7 +216,6 @@ public class MapArea extends MapWidget {
         if (nColourBands > 0)
             params.setParameter("NUMCOLORBANDS", nColourBands + "");
         params.setParameter("LOGSCALE", logScale + "");
-        params.setParameter("VERSION", "1.3.0");
 
         WMSOptions options = getOptionsForCurrentProjection();
         
@@ -493,8 +491,6 @@ public class MapArea extends MapWidget {
         currentProjection = map.getProjection();
         map.addControl(new LayerSwitcher());
         addDrawingLayer();
-        map.addControl(new MousePosition());
-        
         map.setCenter(new LonLat(0.0, 0.0), 2);
         map.setMaxExtent(new Bounds(-180, -360, 180, 360));
     }

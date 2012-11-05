@@ -10,23 +10,21 @@ syntax: glob
 .project
 doc/
 target/
+ncwms/.externalToolBuilders/
+ncwms/src/main/webapp/godiva/
+ncwms/src/main/webapp/godiva3/
+ncwms/src/main/gwt-unitCache/
+ncwms/src/main/webapp/WEB-INF/classes/
+ncwms/src/main/webapp/WEB-INF/lib/
+ncwms/src/main/webapp/WEB-INF/deploy/
+ncwms/src/main/webapp/META-INF/maven/
 
 syntax: regexp
 \.springBeans$
-^ncwms/src/main/webapp/godiva$
-^ncwms/src/main/gwt-unitCache$
 \.db$
-^ncwms/src/main/webapp/WEB-INF/classes$
-^ncwms/src/main/webapp/WEB-INF/lib$
-^ncwms/src/main/webapp/WEB-INF/deploy$
-^ncwms/src/main/webapp/META-INF/maven$
-^ncwms/gwt-unitCache$
 \.aux$
 \.idx$
 \.dvi$
 \.toc$
 \.ilg$
 \.ind$
-
-syntax: regexp
-^ncwms/src/main/webapp/godiva3$
