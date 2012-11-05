@@ -18,11 +18,12 @@ import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
-public class LayerSelectorCombo extends Button implements LayerSelectorIF, WmsUrlProvider {
+public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     private LayerSelectionHandler layerSelectionHandler;
     private PopupPanel popup;
     private Tree tree;
     private Map<String, String> layerIdToTitle;
+    private Map<String, LayerMenuItem> layerIdToMenuEntry; 
     private String selectedLayer;
     private boolean firstUse = true;
     private String firstTitle = null;
@@ -35,6 +36,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF, WmsUr
         this.layerSelectionHandler = layerHandler;
 
         layerIdToTitle = new HashMap<String, String>();
+        layerIdToMenuEntry = new HashMap<String, LayerMenuItem>();
 
         popup = new PopupPanel();
         popup.setAutoHideEnabled(true);
@@ -114,6 +116,8 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF, WmsUr
             layerIdToTitle.put(id, "<big>" + label + "</big>");
         }
         
+        layerIdToMenuEntry.put(id, item);
+        
         /*
          * If the item is plottable, we need a click handler
          */
@@ -121,10 +125,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF, WmsUr
             node.addClickHandler(new ClickHandler() {
                 @Override
                 public void onClick(ClickEvent event) {
-                    setSelectedLayer(id);
-                    wmsUrl = item.getWmsUrl();
-                    layerSelectionHandler.layerSelected(wmsUrl, id, true);
-                    selectedNode = item;
+                    selectLayer(id, true);
                 }
             });
         }
@@ -160,12 +161,16 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF, WmsUr
     }
 
     @Override
-    public void setSelectedLayer(String id) {
+    public void selectLayer(String id, boolean autoZoomAndPalette) {
         selectedLayer = id;
         setHTML(layerIdToTitle.get(id));
         if (popup.isShowing()) {
             popup.hide();
         }
+        LayerMenuItem item = layerIdToMenuEntry.get(id);
+        wmsUrl = item.getWmsUrl();
+        selectedNode = item;
+        layerSelectionHandler.layerSelected(wmsUrl, id, autoZoomAndPalette);
     }
     
     @Override

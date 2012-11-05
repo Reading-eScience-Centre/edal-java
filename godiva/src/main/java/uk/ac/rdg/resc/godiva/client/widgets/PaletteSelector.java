@@ -55,7 +55,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	private int width;
 	
 	private Image paletteImage;
-	private WmsUrlProvider wmsUrlProvider;
+	private LayerSelectorIF wmsUrlProvider;
 	private final PaletteSelectionHandler paletteHandler;
 	
 	private DialogBox popup;
@@ -78,7 +78,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	 */
 	public PaletteSelector(String id, int height, int width, 
 	                       final PaletteSelectionHandler handler,
-	                       WmsUrlProvider wmsUrlProvider, boolean vertical) {
+	                       LayerSelectorIF wmsUrlProvider, boolean vertical) {
 	    this.id = id;
 		this.wmsUrlProvider = wmsUrlProvider;
 		this.height = height;
@@ -380,8 +380,12 @@ public class PaletteSelector implements PaletteSelectorIF {
 	        ErrorBox.popupErrorMessage("Cannot use a negative or zero value for logarithmic scale");
 	        return false;
 	    }
-	    minScale.setValue(format.format(minVal));
-	    maxScale.setValue(format.format(Float.parseFloat(vals[1])));
+        /*
+         * We don't format the output, in case the user has entered something
+         * more precise
+         */
+	    minScale.setValue(minVal+"");
+	    maxScale.setValue(Float.parseFloat(vals[1])+"");
 	    setLogScale(isLogScale);
 	    setScaleLabels();
 	    return true;

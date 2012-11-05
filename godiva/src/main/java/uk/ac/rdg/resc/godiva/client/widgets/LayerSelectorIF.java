@@ -9,7 +9,8 @@ import com.google.gwt.user.client.ui.IsWidget;
 public interface LayerSelectorIF extends IsWidget {
     public void populateLayers(LayerMenuItem topItem);
     public List<String> getSelectedIds();
-    public void setSelectedLayer(String id);
+    public void selectLayer(String id, boolean autoZoomAndPalette);
     public void setEnabled(boolean enabled);
     public List<String> getTitleElements();
+    public String getWmsUrl();
 }

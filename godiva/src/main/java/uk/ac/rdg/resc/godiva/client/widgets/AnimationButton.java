@@ -37,7 +37,7 @@ public class AnimationButton extends ToggleButton {
     private StartEndTimePopup popup;
     private String animLayer = null;
     private String jsonProxyUrl;
-    private WmsUrlProvider wmsUrlProvider;
+    private LayerSelectorIF wmsUrlProvider;
     private String currentElevation;
     private String palette;
     private String scaleRange;
@@ -61,7 +61,7 @@ public class AnimationButton extends ToggleButton {
     private final AviExportHandler aviExporter;
 
     public AnimationButton(final MapArea map, final String jsonProxyUrl,
-            final WmsUrlProvider wmsUrlProvider, final TimeSelectorIF currentTimeSelector,
+            final LayerSelectorIF wmsUrlProvider, final TimeSelectorIF currentTimeSelector,
             AviExportHandler aviExporter) {
         super(new Image(GWT.getModuleBaseURL() + "img/film.png"), new Image(GWT.getModuleBaseURL()
                 + "img/stop.png"));

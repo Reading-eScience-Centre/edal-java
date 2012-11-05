@@ -15,11 +15,11 @@ public class GodivaStateInfo {
     private UnitsInfoIF unitsInfo;
     private CopyrightInfoIF copyrightInfo;
     private InfoIF moreInfo;
-    private WmsUrlProvider wmsUrl;
+    private LayerSelectorIF wmsUrl;
 
     public GodivaStateInfo(ElevationSelectorIF elevationSelector, TimeSelectorIF timeSelector,
             PaletteSelectorIF paletteSelector, UnitsInfoIF unitsInfo,
-            CopyrightInfoIF copyrightInfo, InfoIF moreInfo, WmsUrlProvider wmsUrl) {
+            CopyrightInfoIF copyrightInfo, InfoIF moreInfo, LayerSelectorIF wmsUrl) {
         super();
         if (elevationSelector == null || timeSelector == null || paletteSelector == null
                 || unitsInfo == null || copyrightInfo == null || moreInfo == null || wmsUrl == null) {
@@ -58,7 +58,7 @@ public class GodivaStateInfo {
         return moreInfo;
     }
 
-    public WmsUrlProvider getWmsUrlProvider() {
+    public LayerSelectorIF getWmsUrlProvider() {
         return wmsUrl;
     }
 }
