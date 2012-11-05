@@ -97,7 +97,7 @@ public class GridSeriesCoverageImpl extends
         Extent<Integer> xExtent = getDomain().getHorizontalGrid().getXAxis().getIndexExtent();
         Extent<Integer> yExtent = getDomain().getHorizontalGrid().getYAxis().getIndexExtent();
         int zIndex = 0;
-        if (getDomain().getVerticalAxis() != null) {
+        if (getDomain().getVerticalAxis() != null && zPos != null) {
             zIndex = getDomain().getVerticalAxis().findIndexOf(zPos.getZ());
         }
         if(zIndex < 0){
