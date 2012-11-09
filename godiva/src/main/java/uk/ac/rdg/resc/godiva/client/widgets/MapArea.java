@@ -299,6 +299,9 @@ public class MapArea extends MapWidget {
             vendorParams.setProperty("COLORBY/DEPTH", colorbyElevationStr);
         }
         
+//        vendorParams.setProperty("VERSION", "1.3.0");
+//        vendorParams.setProperty("CRS", map.getProjection());
+        
         if (getFeatureInfo != null) {
             getFeatureInfo.deactivate();
             map.removeControl(getFeatureInfo);
@@ -312,13 +315,28 @@ public class MapArea extends MapWidget {
                 String pixels[] = eventObject.getJSObject().getProperty("xy").toString().split(",");
                 final LonLat lonLat = MapArea.this.map.getLonLatFromPixel(new Pixel(Integer
                         .parseInt(pixels[0].substring(2)), Integer.parseInt(pixels[1].substring(2))));
-                FeatureInfoMessageAndFeatureIds featureInfo = processFeatureInfo(eventObject.getText());
+                
+                int x = Integer.parseInt(pixels[0].substring(2)) + MapArea.this.getAbsoluteLeft();
+                int y = Integer.parseInt(pixels[1].substring(2)) + MapArea.this.getAbsoluteTop();
+                
+                FeatureInfoMessageAndFeatureIds featureInfo = null;
+                final DialogBox pop = new DialogBoxWithCloseButton();
+                pop.setPopupPosition(x, y);
+                
+                try{
+                    featureInfo = processFeatureInfo(eventObject.getText());
+                } catch (Exception e) {
+                    /*
+                     * Something is wrong with the GFI response.
+                     */
+                    pop.setHTML("Error");
+                    pop.add(new HTML("No Feature information is available, due to a server error"));
+                    pop.show();
+                    return;
+                }
                 
                 String message = featureInfo.message;
 
-                int x = Integer.parseInt(pixels[0].substring(2)) + MapArea.this.getAbsoluteLeft();
-                int y = Integer.parseInt(pixels[1].substring(2)) + MapArea.this.getAbsoluteTop();
-                final DialogBox pop = new DialogBoxWithCloseButton();
 
                 pop.setHTML("Feature Info");
 

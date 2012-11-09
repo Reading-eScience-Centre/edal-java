@@ -9,7 +9,7 @@ public class LayerTreeJSONParser {
     public static LayerMenuItem getTreeFromJson(String wmsUrl, JSONObject json) {
         String nodeLabel = json.get("label").isString().stringValue();
         JSONValue children = json.get("children");
-        LayerMenuItem rootItem = new LayerMenuItem(nodeLabel, "rootId", false, wmsUrl);
+        LayerMenuItem rootItem = new LayerMenuItem(nodeLabel, null, "rootId", false, wmsUrl);
         JSONArray childrenArray = children.isArray();
         for (int i = 0; i < childrenArray.size(); i++) {
             addNode(childrenArray.get(i).isObject(), rootItem);
