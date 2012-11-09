@@ -100,6 +100,7 @@ import uk.ac.rdg.resc.edal.util.TimeUtils;
 final public class Charting {
     private static final Locale US_LOCALE = new Locale("us", "US");
     private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+    private static final DecimalFormat NUMBER_3DP = new DecimalFormat("#0.000");
 
     public static JFreeChart createTimeseriesPlot(List<PointSeriesFeature> features, String baseMemberName) {
         TimeSeriesCollection xydataset = new TimeSeriesCollection();
@@ -108,7 +109,9 @@ final public class Charting {
         VerticalPosition vPos = null;
         ScalarMetadata metadata = null;
         for(PointSeriesFeature feature : features) {
-            TimeSeries ts = new TimeSeries("Data", Millisecond.class);
+            String location = "(" + NUMBER_3DP.format(feature.getHorizontalPosition().getX()) + ","
+                    + NUMBER_3DP.format(feature.getHorizontalPosition().getY()) + ")";
+            TimeSeries ts = new TimeSeries(location, Millisecond.class);
             List<TimePosition> times = feature.getCoverage().getDomain().getTimes();
             String memberName = MetadataUtils.getScalarMemberName(feature, baseMemberName);
             metadata = MetadataUtils.getScalarMetadata(feature, memberName);
@@ -143,17 +146,24 @@ final public class Charting {
         if(metadata != null){
             title = "Timeseries of " + metadata.getTitle();
             if(vPos != null){
-                title += " at " + vPos;
+                VerticalCrs vCrs = vPos.getCoordinateReferenceSystem();
+                String heightOrDepth = "";
+                if(vCrs != null) {
+                    heightOrDepth = (vCrs.getPositiveDirection() == PositiveDirection.UP) ? " high" : " deep";
+                }
+                title += " at " + vPos + heightOrDepth;
             }
         } else {
             title = "No data";
         }
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(title, "Date / time", yLabel,
-                xydataset, false, false, false);
+                xydataset, true, false, false);
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        renderer.setSeriesShape(0, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
-        renderer.setSeriesShapesVisible(0, true);
+        for(int i=0; i<features.size(); i++){
+            renderer.setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
+            renderer.setSeriesShapesVisible(i, true);
+        }
         chart.getXYPlot().setRenderer(renderer);
         chart.getXYPlot().setNoDataMessage("There is no data for your choice");
         chart.getXYPlot().setNoDataMessageFont(new Font("sansserif", Font.BOLD, 32));
@@ -189,8 +199,15 @@ final public class Charting {
             List<Double> elevationValues = feature.getCoverage().getDomain().getZValues();
             zAxisAndValues = getZAxisAndValues(elevationValues, feature.getCoverage().getDomain().getVerticalCrs());
     
-            // TODO: more meaningful title
-            XYSeries series = new XYSeries("data", true);
+            /*
+             * This is the label used for the legend. We *may* want to include
+             * the feature ID, but generally speaking that will be rather
+             * arbitrary
+             */
+            String location = "(" + NUMBER_3DP.format(feature.getHorizontalPosition().getX()) + ","
+                    + NUMBER_3DP.format(feature.getHorizontalPosition().getY()) + ")";
+            XYSeries series = new XYSeries(location, true);
+            series.setDescription(memberName);
             for (int i = 0; i < elevationValues.size(); i++) {
                 Number val = dataValues.get(i);
                 if (val.equals(Float.NaN) || val.equals(Double.NaN)) {
@@ -224,10 +241,6 @@ final public class Charting {
             renderer.setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
             renderer.setSeriesShapesVisible(i, true);
         }
-        /*
-         * TODO add legend
-         */
-//        renderer.setSeriesPaint(0, Color.RED);
 
         XYPlot plot = new XYPlot(xySeriesColl, elevationAxis, valueAxis, renderer);
         plot.setBackgroundPaint(Color.lightGray);
@@ -246,9 +259,9 @@ final public class Charting {
         }
         
         /*
-         * Use default font and don't create a legend
+         * Use default font and create a legend
          */
-        return new JFreeChart(title, null, plot, false);
+        return new JFreeChart(title, null, plot, true);
     }
 
     private static String getAxisLabel(Feature feature, String memberName) {
