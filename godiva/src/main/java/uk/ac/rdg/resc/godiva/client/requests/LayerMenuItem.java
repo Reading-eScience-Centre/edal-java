@@ -7,6 +7,7 @@ import java.util.List;
 public class LayerMenuItem implements Serializable {
     private static final long serialVersionUID = 1L;
     private String title;
+    private String description = null;
     private String id = null;
     private boolean plottable = true;
     private String wmsUrl = null;
@@ -17,11 +18,12 @@ public class LayerMenuItem implements Serializable {
     }
     
     public LayerMenuItem(String title, String id, boolean plottable) {
-        this(title, id, plottable, null);
+        this(title, null, id, plottable, null);
     }
     
-    public LayerMenuItem(String title, String id, boolean plottable, String wmsUrl) {
+    public LayerMenuItem(String title, String description, String id, boolean plottable, String wmsUrl) {
         this.title = title;
+        this.description = description;
         this.id = id;
         this.plottable = plottable;
         this.wmsUrl = wmsUrl;
@@ -62,12 +64,21 @@ public class LayerMenuItem implements Serializable {
     public String getWmsUrl() {
         if (wmsUrl == null) {
             if (parent == null) {
-                throw new IllegalStateException("A layer menu tree must have a WmsUrl defined");
+                return null;
+//                throw new IllegalStateException("A layer menu tree must have a WmsUrl defined");
             } else {
                 return parent.getWmsUrl();
             }
         } else {
             return wmsUrl;
         }
+    }
+    
+    public String getDescription(){
+        return description;
+    }
+    
+    public void setId(String newId){
+        this.id = newId;
     }
 }

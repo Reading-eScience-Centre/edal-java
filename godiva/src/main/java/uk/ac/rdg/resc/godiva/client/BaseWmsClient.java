@@ -112,6 +112,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                             .stringValue());
                     mapWidth = Integer.parseInt(parentObj.get("mapWidth").isString().stringValue());
                     initBaseWms();
+                    handleCustomParams(parentObj);
                 } catch (Exception e) {
                     /*
                      * Catching a plain Exception - not something that should
@@ -137,7 +138,21 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             initWithDefaults();
         }
     }
-    
+ 
+    /**
+     * This is called after all other parameters have been received from a
+     * config servlet, and subclasses can use it to handle custom commands from
+     * the ConfigServlet.
+     * 
+     * @param parentObj
+     */
+    protected void handleCustomParams(JSONObject parentObj) {
+        /*
+         * Does nothing, but if a custom client adds to the config options, this
+         * can be overridden to handle them
+         */
+    }
+
     public static native void setImagePath(String imagepath)/*-{
         $wnd.OpenLayers.ImgPath = imagepath;
     }-*/;
@@ -148,7 +163,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * 
      * Subclasses can override this to define new defaults
      */
-    protected final void initWithDefaults() {
+    protected void initWithDefaults() {
         mapHeight = 400;
         mapWidth = 512;
         /*

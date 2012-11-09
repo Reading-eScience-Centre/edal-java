@@ -76,7 +76,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     // Link to a screenshot of the current state
     protected Anchor screenshot;
     // Link to the documentation for the system
-    private Anchor docLink;
+    protected Anchor docLink;
 
     private OpacitySelector opacitySelector;
 
@@ -98,25 +98,26 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * Initialises links.
          */
         kmzLink = new Anchor("Open in Google Earth");
-        kmzLink.setStylePrimaryName("labelStyle");
+        kmzLink.setStylePrimaryName("linkStyle");
         kmzLink.setTitle("Open the current view in Google Earth");
 
         permalink = new Anchor("Permalink");
-        permalink.setStylePrimaryName("labelStyle");
+        permalink.setStylePrimaryName("linkStyle");
         permalink.setTarget("_blank");
         permalink.setTitle("Permanent link to the current view");
 
         email = new Anchor("Email Link");
-        email.setStylePrimaryName("labelStyle");
+        email.setStylePrimaryName("linkStyle");
         email.setTitle("Email a link to the current view");
 
         screenshot = new Anchor("Export to PNG");
         screenshot.setHref("/screenshots/getScreenshot?");
-        screenshot.setStylePrimaryName("labelStyle");
+        screenshot.setStylePrimaryName("linkStyle");
         screenshot.setTarget("_blank");
         screenshot.setTitle("Open a downloadable image in a new window - may be slow to load");
 
         docLink = new Anchor("Documentation", docHref);
+        docLink.setStylePrimaryName("linkStyle");
         docLink.setTarget("_blank");
         docLink.setTitle("Open documentation in a new window");
 
@@ -256,7 +257,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     
     protected void menuLoaded(LayerMenuItem menuTree) {
         if (menuTree.isLeaf()) {
-            menuTree.addChildItem(new LayerMenuItem("No georeferencing data found!", null, false, null));
+            menuTree.addChildItem(new LayerMenuItem("No georeferencing data found!", null, null, false, null));
         }
         layerSelector.populateLayers(menuTree);
 
@@ -264,8 +265,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         if (permalinking) {
             String currentLayer = permalinkParamsMap.get("layer");
+            String currentWms = URL.decode(permalinkParamsMap.get("dataset"));
             if (currentLayer != null) {
-                layerSelector.selectLayer(currentLayer, false);
+                layerSelector.selectLayer(currentLayer, currentWms, false);
             }
         }
     }
@@ -498,7 +500,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     /**
      * Updates the links (KMZ, screenshot, email, permalink...)
      */
-    private void updateLinksEtc() {
+    protected void updateLinksEtc() {
         kmzLink.setHref(mapArea.getKMZUrl());
 
         String baseurl = "http://" + Window.Location.getHost() + Window.Location.getPath()
@@ -675,20 +677,49 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      * custom implementations, whilst still keeping the Godiva feature set (i.e.
      * one WMS layer at a time)
      */
+    
+    /**
+     * Gets a new palette selector. This method is used in the construction of
+     * the Godiva interface and is only called once.
+     * 
+     * @param wmsUrlProvider
+     *            A {@link LayerSelectorIF} which provides the currently
+     *            selected WMS URL
+     * @return A new instance of a {@link PaletteSelectorIF}
+     */
     protected PaletteSelectorIF getPaletteSelector(LayerSelectorIF wmsUrlProvider) {
         return new PaletteSelector("mainLayer", getMapHeight(), 30,
                 this, layerSelector, true);
     }
 
+    /**
+     * Gets a new time selector. This method is used in the construction of the
+     * Godiva interface and is only called once.
+     * 
+     * @return A new instance of a {@link TimeSelectorIF}
+     */
     protected TimeSelectorIF getTimeSelector() {
         return new TimeSelector("mainLayer", this);
     }
 
+    /**
+     * Gets a new elevation selector. This method is used in the construction of the
+     * Godiva interface and is only called once.
+     * 
+     * @return A new instance of an {@link ElevationSelectorIF}
+     */
     protected ElevationSelectorIF getElevationSelector() {
         return new ElevationSelector("mainLayer", "Depth", this);
     }
     
 
+    
+    /**
+     * Gets a new layer selector. This method is used in the construction of the
+     * Godiva interface and is only called once.
+     * 
+     * @return A new instance of a {@link LayerSelectorIF}
+     */
     protected LayerSelectorIF getLayerSelector() {
         return new LayerSelectorCombo(this);
     }

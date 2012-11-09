@@ -202,6 +202,10 @@ public class PaletteSelector implements PaletteSelectorIF {
         HorizontalPanel buttonsPanel = new HorizontalPanel();
         buttonsPanel.add(autoButton);
         buttonsPanel.add(lockButton);
+        buttonsPanel.setCellVerticalAlignment(autoButton, HasVerticalAlignment.ALIGN_TOP);
+        buttonsPanel.setCellVerticalAlignment(lockButton, HasVerticalAlignment.ALIGN_TOP);
+        buttonsPanel.setCellHorizontalAlignment(autoButton, HasHorizontalAlignment.ALIGN_RIGHT);
+        buttonsPanel.setCellHorizontalAlignment(lockButton, HasHorizontalAlignment.ALIGN_LEFT);
 
         vp.add(maxScale);
         vp.setCellHeight(maxScale, "30px");
