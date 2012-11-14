@@ -3,6 +3,7 @@ package uk.ac.rdg.resc.godiva.client.widgets;
 import java.util.List;
 
 import uk.ac.rdg.resc.godiva.client.handlers.PaletteSelectionHandler;
+import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -16,7 +17,6 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.ui.CellPanel;
-import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -35,6 +35,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	private TextBox maxScale;
 	private ListBox nColorBands;
 	private ListBox styles;
+	private ListBox opacity;
 	private ListBox logScale;
 	private PushButton autoButton;
 	private ToggleButton lockButton;
@@ -56,18 +57,19 @@ public class PaletteSelector implements PaletteSelectorIF {
 	
 	private Image paletteImage;
 	private LayerSelectorIF wmsUrlProvider;
+	private OpacityReceiverIF opacitySelector;
 	private final PaletteSelectionHandler paletteHandler;
 	
-	private DialogBox popup;
+	private DialogBoxWithCloseButton popup;
 	private HorizontalPanel palettesPanel;
 	
 	private boolean enabled;
 	
-	private String id;
+	private String wmsLayerId;
 	
 	/**
 	 * 
-	 * @param id
+	 * @param wmsLayerId
 	 * @param height
 	 *         The height of the image part of the palette
 	 * @param width
@@ -76,11 +78,12 @@ public class PaletteSelector implements PaletteSelectorIF {
 	 * @param baseUrl
 	 * @param vertical
 	 */
-	public PaletteSelector(String id, int height, int width, 
-	                       final PaletteSelectionHandler handler,
-	                       LayerSelectorIF wmsUrlProvider, boolean vertical) {
-	    this.id = id;
+    public PaletteSelector(String wmsLayerId, int height, int width, final PaletteSelectionHandler handler,
+            LayerSelectorIF wmsUrlProvider, OpacityReceiverIF opacitySelector, final CentrePosIF localCentre, boolean vertical) {
+        
+        this.wmsLayerId = wmsLayerId;
 		this.wmsUrlProvider = wmsUrlProvider;
+		this.opacitySelector = opacitySelector;
 		this.height = height;
 		this.width = width;
 		this.paletteHandler = handler;
@@ -104,7 +107,7 @@ public class PaletteSelector implements PaletteSelectorIF {
             @Override
             public void onClick(ClickEvent event) {
                 if(enabled && !isLocked())
-                    popupPaletteSelector();
+                    popupPaletteSelector(localCentre);
             }
         });
         paletteImage.setTitle("Click to choose palette and number of colour bands");
@@ -112,7 +115,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         ChangeHandler scaleChangeHandler = new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                handler.scaleRangeChanged(PaletteSelector.this.id, getScaleRange());
+                handler.scaleRangeChanged(PaletteSelector.this.wmsLayerId, getScaleRange());
                 setScaleLabels();
             }
         };
@@ -127,9 +130,24 @@ public class PaletteSelector implements PaletteSelectorIF {
 		styles.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                paletteHandler.paletteChanged(PaletteSelector.this.id, currentPalette, getSelectedStyle(), getNumColorBands());
+                paletteHandler.paletteChanged(PaletteSelector.this.wmsLayerId, currentPalette, getSelectedStyle(), getNumColorBands());
             }
         });
+		
+        opacity = new ListBox();
+        opacity.addItem("25%", "0.25");
+        opacity.addItem("50%", "0.5");
+        opacity.addItem("75%", "0.75");
+        opacity.addItem("opaque", "1.0");
+        opacity.setSelectedIndex(3);
+        opacity.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                PaletteSelector.this.opacitySelector.setOpacity(PaletteSelector.this.wmsLayerId,
+                        getOpacity());
+            }
+        });
+        opacity.setTitle("Select the opacity of the layer");
 		
 		logScale = new ListBox();
 		logScale.addItem("linear");
@@ -143,7 +161,7 @@ public class PaletteSelector implements PaletteSelectorIF {
                     ErrorBox.popupErrorMessage("Cannot use a negative or zero value for logarithmic scale");
                 } else {
                     setScaleLabels();
-                    handler.logScaleChanged(PaletteSelector.this.id, isLogScale());
+                    handler.logScaleChanged(PaletteSelector.this.wmsLayerId, isLogScale());
                 }
             }
         });
@@ -160,7 +178,7 @@ public class PaletteSelector implements PaletteSelectorIF {
             @Override
             public void onClick(ClickEvent event) {
                 if(!isLocked())
-                    handler.autoAdjustPalette(PaletteSelector.this.id);
+                    handler.autoAdjustPalette(PaletteSelector.this.wmsLayerId);
             }
         });
 		autoButton.setTitle("Auto-adjust the colour range");
@@ -208,17 +226,20 @@ public class PaletteSelector implements PaletteSelectorIF {
         buttonsPanel.setCellHorizontalAlignment(lockButton, HasHorizontalAlignment.ALIGN_LEFT);
 
         vp.add(maxScale);
-        vp.setCellHeight(maxScale, "30px");
+        vp.setCellHeight(maxScale, "50px");
         vp.setCellVerticalAlignment(maxScale, HasVerticalAlignment.ALIGN_TOP);
         vp.add(mhLabel);
         vp.setCellVerticalAlignment(mhLabel, HasVerticalAlignment.ALIGN_BOTTOM);
 
         vp.add(styles);
-        vp.setCellHeight(styles, "40px");
-        vp.setCellVerticalAlignment(styles, HasVerticalAlignment.ALIGN_BOTTOM);
+        vp.setCellHeight(styles, "20px");
+        vp.setCellVerticalAlignment(styles, HasVerticalAlignment.ALIGN_TOP);
+        vp.add(opacity);
+        vp.setCellHeight(opacity, "20px");
+        vp.setCellVerticalAlignment(styles, HasVerticalAlignment.ALIGN_TOP);
         vp.add(logScale);
-        vp.setCellHeight(logScale, "40px");
-        vp.setCellVerticalAlignment(logScale, HasVerticalAlignment.ALIGN_MIDDLE);
+        vp.setCellHeight(logScale, "20px");
+        vp.setCellVerticalAlignment(logScale, HasVerticalAlignment.ALIGN_TOP);
         vp.add(buttonsPanel);
         vp.setCellHeight(buttonsPanel, "40px");
         vp.setCellVerticalAlignment(buttonsPanel, HasVerticalAlignment.ALIGN_TOP);
@@ -227,7 +248,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         vp.setCellVerticalAlignment(mlLabel, HasVerticalAlignment.ALIGN_TOP);
 
         vp.add(minScale);
-        vp.setCellHeight(minScale, "30px");
+        vp.setCellHeight(minScale, "40px");
         vp.setCellVerticalAlignment(minScale, HasVerticalAlignment.ALIGN_BOTTOM);
 
         mainPanel.add(vp);
@@ -249,6 +270,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	    VerticalPanel buttonsAndLogPanel = new VerticalPanel();
 	    buttonsAndLogPanel.add(buttonsPanel);
 	    buttonsAndLogPanel.add(styles);
+	    buttonsAndLogPanel.add(opacity);
 	    buttonsAndLogPanel.add(logScale);
 	    
 	    hp.add(minScale);
@@ -270,9 +292,9 @@ public class PaletteSelector implements PaletteSelectorIF {
 	    mainPanel.add(hp);
 	}
 	
-	private void popupPaletteSelector() {
+	private void popupPaletteSelector(CentrePosIF localCentre) {
 	    if(popup == null){
-	        popup = new DialogBox();
+	        popup = new DialogBoxWithCloseButton(localCentre);
 	    
 	        nColorBands.addChangeHandler(new ChangeHandler() {
                 @Override
@@ -281,6 +303,7 @@ public class PaletteSelector implements PaletteSelectorIF {
                 }
             });
 	        
+	        popup.setHTML("Click to choose a colour palette");
 	        populatePaletteSelector();
 	    }
         VerticalPanel popupPanel = new VerticalPanel();
@@ -292,16 +315,14 @@ public class PaletteSelector implements PaletteSelectorIF {
         popupPanel.add(palettesPanel);
         
         popup.setAutoHideEnabled(true);
-        popup.setText("Click to choose a colour palette");
         popup.setModal(true);
         popup.setWidget(popupPanel);
-        popup.setAnimationEnabled(true);
         popup.setGlassEnabled(true);
         popup.addCloseHandler(new CloseHandler<PopupPanel>() {
             @Override
             public void onClose(CloseEvent<PopupPanel> event) {
                 selectPalette(currentPalette);
-                paletteHandler.paletteChanged(id, currentPalette, getSelectedStyle(), getNumColorBands());
+                paletteHandler.paletteChanged(wmsLayerId, currentPalette, getSelectedStyle(), getNumColorBands());
             }
         });
         popup.center();
@@ -341,7 +362,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     @Override
     public void setId(String id) {
-        this.id = id;
+        this.wmsLayerId = id;
     }
     
     @Override
@@ -463,6 +484,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         autoButton.setEnabled(enabled);
         lockButton.setEnabled(enabled);
         styles.setEnabled(enabled);
+        opacity.setEnabled(enabled);
         logScale.setEnabled(enabled);
         if(enabled){
             paletteImage.setStylePrimaryName("activeImageStyle");
@@ -484,8 +506,17 @@ public class PaletteSelector implements PaletteSelectorIF {
     @Override
     public void populateStyles(List<String> availableStyles) {
         styles.clear();
-        for(String style : availableStyles)
+        for(String style : availableStyles) {
             styles.addItem(style);
+        }
+        
+        if (availableStyles.size() <= 1
+                || ((availableStyles.size() == 2) && availableStyles.get(0).equalsIgnoreCase(
+                        "default"))) {
+            styles.setVisible(false);
+        } else {
+            styles.setVisible(true);
+        }
     }
 
     @Override
@@ -510,5 +541,23 @@ public class PaletteSelector implements PaletteSelectorIF {
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @Override
+    public float getOpacity() {
+        return Float.parseFloat(opacity.getValue(opacity.getSelectedIndex()));
+    }
+
+    @Override
+    public void setOpacity(float opacityValue) {
+        float minDist = Float.MAX_VALUE;
+        for(int i = 0; i < opacity.getItemCount(); i++){
+            float listVal = Float.parseFloat(opacity.getValue(i));
+            float dist = Math.abs(listVal - opacityValue);
+            if(dist < minDist) {
+                minDist = dist;
+                opacity.setSelectedIndex(i);
+            }
+        }
     }
 }

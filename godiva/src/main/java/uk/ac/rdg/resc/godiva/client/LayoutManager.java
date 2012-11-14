@@ -6,7 +6,6 @@ import uk.ac.rdg.resc.godiva.client.widgets.ElevationSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorCombo;
 import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
-import uk.ac.rdg.resc.godiva.client.widgets.OpacitySelector;
 import uk.ac.rdg.resc.godiva.client.widgets.PaletteSelector;
 import uk.ac.rdg.resc.godiva.client.widgets.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.TimeSelector;
@@ -110,7 +109,6 @@ public class LayoutManager {
         vPanel.add(topPanel);
 
         vPanel.setCellHeight(topPanel, logoHeight+"px");
-//        vPanel.setCellHeight(topPanel, myOceanLogo.getHeight()+"px");
         vPanel.setCellWidth(topPanel, ((int) mapArea.getMap().getSize().getWidth()+100)+"px");
         vPanel.add(mapPaletteLoaderPanel);
         
@@ -136,7 +134,6 @@ public class LayoutManager {
             MapArea mapArea,
             Image loadingImage,
             AnimationButton anim,
-            OpacitySelector opacitySelector,
             PushButton infoButton){
         kmzLink.setStylePrimaryName("linkStyle");
         permalink.setStylePrimaryName("linkStyle");
@@ -149,7 +146,6 @@ public class LayoutManager {
         selectors.add(unitsInfo);
         selectors.add(timeSelector);
         selectors.add(elevationSelector);
-        selectors.add(opacitySelector);
         
         /*
          * The image height is hardcoded here, because when running with IE8, rescLogo.getHeight()
@@ -169,6 +165,7 @@ public class LayoutManager {
         bottomPanel.add(permalink);
         bottomPanel.add(email);
         bottomPanel.add(screenshot);
+        infoButton.setWidth("16px");
         bottomPanel.add(infoButton);
 //        bottomPanel.add(docLink);
         

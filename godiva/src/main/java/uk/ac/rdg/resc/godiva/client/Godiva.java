@@ -15,6 +15,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfoIF;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
+import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 import uk.ac.rdg.resc.godiva.client.widgets.ElevationSelector;
 import uk.ac.rdg.resc.godiva.client.widgets.ElevationSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.GodivaStateInfo;
@@ -23,7 +24,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.InfoIF;
 import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorCombo;
 import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
-import uk.ac.rdg.resc.godiva.client.widgets.OpacitySelector;
+import uk.ac.rdg.resc.godiva.client.widgets.OpacityReceiverIF;
 import uk.ac.rdg.resc.godiva.client.widgets.PaletteSelector;
 import uk.ac.rdg.resc.godiva.client.widgets.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.TimeSelector;
@@ -32,8 +33,6 @@ import uk.ac.rdg.resc.godiva.client.widgets.UnitsInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.UnitsInfoIF;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.Request;
@@ -78,8 +77,6 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     // Link to the documentation for the system
     protected Anchor docLink;
 
-    private OpacitySelector opacitySelector;
-
     // Button to create animations
     private AnimationButton anim;
     
@@ -123,7 +120,6 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         mapArea.setTransectLayerId(WMS_LAYER_ID);
 
-
         /*
          * We use a get method here, so that subclasses can override and use
          * their own custom implementations.
@@ -132,14 +128,13 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * they are the most complex. The other things such as links can easily
          * be removed.
          * 
-         * TODO This should probably be extended to the animation button and
-         * opacity selector at the very least, but first they need to be
-         * interfaceised.  Yes that is a word.
+         * TODO This should probably be extended to the animation button but
+         * first it needs to be interfaceised. Yes that is a word.
          */
         layerSelector = getLayerSelector();
         ElevationSelectorIF elevationSelector = getElevationSelector();
         TimeSelectorIF timeSelector = getTimeSelector();
-        PaletteSelectorIF paletteSelector = getPaletteSelector(layerSelector);
+        PaletteSelectorIF paletteSelector = getPaletteSelector(layerSelector, mapArea, mapArea);
 
         UnitsInfoIF unitsInfo = new UnitsInfo();
         final CopyrightInfoIF copyrightInfo = new CopyrightInfo();
@@ -148,12 +143,6 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         widgetCollection = new GodivaStateInfo(elevationSelector, timeSelector, paletteSelector,
                 unitsInfo, copyrightInfo, moreInfo, layerSelector);
 
-        opacitySelector = new OpacitySelector(new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                setOpacity();
-            }
-        });
         anim = new AnimationButton(mapArea, proxyUrl, layerSelector, timeSelector, this);
 
         logo = getLogo();
@@ -161,13 +150,13 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         loadingImage = new Image(GWT.getModuleBaseURL()+"img/loading.gif");
         loadingImage.setVisible(false);
         loadingImage.setStylePrimaryName("loadingImage");
-
         
         infoButton = new PushButton(new Image(GWT.getModuleBaseURL()+"img/info.png"));
         infoButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton();
+                DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(mapArea);
+                popup.setGlassEnabled(true);
                 popup.setHTML("<b>Information</b>");
                 VerticalPanel vPanel = new VerticalPanel();
                 if(copyrightInfo.hasCopyright()){
@@ -186,14 +175,13 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         mainWindow.add(LayoutManager.getGodiva3Layout(layerSelector, unitsInfo, timeSelector,
                 elevationSelector, paletteSelector, kmzLink, permalink, email, screenshot, logo,
-                mapArea, loadingImage, anim, opacitySelector, infoButton));
+                mapArea, loadingImage, anim, infoButton));
         
         timeSelector.setEnabled(false);
         elevationSelector.setEnabled(false);
         paletteSelector.setEnabled(false);
         unitsInfo.setEnabled(false);
         copyrightInfo.setEnabled(false);
-        opacitySelector.setEnabled(false);
     }
     
     /**
@@ -202,11 +190,6 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      */
     protected Image getLogo() {
         return new Image(GWT.getModuleBaseURL()+"img/logo.png");
-    }
-
-    private void setOpacity() {
-        mapArea.setOpacity(WMS_LAYER_ID, opacitySelector.getOpacity());
-        updateLinksEtc();
     }
 
     /**
@@ -219,7 +202,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * This is where we define the fact that we are working with a single local server
          */
         final String wmsUrl = "wms";
-        RequestBuilder getMenuRequest = new RequestBuilder(RequestBuilder.GET,
+        final RequestBuilder getMenuRequest = new RequestBuilder(RequestBuilder.GET,
                 getUrlFromGetArgs(wmsUrl, "?request=GetMetadata&item=menu"));
         getMenuRequest.setCallback(new RequestCallback() {
             @Override
@@ -234,7 +217,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
                     menuLoaded(menuTree);
                 } catch (Exception e) {
-                    invalidJson(e);
+                    invalidJson(e, getMenuRequest.getUrl());
                 } finally {
                     setLoading(false);
                 }
@@ -332,12 +315,14 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
     @Override
     public void loadingStarted() {
-        loadingImage.setVisible(true);
+        if(loadingImage != null)
+            loadingImage.setVisible(true);
     }
 
     @Override
     public void loadingFinished() {
-        loadingImage.setVisible(false);
+        if(loadingImage != null)
+            loadingImage.setVisible(false);
     }
 
     @Override
@@ -444,8 +429,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String currentScaleRange = widgetCollection.getPaletteSelector().getScaleRange();
         int nColourBands = widgetCollection.getPaletteSelector().getNumColorBands();
         boolean logScale = widgetCollection.getPaletteSelector().isLogScale();
-        mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID, layerSelector.getSelectedIds().get(0), currentTime, colorbyTime,
-                currentElevation, colorbyElevation, currentStyle, currentPalette, currentScaleRange, nColourBands,
+        mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID,
+                layerSelector.getSelectedIds().get(0), currentTime, colorbyTime, currentElevation,
+                colorbyElevation, currentStyle, currentPalette, currentScaleRange, nColourBands,
                 logScale, widgetCollection.getElevationSelector().getNElevations() > 1,
                 widgetCollection.getTimeSelector().hasMultipleTimes());
         
@@ -456,17 +442,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             permalinking = false;
             String currentOpacity = permalinkParamsMap.get("opacity");
             if (currentOpacity != null) {
-                opacitySelector.setOpacity(Float.parseFloat(currentOpacity));
-                setOpacity();
+                widgetCollection.getPaletteSelector().setOpacity(Float.parseFloat(currentOpacity));
             }
         }
         updateLinksEtc();
-
-        /*
-         * This doesn't get automatically enabled by the base client (because it
-         * is Godiva3 specific)
-         */
-        opacitySelector.setEnabled(true);
     }
 
     @Override
@@ -553,7 +532,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             scaleRange = paletteSelector.getScaleRange();
             urlParams += "&scaleRange=" + scaleRange;
         }
-        urlParams += "&opacity=" + opacitySelector.getOpacity();
+        urlParams += "&opacity=" + paletteSelector.getOpacity();
 
         anim.updateDetails(currentLayer, currentElevation, currentPalette, currentStyle,
                 scaleRange, nColorBands, logScale);
@@ -687,9 +666,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      *            selected WMS URL
      * @return A new instance of a {@link PaletteSelectorIF}
      */
-    protected PaletteSelectorIF getPaletteSelector(LayerSelectorIF wmsUrlProvider) {
-        return new PaletteSelector("mainLayer", getMapHeight(), 30,
-                this, layerSelector, true);
+    protected PaletteSelectorIF getPaletteSelector(LayerSelectorIF wmsUrlProvider,
+            OpacityReceiverIF opacityReceiver, CentrePosIF localCentre) {
+        return new PaletteSelector("mainLayer", getMapHeight(), 30, this, wmsUrlProvider,
+                opacityReceiver, localCentre, true);
     }
 
     /**

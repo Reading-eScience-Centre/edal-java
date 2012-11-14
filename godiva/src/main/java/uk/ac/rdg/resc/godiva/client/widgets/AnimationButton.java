@@ -145,7 +145,7 @@ public class AnimationButton extends ToggleButton {
     }
 
     private StartEndTimePopup getWizard() {
-        popup = new StartEndTimePopup(animLayer, jsonProxyUrl + wmsUrlProvider.getWmsUrl(), currentTimeSelector);
+        popup = new StartEndTimePopup(animLayer, jsonProxyUrl + wmsUrlProvider.getWmsUrl(), currentTimeSelector, map);
         popup.setErrorMessage("Can only create animation where there are multiple times");
         popup.setButtonLabel("Next >");
         popup.addCloseHandler(new CloseHandler<PopupPanel>() {
@@ -164,6 +164,11 @@ public class AnimationButton extends ToggleButton {
         popup.setTimeSelectionHandler(new StartEndTimeHandler() {
             @Override
             public void timesReceived(String startDateTime, String endDateTime) {
+                VerticalPanel loadingPanel = new VerticalPanel();
+                loadingPanel.add(new Label("Getting details from server..."));
+                loadingPanel.add(new Label("Please wait"));
+                loadingPanel.setSize("350px", "150px");
+                popup.setWidget(loadingPanel);
                 String url = URL.encode(jsonProxyUrl + wmsUrlProvider.getWmsUrl()
                         + "?request=GetMetadata&item=animationTimesteps&layerName=" + animLayer
                         + "&start=" + startDateTime + "&end=" + endDateTime);

@@ -19,13 +19,12 @@ import uk.ac.rdg.resc.godiva.client.requests.LayerRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.LayerRequestCallback;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestCallback;
+import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
 import uk.ac.rdg.resc.godiva.client.widgets.GodivaStateInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
@@ -36,10 +35,7 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -181,7 +177,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     private void initBaseWms() {
         loadingCount = 0;
-        mapArea = new MapArea(mapWidth, mapHeight, this);
+        mapArea = new MapArea(mapWidth, mapHeight, this, proxyUrl);
 
         /*
          * Call the subclass initialisation
@@ -278,7 +274,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         dateTimeDetailsLoaded = false;
         minMaxDetailsLoaded = false;
 
-        LayerRequestBuilder getLayerDetailsRequest = new LayerRequestBuilder(layerId, proxyUrl
+        final LayerRequestBuilder getLayerDetailsRequest = new LayerRequestBuilder(layerId, proxyUrl
                 + wmsUrl, currentTime);
 
         getLayerDetailsRequest.setCallback(new LayerRequestCallback(layerId, this) {
@@ -318,7 +314,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     layerDetailsLoaded = true;
                     updateMapBase(layerId);
                 } catch (Exception e) {
-                    invalidJson(e);
+                    invalidJson(e, getLayerDetailsRequest.getUrl());
                 } finally {
                     setLoading(false);
                 }
@@ -433,7 +429,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             parameters.put("time", nearestTime);
         }
 
-        RequestBuilder getMinMaxRequest = new RequestBuilder(RequestBuilder.GET, getWmsRequestUrl(
+        final RequestBuilder getMinMaxRequest = new RequestBuilder(RequestBuilder.GET, getWmsRequestUrl(
                 widgetCollection.getWmsUrlProvider().getWmsUrl(), "GetMetadata", parameters));
         getMinMaxRequest.setCallback(new RequestCallback() {
             @Override
@@ -446,7 +442,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         double max = parentObj.get("max").isNumber().doubleValue();
                         rangeLoaded(layerId, min, max);
                     } catch (Exception e) {
-                        invalidJson(e);
+                        invalidJson(e, getMinMaxRequest.getUrl());
                     }
                 }
                 minMaxDetailsLoaded = true;
@@ -491,26 +487,19 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * 
      * @param e
      */
-    protected void invalidJson(Exception e) {
+    protected void invalidJson(Exception e, String url) {
         e.printStackTrace();
-        final DialogBox popup = new DialogBox();
+        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(mapArea);
         VerticalPanel v = new VerticalPanel();
         if (e instanceof ConnectionException) {
             v.add(new Label(e.getMessage()));
         } else {
-            v.add(new Label("Invalid JSON returned from server: " + e.getMessage()));
+            v.add(new Label("The server has experienced an error"));
+            v.add(new Label("Please try again in a short while"));
+            v.add(new Label("The URL which behaved unexpectedly was:"));
+            v.add(new Label(url));
         }
-        popup.setText("Error");
-        Button b = new Button();
-        b.setText("Close");
-        b.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                popup.hide();
-            }
-        });
-        v.add(b);
-        v.setCellHorizontalAlignment(b, HasHorizontalAlignment.ALIGN_CENTER);
+        popup.setHTML("Server Error");
         popup.setWidget(v);
         popup.center();
     }
@@ -675,7 +664,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             return;
         }
         dateTimeDetailsLoaded = false;
-        TimeRequestBuilder getTimeRequest = new TimeRequestBuilder(layerId, selectedDate, proxyUrl
+        final TimeRequestBuilder getTimeRequest = new TimeRequestBuilder(layerId, selectedDate, proxyUrl
                 + getWidgetCollection(layerId).getWmsUrlProvider().getWmsUrl());
         getTimeRequest.setCallback(new TimeRequestCallback() {
             @Override
@@ -691,7 +680,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     dateTimeDetailsLoaded = true;
                     updateMapBase(layerId);
                 } catch (Exception e) {
-                    invalidJson(e);
+                    invalidJson(e, getTimeRequest.getUrl());
                 } finally {
                     setLoading(false);
                 }

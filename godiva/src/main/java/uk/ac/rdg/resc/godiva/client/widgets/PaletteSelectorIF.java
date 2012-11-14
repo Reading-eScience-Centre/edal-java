@@ -20,4 +20,6 @@ public interface PaletteSelectorIF extends IsWidget {
     public boolean isLocked();
     public void setEnabled(boolean enabled);
     public boolean isEnabled();
+    public float getOpacity();
+    public void setOpacity(float opacity);
 }
