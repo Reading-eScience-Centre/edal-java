@@ -55,7 +55,8 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
 
     private boolean multiFeature = false;
 
-    public StartEndTimePopup(String layer, String baseUrl, final TimeSelectorIF currentTimeSelector) {
+    public StartEndTimePopup(String layer, String baseUrl, final TimeSelectorIF currentTimeSelector, final CentrePosIF centrePos) {
+        super(centrePos);
         this.jsonProxyUrl = baseUrl;
         this.layer = layer;
 
@@ -133,7 +134,11 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                     startTimeSelector.selectDate(availableDates.get(0));
                 }
                 endTimeSelector.populateDates(availableDates);
-                endTimeSelector.selectDate(availableDates.get(availableDates.size() - 1));
+                /*
+                 * Pick a date 5 day-steps ahead.
+                 */
+                int index = availableDates.size() > 5 ? 5 : availableDates.size() - 1;
+                endTimeSelector.selectDate(availableDates.get(index));
                 setTimeSelector();
             }
         });
@@ -336,10 +341,12 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
         if (loadingLabel == null) {
             loadingLabel = new Label("Loading...");
         }
-        loadingLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_JUSTIFY);
+        loadingLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
         loadingLabel.setSize("350px", "150px");
         setText("Loading details");
-        setWidget(loadingLabel);
+        VerticalPanel verticalPanel = new VerticalPanel();
+        verticalPanel.add(loadingLabel);
+        setWidget(verticalPanel);
     }
 
     private Button getNextButton() {

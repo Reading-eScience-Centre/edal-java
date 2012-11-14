@@ -139,7 +139,7 @@
 /* Used for palette, animation, getFeatureInfo popups */
 .gwt-DialogBox{
     z-index: 2000;
-    width: 400px;
+/*     width: 400px; */
 }
 
 /* Used for palette, animation, getFeatureInfo popups */

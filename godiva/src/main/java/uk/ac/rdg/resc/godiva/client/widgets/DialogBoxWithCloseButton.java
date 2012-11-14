@@ -37,27 +37,30 @@ import com.google.gwt.user.client.ui.Widget;
  * Slight modification to have a hardcoded close image.  Original code from:
  * http://code.google.com/p/wcinteractions/source/browse/trunk/MVP/src/com/mvp/client/ui/widget/DialogBoxExt.java
  * 
+ * Modification to allow custom centring
+ * 
  * @author Guy Griffiths
  */
 public class DialogBoxWithCloseButton extends DialogBox {
 
+    private CentrePosIF localCentre;
     private HorizontalPanel captionPanel = new HorizontalPanel();
+    
+    public interface CentrePosIF {
+        public ScreenPosition getCentre();
+    }
 
     private Widget closeWidget = null;
 
-    /**
-     * You have to provide a widget here. If click on the widget the dialog box
-     * will be closed.
-     * 
-     * @param closeDialogBox
-     */
-    public DialogBoxWithCloseButton() {
+    public DialogBoxWithCloseButton(CentrePosIF localCentre) {
         super();
 
+        this.localCentre = localCentre;
         closeWidget = new Image(GWT.getModuleBaseURL()+"img/cross.png");
 
-        // empty header could case a problem!
+        // empty header could cause a problem!
         setHTML("&nbsp;");
+        setAnimationEnabled(true);
     }
 
     @Override
@@ -168,6 +171,22 @@ public class DialogBoxWithCloseButton extends DialogBox {
             return t;
         }
         return false;
+    }
+    
+    @Override
+    /**
+     * This centres the dialog box, but uses a 
+     */
+    public void center() {
+        setPopupPositionAndShow(new PositionCallback() {
+            @Override
+            public void setPosition(int offsetWidth, int offsetHeight) {
+                ScreenPosition centre = localCentre.getCentre();
+                DialogBoxWithCloseButton.this.setPopupPosition(centre.getX() - offsetWidth / 2,
+                        centre.getY() - offsetHeight / 2);
+                DialogBoxWithCloseButton.this.show();
+            }
+        });
     }
 
 }

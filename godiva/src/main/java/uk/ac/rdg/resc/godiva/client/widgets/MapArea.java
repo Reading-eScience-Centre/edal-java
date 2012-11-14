@@ -35,6 +35,7 @@ import org.gwtopenmaps.openlayers.client.util.JSObject;
 
 import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
+import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -51,17 +52,17 @@ import com.google.gwt.xml.client.Node;
 import com.google.gwt.xml.client.NodeList;
 import com.google.gwt.xml.client.XMLParser;
 
-public class MapArea extends MapWidget {
+public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF {
 
-    private static final Projection EPSG4326 = new Projection("EPSG:4326");
-    private static final NumberFormat FORMATTER = NumberFormat.getFormat("###.#####"); 
-
-    private final class WmsDetails {
-        private String wmsUrl;
-        private final WMS wms;
-        private final WMSParams params;
-        private final boolean multipleElevations;
-        private final boolean multipleTimes;
+    protected static final Projection CRS84 = new Projection("CRS:84");
+    protected static final NumberFormat FORMATTER = NumberFormat.getFormat("###.#####"); 
+    
+    protected final class WmsDetails {
+        public String wmsUrl;
+        public final WMS wms;
+        public final WMSParams params;
+        public final boolean multipleElevations;
+        public final boolean multipleTimes;
 
         public WmsDetails(String wmsUrl, WMS wms, WMSParams wmsParameters, boolean multipleElevations,
                 boolean multipleTimes) {
@@ -75,30 +76,39 @@ public class MapArea extends MapWidget {
         }
     }
 
-    private Map map;
-    private java.util.Map<String, WmsDetails> wmsLayers;
-    private Image animLayer;
-    private String currentProjection;
+    public int maxFeatures = 5;
+    
+    protected Map map;
+    protected java.util.Map<String, WmsDetails> wmsLayers;
+    protected Image animLayer;
+    protected String currentProjection;
 
-    private String transectLayer = null;
+    protected String transectLayer = null;
 
-    private WMSOptions wmsPolarOptions;
-    private WMSOptions wmsStandardOptions;
+    protected WMSOptions wmsPolarOptions;
+    protected WMSOptions wmsStandardOptions;
 
-    private LayerLoadStartListener loadStartListener;
-    private LayerLoadCancelListener loadCancelListener;
-    private LayerLoadEndListener loadEndListener;
+    protected LayerLoadStartListener loadStartListener;
+    protected LayerLoadCancelListener loadCancelListener;
+    protected LayerLoadEndListener loadEndListener;
 
-    private GodivaActionsHandler widgetDisabler;
+    protected GodivaActionsHandler widgetDisabler;
 
-    private String baseUrlForExport;
-    private String layersForExport;
+    protected String baseUrlForExport;
+    protected String layersForExport;
 
-    private WMSGetFeatureInfo getFeatureInfo;
-    private EditingToolbar editingToolbar;
+    protected WMSGetFeatureInfo getFeatureInfo;
+    protected EditingToolbar editingToolbar;
+    protected String proxyUrl;
 
-    public MapArea(int width, int height, final GodivaActionsHandler godivaListener) {
+    public MapArea(int width, int height, final GodivaActionsHandler godivaListener, String proxyUrl) {
         super(width + "px", height + "px", getDefaultMapOptions());
+        
+        if(proxyUrl == null){
+            this.proxyUrl = "";
+        } else {
+            this.proxyUrl = proxyUrl;
+        }
         
         wmsLayers = new LinkedHashMap<String, WmsDetails>();
 
@@ -236,6 +246,7 @@ public class MapArea extends MapWidget {
         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
         WMS wmsLayer;
         if (wmsAndParams == null) {
+            params.setParameter("VERSION", "1.3.0");
             wmsLayer = new WMS("WMS Layer", wmsUrl, params, options);
             wmsLayer.addLayerLoadStartListener(loadStartListener);
             wmsLayer.addLayerLoadCancelListener(loadCancelListener);
@@ -265,14 +276,14 @@ public class MapArea extends MapWidget {
         }
     }
 
-    private void setGetFeatureInfoDetails(final String wmsUrl, final boolean multipleElevations,
+    protected void setGetFeatureInfoDetails(final String wmsUrl, final boolean multipleElevations,
             final boolean multipleTimes, final String layerId) {
         WMSGetFeatureInfoOptions getFeatureInfoOptions = new WMSGetFeatureInfoOptions();
         getFeatureInfoOptions.setQueryVisible(true);
         getFeatureInfoOptions.setInfoFormat("text/xml");
-        getFeatureInfoOptions.setMaxFeaturess(5);
+        getFeatureInfoOptions.setMaxFeaturess(maxFeatures);
         
-        WMS[] layers = new WMS[wmsLayers.size()];
+        final WMS[] layers = new WMS[wmsLayers.size()];
         Iterator<WmsDetails> it = wmsLayers.values().iterator();
         int i = 0;
         while (it.hasNext()) {
@@ -299,9 +310,6 @@ public class MapArea extends MapWidget {
             vendorParams.setProperty("COLORBY/DEPTH", colorbyElevationStr);
         }
         
-//        vendorParams.setProperty("VERSION", "1.3.0");
-//        vendorParams.setProperty("CRS", map.getProjection());
-        
         if (getFeatureInfo != null) {
             getFeatureInfo.deactivate();
             map.removeControl(getFeatureInfo);
@@ -313,19 +321,23 @@ public class MapArea extends MapWidget {
             @Override
             public void onGetFeatureInfo(GetFeatureInfoEvent eventObject) {
                 String pixels[] = eventObject.getJSObject().getProperty("xy").toString().split(",");
-                final LonLat lonLat = MapArea.this.map.getLonLatFromPixel(new Pixel(Integer
-                        .parseInt(pixels[0].substring(2)), Integer.parseInt(pixels[1].substring(2))));
                 
-                int x = Integer.parseInt(pixels[0].substring(2)) + MapArea.this.getAbsoluteLeft();
-                int y = Integer.parseInt(pixels[1].substring(2)) + MapArea.this.getAbsoluteTop();
+                final int mapXClick = Integer.parseInt(pixels[0].substring(2));
+                final int mapYClick = Integer.parseInt(pixels[1].substring(2));
+                
+                final LonLat lonLat = MapArea.this.map.getLonLatFromPixel(new Pixel(mapXClick, mapYClick));
+                
+                int x = mapXClick + MapArea.this.getAbsoluteLeft();
+                int y = mapYClick + MapArea.this.getAbsoluteTop();
                 
                 FeatureInfoMessageAndFeatureIds featureInfo = null;
-                final DialogBox pop = new DialogBoxWithCloseButton();
+                final DialogBox pop = new DialogBoxWithCloseButton(MapArea.this);
                 pop.setPopupPosition(x, y);
                 
                 try{
                     featureInfo = processFeatureInfo(eventObject.getText());
                 } catch (Exception e) {
+                    e.printStackTrace();
                     /*
                      * Something is wrong with the GFI response.
                      */
@@ -337,7 +349,6 @@ public class MapArea extends MapWidget {
                 
                 String message = featureInfo.message;
 
-
                 pop.setHTML("Feature Info");
 
                 VerticalPanel panel = new VerticalPanel();
@@ -346,15 +357,25 @@ public class MapArea extends MapWidget {
                 panel.add(html);
 
                 StringBuilder layerNames = new StringBuilder();
-                for(String layerName : featureInfo.featureIds){
-                    layerNames.append(layerName+",");
+                
+                /*
+                 * The FeatureInfo has not returned feature IDs to query
+                 * 
+                 * This is the situation for older ncWMS clients, and we can
+                 * just use the layer IDs
+                 */
+                for(WMS wmsLayer : layers){
+                    layerNames.append(wmsLayer.getId()+",");
                 }
-                // Remove the final comma
-                layerNames.deleteCharAt(layerNames.length()-1);
+                if(layerNames.length() > 0) {
+                    // Remove the final comma
+                    layerNames.deleteCharAt(layerNames.length()-1);
+                }
+                
                 final String layer = layerNames.toString();
                 
                 if (multipleElevations) {
-                    final String link = wmsUrl + "?REQUEST=GetVerticalProfile" + "&LAYER=" + layer
+                    final String link = proxyUrl + wmsUrl + "?REQUEST=GetVerticalProfile" + "&LAYER=" + layer
                             + "&CRS=CRS:84" + ((timeStr != null) ? ("&TIME=" + timeStr) : "")
                             + "&POINT=" + lonLat.lon() + "%20" + lonLat.lat() + "&FORMAT=image/png";
                     Anchor profilePlot = new Anchor("Vertical Profile Plot");
@@ -375,7 +396,7 @@ public class MapArea extends MapWidget {
                         public void onClick(ClickEvent event) {
                             String wmsLayer = wmsLayers.get(layerId).wms.getParams().getLayers().split(",")[0];
                             final StartEndTimePopup timeSelector = new StartEndTimePopup(wmsLayer,
-                                    wmsUrl, null);
+                                    proxyUrl+wmsUrl, null, MapArea.this);
                             timeSelector.setButtonLabel("Plot");
                             timeSelector
                                     .setErrorMessage("You can only plot a time series when you have multiple times available");
@@ -389,8 +410,7 @@ public class MapArea extends MapWidget {
                                     }
                                     String link = wmsUrl
                                             + "?REQUEST=GetTimeseries"
-                                            + "&LAYER="
-                                            + layer
+                                            + "&LAYER=" + layer
                                             + "&CRS=CRS:84"
                                             + "&TIME="
                                             + startDateTime
@@ -425,8 +445,8 @@ public class MapArea extends MapWidget {
         getFeatureInfo.getJSObject().setProperty("vendorParams", vendorParams);
     }
 
-    private void displayImagePopup(String url, String title) {
-        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton();
+    protected void displayImagePopup(String url, String title) {
+        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(this);
         final com.google.gwt.user.client.ui.Image image = new com.google.gwt.user.client.ui.Image(url);
         image.addLoadHandler(new LoadHandler() {
             @Override
@@ -493,8 +513,9 @@ public class MapArea extends MapWidget {
 
     private static MapOptions getDefaultMapOptions() {
         MapOptions mapOptions = new MapOptions();
-        mapOptions.setProjection("EPSG:4326");
-        mapOptions.setDisplayProjection(EPSG4326);
+//        mapOptions.setProjection("EPSG:4326");
+        mapOptions.setProjection("CRS:84");
+        mapOptions.setDisplayProjection(CRS84);
         JSObject vendorParams = JSObject.createJSObject();
         vendorParams.setProperty("theme", GWT.getModuleBaseURL()+"theme/default/style.css");
         mapOptions.setJSObject(vendorParams);
@@ -507,15 +528,23 @@ public class MapArea extends MapWidget {
         addBaseLayers();
 
         currentProjection = map.getProjection();
+        
         map.addControl(new LayerSwitcher());
         addDrawingLayer();
         map.setCenter(new LonLat(0.0, 0.0), 2);
         map.setMaxExtent(new Bounds(-180, -360, 180, 360));
     }
 
+    @Override
     public void setOpacity(String layerId, float opacity) {
-        if (wmsLayers.containsKey(layerId)) {
-            wmsLayers.get(layerId).wms.setOpacity(opacity);
+        for(WmsDetails wmsDetails : wmsLayers.values()) {
+            String layersStr = wmsDetails.params.getLayers();
+            String[] layers = layersStr.split(",");
+            for(String layer : layers) {
+                if(layer.equalsIgnoreCase(layerId)){
+                    wmsDetails.wms.setOpacity(opacity);
+                }
+            }
         }
         if(animLayer != null){
             animLayer.setOpacity(opacity);
@@ -532,8 +561,8 @@ public class MapArea extends MapWidget {
 
     private void addBaseLayers() {
         WMS openLayers;
-        WMS bluemarbleDemis;
-        WMS demis;
+//        WMS bluemarbleDemis;
+//        WMS demis;
         WMS plurel;
         WMS weather;
         WMS srtmDem;
@@ -543,6 +572,7 @@ public class MapArea extends MapWidget {
         WMSParams wmsParams;
         WMSOptions wmsOptions;
         wmsOptions = new WMSOptions();
+        wmsOptions.setProjection("CRS:84");
         wmsOptions.setWrapDateLine(true);
         wmsParams = new WMSParams();
         wmsParams.setLayers("basic");
@@ -553,19 +583,20 @@ public class MapArea extends MapWidget {
         openLayers.setIsBaseLayer(true);
         wmsParams = new WMSParams();
         wmsParams.setLayers("Earth Image");
-        bluemarbleDemis = new WMS("Demis Blue Marble",
-                "http://www2.demis.nl/wms/wms.ashx?WMS=BlueMarble", wmsParams, wmsOptions);
-        bluemarbleDemis.setIsBaseLayer(true);
-        bluemarbleDemis.addLayerLoadStartListener(loadStartListener);
-        bluemarbleDemis.addLayerLoadEndListener(loadEndListener);
-        wmsParams = new WMSParams();
-        wmsParams
-                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
-                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
-        wmsParams.setFormat("image/png");
-        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
-                wmsOptions);
-        demis.setIsBaseLayer(true);
+        
+//        bluemarbleDemis = new WMS("Demis Blue Marble",
+//                "http://www2.demis.nl/wms/wms.ashx?WMS=BlueMarble", wmsParams, wmsOptions);
+//        bluemarbleDemis.setIsBaseLayer(true);
+//        bluemarbleDemis.addLayerLoadStartListener(loadStartListener);
+//        bluemarbleDemis.addLayerLoadEndListener(loadEndListener);
+//        wmsParams = new WMSParams();
+//        wmsParams
+//                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
+//                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+//        wmsParams.setFormat("image/png");
+//        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
+//                wmsOptions);
+//        demis.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("0,2,3,4,5,8,9,10,40");
@@ -617,8 +648,8 @@ public class MapArea extends MapWidget {
                 wmsParams, wmsPolarOptions);
 
         map.addLayer(openLayers);
-        map.addLayer(bluemarbleDemis);
-        map.addLayer(demis);
+//        map.addLayer(bluemarbleDemis);
+//        map.addLayer(demis);
         map.addLayer(plurel);
         map.addLayer(weather);
         map.addLayer(srtmDem);
@@ -648,7 +679,7 @@ public class MapArea extends MapWidget {
                 }
             }
         });
-        map.setBaseLayer(demis);
+        map.setBaseLayer(openLayers);
     }
 
     private WMSOptions getOptionsForCurrentProjection() {
@@ -660,9 +691,9 @@ public class MapArea extends MapWidget {
         }
     }
 
-    private class FeatureInfoMessageAndFeatureIds {
-        private String message;
-        private String[] featureIds;
+    protected class FeatureInfoMessageAndFeatureIds {
+        public String message;
+        public String[] featureIds;
         public FeatureInfoMessageAndFeatureIds(String message, String[] featureIds) {
             super();
             this.message = message;
@@ -670,7 +701,7 @@ public class MapArea extends MapWidget {
         }
     }
     
-    private FeatureInfoMessageAndFeatureIds processFeatureInfo(String text) {
+    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text) {
         Document featureInfo = XMLParser.parse(text);
         double lon = Double.parseDouble(featureInfo.getElementsByTagName("longitude").item(0)
                 .getChildNodes().item(0).getNodeValue());
@@ -817,5 +848,10 @@ public class MapArea extends MapWidget {
             editingToolbar.activate();
         }
     }
-
+    
+    @Override
+    public ScreenPosition getCentre() {
+        return new ScreenPosition(getAbsoluteLeft() + getOffsetWidth() / 2, getAbsoluteTop()
+                + getOffsetHeight() / 2);
+    }
 }
