@@ -81,7 +81,9 @@ import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.impl.LineString;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
@@ -102,20 +104,39 @@ final public class Charting {
     private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
     private static final DecimalFormat NUMBER_3DP = new DecimalFormat("#0.000");
 
-    public static JFreeChart createTimeseriesPlot(List<PointSeriesFeature> features, String baseMemberName) {
-        TimeSeriesCollection xydataset = new TimeSeriesCollection();
-        
+    public static JFreeChart createTimeseriesPlot(List<Feature> features, String baseMemberName) {
         String yLabel = "";
         VerticalPosition vPos = null;
         ScalarMetadata metadata = null;
-        for(PointSeriesFeature feature : features) {
-            String location = "(" + NUMBER_3DP.format(feature.getHorizontalPosition().getX()) + ","
-                    + NUMBER_3DP.format(feature.getHorizontalPosition().getY()) + ")";
-            TimeSeries ts = new TimeSeries(location, Millisecond.class);
-            List<TimePosition> times = feature.getCoverage().getDomain().getTimes();
+        List<TimeSeries> timeSeries = new ArrayList<TimeSeries>();
+        for(Feature feature : features) {
+            String featureKey;
+            List<TimePosition> times;
+            List<?> values;
             String memberName = MetadataUtils.getScalarMemberName(feature, baseMemberName);
+            if(feature instanceof PointSeriesFeature) {
+                PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) feature;
+                featureKey = "(" + NUMBER_3DP.format(pointSeriesFeature.getHorizontalPosition().getX()) + ","
+                        + NUMBER_3DP.format(pointSeriesFeature.getHorizontalPosition().getY()) + ")";
+                times = pointSeriesFeature.getCoverage().getDomain().getTimes();
+                values = pointSeriesFeature.getCoverage().getValues(memberName);
+                vPos = pointSeriesFeature.getVerticalPosition();
+            } else if (feature instanceof TrajectoryFeature) {
+                TrajectoryFeature trajectoryFeature = (TrajectoryFeature) feature;
+                featureKey = trajectoryFeature.getName();
+                List<GeoPosition> domainObjects = trajectoryFeature.getCoverage().getDomain().getDomainObjects();
+                times = new ArrayList<TimePosition>();
+                for(GeoPosition geoPos : domainObjects){
+                    times.add(geoPos.getTimePosition());
+                }
+                values = trajectoryFeature.getCoverage().getValues(memberName);
+            } else {
+                continue;
+            }
+                
+            TimeSeries ts = new TimeSeries(featureKey, Millisecond.class);
+            
             metadata = MetadataUtils.getScalarMetadata(feature, memberName);
-            List<?> values = feature.getCoverage().getValues(memberName);
             
             if (!Number.class.isAssignableFrom(feature.getCoverage().getScalarMetadata(memberName)
                     .getValueType())) {
@@ -129,17 +150,13 @@ final public class Charting {
                 ts.add(new Millisecond(new Date(times.get(i).getValue())), (Number) values.get(i));
             }
             
-            xydataset.addSeries(ts);
+            timeSeries.add(ts);
             
             /*
              * TODO There is usually only one feature for this, but we support
              * multiple. Get a better title/y-label
              */
-//            HorizontalPosition lonLat = feature.getHorizontalPosition();
-//            // Create a chart with no legend, tooltips or URLs
-//            title = "Lon: " + lonLat.getX() + ", Lat: " + lonLat.getY();
             yLabel = getAxisLabel(feature, memberName);
-            vPos = feature.getVerticalPosition();
         }
         
         String title;
@@ -156,18 +173,25 @@ final public class Charting {
         } else {
             title = "No data";
         }
-
+        
+        TimeSeriesCollection xydataset = new TimeSeriesCollection();
+        
+        for(TimeSeries ts : timeSeries) {
+            xydataset.addSeries(ts);
+        }
+        
         JFreeChart chart = ChartFactory.createTimeSeriesChart(title, "Date / time", yLabel,
-                xydataset, true, false, false);
+                xydataset, (timeSeries.size() > 1), false, false);
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        for(int i=0; i<features.size(); i++){
+        
+        for(int i=0; i<timeSeries.size(); i++){
             renderer.setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
             renderer.setSeriesShapesVisible(i, true);
         }
         chart.getXYPlot().setRenderer(renderer);
         chart.getXYPlot().setNoDataMessage("There is no data for your choice");
         chart.getXYPlot().setNoDataMessageFont(new Font("sansserif", Font.BOLD, 32));
-
+        
         return chart;
     }
 
