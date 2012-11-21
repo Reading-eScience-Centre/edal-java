@@ -7,7 +7,8 @@ public class Info extends BaseSelector implements InfoIF {
     public Info() {
         super("Copyright");
         info = new Label();
-        info.setStylePrimaryName("lightLabel");
+        info.setStylePrimaryName("labelStyle");
+        info.addStyleDependentName("light");
         label.setTitle("Information about the data");
         add(info);
     }
@@ -22,9 +23,11 @@ public class Info extends BaseSelector implements InfoIF {
     @Override
     public void setEnabled(boolean enabled){
         if(enabled){
-            label.setStylePrimaryName("labelStyle");
+            info.removeStyleDependentName("inactive");
+            label.removeStyleDependentName("inactive");
         } else {
-            label.setStylePrimaryName("inactiveLabelStyle");
+            info.addStyleDependentName("inactive");
+            label.addStyleDependentName("inactive");
         }
     }
 

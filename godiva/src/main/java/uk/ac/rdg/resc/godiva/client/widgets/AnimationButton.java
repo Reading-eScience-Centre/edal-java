@@ -145,7 +145,7 @@ public class AnimationButton extends ToggleButton {
     }
 
     private StartEndTimePopup getWizard() {
-        popup = new StartEndTimePopup(animLayer, jsonProxyUrl + wmsUrlProvider.getWmsUrl(), currentTimeSelector, map);
+        popup = new StartEndTimePopup(animLayer, jsonProxyUrl + wmsUrlProvider.getWmsUrl(), currentTimeSelector, map, 5);
         popup.setErrorMessage("Can only create animation where there are multiple times");
         popup.setButtonLabel("Next >");
         popup.addCloseHandler(new CloseHandler<PopupPanel>() {

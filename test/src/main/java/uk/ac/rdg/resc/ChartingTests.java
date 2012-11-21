@@ -14,8 +14,8 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidLineStringException;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
-import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.impl.LineString;
 import uk.ac.rdg.resc.edal.graphics.Charting;
@@ -50,7 +50,7 @@ public class ChartingTests {
                 .getDomain().getVerticalCrs());
         TimePosition time = timeAxis.getCoordinateValue(0);
         
-        PointSeriesFeature pointSeriesFeature = feature
+        Feature pointSeriesFeature = feature
                 .extractPointSeriesFeature(hPos, zPos, timeAxis.getCoordinateExtent(), null);
         JFreeChart timeseriesPlot = Charting.createTimeseriesPlot(Arrays.asList(pointSeriesFeature), memberName);
         

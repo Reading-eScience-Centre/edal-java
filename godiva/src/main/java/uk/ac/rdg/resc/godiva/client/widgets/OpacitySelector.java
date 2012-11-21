@@ -22,9 +22,9 @@ public class OpacitySelector extends BaseSelector {
     public void setEnabled(boolean enabled){
         opacity.setEnabled(enabled);
         if(!opacity.isEnabled()){
-            label.setStylePrimaryName("inactiveLabelStyle");
+            label.addStyleDependentName("inactive");
         } else {
-            label.setStylePrimaryName("labelStyle");
+            label.removeStyleDependentName("inactive");
         }
     }
     

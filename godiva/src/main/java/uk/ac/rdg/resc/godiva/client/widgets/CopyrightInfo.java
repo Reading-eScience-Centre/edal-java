@@ -7,7 +7,8 @@ public class CopyrightInfo extends BaseSelector implements CopyrightInfoIF {
     public CopyrightInfo() {
         super("Copyright");
         copyright = new Label();
-        copyright.setStylePrimaryName("lightLabel");
+        copyright.setStylePrimaryName("labelStyle");
+        copyright.addStyleDependentName("light");
         label.setTitle("Information about the copyright of this dataset");
         add(copyright);
     }
@@ -22,9 +23,11 @@ public class CopyrightInfo extends BaseSelector implements CopyrightInfoIF {
     @Override
     public void setEnabled(boolean enabled){
         if(enabled){
-            label.setStylePrimaryName("labelStyle");
+            copyright.removeStyleDependentName("inactive");
+            label.removeStyleDependentName("inactive");
         } else {
-            label.setStylePrimaryName("inactiveLabelStyle");
+            copyright.addStyleDependentName("inactive");
+            label.addStyleDependentName("inactive");
         }
     }
 

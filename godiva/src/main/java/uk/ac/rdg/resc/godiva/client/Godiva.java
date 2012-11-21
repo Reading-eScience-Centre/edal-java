@@ -9,7 +9,6 @@ import uk.ac.rdg.resc.godiva.client.handlers.AviExportHandler;
 import uk.ac.rdg.resc.godiva.client.requests.CaseInsensitiveParameterMap;
 import uk.ac.rdg.resc.godiva.client.requests.ConnectionException;
 import uk.ac.rdg.resc.godiva.client.requests.LayerDetails;
-import uk.ac.rdg.resc.godiva.client.requests.LayerMenuItem;
 import uk.ac.rdg.resc.godiva.client.requests.LayerTreeJSONParser;
 import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
@@ -31,6 +30,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.TimeSelector;
 import uk.ac.rdg.resc.godiva.client.widgets.TimeSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.UnitsInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.UnitsInfoIF;
+import uk.ac.rdg.resc.godiva.shared.LayerMenuItem;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -78,9 +78,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     protected Anchor docLink;
 
     // Button to create animations
-    private AnimationButton anim;
+    protected AnimationButton anim;
     
-    private PushButton infoButton;
+    protected PushButton infoButton;
 
     @Override
     public void init() {

@@ -7,7 +7,8 @@ public class UnitsInfo extends BaseSelector implements UnitsInfoIF {
     public UnitsInfo() {
         super("Units");
         units = new Label();
-        units.setStylePrimaryName("lightLabel");
+        units.setStylePrimaryName("labelStyle");
+        units.addStyleDependentName("light");
         label.setTitle("Units of measurement for the data");
         add(units);
     }
@@ -22,9 +23,11 @@ public class UnitsInfo extends BaseSelector implements UnitsInfoIF {
     @Override
     public void setEnabled(boolean enabled){
         if(enabled){
-            label.setStylePrimaryName("labelStyle");
+            units.removeStyleDependentName("inactive");
+            label.removeStyleDependentName("inactive");
         } else {
-            label.setStylePrimaryName("inactiveLabelStyle");
+            units.addStyleDependentName("inactive");
+            label.addStyleDependentName("inactive");
         }
     }
     

@@ -4,6 +4,10 @@
   z-index: 1499;
 }
 
+.subtitle {
+	font-size: 0.9em;
+}
+
 /* This is used for the labels which are actually buttons */
 .hiddenButton {
   font-size: 1.2em;
@@ -18,16 +22,12 @@
   cursor: pointer;
 }
 
-.inactiveHiddenButton {
-  font-size: 1.2em;
-  font-weight: bold;
+.hiddenButton-title {
+	font-size: 1.4em
+}
+
+.hiddenButton-inactive {
   color: #777777;
-  /* top right bottom left */
-  margin: 3px 10px 10px;
-  text-align: left;
-  background-color: transparent;
-  border: 0;
-  padding: 0;
   cursor: default;
 }
 
@@ -42,31 +42,25 @@
 }
 
 /* This is used for the labels on the time/elevation/variable selectors (when disabled) */
-.inactiveLabelStyle {
-  font-size: 1.2em;
-  font-weight: bold;
+.labelStyle-inactive {
   color: #777777;
-  margin: 3px 10px 10px 12px;
-  text-align: left;
+}
+
+/* This is used for the values of units, copyright, etc */
+.labelStyle-light {
+  font-size: 1em;
+  font-weight: normal;
+  margin: 5px 2px 0px;
 }
 
 /* This is used for the labels on the palette selector (when enabled) */
-.activeImageStyle {
+.imageStyle {
   opacity: 1;
 }
 
 /* This is used for the labels on the palette selector (when disabled) */
-.inactiveImageStyle {
+.imageStyle-inactive {
   opacity: 0.3;
-}
-
-/* This is used for the labels on the time/elevation/variable selectors (when disabled) */
-.lightLabel {
-  font-size: 1em;
-  font-weight: normal;
-  color: #111111;
-  margin: 5px 2px 0px;
-  text-align: left;
 }
 
 /* Used by the links */
@@ -163,4 +157,9 @@
 /* Used for layer selector */
 .gwt-PopupPanel{
 	z-index: 1999;
+}
+
+/* Used for layer selector */
+.gwt-ListBox{
+	background-color: transparent;
 }

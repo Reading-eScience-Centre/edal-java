@@ -2,7 +2,7 @@ package uk.ac.rdg.resc.godiva.client.widgets;
 
 import java.util.List;
 
-import uk.ac.rdg.resc.godiva.client.requests.LayerMenuItem;
+import uk.ac.rdg.resc.godiva.shared.LayerMenuItem;
 
 import com.google.gwt.user.client.ui.IsWidget;
 

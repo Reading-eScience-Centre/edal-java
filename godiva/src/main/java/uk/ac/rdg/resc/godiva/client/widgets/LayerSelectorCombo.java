@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import uk.ac.rdg.resc.godiva.client.handlers.LayerSelectionHandler;
-import uk.ac.rdg.resc.godiva.client.requests.LayerMenuItem;
+import uk.ac.rdg.resc.godiva.shared.LayerMenuItem;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -26,12 +26,16 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     private Map<String, LayerMenuItem> layerIdWmsUrlToMenuEntry; 
     private String selectedLayer;
     private boolean firstUse = true;
-    private String firstTitle = null;
+    public String firstTitle = null;
     
     private LayerMenuItem selectedNode;
     private String wmsUrl;
 
     public LayerSelectorCombo(LayerSelectionHandler layerHandler) {
+        this(layerHandler, "Click here to start", true);
+    }
+    
+    public LayerSelectorCombo(LayerSelectionHandler layerHandler, String firstText, boolean showRefreshButton) {
         super("Loading");
         this.layerSelectionHandler = layerHandler;
 
@@ -42,6 +46,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         popup.setAutoHideEnabled(true);
 
         setStylePrimaryName("hiddenButton");
+        addStyleDependentName("title");
         addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -53,27 +58,31 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
                     popup.show();
                 }
                 if(firstUse) {
-                    setHTML("<big>" + firstTitle + "</big>");
+                    setText(firstTitle);
                     firstUse = false;
                 }
             }
         });
 
-        setHTML("<big>Click here to start</big>");
+        setText(firstText);
         
         VerticalPanel vPanel = new VerticalPanel();
-        PushButton button = new PushButton("Refresh");
-        button.addStyleDependentName("CentreAndMargin");
-        button.setTitle("Click to refresh the layers list");
-        button.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                layerSelectionHandler.refreshLayerList();
-            }
-        });
         tree = new Tree();
         vPanel.add(tree);
-        vPanel.add(button);
+        
+        if(showRefreshButton) {
+            PushButton button = new PushButton("Refresh");
+            button.addStyleDependentName("CentreAndMargin");
+            button.setTitle("Click to refresh the layers list");
+            button.addClickHandler(new ClickHandler() {
+                @Override
+                public void onClick(ClickEvent event) {
+                    layerSelectionHandler.refreshLayerList();
+                }
+            });
+            vPanel.add(button);
+        }
+        
         popup.add(vPanel);
     }
 
@@ -85,7 +94,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         if(firstUse){
             firstTitle = nodeLabel;
         } else {
-            setHTML("<big>" + nodeLabel + "</big>");
+            setText(nodeLabel);
         }
         List<LayerMenuItem> children = topItem.getChildren();
         if(children != null){
@@ -96,25 +105,15 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     }
     
     private void addNode(final LayerMenuItem item, final TreeItem parentNode) {
-        if(parentNode == null && item.isLeaf()){
-            /*
-             * This is an empty dataset (probably it is still loading)
-             */
-            String nodeLabel = item.getTitle();
-            TreeItem nextNode = new TreeItem(nodeLabel);
-            tree.addItem(nextNode);
-            return;
-        }
-        
         String label = item.getTitle();
         final String id = item.getId();
         
         Label node = new Label(label);
         if(parentNode != null){
             final String parentName = parentNode.getText();
-            layerIdWmsUrlToTitle.put(id+item.getWmsUrl(), "<big>" + parentName + "</big> > " + label);
+            layerIdWmsUrlToTitle.put(id+item.getWmsUrl(), parentName + "<div class=\"subtitle\">  &nbsp>&nbsp" + label + "</div>");
         } else {
-            layerIdWmsUrlToTitle.put(id+item.getWmsUrl(), "<big>" + label + "</big>");
+            layerIdWmsUrlToTitle.put(id+item.getWmsUrl(), label);
         }
         
         layerIdWmsUrlToMenuEntry.put(id+item.getWmsUrl(), item);
@@ -139,7 +138,10 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             /*
              * We have a leaf node
              */
-            parentNode.addItem(node);
+            if(parentNode != null)
+                parentNode.addItem(node);
+            else
+                tree.addItem(node);
         } else {
             /*
              * We have a branch node
@@ -182,9 +184,9 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         if(enabled)
-            setStylePrimaryName("hiddenButton");
+            removeStyleDependentName("inactive");
         else
-            setStylePrimaryName("inactiveHiddenButton");
+            addStyleDependentName("inactive");
     }
     
     @Override
