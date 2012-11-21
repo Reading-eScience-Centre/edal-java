@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.godiva.client.requests;
+package uk.ac.rdg.resc.godiva.shared;
 
 import java.io.Serializable;
 import java.util.ArrayList;

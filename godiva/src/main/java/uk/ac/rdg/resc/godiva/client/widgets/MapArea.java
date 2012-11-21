@@ -141,7 +141,7 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
 
     public void addAnimationLayer(String wmsUrl, String layerId, String timeList, String currentElevation,
             String palette, String style, String scaleRange, int nColorBands, boolean logScale, String frameRate) {
-        StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.1.1");
+        StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.3.0");
         url.append("&format=image/gif" + "&transparent=true" + "&styles=" + style + "/" + palette
                 + "&layers=" + layerId + "&time=" + timeList + "&logscale=" + logScale + "&crs="
                 + currentProjection + "&bbox=" + map.getExtent().toBBox(6) + "&width="
@@ -339,10 +339,10 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
                 } catch (Exception e) {
                     e.printStackTrace();
                     /*
-                     * Something is wrong with the GFI response.
+                     * Something is wrong with the GFI response.  It may just be that there is no data here.
                      */
-                    pop.setHTML("Error");
-                    pop.add(new HTML("No Feature information is available, due to a server error"));
+                    pop.setHTML("Feature Info Unavailable");
+                    pop.add(new HTML("No Feature information is available at this location"));
                     pop.show();
                     return;
                 }
@@ -396,7 +396,7 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
                         public void onClick(ClickEvent event) {
                             String wmsLayer = wmsLayers.get(layerId).wms.getParams().getLayers().split(",")[0];
                             final StartEndTimePopup timeSelector = new StartEndTimePopup(wmsLayer,
-                                    proxyUrl+wmsUrl, null, MapArea.this);
+                                    proxyUrl+wmsUrl, null, MapArea.this, -1);
                             timeSelector.setButtonLabel("Plot");
                             timeSelector
                                     .setErrorMessage("You can only plot a time series when you have multiple times available");
@@ -428,7 +428,6 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
                             });
                             pop.hide();
                             timeSelector.center();
-                            timeSelector.show();
                         }
                     });
                     panel.add(timeseriesPlot);

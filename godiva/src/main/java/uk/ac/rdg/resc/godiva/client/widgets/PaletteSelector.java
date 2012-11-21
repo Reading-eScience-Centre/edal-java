@@ -111,6 +111,7 @@ public class PaletteSelector implements PaletteSelectorIF {
             }
         });
         paletteImage.setTitle("Click to choose palette and number of colour bands");
+        paletteImage.setStylePrimaryName("imageStyle");
 
         ChangeHandler scaleChangeHandler = new ChangeHandler() {
             @Override
@@ -487,13 +488,13 @@ public class PaletteSelector implements PaletteSelectorIF {
         opacity.setEnabled(enabled);
         logScale.setEnabled(enabled);
         if(enabled){
-            paletteImage.setStylePrimaryName("activeImageStyle");
-            mlLabel.setStylePrimaryName("tickmark");
-            mhLabel.setStylePrimaryName("tickmark");
+            paletteImage.removeStyleDependentName("inactive");
+            mlLabel.removeStyleDependentName("inactive");
+            mhLabel.removeStyleDependentName("inactive");
         } else {
-            paletteImage.setStylePrimaryName("inactiveImageStyle");
-            mlLabel.setStylePrimaryName("disabledTickmark");
-            mhLabel.setStylePrimaryName("disabledTickmark");
+            paletteImage.addStyleDependentName("inactive");
+            mlLabel.addStyleDependentName("inactive");
+            mhLabel.addStyleDependentName("inactive");
         }
         this.enabled = enabled;
     }

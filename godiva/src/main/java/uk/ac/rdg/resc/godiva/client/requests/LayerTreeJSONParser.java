@@ -1,5 +1,7 @@
 package uk.ac.rdg.resc.godiva.client.requests;
 
+import uk.ac.rdg.resc.godiva.shared.LayerMenuItem;
+
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONValue;

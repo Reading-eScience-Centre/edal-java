@@ -94,7 +94,16 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     @Override
     public void onModuleLoad() {
+        /*
+         * Set the path for OpenLayers images. This means that we can package
+         * them with this GWT source code, keeping everything nicely separated
+         */
         setImagePath(GWT.getModuleBaseURL()+"/js/img/");
+        
+        /*
+         * The location of the config servlet is hard-coded. If it is not found,
+         * we use some default options
+         */
         RequestBuilder getConfig = new RequestBuilder(RequestBuilder.GET, "getconfig");
         getConfig.setCallback(new RequestCallback() {
             @Override
@@ -108,6 +117,9 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                             .stringValue());
                     mapWidth = Integer.parseInt(parentObj.get("mapWidth").isString().stringValue());
                     initBaseWms();
+                    /*
+                     * Handle any user-specific configuration parameters
+                     */
                     handleCustomParams(parentObj);
                 } catch (Exception e) {
                     /*
@@ -125,9 +137,14 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
 
             @Override
             public void onError(Request request, Throwable exception) {
+                /*
+                 * If we have a problem contacting the config servlet, use some
+                 * default options
+                 */
                 initWithDefaults();
             }
         });
+        
         try {
             getConfig.send();
         } catch (RequestException e) {
@@ -137,8 +154,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
  
     /**
      * This is called after all other parameters have been received from a
-     * config servlet, and subclasses can use it to handle custom commands from
-     * the ConfigServlet.
+     * config servlet, and subclasses can use it to handle custom configuration
+     * options from the ConfigServlet.
      * 
      * @param parentObj
      */
@@ -149,7 +166,13 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          */
     }
 
-    public static native void setImagePath(String imagepath)/*-{
+    /**
+     * Uses native Javascript to set the image path for OpenLayers
+     * 
+     * @param imagepath
+     *            The path where OpenLayers images are stored
+     */
+    private static native void setImagePath(String imagepath)/*-{
         $wnd.OpenLayers.ImgPath = imagepath;
     }-*/;
 
@@ -163,7 +186,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         mapHeight = 400;
         mapWidth = 512;
         /*
-         * No proxy by default, because by default, we run on the same server as
+         * No proxy by default, because by default we run on the same server as
          * ncWMS
          */
         proxyUrl = "";

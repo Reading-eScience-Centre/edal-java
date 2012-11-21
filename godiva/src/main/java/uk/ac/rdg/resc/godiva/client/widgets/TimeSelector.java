@@ -163,7 +163,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 	    if(availableDates == null || availableDates.size() == 0){
 	        dates.setEnabled(false);
 	        times.setEnabled(false);
-	        label.setStylePrimaryName("inactiveLabelStyle");
+	        label.addStyleDependentName("inactive");
 	    } else {
 	        if(continuous){
     	        if(availableDates.size() != 2){
@@ -189,7 +189,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     	        dates.setEnabled(true);
     	        dates.setSelectedIndex(selectDate);
 
-    	        label.setStylePrimaryName("labelStyle");
+    	        label.removeStyleDependentName("inactive");
     	        /*
     	         * Now fire a change event to populate the times
     	         */
@@ -200,7 +200,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     				dates.addItem(item);
     			}
     			dates.setEnabled(true);
-    			label.setStylePrimaryName("labelStyle");
+    			label.removeStyleDependentName("inactive");
 	        }
 		}
 	}
@@ -326,9 +326,9 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 	        dates.setEnabled(false);
 	    
 	    if(!times.isEnabled() && !dates.isEnabled()){
-	        label.setStylePrimaryName("inactiveLabelStyle");
+	        label.addStyleDependentName("inactive");
 	    } else {
-	        label.setStylePrimaryName("labelStyle");
+	        label.removeStyleDependentName("inactive");
 	    }
 	}
 	

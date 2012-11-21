@@ -18,7 +18,6 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
     private String id;
     private String units;
     private boolean continuous;
-//    private String continuousRange = null;
     
 	public ElevationSelector(String id, String title, final ElevationSelectionHandler handler) {
 		super(title);
@@ -45,8 +44,9 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
         String currentElevation = getSelectedElevation();
 		elevations.clear();
 		formattedValuesToRealValues = new HashMap<String, String>();
+		label.setStylePrimaryName("labelStyle");
 		if(availableElevations == null || availableElevations.size()==0){
-			label.setStylePrimaryName("inactiveLabelStyle");
+			label.addStyleDependentName("inactive");
 			elevations.setEnabled(false);
 		} else {
 		    if(continuous){
@@ -81,7 +81,7 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
 		            i++;
 		        }
 		    }
-		    label.setStylePrimaryName("labelStyle");
+		    label.removeStyleDependentName("inactive");
 		    elevations.setEnabled(true);
 		}
 	}
@@ -151,9 +151,9 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
             elevations.setEnabled(false);
         
         if(!elevations.isEnabled()){
-            label.setStylePrimaryName("inactiveLabelStyle");
+            label.addStyleDependentName("inactive");
         } else {
-            label.setStylePrimaryName("labelStyle");
+            label.removeStyleDependentName("inactive");
         }
     }
 
@@ -169,7 +169,6 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
 
     @Override
     public String getSelectedElevationRange() {
-//        return continuousRange;
         if(!elevations.isEnabled()) return null;
         int index = elevations.getSelectedIndex();
         if(index < 0)

@@ -54,12 +54,18 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
     private Label loadingLabel = new Label("Loading");
 
     private boolean multiFeature = false;
+    private TimeSelectorIF currentTime;
+    private List<String> availableDates;
 
-    public StartEndTimePopup(String layer, String baseUrl, final TimeSelectorIF currentTimeSelector, final CentrePosIF centrePos) {
+    public StartEndTimePopup(String layer, String baseUrl,
+            final TimeSelectorIF currentTimeSelector, final CentrePosIF centrePos,
+            final int defaultDateStepsBetweenStartAndEnd) {
         super(centrePos);
         this.jsonProxyUrl = baseUrl;
         this.layer = layer;
 
+        this.currentTime = currentTimeSelector;
+        
         init();
 
         LayerRequestBuilder getLayerDetails = new LayerRequestBuilder(layer, jsonProxyUrl, null);
@@ -75,7 +81,6 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                 LayerDetails layerDetails = getLayerDetails();
                 multiFeature = layerDetails.isMultiFeature();
 
-                final List<String> availableDates;
                 if(multiFeature){
                     availableDates = TimeSelector.getDatesInRange(layerDetails.getStartTime(),
                             layerDetails.getEndTime());
@@ -87,38 +92,10 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                     return;
                 }
                 
-                final boolean setTimeToCurrent = (currentTimeSelector != null && !currentTimeSelector
-                        .getSelectedDate()
-                        .equals(availableDates.get(availableDates.size() - 1)));
-                
                 availableTimes = new LinkedHashMap<String, List<String>>();
                 for (final String date : availableDates) {
                     if(multiFeature) {
-                        doPopulateTimes(date, availableDates, Arrays.asList(TimeSelector.allTimes),
-                                setTimeToCurrent, currentTimeSelector);
-                    } else {
-                        TimeRequestBuilder getTimeRequest = new TimeRequestBuilder(
-                                StartEndTimePopup.this.layer, date, jsonProxyUrl);
-                        getTimeRequest.setCallback(new TimeRequestCallback() {
-                            @Override
-                            public void onResponseReceived(Request request, Response response) {
-                                super.onResponseReceived(request, response);
-                                doPopulateTimes(date, availableDates, getAvailableTimesteps(),
-                                        setTimeToCurrent, currentTimeSelector);
-                            }
-    
-                            @Override
-                            public void onError(Request request, Throwable exception) {
-                                // TODO handle error
-                            }
-                        });
-    
-                        try {
-                            getTimeRequest.send();
-                        } catch (RequestException e) {
-                            // TODO handle error
-                            e.printStackTrace();
-                        }
+                        availableTimes.put(date, Arrays.asList(TimeSelector.allTimes));
                     }
                 }
                 
@@ -128,7 +105,10 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                  */
                 Collections.sort(availableDates);
                 startTimeSelector.populateDates(availableDates);
-                if (setTimeToCurrent) {
+                
+                if (currentTime != null
+                        && !currentTime.getSelectedDate().equals(
+                                availableDates.get(availableDates.size() - 1))) {
                     startTimeSelector.selectDate(currentTimeSelector.getSelectedDate());
                 } else {
                     startTimeSelector.selectDate(availableDates.get(0));
@@ -137,8 +117,12 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                 /*
                  * Pick a date 5 day-steps ahead.
                  */
-                int index = availableDates.size() > 5 ? 5 : availableDates.size() - 1;
-                endTimeSelector.selectDate(availableDates.get(index));
+                
+                if(defaultDateStepsBetweenStartAndEnd > 0 && availableDates.size() > defaultDateStepsBetweenStartAndEnd) {
+                    endTimeSelector.selectDate(availableDates.get(defaultDateStepsBetweenStartAndEnd));
+                } else {
+                    endTimeSelector.selectDate(availableDates.get(availableDates.size() - 1));
+                }
                 setTimeSelector();
             }
         });
@@ -148,30 +132,6 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
         } catch (RequestException e) {
             e.printStackTrace();
             // TODO handle error
-        }
-    }
-    
-    private void doPopulateTimes(String date, List<String> availableDates,
-            List<String> availableTimesteps, boolean setTimeToCurrent,
-            TimeSelectorIF currentTimeSelector) {
-        availableTimes.put(date, availableTimesteps);
-        if (date.equals(startTimeSelector.getSelectedDate())) {
-            if (date.equals(availableDates.get(availableDates.size() - 1))
-                    && availableTimesteps.size() > 1) {
-                startTimeSelector.populateTimes(availableTimesteps
-                        .subList(0, availableTimesteps.size() - 2));
-            } else {
-                startTimeSelector.populateTimes(availableTimesteps);
-            }
-        }
-        if (date.equals(endTimeSelector.getSelectedDate())) {
-            endTimeSelector.populateTimes(availableTimesteps);
-            endTimeSelector.selectDateTime(availableTimesteps.get(
-                    availableTimesteps.size() - 1));
-        }
-        if (setTimeToCurrent) {
-            startTimeSelector.selectDateTime(
-                    currentTimeSelector.getSelectedDateTime());
         }
     }
 
@@ -184,92 +144,105 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
         errorMessage = "You need multiple time values to do this";
 
         setLoading();
-        
+
         startTimeSelector = new TimeSelector("start_time", "Start time",
                 new TimeDateSelectionHandler() {
                     @Override
-                    public void dateSelected(String id, String selectedDate) {
-                        startTimeSelector.populateTimes(availableTimes.get(startTimeSelector
-                                .getSelectedDate()));
-                        /*
-                         * Store the currently selected end date
-                         */
-                        String selectedEndDate = endTimeSelector.getSelectedDate();
-                        /*
-                         * Re-populate the end dates with those equal to or
-                         * later than the selected start date
-                         */
-                        endTimeSelector.populateDates(getDatesLaterOrEqualTo(startTimeSelector
-                                .getSelectedDate(), endTimeSelector.getAvailableDates()));
-                        /*
-                         * Now try and select the previously selected end date.
-                         * 
-                         * If this fails, the first available date will be
-                         * selected. This is fine, because it means that
-                         * previously we had a date selected which was before
-                         * the newly-selected start date
-                         */
-                        endTimeSelector.selectDate(selectedEndDate);
+                    public void dateSelected(String id, final String selectedDate) {
+                        final List<String> timesForDate = availableTimes.get(startTimeSelector
+                                .getSelectedDate());
+                        if (timesForDate != null) {
+                            startTimeSelector.populateTimes(timesForDate);
+                            checkOrder();
+                        } else {
+                            TimeRequestBuilder getTimeRequest = new TimeRequestBuilder(
+                                    StartEndTimePopup.this.layer, selectedDate, jsonProxyUrl);
+                            getTimeRequest.setCallback(new TimeRequestCallback() {
+                                @Override
+                                public void onResponseReceived(Request request, Response response) {
+                                    super.onResponseReceived(request, response);
+                                    availableTimes.put(startTimeSelector.getSelectedDate(),
+                                            getAvailableTimesteps());
+                                    startTimeSelector.populateTimes(getAvailableTimesteps());
+                                    checkOrder();
+                                }
+
+                                @Override
+                                public void onError(Request request, Throwable exception) {
+                                }
+                            });
+
+                            try {
+                                getTimeRequest.send();
+                            } catch (RequestException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
                     }
 
                     @Override
                     public void timeSelected(String id, String selectedStartDateTime) {
-                        setEndTimes();
                     }
 
                 });
 
         endTimeSelector = new TimeSelector("end_time", "End time", new TimeDateSelectionHandler() {
             @Override
+            public void dateSelected(String id, final String selectedDate) {
+                final List<String> timesForDate = availableTimes.get(startTimeSelector
+                        .getSelectedDate());
+                if (timesForDate != null) {
+                    endTimeSelector.populateTimes(timesForDate);
+                    checkOrder();
+                } else {
+                    TimeRequestBuilder getTimeRequest = new TimeRequestBuilder(
+                            StartEndTimePopup.this.layer, selectedDate, jsonProxyUrl);
+                    getTimeRequest.setCallback(new TimeRequestCallback() {
+                        @Override
+                        public void onResponseReceived(Request request, Response response) {
+                            super.onResponseReceived(request, response);
+                            availableTimes.put(endTimeSelector.getSelectedDate(),
+                                    getAvailableTimesteps());
+                            endTimeSelector.populateTimes(getAvailableTimesteps());
+                            checkOrder();
+                        }
+
+                        @Override
+                        public void onError(Request request, Throwable exception) {
+                        }
+                    });
+
+                    try {
+                        getTimeRequest.send();
+                    } catch (RequestException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+
+            @Override
             public void timeSelected(String id, String selectedTime) {
                 /*
                  * Do nothing here - we only check the time when the "Next"
                  * button is clicked
                  */
-            }
-
-            @Override
-            public void dateSelected(String id, String selectedDate) {
-                endTimeSelector.populateTimes(availableTimes.get(endTimeSelector.getSelectedDate()));
-                setEndTimes();
+                checkOrder();
             }
         });
     }
     
-    private void setEndTimes(){
-        /*
-         * If both start and end times occur on the same day,
-         * remove any later times from the end selector
-         */
-        if (endTimeSelector.getSelectedDate().equals(
-                startTimeSelector.getSelectedDate())) {
-            String selectedStartTime = startTimeSelector.getSelectedTime();
-            String selectedEndDateTime = endTimeSelector.getSelectedDateTime();
-            List<String> laterTimes = getTimesLaterThan(selectedStartTime,
-                    startTimeSelector.getAvailableTimes());
-            if (laterTimes.size() > 0) {
-                endTimeSelector.populateTimes(laterTimes);
-                endTimeSelector.selectDateTime(selectedEndDateTime);
-            } else {
-                /*
-                 * No times are later - i.e. the final time for
-                 * the day has been selected.
-                 * 
-                 * Get dates later or equals to the selected
-                 * date
-                 */
-                List<String> datesLaterOrEqualTo = getDatesLaterOrEqualTo(endTimeSelector
-                        .getSelectedDate(), endTimeSelector.getAvailableDates());
-                /*
-                 * Sort them and remove the first one. This
-                 * should mean that the next day gets selected.
-                 */
-                Collections.sort(datesLaterOrEqualTo);
-                datesLaterOrEqualTo.remove(0);
-                endTimeSelector.populateDates(datesLaterOrEqualTo);
-                endTimeSelector.selectDateTime(datesLaterOrEqualTo.get(0) + "T"
-                        + availableTimes.get(datesLaterOrEqualTo.get(0)).get(0));
-            }
+    private void checkOrder(){
+        if(nextButton == null) {
+            return;
+        }
+        if ((startTimeSelector == null && endTimeSelector == null)
+                && startTimeSelector.getSelectedDateTime().compareTo(
+                        endTimeSelector.getSelectedDateTime()) >= 0) {
+            nextButton.setEnabled(false);
+        } else {
+            nextButton.setEnabled(true);
         }
     }
 
