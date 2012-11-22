@@ -455,13 +455,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 StringBuilder layerNames = new StringBuilder();
                 
                 /*
-                 * The FeatureInfo has not returned feature IDs to query
-                 * 
-                 * This is the situation for older ncWMS clients, and we can
-                 * just use the layer IDs
+                 * The FeatureInfo has returned feature IDs to query
                  */
-                for(WMS wmsLayer : layers){
-                    layerNames.append(wmsLayer.getId()+",");
+                for(String layerName : featureInfo.featureIds){
+                    layerNames.append(layerName+",");
                 }
                 if(layerNames.length() > 0) {
                     // Remove the final comma

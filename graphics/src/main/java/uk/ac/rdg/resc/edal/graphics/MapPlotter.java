@@ -372,8 +372,11 @@ public class MapPlotter {
             GridCell2D containingCell = targetDomain.findContainingCell(hPos);
             if(containingCell == null)
                 continue;
-            coords.add(containingCell.getGridCoordinates());
-            values.add((Number) evaluator.evaluate(hPos));
+            Number valueObject = (Number) evaluator.evaluate(hPos);
+            if(valueObject != null && !Float.isNaN(valueObject.floatValue())){
+                coords.add(containingCell.getGridCoordinates());
+                values.add(valueObject);
+            }
         }
         frame.addMultipointData(values, coords, plotStyle);
     }
