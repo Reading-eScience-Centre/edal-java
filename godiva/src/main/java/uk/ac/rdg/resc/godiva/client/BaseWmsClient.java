@@ -19,8 +19,8 @@ import uk.ac.rdg.resc.godiva.client.requests.LayerRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.LayerRequestCallback;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestCallback;
+import uk.ac.rdg.resc.godiva.client.state.GodivaStateInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
-import uk.ac.rdg.resc.godiva.client.widgets.GodivaStateInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 
 import com.google.gwt.core.client.EntryPoint;
@@ -34,16 +34,16 @@ import com.google.gwt.http.client.URL;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
- * Still TODO:
+ * A class to handle the common operations needed in an EDAL wms client.
  * 
- * Make wms URL configurable
+ * This is not dependent on there being only a single WMS layer viewable at a
+ * time - i.e. each WMS layer can have associated with it an entire set of
+ * widgets, in the form of a {@link GodivaStateInfo} object. For a subclass
+ * which uses this to implement a single WMS layer client, see {@link Godiva}
  * 
  * @author Guy Griffiths
  * 
@@ -98,8 +98,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * Set the path for OpenLayers images. This means that we can package
          * them with this GWT source code, keeping everything nicely separated
          */
-        setImagePath(GWT.getModuleBaseURL()+"/js/img/");
-        
+        setImagePath(GWT.getModuleBaseURL() + "/js/img/");
+
         /*
          * The location of the config servlet is hard-coded. If it is not found,
          * we use some default options
@@ -144,14 +144,24 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                 initWithDefaults();
             }
         });
-        
+
         try {
             getConfig.send();
         } catch (RequestException e) {
             initWithDefaults();
         }
     }
- 
+
+    /**
+     * Uses native Javascript to set the image path for OpenLayers
+     * 
+     * @param imagepath
+     *            The path where OpenLayers images are stored
+     */
+    private static native void setImagePath(String imagepath)/*-{
+		$wnd.OpenLayers.ImgPath = imagepath;
+    }-*/;
+
     /**
      * This is called after all other parameters have been received from a
      * config servlet, and subclasses can use it to handle custom configuration
@@ -165,17 +175,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * can be overridden to handle them
          */
     }
-
-    /**
-     * Uses native Javascript to set the image path for OpenLayers
-     * 
-     * @param imagepath
-     *            The path where OpenLayers images are stored
-     */
-    private static native void setImagePath(String imagepath)/*-{
-        $wnd.OpenLayers.ImgPath = imagepath;
-    }-*/;
-
 
     /**
      * Initializes the WMS client with some default settings.
@@ -212,7 +211,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * if they like
          */
         OpenLayers.setProxyHost(proxyUrl);
-        
+
         /*
          * Now request the menu from the ncWMS server
          */
@@ -268,19 +267,22 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
 
     /**
      * Request details about a particular layer. Once loaded, layerDetailsLoaded
-     * will be called
+     * will be called.
      * 
+     * @param wmsUrl
+     *            the base URL of the WMS server containing the layer details
      * @param layerId
      *            the ID of the layer whose details are desired
      * @param currentTime
-     *            the time we want to know the closest time to. Can be null
+     *            the time we want to know the closest available time to. Can be
+     *            null
      * @param autoZoomAndPalette
      *            true if we want to zoom to extents and possibly auto-adjust
-     *            palette. Note that this will only auto-adjust the palette if
-     *            the conditions are right
+     *            palette once the details have been loaded. Note that this will
+     *            only auto-adjust the palette if the conditions are right
      */
-    protected void requestLayerDetails(final String wmsUrl, final String layerId, String currentTime,
-            final boolean autoZoomAndPalette) {
+    protected void requestLayerDetails(final String wmsUrl, final String layerId,
+            String currentTime, final boolean autoZoomAndPalette) {
         if (layerId == null) {
             /*
              * We have no variables defined in the selected layer
@@ -297,8 +299,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         dateTimeDetailsLoaded = false;
         minMaxDetailsLoaded = false;
 
-        final LayerRequestBuilder getLayerDetailsRequest = new LayerRequestBuilder(layerId, proxyUrl
-                + wmsUrl, currentTime);
+        final LayerRequestBuilder getLayerDetailsRequest = new LayerRequestBuilder(layerId,
+                proxyUrl + wmsUrl, currentTime);
 
         getLayerDetailsRequest.setCallback(new LayerRequestCallback(layerId, this) {
             @Override
@@ -309,10 +311,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         throw new ConnectionException("Error contacting server");
                     }
                     /*
-                     * Call a subclass method to deal with the layer details.
-                     * This will normally make a call to populateWidgets, and
-                     * may create extra widgets if needed (e.g. for multi-layer
-                     * clients)
+                     * This will make a call to populateWidgets, and may create
+                     * extra widgets if needed (e.g. for multi-layer clients)
                      */
                     layerDetailsLoaded(getLayerDetails(), autoZoomAndPalette);
 
@@ -335,27 +335,49 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         minMaxDetailsLoaded = true;
                     }
                     layerDetailsLoaded = true;
+                    /*
+                     * Once we have done everything else we update the map. Note
+                     * that this will only actually update the map if all three
+                     * flags (layerDetailsLoaded, minMaxDetailsLoaded, and
+                     * dateTimeDetailsLoaded) are set to true.
+                     */
                     updateMapBase(layerId);
                 } catch (Exception e) {
                     invalidJson(e, getLayerDetailsRequest.getUrl());
                 } finally {
+                    /*
+                     * Indicate that we have finished this loading operation
+                     */
                     setLoading(false);
                 }
             }
 
             @Override
             public void onError(Request request, Throwable e) {
+                /*
+                 * We have an error. We set the state variables correctly and
+                 * update the map, then handle the error that occurred
+                 */
                 setLoading(false);
                 layerDetailsLoaded = true;
+                minMaxDetailsLoaded = true;
                 updateMapBase(layerId);
                 handleError(e);
             }
         });
 
         try {
+            /*
+             * Register that we are loading something, then send the request
+             */
             setLoading(true);
             getLayerDetailsRequest.send();
         } catch (RequestException e) {
+            /*
+             * If this fails, set the loading state
+             */
+            setLoading(false);
+            layerDetailsLoaded = true;
             handleError(e);
         }
     }
@@ -367,54 +389,63 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * 
      * @param layerId
      *            the ID of the layer to request the scale range for
-     * @param elevation
-     *            the elevation
-     * @param time
-     *            the time
      * @param force
      *            whether to perform even if a scale has been set on the server
      */
     protected void maybeRequestAutoRange(final String layerId, boolean force) {
         GodivaStateInfo widgetCollection = getWidgetCollection(layerId);
-        if(!widgetCollection.getPaletteSelector().isEnabled()){
-            /*
-             * If the palette is disabled, we don't want to get an auto-range
-             */
+
+        /*
+         * If the palette is disabled, we don't want to get an auto-range
+         */
+        if (!widgetCollection.getPaletteSelector().isEnabled()) {
             minMaxDetailsLoaded = true;
             return;
         }
-        
-        minMaxDetailsLoaded = false;
-        
+
         /*
          * If we have default values for the scale range or force=true, then
-         * continue with the request, otherwise return
+         * continue with the request, otherwise return.
+         * 
+         * Note that the current default scale range is [-50, 50]. This should
+         * probably be signalled in a more appropriate manner
          */
-        String[] scaleRangeSplit = widgetCollection.getPaletteSelector()
-                .getScaleRange().split(",");
-        if (!force && (Double.parseDouble(scaleRangeSplit[0]) != -50 || Double
+        String[] scaleRangeSplit = widgetCollection.getPaletteSelector().getScaleRange().split(",");
+        if (!force
+                && (Double.parseDouble(scaleRangeSplit[0]) != -50 || Double
                         .parseDouble(scaleRangeSplit[1]) != 50)) {
             minMaxDetailsLoaded = true;
             return;
         }
 
+        minMaxDetailsLoaded = false;
+
         Map<String, String> parameters = new HashMap<String, String>();
+        /*
+         * We are making a general GetMetadata request, so we need to set the
+         * item to "minmax"
+         */
+        parameters.put("item", "minmax");
+        parameters.put("layers", layerId);
         /*
          * We use 1.1.1 here, because if getMap().getProjection() returns
          * EPSG:4326, getMap().getExtent().toBBox(4) will still return in
          * lon-lat order
          */
-        parameters.put("item", "minmax");
-        parameters.put("layers", layerId);
-        parameters.put("srs", mapArea.getMap().getProjection());
-        
+        parameters.put("version", "1.1.1");
+        parameters.put("bbox", mapArea.getMap().getExtent().toBBox(4));
         /*
          * We put crs as well as srs, because some older versions of THREDDS
          * seem to still want "CRS" even with 1.1.1...
          */
+        parameters.put("srs", mapArea.getMap().getProjection());
         parameters.put("crs", mapArea.getMap().getProjection());
-        
+
         if (widgetCollection.getTimeSelector().isContinuous()) {
+            /*
+             * Continuous time ranges need both a "time" (a range) and a
+             * "colorby/time" (single value) from the time selector
+             */
             if (widgetCollection.getTimeSelector().getSelectedDateTime() != null) {
                 parameters.put("colorby/time", widgetCollection.getTimeSelector()
                         .getSelectedDateTime());
@@ -424,12 +455,19 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         .getSelectedDateTimeRange());
             }
         } else {
+            /*
+             * Discrete time ranges just need a single time
+             */
             if (widgetCollection.getTimeSelector().getSelectedDateTime() != null) {
                 parameters.put("time", widgetCollection.getTimeSelector().getSelectedDateTime());
             }
         }
 
         if (widgetCollection.getElevationSelector().isContinuous()) {
+            /*
+             * Continuous depth ranges need both an "elevation" (a range) and a
+             * "colorby/depth" (single value) from the elevation selector
+             */
             if (widgetCollection.getElevationSelector().getSelectedElevation() != null) {
                 parameters.put("colorby/depth", widgetCollection.getElevationSelector()
                         .getSelectedElevation());
@@ -439,76 +477,246 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         .getSelectedElevationRange());
             }
         } else {
+            /*
+             * Discrete elevation ranges just need a single elevation
+             */
             if (widgetCollection.getElevationSelector().getSelectedElevation() != null) {
                 parameters.put("elevation", widgetCollection.getElevationSelector()
                         .getSelectedElevation());
             }
         }
+        /*
+         * We just request a 100x100 pixel subsample of the data for getting the
+         * auto-range. The bigger this grid, the more accurate the result, but
+         * the longer it will take.
+         * 
+         * Note that for in-situ datasets, this size is irrelevant, since
+         * reprojection of data will never subsample it.
+         */
         parameters.put("height", "100");
         parameters.put("width", "100");
-        parameters.put("version", "1.1.1");
-        parameters.put("bbox", mapArea.getMap().getExtent().toBBox(4));
         if (nearestTime != null) {
             parameters.put("time", nearestTime);
         }
 
-        final RequestBuilder getMinMaxRequest = new RequestBuilder(RequestBuilder.GET, getWmsRequestUrl(
-                widgetCollection.getWmsUrlProvider().getWmsUrl(), "GetMetadata", parameters));
+        /*
+         * Assemble the mix-max request
+         */
+        final RequestBuilder getMinMaxRequest = new RequestBuilder(RequestBuilder.GET,
+                getWmsRequestUrl(widgetCollection.getWmsUrlProvider().getWmsUrl(), "GetMetadata",
+                        parameters));
         getMinMaxRequest.setCallback(new RequestCallback() {
             @Override
             public void onResponseReceived(Request req, Response response) {
-                if (response.getText() != null && !response.getText().isEmpty()) {
-                    try {
+                /*
+                 * Extract the min and max values from the JSON, handling any
+                 * errors
+                 */
+                try {
+                    if (response.getText() != null && !response.getText().isEmpty()) {
                         JSONValue jsonMap = JSONParser.parseLenient(response.getText());
                         JSONObject parentObj = jsonMap.isObject();
                         double min = parentObj.get("min").isNumber().doubleValue();
                         double max = parentObj.get("max").isNumber().doubleValue();
+                        /*
+                         * Call the rangeLoaded method. All this does it set the
+                         * range on the appropriate widget, but subclasses may
+                         * want to add additional behaviour, so it is a separate
+                         * method
+                         */
                         rangeLoaded(layerId, min, max);
-                    } catch (Exception e) {
-                        invalidJson(e, getMinMaxRequest.getUrl());
                     }
+                } catch (Exception e) {
+                    invalidJson(e, getMinMaxRequest.getUrl());
+                } finally {
+                    /*
+                     * Set the state correctly and update the map, regardless of
+                     * whether we succeeded or failed
+                     */
+                    minMaxDetailsLoaded = true;
+                    updateMapBase(layerId);
+                    setLoading(false);
                 }
-                minMaxDetailsLoaded = true;
-                updateMapBase(layerId);
-                setLoading(false);
             }
 
             @Override
             public void onError(Request request, Throwable exception) {
-                // We have failed, but we still want to update the map
+                /*
+                 * Set the state correctly and update the map, regardless of
+                 * whether we succeeded or failed
+                 */
                 setLoading(false);
                 minMaxDetailsLoaded = true;
                 updateMapBase(layerId);
                 handleError(exception);
             }
         });
+        setLoading(true);
         try {
-            setLoading(true);
             getMinMaxRequest.send();
         } catch (RequestException e) {
+            setLoading(false);
+            minMaxDetailsLoaded = true;
+            updateMapBase(layerId);
             handleError(e);
         }
     }
 
-    @Override
-    public void setLoading(boolean loading) {
-        if (loading) {
-            loadingCount++;
-            if (loadingCount == 1) {
-                loadingStarted();
+    /**
+     * This is called when an auto scale range has been loaded. It can be
+     * assumed that by this point we want to update the scale.
+     * 
+     * @param layerId
+     *            the layer for which the scale range has been loaded
+     * @param min
+     *            the minimum scale value
+     * @param max
+     *            the maximum scale value
+     */
+    protected void rangeLoaded(String layerId, double min, double max) {
+        getWidgetCollection(layerId).getPaletteSelector().setScaleRange(min + "," + max, null);
+    }
+
+    /**
+     * This is called once a layer's details have been loaded. By default this
+     * will just populate the widgets associated with this layer, but subclasses
+     * may want to override this method to implement custom behaviour
+     * before/after populating the widgets
+     * 
+     * @param layerDetails
+     *            the details received from the server
+     * @param autoUpdate
+     *            whether or not we want to auto update palette and zoom
+     */
+    protected void layerDetailsLoaded(LayerDetails layerDetails, boolean autoUpdate) {
+        /*
+         * We want to populate the widgets associated with this layer. Any other
+         * actions which are needed should be implemented by the subclass
+         */
+        populateWidgets(layerDetails);
+    }
+
+    /**
+     * Populates the set of widgets associated with this layer. The ID of the
+     * layer is taken from the {@link LayerDetails} and the associated widgets
+     * are retrieved and populated
+     * 
+     * @param layerDetails
+     *            a {@link LayerDetails} object containing the layer details.
+     *            This gets returned when layer details are loaded
+     */
+    protected void populateWidgets(LayerDetails layerDetails) {
+        if (layerDetails == null) {
+            handleError(new NullPointerException("Null layer details"));
+        }
+
+        GodivaStateInfo widgetCollection = getWidgetCollection(layerDetails.getId());
+
+        if (widgetCollection == null) {
+            handleError(new NullPointerException("Null widget collection"));
+        }
+
+        /*
+         * GodivaStateInfo.get*() cannot return null, so all
+         * widgetCollection.get* methods are NullPointerException safe
+         */
+
+        /*
+         * Set the layer ID for the widgets that need it
+         */
+        widgetCollection.getElevationSelector().setId(layerDetails.getId());
+        widgetCollection.getTimeSelector().setId(layerDetails.getId());
+        widgetCollection.getPaletteSelector().setId(layerDetails.getId());
+
+        /*
+         * Set some static information
+         */
+        widgetCollection.getUnitsInfo().setUnits(layerDetails.getUnits());
+        widgetCollection.getCopyrightInfo().setCopyrightInfo(layerDetails.getCopyright());
+        widgetCollection.getMoreInfo().setInfo(layerDetails.getMoreInfo());
+        widgetCollection.getElevationSelector().setUnitsAndDirection(layerDetails.getZUnits(),
+                layerDetails.isZPositive());
+
+        /*
+         * Populate the palette options
+         */
+        widgetCollection.getPaletteSelector().populatePalettes(layerDetails.getAvailablePalettes());
+        widgetCollection.getPaletteSelector().populateStyles(layerDetails.getSupportedStyles());
+        if (!widgetCollection.getPaletteSelector().isLocked()) {
+            widgetCollection.getPaletteSelector().setScaleRange(layerDetails.getScaleRange(),
+                    layerDetails.isLogScale());
+            widgetCollection.getPaletteSelector().setNumColorBands(layerDetails.getNumColorBands());
+        }
+
+        /*
+         * Set things dependent on whether we have a multi-feature layer (i.e.
+         * one with continuous depth/time axes which can show data from multiple
+         * features. This usually corresponds to in-situ data, but not
+         * necessarily)
+         */
+        widgetCollection.getTimeSelector().setContinuous(layerDetails.isMultiFeature());
+        widgetCollection.getElevationSelector().setContinuous(layerDetails.isMultiFeature());
+        mapArea.setMultiFeature(layerDetails.isMultiFeature());
+
+        if (layerDetails.isMultiFeature()) {
+            /*
+             * Set all options which depend on this being a multi-feature layer
+             */
+            if (layerDetails.getStartTime().equals(layerDetails.getEndTime())) {
+                widgetCollection.getTimeSelector().populateDates(null);
+            } else {
+                List<String> startEndDates = new ArrayList<String>();
+                startEndDates.add(layerDetails.getStartTime());
+                startEndDates.add(layerDetails.getEndTime());
+                widgetCollection.getTimeSelector().populateDates(startEndDates);
+            }
+
+            if (layerDetails.getStartZ().equals(layerDetails.getEndZ())) {
+                widgetCollection.getElevationSelector().populateElevations(null);
+            } else {
+                List<String> startEndZs = new ArrayList<String>();
+                startEndZs.add(layerDetails.getStartZ());
+                startEndZs.add(layerDetails.getEndZ());
+                widgetCollection.getElevationSelector().populateElevations(startEndZs);
+            }
+            if (layerDetails.getNearestDateTime() != null) {
+                widgetCollection.getTimeSelector()
+                        .selectDateTime(layerDetails.getNearestDateTime());
             }
         } else {
-            loadingCount--;
-            if (loadingCount == 0) {
-                loadingFinished();
+            /*
+             * Set all options which depend on this being a single-feature layer
+             */
+            widgetCollection.getTimeSelector().populateDates(layerDetails.getAvailableDates());
+            widgetCollection.getElevationSelector().populateElevations(
+                    layerDetails.getAvailableZs());
+            if (layerDetails.getNearestDateTime() != null) {
+                nearestTime = layerDetails.getNearestDateTime();
+                widgetCollection.getTimeSelector().selectDate(layerDetails.getNearestDate());
             }
         }
     }
 
     /**
-     * Handles the case where invalid data is sent back from the server
+     * Checks that all the required details are loaded (or do not need to be)
+     * before calling the subclass method
+     */
+    private void updateMapBase(String layerUpdated) {
+        if (layerDetailsLoaded && dateTimeDetailsLoaded && minMaxDetailsLoaded) {
+            updateMap(mapArea, layerUpdated);
+        }
+    }
+
+    /**
+     * Handles the case where we are unable to parse JSON data returned from the
+     * server, or where non-JSON data is returned when we expected JSON data.
+     * This covers a number of situations and so needs to be quite a general
+     * method.
      * 
      * @param e
+     *            The exception which was caught
+     * @param url
+     *            The URL which caused the exception
      */
     protected void invalidJson(Exception e, String url) {
         e.printStackTrace();
@@ -527,122 +735,19 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         popup.center();
     }
 
-    /**
-     * Handles general exceptions.
+    /*
+     * Methods which are part of the interfaces we implement
      */
-    @Override
-    public void handleError(Throwable e) {
-        /*
-         * TODO Handle these better?
-         */
-        e.printStackTrace();
-    }
 
-    /**
-     * Handles an error which is catastrophic.
-     * 
-     * @param message
-     *            the message to display to the user
+    /*
+     * Methods from LayerSelectionHandler
      */
-    protected void handleCatastrophicError(String message) {
-        /*
-         * TODO combine error handling a little better
-         */
-        HTML errorMessage = new HTML();
-        Window.setTitle("Unrecoverable Error");
-        errorMessage.setHTML(message);
-        RootLayoutPanel mainWindow = RootLayoutPanel.get();
-        for (int i = 0; i < mainWindow.getWidgetCount(); i++) {
-            mainWindow.remove(0);
-        }
-        mainWindow.add(errorMessage);
-    }
-
-    /**
-     * Populates a set of widgets. {@link GodivaStateInfo} contains all widgets
-     * necessary for setting all server options (TODO what about style?).
-     * 
-     * @param layerDetails
-     *            a {@link LayerDetails} object containing the layer details.
-     *            This gets returned when layer details are loaded
-     * @param widgetCollection
-     *            a collection of widgets to populated.
-     */
-    protected void populateWidgets(LayerDetails layerDetails, GodivaStateInfo widgetCollection) {
-        // TODO Deal with null cases
-        widgetCollection.getElevationSelector().setId(layerDetails.getId());
-        widgetCollection.getTimeSelector().setId(layerDetails.getId());
-        widgetCollection.getPaletteSelector().setId(layerDetails.getId());
-
-        widgetCollection.getUnitsInfo().setUnits(layerDetails.getUnits());
-        widgetCollection.getCopyrightInfo().setCopyrightInfo(layerDetails.getCopyright());
-        widgetCollection.getMoreInfo().setInfo(layerDetails.getMoreInfo());
-
-        widgetCollection.getPaletteSelector().populatePalettes(layerDetails.getAvailablePalettes());
-        widgetCollection.getPaletteSelector().populateStyles(layerDetails.getSupportedStyles());
-
-        widgetCollection.getTimeSelector().setContinuous(layerDetails.isMultiFeature());
-        widgetCollection.getElevationSelector().setContinuous(layerDetails.isMultiFeature());
-        
-        mapArea.setMultiFeature(layerDetails.isMultiFeature());
-        
-        if(layerDetails.isMultiFeature()){
-            if(layerDetails.getStartTime().equals(layerDetails.getEndTime())){
-                widgetCollection.getTimeSelector().populateDates(null);
-            } else {
-                List<String> startEndDates = new ArrayList<String>();
-                startEndDates.add(layerDetails.getStartTime());
-                startEndDates.add(layerDetails.getEndTime());
-                widgetCollection.getTimeSelector().populateDates(startEndDates);
-            }
-            
-            if(layerDetails.getStartZ().equals(layerDetails.getEndZ())){
-                widgetCollection.getElevationSelector().populateElevations(null);
-            } else {
-                List<String> startEndZs = new ArrayList<String>();
-                startEndZs.add(layerDetails.getStartZ());
-                startEndZs.add(layerDetails.getEndZ());
-                widgetCollection.getElevationSelector().populateElevations(startEndZs);
-            }
-            if (layerDetails.getNearestDateTime() != null) {
-                widgetCollection.getTimeSelector().selectDateTime(layerDetails.getNearestDateTime());
-            }
-        } else {
-            widgetCollection.getTimeSelector().populateDates(layerDetails.getAvailableDates());
-            widgetCollection.getElevationSelector().populateElevations(layerDetails.getAvailableZs());
-            if (layerDetails.getNearestDateTime() != null) {
-                nearestTime = layerDetails.getNearestDateTime();
-                widgetCollection.getTimeSelector().selectDate(layerDetails.getNearestDate());
-            }
-        }
-        /*
-         * This is independent of whether we have multiple features
-         */
-        widgetCollection.getElevationSelector().setUnitsAndDirection(layerDetails.getZUnits(),
-                layerDetails.isZPositive());
-
-        if (!widgetCollection.getPaletteSelector().isLocked()) {
-            widgetCollection.getPaletteSelector().setScaleRange(layerDetails.getScaleRange(), layerDetails.isLogScale());
-            widgetCollection.getPaletteSelector().setNumColorBands(layerDetails.getNumColorBands());
-        }
-    }
-
-    /**
-     * Performs tasks common to each map update, then calls the subclass method
-     */
-    private void updateMapBase(String layerUpdated) {
-        if (layerDetailsLoaded && dateTimeDetailsLoaded && minMaxDetailsLoaded) {
-            updateMap(mapArea, layerUpdated);
-        }
-    }
 
     @Override
     public void layerSelected(String wmsUrl, String layerId, boolean autoZoomAndPalette) {
         requestLayerDetails(wmsUrl, layerId, getCurrentTime(), autoZoomAndPalette);
         updateMapBase(layerId);
     }
-
-    public abstract String getCurrentTime();
 
     @Override
     public void layerDeselected(String layerId) {
@@ -654,10 +759,18 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         requestAndPopulateMenu();
     }
 
+    /*
+     * From ElevationSelectionHandler
+     */
+
     @Override
     public void elevationSelected(String layerId, String elevation) {
         updateMapBase(layerId);
     }
+
+    /*
+     * From PaletteSelectionHandler
+     */
 
     @Override
     public void paletteChanged(String layerId, String paletteName, String style, int nColorBands) {
@@ -679,6 +792,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         maybeRequestAutoRange(layerId, true);
     }
 
+    
+    /*
+     * Methods from TimeDateSelectionHandler
+     */
+    
     @Override
     public void dateSelected(final String layerId, String selectedDate) {
         if (selectedDate == null) {
@@ -687,8 +805,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             return;
         }
         dateTimeDetailsLoaded = false;
-        final TimeRequestBuilder getTimeRequest = new TimeRequestBuilder(layerId, selectedDate, proxyUrl
-                + getWidgetCollection(layerId).getWmsUrlProvider().getWmsUrl());
+        final TimeRequestBuilder getTimeRequest = new TimeRequestBuilder(layerId, selectedDate,
+                proxyUrl + getWidgetCollection(layerId).getWmsUrlProvider().getWmsUrl());
         getTimeRequest.setCallback(new TimeRequestCallback() {
             @Override
             public void onResponseReceived(Request request, Response response) {
@@ -698,7 +816,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         throw new ConnectionException("Error contacting server");
                     }
                     availableTimesLoaded(layerId, getAvailableTimesteps(), nearestTime);
-                    timeSelected(layerId, getWidgetCollection(layerId).getTimeSelector()
+                    datetimeSelected(layerId, getWidgetCollection(layerId).getTimeSelector()
                             .getSelectedDateTime());
                     dateTimeDetailsLoaded = true;
                     updateMapBase(layerId);
@@ -727,12 +845,35 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     }
 
     @Override
-    public void timeSelected(String layerId, String selectedTime) {
+    public void datetimeSelected(String layerId, String selectedTime) {
         dateTimeDetailsLoaded = true;
         nearestTime = null;
         updateMapBase(layerId);
     }
 
+    /*
+     * Methods from GodivaActionsHandler (others are delegated to subclasses)
+     */
+
+    @Override
+    public void setLoading(boolean loading) {
+        /*
+         * Adjust the loading count, and call the loadingStarted() or
+         * loadingFinished() methods as appropriate
+         */
+        if (loading) {
+            loadingCount++;
+            if (loadingCount == 1) {
+                loadingStarted();
+            }
+        } else {
+            loadingCount--;
+            if (loadingCount == 0) {
+                loadingFinished();
+            }
+        }
+    }
+    
     @Override
     public void onMapMove(MapMoveEvent eventObject) {
         /*
@@ -753,14 +894,39 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          */
     }
 
-    public abstract void updateMap(MapArea mapArea, String layerUpdated);
+
+    /*
+     * Method from ErrorHandler
+     */
+
+    @Override
+    public void handleError(Throwable e) {
+        /*
+         * This is not ideal, but there is little we can do about some of these
+         * exceptions. This at least logs the error for debugging.
+         */
+        e.printStackTrace();
+    }
+
+    /*
+     * Abstract methods to be implemented by a subclass
+     */
 
     /**
      * This gets called once the page has loaded. Subclasses should use for
      * initializing any widgets, and setting the layout. If this is not
      * implemented, a blank page will be displayed
      */
-    public abstract void init();
+    protected abstract void init();
+
+    /**
+     * Gets the {@link GodivaStateInfo} for the specified layer
+     * 
+     * @param layerId
+     *            The WMS layer ID
+     * @return The state information, usually in the form of widgets
+     */
+    protected abstract GodivaStateInfo getWidgetCollection(String layerId);
 
     /**
      * This is called at initialisation, and is used to populate the layer
@@ -768,16 +934,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * then populate the appropriate widget(s)
      */
     protected abstract void requestAndPopulateMenu();
-
-    /**
-     * This is called once a layer's details have been loaded
-     * 
-     * @param layerDetails
-     *            the details received from the server
-     * @param autoUpdate
-     *            whether or not we want to auto update palette and zoom
-     */
-    public abstract void layerDetailsLoaded(LayerDetails layerDetails, boolean autoUpdate);
 
     /**
      * This is called once a list of available times has been loaded
@@ -789,38 +945,39 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * @param nearestTime
      *            the nearest time to the current time (for e.g. auto selection)
      */
-    public abstract void availableTimesLoaded(String layerId, List<String> availableTimes,
+    protected abstract void availableTimesLoaded(String layerId, List<String> availableTimes,
             String nearestTime);
 
     /**
-     * This is called when an auto scale range has been loaded. It can be
-     * assumed that by this point we want to update the scale
+     * This is where the map should be updated. It gets called when all details
+     * have been loaded and we actually want to update the map. Clients should
+     * handle this in the appropriate way, which will almost certainly involve a
+     * call to mapArea.addLayer(...)
      * 
-     * @param layerId
-     *            the layer for which the scale range has been loaded
-     * @param min
-     *            the minimum scale value
-     * @param max
-     *            the maximum scale value
+     * @param mapArea
+     *            The map area which can be updated
+     * @param layerUpdated
+     *            The ID of the layer which we are viewing
      */
-    public abstract void rangeLoaded(String layerId, double min, double max);
+    protected abstract void updateMap(MapArea mapArea, String layerUpdated);
 
     /**
      * This is called when a loading process starts
      */
-    public abstract void loadingStarted();
+    protected abstract void loadingStarted();
 
     /**
      * This is called when all loading processes have finished
      */
-    public abstract void loadingFinished();
+    protected abstract void loadingFinished();
 
     /**
-     * Gets the {@link GodivaStateInfo} for the specified layer
+     * Returns the "current" time. The definition of current may depend on
+     * exactly what the client does. This is the time used when requesting layer
+     * details from the server - i.e. the time to which the "nearestTime" will
+     * refer
      * 
-     * @param layerId
-     *            the layer ID
-     * @return
+     * @return A string representation of the current time
      */
-    public abstract GodivaStateInfo getWidgetCollection(String layerId);
+    protected abstract String getCurrentTime();
 }

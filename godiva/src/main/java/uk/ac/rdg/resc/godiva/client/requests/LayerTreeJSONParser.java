@@ -6,6 +6,12 @@ import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONValue;
 
+/**
+ * Parses a menu from JSON into a top-level {@link LayerMenuItem}
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class LayerTreeJSONParser {
 
     public static LayerMenuItem getTreeFromJson(String wmsUrl, JSONObject json) {

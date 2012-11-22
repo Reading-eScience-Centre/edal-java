@@ -2,6 +2,14 @@ package uk.ac.rdg.resc.godiva.client.requests;
 
 import java.util.List;
 
+/**
+ * Encapsulates the details which can get returned by the
+ * GetMetadata&item=layerDetails method. This is what will be passed to a
+ * {@link LayerRequestCallback}
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class LayerDetails {
     private final String id;
     

@@ -2,7 +2,10 @@ package uk.ac.rdg.resc.godiva.client.widgets;
 
 import java.util.List;
 
+import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.PaletteSelectionHandler;
+import uk.ac.rdg.resc.godiva.client.state.LayerSelectorIF;
+import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
@@ -30,6 +33,13 @@ import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+/**
+ * Implementation of {@link PaletteSelectorIF} which can be either horizontally
+ * or verticall oriented, and contains controls for setting all palette variables
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class PaletteSelector implements PaletteSelectorIF {
 	private TextBox minScale;
 	private TextBox maxScale;
@@ -57,7 +67,6 @@ public class PaletteSelector implements PaletteSelectorIF {
 	
 	private Image paletteImage;
 	private LayerSelectorIF wmsUrlProvider;
-	private OpacityReceiverIF opacitySelector;
 	private final PaletteSelectionHandler paletteHandler;
 	
 	private DialogBoxWithCloseButton popup;
@@ -67,23 +76,35 @@ public class PaletteSelector implements PaletteSelectorIF {
 	
 	private String wmsLayerId;
 	
-	/**
-	 * 
-	 * @param wmsLayerId
-	 * @param height
-	 *         The height of the image part of the palette
-	 * @param width
-	 *         The width of the image part of the palette
-	 * @param handler
-	 * @param baseUrl
-	 * @param vertical
-	 */
+    /**
+     * Instantiates a new {@link PaletteSelector}
+     * 
+     * @param wmsLayerId
+     *            The ID of the WMS layer
+     * @param height
+     *            The height of the palette image
+     * @param width
+     *            The width of the palette image
+     * @param handler
+     *            The {@link PaletteSelectionHandler} to handle palette events
+     * @param wmsUrlProvider
+     *            A {@link LayerSelectorIF} which can be used to obtain the WMS
+     *            URL for the current WMS layer
+     * @param opacitySelector
+     *            The {@link OpacitySelectionHandler} used for when the opacity
+     *            changes
+     * @param localCentre
+     *            A {@link CentrePosIF} to define the local centre (usually over
+     *            the centre of the map)
+     * @param vertical
+     *            <code>true</code> if this palette selector should be
+     *            vertically aligned
+     */
     public PaletteSelector(String wmsLayerId, int height, int width, final PaletteSelectionHandler handler,
-            LayerSelectorIF wmsUrlProvider, OpacityReceiverIF opacitySelector, final CentrePosIF localCentre, boolean vertical) {
+            LayerSelectorIF wmsUrlProvider, final CentrePosIF localCentre, boolean vertical) {
         
         this.wmsLayerId = wmsLayerId;
 		this.wmsUrlProvider = wmsUrlProvider;
-		this.opacitySelector = opacitySelector;
 		this.height = height;
 		this.width = width;
 		this.paletteHandler = handler;
@@ -144,7 +165,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         opacity.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                PaletteSelector.this.opacitySelector.setOpacity(PaletteSelector.this.wmsLayerId,
+                PaletteSelector.this.paletteHandler.setOpacity(PaletteSelector.this.wmsLayerId,
                         getOpacity());
             }
         });
@@ -209,6 +230,9 @@ public class PaletteSelector implements PaletteSelectorIF {
 		}
 	}
 	
+    /*
+     * Sets up the layout for a vertical palette
+     */
 	private void initVertical(){
         mainPanel = new HorizontalPanel();
 
@@ -255,6 +279,9 @@ public class PaletteSelector implements PaletteSelectorIF {
         mainPanel.add(vp);
 	}
 	
+	/*
+	 * Sets the layout for a horizontal palette
+	 */
 	private void initHorizontal(){
 	    mainPanel = new VerticalPanel();
 	    
@@ -293,6 +320,9 @@ public class PaletteSelector implements PaletteSelectorIF {
 	    mainPanel.add(hp);
 	}
 	
+	/*
+	 * Pops up a selector with images for each palette which can be selected
+	 */
 	private void popupPaletteSelector(CentrePosIF localCentre) {
 	    if(popup == null){
 	        popup = new DialogBoxWithCloseButton(localCentre);
@@ -329,6 +359,9 @@ public class PaletteSelector implements PaletteSelectorIF {
         popup.center();
     }
 	
+	/*
+	 * Gets the palette images and displays them in the palettesPanel
+	 */
 	private void populatePaletteSelector() {
 	    if(palettesPanel == null){
 	        palettesPanel = new HorizontalPanel();
@@ -350,6 +383,9 @@ public class PaletteSelector implements PaletteSelectorIF {
 	    }
     }
 
+	/*
+	 * Gets the URL for the palette image
+	 */
     private String getImageUrl(String paletteName, int height, int width){
 	    String url = "?request=GetLegendGraphic"
 	        +"&height="+height

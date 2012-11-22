@@ -9,14 +9,20 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
+/**
+ * A popup error box which displays a custom message
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class ErrorBox extends DialogBox {
-    
-    public static void popupErrorMessage(String message){
+
+    public static void popupErrorMessage(String message) {
         ErrorBox errorBox = new ErrorBox(message);
         errorBox.center();
     }
-    
-    private ErrorBox(String message){
+
+    private ErrorBox(String message) {
         super();
         setText("Error");
         VerticalPanel panel = new VerticalPanel();

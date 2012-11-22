@@ -1,9 +1,19 @@
 package uk.ac.rdg.resc.godiva.client.widgets;
 
+import uk.ac.rdg.resc.godiva.client.state.CopyrightInfoIF;
+
 import com.google.gwt.user.client.ui.Label;
 
+/**
+ * Implementation of {@link CopyrightInfoIF} which just displays the information
+ * as a {@link Label}
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class CopyrightInfo extends BaseSelector implements CopyrightInfoIF {
     private Label copyright;
+
     public CopyrightInfo() {
         super("Copyright");
         copyright = new Label();
@@ -12,17 +22,17 @@ public class CopyrightInfo extends BaseSelector implements CopyrightInfoIF {
         label.setTitle("Information about the copyright of this dataset");
         add(copyright);
     }
-    
+
     @Override
-    public void setCopyrightInfo(String copyright){
+    public void setCopyrightInfo(String copyright) {
         this.copyright.setText(copyright);
         this.copyright.setTitle("Copyright information about the current dataset");
         setEnabled(true);
     }
-    
+
     @Override
-    public void setEnabled(boolean enabled){
-        if(enabled){
+    public void setEnabled(boolean enabled) {
+        if (enabled) {
             copyright.removeStyleDependentName("inactive");
             label.removeStyleDependentName("inactive");
         } else {

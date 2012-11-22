@@ -13,6 +13,12 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 
+/**
+ * Parses the JSON response and exposes the layer details
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public abstract class LayerRequestCallback implements RequestCallback {
 
     private static final NumberFormat format2Digits = NumberFormat.getFormat("00");
@@ -31,8 +37,8 @@ public abstract class LayerRequestCallback implements RequestCallback {
     public void onError(Request request, Throwable exception) {
         err.handleError(exception);
     }
-    
-    public LayerDetails getLayerDetails(){
+
+    public LayerDetails getLayerDetails() {
         return layerDetails;
     }
 
@@ -116,60 +122,56 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 availablePalettes.add(palettesArr.get(i).isString().stringValue());
             }
             layerDetails.setAvailablePalettes(availablePalettes);
-            // TODO Don't select default palette if a Cookie for this
-            // layer exists - get palette from Cookie
             JSONValue defaultPaletteJson = parentObj.get("defaultPalette");
             if (defaultPaletteJson != null) {
                 layerDetails.setSelectedPalette(defaultPaletteJson.isString().stringValue());
             }
         }
-        
+
         // If we have different times, we may (will?) have a nearest
         // time string.
         JSONValue nearestTimeJson = parentObj.get("nearestTimeIso");
         if (nearestTimeJson != null) {
             layerDetails.setNearestTime(nearestTimeJson.isString().stringValue());
-            layerDetails.setNearestDate(nearestTimeJson.isString().stringValue()
-                    .substring(0, 10));
+            layerDetails.setNearestDate(nearestTimeJson.isString().stringValue().substring(0, 10));
         }
-        
+
         boolean multiFeature = false;
         JSONValue multiFeatureJson = parentObj.get("multiFeature");
-        if(multiFeatureJson != null) {
+        if (multiFeatureJson != null) {
             multiFeature = multiFeatureJson.isBoolean().booleanValue();
         }
         layerDetails.setMultiFeature(multiFeature);
-        
-        if(multiFeature){
+
+        if (multiFeature) {
             JSONValue startTimeJson = parentObj.get("startTime");
-            if(startTimeJson != null){
+            if (startTimeJson != null) {
                 layerDetails.setStartTime(startTimeJson.isString().stringValue());
             }
             JSONValue endTimeJson = parentObj.get("endTime");
-            if(endTimeJson != null){
+            if (endTimeJson != null) {
                 layerDetails.setEndTime(endTimeJson.isString().stringValue());
             }
-            
+
             JSONValue startZJson = parentObj.get("startZ");
-            if(startZJson != null){
+            if (startZJson != null) {
                 layerDetails.setStartZ(startZJson.isString().stringValue());
             }
             JSONValue endZJson = parentObj.get("endZ");
-            if(endZJson != null){
+            if (endZJson != null) {
                 layerDetails.setEndZ(endZJson.isString().stringValue());
             }
             JSONValue zUnitsJson = parentObj.get("zUnits");
-            if(zUnitsJson != null){
+            if (zUnitsJson != null) {
                 layerDetails.setZUnits(zUnitsJson.isString().stringValue());
             }
             JSONValue zPositiveJson = parentObj.get("zPositive");
-            if(zPositiveJson != null){
+            if (zPositiveJson != null) {
                 layerDetails.setZPositive(zPositiveJson.isBoolean().booleanValue());
             }
         } else {
             JSONValue datesJson = parentObj.get("datesWithData");
             if (datesJson != null) {
-                // TODO deal with timeAxisUnits (currently assume ISO8601)
                 JSONObject datesObj = datesJson.isObject();
                 List<String> availableDates = new ArrayList<String>();
                 for (String yearString : datesObj.keySet()) {
@@ -181,16 +183,15 @@ public abstract class LayerRequestCallback implements RequestCallback {
                         JSONArray daysArr = yearObj.get(monthString).isArray();
                         for (int iDay = 0; iDay < daysArr.size(); iDay++) {
                             int day = (int) daysArr.get(iDay).isNumber().doubleValue();
-                            availableDates
-                                    .add(format4Digits.format(year) + "-"
-                                            + format2Digits.format(month + 1) + "-"
-                                            + format2Digits.format(day));
+                            availableDates.add(format4Digits.format(year) + "-"
+                                    + format2Digits.format(month + 1) + "-"
+                                    + format2Digits.format(day));
                         }
                     }
                 }
                 layerDetails.setAvailableDates(availableDates);
             }
-            
+
             JSONValue zvalsJson = parentObj.get("zaxis");
             if (zvalsJson != null) {
                 JSONObject zvalsObj = zvalsJson.isObject();

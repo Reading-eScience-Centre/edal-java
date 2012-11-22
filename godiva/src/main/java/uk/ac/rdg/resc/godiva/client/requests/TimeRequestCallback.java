@@ -11,12 +11,20 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 
+/**
+ * Parses the JSON which gives the timesteps for a day, and exposes them
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public abstract class TimeRequestCallback implements RequestCallback {
-    
+
     private List<String> availableTimesteps;
 
+    @Override
     public abstract void onError(Request request, Throwable exception);
 
+    @Override
     public void onResponseReceived(Request request, Response response) {
         JSONValue jsonMap = JSONParser.parseLenient(response.getText());
         JSONObject parentObj = jsonMap.isObject();
@@ -25,7 +33,7 @@ public abstract class TimeRequestCallback implements RequestCallback {
         if (timestepsJson != null) {
             availableTimesteps = new ArrayList<String>();
             JSONArray timestepsArr = timestepsJson.isArray();
-            for(int i=0; i< timestepsArr.size(); i++){
+            for (int i = 0; i < timestepsArr.size(); i++) {
                 availableTimesteps.add(timestepsArr.get(i).isString().stringValue());
             }
         }
