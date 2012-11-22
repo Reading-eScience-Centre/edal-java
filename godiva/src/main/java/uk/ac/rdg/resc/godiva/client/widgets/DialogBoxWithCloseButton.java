@@ -34,10 +34,12 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author L.Pelov
  * 
- * Slight modification to have a hardcoded close image.  Original code from:
- * http://code.google.com/p/wcinteractions/source/browse/trunk/MVP/src/com/mvp/client/ui/widget/DialogBoxExt.java
+ *         Slight modification to have a hardcoded close image. Original code
+ *         from:
+ *         http://code.google.com/p/wcinteractions/source/browse/trunk/MVP/
+ *         src/com/mvp/client/ui/widget/DialogBoxExt.java
  * 
- * Modification to allow custom centring
+ *         Modification to allow custom centring
  * 
  * @author Guy Griffiths
  */
@@ -45,7 +47,7 @@ public class DialogBoxWithCloseButton extends DialogBox {
 
     private CentrePosIF localCentre;
     private HorizontalPanel captionPanel = new HorizontalPanel();
-    
+
     public interface CentrePosIF {
         public ScreenPosition getCentre();
     }
@@ -56,7 +58,7 @@ public class DialogBoxWithCloseButton extends DialogBox {
         super();
 
         this.localCentre = localCentre;
-        closeWidget = new Image(GWT.getModuleBaseURL()+"img/cross.png");
+        closeWidget = new Image(GWT.getModuleBaseURL() + "img/cross.png");
 
         // empty header could cause a problem!
         setHTML("&nbsp;");
@@ -172,11 +174,13 @@ public class DialogBoxWithCloseButton extends DialogBox {
         }
         return false;
     }
-    
-    @Override
+
     /**
-     * This centres the dialog box, but uses a 
+     * This centres the dialog box, but uses a {@link CentrePosIF} to define the
+     * centre position (so that for example we can centre this box over a map,
+     * or other widget)
      */
+    @Override
     public void center() {
         setPopupPositionAndShow(new PositionCallback() {
             @Override

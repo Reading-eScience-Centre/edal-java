@@ -1,6 +1,5 @@
 package uk.ac.rdg.resc.godiva.client.widgets;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -15,6 +14,7 @@ import uk.ac.rdg.resc.godiva.client.requests.LayerRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.LayerRequestCallback;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestCallback;
+import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -131,7 +131,6 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
             getLayerDetails.send();
         } catch (RequestException e) {
             e.printStackTrace();
-            // TODO handle error
         }
     }
 
@@ -182,7 +181,7 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                     }
 
                     @Override
-                    public void timeSelected(String id, String selectedStartDateTime) {
+                    public void datetimeSelected(String id, String selectedStartDateTime) {
                     }
 
                 });
@@ -223,7 +222,7 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
             }
 
             @Override
-            public void timeSelected(String id, String selectedTime) {
+            public void datetimeSelected(String id, String selectedTime) {
                 /*
                  * Do nothing here - we only check the time when the "Next"
                  * button is clicked
@@ -233,6 +232,9 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
         });
     }
     
+    /*
+     * This just disables the next button if the start time is later than the end time
+     */
     private void checkOrder(){
         if(nextButton == null) {
             return;
@@ -241,8 +243,10 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                 && startTimeSelector.getSelectedDateTime().compareTo(
                         endTimeSelector.getSelectedDateTime()) >= 0) {
             nextButton.setEnabled(false);
+            nextButton.setTitle("Start time must be before end time");
         } else {
             nextButton.setEnabled(true);
+            nextButton.setTitle("");
         }
     }
 
@@ -290,25 +294,30 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
         setWidget(timeSelectionPanel);
     }
 
-    private List<String> getDatesLaterOrEqualTo(String selectedDate, List<String> availableDates) {
-        List<String> laterDates = new ArrayList<String>();
-        for (String date : availableDates) {
-            if (date.compareTo(selectedDate) >= 0) {
-                laterDates.add(date);
-            }
-        }
-        return laterDates;
-    }
-
-    private List<String> getTimesLaterThan(String selectedTime, List<String> availableTimes) {
-        List<String> laterTimes = new ArrayList<String>();
-        for (String time : availableTimes) {
-            if (time.compareTo(selectedTime) > 0) {
-                laterTimes.add(time);
-            }
-        }
-        return laterTimes;
-    }
+    /*
+     * These were previously used for filtering the dates, rather than just
+     * disabling the next button. They have been left here in case we want to go
+     * back to that approach
+     */
+//    private List<String> getDatesLaterOrEqualTo(String selectedDate, List<String> availableDates) {
+//        List<String> laterDates = new ArrayList<String>();
+//        for (String date : availableDates) {
+//            if (date.compareTo(selectedDate) >= 0) {
+//                laterDates.add(date);
+//            }
+//        }
+//        return laterDates;
+//    }
+//
+//    private List<String> getTimesLaterThan(String selectedTime, List<String> availableTimes) {
+//        List<String> laterTimes = new ArrayList<String>();
+//        for (String time : availableTimes) {
+//            if (time.compareTo(selectedTime) > 0) {
+//                laterTimes.add(time);
+//            }
+//        }
+//        return laterTimes;
+//    }
 
     private void setLoading() {
         if (loadingLabel == null) {

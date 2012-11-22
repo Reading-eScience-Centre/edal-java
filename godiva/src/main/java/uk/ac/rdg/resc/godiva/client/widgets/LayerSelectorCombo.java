@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import uk.ac.rdg.resc.godiva.client.handlers.LayerSelectionHandler;
+import uk.ac.rdg.resc.godiva.client.state.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.shared.LayerMenuItem;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -18,6 +19,13 @@ import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
+/**
+ * An implementation of {@link LayerSelectorIF} which presents the layers in a
+ * popup tree.
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     private LayerSelectionHandler layerSelectionHandler;
     private PopupPanel popup;
@@ -104,6 +112,10 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         }
     }
     
+    /*
+     * This is called recursively to transfer the information in the
+     * LayerMenuItem tree to the Tree widget
+     */
     private void addNode(final LayerMenuItem item, final TreeItem parentNode) {
         String label = item.getTitle();
         final String id = item.getId();
@@ -161,10 +173,8 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     }
 
     @Override
-    public List<String> getSelectedIds() {
-        List<String> ret = new ArrayList<String>();
-        ret.add(selectedLayer);
-        return ret;
+    public String getSelectedId() {
+        return selectedLayer;
     }
 
     @Override

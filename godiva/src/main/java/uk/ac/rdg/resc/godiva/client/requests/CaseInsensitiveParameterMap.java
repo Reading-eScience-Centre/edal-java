@@ -4,6 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Implements a {@link Map} of {@link String}s to {@link String}s which ignores
+ * the case of the key
+ * 
+ * @author Guy Griffiths
+ */
 public class CaseInsensitiveParameterMap {
     public Map<String, String> pMap;
     

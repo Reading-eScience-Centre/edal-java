@@ -5,15 +5,30 @@ import java.util.List;
 import java.util.Map;
 
 import uk.ac.rdg.resc.godiva.client.handlers.ElevationSelectionHandler;
+import uk.ac.rdg.resc.godiva.client.state.ElevationSelectorIF;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.ui.ListBox;
 
+/**
+ * An implementation of {@link ElevationSelectorIF} which presents the available
+ * elevations as a drop down list. In the case where we have a continuous depth
+ * axis, this will still be the case, but ranges will be generated, and the
+ * values shown will be the centre points of these ranges. The protocol for
+ * continuous vertical axes is more flexible, but in practice this is sufficient
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class ElevationSelector extends BaseSelector implements ElevationSelectorIF {
 	private ListBox elevations;
     private final NumberFormat format = NumberFormat.getFormat("#0.##");
+    /*
+     * This is required because the server will respond with the exact values it
+     * knows about, and expects them back. This gets ugly with rounding errors.
+     */
     private Map<String, String> formattedValuesToRealValues;
     private String id;
     private String units;
@@ -85,20 +100,25 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
 		    elevations.setEnabled(true);
 		}
 	}
-	
-	private double getOptimumDz(double firstVal, double secondVal, int numberOfSteps) {
-	    double dz = (secondVal - firstVal)/numberOfSteps;
-	    double[] niceSteps = new double[]{1e-3,1e-2,1e-1,1,5,10,20,50,100,250,500,1000,10000};
-	    double last = dz;
-	    for(double test : niceSteps){
-	        if(dz > test) {
-	            last = test;
-	            continue;
-	        } else {
-	            dz = last;
-	            break;
-	        }
-	    }
+
+    /*
+     * This method just picks a nice step value, based on start value, stop
+     * value, and number of steps
+     */
+    private double getOptimumDz(double firstVal, double secondVal, int numberOfSteps) {
+        double dz = (secondVal - firstVal) / numberOfSteps;
+        double[] niceSteps = new double[] { 1e-3, 1e-2, 1e-1, 1, 5, 10, 20, 50, 100, 250, 500,
+                1000, 10000 };
+        double last = dz;
+        for (double test : niceSteps) {
+            if (dz > test) {
+                last = test;
+                continue;
+            } else {
+                dz = last;
+                break;
+            }
+        }
         return dz;
     }
 

@@ -34,6 +34,7 @@ import org.gwtopenmaps.openlayers.client.layer.WMSParams;
 import org.gwtopenmaps.openlayers.client.util.JSObject;
 
 import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
+import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
@@ -52,11 +53,24 @@ import com.google.gwt.xml.client.Node;
 import com.google.gwt.xml.client.NodeList;
 import com.google.gwt.xml.client.XMLParser;
 
-public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF {
+/**
+ * A widget containing the main OpenLayers map.
+ * 
+ * @author Guy Griffiths
+ */
+public class MapArea extends MapWidget implements OpacitySelectionHandler, CentrePosIF {
 
+    /*
+     * We work in CRS:84 rather than EPSG:4326 so that lon-lat order is always
+     * correct (regardless of WMS version)
+     */
     protected static final Projection CRS84 = new Projection("CRS:84");
     protected static final NumberFormat FORMATTER = NumberFormat.getFormat("###.#####"); 
     
+    /*
+     * Class to store a WMS layer along with some other details. This means that
+     * all details can be stored together in a java.util.Map
+     */
     protected final class WmsDetails {
         public String wmsUrl;
         public final WMS wms;
@@ -76,6 +90,12 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         }
     }
 
+    /*
+     * The maximum number of features we can request in a GetFeatureInfo
+     * request. This is public because classes which use MapArea may want to
+     * change this. For example when dealing with older versions of ncWMS which
+     * only handle a single feature at a time
+     */
     public int maxFeatures = 5;
     
     protected Map map;
@@ -112,6 +132,9 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         
         wmsLayers = new LinkedHashMap<String, WmsDetails>();
 
+        /*
+         * Define some listeners to handle layer start/end loading events
+         */
         loadStartListener = new LayerLoadStartListener() {
             @Override
             public void onLoadStart(LoadStartEvent eventObject) {
@@ -139,6 +162,30 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         wmsStandardOptions.setWrapDateLine(true);
     }
 
+    /**
+     * Adds an animation layer to the map
+     * 
+     * @param wmsUrl
+     *            The WMS URL
+     * @param layerId
+     *            The WMS layer ID
+     * @param timeList
+     *            A comma separated list of times for the animation
+     * @param currentElevation
+     *            The elevation for the animation
+     * @param palette
+     *            The palette name
+     * @param style
+     *            The style name
+     * @param scaleRange
+     *            The scale range, of the form "[min],[max]"
+     * @param nColorBands
+     *            The number of colour bands to use
+     * @param logScale
+     *            Whether to use a logarithmic colour scale
+     * @param frameRate
+     *            The frame rate of the final animation
+     */
     public void addAnimationLayer(String wmsUrl, String layerId, String timeList, String currentElevation,
             String palette, String style, String scaleRange, int nColorBands, boolean logScale, String frameRate) {
         StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.3.0");
@@ -157,6 +204,10 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
             url.append("&frameRate=" + frameRate);
         ImageOptions opts = new ImageOptions();
         opts.setAlwaysInRange(true);
+        /*
+         * Because the animation is just an animated GIF, we use Image for our
+         * OpenLayers layer
+         */
         animLayer = new Image("Animation Layer", url.toString(), map.getExtent(), map.getSize(),
                 opts);
         animLayer.addLayerLoadStartListener(loadStartListener);
@@ -189,7 +240,11 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
     }
 
     public void stopAnimation() {
-        // This stops and removes the animation. We may want a pause method...
+        /*
+         * This stops and removes the animation. 
+         * 
+         * TODO We may want a pause method...
+         */
         widgetDisabler.enableWidgets();
         if (animLayer != null) {
             map.removeLayer(animLayer);
@@ -200,6 +255,41 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         }
     }
 
+    /**
+     * Adds a WMS layer to the map
+     * 
+     * @param wmsUrl
+     *            The WMS URL
+     * @param internalLayerId
+     *            An internal layer ID. This allows us to add multiple WMS
+     *            layers to this map
+     * @param wmsLayerName
+     *            The WMS layer ID
+     * @param time
+     *            The time (or time range) at which we want data
+     * @param colorbyTime
+     *            If we have a continuous time axis, what time should we try and
+     *            colour the data's value at
+     * @param elevation
+     *            The elevation (or elevation range) at which we want data
+     * @param colorbyElevation
+     *            If we have a continuous elevation axis, what elevation should
+     *            we try and colour the data's value at
+     * @param style
+     *            The style name for this layer
+     * @param palette
+     *            The palette name for this layer
+     * @param scaleRange
+     *            The scale range (as a string: "[min],[max]")
+     * @param nColourBands
+     *            The number of colour bands in the palette
+     * @param logScale
+     *            Whether to use a logarithmic scale
+     * @param multipleElevations
+     *            Whether we have multiple elevations available
+     * @param multipleTimes
+     *            Whether we have multiple times available
+     */
     public void addLayer(String wmsUrl, String internalLayerId, String wmsLayerName, String time,
             String colorbyTime, String elevation, String colorbyElevation, String style,
             String palette, String scaleRange, int nColourBands, boolean logScale,
@@ -241,6 +331,9 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         doAddingOfLayer(wmsUrl, internalLayerId, params, options, multipleElevations, multipleTimes);
     }
 
+    /*
+     * Does the work of actually adding the layer to the map
+     */
     private void doAddingOfLayer(String wmsUrl, String internalLayerId, WMSParams params, WMSOptions options,
             boolean multipleElevations, boolean multipleTimes) {
         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
@@ -276,6 +369,9 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         }
     }
 
+    /*
+     * Sets the GetFeatureInfo details and what to do when we receive GFI data
+     */
     protected void setGetFeatureInfoDetails(final String wmsUrl, final boolean multipleElevations,
             final boolean multipleTimes, final String layerId) {
         WMSGetFeatureInfoOptions getFeatureInfoOptions = new WMSGetFeatureInfoOptions();
@@ -375,6 +471,9 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
                 final String layer = layerNames.toString();
                 
                 if (multipleElevations) {
+                    /*
+                     * If we have multiple depths, we can plot a vertical profile here
+                     */
                     final String link = proxyUrl + wmsUrl + "?REQUEST=GetVerticalProfile" + "&LAYER=" + layer
                             + "&CRS=CRS:84" + ((timeStr != null) ? ("&TIME=" + timeStr) : "")
                             + "&POINT=" + lonLat.lon() + "%20" + lonLat.lat() + "&FORMAT=image/png";
@@ -390,6 +489,9 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
                 }
 
                 if (multipleTimes) {
+                    /*
+                     * If we have multiple times, we can plot a time series here
+                     */
                     Anchor timeseriesPlot = new Anchor("Time Series Plot");
                     timeseriesPlot.addClickHandler(new ClickHandler() {
                         @Override
@@ -444,6 +546,15 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         getFeatureInfo.getJSObject().setProperty("vendorParams", vendorParams);
     }
 
+    /**
+     * Used to display an image in a box. This is used for showing vertical
+     * profiles or time series plots
+     * 
+     * @param url
+     *            The URL of the image
+     * @param title
+     *            The title of the popup box
+     */
     protected void displayImagePopup(String url, String title) {
         final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(this);
         final com.google.gwt.user.client.ui.Image image = new com.google.gwt.user.client.ui.Image(url);
@@ -488,8 +599,10 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         }
     }
 
+    /**
+     * @return The URL used to get a KMZ of the currently displayed layer
+     */
     public String getKMZUrl() {
-        
         String url;
         WmsDetails wmsAndParams = wmsLayers.get(getTransectLayerId());
         if (wmsAndParams != null) {
@@ -512,7 +625,6 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
 
     private static MapOptions getDefaultMapOptions() {
         MapOptions mapOptions = new MapOptions();
-//        mapOptions.setProjection("EPSG:4326");
         mapOptions.setProjection("CRS:84");
         mapOptions.setDisplayProjection(CRS84);
         JSObject vendorParams = JSObject.createJSObject();
@@ -534,7 +646,6 @@ public class MapArea extends MapWidget implements OpacityReceiverIF, CentrePosIF
         map.setMaxExtent(new Bounds(-180, -360, 180, 360));
     }
 
-    @Override
     public void setOpacity(String layerId, float opacity) {
         for(WmsDetails wmsDetails : wmsLayers.values()) {
             String layersStr = wmsDetails.params.getLayers();

@@ -1,9 +1,19 @@
 package uk.ac.rdg.resc.godiva.client.widgets;
 
+import uk.ac.rdg.resc.godiva.client.state.InfoIF;
+
 import com.google.gwt.user.client.ui.Label;
 
+/**
+ * Implementation of the {@link InfoIF} which just displays the information as a
+ * {@link Label}
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class Info extends BaseSelector implements InfoIF {
     private Label info;
+
     public Info() {
         super("Copyright");
         info = new Label();
@@ -12,17 +22,17 @@ public class Info extends BaseSelector implements InfoIF {
         label.setTitle("Information about the data");
         add(info);
     }
-    
+
     @Override
-    public void setInfo(String info){
+    public void setInfo(String info) {
         this.info.setText(info);
         this.info.setTitle("Information about the data");
         setEnabled(true);
     }
-    
+
     @Override
-    public void setEnabled(boolean enabled){
-        if(enabled){
+    public void setEnabled(boolean enabled) {
+        if (enabled) {
             info.removeStyleDependentName("inactive");
             label.removeStyleDependentName("inactive");
         } else {

@@ -1,9 +1,13 @@
-package uk.ac.rdg.resc.godiva.client.widgets;
+package uk.ac.rdg.resc.godiva.client.state;
+
+import com.google.gwt.user.client.ui.IsWidget;
 
 /**
  * A collection of interfaces providing state information about a particular
- * layer. The elements it holds will usually be widgets which can provide the
- * currently selected state.
+ * layer. The elements it holds must be widgets, since the interfaces all
+ * inherit from {@link IsWidget} which can provide the currently selected state.
+ * 
+ * Note that this class may never return null values for any of its methods.
  * 
  * @author Guy Griffiths
  * 

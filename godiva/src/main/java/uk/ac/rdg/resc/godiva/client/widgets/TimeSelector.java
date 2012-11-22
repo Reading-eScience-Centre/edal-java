@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import uk.ac.rdg.resc.godiva.client.handlers.TimeDateSelectionHandler;
+import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -16,10 +17,20 @@ import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 
+/**
+ * Implementation of {@link TimeSelectorIF} which presents dates and times (and
+ * ranges where applicable) as separate drop-down boxes
+ * 
+ * @author Guy Griffiths
+ * 
+ */
 public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     protected static final String[] allTimes = new String[24];
     
     static {
+        /*
+         * allTimes used for continuous axis
+         */
         NumberFormat format = NumberFormat.getFormat("00");
         for(int i=0; i < 24; i++){
             allTimes[i] = format.format(i) + ":00:00.000Z";
@@ -44,6 +55,11 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     private String endTime;
     private static final DateTimeFormat datePrinter = DateTimeFormat.getFormat("yyyy-MM-dd");;
 	
+    
+    public TimeSelector(String id, final TimeDateSelectionHandler handler) {
+        this(id, "Time", handler);
+    }
+    
 	public TimeSelector(String id, String label, final TimeDateSelectionHandler handler) {
 	    super(label);
 	    this.id = id;
@@ -51,13 +67,9 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 	    initDiscrete();
 	}
 	
-	public TimeSelector(String id, final TimeDateSelectionHandler handler) {
-		super("Time");
-		this.id = id;
-		this.handler = handler;
-		initDiscrete();
-	}
-	
+	/*
+	 * Sets up widget for discrete use.  Called whenever we change from continuous to discrete
+	 */
 	private void initDiscrete(){
 		dates = new ListBox();
 		dates.setName("date_selector");
@@ -76,7 +88,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 		times.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                handler.timeSelected(id, getSelectedDateTime());
+                handler.datetimeSelected(id, getSelectedDateTime());
             }
         });
 		add(times);
@@ -84,6 +96,10 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 	
 	private void dateSelected(){
 	    if(continuous){
+	        /*
+	         * If we have a continuous axis, selecting the date should lead to a map update 
+	         */
+	        
 	        String targetTime = null;
 	        if(times.getItemCount() > 0){
 	            targetTime = times.getValue(times.getSelectedIndex());
@@ -121,15 +137,27 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
                 }
             }
             
-            handler.timeSelected(id, getSelectedDateTime());
+            handler.datetimeSelected(id, getSelectedDateTime());
         } else {
+            /*
+             * Otherwise we need to request the available timesteps
+             */
             handler.dateSelected(id, getSelectedDate());
         }
 	}
 	
+	/*
+	 * Sets up the widget for continuous use.
+	 */
     private void initContinuous() {
+        /*
+         * We need all of the same widgets as for the discrete case
+         */
         initDiscrete();
 
+        /*
+         * Then we also need a time range
+         */
         rangeLabel = new Label("+/-");
         add(rangeLabel);
         range = new ListBox();
@@ -138,7 +166,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         range.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                handler.timeSelected(id, getSelectedDateTime());
+                handler.datetimeSelected(id, getSelectedDateTime());
             }
         });
         range.addItem("1 hour", "" + 1000L * 60 * 60);
@@ -158,28 +186,34 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 	}
 	
 	@Override
-    public void populateDates(List<String> availableDates){
+    public void populateDates(List<String> availableDatetimes){
 	    dates.clear();
-	    if(availableDates == null || availableDates.size() == 0){
+	    if(availableDatetimes == null || availableDatetimes.size() == 0){
 	        dates.setEnabled(false);
 	        times.setEnabled(false);
 	        label.addStyleDependentName("inactive");
 	    } else {
 	        if(continuous){
-    	        if(availableDates.size() != 2){
+	            /*
+	             * For a continuous time axis, we only need the start and end times
+	             */
+    	        if(availableDatetimes.size() != 2){
                     throw new IllegalArgumentException(
                             "For a continuous time axis, you must provide exactly 2 dates");
     	        }
     	        
-    	        startTime = availableDates.get(0).substring(11);
-    	        endTime = availableDates.get(1).substring(11);
+    	        /*
+    	         * Datetimes will be in ISO8601 format, so this bit just extracts the time string
+    	         */
+    	        startTime = availableDatetimes.get(0).substring(11);
+    	        endTime = availableDatetimes.get(1).substring(11);
     	        
-    	        availableDates = getDatesInRange(availableDates.get(0), availableDates.get(1));
+    	        availableDatetimes = getDatesInRange(availableDatetimes.get(0), availableDatetimes.get(1));
     	        
     	        int i = 0;
     	        int selectDate = 0;
     	        String nowString = datePrinter.format(new Date());
-    	        for(String item : availableDates){
+    	        for(String item : availableDatetimes){
     	            if(item.compareTo(nowString) < 0){
     	                selectDate = i;
     	            }
@@ -195,8 +229,8 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     	         */
     	        DomEvent.fireNativeEvent(Document.get().createChangeEvent(), dates);
 	        } else {
-    		    Collections.sort(availableDates);
-    			for(String item : availableDates){
+    		    Collections.sort(availableDatetimes);
+    			for(String item : availableDatetimes){
     				dates.addItem(item);
     			}
     			dates.setEnabled(true);
@@ -362,6 +396,10 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         }
     }
 
+    /*
+     * Deprecated methods are fine here, because we are compiling everything
+     * with GWT which handles them properly
+     */
     @SuppressWarnings("deprecation")
     public static List<String> getDatesInRange(String startDateTimeStr, String endDateTimeStr){
         DateTimeFormat parser = DateTimeFormat.getFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
