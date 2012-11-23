@@ -20,7 +20,7 @@
 		<dependency>
 			<groupId>edu.ucar</groupId>
 			<artifactId>netcdf</artifactId>
-			<version>4.2</version>
+			<version>4.2.20</version>
 			<optional>false</optional>
 			<exclusions>
 				<exclusion>
@@ -29,10 +29,17 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<!-- This is required by netcdf, but is marked as "provided" in the
+		     netcdf pom, so we have to manually include it -->
+	    <dependency>
+	      <groupId>edu.ucar</groupId>
+	      <artifactId>opendap</artifactId>
+	      <version>2.2.2</version>
+	    </dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.5.8</version>
+			<version>1.7.2</version>
 		</dependency>
 		<dependency>
 			<groupId>oro</groupId>
