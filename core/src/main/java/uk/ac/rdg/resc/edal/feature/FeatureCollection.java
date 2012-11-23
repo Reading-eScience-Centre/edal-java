@@ -100,12 +100,41 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
      */
     public Class<F> getFeatureType();
     
+    /**
+     * Returns all features meeting the specified criteria. If any criteria are
+     * <code>null</code>, then all possible values for that variable will be
+     * considered.
+     * 
+     * @param boundingBox
+     *            The containing bounding box.
+     * @param zRange
+     *            The containing vertical extent
+     * @param tRange
+     *            The containing time range
+     * @param memberNames
+     *            The included member names
+     * @return A {@link Collection} containing all features matching the
+     *         criteria
+     */
     public Collection<? extends F> findFeatures(BoundingBox boundingBox, Extent<Double> zRange,
             Extent<TimePosition> tRange, Set<String> memberNames);
 
+    /**
+     * @return The minimum bounding box which will contain everything within
+     *         this {@link FeatureCollection}
+     */
     public BoundingBox getCollectionBoundingBox();
     
+    
+    /**
+     * @return The minimum vertical extent which will contain everything within
+     *         this {@link FeatureCollection}
+     */
     public Extent<VerticalPosition> getCollectionVerticalExtent();
     
+    /**
+     * @return The minimum time range which will contain everything within
+     *         this {@link FeatureCollection}
+     */
     public Extent<TimePosition> getCollectionTimeExtent();
 }

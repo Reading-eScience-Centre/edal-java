@@ -27,9 +27,9 @@
 			<optional>false</optional>
 		</dependency>
 		<dependency>
-			<groupId>jfree</groupId>
+			<groupId>org.jfree</groupId>
 			<artifactId>jfreechart</artifactId>
-			<version>1.0.12</version>
+			<version>1.0.14</version>
 		</dependency>
 		<dependency>
 			<groupId>gov.noaa.pmel</groupId>
