@@ -334,7 +334,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     /*
      * Does the work of actually adding the layer to the map
      */
-    private void doAddingOfLayer(String wmsUrl, String internalLayerId, WMSParams params, WMSOptions options,
+    protected void doAddingOfLayer(String wmsUrl, String internalLayerId, WMSParams params, WMSOptions options,
             boolean multipleElevations, boolean multipleTimes) {
         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
         WMS wmsLayer;
@@ -472,7 +472,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                      * If we have multiple depths, we can plot a vertical profile here
                      */
                     final String link = proxyUrl + wmsUrl + "?REQUEST=GetVerticalProfile" + "&LAYER=" + layer
-                            + "&CRS=CRS:84" + ((timeStr != null) ? ("&TIME=" + timeStr) : "")
+                            + "&CRS=" + currentProjection + ((timeStr != null) ? ("&TIME=" + timeStr) : "")
                             + "&POINT=" + lonLat.lon() + "%20" + lonLat.lat() + "&FORMAT=image/png";
                     Anchor profilePlot = new Anchor("Vertical Profile Plot");
                     profilePlot.addClickHandler(new ClickHandler() {
@@ -510,7 +510,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                     String link = wmsUrl
                                             + "?REQUEST=GetTimeseries"
                                             + "&LAYER=" + layer
-                                            + "&CRS=CRS:84"
+                                            + "&CRS=" + currentProjection
                                             + "&TIME="
                                             + startDateTime
                                             + "/"
@@ -620,7 +620,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         return url;
     }
 
-    private static MapOptions getDefaultMapOptions() {
+    protected static MapOptions getDefaultMapOptions() {
         MapOptions mapOptions = new MapOptions();
         mapOptions.setProjection("CRS:84");
         mapOptions.setDisplayProjection(CRS84);
@@ -630,7 +630,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         return mapOptions;
     }
 
-    private void init() {
+    protected void init() {
         this.setStylePrimaryName("mapStyle");
         map = this.getMap();
         addBaseLayers();
@@ -666,7 +666,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         return layersForExport;
     }
 
-    private void addBaseLayers() {
+    protected void addBaseLayers() {
         WMS openLayers;
 //        WMS bluemarbleDemis;
 //        WMS demis;
@@ -789,7 +789,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.setBaseLayer(openLayers);
     }
 
-    private WMSOptions getOptionsForCurrentProjection() {
+    protected WMSOptions getOptionsForCurrentProjection() {
         if (currentProjection.equalsIgnoreCase("EPSG:32661")
                 || currentProjection.equalsIgnoreCase("EPSG:32761")) {
             return wmsPolarOptions;
@@ -879,7 +879,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         return new FeatureInfoMessageAndFeatureIds(html.toString(), ids);
     }
 
-    private void addDrawingLayer() {
+    protected void addDrawingLayer() {
         Vector drawingLayer = new Vector("Drawing");
         drawingLayer.getEvents().register("featureadded", drawingLayer, new EventHandler() {
             @Override
