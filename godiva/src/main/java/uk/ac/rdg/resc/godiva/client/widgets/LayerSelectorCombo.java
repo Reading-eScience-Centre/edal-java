@@ -109,6 +109,8 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             for(LayerMenuItem child : children){
                 addNode(child, null);
             }
+        } else {
+            tree.add(new Label("No data available"));
         }
     }
     
