@@ -57,7 +57,7 @@ public class PointSeriesDomainImpl extends AbstractPointDomain<TimePosition> imp
     public PointSeriesDomainImpl(List<TimePosition> times) {
         super(times);
         if (times != null) {
-            long lastTime = 0L;
+            long lastTime = -Long.MAX_VALUE;
             if (times.size() == 0) {
                 calSys = CalendarSystem.CAL_ISO_8601;
             } else {
