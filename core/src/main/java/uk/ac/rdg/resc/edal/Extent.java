@@ -33,24 +33,61 @@ package uk.ac.rdg.resc.edal;
  * Defines a contiguous domain that is defined by "low" and "high" values. Any
  * value between or including these values is considered part of the domain.
  * </p>
+ * <p>If the low value is null, then any value up to or including the high value
+ * will be considered part of the domain.  If the high value is null, then any
+ * value equal to or exceeding the low value will be considered part of the 
+ * domain.  If both values are null then the domain contains all values (i.e.
+ * the domain is <i>total</i>).</p>
  * 
  * @param <A>
  *            The type of object used to identify values within this extent.
  * @author Jon Blower
  */
 public interface Extent<A extends Comparable<? super A>> extends Domain<A> {
+    
     /**
-     * @return the low value of this {@link Extent}
+     * Returns true if the given value is considered part of this Extent.
+     * If the low value is null, then any value up to or including the high value
+     * will be considered part of the domain.  If the high value is null, then any
+     * value equal to or exceeding the low value will be considered part of the 
+     * domain.  If both values are null then the domain contains all values (i.e.
+     * the domain is <i>total</i>).
+     */
+    @Override
+    public boolean contains(A val);
+    
+    /**
+     * @return the low value of this {@link Extent}, or null if the extent is
+     * unbounded at the low end.
      */
     public A getLow();
 
     /**
-     * @return the high value of this {@link Extent}
+     * @return the high value of this {@link Extent}, or null if the extent is
+     * unbounded at the high end.
      */
     public A getHigh();
-
+    
     /**
-     * @return whether or not this {@link Extent} contains any values
+     * We define the hashcode of an Extent to be calculated according to the
+     * following formula:
+     * <pre>
+     * int hash = 17;
+     * if (low != null) {
+     *     hash = hash * 31 + low.hashCode();
+     * }
+     * if (high != null) {
+     *     hash = hash * 31 + high.hashCode();
+     * }
+     * </pre>
+     * This allows Extents to be compared for equality across implementations.
      */
-    public boolean isEmpty();
+    @Override
+    public int hashCode();
+    
+    /**
+     * Two Extents are equal if their low and high values are equal.
+     */
+    @Override
+    public boolean equals(Object obj);
 }
