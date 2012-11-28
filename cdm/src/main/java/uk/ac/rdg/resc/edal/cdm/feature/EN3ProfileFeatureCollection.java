@@ -17,6 +17,7 @@ import ucar.nc2.Dimension;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
 import uk.ac.rdg.resc.edal.Unit;
@@ -42,7 +43,6 @@ import uk.ac.rdg.resc.edal.position.impl.TimePositionJoda;
 import uk.ac.rdg.resc.edal.position.impl.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 import uk.ac.rdg.resc.edal.util.BigList;
-import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.LittleBigList;
 
 public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFeature> {
@@ -288,9 +288,9 @@ public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFe
             }
         }
         bbox = new BoundingBoxImpl(minx, miny, maxx, maxy, DefaultGeographicCRS.WGS84);
-        vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(minz, vCrs),
+        vExtent = new ExtentImpl((VerticalPosition) new VerticalPositionImpl(minz, vCrs),
                 (VerticalPosition) new VerticalPositionImpl(maxz, vCrs));
-        tExtent = Extents.newExtent((TimePosition) new TimePositionJoda(mint),
+        tExtent = new ExtentImpl((TimePosition) new TimePositionJoda(mint),
                 (TimePosition) new TimePositionJoda(maxt));
     }
 
