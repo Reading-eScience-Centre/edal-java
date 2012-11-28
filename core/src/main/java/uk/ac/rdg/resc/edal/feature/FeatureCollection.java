@@ -105,7 +105,15 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
 
     public BoundingBox getCollectionBoundingBox();
     
+    /**
+     * Returns the vertical extent of the data in the collection, or null if the
+     * data have no vertical component.
+     */
     public Extent<VerticalPosition> getCollectionVerticalExtent();
     
+    /**
+     * Returns the temporal extent of the data in the collection, or null if the
+     * data have no temporal component.
+     */
     public Extent<TimePosition> getCollectionTimeExtent();
 }
