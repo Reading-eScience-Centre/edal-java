@@ -31,10 +31,10 @@ package uk.ac.rdg.resc.edal.coverage.domain.impl;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.position.CalendarSystem;
 import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * This is a {@link List} backed implementation of a {@link PointSeriesDomain}
@@ -81,7 +81,7 @@ public class PointSeriesDomainImpl extends AbstractPointDomain<TimePosition> imp
 
     @Override
     public Extent<TimePosition> getExtent() {
-        return Extents.newExtent(getDomainObjects().get(0),
+        return new ExtentImpl(getDomainObjects().get(0),
                 getDomainObjects().get(getDomainObjects().size() - 1));
     }
 

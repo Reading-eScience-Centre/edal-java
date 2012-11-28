@@ -30,6 +30,9 @@ package uk.ac.rdg.resc.edal;
 
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
+/**
+ * @todo: Do we need this class?
+ */
 public class VerticalExtent implements Extent<VerticalPosition> {
 
     private final VerticalPosition min;
@@ -55,10 +58,5 @@ public class VerticalExtent implements Extent<VerticalPosition> {
     @Override
     public boolean contains(VerticalPosition position) {
         return (position.getZ() >= min.getZ() && position.getZ() <= max.getZ());
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return (min == null && max == null);
     }
 }

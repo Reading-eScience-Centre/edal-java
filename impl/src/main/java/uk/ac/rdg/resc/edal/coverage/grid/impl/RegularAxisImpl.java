@@ -31,8 +31,8 @@ package uk.ac.rdg.resc.edal.coverage.grid.impl;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
-import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
@@ -103,7 +103,7 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     @Override
     public Extent<Double> getCoordinateBounds(int index) {
         double centre = getCoordinateValue(index);
-        return Extents.newExtent(centre - 0.5 * spacing, centre + 0.5 * spacing);
+        return new ExtentImpl(centre - 0.5 * spacing, centre + 0.5 * spacing);
     }
 
     @Override

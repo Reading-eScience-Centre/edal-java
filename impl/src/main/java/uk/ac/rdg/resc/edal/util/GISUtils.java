@@ -45,6 +45,7 @@ import org.opengis.referencing.cs.RangeMeaning;
 import org.opengis.referencing.operation.MathTransform;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.DiscreteCoverage;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
@@ -263,7 +264,7 @@ public final class GISUtils {
      */
     public static Extent<Float> estimateValueRange(Feature feature, String member) {
         List<Float> dataSample = readDataSample(feature, member);
-        return Extents.findMinMax(dataSample);
+        return CollectionUtils.findMinMax(dataSample);
     }
 
     private static List<Float> readDataSample(Feature feature, String member) {
@@ -633,7 +634,7 @@ public final class GISUtils {
             }
         } else if (feature instanceof ProfileFeature) {
             TimePosition time = ((ProfileFeature) feature).getTime();
-            return Extents.newExtent(time, time);
+            return new ExtentImpl(time, time);
         } else if (feature instanceof PointSeriesFeature) {
             return ((PointSeriesFeature) feature).getCoverage().getDomain().getExtent();
         } else if (feature instanceof TrajectoryFeature) {
@@ -648,7 +649,7 @@ public final class GISUtils {
             VerticalAxis verticalAxis = ((GridSeriesFeature) feature).getCoverage().getDomain().getVerticalAxis();
             if(verticalAxis != null){
                 Extent<Double> coordinateExtent = verticalAxis.getCoordinateExtent();
-                return Extents.newExtent(
+                return new ExtentImpl(
                         (VerticalPosition) new VerticalPositionImpl(coordinateExtent.getLow(),
                                 getVerticalCrs(feature)),
                                 new VerticalPositionImpl(coordinateExtent.getHigh(), getVerticalCrs(feature)));
@@ -659,7 +660,7 @@ public final class GISUtils {
             return ((ProfileFeature) feature).getCoverage().getDomain().getVerticalExtent();
         } else if (feature instanceof PointSeriesFeature) {
             VerticalPosition zPos = ((PointSeriesFeature) feature).getVerticalPosition();
-            return Extents.newExtent(zPos, zPos);
+            return new ExtentImpl(zPos, zPos);
         } else if (feature instanceof TrajectoryFeature) {
             return ((TrajectoryFeature) feature).getCoverage().getDomain().getVerticalExtent();
         } else {
