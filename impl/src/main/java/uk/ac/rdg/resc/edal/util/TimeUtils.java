@@ -468,6 +468,6 @@ public class TimeUtils {
                 times.add(iso8601ToDateTime(time, calSys));
             }
         }
-        return Extents.findMinMax(times);
+        return CollectionUtils.findMinMax(times);
     }
 }

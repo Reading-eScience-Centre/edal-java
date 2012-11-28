@@ -29,9 +29,9 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * 
@@ -261,17 +261,12 @@ public final class GridExtentImpl implements GridExtent {
     }
 
     @Override
-    public boolean isEmpty() {
-        return (low == null && high == null);
-    }
-
-    @Override
     public long size() {
         return size;
     }
 
     @Override
     public Extent<Integer> getExtent(int dim) {
-        return Extents.newExtent(low.getIndex(dim), high.getIndex(dim));
+        return new ExtentImpl(low.getIndex(dim), high.getIndex(dim));
     }
 }

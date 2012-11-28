@@ -29,8 +29,8 @@
 package uk.ac.rdg.resc.edal.coverage.grid.impl;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Simple immutable implementation of a {@link GridAxis}
@@ -62,9 +62,9 @@ public class GridAxisImpl implements GridAxis {
     @Override
     public Extent<Integer> getIndexExtent() {
         if(size == 0){
-            return Extents.newExtent(0, 0);
+            return new ExtentImpl(0, 0);
         }
-        return Extents.newExtent(0, this.size - 1);
+        return new ExtentImpl(0, this.size - 1);
     }
 
     @Override

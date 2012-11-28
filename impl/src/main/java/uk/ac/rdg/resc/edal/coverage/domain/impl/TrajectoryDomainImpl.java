@@ -5,6 +5,7 @@ import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
@@ -13,7 +14,6 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 public class TrajectoryDomainImpl extends AbstractPointDomain<GeoPosition> implements TrajectoryDomain {
 
@@ -88,8 +88,8 @@ public class TrajectoryDomainImpl extends AbstractPointDomain<GeoPosition> imple
             hCrs = positions.get(0).getHorizontalPosition().getCoordinateReferenceSystem();
             
             bbox = new BoundingBoxImpl(minx, miny, maxx, maxy, hCrs);
-            zExtent = Extents.newExtent(minz, maxz);
-            tExtent = Extents.newExtent(mint, maxt);
+            zExtent = new ExtentImpl(minz, maxz);
+            tExtent = new ExtentImpl(mint, maxt);
         } else {
             calSys = null;
             vCrs = null;
