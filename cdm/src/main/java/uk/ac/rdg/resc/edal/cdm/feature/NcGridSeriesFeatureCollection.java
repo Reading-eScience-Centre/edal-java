@@ -104,7 +104,14 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
         File file = new File(location);
 
         if (!file.exists()) {
-            file = aggregate(location);
+            File baseFile = new File(location);
+            File baseDir = baseFile.getParentFile();
+            List<File> files = getNetCdfFilesAt(baseDir);
+            if(files.size() == 1) {
+                file = files.get(0);
+            } else {
+                file = aggregate(location);
+            }
         }
 
         String filename = file.getPath();
@@ -246,6 +253,29 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
         }
     }
 
+    /**
+     * Returns the number of files in the given location
+     * @param location
+     * @return
+     */
+    private List<File> getNetCdfFilesAt(File baseDir) {
+        List<File> ret = new ArrayList<File>();
+        
+        if(baseDir != null) {
+            File[] files = baseDir.listFiles();
+            if (files != null) {
+                for (File subFile : files) {
+                    if (subFile.getName().toLowerCase().endsWith(".nc")) {
+                        ret.add(subFile);
+                    } else if(subFile.isDirectory()) {
+                        ret.addAll(getNetCdfFilesAt(subFile));
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
     private File aggregate(String location) throws IOException{
         /*
          * The file doesn't exist. The user is *probably* trying to perform
@@ -284,11 +314,11 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
              */
             File basePathFile = new File(basePath.toString());
             
-            File ncFile = findANetCDFFile(basePathFile, recurse);
-            if (ncFile == null) {
+            List<File> netCdfFilesAt = getNetCdfFilesAt(basePathFile);
+            if(netCdfFilesAt == null || netCdfFilesAt.size() == 0) {
                 throw new FileNotFoundException("No NetCDF files in the location: " + location);
             }
-            String timeDimensionName = getTimeDimensionName(ncFile);
+            String timeDimensionName = getTimeDimensionName(netCdfFilesAt.get(0));
             if(timeDimensionName == null){
                 throw new IllegalArgumentException(
                         "You have specified wildcards in the path, but the NetCDF files don't all have time axes.  We can only automatically aggregate along time axes.");
@@ -316,52 +346,14 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
         }
     }
     
-    private File findANetCDFFile(File file, boolean recurse) {
-        File[] files = file.listFiles();
-        if (files != null) {
-            for (File subFile : files) {
-                if (subFile.getName().toLowerCase().endsWith(".nc")) {
-                    return subFile;
-                }
-            }
-        } else {
-            return null;
-        }
-        /*
-         * There are no files in the current path. Check if we're recursing and
-         * then see if there are any subdirs.
-         */
-        if (recurse) {
-            /*
-             * Go through all objects in this directory
-             */
-            for (File newDir : files) {
-                /*
-                 * Is this object a directory?
-                 */
-                if (newDir.isDirectory()) {
-                    /*
-                     * If so, repeat the whole process on this new directory
-                     */
-                    File fileInSubdir = findANetCDFFile(newDir, true);
-                    /*
-                     * If we found a file in the subdir, return it, otherwise
-                     * keep searching
-                     */
-                    if (fileInSubdir != null) {
-                        return fileInSubdir;
-                    }
-                }
-            }
-            /*
-             * Nothing in any subdirs.
-             */
-            return null;
-        } else {
-            return null;
-        }
-    }
-
+    /**
+     * Finds the name of the time dimension in the given NetCDF file
+     * 
+     * @param ncFile
+     *            A NetCDF file
+     * @return A {@link String} containing the name of the time dimension
+     * @throws IOException
+     */
     private String getTimeDimensionName(File ncFile) throws IOException {
         NetcdfDataset ncDataset = CdmUtils.openDataset(ncFile.getAbsolutePath());
         GridDataset gridDS = CdmUtils.getGridDataset(ncDataset);

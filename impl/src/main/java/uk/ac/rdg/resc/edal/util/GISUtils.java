@@ -561,6 +561,14 @@ public final class GISUtils {
     }
 
     /**
+     * Equivalent to {@link GISUtils#getTimeAxis(Feature, boolean)} with the 2nd
+     * argument set to false
+     */
+    public static TimeAxis getTimeAxis(final Feature feature) {
+        return getTimeAxis(feature, false);
+    }
+    
+    /**
      * Utility to get the time axis of a feature, if it exists
      * 
      * @param feature
