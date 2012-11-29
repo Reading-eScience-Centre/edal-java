@@ -344,6 +344,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             wmsLayer.addLayerLoadStartListener(loadStartListener);
             wmsLayer.addLayerLoadCancelListener(loadCancelListener);
             wmsLayer.addLayerLoadEndListener(loadEndListener);
+            wmsLayer.setIsBaseLayer(false);
             map.addLayer(wmsLayer);
         } else {
             wmsLayer = wmsLayers.get(internalLayerId).wms;
@@ -636,7 +637,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         addBaseLayers();
 
         currentProjection = map.getProjection();
-        
         map.addControl(new LayerSwitcher());
         addDrawingLayer();
         map.setCenter(new LonLat(0.0, 0.0), 2);
@@ -688,9 +688,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         openLayers.addLayerLoadStartListener(loadStartListener);
         openLayers.addLayerLoadEndListener(loadEndListener);
         openLayers.setIsBaseLayer(true);
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("Earth Image");
         
+        
+//        wmsParams = new WMSParams();
+//        wmsParams.setLayers("Earth Image");
 //        bluemarbleDemis = new WMS("Demis Blue Marble",
 //                "http://www2.demis.nl/wms/wms.ashx?WMS=BlueMarble", wmsParams, wmsOptions);
 //        bluemarbleDemis.setIsBaseLayer(true);
@@ -766,13 +767,18 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.addMapBaseLayerChangedListener(new MapBaseLayerChangedListener() {
             @Override
             public void onBaseLayerChanged(MapBaseLayerChangedEvent eventObject) {
-                String url = eventObject.getLayer().getJSObject().getPropertyAsString("url");
-                String layers = eventObject.getLayer().getJSObject().getPropertyAsArray("params")[0]
-                        .getPropertyAsString("LAYERS");
-                baseUrlForExport = url + (url.contains("?") ? "&" : "?");
-                layersForExport = layers;
+                System.out.println("base layer changed");
+                System.out.println(currentProjection + "=>" + map.getProjection());
+                System.out.println();
+                
+//                String url = eventObject.getLayer().getJSObject().getPropertyAsString("url");
+//                String layers = eventObject.getLayer().getJSObject().getPropertyAsArray("params")[0]
+//                        .getPropertyAsString("LAYERS");
+//                baseUrlForExport = url + (url.contains("?") ? "&" : "?");
+//                layersForExport = layers;
                 if (!map.getProjection().equals(currentProjection)) {
                     currentProjection = map.getProjection();
+                    map.zoomToMaxExtent();
                     for (String internalLayerId : wmsLayers.keySet()) {
                         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
                         if (wmsAndParams != null) {
@@ -782,10 +788,34 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                     wmsAndParams.multipleElevations, wmsAndParams.multipleTimes);
                         }
                     }
-                    map.zoomToMaxExtent();
                 }
+                
+                System.out.println(map.getExtent().toBBox(2));
             }
         });
+        
+//        map.addMapLayerChangedListener(new MapLayerChangedListener() {
+//            @Override
+//            public void onLayerChanged(MapLayerChangedEvent eventObject) {
+//                System.out.println("layer changed");
+//                System.out.println(currentProjection + "=>" + map.getProjection());
+//                System.out.println();
+//                
+//                if (!map.getProjection().equals(currentProjection)) {
+//                    currentProjection = map.getProjection();
+//                    for (String internalLayerId : wmsLayers.keySet()) {
+//                        WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
+//                        if (wmsAndParams != null) {
+//                            removeLayer(internalLayerId);
+//                            doAddingOfLayer(wmsAndParams.wmsUrl, internalLayerId, wmsAndParams.params,
+//                                    getOptionsForCurrentProjection(),
+//                                    wmsAndParams.multipleElevations, wmsAndParams.multipleTimes);
+//                        }
+//                    }
+//                    map.zoomToMaxExtent();
+//                }
+//            }
+//        });
         map.setBaseLayer(openLayers);
     }
 

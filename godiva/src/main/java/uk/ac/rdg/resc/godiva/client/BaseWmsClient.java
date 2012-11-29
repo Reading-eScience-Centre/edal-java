@@ -682,6 +682,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             if (layerDetails.getNearestDateTime() != null) {
                 widgetCollection.getTimeSelector()
                         .selectDateTime(layerDetails.getNearestDateTime());
+            } else {
+                dateTimeDetailsLoaded = true;
             }
         } else {
             /*
@@ -693,6 +695,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             if (layerDetails.getNearestDateTime() != null) {
                 nearestTime = layerDetails.getNearestDateTime();
                 widgetCollection.getTimeSelector().selectDate(layerDetails.getNearestDate());
+            } else {
+                dateTimeDetailsLoaded = true;
             }
         }
     }

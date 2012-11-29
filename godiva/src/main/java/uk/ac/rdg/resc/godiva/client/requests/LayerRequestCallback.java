@@ -132,8 +132,11 @@ public abstract class LayerRequestCallback implements RequestCallback {
         // time string.
         JSONValue nearestTimeJson = parentObj.get("nearestTimeIso");
         if (nearestTimeJson != null) {
-            layerDetails.setNearestTime(nearestTimeJson.isString().stringValue());
-            layerDetails.setNearestDate(nearestTimeJson.isString().stringValue().substring(0, 10));
+            String nearestTime = nearestTimeJson.isString().stringValue();
+            if(!nearestTime.equals("") && nearestTime.length() > 10) {
+                layerDetails.setNearestTime(nearestTime);
+                layerDetails.setNearestDate(nearestTimeJson.isString().stringValue().substring(0, 10));
+            }
         }
 
         boolean multiFeature = false;
