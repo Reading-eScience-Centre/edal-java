@@ -627,15 +627,35 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             urlParams += "&layer=" + currentLayer;
         }
 
-        if (timeSelector.getSelectedDateTime() != null) {
-            urlParams += "&time=" + timeSelector.getSelectedDateTime();
+        if(timeSelector.isContinuous()){
+            if (timeSelector.getSelectedDateTimeRange() != null) {
+                urlParams += "&time=" + timeSelector.getSelectedDateTimeRange();
+            }
+            if (timeSelector.getSelectedDateTime() != null) {
+                urlParams += "&colorby/time=" + timeSelector.getSelectedDateTime();
+            }
+            if (timeSelector.getRange() != null) {
+                urlParams += "&range=" + timeSelector.getRange();
+            }
+        } else {
+            if (timeSelector.getSelectedDateTime() != null) {
+                urlParams += "&time=" + timeSelector.getSelectedDateTime();
+            }
         }
-        if (timeSelector.getRange() != null) {
-            urlParams += "&range=" + timeSelector.getRange();
-        }
-        if (elevationSelector.getSelectedElevation() != null) {
-            currentElevation = elevationSelector.getSelectedElevation();
-            urlParams += "&elevation=" + currentElevation;
+        if(elevationSelector.isContinuous()){
+            if (elevationSelector.getSelectedElevationRange() != null) {
+                currentElevation = elevationSelector.getSelectedElevation();
+                urlParams += "&colorby/depth=" + currentElevation;
+            }
+            if (elevationSelector.getSelectedElevationRange() != null) {
+                currentElevation = elevationSelector.getSelectedElevationRange();
+                urlParams += "&elevation=" + currentElevation;
+            }
+        } else {
+            if (elevationSelector.getSelectedElevation() != null) {
+                currentElevation = elevationSelector.getSelectedElevation();
+                urlParams += "&elevation=" + currentElevation;
+            }
         }
         if (paletteSelector.getSelectedPalette() != null) {
             currentPalette = paletteSelector.getSelectedPalette();
@@ -671,7 +691,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 urlParams += "&layerTitle=" + title;
             }
         }
-        urlParams += "&crs=EPSG:4326";
+        urlParams += "&crs=" + mapArea.getMap().getProjection();
         urlParams += "&mapHeight=" + mapHeight;
         urlParams += "&mapWidth=" + mapWidth;
         urlParams += "&style=" + currentStyle;
