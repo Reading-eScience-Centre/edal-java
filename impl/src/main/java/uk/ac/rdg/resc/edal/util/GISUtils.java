@@ -40,8 +40,6 @@ import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.cs.CoordinateSystem;
-import org.opengis.referencing.cs.RangeMeaning;
 import org.opengis.referencing.operation.MathTransform;
 
 import uk.ac.rdg.resc.edal.Extent;
@@ -675,6 +673,61 @@ public final class GISUtils {
         }
     }
 
+    private static List<HorizontalPosition> getFeatureDomainPositions(Feature feature) {
+        List<HorizontalPosition> positions = new ArrayList<HorizontalPosition>();
+        if (feature instanceof GridSeriesFeature) {
+            final BigList<GridCell2D> domainObjects = ((GridSeriesFeature) feature).getCoverage()
+                    .getDomain().getHorizontalGrid().getDomainObjects();
+            return new AbstractList<HorizontalPosition>() {
+                @Override
+                public HorizontalPosition get(int index) {
+                    return domainObjects.get(index).getCentre();
+                }
+
+                @Override
+                public int size() {
+                    return domainObjects.size();
+                }
+            };
+        } else if (feature instanceof GridFeature) {
+            final BigList<GridCell2D> domainObjects = ((GridFeature) feature).getCoverage()
+                    .getDomain().getDomainObjects();
+            return new AbstractList<HorizontalPosition>() {
+                @Override
+                public HorizontalPosition get(int index) {
+                    return domainObjects.get(index).getCentre();
+                }
+
+                @Override
+                public int size() {
+                    return domainObjects.size();
+                }
+            };
+        } else if (feature instanceof ProfileFeature) {
+            HorizontalPosition horizontalPosition = ((ProfileFeature) feature)
+                    .getHorizontalPosition();
+            positions.add(horizontalPosition);
+        } else if (feature instanceof PointSeriesFeature) {
+            HorizontalPosition horizontalPosition = ((PointSeriesFeature) feature)
+                    .getHorizontalPosition();
+            positions.add(horizontalPosition);
+        } else if (feature instanceof TrajectoryFeature) {
+            final List<GeoPosition> domainObjects = ((TrajectoryFeature) feature).getCoverage().getDomain().getDomainObjects();
+            return new AbstractList<HorizontalPosition>() {
+                @Override
+                public HorizontalPosition get(int index) {
+                    return domainObjects.get(index).getHorizontalPosition();
+                }
+
+                @Override
+                public int size() {
+                    return domainObjects.size();
+                }
+            };
+        }
+        return positions;
+    }
+    
     /**
      * Checks whether a bounding box overlaps with a feature's extent
      * @param bbox The bounding box to check
@@ -682,90 +735,13 @@ public final class GISUtils {
      * @return
      */
     public static boolean featureOverlapsBoundingBox(BoundingBox bbox, Feature feature) {
-        /*
-         * Get the feature bounding box
-         */
-        BoundingBox featureBbox = getFeatureHorizontalExtent(feature);
-        
-        /*
-         * Get 2 corners of the bounding box in the feature CRS
-         */
-        CoordinateReferenceSystem crs = featureBbox.getCoordinateReferenceSystem();
-        HorizontalPosition bLowerCorner = transformPosition(bbox.getLowerCorner(), crs);
-        HorizontalPosition bUpperCorner = transformPosition(bbox.getUpperCorner(), crs);
-
-        /*
-         * Check the CRS we are now working in to see if either of the axes wraps
-         */
-        CoordinateSystem coordinateSystem = crs.getCoordinateSystem();
-        boolean wrapX = false;
-        boolean wrapY = false;
-        if(coordinateSystem.getDimension() >= 2){
-            if(coordinateSystem.getAxis(0).getRangeMeaning() == RangeMeaning.WRAPAROUND){
-                wrapX = true;
-            }
-            if(coordinateSystem.getAxis(1).getRangeMeaning() == RangeMeaning.WRAPAROUND){
-                wrapY = true;
-            }
-        }
-        
-        /*
-         * Get some x and y bounds for the feature and the bbox
-         */
-        double xFMin = featureBbox.getMinX();
-        double xFMax = featureBbox.getMaxX();
-        double xBMin = bLowerCorner.getX();
-        double xBMax = bUpperCorner.getX();
-        
-        double yFMin = featureBbox.getMinY();
-        double yFMax = featureBbox.getMaxY();
-        double yBMin = bLowerCorner.getY();
-        double yBMax = bUpperCorner.getY();
-        
-        /*
-         * Our algorithm checks if the x-extent of the feature overlaps with
-         * that of the bounding box, then does the same for the y-extent.
-         * 
-         * If both overlap, we return true.
-         * 
-         * We do 3 checks to determine overlap:
-         * 
-         * The bounding box x-extent contains the minimum value of the feature
-         * x-extent
-         * 
-         * The bounding box x-extent contains the maximum value of the feature
-         * x-extent
-         * 
-         * The feature x-extent contains both values of the bounding box extent
-         * (we only need to check one)
-         * 
-         * However, all of these checks need to ensure that axis wrapping has
-         * been taken into account, so we define 3 checking variables, which are
-         * wrapped in the context of the extent being checked
-         */
-        double xMinCheck = wrapX ? GISUtils.getNextEquivalentLongitude(xBMin, xFMin) : xFMin;
-        double xMaxCheck = wrapX ? GISUtils.getNextEquivalentLongitude(xBMin, xFMax) : xFMax;
-        double xBMinCheck = wrapX ? GISUtils.getNextEquivalentLongitude(xFMin, xBMin) : xBMin;
-
-        if ( !(xBMin <= xMinCheck && xBMax >= xMinCheck)
-                && !(xBMin <= xMaxCheck && xBMax >= xMaxCheck)
-                && !(xFMin <= xBMinCheck && xFMax >= xBMinCheck)) {
-            /*
-             * No need to check the y extents, we've already failed
-             */
-            return false;
-        } else {
-            double yMinCheck = wrapY ? GISUtils.getNextEquivalentLongitude(yBMin, yFMin) : yFMin;
-            double yMaxCheck = wrapY ? GISUtils.getNextEquivalentLongitude(yBMin, yFMax) : yFMax;
-            double yBMinCheck = wrapY ? GISUtils.getNextEquivalentLongitude(yFMin, yBMin) : yBMin;
-            if ((yBMin <= yMinCheck && yBMax >= yMinCheck)
-                    || (yBMin <= yMaxCheck && yBMax >= yMaxCheck)
-                    || (yFMin <= yBMinCheck && yFMax >= yBMinCheck)) {
+        List<HorizontalPosition> featurePoints = getFeatureDomainPositions(feature);
+        for(HorizontalPosition pos : featurePoints) {
+            if(bbox.contains(pos)) {
                 return true;
-            } else {
-                return false;
             }
         }
+        return false;
     }
 
     public static boolean timeRangeContains(Extent<TimePosition> tRange, Feature feature) {
