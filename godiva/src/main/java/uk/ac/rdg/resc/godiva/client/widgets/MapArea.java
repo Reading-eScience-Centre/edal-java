@@ -764,21 +764,17 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.addLayer(northPole);
         map.addLayer(southPole);
         currentProjection = map.getProjection();
+        
         map.addMapBaseLayerChangedListener(new MapBaseLayerChangedListener() {
             @Override
             public void onBaseLayerChanged(MapBaseLayerChangedEvent eventObject) {
-                System.out.println("base layer changed");
-                System.out.println(currentProjection + "=>" + map.getProjection());
-                System.out.println();
-                
-//                String url = eventObject.getLayer().getJSObject().getPropertyAsString("url");
-//                String layers = eventObject.getLayer().getJSObject().getPropertyAsArray("params")[0]
-//                        .getPropertyAsString("LAYERS");
-//                baseUrlForExport = url + (url.contains("?") ? "&" : "?");
-//                layersForExport = layers;
+                String url = eventObject.getLayer().getJSObject().getPropertyAsString("url");
+                String layers = eventObject.getLayer().getJSObject().getPropertyAsArray("params")[0]
+                        .getPropertyAsString("LAYERS");
+                baseUrlForExport = url + (url.contains("?") ? "&" : "?");
+                layersForExport = layers;
                 if (!map.getProjection().equals(currentProjection)) {
                     currentProjection = map.getProjection();
-                    map.zoomToMaxExtent();
                     for (String internalLayerId : wmsLayers.keySet()) {
                         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
                         if (wmsAndParams != null) {
@@ -788,35 +784,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                     wmsAndParams.multipleElevations, wmsAndParams.multipleTimes);
                         }
                     }
+                    map.zoomToMaxExtent();
                 }
-                
-                System.out.println(map.getExtent().toBBox(2));
             }
         });
         
-//        map.addMapLayerChangedListener(new MapLayerChangedListener() {
-//            @Override
-//            public void onLayerChanged(MapLayerChangedEvent eventObject) {
-//                System.out.println("layer changed");
-//                System.out.println(currentProjection + "=>" + map.getProjection());
-//                System.out.println();
-//                
-//                if (!map.getProjection().equals(currentProjection)) {
-//                    currentProjection = map.getProjection();
-//                    for (String internalLayerId : wmsLayers.keySet()) {
-//                        WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
-//                        if (wmsAndParams != null) {
-//                            removeLayer(internalLayerId);
-//                            doAddingOfLayer(wmsAndParams.wmsUrl, internalLayerId, wmsAndParams.params,
-//                                    getOptionsForCurrentProjection(),
-//                                    wmsAndParams.multipleElevations, wmsAndParams.multipleTimes);
-//                        }
-//                    }
-//                    map.zoomToMaxExtent();
-//                }
-//            }
-//        });
         map.setBaseLayer(openLayers);
+        baseUrlForExport = "http://labs.metacarta.com/wms-c/Basic.py?";
+        layersForExport = "basic";
     }
 
     protected WMSOptions getOptionsForCurrentProjection() {
