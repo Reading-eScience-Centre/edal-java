@@ -36,13 +36,23 @@ import java.awt.image.IndexColorModel;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import uk.ac.rdg.resc.edal.Extent;
 
@@ -113,6 +123,30 @@ public class ColorPalette {
 
     static {
         palettes.put(DEFAULT_PALETTE_NAME, DEFAULT_PALETTE);
+        
+        try {
+            String[] paletteFileNames = getResourceListing(ColorPalette.class, "palettes/");
+            for (String paletteFileName : paletteFileNames) {
+                if(paletteFileName.endsWith(".pal")){
+                    try {
+                        String paletteName = paletteFileName.substring(0,
+                                paletteFileName.lastIndexOf("."));
+                        ColorPalette palette = new ColorPalette(paletteName,
+                                readColorPalette(new InputStreamReader(ColorPalette.class.getResource(
+                                        "/palettes/" + paletteFileName).openStream())));
+                        palettes.put(palette.getName(), palette);
+                    } catch (IOException e) {
+                        /*
+                         * If we can't add this palette, don't add it
+                         */
+                    }
+                }
+            }
+        } catch (Exception e) {
+            /*
+             * This catches anything thrown whilst trying to read the palettes directory
+             */
+        }
     }
 
     private ColorPalette(String name, Color[] palette) {
@@ -140,21 +174,19 @@ public class ColorPalette {
     }
 
     /**
-     * This is called by WmsController on initialization to load all the
-     * palettes in the WEB-INF/conf/palettes directory. This will attempt to
-     * load all files with the file extension ".pal".
+     * This will load any palettes in the given directory, overwriting any with
+     * the same name
      * 
      * @param paletteLocationDir
-     *            Directory containing the palette files. This has already been
-     *            checked to exist and be a directory
+     *            Directory containing the palette files. This must have already
+     *            been checked to exist and be a directory
      */
     public static final void loadPalettes(File paletteLocationDir) {
         for (File file : paletteLocationDir.listFiles()) {
             if (file.getName().endsWith(".pal")) {
                 try {
-                    String paletteName = file.getName().substring(0,
-                            file.getName().lastIndexOf("."));
-                    ColorPalette palette = new ColorPalette(paletteName, readColorPalette(file));
+                    String paletteName = file.getName().substring(0, file.getName().lastIndexOf("."));
+                    ColorPalette palette = new ColorPalette(paletteName, readColorPalette(new FileReader(file)));
                     palettes.put(palette.getName(), palette);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -486,8 +518,8 @@ public class ColorPalette {
      *             if the palette file could not be read or contains a format
      *             error
      */
-    private static Color[] readColorPalette(File paletteFile) throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(paletteFile));
+    private static Color[] readColorPalette(Reader paletteFileReader) throws Exception {
+        BufferedReader reader = new BufferedReader(paletteFileReader);
         List<Color> colours = new ArrayList<Color>();
         String line;
         try {
@@ -528,4 +560,64 @@ public class ColorPalette {
         return colours.toArray(new Color[0]);
     }
 
+    /**
+     * This method was taken from the internet, and is used here to extract the
+     * palette names from the JAR. This allows us to package palettes with the
+     * edal-graphics library
+     * 
+     * List directory contents for a resource folder. Not recursive. This is
+     * basically a brute-force implementation. Works for regular files and also
+     * JARs.
+     * 
+     * Taken from: http://www.uofr.net/~greg/java/get-resource-listing.html
+     * 
+     * @author Greg Briggs
+     * @param clazz
+     *            Any java class that lives in the same place as the resources
+     *            you want.
+     * @param path
+     *            Should end with "/", but not start with one.
+     * @return Just the name of each member item, not the full paths.
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    private static String[] getResourceListing(Class clazz, String path) throws URISyntaxException, IOException {
+        URL dirURL = clazz.getClassLoader().getResource(path);
+        if (dirURL != null && dirURL.getProtocol().equals("file")) {
+          /* A file path: easy enough */
+          return new File(dirURL.toURI()).list();
+        } 
+
+        if (dirURL == null) {
+          /* 
+           * In case of a jar file, we can't actually find a directory.
+           * Have to assume the same jar as clazz.
+           */
+          String me = clazz.getName().replace(".", "/")+".class";
+          dirURL = clazz.getClassLoader().getResource(me);
+        }
+        
+        if (dirURL.getProtocol().equals("jar")) {
+          /* A JAR path */
+          String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!")); //strip out only the JAR file
+          JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
+          Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
+          Set<String> result = new HashSet<String>(); //avoid duplicates in case it is a subdirectory
+          while(entries.hasMoreElements()) {
+            String name = entries.nextElement().getName();
+            if (name.startsWith(path)) { //filter according to the path
+              String entry = name.substring(path.length());
+              int checkSubdir = entry.indexOf("/");
+              if (checkSubdir >= 0) {
+                // if it is a subdirectory, we just return the directory name
+                entry = entry.substring(0, checkSubdir);
+              }
+              result.add(entry);
+            }
+          }
+          return result.toArray(new String[result.size()]);
+        } 
+          
+        throw new UnsupportedOperationException("Cannot list files for URL "+dirURL);
+    }
 }
