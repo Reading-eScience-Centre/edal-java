@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
@@ -261,7 +262,11 @@ public final class GISUtils {
      */
     public static Extent<Float> estimateValueRange(Feature feature, String member) {
         List<Float> dataSample = readDataSample(feature, member);
-        return Extents.findMinMax(dataSample);
+        try {
+            return Extents.findMinMax(dataSample);
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     private static List<Float> readDataSample(Feature feature, String member) {
