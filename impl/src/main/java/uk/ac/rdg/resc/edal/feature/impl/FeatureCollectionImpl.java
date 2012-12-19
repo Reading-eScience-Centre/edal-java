@@ -31,7 +31,6 @@ package uk.ac.rdg.resc.edal.feature.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,11 +78,6 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
     }
 
     @Override
-    public Set<String> getFeatureIds() {
-        return id2Feature.keySet();
-    }
-
-    @Override
     public Collection<F> getFeatures() {
         return id2Feature.values();
     }
@@ -98,11 +92,6 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
         return name;
     }
 
-    @Override
-    public Iterator<F> iterator() {
-        return id2Feature.values().iterator();
-    }
-    
     @SuppressWarnings("unchecked")
     @Override
     public Class<F> getFeatureType() {
@@ -216,7 +205,6 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
             }
         }
         if(features != null){
-            int i = 0;
             for (F feature : features) {
                 if (bbox != null && !GISUtils.featureOverlapsBoundingBox(bbox, feature)) {
                     continue;
@@ -227,7 +215,6 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
                 if (zRange != null && !GISUtils.zRangeContains(zRange, feature)) {
                     continue;
                 }
-                i++;
                 includedFeatures.add(feature);
             }
         }

@@ -45,7 +45,7 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  *       using spatio-temporal searches.
  * @author Jon Blower
  */
-public interface FeatureCollection<F extends Feature> extends Iterable<F> {
+public interface FeatureCollection<F extends Feature> {
 
     /**
      * Identifier for this collection. Unique within its context (e.g. within a
@@ -57,13 +57,6 @@ public interface FeatureCollection<F extends Feature> extends Iterable<F> {
      * Human-readable name for this collection (not necessarily unique)
      */
     public String getName();
-
-    /**
-     * Returns the set of Feature identifiers within this collection
-     * 
-     * @return
-     */
-    public Set<String> getFeatureIds();
 
     /**
      * Gets the feature with the given ID.
