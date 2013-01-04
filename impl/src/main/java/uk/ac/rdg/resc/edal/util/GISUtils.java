@@ -222,36 +222,6 @@ public final class GISUtils {
     }
     
     /**
-     * Calculates the magnitude of the vector components given in the provided
-     * Lists.  The two lists must be of the same length.  For any element in the
-     * component lists, if either east or north is null, the magnitude will also
-     * be null.
-     * @return a List of the magnitudes calculated from the components.
-     */
-    public static List<Float> getMagnitudes(List<Float> eastData, List<Float> northData)
-    {
-        if (eastData == null || northData == null) throw new NullPointerException();
-        if (eastData.size() != northData.size())
-        {
-            throw new IllegalArgumentException("east and north data components must be the same length");
-        }
-        List<Float> mag = new ArrayList<Float>(eastData.size());
-        for (int i = 0; i < eastData.size(); i++)
-        {
-            Float east = eastData.get(i);
-            Float north = northData.get(i);
-            Float val = null;
-            if (east != null && north != null)
-            {
-                val = (float)Math.sqrt(east * east + north * north);
-            }
-            mag.add(val);
-        }
-        if (mag.size() != eastData.size()) throw new AssertionError();
-        return mag;
-    }
-    
-    /**
      * Estimate the range of values in this layer by reading a sample of data
      * from the default time and elevation. Works for both Scalar and Vector
      * layers.
@@ -304,7 +274,7 @@ public final class GISUtils {
             feature = gridSeriesFeature.extractGridFeature(
                     new RegularGridImpl(gridSeriesFeature.getCoverage().getDomain()
                             .getHorizontalGrid().getCoordinateExtent(), 100, 100),
-                    getClosestElevationToSurface(gridSeriesFeature),
+                    getClosestElevationToSurface(getVerticalAxis(gridSeriesFeature)),
                     getClosestToCurrentTime(gridSeriesFeature.getCoverage().getDomain()
                             .getTimeAxis()), CollectionUtils.setOf(scalarMemberName));
         }
@@ -350,7 +320,7 @@ public final class GISUtils {
         if (targetTime == null) {
             return getClosestToCurrentTime(tAxis);
         }
-        int index = TimeUtils.findTimeIndex(tAxis.getCoordinateValues(), new TimePositionJoda());
+        int index = TimeUtils.findTimeIndex(tAxis.getCoordinateValues(), targetTime);
         if (index < 0) {
             /*
              * We can calculate the insertion point
@@ -359,11 +329,20 @@ public final class GISUtils {
             /*
              * We set the index to the most recent past time
              */
-            if (insertionPoint > 0) {
-                /*
-                 * The most recent past time
-                 */
+            if (insertionPoint == tAxis.size()) {
                 index = insertionPoint - 1;
+            } else if (insertionPoint > 0) {
+                /*
+                 * We need to find which of the two possibilities is the closest time
+                 */
+                long t1 = tAxis.getCoordinateValues().get(insertionPoint-1).getValue();
+                long t2 = tAxis.getCoordinateValues().get(insertionPoint).getValue();
+                
+                if ((t2 - targetTime.getValue()) <= (targetTime.getValue() - t1)) {
+                    index = insertionPoint;
+                } else {
+                    index = insertionPoint - 1;
+                }
             } else {
                 /*
                  * All DateTimes on the axis are in the future, so we take the
@@ -379,13 +358,11 @@ public final class GISUtils {
     /**
      * Returns the uppermost elevation of the given feature
      * 
-     * @param feature
-     *            The feature to test
-     * @return The uppermost elevation, or null if the feature doesn't have a
-     *         vertical axis
+     * @param vAxis
+     *            The {@link VerticalAxis} to test
+     * @return The uppermost elevation, or null if no {@link VerticalAxis} is provided
      */
-    public static VerticalPosition getClosestElevationToSurface(Feature feature) {
-        VerticalAxis vAxis = getVerticalAxis(feature);
+    public static VerticalPosition getClosestElevationToSurface(VerticalAxis vAxis) {
         if (vAxis == null) {
             return null;
         }
@@ -417,19 +394,18 @@ public final class GISUtils {
      * Gets the closest elevation to the target within the given feature.
      * 
      * @param targetDepth
-     *            The target elevation
-     * @param feature
-     *            The feature containing the domain to be searched
-     * @return Either the closest elevation to the target elevation, or the
-     *         closest elevation to the surface if the target is
-     *         <code>null</code>, or null if the {@link Feature} has no
-     *         {@link VerticalAxis}
+     *            The target elevation, in the same {@link VerticalCrs} as the
+     *            axis
+     * @param vAxis
+     *            The vertical axis to search
+     * @return Either the closest elevation to the target elevation, the closest
+     *         elevation to the surface if the target is <code>null</code>, or
+     *         <code>null</code> if the {@link VerticalAxis} is null
      */
-    public static VerticalPosition getClosestElevationTo(Double targetDepth, Feature feature) {
+    public static VerticalPosition getClosestElevationTo(Double targetDepth, VerticalAxis vAxis) {
         if(targetDepth == null) {
-            return getClosestElevationToSurface(feature);
+            return getClosestElevationToSurface(vAxis);
         }
-        VerticalAxis vAxis = getVerticalAxis(feature);
         if(vAxis == null) {
             return null;
         }
@@ -445,6 +421,38 @@ public final class GISUtils {
         
         List<Double> values = vAxis.getCoordinateValues();
         int index = Collections.binarySearch(values, targetDepth);
+        
+        if (index < 0) {
+            /*
+             * We can calculate the insertion point
+             */
+            int insertionPoint = -(index + 1);
+            /*
+             * We set the index to the final index
+             */
+            if (insertionPoint == vAxis.size()) {
+                index = insertionPoint - 1;
+            } else if (insertionPoint > 0) {
+                /*
+                 * We need to find which of the two possibilities is the closest elevation
+                 */
+                double v1 = vAxis.getCoordinateValues().get(insertionPoint-1);
+                double v2 = vAxis.getCoordinateValues().get(insertionPoint);
+                
+                if ((v2 - targetDepth) <= (targetDepth - v1)) {
+                    index = insertionPoint;
+                } else {
+                    index = insertionPoint - 1;
+                }
+            } else {
+                /*
+                 * All DateTimes on the axis are in the future, so we take the
+                 * earliest
+                 */
+                index = 0;
+            }
+        }
+        
         if(index < 0){
             index = -(index + 1);
             if (index == values.size()) {
@@ -459,22 +467,47 @@ public final class GISUtils {
      * present in the domain of the given feature
      * 
      * @param elevationStr
-     *            The desired elevation
-     * @param feature
-     *            The feature containing the domain
+     *            The desired elevation, as {@link String} representation of a
+     *            number (i.e. with no units etc.)
+     * @param vAxis
+     *            The {@link VerticalAxis} to get the elevation from
      * @return The {@link VerticalPosition} required, or <code>null</code>
      */
-    public static VerticalPosition getExactElevation(String elevationStr, Feature feature) {
+    public static VerticalPosition getExactElevation(String elevationStr, VerticalAxis vAxis) {
         if(elevationStr == null) {
             return null;
         }
-        VerticalAxis vAxis = getVerticalAxis(feature);
         if(vAxis == null){
             return null;
         }
-        Double elevation;
+        double elevation;
         try {
             elevation = Double.parseDouble(elevationStr);
+            if(elevation == 0.0) {
+                elevation = 0.0;
+                /*
+                 * This looks entirely unnecessary, but there's a very good
+                 * reason for it.
+                 * 
+                 * In Java, 0.0 and -0.0 are treated unusually. In equivalence
+                 * tests, they are equal, so:
+                 * 
+                 * 0.0 == -0.0
+                 * 
+                 * evaluates to true
+                 * 
+                 * However, in equality tests, they are not. So:
+                 * 
+                 * (new Double(0.0)).equals(new Double(-0.0))
+                 * 
+                 * evaluates to false. Since the binarySearch below uses the
+                 * equals() method for comparing values, an elevation string of
+                 * "-0.0" or similar will not be seen as matching an axis value
+                 * of 0.0. This if-block simply ensures that anything that is ==
+                 * to 0.0 is actually 0.0, and will hence be seen as .equal() to
+                 * 0.0
+                 */
+            }
         } catch (Exception e) {
             /*
              * If we have any exception here, it means we cannot parse the
@@ -735,9 +768,12 @@ public final class GISUtils {
     
     /**
      * Checks whether a bounding box overlaps with a feature's extent
-     * @param bbox The bounding box to check
-     * @param feature The feature to check
-     * @return
+     * 
+     * @param bbox
+     *            The bounding box to check
+     * @param feature
+     *            The feature to check
+     * @return <code>true</code> if there is an overlap
      */
     public static boolean featureOverlapsBoundingBox(BoundingBox bbox, Feature feature) {
         List<HorizontalPosition> featurePoints = getFeatureDomainPositions(feature);
@@ -774,6 +810,25 @@ public final class GISUtils {
                 || featureZExtent.contains(new VerticalPositionImpl(zRange.getLow(), getVerticalCrs(feature)));
     }
 
+    /**
+     * Returns the nearest {@link GeoPosition} to a given
+     * {@link HorizontalPosition} which is also within the given
+     * {@link BoundingBox}, and is part of the domain of a given
+     * {@link TrajectoryFeature}.
+     * 
+     * TODO This is currently only used once (in AbstractWmsController in
+     * edal-ncwms). Maybe it should go there?
+     * 
+     * @param feature
+     *            The {@link TrajectoryFeature} whose domain is to be searched
+     * @param pos
+     *            The target {@link HorizontalPosition}
+     * @param bbox
+     *            The {@link BoundingBox} which the position must be within
+     * @return Either the horizontally-closest {@link GeoPosition}, or
+     *         <code>null</code> if the {@link TrajectoryFeature} contains no
+     *         domain objects within the {@link BoundingBox}
+     */
     public static GeoPosition getTrajectoryPosition(TrajectoryFeature feature, final HorizontalPosition pos,
             BoundingBox bbox) {
         List<GeoPosition> potentialMatches = new ArrayList<GeoPosition>();
