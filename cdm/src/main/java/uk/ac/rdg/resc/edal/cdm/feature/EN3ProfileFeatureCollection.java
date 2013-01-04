@@ -22,7 +22,6 @@ import uk.ac.rdg.resc.edal.PhenomenonVocabulary;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.UnitVocabulary;
 import uk.ac.rdg.resc.edal.cdm.util.CdmUtils;
-import uk.ac.rdg.resc.edal.cdm.util.FileUtils;
 import uk.ac.rdg.resc.edal.coverage.domain.impl.ProfileDomainImpl;
 import uk.ac.rdg.resc.edal.coverage.impl.ProfileCoverageImpl;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
@@ -65,7 +64,7 @@ public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFe
         double maxz = Double.MIN_VALUE;
         
         VerticalCrs vCrs = null;
-        List<File> files = FileUtils.expandGlobExpression(location);
+        List<File> files = CdmUtils.expandGlobExpression(location);
         /*
          * The ID number of the profile within the collection
          */

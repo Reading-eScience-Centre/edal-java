@@ -59,19 +59,30 @@ public abstract class FeatureCollectionFactory {
      */
     public static FeatureCollectionFactory forName(String factoryClassName)
             throws Exception {
-        String clazz = DefaultGridSeriesFeatureCollectionFactory.class.getName();
+        String clazz = null;
         if (factoryClassName != null && !factoryClassName.trim().equals("")) {
             clazz = factoryClassName;
+        } else {
+            clazz = defaultClass.getName();
         }
-        // TODO make this thread safe. Can this be done without explicit
-        // locking?
-        // See Bloch, Effective Java.
-        if (!readers.containsKey(clazz)) {
-            // Create the DataReader object
-            Object factoryObj = Class.forName(clazz).newInstance();
-            // this will throw a ClassCastException if drObj is not a DataReader
-            readers.put(clazz, (FeatureCollectionFactory) factoryObj);
+        if(defaultClass == null) {
+            throw new IllegalStateException(
+                    "You must set the default class using FeatureCollectionFactory.setDefaultClass() or use a named reader class");
+        }
+        synchronized (readers) {
+            if (!readers.containsKey(clazz)) {
+                // Create the DataReader object
+                Object factoryObj = Class.forName(clazz).newInstance();
+                // this will throw a ClassCastException if drObj is not a FeatureCollectionFactory
+                readers.put(clazz, (FeatureCollectionFactory) factoryObj);
+            }
         }
         return readers.get(clazz);
+    }
+    
+    private static Class<?> defaultClass = null;
+    
+    public static void setDefaultClass(Class<?> clazz) {
+        defaultClass = clazz;
     }
 }
