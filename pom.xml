@@ -232,11 +232,13 @@
 			<id>edal-snapshots</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
+        <!--
 		<site>
 			<id>website</id>
 			<name>ReSC Website</name>
 			<url>scp://fakewebsite.xxx/maven</url>
-		</site>
+        </site>
+        -->
 	</distributionManagement>
 	<modules>
 		<!-- Note that these are relative directory paths, not artifactIds! -->
