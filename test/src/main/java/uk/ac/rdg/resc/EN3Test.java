@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Set;
 
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -20,8 +19,6 @@ public class EN3Test {
         EN3ProfileFeatureCollection en3Collection = new EN3ProfileFeatureCollection(
                 "en3", "EN3 Collection", "/home/guy/Data/EN3/EN3_v1c_2007.12.nc");
         
-        Set<String> featureIds = en3Collection.getFeatureIds();
-//        System.out.println(featureIds);
         
         Feature feature = en3Collection.getFeatureById("prof123");
         if(feature instanceof ProfileFeature){
