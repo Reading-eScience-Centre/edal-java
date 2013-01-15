@@ -49,7 +49,6 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
@@ -276,7 +275,7 @@ public final class GISUtils {
                             .getHorizontalGrid().getCoordinateExtent(), 100, 100),
                     getClosestElevationToSurface(getVerticalAxis(gridSeriesFeature)),
                     getClosestToCurrentTime(gridSeriesFeature.getCoverage().getDomain()
-                            .getTimeAxis()), CollectionUtils.setOf(scalarMemberName));
+                            .getTimeAxis().getCoordinateValues()), CollectionUtils.setOf(scalarMemberName));
         }
 
         if (feature.getCoverage() instanceof DiscreteCoverage) {
@@ -298,8 +297,8 @@ public final class GISUtils {
         return ret;
     }
 
-    public static TimePosition getClosestToCurrentTime(TimeAxis tAxis) {
-        return getClosestTimeTo(new TimePositionJoda(), tAxis);
+    public static TimePosition getClosestToCurrentTime(List<TimePosition> tValues) {
+        return getClosestTimeTo(new TimePositionJoda(), tValues);
     }
 
     /**
@@ -307,20 +306,20 @@ public final class GISUtils {
      * 
      * @param targetTime
      *            The target time
-     * @param tAxis
-     *            The time axis to check
+     * @param tValues
+     *            The time values to check
      * @return Either the closest time within that axis, or the closest to the
      *         current time if the target is <code>null</code>, or
-     *         <code>null</code> if the time axis is <code>null</code>
+     *         <code>null</code> if the list of times is <code>null</code>
      */
-    public static TimePosition getClosestTimeTo(TimePosition targetTime, TimeAxis tAxis) {
-        if(tAxis == null) {
+    public static TimePosition getClosestTimeTo(TimePosition targetTime, List<TimePosition> tValues) {
+        if(tValues == null) {
             return null;
         }
         if (targetTime == null) {
-            return getClosestToCurrentTime(tAxis);
+            return getClosestToCurrentTime(tValues);
         }
-        int index = TimeUtils.findTimeIndex(tAxis.getCoordinateValues(), targetTime);
+        int index = TimeUtils.findTimeIndex(tValues, targetTime);
         if (index < 0) {
             /*
              * We can calculate the insertion point
@@ -329,14 +328,14 @@ public final class GISUtils {
             /*
              * We set the index to the most recent past time
              */
-            if (insertionPoint == tAxis.size()) {
+            if (insertionPoint == tValues.size()) {
                 index = insertionPoint - 1;
             } else if (insertionPoint > 0) {
                 /*
                  * We need to find which of the two possibilities is the closest time
                  */
-                long t1 = tAxis.getCoordinateValues().get(insertionPoint-1).getValue();
-                long t2 = tAxis.getCoordinateValues().get(insertionPoint).getValue();
+                long t1 = tValues.get(insertionPoint-1).getValue();
+                long t2 = tValues.get(insertionPoint).getValue();
                 
                 if ((t2 - targetTime.getValue()) <= (targetTime.getValue() - t1)) {
                     index = insertionPoint;
@@ -352,7 +351,7 @@ public final class GISUtils {
             }
         }
 
-        return tAxis.getCoordinateValue(index);
+        return tValues.get(index);
     }
 
     /**
@@ -600,28 +599,28 @@ public final class GISUtils {
      * Equivalent to {@link GISUtils#getTimeAxis(Feature, boolean)} with the 2nd
      * argument set to false
      */
-    public static TimeAxis getTimeAxis(final Feature feature) {
+    public static List<TimePosition> getTimeAxis(final Feature feature) {
         return getTimeAxis(feature, false);
     }
     
     /**
-     * Utility to get the time axis of a feature, if it exists
+     * Utility to get the values of the time axis of a feature, if it exists
      * 
      * @param feature
      *            the feature to check
      * @param force
      *            whether to create a fake time axis if the feature has a single
      *            time value
-     * @return the {@link TimeAxis}, or <code>null</code> if none exists
+     * @return a {@link List} of {@link TimePosition}s, or <code>null</code> if
+     *         no time axis exists
      */
-    public static TimeAxis getTimeAxis(final Feature feature, boolean force) {
+    public static List<TimePosition> getTimeAxis(final Feature feature, boolean force) {
         if (feature instanceof GridSeriesFeature) {
-            return ((GridSeriesFeature) feature).getCoverage().getDomain().getTimeAxis();
+            return ((GridSeriesFeature) feature).getCoverage().getDomain().getTimeAxis().getCoordinateValues();
         } else if (feature instanceof PointSeriesFeature) {
-            return new TimeAxisImpl("time", ((PointSeriesFeature) feature).getCoverage()
-                    .getDomain().getTimes());
+            return ((PointSeriesFeature) feature).getCoverage().getDomain().getTimes();
         } else if (feature instanceof TrajectoryFeature) {
-            return new TimeAxisImpl("time", new AbstractList<TimePosition>() {
+            return new AbstractList<TimePosition>() {
                 final List<GeoPosition> positions = ((TrajectoryFeature) feature).getCoverage().getDomain().getDomainObjects();
                 @Override
                 public TimePosition get(int index) {
@@ -632,11 +631,11 @@ public final class GISUtils {
                 public int size() {
                     return positions.size();
                 }
-            });
+            };
         } else {
             if(force){
                 if (feature instanceof ProfileFeature) {
-                    return new TimeAxisImpl("time", Arrays.asList(((ProfileFeature) feature).getTime()));
+                    return Arrays.asList(((ProfileFeature) feature).getTime());
                 } else {
                     return null;
                 }

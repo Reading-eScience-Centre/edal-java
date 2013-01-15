@@ -38,9 +38,7 @@ import org.junit.Test;
 
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.UnitVocabulary;
-import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.coverage.grid.impl.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
@@ -132,15 +130,14 @@ public class GISUtilsTest {
 
     @Test
     public void testGetClosestTimeTo() {
-        List<TimePosition> axisValues = new ArrayList<TimePosition>();
+        List<TimePosition> tAxis = new ArrayList<TimePosition>();
         for(long t = 10000; t < 20000; t += 1000){
             /*
              * Axis will have the values 10,000 - 19,000, incrementing by 1000
              * each time
              */
-            axisValues.add(new TimePositionJoda(t));
+            tAxis.add(new TimePositionJoda(t));
         }
-        TimeAxis tAxis = new TimeAxisImpl("testaxis", axisValues);
         
         // Should be null if the axis is null
         assertNull(GISUtils.getClosestTimeTo(new TimePositionJoda(), null));
