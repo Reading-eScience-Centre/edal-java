@@ -38,7 +38,6 @@ public class ChartingTests {
     public static void main(String[] args) throws IOException, InvalidCrsException, InvalidLineStringException {
         NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
                 "testcollection", "Test Collection", "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
-        System.out.println(featureCollection.getFeatureIds());
         GridSeriesFeature feature = featureCollection.getFeatureById("grid1");
         System.out.println(feature.getCoverage().getScalarMemberNames());
         String memberName = "TMP";

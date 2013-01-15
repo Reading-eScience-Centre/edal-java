@@ -28,7 +28,7 @@ public class FeatureCollectionTest {
                 "/home/guy/Data/OSTIA/20100715-UKMO-L4HRfnd-GLOB-v01-fv02-OSTIA.nc");
 //                "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
         
-        System.out.println(featureCollection.getId()+"=>"+featureCollection.getName()+":"+featureCollection.getFeatureIds());
+//        System.out.println(featureCollection.getId()+"=>"+featureCollection.getName()+":"+featureCollection.getFeatureIds());
         MapStyleDescriptor style = new MapStyleDescriptor();
         ColorPalette.loadPalettes(new File("/home/guy/Workspace/edal-java/ncwms/src/main/webapp/WEB-INF/conf/palettes/"));
 //        System.out.println(ColorPalette.getAvailablePaletteNames());
