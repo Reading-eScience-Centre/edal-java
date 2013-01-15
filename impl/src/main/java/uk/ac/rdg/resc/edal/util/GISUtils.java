@@ -49,6 +49,7 @@ import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
+import uk.ac.rdg.resc.edal.coverage.grid.impl.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
@@ -596,11 +597,11 @@ public final class GISUtils {
     }
 
     /**
-     * Equivalent to {@link GISUtils#getTimeAxis(Feature, boolean)} with the 2nd
-     * argument set to false
+     * Creates an actual time axis (not just a list of values)
      */
-    public static List<TimePosition> getTimeAxis(final Feature feature) {
-        return getTimeAxis(feature, false);
+    public static TimeAxis getTimeAxis(final Feature feature) {
+        List<TimePosition> times = getTimes(feature, false);
+        return times == null ? null : new TimeAxisImpl("Time", times);
     }
     
     /**
@@ -614,9 +615,10 @@ public final class GISUtils {
      * @return a {@link List} of {@link TimePosition}s, or <code>null</code> if
      *         no time axis exists
      */
-    public static List<TimePosition> getTimeAxis(final Feature feature, boolean force) {
+    public static List<TimePosition> getTimes(final Feature feature, boolean force) {
         if (feature instanceof GridSeriesFeature) {
-            return ((GridSeriesFeature) feature).getCoverage().getDomain().getTimeAxis().getCoordinateValues();
+            TimeAxis timeAxis = ((GridSeriesFeature) feature).getCoverage().getDomain().getTimeAxis();
+            return timeAxis == null ? null : timeAxis.getCoordinateValues();
         } else if (feature instanceof PointSeriesFeature) {
             return ((PointSeriesFeature) feature).getCoverage().getDomain().getTimes();
         } else if (feature instanceof TrajectoryFeature) {
