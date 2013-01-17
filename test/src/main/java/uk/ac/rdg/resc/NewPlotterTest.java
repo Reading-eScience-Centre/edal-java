@@ -34,8 +34,8 @@ public class NewPlotterTest {
     public static void main(String[] args) throws IOException, InstantiationException {
         final NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
                 "testcollection", "Test Collection",
-                "/home/guy/Data/OSTIA/20100715-UKMO-L4HRfnd-GLOB-v01-fv02-OSTIA.nc");
-//                "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
+                "/home/bx904529/workspace/SampleData/ostia.nc");
+//                "/home/bx904529/workspace/SampleData/FOAM_ONE/FOAM_one.ncml");
         
         final GridSeriesFeature feature = featureCollection.getFeatureById("testcollection1");
         GridSeriesDomain domain = feature.getCoverage().getDomain();
@@ -77,7 +77,7 @@ public class NewPlotterTest {
         
         GlobalPlottingParams params = new GlobalPlottingParams(width, height, bbox, null, null, vPos, tPos);
 
-        ImageIO.write(image.render(params, id2Feature), "png", new File("/home/guy/0000points.png"));
+        ImageIO.write(image.render(params, id2Feature), "png", new File("/home/bx904529/0000points.png"));
         
     }
 }
