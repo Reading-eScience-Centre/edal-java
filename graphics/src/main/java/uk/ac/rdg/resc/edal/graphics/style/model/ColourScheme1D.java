@@ -1,15 +1,15 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.model;
 
 import java.awt.Color;
 import java.awt.image.IndexColorModel;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.graphics.style.ColorPalette;
 
-@XmlRootElement
+@XmlType(namespace=Image.NAMESPACE)
 public class ColourScheme1D extends ColourScheme {
-    
     // The palette to use
     protected ColorPalette palette = ColorPalette.get(null);
     // The colour model for the specified palette
