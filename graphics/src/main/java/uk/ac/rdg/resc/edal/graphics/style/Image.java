@@ -5,7 +5,12 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class Image {
+    @XmlElement(name="layer")
     private List<ImageLayer> layers = new ArrayList<ImageLayer>();
 
     public void addLayer(ImageLayer layer) {

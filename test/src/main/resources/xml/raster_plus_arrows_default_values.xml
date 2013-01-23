@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<image>
+    <layer>
+        <layerId>UV_MAG</layerId>
+        <rasterPlotter>
+            <colourScheme1D>
+                <scaleMin>0</scaleMin>
+                <scaleMax>2</scaleMax>
+            </colourScheme1D>
+        </rasterPlotter>
+    </layer>
+    <layer>
+        <layerId>UV_DIR</layerId>
+        <arrowPlotter/>
+    </layer>
+</image>
