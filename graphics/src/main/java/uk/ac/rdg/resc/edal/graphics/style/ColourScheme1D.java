@@ -1,11 +1,23 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
+import java.awt.image.IndexColorModel;
+
+import javax.xml.bind.annotation.XmlRootElement;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.graphics.ColorPalette;
 
+@XmlRootElement
 public class ColourScheme1D extends ColourScheme {
+    
+    // The palette to use
+    protected ColorPalette palette = ColorPalette.get(null);
+    // The colour model for the specified palette
+    protected IndexColorModel indexColorModel = null;
+    
+    public ColourScheme1D(){
+        super(1);
+    }
 
 	public ColourScheme1D(Extent<Float> scaleRange, Color belowMinColor,
 			Color aboveMaxColor, Color noDataColor, String paletteName,
@@ -13,7 +25,8 @@ public class ColourScheme1D extends ColourScheme {
 		super(1);
 
 		// Set variables in constructor for now
-		this.scaleRange = scaleRange;
+		this.scaleMin = scaleRange.getLow();
+		this.scaleMax = scaleRange.getHigh();
 		this.opacity = opacity;
 		this.numColourBands = numColourBands;
 		this.logarithmic = logarithmic;
@@ -21,17 +34,17 @@ public class ColourScheme1D extends ColourScheme {
 		this.aboveMaxColour = aboveMaxColor;
 		this.noDataColour = noDataColor;
 		this.paletteName = paletteName;
-
-		// Set the palette to that specified in paletteName
-		palette = ColorPalette.get(paletteName);
-
-		// Get the colour model
-		indexColorModel = palette.getColorModel(numColourBands, opacity);
-
 	}
 
 	@Override
 	public Color doGetColor(Number... values) {
+	    if(palette == null || indexColorModel == null) {
+	        // Set the palette to that specified in paletteName
+	        palette = ColorPalette.get(paletteName);
+	        
+	        // Get the colour model
+	        indexColorModel = palette.getColorModel(numColourBands, opacity);
+	    }
 		/*
 		 * We can directly access values[0] since values is checked to be of
 		 * size 1 in the superclass.
@@ -39,8 +52,6 @@ public class ColourScheme1D extends ColourScheme {
 		if (values[0] == null || Float.isNaN(values[0].floatValue())) {
 			return noDataColour; // if no data present return this color
 		} else {
-			float scaleMin = scaleRange.getLow().floatValue();
-			float scaleMax = scaleRange.getHigh().floatValue();
 			double min = logarithmic ? Math.log(scaleMin) : scaleMin;
 			double max = logarithmic ? Math.log(scaleMax) : scaleMax;
 			double value = logarithmic ? Math.log(values[0].doubleValue())
@@ -75,7 +86,7 @@ public class ColourScheme1D extends ColourScheme {
 			}
 
 			// return the corresponding colour
-			return new Color(indexColorModel.getRGB(index));
+			return new Color(indexColorModel.getRGB(index), true);
 		}
 	}
 }

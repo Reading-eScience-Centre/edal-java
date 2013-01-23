@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<image>
+    <layer>
+        <layerId>TMP</layerId>
+        <rasterPlotter>
+            <colourScheme1D>
+                <scaleMin>270</scaleMin>
+                <scaleMax>302</scaleMax>
+                <aboveMaxColour>#000000</aboveMaxColour>
+                <belowMinColour>#000000</belowMinColour>
+                <noDataColour>#00000000</noDataColour>
+                <paletteName>alg</paletteName>
+                <opacity>75</opacity>
+                <numColourBands>55</numColourBands>
+                <logarithmic>false</logarithmic>
+            </colourScheme1D>
+        </rasterPlotter>
+    </layer>
+</image>

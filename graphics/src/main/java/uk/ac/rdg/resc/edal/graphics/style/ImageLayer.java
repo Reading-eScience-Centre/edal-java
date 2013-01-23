@@ -9,6 +9,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.coverage.DomainObjectValuePair;
@@ -37,8 +41,11 @@ import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
+@XmlRootElement
 public class ImageLayer {
+    @XmlElement(name="layerId")
     private String[] textIdentifiers;
+    @XmlElementRef
     private Plotter plotter;
 
     @SuppressWarnings("unused")
@@ -158,6 +165,32 @@ public class ImageLayer {
                 plottingData.add(new PlottingDatum(coords, (Number) entry.getValue().getValue(
                         member)));
             }
+        } else if (plotter.getPlotType() == PlotType.SUBSAMPLE) {
+            /*
+             * We want a value for every pixel in the image (aside from missing
+             * data), so we:
+             * 
+             * Project the feature onto the target grid
+             * 
+             * Get all values from this newly projected feature
+             */
+            RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth()/plotter.getXSampleSize(),
+                    params.getHeight()/plotter.getYSampleSize());
+            if (!gridFeature.getCoverage().getDomain().equals(targetDomain)) {
+                gridFeature = gridFeature.extractGridFeature(targetDomain, members);
+            }
+            
+            List<DomainObjectValuePair<GridCell2D>> list = gridFeature.getCoverage().list();
+            for (DomainObjectValuePair<GridCell2D> entry : list) {
+                GridCoordinates2D gridCoordinates = entry.getDomainObject().getGridCoordinates();
+                GridCoordinates2D coords = new GridCoordinates2DImpl(plotter.getXSampleSize()/2+gridCoordinates.getXIndex()*plotter.getXSampleSize(),
+                        -plotter.getYSampleSize()/2+params.getHeight() - gridCoordinates.getYIndex()*plotter.getYSampleSize() - 1);
+                plottingData.add(new PlottingDatum(coords, (Number) entry.getValue().getValue(
+                        member)));
+            }
+            /*
+             * TODO add different subsampling methods (i.e. MEAN as well as CLOSEST)
+             */
         } else if (plotter.getPlotType() == PlotType.GLYPH) {
             /*
              * We want a value for every point on the feature which falls within
@@ -218,7 +251,7 @@ public class ImageLayer {
              * Either way, throw an exception
              */
             throw new IllegalArgumentException(
-                    "GridFeatures are incompatible with this plotting type");
+                    "GridFeatures are incompatible with this plotting type: "+plotter.getPlotType());
         }
 
         return plottingData;
