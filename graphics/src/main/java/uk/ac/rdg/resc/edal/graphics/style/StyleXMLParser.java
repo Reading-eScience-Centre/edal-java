@@ -1,20 +1,30 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.SchemaOutputResolver;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
+import javax.xml.transform.Result;
+import javax.xml.transform.stream.StreamResult;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.graphics.style.model.ArrowPlotter;
+import uk.ac.rdg.resc.edal.graphics.style.model.ColourScheme1D;
+import uk.ac.rdg.resc.edal.graphics.style.model.Image;
+import uk.ac.rdg.resc.edal.graphics.style.model.ImageLayer;
+import uk.ac.rdg.resc.edal.graphics.style.model.RasterPlotter;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public class StyleXMLParser {
-    static class ColorAdapter extends XmlAdapter<String, Color> {
+    public static class ColorAdapter extends XmlAdapter<String, Color> {
         @Override
         public Color unmarshal(String s) {
             if (s.length() == 7) {
@@ -56,8 +66,21 @@ public class StyleXMLParser {
 
         return image;
     }
+    
+    public static void generateSchema(final String path) throws IOException, JAXBException {
+        JAXBContext context = JAXBContext.newInstance(Image.class);
+        context.generateSchema(new SchemaOutputResolver() {
+            @Override
+            public Result createOutput(String namespaceUri, String suggestedFileName) throws IOException {
+                System.out.println(namespaceUri+", "+suggestedFileName);
+                return new StreamResult(new File(path,suggestedFileName));
+            }
+        });
+    }
 
-    public static void main(String[] args) throws JAXBException {
+    public static void main(String[] args) throws JAXBException, IOException {
+        StyleXMLParser.generateSchema("/home/guy");
+        
         Extent<Float> scaleRange = Extents.newExtent(270.0f, 310.0f);
         ColourScheme1D colourScheme = new ColourScheme1D(scaleRange, null, Color.BLUE, new Color(0,
                 0, 0, 0), "redblue", 100, 254, false);
@@ -75,6 +98,7 @@ public class StyleXMLParser {
         image.addLayer(magLayer);
         image.addLayer(dirLayer);
 
-        System.out.println(StyleXMLParser.serialise(image));
+        StyleXMLParser.serialise(image);
+//        System.out.println(StyleXMLParser.serialise(image));
     }
 }

@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.model;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -7,9 +7,17 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement
+import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
+
+@XmlType(namespace=Image.NAMESPACE)
+@XmlRootElement(namespace=Image.NAMESPACE)
 public class Image {
+    
+    public static final String NAMESPACE="http://www.resc.reading.ac.uk/";
+    
     @XmlElement(name="layer")
     private List<ImageLayer> layers = new ArrayList<ImageLayer>();
 

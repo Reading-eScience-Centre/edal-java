@@ -1,12 +1,14 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.model;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElementRef;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement
+import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
+
+@XmlType(namespace=Image.NAMESPACE)
 public class RasterPlotter extends Plotter {
     private ColourScheme1D colourScheme = new ColourScheme1D();
 
@@ -18,9 +20,13 @@ public class RasterPlotter extends Plotter {
         super(1, PlotType.RASTER);
     }
 
-    @XmlElementRef
+    @XmlElement
     public void setColourScheme(ColourScheme1D colourScheme) {
         this.colourScheme = colourScheme;
+    }
+    
+    public ColourScheme1D getColourScheme() {
+        return colourScheme;
     }
 
     @Override

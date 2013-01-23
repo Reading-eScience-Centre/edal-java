@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.model;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -7,14 +7,15 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
-@XmlRootElement
+@XmlType(namespace=Image.NAMESPACE)
 public class ArrowPlotter extends Plotter {
-    private int arrowSize = 8;
+    private Integer arrowSize = 8;
     private Color arrowColor = Color.black;
     
     public ArrowPlotter() {
@@ -26,19 +27,27 @@ public class ArrowPlotter extends Plotter {
     }
 
     @XmlElement
-    public void setArrowSize(int arrowSize) {
-        if(arrowSize < 1) {
-            throw new IllegalArgumentException("Arrow size must be > 0");
+    public void setArrowSize(Integer arrowSize) {
+        if(arrowSize < 1 || arrowSize == null) {
+            throw new IllegalArgumentException("Arrow size must be non-null and > 0");
         }
         this.arrowSize = arrowSize;
         setXSampleSize((int) (arrowSize*1.5));
         setYSampleSize((int) (arrowSize*1.5));
+    }
+    
+    public Integer getArrowSize() {
+        return arrowSize;
     }
 
     @XmlElement
     @XmlJavaTypeAdapter(ColorAdapter.class)
     public void setArrowColor(Color arrowColor) {
         this.arrowColor = arrowColor;
+    }
+    
+    public Color getArrowColor() {
+        return arrowColor;
     }
 
     @Override

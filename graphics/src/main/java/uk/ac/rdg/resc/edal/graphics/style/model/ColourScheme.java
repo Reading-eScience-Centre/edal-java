@@ -1,13 +1,15 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.model;
 
 import java.awt.Color;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
+@XmlType(namespace=Image.NAMESPACE)
 @XmlSeeAlso({ ColourScheme1D.class })
 public abstract class ColourScheme {
     // The scale range spanned by this colour scheme
@@ -34,13 +36,13 @@ public abstract class ColourScheme {
     protected String paletteName = null;
     // The opacity of the color palette
     @XmlElement
-    protected int opacity = 100;
+    protected Integer opacity = 100;
     // The number of color bands to use
     @XmlElement
-    protected int numColourBands = 254;
+    protected Integer numColourBands = 254;
     // Whether or not the scale is logarithmic
     @XmlElement
-    protected boolean logarithmic = false;
+    protected Boolean logarithmic = false;
 
     // Number of values used to generate a colour in this colour scheme.
     // Protected so that subclasses can access it.

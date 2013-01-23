@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.model;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementRef;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -34,18 +33,22 @@ import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.graphics.style.Plotter.PlotType;
+import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
+import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
+import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
+import uk.ac.rdg.resc.edal.graphics.style.model.Plotter.PlotType;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
-@XmlRootElement
+@XmlType(namespace=Image.NAMESPACE)
 public class ImageLayer {
     @XmlElement(name="layerId")
     private String[] textIdentifiers;
-    @XmlElementRef
+    @XmlElement
     private Plotter plotter;
 
     @SuppressWarnings("unused")

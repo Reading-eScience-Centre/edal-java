@@ -1,10 +1,13 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.model;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
+
+import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 
 /**
  * A plotter class. Each plotter should deal with transforming a number (usually
@@ -14,8 +17,10 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author guy
  * 
  */
+@XmlType(namespace=Image.NAMESPACE)
 @XmlSeeAlso({RasterPlotter.class, ArrowPlotter.class})
 public abstract class Plotter {
+    @XmlType(namespace=Image.NAMESPACE)
     public enum PlotType {
         RASTER, SUBSAMPLE, GLYPH, TRAJECTORY
     }
@@ -28,6 +33,7 @@ public abstract class Plotter {
     private int xSampleSize = 8;
     private int ySampleSize = 8;
     private SubsampleType subsampleType = SubsampleType.CLOSEST;
+    @XmlType(namespace=Image.NAMESPACE)
     public enum SubsampleType {
         MEAN, CLOSEST
     }
