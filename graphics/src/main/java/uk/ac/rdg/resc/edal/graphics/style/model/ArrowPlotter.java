@@ -13,8 +13,8 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
-@XmlType(namespace=Image.NAMESPACE)
-public class ArrowPlotter extends Plotter {
+@XmlType(namespace=Image.NAMESPACE, propOrder={"arrowSize", "arrowColor"})
+public class ArrowPlotter extends ImageLayer {
     private Integer arrowSize = 8;
     private Color arrowColor = Color.black;
     
@@ -23,7 +23,7 @@ public class ArrowPlotter extends Plotter {
          * To plot raster data, we only need one data field. We also want to
          * extract one data value per pixel.
          */
-        super(1, PlotType.SUBSAMPLE);
+        super(PlotType.SUBSAMPLE);
     }
 
     @XmlElement
@@ -51,8 +51,8 @@ public class ArrowPlotter extends Plotter {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, List<PlottingDatum>[] data) {
-        List<PlottingDatum> plotData = data[0];
+    protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
+        List<PlottingDatum> plotData = dataReader.getDataForLayerName(dataLayerId);
 
         Graphics2D g = image.createGraphics();
         g.setColor(arrowColor);

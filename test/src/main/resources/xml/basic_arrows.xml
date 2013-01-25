@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<image>
-    <layer>
-        <layerId>UV_DIR</layerId>
-        <arrowPlotter>
-            <arrowSize>15</arrowSize>
-            <arrowColor>#aa100000</arrowColor>
-        </arrowPlotter>
-    </layer>
-</image>
+<resc:image xmlns:resc='http://www.resc.reading.ac.uk' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+	<arrowPlotter>
+		<dataLayerId>UV_DIR</dataLayerId>
+		<arrowSize>15</arrowSize>
+		<arrowColor>#aa100000</arrowColor>
+	</arrowPlotter>
+</resc:image>
