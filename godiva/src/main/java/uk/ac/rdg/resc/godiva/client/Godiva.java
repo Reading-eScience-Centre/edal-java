@@ -504,6 +504,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     @Override
     public void setOpacity(String layerId, float opacity) {
         mapArea.setOpacity(layerId, opacity);
+        updateLinksEtc();
     }
 
     @Override
