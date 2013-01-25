@@ -17,8 +17,8 @@ import uk.ac.rdg.resc.edal.graphics.style.ColorPalette;
 import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
-import uk.ac.rdg.resc.edal.graphics.style.Image;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser;
+import uk.ac.rdg.resc.edal.graphics.style.model.Image;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
@@ -78,16 +78,20 @@ public class NewPlotterTest {
          */
         File files = new File(ClassLoader.getSystemResource("xml").getFile());
         for (File file : files.listFiles()) {
-            /*
-             * Read each file, deserialise to an image, and then render and save
-             * the image
-             */
-            String xmlString = readFile(file);
-            Image image = StyleXMLParser.deserialise(xmlString);
-
-            File outputFile = new File("/home/guy/xmlOutput/", file.getName().replaceAll("xml$",
-                    "png"));
-            ImageIO.write(image.render(params, id2Feature), "png", outputFile);
+            try {
+                /*
+                 * Read each file, deserialise to an image, and then render and save
+                 * the image
+                 */
+                String xmlString = readFile(file);
+                Image image = StyleXMLParser.deserialise(xmlString);
+    
+                File outputFile = new File("/home/guy/xmlOutput/", file.getName().replaceAll("xml$",
+                        "png"));
+                ImageIO.write(image.drawImage(params, id2Feature), "png", outputFile);
+            } catch (Exception e) {
+                System.out.println("Problem with "+file.getAbsolutePath()+": "+e.getMessage());
+            }
         }
 
     }

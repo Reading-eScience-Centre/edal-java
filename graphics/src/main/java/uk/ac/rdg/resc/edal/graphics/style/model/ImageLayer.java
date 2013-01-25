@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -37,7 +38,6 @@ import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
-import uk.ac.rdg.resc.edal.graphics.style.model.Plotter.PlotType;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
@@ -45,43 +45,96 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 @XmlType(namespace=Image.NAMESPACE)
-public class ImageLayer {
-    @XmlElement(name="layerId")
-    private String[] textIdentifiers;
-    @XmlElement
-    private Plotter plotter;
+public abstract class ImageLayer extends DrawableLayer {
+    @XmlType(namespace=Image.NAMESPACE)
+    public enum PlotType {
+        RASTER, SUBSAMPLE, GLYPH, TRAJECTORY
+    }
+    @XmlType(namespace=Image.NAMESPACE)
+    public enum SubsampleType {
+        MEAN, CLOSEST
+    }
+    
+    protected interface DataReader {
+        public List<PlottingDatum> getDataForLayerName(String layerId);
+    }
+    
+    /*
+     * The type of plot.  This determines how data will be extracted
+     */
+    private PlotType plotType;
+    
+    /*
+     * For when the plot type is SUBSAMPLE
+     */
+    private int xSampleSize = 8;
+    private int ySampleSize = 8;
+    private SubsampleType subsampleType = SubsampleType.CLOSEST;
+    
+    @XmlElement(name="dataLayerId", required=true)
+    protected String dataLayerId;
 
     @SuppressWarnings("unused")
     private ImageLayer() {
         /* For reflection */
     }
 
-    public ImageLayer(Plotter plotter, String... textIdentifiers) {
-        this.textIdentifiers = textIdentifiers;
-        this.plotter = plotter;
+    public ImageLayer(PlotType plotType) {
+        this.plotType = plotType;
+    }
+    
+    public void setDataLayerId(String dataLayerId) {
+        this.dataLayerId = dataLayerId;
     }
 
-    public BufferedImage drawLayer(GlobalPlottingParams params, Id2FeatureAndMember id2Feature) {
-
-        /*
-         * Java generics doesn't allow us to do:
-         * 
-         * new List<PlottingDatum<Number>>[n]
-         * 
-         * so we have an unchecked conversion (hence the warning suppression)
-         */
-        @SuppressWarnings("unchecked")
-        List<PlottingDatum>[] dataPoints = new List[textIdentifiers.length];
-        for (int i = 0; i < textIdentifiers.length; i++) {
-            FeatureCollectionAndMemberName featureAndMemberName = id2Feature
-                    .getFeatureAndMemberName(textIdentifiers[i]);
-            dataPoints[i] = getDataFromFeatures(featureAndMemberName, params);
-        }
+    @Override
+    public BufferedImage drawImage(final GlobalPlottingParams params, final Id2FeatureAndMember id2Feature) {
         BufferedImage image = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
-        plotter.drawImage(image, dataPoints);
+        drawIntoImage(image, new DataReader() {
+            @Override
+            public List<PlottingDatum> getDataForLayerName(String layerId) {
+                FeatureCollectionAndMemberName featureAndMemberName = id2Feature
+                        .getFeatureAndMemberName(layerId);
+                return getDataFromFeatures(featureAndMemberName, params);
+            }
+        });
         return image;
     }
+    
+    public PlotType getPlotType() {
+        return plotType;
+    }
+    
+    public void setXSampleSize(int xSampleSize) {
+        this.xSampleSize = xSampleSize;
+    }
+    
+    @XmlTransient
+    public int getXSampleSize(){
+        return xSampleSize;
+    }
+    
+    public void setYSampleSize(int ySampleSize) {
+        this.ySampleSize = ySampleSize;
+    }
+    
+    @XmlTransient
+    public int getYSampleSize(){
+        return ySampleSize;
+    }
+    
+    public void setSubsampleType(SubsampleType subsampleType) {
+        this.subsampleType = subsampleType;
+    }
+    
+    @XmlTransient
+    public SubsampleType getSubsampleType() {
+        return subsampleType;
+    }
+    
+    protected abstract void drawIntoImage(BufferedImage image, DataReader dataReader);
+    
 
     private List<PlottingDatum> getDataFromFeatures(
             FeatureCollectionAndMemberName featureAndMemberName, GlobalPlottingParams params) {
@@ -145,7 +198,7 @@ public class ImageLayer {
 
         Set<String> members = CollectionUtils.setOf(member);
 
-        if (plotter.getPlotType() == PlotType.RASTER) {
+        if (getPlotType() == PlotType.RASTER) {
             /*
              * We want a value for every pixel in the image (aside from missing
              * data), so we:
@@ -168,7 +221,7 @@ public class ImageLayer {
                 plottingData.add(new PlottingDatum(coords, (Number) entry.getValue().getValue(
                         member)));
             }
-        } else if (plotter.getPlotType() == PlotType.SUBSAMPLE) {
+        } else if (getPlotType() == PlotType.SUBSAMPLE) {
             /*
              * We want a value for every pixel in the image (aside from missing
              * data), so we:
@@ -177,8 +230,8 @@ public class ImageLayer {
              * 
              * Get all values from this newly projected feature
              */
-            RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth()/plotter.getXSampleSize(),
-                    params.getHeight()/plotter.getYSampleSize());
+            RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth()/getXSampleSize(),
+                    params.getHeight()/getYSampleSize());
             if (!gridFeature.getCoverage().getDomain().equals(targetDomain)) {
                 gridFeature = gridFeature.extractGridFeature(targetDomain, members);
             }
@@ -186,15 +239,15 @@ public class ImageLayer {
             List<DomainObjectValuePair<GridCell2D>> list = gridFeature.getCoverage().list();
             for (DomainObjectValuePair<GridCell2D> entry : list) {
                 GridCoordinates2D gridCoordinates = entry.getDomainObject().getGridCoordinates();
-                GridCoordinates2D coords = new GridCoordinates2DImpl(plotter.getXSampleSize()/2+gridCoordinates.getXIndex()*plotter.getXSampleSize(),
-                        -plotter.getYSampleSize()/2+params.getHeight() - gridCoordinates.getYIndex()*plotter.getYSampleSize() - 1);
+                GridCoordinates2D coords = new GridCoordinates2DImpl(getXSampleSize()/2+gridCoordinates.getXIndex()*getXSampleSize(),
+                        -getYSampleSize()/2+params.getHeight() - gridCoordinates.getYIndex()*getYSampleSize() - 1);
                 plottingData.add(new PlottingDatum(coords, (Number) entry.getValue().getValue(
                         member)));
             }
             /*
              * TODO add different subsampling methods (i.e. MEAN as well as CLOSEST)
              */
-        } else if (plotter.getPlotType() == PlotType.GLYPH) {
+        } else if (getPlotType() == PlotType.GLYPH) {
             /*
              * We want a value for every point on the feature which falls within
              * the bounding box, plus a gutter, up to a maximum on one per
@@ -254,7 +307,7 @@ public class ImageLayer {
              * Either way, throw an exception
              */
             throw new IllegalArgumentException(
-                    "GridFeatures are incompatible with this plotting type: "+plotter.getPlotType());
+                    "GridFeatures are incompatible with this plotting type: "+getPlotType());
         }
 
         return plottingData;
@@ -311,7 +364,7 @@ public class ImageLayer {
 
     private List<PlottingDatum> getDataFromTrajectoryFeature(TrajectoryFeature feature,
             String member, GlobalPlottingParams params) {
-        if (plotter.getPlotType() != PlotType.TRAJECTORY) {
+        if (getPlotType() != PlotType.TRAJECTORY) {
             return Collections.emptyList();
         }
         RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth(),

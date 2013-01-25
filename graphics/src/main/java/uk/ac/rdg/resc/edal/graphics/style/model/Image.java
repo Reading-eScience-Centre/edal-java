@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -14,23 +15,33 @@ import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
 
 @XmlType(namespace=Image.NAMESPACE)
 @XmlRootElement(namespace=Image.NAMESPACE)
-public class Image {
+public class Image extends DrawableLayer {
     
-    public static final String NAMESPACE="http://www.resc.reading.ac.uk/";
+    /*
+     * This is the namespace for the XML.
+     * 
+     * IF YOU CHANGE IT, YOU NEED TO MODIFY pom.xml AS WELL
+     */
+    public static final String NAMESPACE="http://www.resc.reading.ac.uk";
     
-    @XmlElement(name="layer")
-    private List<ImageLayer> layers = new ArrayList<ImageLayer>();
+    @XmlElements({
+        @XmlElement(name="image", type = Image.class),
+        @XmlElement(name="arrowPlotter", type = ArrowPlotter.class),
+        @XmlElement(name="rasterPlotter", type = RasterPlotter.class)
+    })
+    private List<DrawableLayer> layers = new ArrayList<DrawableLayer>();
 
-    public void addLayer(ImageLayer layer) {
+    public void addLayer(DrawableLayer layer) {
         layers.add(layer);
     }
 
-    public BufferedImage render(GlobalPlottingParams params, Id2FeatureAndMember id2Feature) {
+    @Override
+    public BufferedImage drawImage(GlobalPlottingParams params, Id2FeatureAndMember id2Feature) {
         BufferedImage finalImage = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = finalImage.createGraphics();
-        for (ImageLayer layer : layers) {
-            graphics.drawImage(layer.drawLayer(params, id2Feature), 0, 0, null);
+        for (DrawableLayer layer : layers) {
+            graphics.drawImage(layer.drawImage(params, id2Feature), 0, 0, null);
         }
         return finalImage;
     }

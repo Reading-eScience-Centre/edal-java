@@ -86,19 +86,17 @@ public class StyleXMLParser {
                 0, 0, 0), "redblue", 100, 254, false);
         RasterPlotter magPlotter = new RasterPlotter();
         magPlotter.setColourScheme(colourScheme);
+        magPlotter.setDataLayerId("UV_MAG");
 
         ArrowPlotter dirPlotter = new ArrowPlotter();
-        dirPlotter.setArrowColor(Color.red);
-        dirPlotter.setArrowSize(10);
-
-        ImageLayer magLayer = new ImageLayer(magPlotter, "UV_MAG");
-        ImageLayer dirLayer = new ImageLayer(dirPlotter, "UV_DIR");
+        dirPlotter.setArrowColor(Color.decode("#100000"));
+        dirPlotter.setArrowSize(15);
+        dirPlotter.setDataLayerId("UV_DIR");
 
         Image image = new Image();
-        image.addLayer(magLayer);
-        image.addLayer(dirLayer);
+//        image.addLayer(magPlotter);
+        image.addLayer(dirPlotter);
 
-        StyleXMLParser.serialise(image);
-//        System.out.println(StyleXMLParser.serialise(image));
+        System.out.println(StyleXMLParser.serialise(image));
     }
 }

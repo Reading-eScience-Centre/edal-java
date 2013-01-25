@@ -28,3 +28,4 @@ syntax: regexp
 \.toc$
 \.ilg$
 \.ind$
+^graphics/schemas$
