@@ -26,7 +26,11 @@ public class LayerTreeJSONParser {
     }
 
     private static void addNode(JSONObject json, LayerMenuItem parentItem) {
-        final String label = json.get("label").isString().stringValue();
+        JSONValue jsonLabel = json.get("label");
+        if(jsonLabel == null) {
+            return;
+        }
+        final String label = jsonLabel.isString().stringValue();
         JSONValue idJson = json.get("id");
         final String id;
         if (idJson != null && !idJson.toString().equals(""))
