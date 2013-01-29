@@ -72,6 +72,12 @@
 				<artifactId>jaxb2-maven-plugin</artifactId>
 				<version>1.5</version>
 				<executions>
+<!-- 					<execution> -->
+<!-- 						<phase>generate-sources</phase> -->
+<!-- 						<goals> -->
+<!-- 							<goal>xjc</goal> -->
+<!-- 						</goals> -->
+<!-- 					</execution> -->
 					<execution>
 						<phase>generate-resources</phase>
 						<id>schemagen</id>
@@ -88,9 +94,12 @@
 						</transformSchema>
 					</transformSchemas>
 					<includes>
-						<include>**/style/model/*.java</include>
+						<include>**/style/datamodel/model/*.java</include>
 					</includes>
 					<outputDirectory>schemas</outputDirectory>
+                    
+<!--                     <schemaDirectory>schemas</schemaDirectory> -->
+<!--                     <packageName>uk.ac.rdg.resc.graphics.style.xsdmodel</packageName> -->
 				</configuration>
 			</plugin>
 		</plugins>
