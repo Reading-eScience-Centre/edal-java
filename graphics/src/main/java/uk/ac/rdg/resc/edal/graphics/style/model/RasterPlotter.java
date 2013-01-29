@@ -5,11 +5,12 @@ import java.awt.image.BufferedImage;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 
 @XmlType(namespace=Image.NAMESPACE)
 public class RasterPlotter extends ImageLayer {
-    private ColourScheme1D colourScheme = new ColourScheme1D();
+    private ColourScheme colourScheme = new ColourScheme();
 
     public RasterPlotter() {
         /*
@@ -20,11 +21,11 @@ public class RasterPlotter extends ImageLayer {
     }
 
     @XmlElement
-    public void setColourScheme(ColourScheme1D colourScheme) {
+    public void setColourScheme(ColourScheme colourScheme) {
         this.colourScheme = colourScheme;
     }
     
-    public ColourScheme1D getColourScheme() {
+    public ColourScheme getColourScheme() {
         return colourScheme;
     }
 

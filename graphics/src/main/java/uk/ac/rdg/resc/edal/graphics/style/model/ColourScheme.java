@@ -11,8 +11,8 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.graphics.style.ColorPalette;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
-@XmlType(namespace = Image.NAMESPACE, propOrder={})
-public class ColourScheme1D {
+@XmlType(namespace = Image.NAMESPACE, propOrder={}, name="ColourSchemeType")
+public class ColourScheme {
     // The scale range spanned by this colour scheme
     @XmlElement
     protected Float scaleMin = -50f;
@@ -48,10 +48,10 @@ public class ColourScheme1D {
     private ColorPalette palette;
     private IndexColorModel indexColorModel;
 
-    ColourScheme1D() {
+    ColourScheme() {
     }
     
-    public ColourScheme1D(Extent<Float> scaleRange, Color belowMinColour, Color aboveMaxColour, Color noDataColour,
+    public ColourScheme(Extent<Float> scaleRange, Color belowMinColour, Color aboveMaxColour, Color noDataColour,
             String paletteName, Integer opacity, Integer numColourBands, Boolean logarithmic) {
         scaleMin = scaleRange.getLow();
         scaleMax = scaleRange.getHigh();

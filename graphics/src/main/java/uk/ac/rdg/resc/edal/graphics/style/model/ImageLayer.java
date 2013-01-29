@@ -37,6 +37,8 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
+import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
+import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -46,14 +48,6 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 
 @XmlType(namespace=Image.NAMESPACE)
 public abstract class ImageLayer extends DrawableLayer {
-    @XmlType(namespace=Image.NAMESPACE)
-    public enum PlotType {
-        RASTER, SUBSAMPLE, GLYPH, TRAJECTORY
-    }
-    @XmlType(namespace=Image.NAMESPACE)
-    public enum SubsampleType {
-        MEAN, CLOSEST
-    }
     
     protected interface DataReader {
         public List<PlottingDatum> getDataForLayerName(String layerId);
