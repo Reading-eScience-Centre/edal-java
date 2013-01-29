@@ -25,7 +25,7 @@ public class ImageData extends DrawableData {
     })
     private List<DrawableData> layers = new ArrayList<DrawableData>();
 
-    public void addLayer(DrawableData layer) {
-        layers.add(layer);
+    public List<DrawableData> getLayers() {
+        return layers;
     }
 }

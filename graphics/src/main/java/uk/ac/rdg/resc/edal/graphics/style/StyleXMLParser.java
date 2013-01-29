@@ -16,11 +16,10 @@ import javax.xml.transform.Result;
 import javax.xml.transform.stream.StreamResult;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.graphics.style.model.ArrowPlotter;
-import uk.ac.rdg.resc.edal.graphics.style.model.ColourScheme1D;
-import uk.ac.rdg.resc.edal.graphics.style.model.Image;
-import uk.ac.rdg.resc.edal.graphics.style.model.ImageLayer;
-import uk.ac.rdg.resc.edal.graphics.style.model.RasterPlotter;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.ArrowData;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.ColourScheme1DData;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.ImageData;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.RasterData;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public class StyleXMLParser {
@@ -44,8 +43,8 @@ public class StyleXMLParser {
         }
     }
 
-    public static String serialise(Image image) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(Image.class);
+    public static String serialise(ImageData image) throws JAXBException {
+        JAXBContext context = JAXBContext.newInstance(ImageData.class);
 
         Marshaller marshaller = context.createMarshaller();
 
@@ -57,18 +56,18 @@ public class StyleXMLParser {
         return stringWriter.toString();
     }
 
-    public static Image deserialise(String xmlString) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(Image.class);
+    public static ImageData deserialise(String xmlString) throws JAXBException {
+        JAXBContext context = JAXBContext.newInstance(ImageData.class);
 
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
-        Image image = (Image) unmarshaller.unmarshal(new StringReader(xmlString));
+        ImageData image = (ImageData) unmarshaller.unmarshal(new StringReader(xmlString));
 
         return image;
     }
     
     public static void generateSchema(final String path) throws IOException, JAXBException {
-        JAXBContext context = JAXBContext.newInstance(Image.class);
+        JAXBContext context = JAXBContext.newInstance(ImageData.class);
         context.generateSchema(new SchemaOutputResolver() {
             @Override
             public Result createOutput(String namespaceUri, String suggestedFileName) throws IOException {
@@ -82,20 +81,15 @@ public class StyleXMLParser {
         StyleXMLParser.generateSchema("/home/guy");
         
         Extent<Float> scaleRange = Extents.newExtent(270.0f, 310.0f);
-        ColourScheme1D colourScheme = new ColourScheme1D(scaleRange, null, Color.BLUE, new Color(0,
-                0, 0, 0), "redblue", 100, 254, false);
-        RasterPlotter magPlotter = new RasterPlotter();
-        magPlotter.setColourScheme(colourScheme);
-        magPlotter.setDataLayerId("UV_MAG");
+        ColourScheme1DData colourScheme = new ColourScheme1DData(scaleRange, null, Color.BLUE, new Color(0,
+                0, 0, 0), "redblue", 100f, 254, false);
+        RasterData magPlotter = new RasterData("UV_MAG", colourScheme);
 
-        ArrowPlotter dirPlotter = new ArrowPlotter();
-        dirPlotter.setArrowColor(Color.decode("#100000"));
-        dirPlotter.setArrowSize(15);
-        dirPlotter.setDataLayerId("UV_DIR");
+        ArrowData dirPlotter = new ArrowData("UV_DIR", 15, Color.decode("#100000"));
 
-        Image image = new Image();
-//        image.addLayer(magPlotter);
-        image.addLayer(dirPlotter);
+        ImageData image = new ImageData();
+        image.getLayers().add(magPlotter);
+        image.getLayers().add(dirPlotter);
 
         System.out.println(StyleXMLParser.serialise(image));
     }

@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.graphics.style.model;
+package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -9,9 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -34,11 +32,11 @@ import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
+import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
-import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
-import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -46,8 +44,7 @@ import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
-@XmlType(namespace=Image.NAMESPACE)
-public abstract class ImageLayer extends DrawableLayer {
+public abstract class ImageLayer extends Drawable {
     
     protected interface DataReader {
         public List<PlottingDatum> getDataForLayerName(String layerId);
@@ -64,23 +61,11 @@ public abstract class ImageLayer extends DrawableLayer {
     private int xSampleSize = 8;
     private int ySampleSize = 8;
     private SubsampleType subsampleType = SubsampleType.CLOSEST;
-    
-    @XmlElement(name="dataLayerId", required=true)
-    protected String dataLayerId;
-
-    @SuppressWarnings("unused")
-    private ImageLayer() {
-        /* For reflection */
-    }
 
     public ImageLayer(PlotType plotType) {
         this.plotType = plotType;
     }
     
-    public void setDataLayerId(String dataLayerId) {
-        this.dataLayerId = dataLayerId;
-    }
-
     @Override
     public BufferedImage drawImage(final GlobalPlottingParams params, final Id2FeatureAndMember id2Feature) {
         BufferedImage image = new BufferedImage(params.getWidth(), params.getHeight(),
@@ -129,7 +114,6 @@ public abstract class ImageLayer extends DrawableLayer {
     
     protected abstract void drawIntoImage(BufferedImage image, DataReader dataReader);
     
-
     private List<PlottingDatum> getDataFromFeatures(
             FeatureCollectionAndMemberName featureAndMemberName, GlobalPlottingParams params) {
         FeatureCollection<? extends Feature> featureCollection = featureAndMemberName

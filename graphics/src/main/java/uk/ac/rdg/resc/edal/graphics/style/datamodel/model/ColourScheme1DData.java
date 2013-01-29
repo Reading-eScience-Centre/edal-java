@@ -11,39 +11,39 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.graphics.style.ColorPalette;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
-@XmlType(namespace = ImageData.NAMESPACE, propOrder={})
+@XmlType(namespace = ImageData.NAMESPACE, propOrder={}, name="ColourSchemeType")
 public class ColourScheme1DData {
     // The scale range spanned by this colour scheme
-    @XmlElement
-    protected Float scaleMin = -50f;
-    @XmlElement
-    protected Float scaleMax = 50f;
+    @XmlElement(required=true, name="ScaleMin")
+    private Float scaleMin = -50f;
+    @XmlElement(required=true, name="ScaleMax")
+    private Float scaleMax = 50f;
     // The colour to plot for values below the minimum. If null, then use the
     // lowest value in the palette
-    @XmlElement
+    @XmlElement(name="BelowMinColour")
     @XmlJavaTypeAdapter(ColorAdapter.class)
-    protected Color belowMinColour = null;
+    private Color belowMinColour = null;
     // The colour to plot for values above the maximum. If null, then use the
     // highest value in the palette
-    @XmlElement
+    @XmlElement(name="AboveMaxColour")
     @XmlJavaTypeAdapter(ColorAdapter.class)
-    protected Color aboveMaxColour = null;
+    private Color aboveMaxColour = null;
     // The colour to plot for missing data
-    @XmlElement
+    @XmlElement(name="MissingDataColour")
     @XmlJavaTypeAdapter(ColorAdapter.class)
-    protected Color noDataColour = new Color(0, 0, 0, 0);
+    private Color noDataColour = new Color(0, 0, 0, 0);
     // The name of the palette to use.
-    @XmlElement
-    protected String paletteName = null;
+    @XmlElement(name="PaletteName")
+    private String paletteName = null;
     // The opacity of the color palette
-    @XmlElement
-    protected Integer opacity = 100;
+    @XmlElement(name="Opacity")
+    private Float opacity = 1.0f;
     // The number of color bands to use
-    @XmlElement
-    protected Integer numColourBands = 254;
+    @XmlElement(name="NumberOfColourBands")
+    private Integer numColourBands = 254;
     // Whether or not the scale is logarithmic
-    @XmlElement
-    protected Boolean logarithmic = false;
+    @XmlElement(name="Logarithmic")
+    private Boolean logarithmic = false;
 
     private ColorPalette palette;
     private IndexColorModel indexColorModel;
@@ -52,7 +52,7 @@ public class ColourScheme1DData {
     }
     
     public ColourScheme1DData(Extent<Float> scaleRange, Color belowMinColour, Color aboveMaxColour, Color noDataColour,
-            String paletteName, Integer opacity, Integer numColourBands, Boolean logarithmic) {
+            String paletteName, Float opacity, Integer numColourBands, Boolean logarithmic) {
         scaleMin = scaleRange.getLow();
         scaleMax = scaleRange.getHigh();
         
@@ -67,6 +67,7 @@ public class ColourScheme1DData {
         
         this.logarithmic = logarithmic;
     }
+    
 
     public Color getColor(Number value) {
         if (palette == null || indexColorModel == null) {
@@ -74,7 +75,7 @@ public class ColourScheme1DData {
             palette = ColorPalette.get(paletteName);
 
             // Get the colour model
-            indexColorModel = palette.getColorModel(numColourBands, opacity);
+            indexColorModel = palette.getColorModel(numColourBands, (int) (100f*opacity));
         }
         /*
          * We can directly access values[0] since values is checked to be of

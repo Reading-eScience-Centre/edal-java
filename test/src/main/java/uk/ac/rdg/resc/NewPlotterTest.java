@@ -1,6 +1,5 @@
 package uk.ac.rdg.resc;
 
-import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -13,12 +12,12 @@ import uk.ac.rdg.resc.edal.cdm.feature.NcGridSeriesFeatureCollection;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.graphics.style.ColorPalette;
 import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser;
-import uk.ac.rdg.resc.edal.graphics.style.model.Image;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.ImageData;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
@@ -84,13 +83,16 @@ public class NewPlotterTest {
                  * the image
                  */
                 String xmlString = readFile(file);
-                Image image = StyleXMLParser.deserialise(xmlString);
+                ImageData imageData = StyleXMLParser.deserialise(xmlString);
+                
+                Image image = new Image(imageData);
     
                 File outputFile = new File("/home/guy/xmlOutput/", file.getName().replaceAll("xml$",
                         "png"));
                 ImageIO.write(image.drawImage(params, id2Feature), "png", outputFile);
             } catch (Exception e) {
                 System.out.println("Problem with "+file.getAbsolutePath()+": "+e.getMessage());
+                e.printStackTrace();
             }
         }
 
