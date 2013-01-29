@@ -56,6 +56,11 @@
 			</snapshots>
 			<url>file://${project.basedir}/lib</url>
 		</repository>
+        <repository>
+	        <id>releases</id>
+	        <name>Releases</name>
+	        <url>https://oss.sonatype.org/content/repositories/releases</url>
+        </repository>
 	</repositories>
 	<build>
 		<resources>
@@ -87,6 +92,16 @@
 					</execution>
 				</executions>
 				<configuration>
+			        <args>
+			            <arg>-camelcase-always</arg>
+			        </args>
+	                <plugins>
+					    <plugin>
+					        <groupId>org.andromda.thirdparty.jaxb2_commons</groupId>
+					        <artifactId>camelcase-always</artifactId>
+					        <version>1.0</version>
+					    </plugin>
+					</plugins>
 					<transformSchemas>
 						<transformSchema>
 							<uri>http://www.resc.reading.ac.uk</uri>

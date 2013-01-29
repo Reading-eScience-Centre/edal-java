@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<resc:image xmlns:resc='http://www.resc.reading.ac.uk'
+<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'
 	xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
-	<rasterPlotter>
-		<dataLayerId>TMP</dataLayerId>
-		<colourScheme>
-			<scaleMin>270</scaleMin>
-			<scaleMax>302</scaleMax>
-			<aboveMaxColour>#000000</aboveMaxColour>
-			<belowMinColour>#000000</belowMinColour>
-			<noDataColour>#00000000</noDataColour>
-			<paletteName>alg</paletteName>
-			<opacity>75</opacity>
-			<numColourBands>55</numColourBands>
-			<logarithmic>false</logarithmic>
-		</colourScheme>
-	</rasterPlotter>
-</resc:image>
+	<RasterLayer>
+		<DataFieldName>TMP</DataFieldName>
+		<ColourScheme>
+			<ScaleMin>270</ScaleMin>
+			<ScaleMax>302</ScaleMax>
+			<AboveMaxColour>#0000ff</AboveMaxColour>
+			<BelowMinColour>#00ff00</BelowMinColour>
+			<MissingDataColour>#00000000</MissingDataColour>
+			<PaletteName>alg</PaletteName>
+			<Opacity>0.75</Opacity>
+			<NumberOfColourBands>20</NumberOfColourBands>
+			<Logarithmic>false</Logarithmic>
+		</ColourScheme>
+	</RasterLayer>
+</resc:Image>

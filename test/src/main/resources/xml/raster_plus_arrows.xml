@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<resc:image xmlns:resc='http://www.resc.reading.ac.uk'
+<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'
 	xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
-	<rasterPlotter>
-		<dataLayerId>UV_MAG</dataLayerId>
-		<colourScheme>
-			<scaleMin>0</scaleMin>
-			<scaleMax>2</scaleMax>
-			<aboveMaxColour>#ff0000ff</aboveMaxColour>
-			<noDataColour>#000000aa</noDataColour>
-			<paletteName>greyscale</paletteName>
-			<opacity>100</opacity>
-			<numColourBands>254</numColourBands>
-			<logarithmic>false</logarithmic>
-		</colourScheme>
-	</rasterPlotter>
-	<arrowPlotter>
-		<dataLayerId>UV_DIR</dataLayerId>
-		<arrowSize>7</arrowSize>
-		<arrowColor>#aaffffff</arrowColor>
-	</arrowPlotter>
-</resc:image>
+	<RasterLayer>
+		<DataFieldName>UV_MAG</DataFieldName>
+		<ColourScheme>
+			<ScaleMin>0</ScaleMin>
+			<ScaleMax>2</ScaleMax>
+			<AboveMaxColour>##ff0000ff</AboveMaxColour>
+			<MissingDataColour>#000000aa</MissingDataColour>
+			<PaletteName>greyscale</PaletteName>
+			<NumberOfColourBands>250</NumberOfColourBands>
+			<Logarithmic>false</Logarithmic>
+		</ColourScheme>
+	</RasterLayer>
+	<ArrowLayer>
+		<DirectionFieldName>UV_DIR</DirectionFieldName>
+		<ArrowSize>7</ArrowSize>
+		<ArrowColour>#aaffffff</ArrowColour>
+	</ArrowLayer>
+</resc:Image>

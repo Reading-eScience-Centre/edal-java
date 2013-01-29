@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<resc:image xmlns:resc='http://www.resc.reading.ac.uk'
-    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
-        <rasterPlotter>
-        <dataLayerId>UV_MAG</dataLayerId>
-            <colourScheme>
-                <scaleMin>0</scaleMin>
-                <scaleMax>2</scaleMax>
-            </colourScheme>
-        </rasterPlotter>
-        <arrowPlotter>
-        <dataLayerId>UV_DIR</dataLayerId>
-        </arrowPlotter>
-</resc:image>
+<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'
+	xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+	<RasterLayer>
+		<DataFieldName>UV_MAG</DataFieldName>
+		<ColourScheme>
+			<ScaleMin>0</ScaleMin>
+			<ScaleMax>2</ScaleMax>
+		</ColourScheme>
+	</RasterLayer>
+	<ArrowLayer>
+		<DirectionFieldName>UV_DIR</DirectionFieldName>
+	</ArrowLayer>
+</resc:Image>

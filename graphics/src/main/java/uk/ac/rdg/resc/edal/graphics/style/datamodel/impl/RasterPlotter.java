@@ -1,32 +1,22 @@
-package uk.ac.rdg.resc.edal.graphics.style.model;
+package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
 import java.awt.image.BufferedImage;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.RasterData;
 
-@XmlType(namespace=Image.NAMESPACE)
 public class RasterPlotter extends ImageLayer {
-    private ColourScheme colourScheme = new ColourScheme();
 
-    public RasterPlotter() {
+    private RasterData rasterData;
+
+    public RasterPlotter(RasterData rasterData) {
         /*
          * To plot raster data, we only need one data field. We also want to
          * extract one data value per pixel.
          */
         super(PlotType.RASTER);
-    }
-
-    @XmlElement
-    public void setColourScheme(ColourScheme colourScheme) {
-        this.colourScheme = colourScheme;
-    }
-    
-    public ColourScheme getColourScheme() {
-        return colourScheme;
+        this.rasterData = rasterData;
     }
 
     @Override
@@ -36,9 +26,9 @@ public class RasterPlotter extends ImageLayer {
          * to be of size 1 (because it is specified in the constructor, and
          * checks occur in the superclass)
          */
-        for (PlottingDatum datum : dataReader.getDataForLayerName(dataLayerId)) {
+        for (PlottingDatum datum : dataReader.getDataForLayerName(rasterData.getDataFieldName())) {
             image.setRGB(datum.getGridCoords().getXIndex(), datum.getGridCoords().getYIndex(),
-                    colourScheme.getColor(datum.getValue()).getRGB());
+                    rasterData.getColourScheme().getColor(datum.getValue()).getRGB());
         }
     }
 }
