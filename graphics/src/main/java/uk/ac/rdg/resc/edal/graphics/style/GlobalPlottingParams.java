@@ -3,7 +3,6 @@ package uk.ac.rdg.resc.edal.graphics.style;
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public class GlobalPlottingParams {
@@ -13,11 +12,11 @@ public class GlobalPlottingParams {
     private BoundingBox bbox;
     private Extent<Double> zExtent;
     private Extent<TimePosition> tExtent;
-    private VerticalPosition targetZ;
+    private Double targetZ;
     private TimePosition targetT;
 
     public GlobalPlottingParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
-            Extent<TimePosition> tExtent, VerticalPosition targetZ, TimePosition targetT) {
+            Extent<TimePosition> tExtent, Double targetZ, TimePosition targetT) {
         super();
         this.width = width;
         this.height = height;
@@ -28,7 +27,7 @@ public class GlobalPlottingParams {
         this.targetT = targetT;
         
         if(zExtent == null && targetZ != null) {
-            zExtent = Extents.newExtent(targetZ.getZ(), targetZ.getZ());
+            zExtent = Extents.newExtent(targetZ, targetZ);
         }
         
         if(tExtent == null && targetT != null) {
@@ -56,7 +55,7 @@ public class GlobalPlottingParams {
         return tExtent;
     }
 
-    public VerticalPosition getTargetZ() {
+    public Double getTargetZ() {
         return targetZ;
     }
 

@@ -13,6 +13,7 @@ target/
 ncwms/.externalToolBuilders/
 ncwms/src/main/webapp/godiva/
 ncwms/src/main/webapp/godiva3/
+ncwms/src/main/webapp/xmlview/
 ncwms/src/main/gwt-unitCache/
 ncwms/src/main/webapp/WEB-INF/classes/
 ncwms/src/main/webapp/WEB-INF/lib/

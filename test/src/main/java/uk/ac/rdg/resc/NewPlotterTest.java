@@ -19,8 +19,6 @@ import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.ImageData;
 import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 
 public class NewPlotterTest {
     public static void main(String[] args) throws IOException, InstantiationException,
@@ -35,10 +33,9 @@ public class NewPlotterTest {
         final GridSeriesFeature feature = featureCollection.getFeatureById("testcollection2");
         GridSeriesDomain domain = feature.getCoverage().getDomain();
 
-        VerticalPosition vPos = null;
+        Double vPos = null;
         try {
-            vPos = new VerticalPositionImpl(domain.getVerticalAxis().getCoordinateValue(0),
-                    domain.getVerticalCrs());
+            vPos = domain.getVerticalAxis().getCoordinateValue(0);
         } catch (NullPointerException e) {
         }
         TimePosition tPos = null;
