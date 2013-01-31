@@ -41,6 +41,7 @@ import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
+import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
@@ -166,7 +167,8 @@ public abstract class ImageLayer extends Drawable {
         RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth(),
                 params.getHeight());
         GridFeature gridFeature = gridSeriesFeature.extractGridFeature(targetDomain,
-                params.getTargetZ(), params.getTargetT(), members);
+                new VerticalPositionImpl(params.getTargetZ(), gridSeriesFeature.getCoverage()
+                        .getDomain().getVerticalCrs()), params.getTargetT(), members);
         return getDataFromGridFeature(gridFeature, member, params);
     }
 
@@ -332,7 +334,7 @@ public abstract class ImageLayer extends Drawable {
         if (containingCell != null) {
             GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
             Number value = (Number) feature.getCoverage().evaluate(
-                    GISUtils.getClosestElevationTo(params.getTargetZ().getZ(),
+                    GISUtils.getClosestElevationTo(params.getTargetZ(),
                             GISUtils.getVerticalAxis(feature)), member);
             return Arrays.asList(new PlottingDatum(gridCoordinates, value));
         } else {

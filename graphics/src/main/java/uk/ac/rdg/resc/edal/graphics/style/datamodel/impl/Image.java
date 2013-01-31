@@ -15,8 +15,6 @@ public class Image extends Drawable {
     
     private ImageData imageData;
     
-    private List<Drawable> layers;
-    
     public Image(ImageData imageData) {
         this.imageData = imageData;
     }
