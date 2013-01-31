@@ -10,6 +10,7 @@ syntax: glob
 .project
 doc/
 target/
+godiva/.gwt/
 ncwms/.externalToolBuilders/
 ncwms/src/main/webapp/godiva/
 ncwms/src/main/webapp/godiva3/
