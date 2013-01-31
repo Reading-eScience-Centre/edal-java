@@ -166,14 +166,31 @@ public class TimePositionJoda implements TimePosition {
     }
     
     @Override
-    public boolean equals(Object arg0) {
-        if(arg0 instanceof TimePosition){
-            TimePosition timePosition = (TimePosition) arg0;
-            if(timePosition.getValue() == getValue() && timePosition.getCalendarSystem().equals(calSys)){
-                return true;
-            }
-        }
-        return false;
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((calSys == null) ? 0 : calSys.hashCode());
+        result = prime * result + ((dateTime == null) ? 0 : dateTime.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TimePositionJoda other = (TimePositionJoda) obj;
+        if (calSys != other.calSys)
+            return false;
+        if (dateTime == null) {
+            if (other.dateTime != null)
+                return false;
+        } else if (!dateTime.equals(other.dateTime))
+            return false;
+        return true;
     }
 
     @Override
