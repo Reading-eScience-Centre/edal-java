@@ -55,13 +55,13 @@ public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFe
         super(collectionId, collectionName);
 
         double minx = Double.MAX_VALUE;
-        double maxx = Double.MIN_VALUE;
+        double maxx = -Double.MAX_VALUE;
         double miny = Double.MAX_VALUE;
-        double maxy = Double.MIN_VALUE;
+        double maxy = -Double.MAX_VALUE;
         long mint = Long.MAX_VALUE;
-        long maxt = Long.MIN_VALUE;
+        long maxt = -Long.MAX_VALUE;
         double minz = Double.MAX_VALUE;
-        double maxz = Double.MIN_VALUE;
+        double maxz = -Double.MAX_VALUE;
         
         VerticalCrs vCrs = null;
         List<File> files = CdmUtils.expandGlobExpression(location);
@@ -286,11 +286,24 @@ public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFe
                 addFeature(feature);
             }
         }
+        
+        if(maxx < minx && maxy < miny) {
+            /*
+             * We haven't found any profiles...
+             */
+            minx = 0.0;
+            maxx = 0.0;
+            miny = 0.0;
+            maxy = 0.0;
+            vExtent = Extents.emptyExtent(VerticalPosition.class);
+            tExtent = Extents.emptyExtent(TimePosition.class);
+        } else {
+            vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(minz, vCrs),
+                    (VerticalPosition) new VerticalPositionImpl(maxz, vCrs));
+            tExtent = Extents.newExtent((TimePosition) new TimePositionJoda(mint),
+                    (TimePosition) new TimePositionJoda(maxt));
+        }
         bbox = new BoundingBoxImpl(minx, miny, maxx, maxy, DefaultGeographicCRS.WGS84);
-        vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(minz, vCrs),
-                (VerticalPosition) new VerticalPositionImpl(maxz, vCrs));
-        tExtent = Extents.newExtent((TimePosition) new TimePositionJoda(mint),
-                (TimePosition) new TimePositionJoda(maxt));
     }
 
     @Override
