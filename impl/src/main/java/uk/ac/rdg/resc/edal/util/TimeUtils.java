@@ -465,7 +465,11 @@ public class TimeUtils {
         for (String element : elements) {
             String[] startStop = element.split("/");
             for (String time : startStop) {
-                times.add(iso8601ToDateTime(time, calSys));
+                if(time.equalsIgnoreCase("current")) {
+                    times.add(new TimePositionJoda());
+                } else {
+                    times.add(iso8601ToDateTime(time, calSys));
+                }
             }
         }
         return Extents.findMinMax(times);
