@@ -40,6 +40,7 @@ import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
@@ -166,9 +167,15 @@ public abstract class ImageLayer extends Drawable {
         Set<String> members = CollectionUtils.setOf(member);
         RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth(),
                 params.getHeight());
-        GridFeature gridFeature = gridSeriesFeature.extractGridFeature(targetDomain,
-                new VerticalPositionImpl(params.getTargetZ(), gridSeriesFeature.getCoverage()
-                        .getDomain().getVerticalCrs()), params.getTargetT(), members);
+        VerticalPosition vPos = null;
+        if (gridSeriesFeature.getCoverage().getDomain().getVerticalAxis() != null
+                && params.getTargetZ() != null) {
+            vPos = new VerticalPositionImpl(params.getTargetZ(), gridSeriesFeature.getCoverage()
+                    .getDomain().getVerticalCrs());
+        }
+
+        GridFeature gridFeature = gridSeriesFeature.extractGridFeature(targetDomain, vPos,
+                params.getTargetT(), members);
         return getDataFromGridFeature(gridFeature, member, params);
     }
 
