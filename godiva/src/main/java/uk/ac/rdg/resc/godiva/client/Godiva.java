@@ -702,7 +702,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             urlParams += "&units=" + unitsInfo.getUnits();
         urlParams += "&baseUrl=" + mapArea.getBaseLayerUrl();
         urlParams += "&baseLayers=" + mapArea.getBaseLayerLayers();
-        screenshot.setHref("screenshots/createScreenshot?" + urlParams);
+        screenshot.setHref("http://" + Window.Location.getHost() + Window.Location.getPath()+"/screenshots/createScreenshot?" + urlParams);
     }
 
     /*
