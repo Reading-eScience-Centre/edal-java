@@ -1,14 +1,12 @@
 package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
 import java.awt.Color;
-import java.awt.image.IndexColorModel;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.graphics.style.ColorPalette;
+import uk.ac.rdg.resc.edal.graphics.style.Palette1D;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
 @XmlType(namespace = Image.NAMESPACE, propOrder={}, name="ColourSchemeType")
@@ -32,27 +30,18 @@ public class ColourScheme1DData {
     @XmlElement(name="MissingDataColour")
     @XmlJavaTypeAdapter(ColorAdapter.class)
     private Color noDataColour = new Color(0, 0, 0, 0);
-    // The name of the palette to use.
-    @XmlElement(name="PaletteName")
-    private String paletteName = null;
-    // The opacity of the color palette
-    @XmlElement(name="Opacity")
-    private Float opacity = 1.0f;
-    // The number of color bands to use
-    @XmlElement(name="NumberOfColourBands")
-    private Integer numColourBands = 254;
-    // Whether or not the scale is logarithmic
+    // The palette to use.
+    @XmlElement(name="Palette")
+    private Palette1D palette = new Palette1D();
+   // Whether or not the scale is logarithmic
     @XmlElement(name="Logarithmic")
     private Boolean logarithmic = false;
-
-    private ColorPalette palette;
-    private IndexColorModel indexColorModel;
 
     ColourScheme1DData() {
     }
     
     public ColourScheme1DData(Extent<Float> scaleRange, Color belowMinColour, Color aboveMaxColour, Color noDataColour,
-            String paletteName, Float opacity, Integer numColourBands, Boolean logarithmic) {
+            Palette1D palette, Boolean logarithmic) {
         scaleMin = scaleRange.getLow();
         scaleMax = scaleRange.getHigh();
         
@@ -60,27 +49,13 @@ public class ColourScheme1DData {
         this.aboveMaxColour = aboveMaxColour;
         this.noDataColour = noDataColour;
         
-        this.paletteName = paletteName;
-        
-        this.opacity = opacity;
-        this.numColourBands = numColourBands;
+        this.palette = palette;
         
         this.logarithmic = logarithmic;
     }
     
 
     public Color getColor(Number value) {
-        if (palette == null || indexColorModel == null) {
-            // Set the palette to that specified in paletteName
-            palette = ColorPalette.get(paletteName);
-
-            // Get the colour model
-            indexColorModel = palette.getColorModel(numColourBands, (int) (100f*opacity));
-        }
-        /*
-         * We can directly access values[0] since values is checked to be of
-         * size 1 in the superclass.
-         */
         if (value == null || Float.isNaN(value.floatValue())) {
             return noDataColour; // if no data present return this color
         } else {
@@ -103,21 +78,14 @@ public class ColourScheme1DData {
                 }
             }
 
-            double frac = (scaledVal - min) / (max - min);
-            // Compute the index of the corresponding colour
-            int index = (int) (frac * numColourBands);
+            float frac = (float) ((scaledVal - min) / (max - min));
             /*
-             * For values very close to the maximum value in the range index
-             * might turn out to be equal to numColourBands due to rounding
-             * error. In this case we subtract one from the index to ensure that
-             * these pixels are displayed correctly.
+             * Ensure that frac is not less than 0 or greater then 1
+             * due to rounding errors.
              */
-            if (index == numColourBands) {
-                index--;
-            }
-
-            // return the corresponding colour
-            return new Color(indexColorModel.getRGB(index), true);
+            if (frac < 0.0f) frac = 0.0f;
+            if (frac > 1.0f) frac = 1.0f;
+            return this.palette.getColor(frac);
         }
     }
 }

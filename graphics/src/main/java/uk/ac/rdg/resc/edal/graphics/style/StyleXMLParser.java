@@ -82,7 +82,7 @@ public class StyleXMLParser {
         
         Extent<Float> scaleRange = Extents.newExtent(270.0f, 310.0f);
         ColourScheme1DData colourScheme = new ColourScheme1DData(scaleRange, null, Color.BLUE, new Color(0,
-                0, 0, 0), "redblue", 100f, 254, false);
+                0, 0, 0), new Palette1D(254), false);
         RasterLayer magPlotter = new RasterLayer("UV_MAG", colourScheme);
 
         ArrowLayer dirPlotter = new ArrowLayer("UV_DIR", 15, Color.decode("#100000"));
