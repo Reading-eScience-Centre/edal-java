@@ -64,6 +64,8 @@ public abstract class ImageLayer extends Drawable {
     private int ySampleSize = 8;
     private SubsampleType subsampleType = SubsampleType.CLOSEST;
 
+    private ImageLayer(){}
+    
     public ImageLayer(PlotType plotType) {
         this.plotType = plotType;
     }

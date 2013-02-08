@@ -17,7 +17,6 @@ import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.ImageData;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
 public class NewPlotterTest {
@@ -80,9 +79,7 @@ public class NewPlotterTest {
                  * the image
                  */
                 String xmlString = readFile(file);
-                ImageData imageData = StyleXMLParser.deserialise(xmlString);
-                
-                Image image = new Image(imageData);
+                Image image = StyleXMLParser.deserialise(xmlString);
     
                 File outputFile = new File("/home/guy/xmlOutput/", file.getName().replaceAll("xml$",
                         "png"));

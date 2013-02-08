@@ -1,9 +1,10 @@
-package uk.ac.rdg.resc.edal.graphics.style.datamodel.model;
+package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlType(namespace = ImageData.NAMESPACE, name="LinearOpacityType")
+
+@XmlType(namespace = Image.NAMESPACE, name="LinearOpacityType")
 public class LinearOpacity extends OpacityTransform {
     @XmlElement(name = "OpaqueValue", required = true)
     private Float opaqueValue;

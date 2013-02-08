@@ -2,21 +2,36 @@ package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.ArrowData;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.DrawableData;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.ImageData;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.model.RasterData;
 
+@XmlType(namespace=Image.NAMESPACE, name="ImageType")
+@XmlRootElement(namespace=Image.NAMESPACE, name="Image")
 public class Image extends Drawable {
+    /*
+     * This is the namespace for the XML.
+     * 
+     * IF YOU CHANGE IT, YOU NEED TO MODIFY pom.xml AS WELL
+     */
+    public static final String NAMESPACE="http://www.resc.reading.ac.uk";
     
-    private ImageData imageData;
-    
-    public Image(ImageData imageData) {
-        this.imageData = imageData;
+    @XmlElements({
+        @XmlElement(name="Image", type = Image.class),
+        @XmlElement(name="ArrowLayer", type = ArrowLayer.class),
+        @XmlElement(name="RasterLayer", type = RasterLayer.class)
+    })
+    private List<Drawable> layers = new ArrayList<Drawable>();
+
+    public List<Drawable> getLayers() {
+        return layers;
     }
     
     @Override
@@ -25,18 +40,7 @@ public class Image extends Drawable {
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = finalImage.createGraphics();
         
-        for(DrawableData data : imageData.getLayers()) {
-            Drawable drawable = null;
-            if(data instanceof ImageData) {
-                ImageData newImageData = (ImageData) data;
-                drawable = new Image(newImageData);
-            } else if(data instanceof RasterData) {
-                RasterData rasterData = (RasterData) data;
-                drawable = new RasterPlotter(rasterData);
-            } else if(data instanceof ArrowData) {
-                ArrowData ArrowData = (ArrowData) data;
-                drawable = new ArrowPlotter(ArrowData);
-            }
+        for(Drawable drawable : layers) {
             if(drawable != null) {
                 graphics.drawImage(drawable.drawImage(params, id2Feature), 0, 0, null);
             }

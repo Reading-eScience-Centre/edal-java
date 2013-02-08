@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.graphics.style.datamodel.model;
+package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
 import java.awt.Color;
 import java.awt.image.IndexColorModel;
@@ -11,7 +11,7 @@ import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.graphics.style.ColorPalette;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
-@XmlType(namespace = ImageData.NAMESPACE, propOrder={}, name="ColourSchemeType")
+@XmlType(namespace = Image.NAMESPACE, propOrder={}, name="ColourSchemeType")
 public class ColourScheme1DData {
     // The scale range spanned by this colour scheme
     @XmlElement(required=true, name="ScaleMin")
