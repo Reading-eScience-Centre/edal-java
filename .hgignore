@@ -11,6 +11,7 @@ syntax: glob
 doc/
 target/
 ncwms/.externalToolBuilders/
+ncwms/src/main/webapp/xmlview/
 ncwms/src/main/webapp/godiva/
 ncwms/src/main/webapp/godiva3/
 ncwms/src/main/gwt-unitCache/
