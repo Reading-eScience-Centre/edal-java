@@ -186,7 +186,7 @@ public class Palette1D implements Palette {
 		return this.palette[i];
 	}
 
-    public static Palette1D fromString(String paletteString) {
+    public static Palette1D fromString(String paletteString, int nColourBands) {
         // TODO Auto-generated method stub
         return null;
     }

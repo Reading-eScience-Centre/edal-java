@@ -76,21 +76,4 @@ public class StyleXMLParser {
             }
         });
     }
-
-    public static void main(String[] args) throws JAXBException, IOException {
-        StyleXMLParser.generateSchema("/home/guy");
-        
-        Extent<Float> scaleRange = Extents.newExtent(270.0f, 310.0f);
-        ColourScheme colourScheme = new ColourScheme(scaleRange, null, Color.BLUE, new Color(0,
-                0, 0, 0), new Palette1D(254), false);
-        RasterLayer magPlotter = new RasterLayer("UV_MAG", colourScheme);
-
-        ArrowLayer dirPlotter = new ArrowLayer("UV_DIR", 15, Color.decode("#100000"));
-
-        Image image = new Image();
-        image.getLayers().add(magPlotter);
-        image.getLayers().add(dirPlotter);
-
-        System.out.println(StyleXMLParser.serialise(image));
-    }
 }

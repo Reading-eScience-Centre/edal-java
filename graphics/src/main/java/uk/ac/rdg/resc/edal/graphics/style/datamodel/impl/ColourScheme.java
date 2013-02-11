@@ -21,20 +21,6 @@ public class ColourScheme {
     ColourScheme() {
     }
 
-//    public ColourScheme(Extent<Float> scaleRange, Color belowMinColour, Color aboveMaxColour, Color noDataColour,
-//            Palette1D palette, Boolean logarithmic) {
-//        scaleMin = scaleRange.getLow();
-//        scaleMax = scaleRange.getHigh();
-//        
-//        this.belowMinColour = belowMinColour;
-//        this.aboveMaxColour = aboveMaxColour;
-//        this.noDataColour = noDataColour;
-//        
-//        this.palette = palette;
-//        
-//        this.logarithmic = logarithmic;
-//    }
-
     public Color getColor(Number value) {
         Float zeroToOne = scaleRange.scaleZeroToOne(value);
         return colourPalette.getColor(zeroToOne);
