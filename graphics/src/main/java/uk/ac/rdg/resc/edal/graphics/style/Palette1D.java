@@ -180,10 +180,15 @@ public class Palette1D implements Palette {
             throw new IllegalArgumentException("value must be between 0 and 1");
         }
         // find the nearest colour in the palette
-        int i = (int) (value * (float) this.palette.length);
+        int i = (int) (value * this.palette.length);
         // correct in the special case that value = 1 to keep within bounds of array
         if (i == this.palette.length) i--;
 		return this.palette[i];
 	}
+
+    public static Palette1D fromString(String paletteString) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }
