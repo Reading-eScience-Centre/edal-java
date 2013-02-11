@@ -23,15 +23,29 @@ public class ColourPalette {
     @XmlElement(name = "MissingDataColour")
     @XmlJavaTypeAdapter(ColorAdapter.class)
     private Color noDataColour = new Color(0, 0, 0, 0);
-
     
-    private Palette1D palette = new Palette1D();
+    // The colour to plot for missing data
+    @XmlElement(name = "NumberOfColourBands")
+    private Integer nColourBands = 254;
+    
     @XmlElement(name = "Palette")
-    public void setPalette(String paletteString) {
-        palette = Palette1D.fromString(paletteString);
+    private String paletteString;
+    
+    private Palette1D palette = null;
+    
+    public ColourPalette(Color belowMinColour, Color aboveMaxColour, Color noDataColour,
+            String palette, Integer nColourBands) {
+        super();
+        this.belowMinColour = belowMinColour;
+        this.aboveMaxColour = aboveMaxColour;
+        this.noDataColour = noDataColour;
+        this.nColourBands = nColourBands;
     }
 
     public Color getColor(Number value) {
+        if(palette == null) {
+            palette = Palette1D.fromString(paletteString, nColourBands);
+        }
         if (value == null) {
             return noDataColour;
         }

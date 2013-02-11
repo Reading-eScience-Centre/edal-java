@@ -14,6 +14,15 @@ public class ColourScale {
     @XmlElement(name="Logarithmic")
     private Boolean logarithmic = false;
     
+    @SuppressWarnings("unused")
+    private ColourScale(){}
+    
+    public ColourScale(Float scaleMin, Float scaleMax, Boolean logarithmic) {
+        this.scaleMin = scaleMin;
+        this.scaleMax = scaleMax;
+        this.logarithmic = logarithmic;
+    }
+    
     /**
      * Scales an input number to the range 0-1. Will return a number outside
      * this range if necessary, but the result can ONLY be interpreted as
