@@ -17,7 +17,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import uk.ac.rdg.resc.edal.Extent;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ArrowLayer;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme1DData;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.RasterLayer;
 import uk.ac.rdg.resc.edal.util.Extents;
@@ -81,7 +81,7 @@ public class StyleXMLParser {
         StyleXMLParser.generateSchema("/home/guy");
         
         Extent<Float> scaleRange = Extents.newExtent(270.0f, 310.0f);
-        ColourScheme1DData colourScheme = new ColourScheme1DData(scaleRange, null, Color.BLUE, new Color(0,
+        ColourScheme colourScheme = new ColourScheme(scaleRange, null, Color.BLUE, new Color(0,
                 0, 0, 0), new Palette1D(254), false);
         RasterLayer magPlotter = new RasterLayer("UV_MAG", colourScheme);
 

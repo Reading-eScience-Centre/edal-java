@@ -14,14 +14,14 @@ public class RasterLayer extends ImageLayer {
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
     @XmlElement(name = "ColourScheme")
-    private ColourScheme1DData colourScheme = new ColourScheme1DData();
+    private ColourScheme colourScheme = new ColourScheme();
     
     @SuppressWarnings("unused")
     private RasterLayer() {
         super(PlotType.RASTER);
     }
     
-    public RasterLayer(String dataFieldName, ColourScheme1DData colourScheme) {
+    public RasterLayer(String dataFieldName, ColourScheme colourScheme) {
         super(PlotType.RASTER);
         this.dataFieldName = dataFieldName;
         this.colourScheme = colourScheme;
@@ -31,7 +31,7 @@ public class RasterLayer extends ImageLayer {
         return dataFieldName;
     }
 
-    public ColourScheme1DData getColourScheme() {
+    public ColourScheme getColourScheme() {
         return colourScheme;
     }
 
