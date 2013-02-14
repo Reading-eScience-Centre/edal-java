@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:Image xmlns:ns2="http://www.resc.reading.ac.uk">
+    <ContourLayer>
+        <DataFieldName>TMP</DataFieldName>
+        <ScaleMin>270.0</ScaleMin>
+        <ScaleMax>310.0</ScaleMax>
+        <NumberOfContours>10.0</NumberOfContours>
+        <Colour>#ff000000</Colour>
+        <Style>1</Style>
+        <LabelEnabled>true</LabelEnabled>
+    </ContourLayer>
+</ns2:Image>

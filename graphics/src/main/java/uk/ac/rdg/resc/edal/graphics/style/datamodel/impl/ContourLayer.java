@@ -22,9 +22,11 @@ import java.awt.image.BufferedImage;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
+import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
 @XmlType(namespace = Image.NAMESPACE, name = "ContourLayerType")
 public class ContourLayer extends ImageLayer {
@@ -38,10 +40,11 @@ public class ContourLayer extends ImageLayer {
     @XmlElement(name = "NumberOfContours")
     private double numberOfContours = 10.0;
     @XmlElement(name = "Colour")
+    @XmlJavaTypeAdapter(ColorAdapter.class)
     private Color colour = Color.BLACK;
     @XmlElement(name = "Style")
     private int style = ContourLineAttribute.DASHED;
-    @XmlElement(name = "LabelEnambled")
+    @XmlElement(name = "LabelEnabled")
     private boolean labelEnabled = true;
 
     private int width = 1000;
@@ -110,7 +113,7 @@ public class ContourLayer extends ImageLayer {
             }
         }
 		for (PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)) {
-	    	 values[(height * datum.getGridCoords().getYIndex()) + datum.getGridCoords().getXIndex()]
+	    	 values[(height * datum.getGridCoords().getXIndex()) + datum.getGridCoords().getYIndex()]
 	    			 = datum.getValue().doubleValue();
 	     }
 		
