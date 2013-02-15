@@ -315,7 +315,7 @@ public final class GISUtils {
      *         <code>null</code> if the list of times is <code>null</code>
      */
     public static TimePosition getClosestTimeTo(TimePosition targetTime, List<TimePosition> tValues) {
-        if(tValues == null) {
+        if(tValues == null || tValues.size() == 0) {
             return null;
         }
         if (targetTime == null) {

@@ -73,6 +73,7 @@ public class NewPlotterTest {
          */
         File files = new File(ClassLoader.getSystemResource("xml").getFile());
         for (File file : files.listFiles()) {
+//        File file = new File(ClassLoader.getSystemResource("xml/basic_raster.xml").getFile());
             try {
                 /*
                  * Read each file, deserialise to an image, and then render and save

@@ -3,8 +3,10 @@
 	<RasterLayer>
 		<DataFieldName>UV_MAG</DataFieldName>
 		<ColourScheme>
-			<ScaleMin>0</ScaleMin>
-			<ScaleMax>2</ScaleMax>
+			<ScaleRange>
+				<ScaleMin>0</ScaleMin>
+				<ScaleMax>2</ScaleMax>
+			</ScaleRange>
 		</ColourScheme>
 	</RasterLayer>
 	<ArrowLayer>

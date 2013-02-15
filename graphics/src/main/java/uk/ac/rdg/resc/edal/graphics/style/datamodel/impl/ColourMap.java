@@ -3,12 +3,14 @@ package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 import java.awt.Color;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import uk.ac.rdg.resc.edal.graphics.style.Palette1D;
+import uk.ac.rdg.resc.edal.graphics.style.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
-public class ColourPalette {
+@XmlType(namespace = Image.NAMESPACE, name="ColourPaletteType")
+public class ColourMap {
     // The colour to plot for values below the minimum. If null, then use the
     // lowest value in the palette
     @XmlElement(name = "BelowMinColour")
@@ -29,31 +31,40 @@ public class ColourPalette {
     private Integer nColourBands = 254;
     
     @XmlElement(name = "Palette")
-    private String paletteString;
+    private String paletteString = "default";
     
-    private Palette1D palette = null;
+    private ColourPalette palette = null;
     
-    public ColourPalette(Color belowMinColour, Color aboveMaxColour, Color noDataColour,
+    ColourMap(){}
+    
+    public ColourMap(Color belowMinColour, Color aboveMaxColour, Color noDataColour,
             String palette, Integer nColourBands) {
         super();
         this.belowMinColour = belowMinColour;
         this.aboveMaxColour = aboveMaxColour;
         this.noDataColour = noDataColour;
         this.nColourBands = nColourBands;
+        this.paletteString = palette;
     }
 
     public Color getColor(Number value) {
         if(palette == null) {
-            palette = Palette1D.fromString(paletteString, nColourBands);
+            palette = ColourPalette.fromString(paletteString, nColourBands);
         }
-        if (value == null) {
+        if (value == null || Float.isNaN(value.floatValue())) {
             return noDataColour;
         }
         float val = value.floatValue();
         if (val < 0.0) {
+            if(belowMinColour == null) {
+                return palette.getColor(0f);
+            }
             return belowMinColour;
         }
         if (val > 1.0) {
+            if(aboveMaxColour == null) {
+                return palette.getColor(1f);
+            }
             return aboveMaxColour;
         }
         return palette.getColor(val);

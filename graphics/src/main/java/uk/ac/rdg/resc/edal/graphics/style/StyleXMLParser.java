@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 
+import javax.imageio.ImageIO;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -15,12 +16,13 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.transform.Result;
 import javax.xml.transform.stream.StreamResult;
 
-import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ArrowLayer;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourMap;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.RasterLayer;
-import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.StippleLayer;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.PatternScale;
 
 public class StyleXMLParser {
     public static class ColorAdapter extends XmlAdapter<String, Color> {
@@ -39,7 +41,7 @@ public class StyleXMLParser {
 
         @Override
         public String marshal(Color c) {
-            return "#" + Integer.toHexString(c.getRGB());
+            return "#" + String.format("%08X", c.getRGB());
         }
     }
 
@@ -75,5 +77,25 @@ public class StyleXMLParser {
                 return new StreamResult(new File(path,suggestedFileName));
             }
         });
+    }
+    
+    public static void main(String[] args) throws JAXBException, IOException {
+//        generateSchema("/home/guy/Workspace/edal-java/graphics/schemas/");
+        
+        Image image = new Image();
+//        StippleLayer layer = new StippleLayer("foam/TMP", new PatternScale(5, 305f, 280f, false));
+//        image.getLayers().add(layer);
+//        System.out.println(serialise(image));
+//        
+//        System.out.println();
+//        
+//        image = new Image();
+        ColourScale scaleRange = new ColourScale(270f, 302f, false);
+        ColourMap colourPalette = new ColourMap(Color.green, Color.cyan, new Color(0, 0, 0, 0), "rainbow", 20);
+        ColourScheme colourScheme = new ColourScheme(scaleRange, colourPalette);
+        System.out.println(colourScheme.getColor(280));
+        RasterLayer rasterLayer = new RasterLayer("TMP", colourScheme);
+        image.getLayers().add(rasterLayer);
+        System.out.println(serialise(image));
     }
 }

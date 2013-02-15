@@ -16,7 +16,6 @@ public class RasterLayer extends ImageLayer {
     @XmlElement(name = "ColourScheme")
     private ColourScheme colourScheme = new ColourScheme();
     
-    @SuppressWarnings("unused")
     private RasterLayer() {
         super(PlotType.RASTER);
     }

@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
 	<RasterLayer>
-		<DataFieldName>foam/UV_MAG</DataFieldName>
+		<DataFieldName>UV_MAG</DataFieldName>
 		<ColourScheme>
-			<ScaleMin>0</ScaleMin>
-			<ScaleMax>2</ScaleMax>
-			<AboveMaxColour>#ff0000ff</AboveMaxColour>
-			<MissingDataColour>#000000aa</MissingDataColour>
-			<PaletteName>greyscale</PaletteName>
-			<NumberOfColourBands>250</NumberOfColourBands>
-			<Logarithmic>false</Logarithmic>
+			<ScaleRange>
+				<ScaleMin>0</ScaleMin>
+				<ScaleMax>2</ScaleMax>
+				<Logarithmic>false</Logarithmic>
+			</ScaleRange>
+			<ColourMap>
+				<BelowMinColour>#FF0000FF00</BelowMinColour>
+				<AboveMaxColour>#FF0000FF</AboveMaxColour>
+				<MissingDataColour>#000000aa</MissingDataColour>
+				<NumberOfColourBands>20</NumberOfColourBands>
+				<Palette>greyscale</Palette>
+			</ColourMap>
 		</ColourScheme>
 	</RasterLayer>
 	<ArrowLayer>
-		<DirectionFieldName>foam/UV_DIR</DirectionFieldName>
+		<DirectionFieldName>UV_DIR</DirectionFieldName>
 		<ArrowSize>7</ArrowSize>
 		<ArrowColour>#aaffffff</ArrowColour>
 	</ArrowLayer>

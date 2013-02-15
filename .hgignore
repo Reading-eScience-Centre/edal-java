@@ -30,4 +30,5 @@ syntax: regexp
 \.toc$
 \.ilg$
 \.ind$
+.*\/\.gwt\/.*
 ^graphics/schemas$

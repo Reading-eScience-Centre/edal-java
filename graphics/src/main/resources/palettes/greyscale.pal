@@ -1,3 +1,3 @@
-# Greyscale palette
-0 0 0
-255 255 255
+% greyscale
+#FF000000
+#FFFFFFFF

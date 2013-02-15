@@ -6,19 +6,24 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.graphics.style.Palette1D;
+import uk.ac.rdg.resc.edal.graphics.style.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
 @XmlType(namespace = Image.NAMESPACE, propOrder = {}, name = "ColourSchemeType")
 public class ColourScheme {
 
     @XmlElement(name = "ScaleRange")
-    private ColourScale scaleRange;
+    private ColourScale scaleRange = new ColourScale();
 
-    @XmlElement(name = "ColourPalette")
-    private ColourPalette colourPalette;
+    @XmlElement(name = "ColourMap")
+    private ColourMap colourPalette = new ColourMap();
 
-    ColourScheme() {
+    ColourScheme() {}
+
+    public ColourScheme(ColourScale scaleRange, ColourMap colourPalette) {
+        super();
+        this.scaleRange = scaleRange;
+        this.colourPalette = colourPalette;
     }
 
     public Color getColor(Number value) {
