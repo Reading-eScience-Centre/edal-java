@@ -1,4 +1,4 @@
-# Red-blue palette
-0 0 255
-255 255 255
-255 0 0
+% redblue
+#FF0000FF
+#FFFFFFFF
+#FFFF0000

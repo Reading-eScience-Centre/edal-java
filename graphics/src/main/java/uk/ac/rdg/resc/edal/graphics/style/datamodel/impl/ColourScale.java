@@ -14,8 +14,7 @@ public class ColourScale {
     @XmlElement(name="Logarithmic")
     private Boolean logarithmic = false;
     
-    @SuppressWarnings("unused")
-    private ColourScale(){}
+    ColourScale(){}
     
     public ColourScale(Float scaleMin, Float scaleMax, Boolean logarithmic) {
         this.scaleMin = scaleMin;

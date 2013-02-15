@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -46,6 +47,7 @@ import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
+@XmlType(namespace = Image.NAMESPACE, name = "ImageLayerType")
 public abstract class ImageLayer extends Drawable {
     
     protected interface DataReader {
@@ -64,6 +66,7 @@ public abstract class ImageLayer extends Drawable {
     private int ySampleSize = 8;
     private SubsampleType subsampleType = SubsampleType.CLOSEST;
 
+    @SuppressWarnings("unused")
     private ImageLayer(){}
     
     public ImageLayer(PlotType plotType) {

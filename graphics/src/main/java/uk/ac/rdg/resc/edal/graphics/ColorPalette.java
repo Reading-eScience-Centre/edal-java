@@ -34,8 +34,10 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ImageProducer;
 import java.awt.image.IndexColorModel;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -55,6 +57,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
 /**
  * A palette of colours that is used by an {@link ImageProducer} to render data
@@ -125,7 +128,7 @@ public class ColorPalette {
         palettes.put(DEFAULT_PALETTE_NAME, DEFAULT_PALETTE);
         
         try {
-            String[] paletteFileNames = getResourceListing(ColorPalette.class, "palettes/");
+            String[] paletteFileNames = getResourceListing(ColorPalette.class, "old_palettes/");
             for (String paletteFileName : paletteFileNames) {
                 if(paletteFileName.endsWith(".pal")){
                     try {
@@ -133,7 +136,7 @@ public class ColorPalette {
                                 paletteFileName.lastIndexOf("."));
                         ColorPalette palette = new ColorPalette(paletteName,
                                 readColorPalette(new InputStreamReader(ColorPalette.class.getResource(
-                                        "/palettes/" + paletteFileName).openStream())));
+                                        "/old_palettes/" + paletteFileName).openStream())));
                         palettes.put(palette.getName(), palette);
                     } catch (IOException e) {
                         /*
@@ -619,5 +622,25 @@ public class ColorPalette {
         } 
           
         throw new UnsupportedOperationException("Cannot list files for URL "+dirURL);
+    }
+    
+    public static void main(String[] args) throws IOException {
+        ColorAdapter ca = new ColorAdapter();
+        for(String paletteName : ColorPalette.getAvailablePaletteNames()) {
+            File output = new File("/home/guy/Workspace/edal-java/graphics/src/main/resources/palettes/"+paletteName+".pal");
+            output.createNewFile();
+            BufferedWriter writer = new BufferedWriter(new FileWriter(output));
+            ColorPalette colorPalette = ColorPalette.get(paletteName);
+            System.out.println(paletteName);
+            writer.write("% "+paletteName);
+            writer.newLine();
+            for(Color c : colorPalette.palette){
+                writer.write(ca.marshal(c));
+                writer.newLine();
+                System.out.println(ca.marshal(c));
+            }
+            writer.close();
+            System.out.println();
+        }
     }
 }

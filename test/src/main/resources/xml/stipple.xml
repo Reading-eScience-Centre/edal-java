@@ -4,8 +4,8 @@
 		<DataFieldName>TMP</DataFieldName>
 		<ColourScheme>
 			<ScaleRange>
-				<ScaleMin>272.0</ScaleMin>
-				<ScaleMax>302.0</ScaleMax>
+				<ScaleMin>269.0</ScaleMin>
+				<ScaleMax>305.0</ScaleMax>
 				<Logarithmic>false</Logarithmic>
 			</ScaleRange>
 			<ColourMap>
@@ -13,8 +13,17 @@
 				<AboveMaxColour>#FF00FFFF</AboveMaxColour>
 				<MissingDataColour>#00000000</MissingDataColour>
 				<NumberOfColourBands>20</NumberOfColourBands>
-				<Palette>#ff0000,#ffff00,#00ff00,#00ffff,#0000ff</Palette>
+				<Palette>#4444ff,#ff0000,#ff4444</Palette>
 			</ColourMap>
 		</ColourScheme>
 	</RasterLayer>
+	<StippleLayer>
+		<DataFieldName>SALTY</DataFieldName>
+		<Scale>
+			<PatternBands>10</PatternBands>
+			<OpaqueValue>40</OpaqueValue>
+			<TransparentValue>30</TransparentValue>
+			<Logarithmic>false</Logarithmic>
+		</Scale>
+	</StippleLayer>
 </resc:Image>
