@@ -33,10 +33,12 @@ public class ContourLayer extends ImageLayer {
 
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
-    @XmlElement(name = "ScaleMin", required = true)
+    @XmlElement(name = "ScaleMin")
     private double scaleMin = -50.0;
-    @XmlElement(name = "ScaleMax", required = true)
+    @XmlElement(name = "ScaleMax")
     private double scaleMax = 50.0;
+    @XmlElement(name = "AutoscaleEnabled")
+    private boolean autoscaleEnabled = true;
     @XmlElement(name = "NumberOfContours")
     private double numberOfContours = 10.0;
     @XmlElement(name = "Colour")
@@ -55,12 +57,13 @@ public class ContourLayer extends ImageLayer {
 		super(PlotType.RASTER);
 	}
     
-    public ContourLayer(String dataFieldName, double scaleMin, double scaleMax, double numberOfContours,
-    		Color colour, int style, boolean labelEnabled) {
+    public ContourLayer(String dataFieldName, double scaleMin, double scaleMax, boolean autoscaleEnabled, 
+    		double numberOfContours, Color colour, int style, boolean labelEnabled) {
     	super(PlotType.RASTER);
     	this.dataFieldName = dataFieldName;
     	this.scaleMin = scaleMin;
     	this.scaleMax = scaleMax;
+    	this.autoscaleEnabled = autoscaleEnabled;
     	this.numberOfContours = numberOfContours;
     	this.colour = colour;
     	this.style = style;
@@ -77,6 +80,10 @@ public class ContourLayer extends ImageLayer {
 
 	public double getScaleMax() {
 		return scaleMax;
+	}
+	
+	public boolean isAutoscaleEnabled() {
+		return autoscaleEnabled;
 	}
 
 	public double getNumberOfContours() {
@@ -112,9 +119,20 @@ public class ContourLayer extends ImageLayer {
                 count++;
             }
         }
+        
+        if (autoscaleEnabled) {
+        	scaleMin = Double.MAX_VALUE;
+        	scaleMax = Double.MIN_VALUE;
+        }
+        
 		for (PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)) {
-	    	 values[(height * datum.getGridCoords().getXIndex()) + datum.getGridCoords().getYIndex()]
-	    			 = datum.getValue().doubleValue();
+			double val = datum.getValue().doubleValue();
+			values[(height * datum.getGridCoords().getXIndex()) + datum.getGridCoords().getYIndex()]
+					= val;
+    		if (autoscaleEnabled) {
+    			if (val < scaleMin) scaleMin = val;
+    			if (val > scaleMax) scaleMax = val;
+    		}
 	     }
 		
 		SGTGrid sgtGrid = new SimpleGrid(values, xAxis, yAxis, null);
