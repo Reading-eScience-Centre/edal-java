@@ -122,7 +122,7 @@ public class ContourLayer extends ImageLayer {
         
         if (autoscaleEnabled) {
         	scaleMin = Double.MAX_VALUE;
-        	scaleMax = Double.MIN_VALUE;
+        	scaleMax = -Double.MAX_VALUE;
         }
         
 		for (PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)) {
