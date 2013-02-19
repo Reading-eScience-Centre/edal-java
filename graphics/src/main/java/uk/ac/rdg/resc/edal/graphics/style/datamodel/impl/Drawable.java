@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
@@ -15,11 +16,16 @@ public abstract class Drawable {
         @XmlElement(name="FlatOpacity", type = FlatOpacity.class),
         @XmlElement(name="LinearOpacity", type = LinearOpacity.class)
     })
-    private OpacityTransform opacityFunc;
-
-    public OpacityTransform getOpacityFunc() {
-        return opacityFunc;
-    }
+    private OpacityTransform opacityTransform;
     
+    public OpacityTransform getOpacityTransform() {
+        return opacityTransform;
+    }
+
+    @XmlTransient
+    public void setOpacityTransform(OpacityTransform opacityTransform) {
+        this.opacityTransform = opacityTransform;
+    }
+
     public abstract BufferedImage drawImage(GlobalPlottingParams params, Id2FeatureAndMember id2Feature);
 }

@@ -52,7 +52,6 @@ public class ContourLayer extends ImageLayer {
     private int width = 1000;
     private int height = 1000;
     
-    @SuppressWarnings("unused")
     private ContourLayer() {
 		super(PlotType.RASTER);
 	}

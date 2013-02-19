@@ -77,6 +77,12 @@ public abstract class ImageLayer extends Drawable {
     public BufferedImage drawImage(final GlobalPlottingParams params, final Id2FeatureAndMember id2Feature) {
         BufferedImage image = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
+        drawIntoImage(image, params, id2Feature);
+        return image;
+    }
+    
+    protected void drawIntoImage(BufferedImage image, final GlobalPlottingParams params,
+            final Id2FeatureAndMember id2Feature) {
         drawIntoImage(image, new DataReader() {
             @Override
             public List<PlottingDatum> getDataForLayerName(String layerId) {
@@ -85,9 +91,8 @@ public abstract class ImageLayer extends Drawable {
                 return getDataFromFeatures(featureAndMemberName, params);
             }
         });
-        return image;
     }
-    
+
     public PlotType getPlotType() {
         return plotType;
     }

@@ -44,7 +44,12 @@ public class Image extends Drawable {
         
         for(Drawable drawable : layers) {
             if(drawable != null) {
-                graphics.drawImage(drawable.drawImage(params, id2Feature), 0, 0, null);
+                BufferedImage drawnImage = drawable.drawImage(params, id2Feature);
+                OpacityTransform opacityTransform = drawable.getOpacityTransform();
+                if(opacityTransform != null) {
+                    opacityTransform.drawIntoImage(drawnImage, params, id2Feature);
+                }
+                graphics.drawImage(drawnImage, 0, 0, null);
             }
         }
         return finalImage;
