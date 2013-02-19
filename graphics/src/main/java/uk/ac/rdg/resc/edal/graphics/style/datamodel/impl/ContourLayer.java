@@ -34,20 +34,20 @@ public class ContourLayer extends ImageLayer {
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
     @XmlElement(name = "ScaleMin")
-    private double scaleMin = -50.0;
+    private Double scaleMin = -50.0;
     @XmlElement(name = "ScaleMax")
-    private double scaleMax = 50.0;
+    private Double scaleMax = 50.0;
     @XmlElement(name = "AutoscaleEnabled")
-    private boolean autoscaleEnabled = true;
+    private Boolean autoscaleEnabled = true;
     @XmlElement(name = "NumberOfContours")
-    private double numberOfContours = 10.0;
+    private Double numberOfContours = 10.0;
     @XmlElement(name = "Colour")
     @XmlJavaTypeAdapter(ColorAdapter.class)
     private Color colour = Color.BLACK;
     @XmlElement(name = "Style")
-    private int style = ContourLineAttribute.DASHED;
+    private Integer style = ContourLineAttribute.DASHED;
     @XmlElement(name = "LabelEnabled")
-    private boolean labelEnabled = true;
+    private Boolean labelEnabled = true;
 
     private int width = 1000;
     private int height = 1000;
