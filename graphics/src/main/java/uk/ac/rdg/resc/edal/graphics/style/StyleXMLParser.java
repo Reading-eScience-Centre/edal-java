@@ -19,6 +19,7 @@ import javax.xml.transform.stream.StreamResult;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.RasterLayer;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.StippleLayer;
@@ -80,7 +81,7 @@ public class StyleXMLParser {
     }
     
     public static void main(String[] args) throws JAXBException, IOException {
-//        generateSchema("/home/guy/Workspace/edal-java/graphics/schemas/");
+//        generateSchema("/home/guy/");
         
         Image image = new Image();
 //        StippleLayer layer = new StippleLayer("foam/TMP", new PatternScale(5, 305f, 280f, false));
@@ -95,6 +96,7 @@ public class StyleXMLParser {
         ColourScheme colourScheme = new ColourScheme(scaleRange, colourPalette);
         System.out.println(colourScheme.getColor(280));
         RasterLayer rasterLayer = new RasterLayer("TMP", colourScheme);
+        rasterLayer.setOpacityTransform(new FlatOpacity(0.5f));
         image.getLayers().add(rasterLayer);
         System.out.println(serialise(image));
     }

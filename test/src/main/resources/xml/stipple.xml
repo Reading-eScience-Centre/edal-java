@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
 	<RasterLayer>
+        <FlatOpacity>
+            <Opacity>0.7</Opacity>
+        </FlatOpacity>
 		<DataFieldName>TMP</DataFieldName>
 		<ColourScheme>
 			<ScaleRange>
@@ -18,6 +21,11 @@
 		</ColourScheme>
 	</RasterLayer>
 	<StippleLayer>
+	    <LinearOpacity>
+	       <DataFieldName>TMP</DataFieldName>
+	       <OpaqueValue>302</OpaqueValue>
+	       <TransparentValue>271</TransparentValue>
+	    </LinearOpacity>
 		<DataFieldName>SALTY</DataFieldName>
 		<Scale>
 			<PatternBands>10</PatternBands>
