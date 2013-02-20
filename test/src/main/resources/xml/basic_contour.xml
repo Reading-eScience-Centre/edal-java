@@ -9,11 +9,9 @@
                 <Logarithmic>false</Logarithmic>
             </ScaleRange>
             <ColourMap>
-                <BelowMinColour>#FF00FF00</BelowMinColour>
-                <AboveMaxColour>#FF00FFFF</AboveMaxColour>
                 <MissingDataColour>#00000000</MissingDataColour>
-                <NumberOfColourBands>20</NumberOfColourBands>
-                <Palette>rainbow</Palette>
+                <NumberOfColourBands>10</NumberOfColourBands>
+                <Palette>redblue</Palette>
             </ColourMap>
         </ColourScheme>
     </RasterLayer>
@@ -21,8 +19,9 @@
         <DataFieldName>TMP</DataFieldName>
         <AutoscaleEnabled>true</AutoscaleEnabled>
         <NumberOfContours>10.0</NumberOfContours>
-        <Colour>#FF000000</Colour>
-        <Style>1</Style>
+        <ContourLineColour>#FF000000</ContourLineColour>
+        <ContourLineWidth>1</ContourLineWidth>
+        <ContourLineStyle>DASHED</ContourLineStyle>
         <LabelEnabled>true</LabelEnabled>
     </ContourLayer>
 </ns2:Image>

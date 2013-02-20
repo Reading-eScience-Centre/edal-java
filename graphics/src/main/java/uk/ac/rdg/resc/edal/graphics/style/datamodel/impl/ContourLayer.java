@@ -30,6 +30,10 @@ import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
 @XmlType(namespace = Image.NAMESPACE, name = "ContourLayerType")
 public class ContourLayer extends ImageLayer {
+	
+	public enum ContourLineStyle {
+		SOLID, DASHED, HEAVY, HIGHLIGHT, MARK, MARK_LINE, STROKE
+	}
 
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
@@ -41,11 +45,13 @@ public class ContourLayer extends ImageLayer {
     private Boolean autoscaleEnabled = true;
     @XmlElement(name = "NumberOfContours")
     private Double numberOfContours = 10.0;
-    @XmlElement(name = "Colour")
+    @XmlElement(name = "ContourLineColour")
     @XmlJavaTypeAdapter(ColorAdapter.class)
-    private Color colour = Color.BLACK;
-    @XmlElement(name = "Style")
-    private Integer style = ContourLineAttribute.DASHED;
+    private Color contourLineColour = Color.BLACK;
+    @XmlElement(name = "ContourLineWidth")
+    private Integer contourLineWidth = 1;
+    @XmlElement(name = "ContourLineStyle")
+    private ContourLineStyle contourLineStyle = ContourLineStyle.DASHED;
     @XmlElement(name = "LabelEnabled")
     private Boolean labelEnabled = true;
 
@@ -57,15 +63,16 @@ public class ContourLayer extends ImageLayer {
 	}
     
     public ContourLayer(String dataFieldName, double scaleMin, double scaleMax, boolean autoscaleEnabled, 
-    		double numberOfContours, Color colour, int style, boolean labelEnabled) {
+    		double numberOfContours, Color contourLineColour, int contourLineWidth, ContourLineStyle contourLineStyle, boolean labelEnabled) {
     	super(PlotType.RASTER);
     	this.dataFieldName = dataFieldName;
     	this.scaleMin = scaleMin;
     	this.scaleMax = scaleMax;
     	this.autoscaleEnabled = autoscaleEnabled;
     	this.numberOfContours = numberOfContours;
-    	this.colour = colour;
-    	this.style = style;
+    	this.contourLineColour = contourLineColour;
+    	this.contourLineWidth = contourLineWidth;
+    	this.contourLineStyle = contourLineStyle;
     	this.labelEnabled = labelEnabled;
     }
 
@@ -89,16 +96,41 @@ public class ContourLayer extends ImageLayer {
 		return numberOfContours;
 	}
 	
-	public Color getColour() {
-		return colour;
+	public Color getContourLineColour() {
+		return contourLineColour;
+	}
+	
+	public int getContourLineWidth() {
+		return contourLineWidth;
 	}
 
-	public int getStyle() {
-		return style;
+	public ContourLineStyle getContourLineStyle() {
+		return contourLineStyle;
 	}
 
 	public boolean isLabelEnabled() {
 		return labelEnabled;
+	}
+	
+	private int getLineStyleInteger() {
+		switch (contourLineStyle) {
+		case SOLID:
+			return ContourLineAttribute.SOLID;
+		case DASHED:
+			return ContourLineAttribute.DASHED;
+		case HEAVY:
+			return ContourLineAttribute.HEAVY;
+		case HIGHLIGHT:
+			return ContourLineAttribute.HIGHLIGHT;
+		case MARK:
+			return ContourLineAttribute.MARK;
+		case MARK_LINE:
+			return ContourLineAttribute.MARK_LINE;
+		case STROKE:
+			return ContourLineAttribute.STROKE;
+		default:
+			return ContourLineAttribute.DASHED;
+		}
 	}
 
 	@Override
@@ -146,8 +178,9 @@ public class ContourLayer extends ImageLayer {
 
         DefaultContourLineAttribute defAttr = new DefaultContourLineAttribute();
 
-        defAttr.setColor(colour);
-        defAttr.setStyle(style);
+        defAttr.setColor(contourLineColour);
+        defAttr.setStyle(getLineStyleInteger());
+        defAttr.setWidth(contourLineWidth);
         defAttr.setLabelEnabled(labelEnabled);
         clevels.setDefaultContourLineAttribute(defAttr);
 
