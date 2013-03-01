@@ -28,7 +28,8 @@ public class Image extends Drawable {
         @XmlElement(name="ArrowLayer", type = ArrowLayer.class),
         @XmlElement(name="RasterLayer", type = RasterLayer.class),
         @XmlElement(name="StippleLayer", type = StippleLayer.class),
-        @XmlElement(name="ContourLayer", type = ContourLayer.class)
+        @XmlElement(name="ContourLayer", type = ContourLayer.class),
+        @XmlElement(name="SimpleGlyphLayer", type = SimpleGlyphLayer.class)
     })
     private List<Drawable> layers = new ArrayList<Drawable>();
 
