@@ -10,10 +10,12 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.graphics.ColourableIcon;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 
+@XmlType(namespace = Image.NAMESPACE, name = "SimpleGlyphLayerType")
 public class SimpleGlyphLayer extends GlyphLayer {
 
     @XmlElement(name = "DataFieldName", required = true)
