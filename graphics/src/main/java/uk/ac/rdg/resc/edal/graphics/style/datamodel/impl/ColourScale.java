@@ -22,6 +22,19 @@ public class ColourScale {
         this.logarithmic = logarithmic;
     }
     
+    
+    public Float getScaleMin() {
+        return scaleMin;
+    }
+
+    public Float getScaleMax() {
+        return scaleMax;
+    }
+
+    public Boolean isLogarithmic() {
+        return logarithmic;
+    }
+
     /**
      * Scales an input number to the range 0-1. Will return a number outside
      * this range if necessary, but the result can ONLY be interpreted as

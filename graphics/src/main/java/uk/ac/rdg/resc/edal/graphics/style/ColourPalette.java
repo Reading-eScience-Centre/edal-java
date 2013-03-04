@@ -28,6 +28,8 @@ public class ColourPalette {
      */
     public static final String DEFAULT_PALETTE_NAME = "rainbow";
 
+    public static final int MAX_NUM_COLOURS = 254;
+    
     /**
      * This is the palette that will be used if no specific palette has been
      * chosen. This palette is taken from the SGT graphics toolkit.
@@ -123,8 +125,8 @@ public class ColourPalette {
      *             greater than {@link #MAX_NUM_COLOURS}.
      */
     private static Color[] generateColourSet(Color[] palette, int numColorBands) {
-        if (numColorBands < 1) {
-            throw new IllegalArgumentException("numColorBands must be greater than 1");
+        if (numColorBands < 1 || numColorBands > MAX_NUM_COLOURS) {
+            throw new IllegalArgumentException("numColorBands must be greater than 1 and less than "+MAX_NUM_COLOURS);
         }
         Color[] targetPalette;
         if (numColorBands == palette.length) {

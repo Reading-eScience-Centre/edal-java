@@ -30,17 +30,67 @@ import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
 
 @XmlType(namespace = Image.NAMESPACE, name = "ContourLayerType")
 public class ContourLayer extends ImageLayer {
-	
-	public enum ContourLineStyle {
-		SOLID, DASHED, HEAVY, HIGHLIGHT, MARK, MARK_LINE, STROKE
-	}
+    
+    @XmlType(namespace = Image.NAMESPACE, name = "ContourLineStyleType")
+    public enum ContourLineStyle {
+        SOLID {
+            @Override
+            public int getLineStyleInteger() {
+                return ContourLineAttribute.SOLID;
+            }
+        },
+
+        DASHED {
+            @Override
+            public int getLineStyleInteger() {
+                return ContourLineAttribute.DASHED;
+            }
+        },
+        
+        HEAVY {
+            @Override
+            public int getLineStyleInteger() {
+                return ContourLineAttribute.HEAVY;
+            }
+        },
+        
+        HIGHLIGHT {
+            @Override
+            public int getLineStyleInteger() {
+                return ContourLineAttribute.HIGHLIGHT;
+            }
+        },
+        
+        MARK {
+            @Override
+            public int getLineStyleInteger() {
+                return ContourLineAttribute.MARK;
+            }
+        },
+        
+        MARK_LINE {
+            @Override
+            public int getLineStyleInteger() {
+                return ContourLineAttribute.MARK_LINE;
+            }
+        },
+        
+        STROKE {
+            @Override
+            public int getLineStyleInteger() {
+                return ContourLineAttribute.STROKE;
+            }
+        };
+        
+        public abstract int getLineStyleInteger();
+    }
 
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
-    @XmlElement(name = "ScaleMin")
-    private Double scaleMin = -50.0;
-    @XmlElement(name = "ScaleMax")
-    private Double scaleMax = 50.0;
+    
+    @XmlElement(name = "Scale")
+    private ColourScale scale = new ColourScale();
+    
     @XmlElement(name = "AutoscaleEnabled")
     private Boolean autoscaleEnabled = true;
     @XmlElement(name = "NumberOfContours")
@@ -55,19 +105,15 @@ public class ContourLayer extends ImageLayer {
     @XmlElement(name = "LabelEnabled")
     private Boolean labelEnabled = true;
 
-    private int width = 1000;
-    private int height = 1000;
-    
     private ContourLayer() {
 		super(PlotType.RASTER);
 	}
     
-    public ContourLayer(String dataFieldName, double scaleMin, double scaleMax, boolean autoscaleEnabled, 
+    public ContourLayer(String dataFieldName, ColourScale scale, boolean autoscaleEnabled, 
     		double numberOfContours, Color contourLineColour, int contourLineWidth, ContourLineStyle contourLineStyle, boolean labelEnabled) {
     	super(PlotType.RASTER);
     	this.dataFieldName = dataFieldName;
-    	this.scaleMin = scaleMin;
-    	this.scaleMax = scaleMax;
+    	this.scale = scale;
     	this.autoscaleEnabled = autoscaleEnabled;
     	this.numberOfContours = numberOfContours;
     	this.contourLineColour = contourLineColour;
@@ -80,12 +126,8 @@ public class ContourLayer extends ImageLayer {
         return dataFieldName;
     }
 
-    public double getScaleMin() {
-		return scaleMin;
-	}
-
-	public double getScaleMax() {
-		return scaleMax;
+    public ColourScale getScale() {
+		return scale;
 	}
 	
 	public boolean isAutoscaleEnabled() {
@@ -111,32 +153,11 @@ public class ContourLayer extends ImageLayer {
 	public boolean isLabelEnabled() {
 		return labelEnabled;
 	}
-	
-	private int getLineStyleInteger() {
-		switch (contourLineStyle) {
-		case SOLID:
-			return ContourLineAttribute.SOLID;
-		case DASHED:
-			return ContourLineAttribute.DASHED;
-		case HEAVY:
-			return ContourLineAttribute.HEAVY;
-		case HIGHLIGHT:
-			return ContourLineAttribute.HIGHLIGHT;
-		case MARK:
-			return ContourLineAttribute.MARK;
-		case MARK_LINE:
-			return ContourLineAttribute.MARK_LINE;
-		case STROKE:
-			return ContourLineAttribute.STROKE;
-		default:
-			return ContourLineAttribute.DASHED;
-		}
-	}
 
 	@Override
 	protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
-		width = image.getWidth();
-		height = image.getHeight();
+		int width = image.getWidth();
+		int height = image.getHeight();
 		double[] values = new double[width * height];
         double[] xAxis = new double[width];
         double[] yAxis = new double[height];
@@ -151,13 +172,23 @@ public class ContourLayer extends ImageLayer {
             }
         }
         
+        Float scaleMin = null;
+        Float scaleMax = null;
         if (autoscaleEnabled) {
-        	scaleMin = Double.MAX_VALUE;
-        	scaleMax = -Double.MAX_VALUE;
+        	scaleMin = Float.MAX_VALUE;
+        	scaleMax = -Float.MAX_VALUE;
+        } else {
+            scaleMin = scale.getScaleMin();
+            scaleMax = scale.getScaleMax();
         }
         
 		for (PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)) {
-			double val = datum.getValue().doubleValue();
+		    float val;
+		    if(datum.getValue() == null) {
+		        val = Float.NaN;
+		    } else {
+                val = datum.getValue().floatValue();
+		    }
 			values[(height * datum.getGridCoords().getXIndex()) + datum.getGridCoords().getYIndex()]
 					= val;
     		if (autoscaleEnabled) {
@@ -168,7 +199,7 @@ public class ContourLayer extends ImageLayer {
 		
 		SGTGrid sgtGrid = new SimpleGrid(values, xAxis, yAxis, null);
 
-        CartesianGraph cg = getCartesianGraph(sgtGrid);
+        CartesianGraph cg = getCartesianGraph(sgtGrid, width, height);
 
         double contourSpacing = (scaleMax - scaleMin) / numberOfContours;
 
@@ -179,7 +210,7 @@ public class ContourLayer extends ImageLayer {
         DefaultContourLineAttribute defAttr = new DefaultContourLineAttribute();
 
         defAttr.setColor(contourLineColour);
-        defAttr.setStyle(getLineStyleInteger());
+        defAttr.setStyle(contourLineStyle.getLineStyleInteger());
         defAttr.setWidth(contourLineWidth);
         defAttr.setLabelEnabled(labelEnabled);
         clevels.setDefaultContourLineAttribute(defAttr);
@@ -194,7 +225,7 @@ public class ContourLayer extends ImageLayer {
 
 	}
 
-    private CartesianGraph getCartesianGraph(SGTData data) {
+    private static CartesianGraph getCartesianGraph(SGTData data, int width, int height) {
         /*
          * To get fixed size labels we need to set a physical size much smaller
          * than the pixel size (since pixels can't represent physical size).
