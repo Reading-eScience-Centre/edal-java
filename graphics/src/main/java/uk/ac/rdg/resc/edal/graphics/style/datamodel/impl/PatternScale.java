@@ -69,9 +69,13 @@ public class PatternScale {
                 return nLevels - 1;
             }
             if(logarithmic) {
-                return (int) Math.floor(1+(nLevels-2) * ((Math.log(value.floatValue()) - Math.log(transparentValue)) / (Math.log(opaqueValue) - Math.log(transparentValue)))) ;
+                return (int) Math.floor(1+(nLevels-2) 
+                        * ((Math.log(value.floatValue()) - Math.log(transparentValue)) 
+                                / (Math.log(opaqueValue) - Math.log(transparentValue)))) ;
             } else {
-                return (int) Math.floor(1+(nLevels-2) * ((value.floatValue() - transparentValue) / (opaqueValue - transparentValue))) ;
+                return (int) Math.floor(1+(nLevels-2) 
+                        * ((value.floatValue() - transparentValue) 
+                                / (opaqueValue - transparentValue))) ;
             }
         } else {
             if(value.floatValue() >= transparentValue) {
@@ -80,9 +84,15 @@ public class PatternScale {
                 return nLevels - 1;
             }
             if(logarithmic) {
-                return nLevels - 2 - (int) Math.floor(2+(nLevels-2) * ((Math.log(transparentValue) - Math.log(value.floatValue())) / (Math.log(opaqueValue) - Math.log(transparentValue)))) ;
+                return nLevels - 2 
+                        - (int) Math.floor(2+(nLevels-2) 
+                                * ((Math.log(transparentValue)- Math.log(value.floatValue())) 
+                                        / (Math.log(opaqueValue) - Math.log(transparentValue)))) ;
             } else {
-                return nLevels - 2 - (int) Math.floor(2+(nLevels-2) * ((transparentValue - value.floatValue()) / (opaqueValue - transparentValue)));
+                return nLevels - 2 
+                        - (int) Math.floor(2+(nLevels-2) 
+                                * ((transparentValue - value.floatValue()) 
+                                        / (opaqueValue - transparentValue)));
             }
         }
     }
