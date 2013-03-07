@@ -288,7 +288,11 @@ public abstract class ImageLayer extends Drawable {
                 if (val == null || Float.isNaN(val.floatValue())) {
                     continue;
                 }
-                plottingData.add(new PlottingDatum(containingCell.getGridCoordinates(), val));
+                GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
+                GridCoordinates2D coords = new GridCoordinates2DImpl(gridCoordinates.getXIndex(),
+                        params.getHeight() - gridCoordinates.getYIndex() - 1);
+                
+                plottingData.add(new PlottingDatum(coords, val));
             }
         } else {
             /*
