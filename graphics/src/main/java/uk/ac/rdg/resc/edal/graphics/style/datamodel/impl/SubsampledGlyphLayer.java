@@ -109,7 +109,8 @@ public class SubsampledGlyphLayer extends ImageLayer {
             int j = datum.getGridCoords().getYIndex();
             if (value != null && !Float.isNaN(value.floatValue())) {
             	Color color = colourScheme.getColor(value);
-            	g.drawImage(icon.getColouredIcon(color), i, j - icon.getHeight() + 1, null);	
+            	g.drawImage(icon.getColouredIcon(color), i - icon.getWidth()/2,
+            			j - icon.getHeight()/2, null);	
             }
         }
 	}
