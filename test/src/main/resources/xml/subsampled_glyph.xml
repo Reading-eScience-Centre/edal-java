@@ -15,7 +15,7 @@
             </ColourMap>
         </ColourScheme>
     </RasterLayer>
-    <BasicGlyphLayer>
+    <SubsampledGlyphLayer>
         <DataFieldName>TMP</DataFieldName>
         <ColourScheme>
             <ScaleRange>
@@ -30,5 +30,5 @@
             </ColourMap>
         </ColourScheme>
         <IconName>circle</IconName>
-    </BasicGlyphLayer>
+    </SubsampledGlyphLayer>
 </ns2:Image>
