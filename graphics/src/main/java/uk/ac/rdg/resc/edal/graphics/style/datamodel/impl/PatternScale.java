@@ -1,9 +1,6 @@
 package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
-import java.awt.Color;
-
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlType(namespace = Image.NAMESPACE, propOrder = {}, name = "PatternScaleType")
@@ -21,6 +18,7 @@ public class PatternScale {
     @XmlElement(name = "Logarithmic")
     private Boolean logarithmic = false;
     
+    @SuppressWarnings("unused")
     private PatternScale(){}
     
     public PatternScale(int nLevels, Float transparentValue, Float opaqueValue, Boolean logarithmic) {

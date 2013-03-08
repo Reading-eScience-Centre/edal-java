@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -72,8 +73,8 @@ public class NewPlotterTest {
          * Now get all files in the "xml" directory
          */
         File files = new File(ClassLoader.getSystemResource("xml").getFile());
-        for (File file : files.listFiles()) {
-//        File file = new File(ClassLoader.getSystemResource("xml/basic_raster.xml").getFile());
+//        for (File file : files.listFiles()) {
+        File file = new File(ClassLoader.getSystemResource("xml/basic_contour.xml").getFile());{
             try {
                 /*
                  * Read each file, deserialise to an image, and then render and save
@@ -84,7 +85,13 @@ public class NewPlotterTest {
     
                 File outputFile = new File("/home/guy/xmlOutput/", file.getName().replaceAll("xml$",
                         "png"));
-                ImageIO.write(image.drawImage(params, id2Feature), "png", outputFile);
+                BufferedImage drawnImage = image.drawImage(params, id2Feature);
+                BufferedImage legend = image.getLegend(100);
+                if(legend != null) {
+//                    drawnImage.createGraphics().drawImage(legend, 0, 0, null);
+                    ImageIO.write(legend, "png", outputFile);
+                }
+//                ImageIO.write(drawnImage, "png", outputFile);
             } catch (Exception e) {
                 System.out.println("Problem with "+file.getAbsolutePath()+": "+e.getMessage());
                 e.printStackTrace();

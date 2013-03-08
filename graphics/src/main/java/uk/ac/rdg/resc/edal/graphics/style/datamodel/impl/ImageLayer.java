@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -268,7 +268,7 @@ public abstract class ImageLayer extends Drawable {
             RegularAxis yAxis = targetDomain.getYAxis();
             CoordinateReferenceSystem crs = params.getBbox().getCoordinateReferenceSystem();
             HorizontalGrid featureGrid = gridFeature.getCoverage().getDomain();
-            Set<Long> neededIndices = new HashSet<Long>();
+            Set<Long> neededIndices = new LinkedHashSet<Long>();
             for (double x : xAxis.getCoordinateValues()) {
                 for (double y : yAxis.getCoordinateValues()) {
                     long index = featureGrid.findIndexOf(new HorizontalPositionImpl(x, y, crs));

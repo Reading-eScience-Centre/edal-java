@@ -1,12 +1,15 @@
 package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = Image.NAMESPACE, name = "RasterLayerType")
 public class RasterLayer extends ImageLayer {
@@ -45,5 +48,13 @@ public class RasterLayer extends ImageLayer {
             image.setRGB(datum.getGridCoords().getXIndex(), datum.getGridCoords().getYIndex(),
                     colourScheme.getColor(datum.getValue()).getRGB());
         }
+    }
+    
+    @Override
+    protected Set<NameAndRange> getFieldsWithScales() {
+        Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
+        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(
+                colourScheme.scaleRange.getScaleMin(), colourScheme.scaleRange.getScaleMax())));
+        return ret;
     }
 }
