@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
+    <RasterLayer>
+        <DataFieldName>carbon/mean_posteland_fos_adjust</DataFieldName>
+        <ColourScheme>
+            <ScaleRange>
+                <ScaleMin>-0.00007215771</ScaleMin>
+                <ScaleMax>0.00015500169</ScaleMax>
+                <Logarithmic>false</Logarithmic>
+            </ScaleRange>
+            <ColourMap>
+                <BelowMinColour>#FF00FF00</BelowMinColour>
+                <AboveMaxColour>#FF00FFFF</AboveMaxColour>
+                <MissingDataColour>#00000000</MissingDataColour>
+                <NumberOfColourBands>20</NumberOfColourBands>
+                <Palette>#0000FF,#00FF00,#FF0000</Palette>
+            </ColourMap>
+        </ColourScheme>
+    </RasterLayer>
+    <StippleLayer>
+        <DataFieldName>carbon/stdev_posteland_fos_adjust</DataFieldName>
+        <Scale>
+            <PatternBands>10</PatternBands>
+            <OpaqueValue>0.00012</OpaqueValue>
+            <TransparentValue>-0.00001</TransparentValue>
+            <Logarithmic>false</Logarithmic>
+        </Scale>
+    </StippleLayer>
+</resc:Image>

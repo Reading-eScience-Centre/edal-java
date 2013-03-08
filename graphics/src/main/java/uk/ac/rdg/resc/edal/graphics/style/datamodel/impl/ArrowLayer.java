@@ -4,7 +4,9 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
@@ -13,6 +15,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = Image.NAMESPACE, propOrder = { "directionFieldName", "arrowSize", "arrowColour" }, name = "ArrowLayerType")
 public class ArrowLayer extends ImageLayer {
@@ -25,6 +28,7 @@ public class ArrowLayer extends ImageLayer {
     private Integer arrowSize = 8;
     @XmlElement(name = "ArrowSize")
     public void setArrowSize(Integer arrowSize) {
+        this.arrowSize = arrowSize;
         /*
          * This is annotated on the setter, because the it checks for a valid size
          */
@@ -42,8 +46,8 @@ public class ArrowLayer extends ImageLayer {
     public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour) {
         super(PlotType.SUBSAMPLE);
         this.directionFieldName = directionFieldName;
-        this.arrowSize = arrowSize;
         this.arrowColour = arrowColour;
+        setArrowSize(arrowSize);
     }
 
     public String getDirectionFieldName() {
@@ -82,5 +86,12 @@ public class ArrowLayer extends ImageLayer {
                 g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
             }
         }
+    }
+
+    @Override
+    protected Set<NameAndRange> getFieldsWithScales() {
+        Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
+        ret.add(new NameAndRange(directionFieldName, Extents.newExtent(0f, new Float(2*Math.PI))));
+        return ret;
     }
 }

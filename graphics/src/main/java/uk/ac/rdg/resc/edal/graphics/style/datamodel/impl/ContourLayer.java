@@ -19,6 +19,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
@@ -27,6 +29,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.ColorAdapter;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = Image.NAMESPACE, name = "ContourLayerType")
 public class ContourLayer extends ImageLayer {
@@ -210,7 +213,9 @@ public class ContourLayer extends ImageLayer {
         DefaultContourLineAttribute defAttr = new DefaultContourLineAttribute();
 
         defAttr.setColor(contourLineColour);
-        defAttr.setStyle(contourLineStyle.getLineStyleInteger());
+        if(contourLineStyle != null) {
+            defAttr.setStyle(contourLineStyle.getLineStyleInteger());
+        }
         defAttr.setWidth(contourLineWidth);
         defAttr.setLabelEnabled(labelEnabled);
         clevels.setDefaultContourLineAttribute(defAttr);
@@ -260,5 +265,11 @@ public class ContourLayer extends ImageLayer {
         layer.setGraph(graph);
         return graph;
     }
-
+    
+    @Override
+    protected Set<NameAndRange> getFieldsWithScales() {
+        Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
+        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(scale.getScaleMin(), scale.getScaleMax())));
+        return ret;
+    }
 }

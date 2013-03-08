@@ -6,8 +6,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.annotation.XmlElement;
@@ -15,7 +17,9 @@ import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.graphics.ColourableIcon;
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.graphics.style.PlottingDatum;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = Image.NAMESPACE, name = "SubsampledGlyphLayerType")
 public class SubsampledGlyphLayer extends ImageLayer {
@@ -97,7 +101,8 @@ public class SubsampledGlyphLayer extends ImageLayer {
         }
     }
 
-	protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
+	@Override
+    protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
 		List<PlottingDatum> plotData = dataReader.getDataForLayerName(dataFieldName);
 
 		Graphics2D g = image.createGraphics();
@@ -115,4 +120,11 @@ public class SubsampledGlyphLayer extends ImageLayer {
         }
 	}
 
+    @Override
+    protected Set<NameAndRange> getFieldsWithScales() {
+        Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
+        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(
+                colourScheme.scaleRange.getScaleMin(), colourScheme.scaleRange.getScaleMax())));
+        return ret;
+    }
 }

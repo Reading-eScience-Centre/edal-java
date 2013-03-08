@@ -1,13 +1,13 @@
 package uk.ac.rdg.resc.edal.graphics.style.datamodel.impl;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
 
-import javax.imageio.ImageIO;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 @XmlType(namespace = Image.NAMESPACE, name = "FlatOpacityType")
 public class FlatOpacity extends OpacityTransform {
@@ -34,5 +34,10 @@ public class FlatOpacity extends OpacityTransform {
             imagePixels[i] = blendPixel(imagePixels[i], alpha);
         }
         image.setRGB(0, 0, width, height, imagePixels, 0, width);
+    }
+
+    @Override
+    protected Set<NameAndRange> getFieldsWithScales() {
+        return Collections.emptySet();
     }
 }
