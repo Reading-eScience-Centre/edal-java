@@ -17,6 +17,7 @@
     </RasterLayer>
     <BasicGlyphLayer>
         <DataFieldName>TMP</DataFieldName>
+        <GlyphName>circle</GlyphName>
         <ColourScheme>
             <ScaleRange>
                 <ScaleMin>270.0</ScaleMin>
@@ -29,6 +30,5 @@
                 <Palette>rainbow</Palette>
             </ColourMap>
         </ColourScheme>
-        <IconName>circle</IconName>
     </BasicGlyphLayer>
 </ns2:Image>

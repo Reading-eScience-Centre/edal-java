@@ -90,6 +90,16 @@ public class Image extends Drawable {
         BufferedImage finalImage;
         Set<NameAndRange> fieldsWithScales = getFieldsWithScales();
         int noOfIndependentFields = fieldsWithScales.size();
+        Color bgColour = Color.black;
+        Color fgColour = Color.white;
+        /*
+         * This is the fraction of the colourbar which *gets added* as
+         * out-of-range data.
+         * 
+         * i.e. if it's 1, the result would be 1/3 below min, 1/3 in range,
+         * 1/3 above max.
+         */
+        float extraAmountOutOfRange = 0.1f;
         
         if(noOfIndependentFields == 0) {
             /*
@@ -102,15 +112,6 @@ public class Image extends Drawable {
              */
             
             /*
-             * This is the fraction of the colourbar which *gets added* as
-             * out-of-range data.
-             * 
-             * i.e. if it's 1, the result would be 1/3 below min, 1/3 in range,
-             * 1/3 above max.
-             */
-            float extraAmountOutOfRange = 0.1f;
-            
-            /*
              * Get the field name and scale range.
              */
             NameAndRange nameAndRange = fieldsWithScales.iterator().next();
@@ -121,14 +122,14 @@ public class Image extends Drawable {
             LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales, COLOURBAR_WIDTH, componentSize, null, extraAmountOutOfRange);
             BufferedImage colourbar = drawImage(dataGenerator.getGlobalParams(), dataGenerator.getId2FeatureAndMember(null, nameAndRange.getFieldLabel()));
             Graphics2D graphics = colourbar.createGraphics();
-            graphics.setColor(Color.white);
+            graphics.setColor(fgColour);
             graphics.drawRect(0, 0, colourbar.getWidth() - 1, colourbar.getHeight() - 1);
             graphics.dispose();
 
             /*
              * Now generate the labels for this legend
              */
-            BufferedImage labels = getLabels(nameAndRange, extraAmountOutOfRange, componentSize);
+            BufferedImage labels = getLabels(nameAndRange, extraAmountOutOfRange, componentSize, fgColour);
             
             /*
              * Now create the correctly-sized final image...
@@ -138,13 +139,41 @@ public class Image extends Drawable {
              * ...and draw everything into it
              */
             graphics = finalImage.createGraphics();
-            graphics.setColor(Color.black);
+            graphics.setColor(bgColour);
             graphics.fill(new Rectangle(finalImage.getWidth(), finalImage.getHeight()));
             graphics.drawImage(colourbar, 0, 0, null);
             graphics.drawImage(labels, COLOURBAR_WIDTH, 0, null);
         } else {
             /*
-             * General case, where we need to generate each possible combination of 2D legends 
+             * General case, where we need to generate each possible combination
+             * of 2D legends.
+             */
+            int numberOfImagesInOneDirection = noOfIndependentFields - 1;
+            List<NameAndRange> fields = new ArrayList<Drawable.NameAndRange>(fieldsWithScales);
+
+            /*
+             * Before we can start this process, we need to calculate how much
+             * room to leave for the labels. We can do this by generating all
+             * the labels up front
+             */
+            BufferedImage[] labels = new BufferedImage[fields.size()];
+            int borderSize = 0;
+            for(int i = 0; i < fields.size(); i++) {
+                labels[i] = getLabels(fields.get(i), extraAmountOutOfRange, componentSize, fgColour);
+                if(labels[i].getWidth() > borderSize) {
+                    borderSize = labels[i].getWidth() + 8; 
+                }
+            }
+            
+            int totalImageSize = (componentSize + borderSize) * numberOfImagesInOneDirection;
+            
+            finalImage = new BufferedImage(totalImageSize, totalImageSize, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D graphics = finalImage.createGraphics();
+            graphics.setColor(bgColour);
+            graphics.fillRect(0, 0, totalImageSize, totalImageSize);
+            
+            /*
+             * Load the background image and the data mask
              */
             BufferedImage bg = null;
             BufferedImage bgMask = null;
@@ -154,40 +183,49 @@ public class Image extends Drawable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            int numberOfImagesInOneDirection = noOfIndependentFields - 1;
-            
-            int borderPerImageSide = 50;
-            int totalImageSize = (componentSize + 2 * borderPerImageSide) * numberOfImagesInOneDirection;
-            
-            finalImage = new BufferedImage(totalImageSize, totalImageSize, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D graphics = finalImage.createGraphics();
-            
-            
-            List<NameAndRange> fields = new ArrayList<Drawable.NameAndRange>(fieldsWithScales);
-            
             for(int i = 0; i < fields.size(); i++) {
                 String yName = fields.get(i).getFieldLabel();
-                int yStart = (i * (componentSize + 2 * borderPerImageSide)) + borderPerImageSide;
+                int yStart = 2+ (i * (componentSize + borderSize));
                 for(int j = i + 1; j < fields.size(); j++) {
-                    int xStart = ((j-i-1) * (componentSize + 2 * borderPerImageSide)) + borderPerImageSide;
+                    int xStart = 2 +((j-i-1) * (componentSize + borderSize));
                     String xName = fields.get(j).getFieldLabel();
-                    LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales, componentSize, componentSize, bgMask, 10);
+                    LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales, componentSize, componentSize, bgMask, 0.1f);
                     BufferedImage colourbar2d = drawImage(dataGenerator.getGlobalParams(), dataGenerator.getId2FeatureAndMember(xName, yName));
                     if(bg != null) {
                         graphics.drawImage(bg, xStart, yStart, componentSize, componentSize, null);
                     }
-                    graphics.drawImage(colourbar2d, xStart, yStart, null);
                     /*
-                     * TODO add labels + units etc.
+                     * Draw the 2d legend and outline it
                      */
+                    graphics.drawImage(colourbar2d, xStart, yStart, null);
+                    graphics.setColor(fgColour);
+                    graphics.drawRect(xStart, yStart, colourbar2d.getWidth() - 1, colourbar2d.getHeight() - 1);
+                    graphics.drawRect(xStart - 2, yStart - 2, borderSize + colourbar2d.getWidth() - 2, borderSize + colourbar2d.getHeight() - 2);
+                    graphics.drawRect(xStart - 1, yStart - 1, borderSize + colourbar2d.getWidth() - 2, borderSize + colourbar2d.getHeight() - 2);
+                    /*
+                     * Now draw the labels
+                     */
+                    AffineTransform at = new AffineTransform();
+                    at.translate(xStart + componentSize, yStart + componentSize);
+                    at.rotate(Math.PI/2);
+                    graphics.drawImage(labels[j], at, null);
+                    graphics.drawImage(labels[i], xStart + componentSize, yStart, null);
                 }                
             }
         }
         return finalImage;
     }
     
-    private static BufferedImage getLabels(NameAndRange nameAndRange, float extraAmountOutOfRange, int componentSize) {
+    /**
+     * This returns an image suitable for plotting next to a vertical colourbar.
+     * Rotate it if required.
+     * 
+     * @param nameAndRange
+     * @param extraAmountOutOfRange
+     * @param componentSize
+     * @return
+     */
+    private static BufferedImage getLabels(NameAndRange nameAndRange, float extraAmountOutOfRange, int componentSize, Color textColor) {
         String fieldName = nameAndRange.getFieldLabel();
         
         Font textFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
@@ -196,7 +234,7 @@ public class Image extends Drawable {
         Font sidewaysFont = textFont.deriveFont(at);
         DecimalFormat formatter = new DecimalFormat("0.###E0");
         
-        int BORDER = 4;
+        int textBorder = 4;
         
         Float lowVal = nameAndRange.getScaleRange().getLow();
         Float highVal = nameAndRange.getScaleRange().getHigh();
@@ -237,9 +275,11 @@ public class Image extends Drawable {
          */
         int fieldLength = fontMetrics.stringWidth(fieldName);
         /*
-         * Number of lines of text needed for field name 
+         * Number of lines of text needed for field name. The 20 is in there to
+         * get around the fact that characters don't take up equal space. It's
+         * an empirical value. Feel free to empiricise it more.
          */
-        int nLines = (int) Math.ceil((double)fieldLength / componentSize);
+        int nLines = (int) Math.ceil((double)(fieldLength + 20) / componentSize);
         if(nLines > 1) {
             /*
              * It needs splitting.
@@ -275,7 +315,7 @@ public class Image extends Drawable {
         /*
          * Total space needed for all text 
          */
-        int sideSpace = numberSpace + lineHeight * nLines + 2*BORDER;
+        int sideSpace = numberSpace + lineHeight * nLines + 2*textBorder;
         // Dispose of the unused graphics context.
         graphics.dispose();
         
@@ -284,18 +324,18 @@ public class Image extends Drawable {
         /*
          * Now draw text for the scale limits
          */
-        graphics.setColor(Color.white);
+        graphics.setColor(textColor);
         graphics.setFont(textFont);
-        graphics.drawString(highStr, BORDER, highYPos);
-        graphics.drawString(medHighStr, BORDER, medHighYPos);
-        graphics.drawString(medLowStr, BORDER, medLowYPos);
-        graphics.drawString(lowStr, BORDER, lowYPos);
+        graphics.drawString(highStr, textBorder, highYPos);
+        graphics.drawString(medHighStr, textBorder, medHighYPos);
+        graphics.drawString(medLowStr, textBorder, medLowYPos);
+        graphics.drawString(lowStr, textBorder, lowYPos);
         
         graphics.setFont(sidewaysFont);
         
         int offset = 0;
         for (String line : fieldName.split("\n")) {
-            graphics.drawString(line, BORDER + numberSpace + lineHeight + offset, componentSize - BORDER);
+            graphics.drawString(line, textBorder + numberSpace + lineHeight + offset, componentSize - textBorder);
             offset += lineHeight;
         }
         
@@ -324,7 +364,7 @@ public class Image extends Drawable {
     
     public static void main(String[] args) throws IOException {
         Image image = new Image();
-        Drawable layer = new RasterLayer("temp", new ColourScheme(new ColourScale(-00.0000000050f,
+        Drawable layer = new RasterLayer("colouredness", new ColourScheme(new ColourScale(-00.0000000050f,
                 5.0f, false), new ColourMap(Color.black, Color.black, new Color(0, true),
                 "default", 250)));
 //        Drawable raster2 = new RasterLayer("raster2", new ColourScheme(new ColourScale(-5.0f,
@@ -332,14 +372,14 @@ public class Image extends Drawable {
 //                        "redblue", 250)));
 //        layer.setOpacityTransform(new FlatOpacity(0.5f));
         
-        ArrowLayer layer2 = new ArrowLayer("test2", 10, Color.BLACK);
+        ArrowLayer layer2 = new ArrowLayer("pointiness", 10, Color.BLACK);
 //        ContourLayer layer3 = new ContourLayer("test3", new ColourScale(0f, 50f, false), false, 10, Color.blue, 2, null, true);
-        StippleLayer layer3 = new StippleLayer("test3", new PatternScale(8, 0f, 1f, false));
+        StippleLayer layer3 = new StippleLayer("stippliness", new PatternScale(8, 0f, 1f, false));
         image.getLayers().add(layer);
 //        image.getLayers().add(raster2);
-//        image.getLayers().add(layer2);
-//        image.getLayers().add(layer3);
-//        image.setOpacityTransform(new LinearOpacity("test4", 0f, 1f));
+        image.getLayers().add(layer2);
+        image.getLayers().add(layer3);
+        image.setOpacityTransform(new LinearOpacity("seethoughness", 0f, 1f));
         ImageIO.write(image.getLegend(200), "png", new File("/home/guy/legendtest.png"));
     }
 }
