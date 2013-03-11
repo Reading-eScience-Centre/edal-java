@@ -39,15 +39,12 @@ public class RasterLayer extends ImageLayer {
 
     @Override
     protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
-        /*
-         * We can directly access data[0], because the data array is guaranteed
-         * to be of size 1 (because it is specified in the constructor, and
-         * checks occur in the superclass)
-         */
+        int[] pixels = new int[image.getWidth() * image.getHeight()];
         for (PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)) {
-            image.setRGB(datum.getGridCoords().getXIndex(), datum.getGridCoords().getYIndex(),
-                    colourScheme.getColor(datum.getValue()).getRGB());
+            pixels[datum.getGridCoords().getXIndex() + datum.getGridCoords().getYIndex()
+                    * image.getWidth()] = colourScheme.getColor(datum.getValue()).getRGB();
         }
+        image.setRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
     }
     
     @Override
