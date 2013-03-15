@@ -37,6 +37,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.geotoolkit.display.shape.XRectangle2D;
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
@@ -314,7 +315,7 @@ public final class GISUtils {
      *         <code>null</code> if the list of times is <code>null</code>
      */
     public static TimePosition getClosestTimeTo(TimePosition targetTime, List<TimePosition> tValues) {
-        if(tValues == null) {
+        if(tValues == null || tValues.size() == 0) {
             return null;
         }
         if (targetTime == null) {
@@ -787,7 +788,16 @@ public final class GISUtils {
     }
 
     public static boolean timeRangeContains(Extent<TimePosition> tRange, Feature feature) {
+        if(tRange == null) {
+            return false;
+        }
         Extent<TimePosition> featureTimeExtent = getFeatureTimeExtent(feature);
+        if(featureTimeExtent == null) {
+            /*
+             * The feature has no z-extent, so it should be marked as being included in the range
+             */
+            return true;
+        }
         /*
          * We check if the feature extent contains one end (it doesn't matter
          * which) of the desired extent (in case it contains the whole)
@@ -801,7 +811,19 @@ public final class GISUtils {
     }
 
     public static boolean zRangeContains(Extent<Double> zRange, Feature feature) {
+        /*
+         * TODO MORE CHECKS LIKE THIS...
+         */
+        if(zRange == null) {
+            return false;
+        }
         Extent<VerticalPosition> featureZExtent = getFeatureVerticalExtent(feature);
+        if(featureZExtent == null) {
+            /*
+             * The feature has no z-extent, so it should be marked as being included in the range
+             */
+            return true;
+        }
         /*
          * Similar to the time/bounding box situation, except we check in a
          * different order, since we need to instantiate a new VerticalPosition

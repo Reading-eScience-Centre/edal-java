@@ -53,4 +53,15 @@ public interface Extent<A extends Comparable<? super A>> extends Domain<A> {
      * @return whether or not this {@link Extent} contains any values
      */
     public boolean isEmpty();
+
+    /*
+     * Extents should be comparable, so we need to implement hashCode and equals
+     * 
+     * @return
+     */
+    @Override
+    public int hashCode();
+
+    @Override
+    public boolean equals(Object obj);
 }

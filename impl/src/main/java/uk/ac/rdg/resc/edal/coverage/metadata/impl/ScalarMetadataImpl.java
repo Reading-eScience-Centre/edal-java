@@ -74,7 +74,11 @@ public class ScalarMetadataImpl implements ScalarMetadata {
     public ScalarMetadataImpl(String name, String description, Phenomenon parameter, Unit units,
             Class<?> clazz) {
         this.name = name;
-        this.title = description.substring(0, 1).toUpperCase() + description.substring(1);
+        if(description != null && !description.equals("")) {
+            this.title = description.substring(0, 1).toUpperCase() + description.substring(1);
+        } else {
+            this.title = description;
+        }
         this.description = description;
         this.parameter = parameter;
         this.units = units;

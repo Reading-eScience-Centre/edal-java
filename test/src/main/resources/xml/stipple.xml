@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
+	<RasterLayer>
+        <FlatOpacity>
+            <Opacity>0.7</Opacity>
+        </FlatOpacity>
+		<DataFieldName>TMP</DataFieldName>
+		<PaletteColourScheme>
+			<ScaleRange>
+				<ScaleMin>269.0</ScaleMin>
+				<ScaleMax>305.0</ScaleMax>
+				<Logarithmic>false</Logarithmic>
+			</ScaleRange>
+			<ColourMap>
+				<BelowMinColour>#FF00FF00</BelowMinColour>
+				<AboveMaxColour>#FF00FFFF</AboveMaxColour>
+				<MissingDataColour>#00000000</MissingDataColour>
+				<NumberOfColourBands>20</NumberOfColourBands>
+				<Palette>#4444ff,#ff0000,#ff4444</Palette>
+			</ColourMap>
+		</PaletteColourScheme>
+	</RasterLayer>
+	<StippleLayer>
+	    <LinearOpacity>
+	       <DataFieldName>TMP</DataFieldName>
+	       <OpaqueValue>302</OpaqueValue>
+	       <TransparentValue>271</TransparentValue>
+	    </LinearOpacity>
+		<DataFieldName>SALTY</DataFieldName>
+		<Scale>
+			<PatternBands>10</PatternBands>
+			<OpaqueValue>40</OpaqueValue>
+			<TransparentValue>30</TransparentValue>
+			<Logarithmic>false</Logarithmic>
+		</Scale>
+	</StippleLayer>
+</resc:Image>

@@ -7,7 +7,7 @@
 		<artifactId>edal</artifactId>
 		<groupId>uk.ac.rdg.resc</groupId>
 		<relativePath>..</relativePath>
-		<version>0.7.2-SNAPSHOT</version>
+		<version>0.8-SNAPSHOT</version>
 	</parent>
 	<artifactId>edal-graphics</artifactId>
 	<packaging>jar</packaging>
@@ -62,5 +62,59 @@
 	        <url>https://oss.sonatype.org/content/repositories/releases</url>
         </repository>
 	</repositories>
+	<build>
+		<resources>
+			<resource>
+				<directory>schemas</directory>
+				<includes>
+					<include>**/*.xsd</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*</include>
+				</includes>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<id>schemagen</id>
+						<goals>
+							<goal>schemagen</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+			        <args>
+			            <arg>-camelcase-always</arg>
+			        </args>
+	                <plugins>
+					    <plugin>
+					        <groupId>org.andromda.thirdparty.jaxb2_commons</groupId>
+					        <artifactId>camelcase-always</artifactId>
+					        <version>1.0</version>
+					    </plugin>
+					</plugins>
+					<transformSchemas>
+						<transformSchema>
+							<uri>http://www.resc.reading.ac.uk</uri>
+							<toFile>image_schema.xsd</toFile>
+						</transformSchema>
+					</transformSchemas>
+					<includes>
+						<include>**/style/datamodel/impl/*.java</include>
+					</includes>
+					<outputDirectory>schemas</outputDirectory>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
 

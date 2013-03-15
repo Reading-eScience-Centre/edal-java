@@ -201,7 +201,9 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
             features.addAll(id2Feature.values());
         } else {
             for (String memberName : memberNames) {
-                features.addAll(getFeaturesWithMember(memberName));
+                List<F> featuresWithMember = getFeaturesWithMember(memberName);
+                if(featuresWithMember != null)
+                    features.addAll(featuresWithMember);
             }
         }
         if(features != null){

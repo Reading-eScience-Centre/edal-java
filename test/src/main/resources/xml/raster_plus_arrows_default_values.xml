@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'
-	xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
 	<RasterLayer>
 		<DataFieldName>UV_MAG</DataFieldName>
-		<ColourScheme>
-			<ScaleMin>0</ScaleMin>
-			<ScaleMax>2</ScaleMax>
-		</ColourScheme>
+		<PaletteColourScheme>
+			<ScaleRange>
+				<ScaleMin>0</ScaleMin>
+				<ScaleMax>2</ScaleMax>
+			</ScaleRange>
+		</PaletteColourScheme>
 	</RasterLayer>
 	<ArrowLayer>
 		<DirectionFieldName>UV_DIR</DirectionFieldName>
