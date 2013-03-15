@@ -44,6 +44,12 @@ public enum PlotStyle {
             return false;
         }
     },
+    STIPPLE {
+        @Override
+        public boolean usesPalette() {
+            return false;
+        }
+    },
     GRIDPOINT {
         @Override
         public boolean usesPalette() {
@@ -69,7 +75,7 @@ public enum PlotStyle {
         /*
          * Any feature can have its gridpoint(s) plotted
          */
-        allowedPlotStyles.add(GRIDPOINT);
+//        allowedPlotStyles.add(GRIDPOINT);
 
         boolean numerical = Number.class.isAssignableFrom(metadata.getValueType());
         if (numerical) {
@@ -83,13 +89,14 @@ public enum PlotStyle {
                 /*
                  * Any other numerical data can be plotted as a coloured point
                  */
-                allowedPlotStyles.add(POINT);
+//                allowedPlotStyles.add(POINT);
                 if ((feature instanceof GridSeriesFeature || feature instanceof GridFeature)) {
                     /*
                      * Gridded features can be plotted in the boxfill or contour styles (when implemented)
                      */
                     allowedPlotStyles.add(BOXFILL);
                     allowedPlotStyles.add(CONTOUR);
+                    allowedPlotStyles.add(STIPPLE);
                 } else if ((feature instanceof TrajectoryFeature)) {
                     /*
                      * Trajectory features can be plotted as a trajectory

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<resc:Image xmlns:resc='http://www.resc.reading.ac.uk' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
-    <ArrowLayer>
-        <DirectionFieldName>UV_DIR</DirectionFieldName>
-        <ArrowSize>11</ArrowSize>
-        <ArrowColour>#aa00aa</ArrowColour>
-    </ArrowLayer>
+<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
+	<ArrowLayer>
+		<DirectionFieldName>UV_DIR</DirectionFieldName>
+		<ArrowSize>11</ArrowSize>
+		<ArrowColour>#aa00aa</ArrowColour>
+	</ArrowLayer>
 </resc:Image>
