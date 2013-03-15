@@ -2,7 +2,7 @@
 <ns2:Image xmlns:ns2="http://www.resc.reading.ac.uk">
     <RasterLayer>
         <DataFieldName>TMP</DataFieldName>
-        <ColourScheme>
+        <PaletteColourScheme>
             <ScaleRange>
                 <ScaleMin>270.0</ScaleMin>
                 <ScaleMax>305.0</ScaleMax>
@@ -13,11 +13,11 @@
                 <NumberOfColourBands>254</NumberOfColourBands>
                 <Palette>redblue</Palette>
             </ColourMap>
-        </ColourScheme>
+        </PaletteColourScheme>
     </RasterLayer>
     <RasterLayer>
         <DataFieldName>SALTY</DataFieldName>
-        <ColourScheme>
+        <PaletteColourScheme>
             <ScaleRange>
                 <ScaleMin>30.0</ScaleMin>
                 <ScaleMax>40.0</ScaleMax>
@@ -28,6 +28,6 @@
                 <NumberOfColourBands>10</NumberOfColourBands>
                 <Palette>#00000000,#FF000000</Palette>
             </ColourMap>
-        </ColourScheme>
+        </PaletteColourScheme>
     </RasterLayer>
 </ns2:Image>

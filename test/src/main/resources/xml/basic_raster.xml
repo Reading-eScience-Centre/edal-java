@@ -2,7 +2,7 @@
 <resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
 	<RasterLayer>
 		<DataFieldName>TMP</DataFieldName>
-		<ColourScheme>
+		<PaletteColourScheme>
 			<ScaleRange>
 				<ScaleMin>272.0</ScaleMin>
 				<ScaleMax>302.0</ScaleMax>
@@ -15,6 +15,6 @@
 				<NumberOfColourBands>20</NumberOfColourBands>
 				<Palette>#ff0000,#ffff00,#00ff00,#00ffff,#0000ff</Palette>
 			</ColourMap>
-		</ColourScheme>
+		</PaletteColourScheme>
 	</RasterLayer>
 </resc:Image>

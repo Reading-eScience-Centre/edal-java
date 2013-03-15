@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
@@ -16,8 +17,9 @@ public class RasterLayer extends ImageLayer {
     
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
-    @XmlElement(name = "ColourScheme")
-    private ColourScheme colourScheme = new ColourScheme();
+    @XmlElements({@XmlElement(name = "PaletteColourScheme", type = PaletteColourScheme.class),
+        @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class)})
+    private ColourScheme colourScheme = new PaletteColourScheme();
     
     private RasterLayer() {
         super(PlotType.RASTER);
@@ -51,7 +53,7 @@ public class RasterLayer extends ImageLayer {
     protected Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         ret.add(new NameAndRange(dataFieldName, Extents.newExtent(
-                colourScheme.scaleRange.getScaleMin(), colourScheme.scaleRange.getScaleMax())));
+                colourScheme.getScaleMin(), colourScheme.getScaleMax())));
         return ret;
     }
 }

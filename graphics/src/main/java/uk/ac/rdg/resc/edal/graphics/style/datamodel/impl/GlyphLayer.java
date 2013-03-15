@@ -13,6 +13,7 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.graphics.ColourableIcon;
@@ -31,8 +32,9 @@ public abstract class GlyphLayer extends ImageLayer {
     	this.glyphName = glyphName;
     	icon = getIcon(this.glyphName);
     }
-    @XmlElement(name = "ColourScheme")
-    protected ColourScheme colourScheme = new ColourScheme();
+    @XmlElements({@XmlElement(name = "PaletteColourScheme", type = PaletteColourScheme.class),
+        @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class)})
+    protected ColourScheme colourScheme = new PaletteColourScheme();
     
     protected Map<String, ColourableIcon> icons;
     protected ColourableIcon icon;
@@ -116,7 +118,7 @@ public abstract class GlyphLayer extends ImageLayer {
     protected Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         ret.add(new NameAndRange(dataFieldName, Extents.newExtent(
-                colourScheme.scaleRange.getScaleMin(), colourScheme.scaleRange.getScaleMax())));
+                colourScheme.getScaleMin(), colourScheme.getScaleMax())));
         return ret;
     }
 }

@@ -2,22 +2,41 @@
 <ns2:Image xmlns:ns2="http://www.resc.reading.ac.uk">
     <RasterLayer>
         <DataFieldName>TMP</DataFieldName>
-        <ColourScheme>
-            <ScaleRange>
-                <ScaleMin>270.0</ScaleMin>
-                <ScaleMax>305.0</ScaleMax>
-                <Logarithmic>false</Logarithmic>
-            </ScaleRange>
-            <ColourMap>
-                <MissingDataColour>#00000000</MissingDataColour>
-                <NumberOfColourBands>254</NumberOfColourBands>
-                <Palette>rainbow</Palette>
-            </ColourMap>
-        </ColourScheme>
+        <ThresholdColourScheme>
+            <MinColour>#000000</MinColour>
+            <ThresholdValue>
+	            <Colour>#0000ff</Colour>
+	            <Value>270</Value>
+            </ThresholdValue>
+            <ThresholdValue>
+	            <Colour>#4444ff</Colour>
+	            <Value>275</Value>
+            </ThresholdValue>
+            <ThresholdValue>
+	            <Colour>#aaaaff</Colour>
+	            <Value>280</Value>
+            </ThresholdValue>
+            <ThresholdValue>
+	            <Colour>#00ff00</Colour>
+	            <Value>285</Value>
+            </ThresholdValue>
+            <ThresholdValue>
+	            <Colour>#aaffaa</Colour>
+	            <Value>290</Value>
+            </ThresholdValue>
+            <ThresholdValue>
+	            <Colour>#ffaaaa</Colour>
+	            <Value>295</Value>
+            </ThresholdValue>
+            <ThresholdValue>
+	            <Colour>#ff0000</Colour>
+	            <Value>300</Value>
+            </ThresholdValue>
+        </ThresholdColourScheme>
     </RasterLayer>
     <RasterLayer>
         <DataFieldName>SALTY</DataFieldName>
-        <ColourScheme>
+        <PaletteColourScheme>
             <ScaleRange>
                 <ScaleMin>30.0</ScaleMin>
                 <ScaleMax>40.0</ScaleMax>
@@ -28,6 +47,6 @@
                 <NumberOfColourBands>10</NumberOfColourBands>
                 <Palette>#00FFFFFF,#FFFFFFFF</Palette>
             </ColourMap>
-        </ColourScheme>
+        </PaletteColourScheme>
     </RasterLayer>
 </ns2:Image>
