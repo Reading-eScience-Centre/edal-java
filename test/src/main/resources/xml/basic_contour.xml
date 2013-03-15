@@ -2,7 +2,7 @@
 <ns2:Image xmlns:ns2="http://www.resc.reading.ac.uk">
     <RasterLayer>
         <DataFieldName>TMP</DataFieldName>
-        <ColourScheme>
+        <PaletteColourScheme>
             <ScaleRange>
                 <ScaleMin>270.0</ScaleMin>
                 <ScaleMax>310.0</ScaleMax>
@@ -13,7 +13,7 @@
                 <NumberOfColourBands>10</NumberOfColourBands>
                 <Palette>redblue</Palette>
             </ColourMap>
-        </ColourScheme>
+        </PaletteColourScheme>
     </RasterLayer>
     <ContourLayer>
         <DataFieldName>TMP</DataFieldName>

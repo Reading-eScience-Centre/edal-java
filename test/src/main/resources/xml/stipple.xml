@@ -5,7 +5,7 @@
             <Opacity>0.7</Opacity>
         </FlatOpacity>
 		<DataFieldName>TMP</DataFieldName>
-		<ColourScheme>
+		<PaletteColourScheme>
 			<ScaleRange>
 				<ScaleMin>269.0</ScaleMin>
 				<ScaleMax>305.0</ScaleMax>
@@ -18,7 +18,7 @@
 				<NumberOfColourBands>20</NumberOfColourBands>
 				<Palette>#4444ff,#ff0000,#ff4444</Palette>
 			</ColourMap>
-		</ColourScheme>
+		</PaletteColourScheme>
 	</RasterLayer>
 	<StippleLayer>
 	    <LinearOpacity>

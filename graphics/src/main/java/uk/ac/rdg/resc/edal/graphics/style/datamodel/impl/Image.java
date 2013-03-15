@@ -364,7 +364,7 @@ public class Image extends Drawable {
     
     public static void main(String[] args) throws IOException {
         Image image = new Image();
-        Drawable layer = new RasterLayer("colouredness", new ColourScheme(new ColourScale(-00.0000000050f,
+        Drawable layer = new RasterLayer("colouredness", new PaletteColourScheme(new ColourScale(-00.0000000050f,
                 5.0f, false), new ColourMap(Color.black, Color.black, new Color(0, true),
                 "default", 250)));
 //        Drawable raster2 = new RasterLayer("raster2", new ColourScheme(new ColourScale(-5.0f,

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import javax.imageio.ImageIO;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -21,9 +20,8 @@ import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.RasterLayer;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.StippleLayer;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.PatternScale;
 
 public class StyleXMLParser {
     public static class ColorAdapter extends XmlAdapter<String, Color> {
@@ -93,7 +91,7 @@ public class StyleXMLParser {
 //        image = new Image();
         ColourScale scaleRange = new ColourScale(270f, 302f, false);
         ColourMap colourPalette = new ColourMap(Color.green, Color.cyan, new Color(0, 0, 0, 0), "rainbow", 20);
-        ColourScheme colourScheme = new ColourScheme(scaleRange, colourPalette);
+        ColourScheme colourScheme = new PaletteColourScheme(scaleRange, colourPalette);
         System.out.println(colourScheme.getColor(280));
         RasterLayer rasterLayer = new RasterLayer("TMP", colourScheme);
         rasterLayer.setOpacityTransform(new FlatOpacity(0.5f));

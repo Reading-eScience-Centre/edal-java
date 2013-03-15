@@ -2,12 +2,12 @@
 <resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
 	<RasterLayer>
 		<DataFieldName>UV_MAG</DataFieldName>
-		<ColourScheme>
+		<PaletteColourScheme>
 			<ScaleRange>
 				<ScaleMin>0</ScaleMin>
 				<ScaleMax>2</ScaleMax>
 			</ScaleRange>
-		</ColourScheme>
+		</PaletteColourScheme>
 	</RasterLayer>
 	<ArrowLayer>
 		<DirectionFieldName>UV_DIR</DirectionFieldName>
