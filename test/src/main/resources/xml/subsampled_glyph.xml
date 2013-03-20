@@ -5,31 +5,35 @@
         <PaletteColourScheme>
             <ScaleRange>
                 <ScaleMin>270.0</ScaleMin>
-                <ScaleMax>305.0</ScaleMax>
+                <ScaleMax>302.0</ScaleMax>
                 <Logarithmic>false</Logarithmic>
             </ScaleRange>
             <ColourMap>
+                <BelowMinColour>#FF00FF00</BelowMinColour>
+                <AboveMaxColour>#FF00FFFF</AboveMaxColour>
                 <MissingDataColour>#00000000</MissingDataColour>
-                <NumberOfColourBands>254</NumberOfColourBands>
+                <NumberOfColourBands>20</NumberOfColourBands>
                 <Palette>rainbow</Palette>
             </ColourMap>
         </PaletteColourScheme>
     </RasterLayer>
     <SubsampledGlyphLayer>
         <DataFieldName>TMP</DataFieldName>
+        <GlyphIconName>circle</GlyphIconName>
         <PaletteColourScheme>
             <ScaleRange>
                 <ScaleMin>270.0</ScaleMin>
-                <ScaleMax>305.0</ScaleMax>
+                <ScaleMax>302.0</ScaleMax>
                 <Logarithmic>false</Logarithmic>
             </ScaleRange>
             <ColourMap>
+                <BelowMinColour>#FF00FF00</BelowMinColour>
+                <AboveMaxColour>#FF00FFFF</AboveMaxColour>
                 <MissingDataColour>#00000000</MissingDataColour>
-                <NumberOfColourBands>254</NumberOfColourBands>
+                <NumberOfColourBands>20</NumberOfColourBands>
                 <Palette>rainbow</Palette>
             </ColourMap>
         </PaletteColourScheme>
-        <GlyphName>circle</GlyphName>
         <GlyphSpacing>1.5</GlyphSpacing>
     </SubsampledGlyphLayer>
 </ns2:Image>
