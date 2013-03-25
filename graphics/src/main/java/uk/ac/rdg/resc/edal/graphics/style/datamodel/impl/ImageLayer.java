@@ -175,8 +175,6 @@ public abstract class ImageLayer extends Drawable {
          * and use the getDataFromGridFeature method
          */
         Set<String> members = CollectionUtils.setOf(member);
-        RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth(),
-                params.getHeight());
         VerticalPosition vPos = null;
         if (gridSeriesFeature.getCoverage().getDomain().getVerticalAxis() != null
                 && params.getTargetZ() != null) {
@@ -184,8 +182,8 @@ public abstract class ImageLayer extends Drawable {
                     .getDomain().getVerticalCrs());
         }
 
-        GridFeature gridFeature = gridSeriesFeature.extractGridFeature(targetDomain, vPos,
-                params.getTargetT(), members);
+        GridFeature gridFeature = gridSeriesFeature.extractGridFeature(gridSeriesFeature
+                .getCoverage().getDomain().getHorizontalGrid(), vPos, params.getTargetT(), members);
         return getDataFromGridFeature(gridFeature, member, params);
     }
 
@@ -219,27 +217,22 @@ public abstract class ImageLayer extends Drawable {
                         member)));
             }
         } else if (getPlotType() == PlotType.SUBSAMPLE) {
-            /*
-             * We want a value for every pixel in the image (aside from missing
-             * data), so we:
-             * 
-             * Project the feature onto the target grid
-             * 
-             * Get all values from this newly projected feature
-             */
-            RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth()/getXSampleSize(),
-                    params.getHeight()/getYSampleSize());
+            RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth(),
+                    params.getHeight());
             if (!gridFeature.getCoverage().getDomain().equals(targetDomain)) {
                 gridFeature = gridFeature.extractGridFeature(targetDomain, members);
             }
             
-            List<DomainObjectValuePair<GridCell2D>> list = gridFeature.getCoverage().list();
-            for (DomainObjectValuePair<GridCell2D> entry : list) {
-                GridCoordinates2D gridCoordinates = entry.getDomainObject().getGridCoordinates();
-                GridCoordinates2D coords = new GridCoordinates2DImpl(getXSampleSize()/2+gridCoordinates.getXIndex()*getXSampleSize(),
-                        -getYSampleSize()/2+params.getHeight() - gridCoordinates.getYIndex()*getYSampleSize() - 1);
-                plottingData.add(new PlottingDatum(coords, (Number) entry.getValue().getValue(
-                        member)));
+            int xss = getXSampleSize();
+            int yss = getYSampleSize();
+            GridCoverage2D coverage = gridFeature.getCoverage();
+            for(int i = xss/2; i < params.getWidth(); i+=xss) {
+                for(int j = yss/2; j < params.getHeight(); j+=yss) {
+                    GridCell2D gridCell = coverage.getDomain().getGridCell(i, j);
+                    Object value = coverage.evaluate(gridCell.getCentre(), member);
+                    GridCoordinates2D coords = new GridCoordinates2DImpl(i, params.getHeight() - j - 1);
+                    plottingData.add(new PlottingDatum(coords, (Number) value));
+                }
             }
             /*
              * TODO add different subsampling methods (i.e. MEAN as well as CLOSEST)
@@ -260,15 +253,21 @@ public abstract class ImageLayer extends Drawable {
 
             /*
              * We use BorderedGrid here because this will get some data outside
-             * of the bounding box, which is required when plotting glyphs
+             * of the bounding box, which is required when plotting glyphs.
+             * 
+             * This will correspond to one grid point per pixel.
              */
-            RegularGrid targetDomain = new BorderedGrid(params.getBbox(), params.getWidth(),
+            BorderedGrid targetDomain = new BorderedGrid(params.getBbox(), params.getWidth(),
                     params.getHeight());
             RegularAxis xAxis = targetDomain.getXAxis();
             RegularAxis yAxis = targetDomain.getYAxis();
             CoordinateReferenceSystem crs = params.getBbox().getCoordinateReferenceSystem();
             HorizontalGrid featureGrid = gridFeature.getCoverage().getDomain();
             Set<Long> neededIndices = new LinkedHashSet<Long>();
+            /*
+             * Find out which indices in the source data are required to plot
+             * every pixel in the target domain.
+             */
             for (double x : xAxis.getCoordinateValues()) {
                 for (double y : yAxis.getCoordinateValues()) {
                     long index = featureGrid.findIndexOf(new HorizontalPositionImpl(x, y, crs));
@@ -277,22 +276,35 @@ public abstract class ImageLayer extends Drawable {
                     }
                 }
             }
+            
+            /*
+             * If we have a longitude axis (wrapping) we need to plot equivalent points.
+             */
+            
+            /*
+             * Check for longitude by comparing whether findIndexOf gives the
+             * same result for 2 values 360 units apart. This will also return
+             * true for systems where 360 is only a small change, so we also
+             * check that the size of a pixel < 360
+             */
             GridCoverage2D coverage = gridFeature.getCoverage();
             for (long index : neededIndices) {
                 GridCoordinates2D gridCoords = featureGrid.getCoords(index);
                 HorizontalPosition hPos = featureGrid.getGridCell(gridCoords).getCentre();
-                GridCell2D containingCell = targetDomain.findContainingCell(hPos);
-                if (containingCell == null)
-                    continue;
-                Number val = (Number) coverage.evaluate(hPos, member);
-                if (val == null || Float.isNaN(val.floatValue())) {
-                    continue;
+                List<GridCell2D> containingCells = targetDomain.findAllContainingCells(hPos);
+                for(GridCell2D containingCell : containingCells) {
+                    if (containingCell == null)
+                        continue;
+                    Number val = (Number) coverage.evaluate(hPos, member);
+                    if (val == null || Float.isNaN(val.floatValue())) {
+                        continue;
+                    }
+                    GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
+                    
+                    GridCoordinates2D coords = new GridCoordinates2DImpl(gridCoordinates.getXIndex(),
+                            params.getHeight() - gridCoordinates.getYIndex() - 1);
+                    plottingData.add(new PlottingDatum(coords, val));
                 }
-                GridCoordinates2D gridCoordinates = containingCell.getGridCoordinates();
-                GridCoordinates2D coords = new GridCoordinates2DImpl(gridCoordinates.getXIndex(),
-                        params.getHeight() - gridCoordinates.getYIndex() - 1);
-                
-                plottingData.add(new PlottingDatum(coords, val));
             }
         } else {
             /*
