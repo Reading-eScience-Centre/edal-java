@@ -26,12 +26,8 @@ public abstract class GlyphLayer extends ImageLayer {
 
     @XmlElement(name = "DataFieldName", required = true)
     protected String dataFieldName;
-    protected String glyphName = "circle";
-    @XmlElement(name = "GlyphName")
-    public void setGlyphName(String glyphName) {
-    	this.glyphName = glyphName;
-    	icon = getIcon(this.glyphName);
-    }
+    @XmlElement(name = "GlyphIconName")
+    protected String glyphIconName = "circle";
     @XmlElements({@XmlElement(name = "PaletteColourScheme", type = PaletteColourScheme.class),
         @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class)})
     protected ColourScheme colourScheme = new PaletteColourScheme();
@@ -51,8 +47,8 @@ public abstract class GlyphLayer extends ImageLayer {
 		readInIcons();
 	}
 	
-	public String getGlyphName() {
-		return glyphName;
+	public String getGlyphIconName() {
+		return glyphIconName;
 	}
 	
 	protected void readInIcons() throws InstantiationException {
