@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:Image xmlns:ns2="http://www.resc.reading.ac.uk">
+    <ConfidenceIntervalLayer>
+        <LowerFieldName>UV_X</LowerFieldName>
+        <UpperFieldName>UV_Y</UpperFieldName>
+        <GlyphSize>9</GlyphSize>
+        <PaletteColourScheme>
+            <ScaleRange>
+                <ScaleMin>-1.5</ScaleMin>
+                <ScaleMax>1.5</ScaleMax>
+                <Logarithmic>false</Logarithmic>
+            </ScaleRange>
+            <ColourMap>
+                <MissingDataColour>#00000000</MissingDataColour>
+                <NumberOfColourBands>20</NumberOfColourBands>
+                <Palette>redblue</Palette>
+            </ColourMap>
+        </PaletteColourScheme>
+    </ConfidenceIntervalLayer>
+</ns2:Image>

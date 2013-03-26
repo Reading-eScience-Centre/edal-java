@@ -19,7 +19,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
 /*
  * Plot confidence interval triangles.
  */
-@XmlType(namespace = Image.NAMESPACE, name = "GlyphLayerType")
+@XmlType(namespace = Image.NAMESPACE, name = "ConfidenceIntervalLayerType")
 public class ConfidenceIntervalLayer extends ImageLayer {
 
 	// The name of the field of lower bounds
@@ -46,8 +46,18 @@ public class ConfidenceIntervalLayer extends ImageLayer {
         setYSampleSize(glyphSize);
     }
 
-	public ConfidenceIntervalLayer(PlotType plotType) {
+	public ConfidenceIntervalLayer() {
 		super(PlotType.SUBSAMPLE);
+	}
+
+	public ConfidenceIntervalLayer(String lowerFieldName, String upperFieldName,
+			int glyphSize, ColourScheme colourSceme) {
+		super(PlotType.SUBSAMPLE);
+		
+		this.lowerFieldName = lowerFieldName;
+		this.upperFieldName = upperFieldName;
+		this.glyphSize = glyphSize;
+		this.colourScheme = colourSceme;
 	}
 
 	@Override
