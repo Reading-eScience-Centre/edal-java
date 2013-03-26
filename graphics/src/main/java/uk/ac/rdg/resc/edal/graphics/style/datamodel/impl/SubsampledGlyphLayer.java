@@ -10,7 +10,7 @@ import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
 public class SubsampledGlyphLayer extends GlyphLayer {
 
     @XmlElement(name = "GlyphSpacing")
-	private float glyphSpacing = 1.5f;
+	private Float glyphSpacing = 1.5f;
     /*
      * This gets called after being unmarshalled from XML. This reads in the
      * icon for the glyph and sets the glyph spacing as a factor of the icon
@@ -19,6 +19,9 @@ public class SubsampledGlyphLayer extends GlyphLayer {
     void afterUnmarshal( Unmarshaller u, Object parent ) {
     	icon = getIcon(this.glyphIconName);
         
+    	if(glyphSpacing < 1.0 || glyphSpacing == null) {
+            throw new IllegalArgumentException("Glyph spacing must be non-null and => 1.0");
+        }        
     	setXSampleSize((int) (icon.getWidth()*glyphSpacing));
         setYSampleSize((int) (icon.getHeight()*glyphSpacing));
     }
