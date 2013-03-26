@@ -41,7 +41,8 @@ public class Image extends Drawable {
             @XmlElement(name = "StippleLayer", type = StippleLayer.class),
             @XmlElement(name = "ContourLayer", type = ContourLayer.class),
             @XmlElement(name = "BasicGlyphLayer", type = BasicGlyphLayer.class),
-            @XmlElement(name = "SubsampledGlyphLayer", type = SubsampledGlyphLayer.class) })
+            @XmlElement(name = "SubsampledGlyphLayer", type = SubsampledGlyphLayer.class),
+            @XmlElement(name = "ConfidenceIntervalLayer", type = ConfidenceIntervalLayer.class)})
     private List<Drawable> layers = new ArrayList<Drawable>();
 
     public List<Drawable> getLayers() {
