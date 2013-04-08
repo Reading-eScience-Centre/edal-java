@@ -39,15 +39,12 @@ public class ConfidenceIntervalLayer extends ImageLayer {
      * glyph size in pixels.
      */
     void afterUnmarshal( Unmarshaller u, Object parent ) {
-    	if(glyphSize < 1 || glyphSize == null) {
-            throw new IllegalArgumentException("Glyph size must be non-null and > 0");
-        }        
-    	setXSampleSize(glyphSize);
-        setYSampleSize(glyphSize);
+        setSampleSize();
     }
 
 	public ConfidenceIntervalLayer() {
 		super(PlotType.SUBSAMPLE);
+		setSampleSize();
 	}
 
 	public ConfidenceIntervalLayer(String lowerFieldName, String upperFieldName,
@@ -58,6 +55,16 @@ public class ConfidenceIntervalLayer extends ImageLayer {
 		this.upperFieldName = upperFieldName;
 		this.glyphSize = glyphSize;
 		this.colourScheme = colourSceme;
+		
+		setSampleSize();
+	}
+	
+	private void setSampleSize() {
+	    if(glyphSize < 1 || glyphSize == null) {
+	        throw new IllegalArgumentException("Glyph size must be non-null and > 0");
+	    }        
+	    setXSampleSize(glyphSize);
+	    setYSampleSize(glyphSize);
 	}
 
 	@Override
@@ -73,8 +80,8 @@ public class ConfidenceIntervalLayer extends ImageLayer {
             int j = datum.getGridCoords().getYIndex();
             if (value != null && !Float.isNaN(value.floatValue())) {
             	Color color = colourScheme.getColor(value);
-        		int[] xPoints = {i, i + glyphSize - 1, i + glyphSize - 1};
-        		int[] yPoints = {j + glyphSize - 1, j + glyphSize - 1, j};
+        		int[] xPoints = {i - glyphSize / 2, i + glyphSize / 2 - 1, i + glyphSize / 2 - 1};
+        		int[] yPoints = {j + glyphSize / 2 - 1, j + glyphSize / 2 - 1, j - glyphSize / 2};
         		g.setColor(color);
             	g.fillPolygon(xPoints, yPoints, 3);	
             }
@@ -87,10 +94,11 @@ public class ConfidenceIntervalLayer extends ImageLayer {
         	
             int i = datum.getGridCoords().getXIndex();
             int j = datum.getGridCoords().getYIndex();
+            
             if (value != null && !Float.isNaN(value.floatValue())) {
             	Color color = colourScheme.getColor(value);
-            	int[] xPoints = {i, i, i + glyphSize - 1};
-        		int[] yPoints = {j + glyphSize - 1, j, j};
+            	int[] xPoints = {i - glyphSize / 2, i - glyphSize / 2, i + glyphSize / 2 - 1};
+        		int[] yPoints = {j + glyphSize / 2 - 1, j - glyphSize / 2, j - glyphSize / 2};
         		g.setColor(color);
             	g.fillPolygon(xPoints, yPoints, 3);	
             }

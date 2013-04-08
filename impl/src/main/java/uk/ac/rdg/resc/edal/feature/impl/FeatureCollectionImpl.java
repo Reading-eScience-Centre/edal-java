@@ -195,7 +195,6 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
     public Collection<F> findFeatures(BoundingBox bbox, Extent<Double> zRange,
             Extent<TimePosition> tRange, Set<String> memberNames) {
         Set<F> includedFeatures = new HashSet<F>();
-        
         List<F> features = new ArrayList<F>();
         if(memberNames == null){
             features.addAll(id2Feature.values());
@@ -206,19 +205,21 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
                     features.addAll(featuresWithMember);
             }
         }
-        if(features != null){
-            for (F feature : features) {
-                if (bbox != null && !GISUtils.featureOverlapsBoundingBox(bbox, feature)) {
-                    continue;
-                }
-                if (tRange != null && !GISUtils.timeRangeContains(tRange, feature)) {
-                    continue;
-                }
-                if (zRange != null && !GISUtils.zRangeContains(zRange, feature)) {
-                    continue;
-                }
-                includedFeatures.add(feature);
+        for (F feature : features) {
+            if (features.size() > 10 && bbox != null && !GISUtils.featureOverlapsBoundingBox(bbox, feature)) {
+                /*
+                 * If we don't have many features, filtering them by bounding
+                 * box is unlikely to be an efficient thing to do.
+                 */
+                continue;
             }
+            if (tRange != null && !GISUtils.timeRangeContains(tRange, feature)) {
+                continue;
+            }
+            if (zRange != null && !GISUtils.zRangeContains(zRange, feature)) {
+                continue;
+            }
+            includedFeatures.add(feature);
         }
         return includedFeatures;
     }

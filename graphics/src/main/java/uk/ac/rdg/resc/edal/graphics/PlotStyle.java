@@ -56,6 +56,42 @@ public enum PlotStyle {
             return false;
         }
     },
+    DEFAULT_CONTOUR {
+        @Override
+        public boolean usesPalette() {
+            return true;
+        }
+    },
+    DEFAULT_CONTOUR_SMOOTH {
+        @Override
+        public boolean usesPalette() {
+            return true;
+        }
+    },
+    DEFAULT_STIPPLE {
+        @Override
+        public boolean usesPalette() {
+            return true;
+        }
+    },
+    DEFAULT_CONFIDENCE {
+        @Override
+        public boolean usesPalette() {
+            return true;
+        }
+    },
+    DEFAULT_FADE_BLACK {
+        @Override
+        public boolean usesPalette() {
+            return true;
+        }
+    },
+    DEFAULT_FADE_WHITE {
+        @Override
+        public boolean usesPalette() {
+            return true;
+        }
+    },
     DEFAULT {
         @Override
         public boolean usesPalette() {

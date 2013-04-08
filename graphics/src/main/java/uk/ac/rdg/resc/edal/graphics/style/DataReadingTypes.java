@@ -12,7 +12,7 @@ package uk.ac.rdg.resc.edal.graphics.style;
  */
 public class DataReadingTypes {
     public enum PlotType {
-        RASTER, SUBSAMPLE, GLYPH, TRAJECTORY
+        RASTER, SMOOTHED, SUBSAMPLE, GLYPH, TRAJECTORY
     }
 
     public enum SubsampleType {

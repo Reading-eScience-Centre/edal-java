@@ -3,7 +3,7 @@
     <ConfidenceIntervalLayer>
         <LowerFieldName>UV_X</LowerFieldName>
         <UpperFieldName>UV_Y</UpperFieldName>
-        <GlyphSize>9</GlyphSize>
+        <GlyphSize>16</GlyphSize>
         <PaletteColourScheme>
             <ScaleRange>
                 <ScaleMin>-1.5</ScaleMin>
