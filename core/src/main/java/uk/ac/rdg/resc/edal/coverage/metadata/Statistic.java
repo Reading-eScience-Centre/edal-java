@@ -40,13 +40,21 @@ import uk.ac.rdg.resc.edal.Phenomenon;
  */
 public interface Statistic extends ScalarMetadata {
 
+    /*
+     * TODO This is all named types of uncertML. Most are not used.
+     */
+    public enum StatisticType {
+        CENTRED_MOMENT, COEFFICIENT_OF_VARIATION, CONFIDENCE_INTERVAL, CONFUSION_MATRIX,
+        CORRELATION, COVARIANCE_MATRIX, CREDIBLE_INTERVAL, DECILE, DISCRETE_PROBABILITY,
+        INTERQUARTILE_RANGE, KURTOSIS, MEAN, MEDIAN, MODE, MOMENT, PERCENTILE, PROBABILITY,
+        QUANTILE, QUARTILE, RANGE, SKEWNESS, STANDARD_DEVIATION, VARIANCE, LOWER_CONFIDENCE_BOUND, UPPER_CONFIDENCE_BOUND
+    }
+
     /**
      * Returns an identifier indicating the type of the statistic (mean,
      * variance, median etc).
-     * 
-     * @todo return a stronger type, e.g. from UncertML
      */
-    public String getStatisticType();
+    public StatisticType getStatisticType();
 
     @Override
     public StatisticsCollection getParent();
