@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ucar.nc2.Attribute;
+import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
@@ -58,6 +60,8 @@ import uk.ac.rdg.resc.edal.coverage.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.coverage.impl.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.coverage.impl.GridSeriesCoverageImpl;
+import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
+import uk.ac.rdg.resc.edal.coverage.plugins.MeanStddevPlugin;
 import uk.ac.rdg.resc.edal.coverage.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
@@ -119,7 +123,21 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
 
         GridDataset gridDS = CdmUtils.getGridDataset(ncDataset);
         dataReadingStrategy = CdmUtils.getOptimumDataReadingStrategy(ncDataset);
-
+        
+        Map<String, String[]> varId2AncillaryVars = new HashMap<String, String[]>();
+        for(Variable variable : ncDataset.getVariables()) {
+            /*
+             * Just look for parent variables, since these may not have a grid
+             * directly associated with them
+             */
+            for(Attribute attr : variable.getAttributes()) {
+                if(attr.getName().equalsIgnoreCase("ancillary_variables")) {
+                    varId2AncillaryVars.put(variable.getName(), attr.getStringValue().split(" "));
+                    continue;
+                }
+            }
+        }
+        
         int gridNo = 0;
         for (Gridset gridset : gridDS.getGridsets()) {
             gridNo++;
@@ -144,6 +162,8 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
                     domain, dataReadingStrategy);
 
             Map<String, XYVarIDs> xyComponents = new HashMap<String, XYVarIDs>();
+            
+            Map<String, String> varId2UncertMLRefs = new HashMap<String, String>();
 
             if (!coverages.contains(coverage)) {
                 /*
@@ -161,6 +181,14 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
                     String varId = var.getName();
                     String description = var.getDescription();
                     
+                    if(varId2AncillaryVars.containsKey(varId)) {
+                        /*
+                         * If this is a parent variable for a stats collection,
+                         * we don't want it to be a normal variable as well.
+                         */
+                        continue;
+                    }
+                    
                     if(description == null || description.equals("")){
                         if(name != null && !name.equals("")){
                             description = name;
@@ -169,6 +197,11 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
                         }
                     }
                     
+                    for(Attribute attr : var.getAttributes()){
+                        if(attr.getName().equalsIgnoreCase("ref")) {
+                            varId2UncertMLRefs.put(varId, attr.getStringValue());
+                        }
+                    }
 
                     GridValuesMatrix<Float> gridValueMatrix = new NcGridValuesMatrix4D(
                             hGrid.getXAxis(), hGrid.getYAxis(), vAxis, tAxis, filename, varId);
@@ -177,7 +210,6 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
                      */
                     coverage.addMember(varId, domain, description, phenomenon, units,
                             gridValueMatrix);
-
                     /*
                      * Now deal with elements which may be part of a compound
                      * coverage
@@ -238,6 +270,32 @@ public class NcGridSeriesFeatureCollection extends UniqueMembersFeatureCollectio
                         coverage.getScalarMetadata(xyData.xVarId),
                         coverage.getScalarMetadata(xyData.yVarId), xyVarIDs, description);
                 coverage.addPlugin(vectorPlugin);
+            }
+            
+            for(String statsCollectionIds : varId2AncillaryVars.keySet()) {
+                String[] ids = varId2AncillaryVars.get(statsCollectionIds);
+                String meanId = null;
+                String stddevId = null;
+                for(String id : ids) {
+                    String uncertRef = varId2UncertMLRefs.get(id);
+                    if(uncertRef != null && uncertRef.equalsIgnoreCase("http://www.uncertml.org/statistics/mean")) {
+                        meanId = id;
+                    }
+                    if(uncertRef != null && uncertRef.equalsIgnoreCase("http://www.uncertml.org/statistics/standard-deviation")) {
+                        stddevId = id;
+                    }
+                }
+                if(meanId != null && stddevId != null) {
+                    /*
+                     * Mean ID or StdDev ID can be null if they are valid but not in this grid
+                     */
+                    ScalarMetadata meanMetadata = coverage.getScalarMetadata(meanId);
+                    ScalarMetadata stddevMetadata = coverage.getScalarMetadata(stddevId);
+                    MeanStddevPlugin statsPlugin = new MeanStddevPlugin(meanMetadata,
+                            stddevMetadata, meanMetadata.getDescription(),
+                            meanMetadata.getParameter());
+                    coverage.addPlugin(statsPlugin);
+                }
             }
         }
 
