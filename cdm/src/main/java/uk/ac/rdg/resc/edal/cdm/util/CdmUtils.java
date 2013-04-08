@@ -258,6 +258,13 @@ public final class CdmUtils {
                 timesteps.add(new TimePositionJoda(date.getTime(), CalendarSystem.CAL_ISO_8601));
             }
             return new TimeAxisImpl("time", timesteps);
+        } else if(calString.equalsIgnoreCase("360_day")){
+            List<TimePosition> timesteps = new ArrayList<TimePosition>();
+            // Use the Java NetCDF library's built-in date parsing code
+            for (Date date : timeAxis.getTimeDates()) {
+                timesteps.add(new TimePositionJoda(date.getTime(), CalendarSystem.CAL_360_DAY));
+            }
+            return new TimeAxisImpl("time", timesteps);
         } else {
             CalendarSystem calSys = CalendarSystem.valueOf(calString);
             if (calSys == null) {
