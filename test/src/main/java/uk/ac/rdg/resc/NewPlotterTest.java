@@ -9,10 +9,13 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.xml.bind.JAXBException;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+
 import uk.ac.rdg.resc.edal.cdm.feature.NcGridSeriesFeatureCollection;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.feature.GridSeriesFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
@@ -30,7 +33,7 @@ public class NewPlotterTest {
         final NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
                 "testcollection", "Test Collection", "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
 
-        final GridSeriesFeature feature = featureCollection.getFeatureById("testcollection2");
+        final GridSeriesFeature feature = featureCollection.getFeatureById("testcollection1");
         GridSeriesDomain domain = feature.getCoverage().getDomain();
 
         Double vPos = null;
@@ -50,7 +53,8 @@ public class NewPlotterTest {
         int width = 800;
         int height = 400;
 
-        BoundingBox bbox = domain.getHorizontalGrid().getCoordinateExtent();
+//        BoundingBox bbox = domain.getHorizontalGrid().getCoordinateExtent();
+        BoundingBox bbox = new BoundingBoxImpl(150, 15, 180, 45, DefaultGeographicCRS.WGS84);
         GlobalPlottingParams params = new GlobalPlottingParams(width, height, bbox, null, null,
                 vPos, tPos);
 
@@ -74,7 +78,7 @@ public class NewPlotterTest {
          */
         File files = new File(ClassLoader.getSystemResource("xml").getFile());
 //        for (File file : files.listFiles()) {
-        File file = new File(ClassLoader.getSystemResource("xml/whitening.xml").getFile());{
+        File file = new File(ClassLoader.getSystemResource("xml/basic_contour.xml").getFile());{
             try {
                 /*
                  * Read each file, deserialise to an image, and then render and save
@@ -85,7 +89,10 @@ public class NewPlotterTest {
     
                 File outputFile = new File("/home/guy/xmlOutput/", file.getName().replaceAll("xml$",
                         "png"));
+                long t1 = System.nanoTime();
                 BufferedImage drawnImage = image.drawImage(params, id2Feature);
+                long t2 = System.nanoTime();
+                System.out.println((t2-t1)/1000000);
 //                BufferedImage legend = image.getLegend(100);
 //                if(legend != null) {
 //                    drawnImage.createGraphics().drawImage(legend, 0, 0, null);

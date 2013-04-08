@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.coverage.DomainObjectValuePair;
@@ -19,12 +20,14 @@ import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
 import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.coverage.grid.GridValuesMatrix;
 import uk.ac.rdg.resc.edal.coverage.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.BorderedGrid;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.GridCoordinates2DImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.impl.RegularGridImpl;
+import uk.ac.rdg.resc.edal.coverage.impl.GridCoverage2DWrappedGridSeriesCoverage;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.FeatureCollection;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
@@ -33,6 +36,7 @@ import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.graphics.style.BilinearInterpolator;
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.graphics.style.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
@@ -44,6 +48,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
+import uk.ac.rdg.resc.edal.util.BigList;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
@@ -151,7 +156,7 @@ public abstract class ImageLayer extends Drawable {
                 data.addAll(getDataFromGridSeriesFeature((GridSeriesFeature) feature, member,
                         params));
             } else if (feature instanceof GridFeature) {
-                data.addAll(getDataFromGridFeature((GridFeature) feature, member, params));
+                data.addAll(getDataFromGridCoverage2D(((GridFeature) feature).getCoverage(), member, params));
             } else if (feature instanceof PointSeriesFeature) {
                 data.addAll(getDataFromPointSeriesFeature((PointSeriesFeature) feature, member,
                         params));
@@ -171,29 +176,36 @@ public abstract class ImageLayer extends Drawable {
     private List<PlottingDatum> getDataFromGridSeriesFeature(GridSeriesFeature gridSeriesFeature,
             String member, GlobalPlottingParams params) {
         /*
-         * For a GridSeriesFeature, we just extract the appropriate GridFeature
-         * and use the getDataFromGridFeature method
+         * For a GridSeriesFeature, we just wrap the GridSeriesCoverage and use
+         * the getDataFromGridCoverage2D method
          */
-        Set<String> members = CollectionUtils.setOf(member);
         VerticalPosition vPos = null;
         if (gridSeriesFeature.getCoverage().getDomain().getVerticalAxis() != null
                 && params.getTargetZ() != null) {
             vPos = new VerticalPositionImpl(params.getTargetZ(), gridSeriesFeature.getCoverage()
                     .getDomain().getVerticalCrs());
         }
-
-        GridFeature gridFeature = gridSeriesFeature.extractGridFeature(gridSeriesFeature
-                .getCoverage().getDomain().getHorizontalGrid(), vPos, params.getTargetT(), members);
-        return getDataFromGridFeature(gridFeature, member, params);
+        
+        if(getPlotType() == PlotType.SMOOTHED) {
+            return getDataFromGridCoverage2D(
+                    gridSeriesFeature.getCoverage().extractGridCoverage(
+                            gridSeriesFeature.getCoverage().getDomain().getHorizontalGrid(), vPos,
+                            params.getTargetT(), CollectionUtils.setOf(member)), member, params);
+        } else {
+            return getDataFromGridCoverage2D(new GridCoverage2DWrappedGridSeriesCoverage(
+                    gridSeriesFeature.getCoverage(), vPos, params.getTargetT()), member, params);
+        }
     }
-
-    private List<PlottingDatum> getDataFromGridFeature(GridFeature gridFeature, String member,
+    
+    private List<PlottingDatum> getDataFromGridCoverage2D(GridCoverage2D coverage, String member,
             GlobalPlottingParams params) {
         List<PlottingDatum> plottingData = new ArrayList<PlottingDatum>();
 
         Set<String> members = CollectionUtils.setOf(member);
 
-        if (getPlotType() == PlotType.RASTER) {
+        switch (getPlotType()) {
+        case RASTER:
+        {
             /*
              * We want a value for every pixel in the image (aside from missing
              * data), so we:
@@ -204,11 +216,11 @@ public abstract class ImageLayer extends Drawable {
              */
             RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth(),
                     params.getHeight());
-            if (!gridFeature.getCoverage().getDomain().equals(targetDomain)) {
-                gridFeature = gridFeature.extractGridFeature(targetDomain, members);
+            if (!coverage.getDomain().equals(targetDomain)) {
+                coverage = coverage.extractGridCoverage(targetDomain, members);
             }
-
-            List<DomainObjectValuePair<GridCell2D>> list = gridFeature.getCoverage().list();
+            
+            List<DomainObjectValuePair<GridCell2D>> list = coverage.list();
             for (DomainObjectValuePair<GridCell2D> entry : list) {
                 GridCoordinates2D gridCoordinates = entry.getDomainObject().getGridCoordinates();
                 GridCoordinates2D coords = new GridCoordinates2DImpl(gridCoordinates.getXIndex(),
@@ -216,28 +228,33 @@ public abstract class ImageLayer extends Drawable {
                 plottingData.add(new PlottingDatum(coords, (Number) entry.getValue().getValue(
                         member)));
             }
-        } else if (getPlotType() == PlotType.SUBSAMPLE) {
+            break;
+        }
+        case SUBSAMPLE:
+        {
             RegularGrid targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth(),
                     params.getHeight());
-            if (!gridFeature.getCoverage().getDomain().equals(targetDomain)) {
-                gridFeature = gridFeature.extractGridFeature(targetDomain, members);
+            if (!coverage.getDomain().equals(targetDomain)) {
+                coverage = coverage.extractGridCoverage(targetDomain, members);
             }
             
             int xss = getXSampleSize();
             int yss = getYSampleSize();
-            GridCoverage2D coverage = gridFeature.getCoverage();
-            for(int i = xss/2; i < params.getWidth(); i+=xss) {
-                for(int j = yss/2; j < params.getHeight(); j+=yss) {
+            for(int i = xss/2; i <= params.getWidth(); i+=xss) {
+                for(int j = yss/2; j <= params.getHeight(); j+=yss) {
                     GridCell2D gridCell = coverage.getDomain().getGridCell(i, j);
                     Object value = coverage.evaluate(gridCell.getCentre(), member);
-                    GridCoordinates2D coords = new GridCoordinates2DImpl(i, params.getHeight() - j - 1);
+                    GridCoordinates2D coords = new GridCoordinates2DImpl(i, params.getHeight() - j + 1);
                     plottingData.add(new PlottingDatum(coords, (Number) value));
                 }
             }
             /*
              * TODO add different subsampling methods (i.e. MEAN as well as CLOSEST)
              */
-        } else if (getPlotType() == PlotType.GLYPH) {
+            break;
+        }
+        case GLYPH:
+        {
             /*
              * We want a value for every point on the feature which falls within
              * the bounding box, plus a gutter, up to a maximum on one per
@@ -250,19 +267,19 @@ public abstract class ImageLayer extends Drawable {
              * efficient method for small datasets (i.e. less points than
              * pixels), but it is good for larger ones.
              */
-
+            
             /*
              * We use BorderedGrid here because this will get some data outside
              * of the bounding box, which is required when plotting glyphs.
              * 
              * This will correspond to one grid point per pixel.
              */
-            BorderedGrid targetDomain = new BorderedGrid(params.getBbox(), params.getWidth(),
+            BorderedGrid borderedTargetDomain = new BorderedGrid(params.getBbox(), params.getWidth(),
                     params.getHeight());
-            RegularAxis xAxis = targetDomain.getXAxis();
-            RegularAxis yAxis = targetDomain.getYAxis();
+            RegularAxis xAxis = borderedTargetDomain.getXAxis();
+            RegularAxis yAxis = borderedTargetDomain.getYAxis();
             CoordinateReferenceSystem crs = params.getBbox().getCoordinateReferenceSystem();
-            HorizontalGrid featureGrid = gridFeature.getCoverage().getDomain();
+            HorizontalGrid featureGrid = coverage.getDomain();
             Set<Long> neededIndices = new LinkedHashSet<Long>();
             /*
              * Find out which indices in the source data are required to plot
@@ -278,20 +295,12 @@ public abstract class ImageLayer extends Drawable {
             }
             
             /*
-             * If we have a longitude axis (wrapping) we need to plot equivalent points.
+             * Now loop through all needed indices, and add all points which have an equivalent centre
              */
-            
-            /*
-             * Check for longitude by comparing whether findIndexOf gives the
-             * same result for 2 values 360 units apart. This will also return
-             * true for systems where 360 is only a small change, so we also
-             * check that the size of a pixel < 360
-             */
-            GridCoverage2D coverage = gridFeature.getCoverage();
             for (long index : neededIndices) {
                 GridCoordinates2D gridCoords = featureGrid.getCoords(index);
                 HorizontalPosition hPos = featureGrid.getGridCell(gridCoords).getCentre();
-                List<GridCell2D> containingCells = targetDomain.findAllContainingCells(hPos);
+                List<GridCell2D> containingCells = borderedTargetDomain.findAllContainingCells(hPos);
                 for(GridCell2D containingCell : containingCells) {
                     if (containingCell == null)
                         continue;
@@ -306,7 +315,51 @@ public abstract class ImageLayer extends Drawable {
                     plottingData.add(new PlottingDatum(coords, val));
                 }
             }
-        } else {
+            break;
+        }
+        case SMOOTHED:
+        {
+            HorizontalGrid featureHorizGrid = coverage.getDomain();
+            if(featureHorizGrid instanceof RegularGrid) {
+                RegularGrid featureGrid = (RegularGrid) featureHorizGrid;
+                RegularAxis xAxis = featureGrid.getXAxis();
+                RegularAxis yAxis = featureGrid.getYAxis();
+                
+                double[][] dataToInterpolate = new double[xAxis.size()][yAxis.size()];
+                {
+                    coverage.evaluate(new HorizontalPositionImpl(0.0, 0.0, DefaultGeographicCRS.WGS84));
+                    GridValuesMatrix<? extends Object> gridValues = coverage.getGridValues(member);
+                    BigList<? extends Object> values = gridValues.getValues();
+                    
+                    for(int i=0;i<xAxis.size();i++) {
+                        for(int j=0;j<yAxis.size();j++) {
+                            dataToInterpolate[i][j] = ((Number) values.get(gridValues
+                                    .getIndex(i, j))).doubleValue(); 
+                        }                    
+                    }
+                }
+                /*
+                 * Sod the apache commons maths, this is where you need to write an interpolation routine.
+                 */
+                BilinearInterpolator interpolator = new BilinearInterpolator(xAxis.getCoordinateValues(), yAxis.getCoordinateValues(), dataToInterpolate);
+                
+                RegularGridImpl targetDomain = new RegularGridImpl(params.getBbox(), params.getWidth(),
+                        params.getHeight());
+                for(int i=0;i<params.getWidth();i++){
+                    double x = targetDomain.getXAxis().getCoordinateValue(i);
+                    for(int j=0;j<params.getHeight();j++){
+                        double y = targetDomain.getYAxis().getCoordinateValue(j);
+                        double val = interpolator.getValue(x,y);
+                        GridCoordinates2D coords = new GridCoordinates2DImpl(i, params.getHeight() - j - 1);
+                        plottingData.add(new PlottingDatum(coords, val));
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("Only regular grids can be smoothed at present");
+            }
+            break;
+        }
+        default:
             /*
              * The plot type is either:
              * 

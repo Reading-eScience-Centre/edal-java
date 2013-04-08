@@ -37,7 +37,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.geotoolkit.display.shape.XRectangle2D;
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
@@ -778,10 +777,23 @@ public final class GISUtils {
      * @return <code>true</code> if there is an overlap
      */
     public static boolean featureOverlapsBoundingBox(BoundingBox bbox, Feature feature) {
+        /*
+         * TODO This is quite slow.
+         */
         List<HorizontalPosition> featurePoints = getFeatureDomainPositions(feature);
-        for(HorizontalPosition pos : featurePoints) {
-            if(bbox.contains(pos)) {
-                return true;
+        /*
+         * We don't loop over each point in turn. Instead we step over in large
+         * chunks. This way we get acceptance sooner. Rejection will still be
+         * very slow though
+         */
+        int fSize = featurePoints.size();
+        int stride = fSize / 50;
+        for(int offset = 0; offset < stride; offset++) {
+            for(int index = 0; index < fSize; index +=stride) {
+                HorizontalPosition pos = featurePoints.get(index);
+                if(bbox.contains(pos)) {
+                    return true;
+                }
             }
         }
         return false;
