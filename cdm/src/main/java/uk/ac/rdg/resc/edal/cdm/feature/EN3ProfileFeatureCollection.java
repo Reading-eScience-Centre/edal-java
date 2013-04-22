@@ -263,7 +263,7 @@ public class EN3ProfileFeatureCollection extends FeatureCollectionImpl<ProfileFe
                 if(Collections.min(depths) < minz){
                     minz= Collections.min(depths);
                 }
-                if(Collections.min(depths) > maxz){
+                if(Collections.max(depths) > maxz){
                     maxz= Collections.min(depths);
                 }
     
