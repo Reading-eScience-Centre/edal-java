@@ -1,0 +1,20 @@
+{Image: [
+  {ConfidenceIntervalLayer:   {
+    LowerFieldName: "UV_X",
+    UpperFieldName: "UV_Y",
+    GlyphSize: 16,
+    PaletteColourScheme:     {
+      ScaleRange:       {
+        ScaleMin: -1.5,
+        ScaleMax: 1.5,
+        Logarithmic: false
+        },
+      ColourMap:       {
+        MissingDataColour: "#00000000",
+        NumberOfColourBands: 20,
+        Palette: "redblue"
+        }
+      }
+    }
+  }
+]}
