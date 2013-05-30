@@ -1,6 +1,7 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import net.sf.json.JSON;
+import net.sf.json.JSONException;
 import net.sf.json.JSONSerializer;
 import net.sf.json.xml.XMLSerializer;
 
@@ -9,7 +10,7 @@ public class StyleJSONParser {
     /*
      * Convert a JSON string to an XML string for use by JAXB.
      */
-    public static String JSONtoXMLString(String jsonString) {
+    public static String JSONtoXMLString(String jsonString) throws JSONException {
     	XMLSerializer serializer = new XMLSerializer();
 		
     	JSON json = JSONSerializer.toJSON(jsonString);
@@ -17,7 +18,7 @@ public class StyleJSONParser {
 		// Do not add type hints for conversion from xml back to JSON
 		serializer.setTypeHintsEnabled(false);
 		// Set namespace property for Image element
-		serializer.setNamespace("resc", "http://www.resc.reading.ac.uk","Image");
+		serializer.setNamespace("resc", "http://www.resc.reading.ac.uk", "Image");
 		
 		String xmlString = serializer.write(json);
 		
