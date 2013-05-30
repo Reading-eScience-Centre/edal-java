@@ -43,6 +43,18 @@ public class StyleXMLParser {
             return "#" + String.format("%08X", c.getRGB());
         }
     }
+    
+    public static class FlatOpacityAdapter extends XmlAdapter<String, FlatOpacity> {
+        @Override
+        public FlatOpacity unmarshal(String v) throws Exception {
+            return new FlatOpacity(Float.parseFloat(v));
+        }
+
+        @Override
+        public String marshal(FlatOpacity v) throws Exception {
+            return v.getOpacity().toString();
+        }
+    }
 
     public static String serialise(Image image) throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(Image.class);
@@ -92,7 +104,6 @@ public class StyleXMLParser {
         ColourScale scaleRange = new ColourScale(270f, 302f, false);
         ColourMap colourPalette = new ColourMap(Color.green, Color.cyan, new Color(0, 0, 0, 0), "rainbow", 20);
         ColourScheme colourScheme = new PaletteColourScheme(scaleRange, colourPalette);
-        System.out.println(colourScheme.getColor(280));
         RasterLayer rasterLayer = new RasterLayer("TMP", colourScheme);
         rasterLayer.setOpacityTransform(new FlatOpacity(0.5f));
         image.getLayers().add(rasterLayer);

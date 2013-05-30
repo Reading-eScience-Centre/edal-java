@@ -6,10 +6,12 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.graphics.style.StyleXMLParser.FlatOpacityAdapter;
 
 @XmlType(namespace = Image.NAMESPACE, name = "FlatOpacityType")
+@XmlJavaTypeAdapter(FlatOpacityAdapter.class)
 public class FlatOpacity extends OpacityTransform {
     @XmlElement(name = "Opacity", required = true)
     private Float opacity = 1.0f;
@@ -39,5 +41,9 @@ public class FlatOpacity extends OpacityTransform {
     @Override
     protected Set<NameAndRange> getFieldsWithScales() {
         return Collections.emptySet();
+    }
+    
+    public Float getOpacity() {
+        return opacity;
     }
 }
