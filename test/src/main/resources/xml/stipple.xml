@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>
 	<RasterLayer>
-        <FlatOpacity>
-            <Opacity>0.7</Opacity>
-        </FlatOpacity>
+        <FlatOpacity>0.7</FlatOpacity>
 		<DataFieldName>TMP</DataFieldName>
 		<PaletteColourScheme>
 			<ScaleRange>
