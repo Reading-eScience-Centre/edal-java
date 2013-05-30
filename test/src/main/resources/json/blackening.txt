@@ -1,0 +1,36 @@
+{ Image: [
+  {
+    RasterLayer:   {
+      DataFieldName: "TMP",
+      PaletteColourScheme:       {
+        ScaleRange:         {
+          ScaleMin: 270.0,
+          ScaleMax: 305.0,
+          Logarithmic: false
+        },
+        ColourMap:         {
+          MissingDataColour: "#00000000",
+          NumberOfColourBands: 254,
+          Palette: "redblue"
+        }
+      }
+    }
+  },
+  {
+    RasterLayer:    {
+      DataFieldName: "SALTY",
+      PaletteColourScheme:       {
+        ScaleRange:         {
+          ScaleMin: 30.0,
+          ScaleMax: 40.0,
+          Logarithmic: false
+        },
+        ColourMap:         {
+          MissingDataColour: "#00000000",
+          NumberOfColourBands: 10,
+          Palette: "#00000000,#FF000000"
+        }
+      }
+    }
+  }
+]}
