@@ -1,0 +1,38 @@
+{Image: [
+  {"RasterLayer":   {
+    "DataFieldName": "TMP",
+    "PaletteColourScheme":     {
+      "ScaleRange":       {
+        "ScaleMin": "270.0",
+        "ScaleMax": "302.0",
+        "Logarithmic": "false"
+      },
+      "ColourMap":       {
+        "BelowMinColour": "#FF00FF00",
+        "AboveMaxColour": "#FF00FFFF",
+        "MissingDataColour": "#00000000",
+        "NumberOfColourBands": "20",
+        "Palette": "rainbow"
+      }
+    }
+  }},
+  {"SubsampledGlyphLayer":   {
+    "DataFieldName": "TMP",
+    "GlyphIconName": "circle",
+    "PaletteColourScheme":     {
+      "ScaleRange":       {
+        "ScaleMin": "270.0",
+        "ScaleMax": "302.0",
+        "Logarithmic": "false"
+      },
+      "ColourMap":       {
+        "BelowMinColour": "#FF00FF00",
+        "AboveMaxColour": "#FF00FFFF",
+        "MissingDataColour": "#00000000",
+        "NumberOfColourBands": "20",
+        "Palette": "rainbow"
+      }
+    },
+    "GlyphSpacing": "1.5"
+  }}
+]}

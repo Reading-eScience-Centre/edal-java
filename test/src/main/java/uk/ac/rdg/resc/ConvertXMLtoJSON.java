@@ -11,7 +11,7 @@ public class ConvertXMLtoJSON {
 
 	public static void main(String[] args) throws Exception {
 
-		InputStream is = ConvertJSONtoXML.class.getResourceAsStream("/xml/blackening.xml");
+		InputStream is = ConvertJSONtoXML.class.getResourceAsStream("/xml/subsampled_glyph.xml");
 		String xmlData = IOUtils.toString(is);
 		
 		XMLSerializer serializer = new XMLSerializer();
