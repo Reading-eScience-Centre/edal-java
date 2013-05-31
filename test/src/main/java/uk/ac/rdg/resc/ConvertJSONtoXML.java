@@ -12,7 +12,7 @@ public class ConvertJSONtoXML {
 
 	public static void main(String[] args) throws Exception {
 		
-		InputStream is = ConvertJSONtoXML.class.getResourceAsStream("/json/blackening.txt");
+		InputStream is = ConvertJSONtoXML.class.getResourceAsStream("/json/subsampled_glyph.txt");
 		String jsonData = IOUtils.toString(is);
 		
 		XMLSerializer serializer = new XMLSerializer();
