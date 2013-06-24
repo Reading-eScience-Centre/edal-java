@@ -31,6 +31,7 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.http.client.URL;
+import com.google.gwt.json.client.JSONNumber;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
@@ -516,8 +517,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     if (response.getText() != null && !response.getText().isEmpty()) {
                         JSONValue jsonMap = JSONParser.parseLenient(response.getText());
                         JSONObject parentObj = jsonMap.isObject();
-                        double min = parentObj.get("min").isNumber().doubleValue();
-                        double max = parentObj.get("max").isNumber().doubleValue();
+                        JSONNumber minJsonNumber = parentObj.get("min").isNumber();
+                        JSONNumber maxJsonNumber = parentObj.get("max").isNumber();
+
+                        double min = minJsonNumber == null ? -50 : minJsonNumber.doubleValue();
+                        double max = maxJsonNumber == null ? 50 : maxJsonNumber.doubleValue();
                         /*
                          * Call the rangeLoaded method. All this does it set the
                          * range on the appropriate widget, but subclasses may
