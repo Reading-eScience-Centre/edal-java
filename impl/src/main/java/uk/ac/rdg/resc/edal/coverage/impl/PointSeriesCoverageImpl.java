@@ -68,19 +68,21 @@ public class PointSeriesCoverageImpl extends
         PointSeriesDomain domain = new PointSeriesDomainImpl(times);
         PointSeriesCoverageImpl subCoverage = new PointSeriesCoverageImpl(getDescription(), domain);
 
-        long fromIndex = getDomain().findIndexOf(times.get(0));
-        long toIndex = getDomain().findIndexOf(times.get(times.size() - 1)) + 1;
-        if(memberNames == null){
-            memberNames = getScalarMemberNames();
-        }
-        for (String memberName : memberNames) {
-            BigList<?> allValues = getValues(memberName);
-            LittleBigList<Object> requiredValues = new LittleBigList<Object>();
-            requiredValues.addAll(allValues.getAll(fromIndex, toIndex));
-            ScalarMetadata scalarMetadata = getScalarMetadata(memberName);
-            subCoverage.addMember(memberName, domain, scalarMetadata.getDescription(),
-                    scalarMetadata.getParameter(), scalarMetadata.getUnits(), requiredValues,
-                    scalarMetadata.getValueType());
+        if(times.size() > 0) {
+            long fromIndex = getDomain().findIndexOf(times.get(0));
+            long toIndex = getDomain().findIndexOf(times.get(times.size() - 1)) + 1;
+            if(memberNames == null){
+                memberNames = getScalarMemberNames();
+            }
+            for (String memberName : memberNames) {
+                BigList<?> allValues = getValues(memberName);
+                LittleBigList<Object> requiredValues = new LittleBigList<Object>();
+                requiredValues.addAll(allValues.getAll(fromIndex, toIndex));
+                ScalarMetadata scalarMetadata = getScalarMetadata(memberName);
+                subCoverage.addMember(memberName, domain, scalarMetadata.getDescription(),
+                        scalarMetadata.getParameter(), scalarMetadata.getUnits(), requiredValues,
+                        scalarMetadata.getValueType());
+            }
         }
         return subCoverage;
     }
