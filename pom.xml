@@ -93,10 +93,12 @@
 		</plugins>
 		<extensions>
 			<!-- Enabling the use of SCP deployment of artefacts -->
+            <!--
 			<extension>
 				<groupId>org.apache.maven.wagon</groupId>
 				<artifactId>wagon-ssh-external</artifactId>
-			</extension>
+            </extension>
+            -->
 		</extensions>
 	</build>
 	<profiles>
