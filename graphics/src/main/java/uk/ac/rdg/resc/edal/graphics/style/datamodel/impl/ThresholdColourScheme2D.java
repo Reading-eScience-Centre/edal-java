@@ -73,6 +73,12 @@ public class ThresholdColourScheme2D extends ColourScheme2D {
         	}
         	colour = colourIterator.next();
         }
+        for(Float xBand: xThresholds) {
+    		if(xValue.floatValue() > xBand) {
+    			return colour;
+    		}
+    		colour = colourIterator.next();
+    	}
         return colour;
 	}
 
