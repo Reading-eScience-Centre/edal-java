@@ -20,14 +20,15 @@ public class ThresholdColourScheme2D extends ColourScheme2D {
     private Color noDataColour = new Color(0f, 0f, 0f, 0f);
 
     /*
-     * Thresholds and colours are supplied in ascending order, because that is the
-     * logical way to think about things, but then reversed in order.
+     * Thresholds (their lower boundaries) and colours are supplied in ascending order,
+     * because that is the logical way to think about things, but then reversed in order.
      */
     @XmlElement(name = "XThresholds", required = true)
     private List<Float> xThresholds;
     @XmlElement(name = "YThresholds", required = true)
     private List<Float> yThresholds;
     @XmlElement(name = "Colours", required = true)
+    @XmlJavaTypeAdapter(ColorAdapter.class)
     private List<Color> colours;
 
     /*
