@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns0:Image xmlns:ns0="http://www.resc.reading.ac.uk">
+   <RasterLayer>
+      <DataFieldName>TMP</DataFieldName>
+      <ThresholdColourScheme>
+         <Colours>#FF0000FF</Colours>
+         <Thresholds>275.0</Thresholds>
+         <Colours>#FF00FFFF</Colours>
+         <Thresholds>280.0</Thresholds>
+         <Colours>#FF00FF00</Colours>
+         <Thresholds>285.0</Thresholds>
+         <Colours>#FFFFFF00</Colours>
+         <Thresholds>290.0</Thresholds>
+         <Colours>#FFFFC800</Colours>
+         <Thresholds>295.0</Thresholds>
+         <Colours>#FFFFAFAF</Colours>
+         <Thresholds>300.0</Thresholds>
+         <Colours>#FFFF0000</Colours>
+         <MissingDataColour>#00000000</MissingDataColour>
+      </ThresholdColourScheme>
+   </RasterLayer>
+</ns0:Image>
