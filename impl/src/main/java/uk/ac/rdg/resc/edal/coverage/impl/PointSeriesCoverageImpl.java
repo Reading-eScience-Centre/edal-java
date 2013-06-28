@@ -83,6 +83,17 @@ public class PointSeriesCoverageImpl extends
                         scalarMetadata.getParameter(), scalarMetadata.getUnits(), requiredValues,
                         scalarMetadata.getValueType());
             }
+        } else {
+            if(memberNames == null){
+                memberNames = getScalarMemberNames();
+            }
+            for (String memberName : memberNames) {
+                LittleBigList<Object> requiredValues = new LittleBigList<Object>();
+                ScalarMetadata scalarMetadata = getScalarMetadata(memberName);
+                subCoverage.addMember(memberName, domain, scalarMetadata.getDescription(),
+                        scalarMetadata.getParameter(), scalarMetadata.getUnits(), requiredValues,
+                        scalarMetadata.getValueType());
+            }
         }
         return subCoverage;
     }
