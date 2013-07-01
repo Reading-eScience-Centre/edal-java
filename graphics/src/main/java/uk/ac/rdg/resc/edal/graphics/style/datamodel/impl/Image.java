@@ -38,6 +38,7 @@ public class Image extends Drawable {
     @XmlElements({ @XmlElement(name = "Image", type = Image.class),
             @XmlElement(name = "ArrowLayer", type = ArrowLayer.class),
             @XmlElement(name = "RasterLayer", type = RasterLayer.class),
+            @XmlElement(name = "Raster2DLayer", type = Raster2DLayer.class),
             @XmlElement(name = "StippleLayer", type = StippleLayer.class),
             @XmlElement(name = "ContourLayer", type = ContourLayer.class),
             @XmlElement(name = "BasicGlyphLayer", type = BasicGlyphLayer.class),
