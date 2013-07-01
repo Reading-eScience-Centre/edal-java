@@ -107,7 +107,9 @@ public class ThresholdColourScheme2D extends ColourScheme2D {
             }
             value = band;
         }
-        Collections.reverse(xThresholds);
+        if(yThresholds != xThresholds) {
+        	Collections.reverse(xThresholds);
+        }
         
         value = -Float.MAX_VALUE;
         for(Float band : yThresholds) {
