@@ -338,6 +338,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             boolean multipleElevations, boolean multipleTimes) {
         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
         WMS wmsLayer;
+        
         if (wmsAndParams == null) {
             params.setParameter("VERSION", "1.3.0");
             wmsLayer = new WMS("WMS Layer", wmsUrl, params, options);
@@ -468,7 +469,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 
                 final String layer = layerNames.toString();
                 
-                if (multipleElevations) {
+                if (multipleElevations && layerNames.length() > 0) {
                     /*
                      * If we have multiple depths, we can plot a vertical profile here
                      */
@@ -486,7 +487,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     panel.add(profilePlot);
                 }
 
-                if (multipleTimes) {
+                if (multipleTimes && layerNames.length() > 0) {
                     /*
                      * If we have multiple times, we can plot a time series here
                      */
@@ -540,7 +541,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         });
         getFeatureInfo.setAutoActivate(true);
         map.addControl(getFeatureInfo);
-
+        
         getFeatureInfo.getJSObject().setProperty("vendorParams", vendorParams);
     }
 
@@ -669,7 +670,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     protected void addBaseLayers() {
         WMS openLayers;
 //        WMS bluemarbleDemis;
-//        WMS demis;
+        WMS demis;
         WMS plurel;
         WMS weather;
         WMS srtmDem;
@@ -697,14 +698,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 //        bluemarbleDemis.setIsBaseLayer(true);
 //        bluemarbleDemis.addLayerLoadStartListener(loadStartListener);
 //        bluemarbleDemis.addLayerLoadEndListener(loadEndListener);
-//        wmsParams = new WMSParams();
-//        wmsParams
-//                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
-//                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
-//        wmsParams.setFormat("image/png");
-//        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
-//                wmsOptions);
-//        demis.setIsBaseLayer(true);
+        wmsParams = new WMSParams();
+        wmsParams
+                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
+                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+        wmsParams.setFormat("image/png");
+        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
+                wmsOptions);
+        demis.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("0,2,3,4,5,8,9,10,40");
@@ -757,7 +758,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
         map.addLayer(openLayers);
 //        map.addLayer(bluemarbleDemis);
-//        map.addLayer(demis);
+        map.addLayer(demis);
         map.addLayer(plurel);
         map.addLayer(weather);
         map.addLayer(srtmDem);
@@ -789,7 +790,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             }
         });
         
-        map.setBaseLayer(openLayers);
+        map.setBaseLayer(demis);
         baseUrlForExport = "http://labs.metacarta.com/wms-c/Basic.py?";
         layersForExport = "basic";
     }

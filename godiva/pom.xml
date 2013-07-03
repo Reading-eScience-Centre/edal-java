@@ -16,7 +16,7 @@
 		    <!-- This depends on gwt-user, so we don't need to include that -->
 			<groupId>org.gwtopenmaps.openlayers</groupId>
 			<artifactId>gwt-openlayers-client</artifactId>
-			<version>0.8</version>
+			<version>0.9</version>
 		</dependency>
 	</dependencies>
 	<build>
