@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CoverageStyle version="1.1.0" xsi:schemaLocation="http://www.opengis.net/se FeatureStyle.xsd"
+xmlns="http://www.opengis.net/se" xmlns:ogc="http://www.opengis.net/ogc"
+xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Rule>
+		<Name>blackening</Name>
+		<Description>
+			<Title>Indicate uncertainty in a raster field by fading to black</Title>
+		</Description>
+		<RasterSymbolizer>
+			<Geometry>
+				<ogc:PropertyName>analysed_sst</ogc:PropertyName>
+			</Geometry>
+			<Opacity>1.0</Opacity>
+			<ColorMap>
+				<Interpolate fallbackValue="#00000000">
+					<LookupValue>Rasterdata</LookupValue>
+					<InterpolationPoint>
+						<Data>270.0</Data>
+						<Value>#FF0000FF</Value>
+					</InterpolationPoint>
+					<InterpolationPoint>
+						<Data>290.0</Data>
+						<Value>#FFFFFFFF</Value>
+					</InterpolationPoint>
+					<InterpolationPoint>
+						<Data>310.0</Data>
+						<Value>#FFFF0000</Value>
+					</InterpolationPoint>
+				</Interpolate>
+			</ColorMap>
+		</RasterSymbolizer>
+		<RasterSymbolizer>
+			<Geometry>
+				<ogc:PropertyName>analysis_error</ogc:PropertyName>
+			</Geometry>
+			<Opacity>1.0</Opacity>
+			<ColorMap>
+				<Categorize fallbackValue="#00000000">
+					<LookupValue>Rasterdata</LookupValue>
+					<Value>#00000000</Value>
+					<Threshold>0.5</Threshold>
+					<Value>#33000000</Value>
+					<Threshold>1.0</Threshold>
+					<Value>#66000000</Value>
+					<Threshold>1.5</Threshold>
+					<Value>#99000000</Value>
+					<Threshold>2.0</Threshold>
+					<Value>#CC000000</Value>
+					<Threshold>2.5</Threshold>
+					<Value>#FF000000</Value>
+				</Categorize>
+			</ColorMap>
+		</RasterSymbolizer>
+	</Rule>
+</CoverageStyle>
