@@ -147,7 +147,7 @@ final public class Charting {
             }
     
             for (int i = 0; i < times.size(); i++) {
-                ts.add(new Millisecond(new Date(times.get(i).getValue())), (Number) values.get(i));
+                ts.addOrUpdate(new Millisecond(new Date(times.get(i).getValue())), (Number) values.get(i));
             }
             
             timeSeries.add(ts);
