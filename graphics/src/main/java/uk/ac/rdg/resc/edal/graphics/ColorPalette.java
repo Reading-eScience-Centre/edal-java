@@ -68,7 +68,7 @@ public class ColorPalette {
      * hard pushed to distinguish more colours than this in a typical scenario
      * anyway.)
      */
-    public static final int MAX_NUM_COLOURS = 254;
+    public static final int MAX_NUM_COLOURS = 253;
 
     private static final Map<String, ColorPalette> palettes = new HashMap<String, ColorPalette>();
 
