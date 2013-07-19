@@ -75,7 +75,15 @@ public class Frame {
     }
     
     public void addPointData(Number value, GridCoordinates2D coords, PlotStyle style) {
-        layers.add(new PointFrameData(style, coords.getXIndex(), coords.getYIndex(), value));
+        PointFrameData pointFrameData = new PointFrameData(style, coords.getXIndex(), coords.getYIndex(), value);
+        if(value == null || Float.isNaN(value.floatValue())) {
+            /*
+             * Add frames with non-numerical data first, that way colourful ones will be on top
+             */
+            layers.add(0, pointFrameData);
+        } else {
+            layers.add(pointFrameData);
+        }
     }
 
     public void addMultipointData(List<Number> values, List<GridCoordinates2D> coords,
