@@ -34,7 +34,6 @@ import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.domain.GridSeriesDomain;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCell2D;
@@ -52,6 +51,7 @@ import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Implementation of {@link GridSeriesDomain} which represents a domain on a 4D
@@ -130,7 +130,7 @@ public class GridSeriesDomainImpl extends AbstractGrid implements GridSeriesDoma
          * Get the extent of the time axis (if available - empty if not)
          */
         int tIndex = 0;
-        Extent<TimePosition> tExtent = null;
+        Extent<TimePosition> tExtent = Extents.emptyExtent(TimePosition.class);
         if (tAxis != null) {
             tIndex = tAxis.findIndexOf(pos.getTimePosition());
             if(tIndex < 0)
@@ -143,7 +143,7 @@ public class GridSeriesDomainImpl extends AbstractGrid implements GridSeriesDoma
          */
         int vIndex = 0;
         VerticalCrs vCrs = null;
-        Extent<VerticalPosition> vExtent = null;
+        Extent<VerticalPosition> vExtent = Extents.emptyExtent(VerticalPosition.class);
         if (vAxis != null) {
             vIndex = vAxis.findIndexOf(pos.getVerticalPosition().getZ());
             if(vIndex < 0)
@@ -153,8 +153,8 @@ public class GridSeriesDomainImpl extends AbstractGrid implements GridSeriesDoma
             /*
              * Cast is needed here, otherwise an Extent<VerticalPositionImpl> is returned, which is not what we want
              */
-            vExtent = new ExtentImpl((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(),  vCrs),
-                                     (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
+            vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
+                                        (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
         }
         
         GridCell2D hCell = hGrid.findContainingCell(pos.getHorizontalPosition());
@@ -203,8 +203,8 @@ public class GridSeriesDomainImpl extends AbstractGrid implements GridSeriesDoma
                 Extent<VerticalPosition> vExtent = null;
                 if(vAxis != null){
                     Extent<Double> vExtentDouble = vAxis.getCoordinateBounds(vIndex);
-                    vExtent = new ExtentImpl((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(),  vCrs),
-                                             (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
+                    vExtent = Extents.newExtent((VerticalPosition) new VerticalPositionImpl(vExtentDouble.getLow(), vCrs),
+                            (VerticalPosition) new VerticalPositionImpl(vExtentDouble.getHigh(), vCrs));
                 }
                 return new GridCell4DRectangle(GridSeriesDomainImpl.this, hCell, tExtent, tIndex, vExtent, vIndex);
             }

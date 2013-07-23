@@ -104,7 +104,7 @@ final public class Charting {
     private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
     private static final DecimalFormat NUMBER_3DP = new DecimalFormat("#0.000");
 
-    public static JFreeChart createTimeseriesPlot(List<? extends Feature> features, String baseMemberName) {
+    public static JFreeChart createTimeseriesPlot(List<Feature> features, String baseMemberName) {
         String yLabel = "";
         VerticalPosition vPos = null;
         ScalarMetadata metadata = null;

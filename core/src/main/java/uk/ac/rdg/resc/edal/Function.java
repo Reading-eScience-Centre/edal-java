@@ -38,10 +38,6 @@ package uk.ac.rdg.resc.edal;
  * @author Jon Blower
  */
 public interface Function<A, B> {
-    
-    /** Returns the domain of the function */
-    public Domain<A> getDomain();
-    
     /**
      * Evaluates the function for the given value.
      * 
