@@ -34,8 +34,8 @@ import java.util.List;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.ReferenceableAxis;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Abstract superclass for {@link ReferenceableAxis} implementations. Handles
@@ -123,7 +123,7 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
          * to the size-1 (the maximum index). ReferenceableAxis implementations
          * which do not want this behaviour should override this method
          */
-        return new ExtentImpl(0, size() - 1);
+        return Extents.newExtent(0, size() - 1);
     }
 
     @Override
@@ -149,7 +149,7 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
                 max = val1;
             }
         }
-        return new ExtentImpl(min, max);
+        return Extents.newExtent(min, max);
     }
 
     @Override

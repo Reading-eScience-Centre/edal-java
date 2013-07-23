@@ -36,14 +36,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
-import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.ExtentImpl;
 
 /**
  * Contains some useful utility methods for working with Collections.
@@ -203,71 +200,6 @@ public final class CollectionUtils {
     }
     
     /**
-     * Returns a new List containing the given values in the given.  The values
-     * are wrapped by the List, therefore if the values change, the behaviour
-     * of the list will also change
-     */
-    public static <T> List<T> listOf(final T... values) {
-        return new AbstractList<T>() {
-
-            @Override public T get(int index) {
-                return values[index];
-            }
-
-            @Override public int size() {
-                return values.length;
-            }
-            
-        };
-    }
-    
-    /**
-     * Creates an Extent whose minimum is the lowest value in the passed
-     * collection and whose maximum is the highest value in the passed
-     * collection, according to the natural order of its elements. Null values and NaNs
-     * in the passed collection are ignored; if the collection consists entirely
-     * of null values the returned Extent will have null minimum and maximum
-     * values.
-     * 
-     * @param <T>
-     *            The type of the elements in the collection
-     * @param coll
-     *            A Collection of values, in any order.
-     * @return an Extent whose minimum is the lowest value in the passed
-     *         collection and whose maximum is the highest value in the passed
-     *         collection.
-     * @throws NullPointerException
-     *             if the collection is null
-     * @throws NoSuchElementException
-     *             if the collection is empty
-     * @throws ClassCastException
-     *             if any of the elements in the collection are not
-     *             {@link Comparable} with any of the others.
-     */
-    public static <T extends Comparable<? super T>> Extent<T> findMinMax(Collection<T> coll)
-    {
-        // Adapted from Collections.min()
-        Iterator<? extends T> i = coll.iterator();
-        T minCandidate = i.next();
-        T maxCandidate = minCandidate;
-        
-        while (i.hasNext()) {
-            T next = i.next();
-            if (next != null && !next.equals(Float.NaN) && !next.equals(Double.NaN)) {
-                if (minCandidate == null || next.compareTo(minCandidate) < 0) {
-                    minCandidate = next;
-                }
-                if (maxCandidate == null || next.compareTo(maxCandidate) > 0
-                        || maxCandidate.equals(Float.NaN) || maxCandidate.equals(Double.NaN)) {
-                    maxCandidate = next;
-                }
-            }
-        }
-
-        return new ExtentImpl<T>(minCandidate, maxCandidate);
-    }
-    
-    /**
      * Returns an unmodifiable Set containing a single null value
      */
     public static <T> Set<T> setOfSingleNullValue() {
@@ -296,19 +228,8 @@ public final class CollectionUtils {
             }
         };
     }
+
     
-    /**
-     * <p>Copies all the values from the given Collection into a new List.</p>
-     * <p>This could be used, for example, to copy all values from a
-     * lazily-evaluated List into a new List.</p>
-     */
-    public static <T> List<T> copy(Collection<T> coll) {
-        List<T> newList = new ArrayList<T>(coll.size());
-        for (T value : coll) {
-            newList.add(value);
-        }
-        return newList;
-    }
     
     public static Double minIgnoringNullsAndNans(Collection<Number> coll){
         Comparator<Number> minC = new Comparator<Number>() {

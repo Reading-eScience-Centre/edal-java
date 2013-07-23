@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2012 The University of Reading
+ * Copyright (c) 2011 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -24,41 +24,43 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- ******************************************************************************/
+ *******************************************************************************/
 
 package uk.ac.rdg.resc.edal;
 
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+/**
+ * <p>
+ * Defines a partial unary function, which explicitly advertises the values of A
+ * for which the function is defined.
+ * </p>
+ * <p>
+ * <i>Note: this approach is borrowed from the Scala language.</i>
+ * </p>
+ * 
+ * @param <A>
+ *            The type of the function input
+ * @param <B>
+ *            The type of the function output
+ * @author Jon Blower
+ */
+public interface PartialFunction<A, B> extends Function<A, B> {
 
-public class VerticalExtent implements Extent<VerticalPosition> {
+    /**
+     * @return the set of positions for which the partial function is defined.
+     */
+    public Domain<A> getDomain();
 
-    private final VerticalPosition min;
-    private final VerticalPosition max;
-    
-    public VerticalExtent(VerticalPosition min, VerticalPosition max) {
-        if(max.getZ() < min.getZ())
-            throw new IllegalArgumentException("Minimum value must be less than maximum value");
-        this.min = min;
-        this.max = max;
-    }
+    /**
+     * Returns true if the function is defined at the given input value. If the
+     * function is defined at this value (i.e. the domain contains the value)
+     * then {@link #evaluate(java.lang.Object) evaluate()} will return a
+     * non-null value.
+     * 
+     * @param val
+     *            The input value to test
+     * @return true if the function is defined at the given input value, false
+     *         otherwise.
+     */
+    public boolean isDefinedAt(A val);
 
-    @Override
-    public VerticalPosition getHigh() {
-        return max;
-    }
-
-    @Override
-    public VerticalPosition getLow() {
-        return min;
-    }
-
-    @Override
-    public boolean contains(VerticalPosition position) {
-        return (position.getZ() >= min.getZ() && position.getZ() <= max.getZ());
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return (min == null && max == null);
-    }
 }

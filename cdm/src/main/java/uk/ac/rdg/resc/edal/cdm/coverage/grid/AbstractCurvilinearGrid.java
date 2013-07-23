@@ -35,7 +35,6 @@ import java.util.List;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.cdm.coverage.grid.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.coverage.grid.GridAxis;
 import uk.ac.rdg.resc.edal.coverage.grid.GridExtent;
@@ -47,6 +46,7 @@ import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.geometry.impl.AbstractPolygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Partial implementation of a {@link HorizontalGrid} that is based upon a
@@ -131,7 +131,7 @@ public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid
 
             @Override
             public Extent<Integer> getIndexExtent() {
-                return new ExtentImpl(0, curvGrid.getNi()-1);
+                return Extents.newExtent(0, curvGrid.getNi()-1);
             }
         };
     }
@@ -154,7 +154,7 @@ public abstract class AbstractCurvilinearGrid extends AbstractHorizontalGrid
 
             @Override
             public Extent<Integer> getIndexExtent() {
-                return new ExtentImpl(0, curvGrid.getNj()-1);
+                return Extents.newExtent(0, curvGrid.getNj()-1);
             }
         };
     }

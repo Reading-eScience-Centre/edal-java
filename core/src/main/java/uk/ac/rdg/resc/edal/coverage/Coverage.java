@@ -30,15 +30,15 @@ package uk.ac.rdg.resc.edal.coverage;
 
 import java.util.Set;
 
-import uk.ac.rdg.resc.edal.Function;
+import uk.ac.rdg.resc.edal.PartialFunction;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
 
 /**
  * <p>
  * A Coverage associates positions with its {@link #getDomain() domain} to
- * values (its <i>range</i>).  Coverages will usually be partial, because their
- * extent is finite.
+ * values (its <i>range</i>). It is a partial function because, generally, not
+ * all possible positions are associated with values.
  * </p>
  * 
  * @param <P>
@@ -47,7 +47,7 @@ import uk.ac.rdg.resc.edal.coverage.metadata.ScalarMetadata;
  *            spatiotemporal position.
  * @author Jon Blower
  */
-public interface Coverage<P> extends Function<P, Record> {
+public interface Coverage<P> extends PartialFunction<P, Record> {
 
     /**
      * Returns a human-readable description of this coverage.

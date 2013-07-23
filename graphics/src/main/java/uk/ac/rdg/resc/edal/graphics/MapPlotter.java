@@ -18,7 +18,6 @@ import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.Phenomenon;
 import uk.ac.rdg.resc.edal.Unit;
 import uk.ac.rdg.resc.edal.coverage.GridCoverage2D;
@@ -59,6 +58,7 @@ import uk.ac.rdg.resc.edal.position.impl.HorizontalPositionImpl;
 import uk.ac.rdg.resc.edal.position.impl.TimePositionJoda;
 import uk.ac.rdg.resc.edal.position.impl.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.AbstractBigList;
+import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
@@ -553,7 +553,7 @@ public class MapPlotter {
             Extent<Float> frameRange = frameData.get(0).getAutoRange();
             mins.add(frameRange.getLow());
             maxes.add(frameRange.getHigh());
-            style.setScaleRange(new ExtentImpl(Collections.min(mins), Collections.max(maxes)));
+            style.setScaleRange(Extents.newExtent(Collections.min(mins), Collections.max(maxes)));
         }
 
         List<BufferedImage> images = new ArrayList<BufferedImage>();

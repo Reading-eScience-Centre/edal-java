@@ -38,7 +38,7 @@ import uk.ac.rdg.resc.edal.coverage.domain.ProfileDomain;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.position.impl.VerticalPositionImpl;
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 public class ProfileDomainImpl implements ProfileDomain {
     
@@ -153,6 +153,6 @@ public class ProfileDomainImpl implements ProfileDomain {
 
     @Override
     public Extent<VerticalPosition> getVerticalExtent() {
-        return CollectionUtils.findMinMax(getDomainObjects());
+        return Extents.findMinMax(getDomainObjects());
     }
 }
