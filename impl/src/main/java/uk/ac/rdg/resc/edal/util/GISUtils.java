@@ -833,9 +833,32 @@ public final class GISUtils {
     public static GeoPosition getTrajectoryPosition(TrajectoryFeature feature, final HorizontalPosition pos,
             BoundingBox bbox) {
         List<GeoPosition> potentialMatches = new ArrayList<GeoPosition>();
-        for(GeoPosition pos4d : feature.getCoverage().getDomain().getDomainObjects()){
+        List<GeoPosition> trajectoryPositions = feature.getCoverage().getDomain().getDomainObjects();
+
+        boolean foundPosInBox = false;
+        if(bbox.contains(trajectoryPositions.get(0).getHorizontalPosition())){
+            foundPosInBox = true;
+            potentialMatches.add(trajectoryPositions.get(0));
+        }
+        for(int i = 1; i < trajectoryPositions.size(); i++){
+            GeoPosition pos4d = trajectoryPositions.get(i);
             if(bbox.contains(pos4d.getHorizontalPosition())){
+                foundPosInBox = true;
                 potentialMatches.add(pos4d);
+            }
+            if(!foundPosInBox) {
+                /*
+                 * While we haven't found a position within the bounding box,
+                 * check if the line from the last position to this one
+                 * intersects the box. If so, we add both ends to the list of
+                 * potential matches (which will later be sorted by distance to
+                 * the click position)
+                 */
+                GeoPosition lastPos4d = trajectoryPositions.get(i-1);
+                if(lineIntersectsBbox(lastPos4d.getHorizontalPosition(), pos4d.getHorizontalPosition(), bbox)) {
+                    potentialMatches.add(pos4d);
+                    potentialMatches.add(lastPos4d);
+                }
             }
         }
         if(potentialMatches.size() == 0){
@@ -854,5 +877,38 @@ public final class GISUtils {
             });
         }
         return potentialMatches.get(0);
+    }
+
+    private static boolean lineIntersectsBbox(HorizontalPosition p0, HorizontalPosition p1,
+            BoundingBox bbox) {
+        /*
+         * Adapted from:
+         * http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson
+         * -7-intersecting-simple-shapes/ray-box-intersection/
+         */
+
+        double tmin = (bbox.getMinX() - p0.getX()) / (p1.getX() - p0.getX());
+        double tmax = (bbox.getMaxX() - p0.getX()) / (p1.getX() - p0.getX());
+        if (tmin > tmax) {
+            double temp = tmin;
+            tmin = tmax;
+            tmax = temp;
+        }
+        double tymin = (bbox.getMinY() - p0.getY()) / (p1.getY() - p0.getY());
+        double tymax = (bbox.getMaxY() - p0.getY()) / (p1.getY() - p0.getY());
+        if (tymin > tymax) {
+            double temp = tymin;
+            tymin = tymax;
+            tymax = temp;
+        }
+        if ((tmin > tymax) || (tymin > tmax))
+            return false;
+        if (tymin > tmin)
+            tmin = tymin;
+        if (tymax < tmax)
+            tmax = tymax;
+        if ((tmin > 1) || (tmax < 0))
+            return false;
+        return true;
     }
 }
