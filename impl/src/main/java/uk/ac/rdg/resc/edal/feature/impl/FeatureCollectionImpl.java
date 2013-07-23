@@ -39,6 +39,7 @@ import java.util.Set;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.metadata.RangeMetadata;
 import uk.ac.rdg.resc.edal.coverage.metadata.impl.MetadataUtils;
 import uk.ac.rdg.resc.edal.feature.Feature;
@@ -47,7 +48,6 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.impl.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 public class FeatureCollectionImpl<F extends Feature> implements FeatureCollection<F> {
@@ -68,8 +68,8 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
         member2Features = new LinkedHashMap<String, List<F>>();
         
         bbox = null;
-        tExtent = Extents.emptyExtent(TimePosition.class);
-        zExtent = Extents.emptyExtent(VerticalPosition.class);
+        tExtent = null;
+        zExtent = null;
     }
 
     @Override
@@ -147,8 +147,8 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
         
         Extent<TimePosition> fTExtent = GISUtils.getFeatureTimeExtent(feature);
         if(fTExtent != null){
-            TimePosition lowT = tExtent.getLow();
-            TimePosition highT = tExtent.getHigh();
+            TimePosition lowT = tExtent == null ? null : tExtent.getLow();
+            TimePosition highT = tExtent == null ? null : tExtent.getHigh();
             changed = false;
             if(lowT == null || fTExtent.getLow().compareTo(lowT) < 0){
                 lowT = fTExtent.getLow();
@@ -159,14 +159,14 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
                 changed = true;
             }
             if(changed){
-                tExtent = Extents.newExtent(lowT, highT);
+                tExtent = new ExtentImpl(lowT, highT);
             }
         }
         
         Extent<VerticalPosition> fZExtent = GISUtils.getFeatureVerticalExtent(feature);
         if(fZExtent != null){
-            VerticalPosition lowZ = zExtent.getLow();
-            VerticalPosition highZ = zExtent.getHigh();
+            VerticalPosition lowZ = zExtent == null ? null : zExtent.getLow();
+            VerticalPosition highZ = zExtent == null ? null : zExtent.getHigh();
             changed = false;
             if(lowZ == null || fZExtent.getLow().compareTo(lowZ) < 0){
                 lowZ = fZExtent.getLow();
@@ -177,7 +177,7 @@ public class FeatureCollectionImpl<F extends Feature> implements FeatureCollecti
                 changed = true;
             }
             if(changed){
-                zExtent = Extents.newExtent(lowZ, highZ);
+                zExtent = new ExtentImpl(lowZ, highZ);
             }
         }
     }

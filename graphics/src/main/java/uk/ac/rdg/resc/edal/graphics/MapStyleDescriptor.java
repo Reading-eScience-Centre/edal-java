@@ -11,15 +11,14 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 public class MapStyleDescriptor {
     private ColorPalette colorPalette = ColorPalette.get(null);
     /*
-     * Colour scale range of the picture. An {@link Extent#isEmpty() empty
-     * Range} means that the picture will be auto-scaled.
+     * Colour scale range of the picture. A null extent means that the picture
+     * will be auto-scaled.
      */
-    private Extent<Float> scaleRange = Extents.emptyExtent(Float.class);
+    private Extent<Float> scaleRange = null;
     private boolean transparent = true;
     private int opacity = 100;
     private int numColourBands = 254;
@@ -180,7 +179,7 @@ public class MapStyleDescriptor {
     }
     
     public boolean isAutoScale(){
-        return scaleRange == null || scaleRange.isEmpty();
+        return scaleRange == null;
     }
     
     public IndexColorModel getColorModel(){

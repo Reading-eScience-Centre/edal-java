@@ -33,8 +33,8 @@ import java.util.Collection;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.coverage.grid.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Class representing a single map overlay image. This can contain any number of
@@ -491,8 +491,8 @@ public class Frame {
             /*
              * We have no data where the ranges matter. Return something anyway
              */
-            return Extents.newExtent(0.0f, 1.0f);
+            return new ExtentImpl(0.0f, 1.0f);
         }
-        return Extents.newExtent(min, max);
+        return new ExtentImpl(min, max);
     }
 }

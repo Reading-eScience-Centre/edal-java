@@ -76,12 +76,14 @@ public interface GridCell4D extends Domain<GeoPosition> {
     public CoordinateReferenceSystem getHorizontalCrs();
 
     /**
-     * @return the range of valid integers in the time axis of parent grid
+     * @return the range of valid positions in the time axis of parent grid,
+     * or null if there is no time axis.
      */
     public Extent<TimePosition> getTimeExtent();
 
     /**
-     * @return the range of valid integers in the vertical axis of parent grid
+     * @return the range of valid positions in the vertical axis of parent grid,
+     * or null if there is no vertical axis
      */
     public Extent<VerticalPosition> getVerticalExtent();
 
