@@ -12,7 +12,16 @@
 	<version>0.8.1-SNAPSHOT</version>
 	<artifactId>edal</artifactId>
 	<name>Environmental Data Abstraction Library</name>
-	<packaging>pom</packaging>
+    
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Enables auto-insertion of licence in new source code files.
+        Could be extracted to a separate settings file, as per 
+        http://mevenide.codehaus.org/m2-site/mevenide2-netbeans/customizations.html -->
+        <netbeans.hint.license>bsd-3clause</netbeans.hint.license>
+    </properties>
+	
+    <packaging>pom</packaging>
 	<url>http://code.google.com/p/edal-java/</url>
 	<inceptionYear>2010</inceptionYear>
 	<description>EDAL (Environmental Data Abstraction Library) is a set of Java libararies that provide a consistent means for accessing and manipulating environmental data. The core concepts are based on the standards-compliant data model of the Climate Science Modelling Language.</description>
