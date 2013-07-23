@@ -472,6 +472,6 @@ public class TimeUtils {
                 }
             }
         }
-        return Extents.findMinMax(times);
+        return CollectionUtils.findMinMax(times);
     }
 }

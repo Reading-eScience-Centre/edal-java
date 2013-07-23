@@ -34,8 +34,8 @@ import java.util.List;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 import uk.ac.rdg.resc.edal.Extent;
+import uk.ac.rdg.resc.edal.ExtentImpl;
 import uk.ac.rdg.resc.edal.position.TimePosition;
-import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Partial implementation of an irregular axis.
@@ -46,7 +46,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * @param <T>
  *            The type of value the axis contains
  */
-public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> extends
+public abstract class AbstractIrregularAxis<T extends Comparable<T>> extends
         AbstractReferenceableAxis<T> {
     /**
      * The axis values, always in ascending numerical order to simplify
@@ -195,7 +195,7 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
             upperBound = getMidpoint(axisValues[upperIndex], axisValues[index]);
         }
 
-        return Extents.newExtent(lowerBound, upperBound);
+        return new ExtentImpl(lowerBound, upperBound);
     }
 
     /**
