@@ -26,42 +26,53 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.geometry;
+package uk.ac.rdg.resc.edal.domain;
 
-import java.util.List;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.domain.Domain;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.util.Array;
 
 /**
- * A polygon in the horizontal plane, defined by a list of vertices in a given
- * coordinate reference system.
+ * <p>
+ * A {@link Domain} that consists of a finite number of discrete objects.
+ * {@link DiscreteFeature}s use this type of domain.
+ * </p>
  * 
+ * @param <P>
+ *            The type of object used to identify positions within this domain
+ * @param <DO>
+ *            The type of the domain object
  * @author Jon Blower
  */
-public interface Polygon extends Domain<HorizontalPosition> {
+public interface DiscreteDomain<P, DO> extends Domain<P> {
 
     /**
-     * Returns the two-dimensional horizontal coordinate reference system to
-     * which the {@link #getVertices() vertices} are referenced.
-     * 
-     * @return the two-dimensional horizontal coordinate reference system to
-     *         which the vertices are referenced.
+     * Returns true if at least one of the domain objects contains the given
+     * position.
      */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    @Override
+    public boolean contains(P position);
 
     /**
-     * Returns the list of vertices that define this polygon in the horizontal
-     * plane. The coordinates of the vertices are defined in this object's
-     * {@link #getCoordinateReferenceSystem() coordinate reference system}. The
-     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
-     * as this object, but they may not have a non-null CRS that is different
-     * from that of this object.
-     * 
-     * @return the list of vertices that define this polygon in the horizontal
-     *         plane.
-     * @todo define whether the polygon is closed, and whether there is a
-     *       particular order (clockwise or anticlockwise) to the vertices.
+     * Returns an {@link Array} of domain objects that comprise this domain.
      */
-    public List<HorizontalPosition> getVertices();
+    public Array<DO> getDomainObjects();
+
+    /**
+     * Finds the index of the first domain object within the
+     * {@link #getDomainObjects() array of domain objects} that contains the given
+     * position.
+     * 
+     * @return the index of the domain object, or -1 if the position is outside
+     *         the domain
+     */
+    public long findIndexOf(P pos);
+
+    /**
+     * <p>
+     * Returns the number of domain objects in the domain.
+     * </p>
+     * 
+     * @return the number of domain objects in the domain
+     */
+    public long size();
 }

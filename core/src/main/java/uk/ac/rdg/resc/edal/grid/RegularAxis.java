@@ -26,42 +26,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.geometry;
-
-import java.util.List;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.domain.Domain;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+package uk.ac.rdg.resc.edal.grid;
 
 /**
- * A polygon in the horizontal plane, defined by a list of vertices in a given
- * coordinate reference system.
+ * <p>
+ * A one-dimensional axis of a Grid, whose coordinate values are regularly
+ * spaced.
+ * </p>
  * 
  * @author Jon Blower
  */
-public interface Polygon extends Domain<HorizontalPosition> {
+public interface RegularAxis extends ReferenceableAxis<Double> {
 
-    /**
-     * Returns the two-dimensional horizontal coordinate reference system to
-     * which the {@link #getVertices() vertices} are referenced.
-     * 
-     * @return the two-dimensional horizontal coordinate reference system to
-     *         which the vertices are referenced.
-     */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    /** Gets the spacing between coordinate values, might be negative. */
+    public double getCoordinateSpacing();
 
-    /**
-     * Returns the list of vertices that define this polygon in the horizontal
-     * plane. The coordinates of the vertices are defined in this object's
-     * {@link #getCoordinateReferenceSystem() coordinate reference system}. The
-     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
-     * as this object, but they may not have a non-null CRS that is different
-     * from that of this object.
-     * 
-     * @return the list of vertices that define this polygon in the horizontal
-     *         plane.
-     * @todo define whether the polygon is closed, and whether there is a
-     *       particular order (clockwise or anticlockwise) to the vertices.
-     */
-    public List<HorizontalPosition> getVertices();
 }

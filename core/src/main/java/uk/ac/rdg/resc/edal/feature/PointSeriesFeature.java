@@ -28,19 +28,16 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
-import java.util.Set;
-
-import uk.ac.rdg.resc.edal.Extent;
-import uk.ac.rdg.resc.edal.coverage.PointSeriesCoverage;
+import org.joda.time.DateTime;
+import uk.ac.rdg.resc.edal.domain.PointSeriesDomain;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.TimePosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A measurement of a time series at a point
  * @author Jon Blower
  */
-public interface PointSeriesFeature extends Feature {
+public interface PointSeriesFeature extends DiscreteFeature<DateTime, DateTime> {
     /**
      * Gets the horizontal location of this point series feature.
      * 
@@ -54,9 +51,7 @@ public interface PointSeriesFeature extends Feature {
      * @return the vertical location of this point series feature.
      */
     public VerticalPosition getVerticalPosition();
-
-    @Override
-    public PointSeriesCoverage getCoverage();
     
-    public PointSeriesFeature extractSubFeature(Extent<TimePosition> tExtent, Set<String> memberNames);
+    @Override
+    public PointSeriesDomain getDomain();
 }

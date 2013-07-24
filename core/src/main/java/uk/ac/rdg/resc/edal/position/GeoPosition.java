@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.position;
 
+import org.joda.time.DateTime;
+
 /**
  * <p>
  * Defines the position of a point in four-dimensional space and time.
@@ -49,8 +51,8 @@ public interface GeoPosition {
     public VerticalPosition getVerticalPosition();
 
     /**
-     * @return the {@link TimePosition} component of this {@link GeoPosition}
+     * @return the time component of this {@link GeoPosition}
      */
-    public TimePosition getTimePosition();
+    public DateTime getTimePosition();
 
 }

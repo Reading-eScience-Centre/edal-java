@@ -26,42 +26,47 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.geometry;
+package uk.ac.rdg.resc.edal.util;
 
-import java.util.List;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.domain.Domain;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import java.util.Iterator;
 
 /**
- * A polygon in the horizontal plane, defined by a list of vertices in a given
- * coordinate reference system.
- * 
- * @author Jon Blower
+ * An multidimensional array of values
+ * @param <E> the type of the values within the array
+ * @author Jon Blower, Guy Griffiths
+ * @todo Would a toList() method be useful here?
  */
-public interface Polygon extends Domain<HorizontalPosition> {
-
+public interface Array<E> extends Iterable<E>
+{
     /**
-     * Returns the two-dimensional horizontal coordinate reference system to
-     * which the {@link #getVertices() vertices} are referenced.
-     * 
-     * @return the two-dimensional horizontal coordinate reference system to
-     *         which the vertices are referenced.
+     * Gets the number of dimensions of the array.  Equal to getShape().length.
+     * @return 
      */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
-
+    public int getNDim();
+    
     /**
-     * Returns the list of vertices that define this polygon in the horizontal
-     * plane. The coordinates of the vertices are defined in this object's
-     * {@link #getCoordinateReferenceSystem() coordinate reference system}. The
-     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
-     * as this object, but they may not have a non-null CRS that is different
-     * from that of this object.
-     * 
-     * @return the list of vertices that define this polygon in the horizontal
-     *         plane.
-     * @todo define whether the polygon is closed, and whether there is a
-     *       particular order (clockwise or anticlockwise) to the vertices.
+     * Gets the shape of the array, i.e. the number of points in each direction.
+     * @return 
      */
-    public List<HorizontalPosition> getVertices();
+    public int[] getShape();
+    
+    /**
+     * Gets the runtime class of values within the Array.
+     * @return 
+     */
+    public Class<E> getValueClass();
+    
+    /**
+     * Returns an iterator over all the values in the array.  The convention is
+     * that the last dimension (represented by the last entry in getShape())
+     * varies fastest.
+     */
+    @Override
+    public Iterator<E> iterator();
+    
+    /**
+     * Gets the number of values in the array.
+     * @return 
+     */
+    public long size();
 }

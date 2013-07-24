@@ -26,42 +26,72 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.geometry;
+package uk.ac.rdg.resc.edal.grid;
 
-import java.util.List;
+import org.joda.time.Chronology;
+import org.joda.time.DateTime;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.domain.Domain;
+
+import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.domain.GridSeriesDomain;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
- * A polygon in the horizontal plane, defined by a list of vertices in a given
- * coordinate reference system.
+ * A cell in a {@link GridSeriesDomain}, which can have up to four dimensions.
  * 
  * @author Jon Blower
  */
-public interface Polygon extends Domain<HorizontalPosition> {
+public interface GridCell4D extends Domain<GeoPosition>
+{
 
     /**
-     * Returns the two-dimensional horizontal coordinate reference system to
-     * which the {@link #getVertices() vertices} are referenced.
-     * 
-     * @return the two-dimensional horizontal coordinate reference system to
-     *         which the vertices are referenced.
+     * @return the time index of the grid cell in the parent grid
      */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    public int getTimeIndex();
 
     /**
-     * Returns the list of vertices that define this polygon in the horizontal
-     * plane. The coordinates of the vertices are defined in this object's
-     * {@link #getCoordinateReferenceSystem() coordinate reference system}. The
-     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
-     * as this object, but they may not have a non-null CRS that is different
-     * from that of this object.
-     * 
-     * @return the list of vertices that define this polygon in the horizontal
-     *         plane.
-     * @todo define whether the polygon is closed, and whether there is a
-     *       particular order (clockwise or anticlockwise) to the vertices.
+     * @return the z index of the grid cell in the parent grid
      */
-    public List<HorizontalPosition> getVertices();
+    public int getVerticalIndex();
+
+    /**
+     * @return the centre of the grid cell in horizontal space
+     */
+    public HorizontalPosition getCentre();
+
+    /**
+     * @return the footprint of this grid cell in horizontal space.
+     */
+    public Polygon getFootprint();
+
+    /**
+     * @return the {@link CoordinateReferenceSystem} of the horizontal component
+     *         of the grid cell
+     */
+    public CoordinateReferenceSystem getHorizontalCrs();
+
+    /**
+     * @return the range of valid times in the time axis of parent grid
+     */
+    public Extent<DateTime> getTimeExtent();
+
+    /**
+     * @return the range of valid integers in the vertical axis of parent grid
+     */
+    public Extent<VerticalPosition> getVerticalExtent();
+
+    /**
+     * @return the {@link Chronology} used in this grid cell
+     */
+    public Chronology getChronology();
+
+    /**
+     * @return the parent grid of this grid cell
+     */
+    public GridSeriesDomain getGrid();
+
 }

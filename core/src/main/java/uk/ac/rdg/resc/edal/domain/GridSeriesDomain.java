@@ -26,42 +26,57 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.geometry;
+package uk.ac.rdg.resc.edal.domain;
 
-import java.util.List;
+import org.joda.time.Chronology;
+
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.domain.Domain;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+
+import uk.ac.rdg.resc.edal.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
- * A polygon in the horizontal plane, defined by a list of vertices in a given
- * coordinate reference system.
+ * The domain of a {@link GridSeriesFeature}, modelled as a composition of a
+ * horizontal grid, plus t and z axes.
  * 
+ * @todo Explain that GridCoordinates are 4D and explain ordering.
  * @author Jon Blower
  */
-public interface Polygon extends Domain<HorizontalPosition> {
+public interface GridSeriesDomain extends DiscreteDomain<GeoPosition, GridCell4D> {
 
     /**
-     * Returns the two-dimensional horizontal coordinate reference system to
-     * which the {@link #getVertices() vertices} are referenced.
-     * 
-     * @return the two-dimensional horizontal coordinate reference system to
-     *         which the vertices are referenced.
+     * @return the horizontal component of this domain
      */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    public HorizontalGrid getHorizontalGrid();
 
     /**
-     * Returns the list of vertices that define this polygon in the horizontal
-     * plane. The coordinates of the vertices are defined in this object's
-     * {@link #getCoordinateReferenceSystem() coordinate reference system}. The
-     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
-     * as this object, but they may not have a non-null CRS that is different
-     * from that of this object.
-     * 
-     * @return the list of vertices that define this polygon in the horizontal
-     *         plane.
-     * @todo define whether the polygon is closed, and whether there is a
-     *       particular order (clockwise or anticlockwise) to the vertices.
+     * @return the vertical component of this domain
      */
-    public List<HorizontalPosition> getVertices();
+    public VerticalAxis getVerticalAxis();
+
+    /**
+     * @return the time component of this domain
+     */
+    public TimeAxis getTimeAxis();
+
+    /**
+     * @return the {@link CoordinateReferenceSystem} of the horizontal component
+     *         of this domain
+     */
+    public CoordinateReferenceSystem getHorizontalCrs();
+
+    /**
+     * @return the {@link VerticalCrs} of the vertical component of this domain
+     */
+    public VerticalCrs getVerticalCrs();
+
+    /**
+     * @return the {@link Chronology} of the time component of this domain
+     */
+    public Chronology getChronology();
+
 }
