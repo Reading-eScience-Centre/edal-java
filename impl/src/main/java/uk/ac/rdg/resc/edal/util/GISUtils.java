@@ -887,15 +887,17 @@ public final class GISUtils {
          * -7-intersecting-simple-shapes/ray-box-intersection/
          */
 
-        double tmin = (bbox.getMinX() - p0.getX()) / (p1.getX() - p0.getX());
-        double tmax = (bbox.getMaxX() - p0.getX()) / (p1.getX() - p0.getX());
+        double xSpan = (p1.getX() - p0.getX());
+        double ySpan = (p1.getY() - p0.getY());
+        double tmin = (bbox.getMinX() - p0.getX()) / xSpan;
+        double tmax = (bbox.getMaxX() - p0.getX()) / xSpan;
         if (tmin > tmax) {
             double temp = tmin;
             tmin = tmax;
             tmax = temp;
         }
-        double tymin = (bbox.getMinY() - p0.getY()) / (p1.getY() - p0.getY());
-        double tymax = (bbox.getMaxY() - p0.getY()) / (p1.getY() - p0.getY());
+        double tymin = (bbox.getMinY() - p0.getY()) / ySpan;
+        double tymax = (bbox.getMaxY() - p0.getY()) / ySpan;
         if (tymin > tymax) {
             double temp = tymin;
             tymin = tymax;

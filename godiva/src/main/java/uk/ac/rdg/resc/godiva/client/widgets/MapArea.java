@@ -680,7 +680,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         WMSParams wmsParams;
         WMSOptions wmsOptions;
         wmsOptions = new WMSOptions();
-        wmsOptions.setProjection("CRS:84");
+        wmsOptions.setProjection("EPSG:4326");
         wmsOptions.setWrapDateLine(true);
         wmsParams = new WMSParams();
         wmsParams.setLayers("basic");
