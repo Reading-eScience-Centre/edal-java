@@ -26,72 +26,58 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.position;
+package uk.ac.rdg.resc.edal.feature;
 
-import uk.ac.rdg.resc.edal.metadata.Unit;
+import java.util.Set;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 
 /**
- * <p>
- * A vertical coordinate reference system.
- * </p>
- * <p>
- * We don't use GeoAPI's VerticalCRS class here as we need to incorporate
- * pressure and dimensionless coordinates.
- * </p>
+ * Contains the data values returned by a {@link Feature}.
  * 
  * @author Jon Blower
  */
-public interface VerticalCrs {
-    /**
-     * An enum representing which direction is positive
-     * 
-     * @author Jon Blower
-     */
-    public enum PositiveDirection {
-        UP, DOWN;
-        public boolean isPositive() {
-            if (this == PositiveDirection.UP) {
-                return true;
-            }
-            return false;
-        }
-    }
-
-    /**
-     * @return the {@link Unit} for the values in this {@link VerticalCrs}
-     */
-    public Unit getUnits();
-
-    /**
-     * Return true if this axis has units of pressure. If this is true then the
-     * positive direction must be DOWN.
-     */
-    public boolean isPressure();
+public interface Record {
 
     /**
      * <p>
-     * Return true if this is a dimensionless (e.g. sigma or terrain-following)
-     * coordinate system. If this is true then the units are irrelevant, and
-     * isPressure() will return false.
+     * Gets the value of the given feature member..
      * </p>
      * <p>
-     * Future APIs will need to allow conversions between dimensionless and
-     * dimensional coordinates, which will require more information. (The
-     * conversion can be performed using existing routines, e.g. in
-     * Java-NetCDF.) However, the current purpose of EDAL is not to perform the
-     * conversion but to provide client code with enough information to decide
-     * what to do.
+     * <i>This is called locate() in GeoAPI - I don't know why (presumably this
+     * reflects the standard, but it seems like an odd name).</i>
      * </p>
      * 
-     * @see http
-     *      ://cf-pcmdi.llnl.gov/documents/cf-conventions/1.5/cf-conventions.
-     *      html#dimensionless-v-coord
+     * @param paramId
+     *            The name of a member of this record as provided by the
+     *            Feature's {@link Feature#getParameterIds() set of parameter ids}.
+     * @return the value of the given member. The runtime type of the value is
+     *         given by {@link #getParameter(java.lang.String) getParameter(paramId)}.
+     * @throws IllegalArgumentException
+     *             if {@code paramId} is not a valid parameter Id
      */
-    public boolean isDimensionless();
+    public Object getValue(String paramId);
 
     /**
-     * Indicates whether coordinate values increase upward or downward.
+     * Returns a Set of unique identifiers, one for each member of the coverage.
+     * These identifiers are not (necessarily) intended to be human-readable.
+     * 
+     * @return a Set of unique identifiers, one for each member of the coverage.
      */
-    public PositiveDirection getPositiveDirection();
+    public Set<String> getParameterIds();
+
+    /**
+     * Returns a description of the values returned by the coverage (including
+     * their units and the phenomenon they represent) for a
+     * particular member.
+     * 
+     * @param memberName
+     *            The unique identifier of the member
+     * @return a description of the values returned by the coverage for a
+     *         particular member.
+     * @throws IllegalArgumentException
+     *             if {@code memberName} is not present in the
+     *             {@link #getMemberNames() set of member names}.
+     */
+    public Parameter getParameter(String paramId);
 
 }

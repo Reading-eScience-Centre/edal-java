@@ -26,42 +26,34 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.geometry;
-
-import java.util.List;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.domain.Domain;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+package uk.ac.rdg.resc.edal.metadata;
 
 /**
- * A polygon in the horizontal plane, defined by a list of vertices in a given
- * coordinate reference system.
+ * Enumeration of vocabularies that can be used to interpret a {@link Unit}
+ * string.
  * 
  * @author Jon Blower
  */
-public interface Polygon extends Domain<HorizontalPosition> {
+public enum UnitVocabulary {
+    /**
+     * The Unified Code for Units of Measure.
+     * 
+     * @see http://unitsofmeasure.org/
+     */
+    UCUM,
 
     /**
-     * Returns the two-dimensional horizontal coordinate reference system to
-     * which the {@link #getVertices() vertices} are referenced.
-     * 
-     * @return the two-dimensional horizontal coordinate reference system to
-     *         which the vertices are referenced.
+     * Unidata UDUNITS
      */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    UDUNITS,
 
     /**
-     * Returns the list of vertices that define this polygon in the horizontal
-     * plane. The coordinates of the vertices are defined in this object's
-     * {@link #getCoordinateReferenceSystem() coordinate reference system}. The
-     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
-     * as this object, but they may not have a non-null CRS that is different
-     * from that of this object.
-     * 
-     * @return the list of vertices that define this polygon in the horizontal
-     *         plane.
-     * @todo define whether the polygon is closed, and whether there is a
-     *       particular order (clockwise or anticlockwise) to the vertices.
+     * UDUNITS version 2
      */
-    public List<HorizontalPosition> getVertices();
+    UDUNITS2,
+
+    /**
+     * Unknown unit vocabulary: units cannot be converted to another system.
+     */
+    UNKNOWN;
 }

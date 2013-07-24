@@ -1,6 +1,7 @@
 package uk.ac.rdg.resc.edal.feature;
 
-import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
+import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
  * A {@link Feature} representing values over a 1-dimensional domain of
@@ -10,8 +11,10 @@ import uk.ac.rdg.resc.edal.coverage.TrajectoryCoverage;
  * @author Guy Griffiths
  * 
  */
-public interface TrajectoryFeature extends Feature {
-
+public interface TrajectoryFeature extends DiscreteFeature<GeoPosition, GeoPosition>
+{
+    
     @Override
-    public TrajectoryCoverage getCoverage();
+    public TrajectoryDomain getDomain();
+    
 }

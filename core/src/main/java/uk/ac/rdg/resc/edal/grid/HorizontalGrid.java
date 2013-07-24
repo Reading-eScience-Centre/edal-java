@@ -26,42 +26,56 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.geometry;
+package uk.ac.rdg.resc.edal.grid;
 
-import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.domain.Domain;
+
+import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * A polygon in the horizontal plane, defined by a list of vertices in a given
- * coordinate reference system.
+ * A two-dimensional grid in the horizontal plane that is referenced to a 2D
+ * horizontal coordinate reference system. If each individual grid axis is
+ * aligned with the axes of the CRS, the {@link RectilinearGrid} class can be
+ * used.
  * 
  * @author Jon Blower
  */
-public interface Polygon extends Domain<HorizontalPosition> {
+public interface HorizontalGrid extends DiscreteDomain<HorizontalPosition, GridCell2D> {
 
     /**
-     * Returns the two-dimensional horizontal coordinate reference system to
-     * which the {@link #getVertices() vertices} are referenced.
+     * {@inheritDoc}
+     * <p>
+     * This may or may not be aligned with any of the real-world coordinate axes
+     * in the {@link #getCoordinateReferenceSystem() coordinate reference
+     * system}.
+     * </p>
+     */
+    public GridAxis getXAxis();
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This may or may not be aligned with any of the real-world coordinate axes
+     * in the {@link #getCoordinateReferenceSystem() coordinate reference
+     * system}.
+     * </p>
+     */
+    public GridAxis getYAxis();
+
+    /**
+     * Returns a two-dimensional horizontal coordinate reference system.
      * 
-     * @return the two-dimensional horizontal coordinate reference system to
-     *         which the vertices are referenced.
+     * @return a two-dimensional horizontal coordinate reference system.
      */
     public CoordinateReferenceSystem getCoordinateReferenceSystem();
 
     /**
-     * Returns the list of vertices that define this polygon in the horizontal
-     * plane. The coordinates of the vertices are defined in this object's
-     * {@link #getCoordinateReferenceSystem() coordinate reference system}. The
-     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
-     * as this object, but they may not have a non-null CRS that is different
-     * from that of this object.
+     * Gets the bounding box for the coordinates of the grid in the grid's
+     * coordinate reference system.
      * 
-     * @return the list of vertices that define this polygon in the horizontal
-     *         plane.
-     * @todo define whether the polygon is closed, and whether there is a
-     *       particular order (clockwise or anticlockwise) to the vertices.
+     * @return A {@link BoundingBox} containing the co-ordinates of the grid
      */
-    public List<HorizontalPosition> getVertices();
+    public BoundingBox getCoordinateExtent();
 }

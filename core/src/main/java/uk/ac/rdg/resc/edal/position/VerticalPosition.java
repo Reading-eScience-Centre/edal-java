@@ -39,7 +39,7 @@ public interface VerticalPosition extends Comparable<VerticalPosition> {
      * Returns the vertical coordinate of this position, equivalent to
      * getOrdinate(0)
      */
-    public Double getZ();
+    public double getZ();
 
     /**
      * Returns a vertical coordinate reference system.

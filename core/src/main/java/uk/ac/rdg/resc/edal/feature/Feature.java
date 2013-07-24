@@ -28,23 +28,22 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
-import uk.ac.rdg.resc.edal.coverage.Coverage;
+import java.util.Set;
+import uk.ac.rdg.resc.edal.domain.Domain;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 
 /**
  * <p>
  * Superclass for all Feature types.
  * </p>
- * 
+ * @param <P>
+ *            The type of object used to identify positions within the
+ *            feature's domain. This may be a spatial, temporal, or combined
+ *            spatiotemporal position.
  * @author Jon Blower
  */
-public interface Feature {
-    /**
-     * Gets the {@link FeatureCollection} to which this feature belongs. If this
-     * feature does not belong to a collection, this will return null.
-     * 
-     * @return
-     */
-    public FeatureCollection<? extends Feature> getFeatureCollection();
+public interface Feature<P>
+{
 
     /**
      * Gets an identifier that is unique within the
@@ -65,9 +64,21 @@ public interface Feature {
      * @return
      */
     public String getDescription();
-
+    
     /**
-     * Gets the measurement values
+     * Gets the domain of the values contained with the feature
+     * @return 
      */
-    public Coverage<?> getCoverage();
+    public Domain<P> getDomain();
+    
+    /**
+     * Gets the set of identifiers of the parameters of this Feature ({@literal i.e.}
+     * the variables that the feature records).
+     * @return 
+     */
+    public Set<String> getParameterIds();
+    
+    public Parameter getParameter(String parameterId);
+    
+    
 }
