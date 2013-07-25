@@ -29,27 +29,42 @@
  */
 package uk.ac.rdg.resc.edal.dataset;
 
-import java.io.IOException;
-import java.util.Map;
-
 /**
- * A factory for {@link Dataset} objects.  The intention is that one factory
- * object will be created for each type of data source (e.g. one factory object
- * per file format).  These objects can be stateless (hence thread-safe) singletons
- * and shared between datasets.
- * @param <D> The type of Dataset that this factory creates.
+ * Describes a grid of data held by a {@link GridDataset}.
+ * @todo should this inherit from VariableMetadata?  Then we could specialize
+ * the getXDomain() methods to return more specific types.
  * @author Jon
  */
-public interface DatasetFactory<D extends Dataset>
+public interface GridMetadata
 {
+    
+    public String getId();
+    
     /**
-     * Returns a Dataset object representing the data at the given location.
-     * @param location The location of the source data: this may be a file,
-     * database connection string or a remote server address.
-     * @param parameters Parameters that affect the creation of the dataset.
-     * These are specific to the Factory in question.
-     * @return 
+     * Gets the number of dimensions of the grid.
      */
-    public D createDataset(String location, Map<String, Object> parameters) throws IOException;
+    public int getNDim();
+    
+    public int[] getShape();
+    
+    /**
+     * Returns the index of the x axis within the grid
+     */
+    public int getXAxisIndex();
+    
+    /**
+     * Returns the index of the y axis within the grid
+     */
+    public int getYAxisIndex();
+    
+    /**
+     * Returns the index of the vertical axis within the grid
+     */
+    public int getZAxisIndex();
+    
+    /**
+     * Returns the index of the time axis within the grid
+     */
+    public int getTAxisIndex();
     
 }

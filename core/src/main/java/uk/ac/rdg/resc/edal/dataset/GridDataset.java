@@ -29,10 +29,39 @@
  */
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.io.IOException;
+import java.util.Set;
+import org.joda.time.DateTime;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
+
 /**
  * Interface for reading gridded data and associated metadata.
  * @author Jon
  */
 public interface GridDataset extends Dataset {
+    
+    /**
+     * Gets the identifiers of each of the underlying grids of data.  In some
+     * cases these may be the same as the set of variable IDs ({@link #getVariableIds()}).
+     * However, sometimes a variable may be composed from more than one underlying
+     * grid (e.g. sea water density calculated from temperature and pressure "primitives")
+     * and so not all variables will have a corresponding data grid.  Conversely,
+     * a Dataset may choose not to expose all the underlying data grids as
+     * publicly-visible variables.
+     * @return 
+     */
+    public Set<String> getDataGridIds();
+    
+    /**
+     * Gets the metadata associated with the underlying data grid with the 
+     * given identifier, which must appear in {@link #getDataGridIds()}.
+     */
+    public GridMetadata getGridMetadata(String dataGridId);
+    
+    
+    public GridFeature readMapData(Set<String> varIds, DateTime time,
+            VerticalPosition zPos, HorizontalGrid hGrid) throws IOException;
     
 }
