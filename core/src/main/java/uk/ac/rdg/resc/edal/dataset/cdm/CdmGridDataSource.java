@@ -121,6 +121,11 @@ final class CdmGridDataSource implements GridDataSource
             float val = this.dataChunk.readFloatValue(index);
             return Float.isNaN(val) ? null : val;
         }
+        
+        @Override
+        public void set(Float val, int... coords) {
+            throw new UnsupportedOperationException("Modificaiton not supported.");
+        }
 
         @Override
         public Iterator<Float> iterator() {

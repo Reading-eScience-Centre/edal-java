@@ -55,6 +55,7 @@ public interface Dataset<F extends Feature>
     
     /**
      * Returns the variables at the top level of the hierarchy.
+     * @todo should this just return the ids?
      */
     public Set<VariableMetadata> getTopLevelVariables();
     

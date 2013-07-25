@@ -40,7 +40,7 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  * Interface for reading gridded data and associated metadata.
  * @author Jon
  */
-public interface GridDataset extends Dataset {
+public interface GridDataset extends Dataset<GridFeature> {
     
     /**
      * Gets the identifiers of each of the underlying grids of data.  In some
@@ -50,6 +50,7 @@ public interface GridDataset extends Dataset {
      * and so not all variables will have a corresponding data grid.  Conversely,
      * a Dataset may choose not to expose all the underlying data grids as
      * publicly-visible variables.
+     * @todo: Do we need these?
      * @return 
      */
     public Set<String> getDataGridIds();
