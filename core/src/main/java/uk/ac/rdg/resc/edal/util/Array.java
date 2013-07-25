@@ -65,6 +65,11 @@ public interface Array<E> extends Iterable<E>
     public Iterator<E> iterator();
     
     /**
+     * Gets a value from the array
+     */
+    public E get(int... coords);
+    
+    /**
      * Gets the number of values in the array.
      * @return 
      */

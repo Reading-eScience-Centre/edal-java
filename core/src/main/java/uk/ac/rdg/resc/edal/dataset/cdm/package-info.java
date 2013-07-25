@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.grid;
-
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-
-import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
-import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-
 /**
- * A two-dimensional grid in the horizontal plane that is referenced to a 2D
- * horizontal coordinate reference system. If each individual grid axis is
- * aligned with the axes of the CRS, the {@link RectilinearGrid} class can be
- * used.
- * 
- * @author Jon Blower
+ * Interface to datasets through the Unidata Common Data Model.  Will be moved
+ * to a separate module in due course.
  */
-public interface HorizontalGrid extends DiscreteDomain<HorizontalPosition, GridCell2D>, HorizontalDomain {
+package uk.ac.rdg.resc.edal.dataset.cdm;
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This may or may not be aligned with any of the real-world coordinate axes
-     * in the {@link #getCoordinateReferenceSystem() coordinate reference
-     * system}.
-     * </p>
-     */
-    public GridAxis getXAxis();
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This may or may not be aligned with any of the real-world coordinate axes
-     * in the {@link #getCoordinateReferenceSystem() coordinate reference
-     * system}.
-     * </p>
-     */
-    public GridAxis getYAxis();
-    
-}

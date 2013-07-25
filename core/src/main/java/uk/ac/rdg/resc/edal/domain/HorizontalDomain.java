@@ -27,29 +27,32 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.ac.rdg.resc.edal.dataset;
+package uk.ac.rdg.resc.edal.domain;
 
-import java.io.IOException;
-import java.util.Map;
+import org.opengis.metadata.extent.GeographicBoundingBox;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * A factory for {@link Dataset} objects.  The intention is that one factory
- * object will be created for each type of data source (e.g. one factory object
- * per file format).  These objects can be stateless (hence thread-safe) singletons
- * and shared between datasets.
- * @param <D> The type of Dataset that this factory creates.
+ * A two-dimensional {@link Domain} in the horizontal plane
  * @author Jon
  */
-public interface DatasetFactory<D extends Dataset>
-{
+public interface HorizontalDomain extends Domain<HorizontalPosition> {
+    
     /**
-     * Returns a Dataset object representing the data at the given location.
-     * @param location The location of the source data: this may be a file,
-     * database connection string or a remote server address.
-     * @param parameters Parameters that affect the creation of the dataset.
-     * These are specific to the Factory in question.
-     * @return 
+     * Returns the bounding box of the domain in the domain's own coordinate
+     * reference system
      */
-    public D createDataset(String location, Map<String, Object> parameters) throws IOException;
+    public BoundingBox getBoundingBox();
+    
+    /**
+     * Returns the bounding box of the domain in WGS84 latitude-longitude
+     * coordinates.
+     */
+    public GeographicBoundingBox getGeographicBoundingBox();
+    
+    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    
     
 }

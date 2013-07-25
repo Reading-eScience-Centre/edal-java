@@ -28,15 +28,14 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.util.Set;
-import org.joda.time.DateTime;
-import uk.ac.rdg.resc.edal.domain.Domain;
+import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.TimeDomain;
+import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
- * Describes a variable held within a dataset.  Variables can be hierarchically
- * nested.
+ * Describes a variable held within a {@link Dataset}.  Variables can be
+ * hierarchically nested.
  * @author Jon
  */
 public interface VariableMetadata {
@@ -58,11 +57,11 @@ public interface VariableMetadata {
      */
     public Parameter getParameter();
     
-    public Domain<HorizontalPosition> getHorizontalDomain();
+    public HorizontalDomain getHorizontalDomain();
     
-    public Domain<VerticalPosition> getVerticalDomain();
+    public VerticalDomain getVerticalDomain();
     
-    public Domain<DateTime> getTemporalDomain();
+    public TimeDomain getTemporalDomain();
     
     public VariableMetadata getParent();
     

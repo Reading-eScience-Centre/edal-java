@@ -27,29 +27,26 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.ac.rdg.resc.edal.dataset;
+package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
 import java.util.Map;
+import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
+import uk.ac.rdg.resc.edal.dataset.GridDataset;
 
 /**
- * A factory for {@link Dataset} objects.  The intention is that one factory
- * object will be created for each type of data source (e.g. one factory object
- * per file format).  These objects can be stateless (hence thread-safe) singletons
- * and shared between datasets.
- * @param <D> The type of Dataset that this factory creates.
+ * {@link DatasetFactory} that creates {@link Dataset}s representing gridded
+ * data read through the Unidata Common Data Model.
  * @author Jon
  */
-public interface DatasetFactory<D extends Dataset>
+public final class CdmGridDatasetFactory implements DatasetFactory<GridDataset>
 {
-    /**
-     * Returns a Dataset object representing the data at the given location.
-     * @param location The location of the source data: this may be a file,
-     * database connection string or a remote server address.
-     * @param parameters Parameters that affect the creation of the dataset.
-     * These are specific to the Factory in question.
-     * @return 
-     */
-    public D createDataset(String location, Map<String, Object> parameters) throws IOException;
+
+    @Override
+    public GridDataset createDataset(String location, Map<String, Object> parameters) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
 }

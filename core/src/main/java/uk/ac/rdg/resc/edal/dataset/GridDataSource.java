@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Reading e-Science Centre, University of Reading, UK
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of Reading e-Science Centre, University of Reading, UK, nor the names of the
+ * 3. Neither the name of The University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
  * 
@@ -30,26 +30,19 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
-import java.util.Map;
+import uk.ac.rdg.resc.edal.util.Array;
 
 /**
- * A factory for {@link Dataset} objects.  The intention is that one factory
- * object will be created for each type of data source (e.g. one factory object
- * per file format).  These objects can be stateless (hence thread-safe) singletons
- * and shared between datasets.
- * @param <D> The type of Dataset that this factory creates.
+ * Low-level interface to multidimensional grids, used by {@link AbstractGridDataset}.
+ * @todo axis order issues: should we define that the returned Array must have
+ * the x axis varying fastest, irrespective of the ordering of the underlying data grid?
  * @author Jon
  */
-public interface DatasetFactory<D extends Dataset>
-{
-    /**
-     * Returns a Dataset object representing the data at the given location.
-     * @param location The location of the source data: this may be a file,
-     * database connection string or a remote server address.
-     * @param parameters Parameters that affect the creation of the dataset.
-     * These are specific to the Factory in question.
-     * @return 
-     */
-    public D createDataset(String location, Map<String, Object> parameters) throws IOException;
+public interface GridDataSource {
+    
+    public Array<? extends Number> read(GridMetadata gridMetadata, int tIndex, int zIndex,
+        int ymin, int ymax, int xmin, int xmax) throws IOException;
+    
+    public void close() throws IOException;
     
 }
