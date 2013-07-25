@@ -25,15 +25,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.ac.rdg.resc.edal.dataset;
+package uk.ac.rdg.resc.edal.dataset.cdm;
 
-import com.sun.java.util.jar.pack.ConstantPool.Index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import uk.ac.rdg.resc.edal.dataset.PixelMap.PixelMapEntry;
-import uk.ac.rdg.resc.edal.util.Array;
+import ucar.ma2.Index;
+import ucar.nc2.dataset.VariableDS;
+import ucar.nc2.dt.GridDatatype;
+import uk.ac.rdg.resc.edal.dataset.cdm.PixelMap.PixelMapEntry;
 
 /**
  * <p>Defines different strategies for reading data from files. The grid below represents the source
@@ -264,13 +265,13 @@ public enum DataReadingStrategy
     };
 
     /**
-     * Reads data from the given GridDataSource, populating the passed-in array
+     * Reads data from the given GridDatatype, populating the passed-in array
      * of floats.  Returns the number of bytes actually read from the source data files
      * (which may be considerably larger than the size of the data array).
      * @see PixelMap
      */
-    public Array<? extends Number> readMapData(GridDataSource dataSource,
-         String varId, int tIndex, int zIndex, PixelMap pixelMap) throws IOException;
+    public final int readData(int tIndex, int zIndex, GridDatatype grid, PixelMap pixelMap,
+            float[] data) throws IOException
     {
         // Set the time and z ranges
         RangesList rangesList = new RangesList(grid);
@@ -290,6 +291,6 @@ public enum DataReadingStrategy
      * Reads data from the given variable, populating the given data array
      * @return The number of data points actually read from the source data
      */
-    abstract Array<? extends Number> readMapData(GridDataSource dataSource,
-         String varId, int tIndex, int zIndex, PixelMap pixelMap) throws IOException;
+    abstract int populatePixelArray(float[] data, PixelMap pixelMap, VariableDS var, RangesList ranges)
+        throws IOException;
 }

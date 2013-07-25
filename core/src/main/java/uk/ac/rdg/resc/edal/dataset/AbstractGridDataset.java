@@ -71,7 +71,8 @@ public abstract class AbstractGridDataset implements GridDataset
             VariableMetadata vm = this.getVariableMetadata(varId);
             
             // TODO: if this is a variable whose values are derived (rather than
-            // being read directly) we need to work out which 
+            // being read directly) we need to work out which of the underlying
+            // grids we're really going to read.
             
             // Cast down the horizontal, vertical and temporal domain objects
             // to HorizontalGrid, VerticalAxis and TimeAxis.  This should always
@@ -81,7 +82,7 @@ public abstract class AbstractGridDataset implements GridDataset
             VerticalAxis zAxis        = (VerticalAxis)   vm.getVerticalDomain();
             TimeAxis tAxis            = (TimeAxis)       vm.getTemporalDomain();
             
-            // Use this object to convert natural coordinates to grid indices
+            // Use these objects to convert natural coordinates to grid indices
             int tIndex = tAxis.findIndexOf(time);
             int zIndex = zAxis.findIndexOf(zPos);
             // Create a PixelMap from the source and target grids
@@ -94,14 +95,14 @@ public abstract class AbstractGridDataset implements GridDataset
             // Create new VariableMetadata object with the new domain, units etc
             VariableMetadata newVm = null; // TODO
             
-            values.put(varId, gvm);
+            values.put(varId, data);
             metadata.put(varId, newVm);
         }
         
         // Release resources held by the DataSource
         dataSource.close();
         
-        // Construct the GridFeature from the t and z values and the horizontal grid
+        // Construct the GridFeature from the t and z values, the horizontal grid
         // and the VariableMetadata objects
         GridFeature gf = null; // TODO
         

@@ -70,6 +70,11 @@ public interface Array<E> extends Iterable<E>
     public E get(int... coords);
     
     /**
+     * Sets a value in the array (optional operation)
+     */
+    public void set(E value, int... coords);
+    
+    /**
      * Gets the number of values in the array.
      * @return 
      */
