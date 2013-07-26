@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ ******************************************************************************/
 
 package uk.ac.rdg.resc.edal.geometry;
 
@@ -32,14 +32,13 @@ import org.opengis.geometry.Envelope;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * A rectangular bounding box in the horizontal plane. Extends
- * {@link Envelope} by providing convenience methods for accessing minimum and
- * maximum x and y values.
+ * A rectangular bounding box in the horizontal plane. Extends {@link Envelope}
+ * by providing convenience methods for accessing minimum and maximum x and y
+ * values.
  * 
  * @author Jon Blower
  */
-public interface BoundingBox extends Envelope, Polygon
-{
+public interface BoundingBox extends Envelope, Polygon {
     /**
      * Gets the minimum ordinate along the first axis, equivalent to
      * {@code getMinimum(0)}.
@@ -63,17 +62,17 @@ public interface BoundingBox extends Envelope, Polygon
      * {@code getMaximum(1)}.
      */
     public double getMaxY();
-    
+
     /**
      * Gets the width of the bounding box, i.e. {@code getMaxX() - getMinX()}.
      */
     public double getWidth();
-    
+
     /**
      * Gets the height of the bounding box, i.e. {@code getMaxY() - getMinY()}.
      */
     public double getHeight();
-    
+
     /**
      * Gets the position (getMinX(), getMinY())
      */

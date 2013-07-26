@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -24,17 +24,17 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ ******************************************************************************/
 
 package uk.ac.rdg.resc.edal.domain;
 
 /**
  * <p>
  * Defines a contiguous domain that is defined by "low" and "high" bounds. Any
- * value between or including these values is considered part of the domain.
- * A null value for "low" or "high" indicates that the extent is unbounded at 
- * that end.  If both values are null, then the Extent includes all possible
- * values of P.
+ * value between or including these values is considered part of the domain. A
+ * null value for "low" or "high" indicates that the extent is unbounded at that
+ * end. If both values are null, then the Extent includes all possible values of
+ * P.
  * </p>
  * 
  * @param P

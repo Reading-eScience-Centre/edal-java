@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -24,31 +24,29 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ ******************************************************************************/
 
 package uk.ac.rdg.resc.edal.feature;
-
 
 import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
 import uk.ac.rdg.resc.edal.util.Array;
 
 /**
  * <p>
- * A {@link Feature} whose domain consists of a finite number of domain
- * objects, each of which is associated with a single measurement value from each
- * Feature member.
+ * A {@link Feature} whose domain consists of a finite number of domain objects,
+ * each of which is associated with a single measurement value from each Feature
+ * member.
  * </p>
  * 
  * @param <P>
- *            The type of object used to identify positions within the
- *            feature's domain. This may be a spatial, temporal, or combined
+ *            The type of object used to identify positions within the feature's
+ *            domain. This may be a spatial, temporal, or combined
  *            spatiotemporal position.
  * @param <DO>
  *            The type of domain object
  * @author Jon Blower
  */
-public interface DiscreteFeature<P, DO> extends Feature<P>
-{
+public interface DiscreteFeature<P, DO> extends Feature<P> {
     /** {@inheritDoc} */
     @Override
     public DiscreteDomain<P, DO> getDomain();
@@ -60,9 +58,9 @@ public interface DiscreteFeature<P, DO> extends Feature<P>
      * @return the list of objects that comprise this coverage's range.
      * @todo Preserve for possible future use but don't implement for now
      */
-    //public List<Record> getValues();
+    // public List<Record> getValues();
 
-    /**
+/**
      * Gets the array of values for the given parameter.  The shape of this array
      * must match the shape of the array of domain objects
      * (from {@link DiscreteDomain#getDomainObjects()}).
@@ -90,7 +88,7 @@ public interface DiscreteFeature<P, DO> extends Feature<P>
      *         domain.
      * @todo Preserve for possible future use but don't implement for now
      */
-    //public DomainObjectValuePair<DO> locate(P position);
+    // public DomainObjectValuePair<DO> locate(P position);
 
     /**
      * <p>
@@ -103,7 +101,7 @@ public interface DiscreteFeature<P, DO> extends Feature<P>
      * @return all the domain-object/record pairs in the coverage
      * @todo Preserve for possible future use but don't implement for now
      */
-    //public List<DomainObjectValuePair<DO>> list();
+    // public List<DomainObjectValuePair<DO>> list();
 
     /**
      * Gets the number of distinct values in this coverage. (Equivalent to
