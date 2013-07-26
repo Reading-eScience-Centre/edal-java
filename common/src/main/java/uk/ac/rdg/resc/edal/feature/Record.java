@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ ******************************************************************************/
 
 package uk.ac.rdg.resc.edal.feature;
 
@@ -49,9 +49,11 @@ public interface Record {
      * 
      * @param paramId
      *            The name of a member of this record as provided by the
-     *            Feature's {@link Feature#getParameterIds() set of parameter ids}.
+     *            Feature's {@link Feature#getParameterIds() set of parameter
+     *            ids}.
      * @return the value of the given member. The runtime type of the value is
-     *         given by {@link #getParameter(java.lang.String) getParameter(paramId)}.
+     *         given by {@link #getParameter(java.lang.String)
+     *         getParameter(paramId)}.
      * @throws IllegalArgumentException
      *             if {@code paramId} is not a valid parameter Id
      */
@@ -67,8 +69,7 @@ public interface Record {
 
     /**
      * Returns a description of the values returned by the coverage (including
-     * their units and the phenomenon they represent) for a
-     * particular member.
+     * their units and the phenomenon they represent) for a particular member.
      * 
      * @param memberName
      *            The unique identifier of the member

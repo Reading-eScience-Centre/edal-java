@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2011 The University of Reading
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -24,14 +24,19 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ ******************************************************************************/
 
 package uk.ac.rdg.resc.edal.util;
 
 /**
- * <p>A resizeable array of unsigned bytes.  Data are stored in an array of
- * primitive bytes.</p>
- * <p>Instances of this class are not thread safe.</p>
+ * <p>
+ * A resizeable array of unsigned bytes. Data are stored in an array of
+ * primitive bytes.
+ * </p>
+ * <p>
+ * Instances of this class are not thread safe.
+ * </p>
+ * 
  * @author Jon Blower
  */
 public final class RUByteArray extends RArray {
@@ -51,9 +56,12 @@ public final class RUByteArray extends RArray {
 
     /**
      * Creates an array with the given initial capacity and chunk size.
-     * @param initialCapacity The number of elements in the storage array
-     * @param chunkSize The number of storage elements that will be added each
-     * time the storage array grows.
+     * 
+     * @param initialCapacity
+     *            The number of elements in the storage array
+     * @param chunkSize
+     *            The number of storage elements that will be added each time
+     *            the storage array grows.
      */
     public RUByteArray(int initialCapacity, int chunkSize) {
         super(initialCapacity, chunkSize);
@@ -66,9 +74,12 @@ public final class RUByteArray extends RArray {
 
     /**
      * Returns the <i>i</i>th element of the array.
-     * @param i The index of the element to return.
+     * 
+     * @param i
+     *            The index of the element to return.
      * @return the <i>i</i>th element of the array.
-     * @throws ArrayIndexOutOfBoundsException if {@code i >= size()}
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code i >= size()}
      */
     @Override
     public long getLong(int i) {
@@ -83,9 +94,8 @@ public final class RUByteArray extends RArray {
         return this.getStorage()[i] & 0xff;
     }
 
-    private byte[] getStorage()
-    {
-        return (byte[])this.storage;
+    private byte[] getStorage() {
+        return (byte[]) this.storage;
     }
 
     @Override
@@ -95,7 +105,7 @@ public final class RUByteArray extends RArray {
 
     @Override
     protected void setElement(int index, long value) {
-        this.getStorage()[index] = (byte)value;
+        this.getStorage()[index] = (byte) value;
     }
 
     @Override
