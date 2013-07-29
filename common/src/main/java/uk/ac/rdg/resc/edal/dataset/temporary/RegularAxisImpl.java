@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.dataset.temporary;
 
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
-import uk.ac.rdg.resc.edal.dataset.AbstractReferenceableAxis;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.util.Array;
