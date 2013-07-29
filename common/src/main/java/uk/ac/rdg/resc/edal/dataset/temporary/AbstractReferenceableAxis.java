@@ -26,14 +26,13 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.dataset;
+package uk.ac.rdg.resc.edal.dataset.temporary;
 
 import java.util.AbstractList;
 import java.util.List;
 
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 
-import uk.ac.rdg.resc.edal.dataset.temporary.Extents;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 
