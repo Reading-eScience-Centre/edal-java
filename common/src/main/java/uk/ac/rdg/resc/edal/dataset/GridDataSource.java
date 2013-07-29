@@ -29,11 +29,12 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
-import uk.ac.rdg.resc.edal.util.Array;
+
+import uk.ac.rdg.resc.edal.util.ValuesArray4D;
 
 /**
  * Low-level interface to multidimensional grids, used by
- * {@link AbstractGridDataset}.
+ * {@link DataReadingStrategy}.
  * 
  * @todo axis order issues: should we define that the returned Array must have
  *       the x axis varying fastest, irrespective of the ordering of the
@@ -42,7 +43,7 @@ import uk.ac.rdg.resc.edal.util.Array;
  */
 public interface GridDataSource {
 
-    public Array<? extends Number> read(GridMetadata gridMetadata, int tIndex, int zIndex,
+    public ValuesArray4D read(String variableId, int tmin, int tmax, int zmin, int zmax,
             int ymin, int ymax, int xmin, int xmax) throws IOException;
 
     public void close() throws IOException;

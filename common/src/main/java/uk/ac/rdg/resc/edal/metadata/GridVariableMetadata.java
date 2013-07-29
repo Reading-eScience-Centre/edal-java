@@ -28,59 +28,31 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+
 /**
- * <p>
- * Simple immutable class consisting of a string and vocabulary that acts as a
- * namespace for the string. Instances of this class are created through the
- * static factory methods, which give the possibility in future to cache
- * instances of this class, saving object creation and garbage collection.
- * </p>
+ * This is a {@link VariableMetadata} object specialised for discrete 4D grids
  * 
- * @author Jon Blower
+ * @author Guy
  */
-public final class Phenomenon {
-
-    private final String stdName;
-    private final PhenomenonVocabulary phenomVocab;
-
-    private Phenomenon(String stdName, PhenomenonVocabulary phenomVocab) {
-        this.stdName = stdName;
-        this.phenomVocab = phenomVocab;
-    }
+public interface GridVariableMetadata extends VariableMetadata {
+    /**
+     * Returns the {@link HorizontalGrid} of the variable.
+     */
+    @Override
+    public HorizontalGrid getHorizontalDomain();
 
     /**
-     * Gets an instance of a phenomenon with the given standard name in the
-     * given vocabulary.
+     * Returns the {@link VerticalAxis} of the variable
      */
-    public static Phenomenon getPhenomenon(String stdName, PhenomenonVocabulary phenomVocab) {
-        return new Phenomenon(stdName, phenomVocab);
-    }
+    @Override
+    public VerticalAxis getVerticalDomain();
 
     /**
-     * Gets an instance of a phenomenon with the given standard name in an
-     * unknown vocabulary.
+     * Returns the {@link TimeAxis} of the variable
      */
-    public static Phenomenon getPhenomenon(String stdName) {
-        return getPhenomenon(stdName, PhenomenonVocabulary.UNKNOWN);
-    }
-
-    /**
-     * @return a {@link String} containing the standard name of this
-     *         {@link Phenomenon}
-     */
-    public String getStandardName() {
-        return stdName;
-    }
-
-    /**
-     * @return the {@link PhenomenonVocabulary} of which this {@link Phenomenon}
-     *         is a part of
-     */
-    public PhenomenonVocabulary getVocabulary() {
-        return phenomVocab;
-    }
-
-    public String toString() {
-        return getStandardName();
-    }
+    @Override
+    public TimeAxis getTemporalDomain();
 }

@@ -48,5 +48,4 @@ public interface RectilinearGrid extends HorizontalGrid {
      */
     @Override
     public ReferenceableAxis<Double> getYAxis();
-
 }

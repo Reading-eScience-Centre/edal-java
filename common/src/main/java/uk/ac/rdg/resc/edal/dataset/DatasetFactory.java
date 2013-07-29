@@ -32,23 +32,26 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * A factory for {@link Dataset} objects.  The intention is that one factory
+ * A factory for {@link Dataset} objects. The intention is that one factory
  * object will be created for each type of data source (e.g. one factory object
- * per file format).  These objects can be stateless (hence thread-safe) singletons
- * and shared between datasets.
- * @param <D> The type of Dataset that this factory creates.
+ * per file format). These objects can be stateless (hence thread-safe)
+ * singletons and shared between datasets.
+ * 
  * @author Jon
+ * @author Guy
  */
-public interface DatasetFactory<D extends Dataset>
-{
+public interface DatasetFactory {
     /**
      * Returns a Dataset object representing the data at the given location.
-     * @param location The location of the source data: this may be a file,
-     * database connection string or a remote server address.
-     * @param parameters Parameters that affect the creation of the dataset.
-     * These are specific to the Factory in question.
-     * @return 
+     * 
+     * @param location
+     *            The location of the source data: this may be a file, database
+     *            connection string or a remote server address.
+     * @param parameters
+     *            Parameters that affect the creation of the dataset. These are
+     *            specific to the Factory in question.
+     * @return
      */
-    public D createDataset(String location, Map<String, Object> parameters) throws IOException;
-    
+    public Dataset createDataset(String location, Map<String, Object> parameters)
+            throws IOException;
 }

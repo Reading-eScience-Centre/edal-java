@@ -36,15 +36,22 @@ package uk.ac.rdg.resc.edal.position;
 public interface VerticalPosition extends Comparable<VerticalPosition> {
 
     /**
-     * Returns the vertical coordinate of this position, equivalent to
-     * getOrdinate(0)
+     * Returns the vertical coordinate of this position
      */
     public double getZ();
 
     /**
      * Returns a vertical coordinate reference system.
-     * 
-     * @return a vertical coordinate reference system.
      */
     public VerticalCrs getCoordinateReferenceSystem();
+    
+    /*
+     * Comparable, so we need to implement hashCode and equals
+     */
+    
+    @Override
+    public int hashCode();
+    
+    @Override
+    public boolean equals(Object obj);
 }

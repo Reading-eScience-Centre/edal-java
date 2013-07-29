@@ -53,6 +53,5 @@ public interface GeoPosition {
     /**
      * @return the time component of this {@link GeoPosition}
      */
-    public DateTime getTimePosition();
-
+    public DateTime getTime();
 }

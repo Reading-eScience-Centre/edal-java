@@ -30,39 +30,55 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
 import java.util.Set;
+
 import org.joda.time.DateTime;
+
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 
 /**
  * Interface for reading gridded data and associated metadata.
  * 
  * @author Jon
+ * @author Guy
  */
-public interface GridDataset extends Dataset<GridFeature> {
+public interface GridDataset extends Dataset {
+    /**
+     * Returns the {@link GridVariableMetadata} associated with a particular
+     * variable ID
+     */
+    @Override
+    public GridVariableMetadata getVariableMetadata(String variableId);
 
     /**
-     * Gets the identifiers of each of the underlying grids of data. In some
-     * cases these may be the same as the set of variable IDs (
-     * {@link #getVariableIds()}). However, sometimes a variable may be composed
-     * from more than one underlying grid (e.g. sea water density calculated
-     * from temperature and pressure "primitives") and so not all variables will
-     * have a corresponding data grid. Conversely, a Dataset may choose not to
-     * expose all the underlying data grids as publicly-visible variables.
+     * Returns the {@link Set} of {@link GridVariableMetadata} objects which are
+     * at the top level of this {@link GridDataset}
+     */
+    @Override
+    public Set<GridVariableMetadata> getTopLevelVariables();
+
+    /**
+     * Extracts a {@link GridFeature} from this {@link GridDataset}
      * 
-     * @todo: Do we need these?
-     * @return
+     * @param varIds
+     *            The variables to extract
+     * @param hGrid
+     *            The target {@link HorizontalGrid}
+     * @param zPos
+     *            The target z-position
+     * @param time
+     *            The target {@link DateTime}
+     * @return The extracted {@link GridFeature}
+     * @throws IOException
+     *             If the underlying data cannot be read for any reason
      */
-    public Set<String> getDataGridIds();
+    public GridFeature readMapData(Set<String> varIds, HorizontalGrid hGrid, Double zPos,
+            DateTime time) throws IOException;
 
-    /**
-     * Gets the metadata associated with the underlying data grid with the given
-     * identifier, which must appear in {@link #getDataGridIds()}.
-     */
-    public GridMetadata getGridMetadata(String dataGridId);
+//    public PointSeriesFeature readTimeSeriesData(Set<String> varIds, HorizontalPosition hPos,
+//            Double zPos, TimeAxis timeAxis) throws IOException;
 
-    public GridFeature readMapData(Set<String> varIds, DateTime time, VerticalPosition zPos,
-            HorizontalGrid hGrid) throws IOException;
-
+//    public ProfileFeature readProfileData(Set<String> varIds, HorizontalPosition hPos,
+//            VerticalAxis zAxis, DateTime time) throws IOException;
 }

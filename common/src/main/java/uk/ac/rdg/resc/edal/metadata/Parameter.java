@@ -34,6 +34,7 @@ import uk.ac.rdg.resc.edal.feature.Feature;
  * Describes what is being measured by a {@link Feature} or {@link Dataset}.
  * 
  * @author Jon
+ * @author Guy
  */
 public interface Parameter {
 
@@ -55,11 +56,9 @@ public interface Parameter {
      */
     public String getDescription();
 
-    public String getUnits();
-
     /**
-     * The runtime class of the values of this parameter.
+     * 
+     * @return
      */
-    public Class<? extends Number> getValueClass();
-
+    public String getUnits();
 }

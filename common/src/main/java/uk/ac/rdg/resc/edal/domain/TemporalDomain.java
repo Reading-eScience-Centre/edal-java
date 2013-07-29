@@ -26,21 +26,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.metadata;
+package uk.ac.rdg.resc.edal.domain;
+
+import org.joda.time.Chronology;
+import org.joda.time.DateTime;
 
 /**
- * Enumeration of vocabularies for {@link Phenomenon}s.
  * 
- * @author Jon Blower
+ * @author Jon
  */
-public enum PhenomenonVocabulary {
-    /**
-     * The Climate and Forecast standard names
-     * 
-     * @see http://cfconventions.org/
-     */
-    CLIMATE_AND_FORECAST,
+public interface TemporalDomain extends Domain<DateTime> {
 
-    /** Unknown phenomenon vocabulary */
-    UNKNOWN;
+    public Extent<DateTime> getExtent();
+
+    public Chronology getChronology();
+
 }

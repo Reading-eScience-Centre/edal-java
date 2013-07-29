@@ -35,30 +35,21 @@ import java.util.Iterator;
  * 
  * @param <E>
  *            the type of the values within the array
- * @author Jon Blower, Guy Griffiths
+ * @author Jon Blower
+ * @author Guy
+ * 
  * @todo Would a toList() method be useful here?
  */
 public interface Array<E> extends Iterable<E> {
     /**
      * Gets the number of dimensions of the array. Equal to getShape().length.
-     * 
-     * @return
      */
     public int getNDim();
 
     /**
      * Gets the shape of the array, i.e. the number of points in each direction.
-     * 
-     * @return
      */
     public int[] getShape();
-
-    /**
-     * Gets the runtime class of values within the Array.
-     * 
-     * @return
-     */
-    public Class<E> getValueClass();
 
     /**
      * Returns an iterator over all the values in the array. The convention is
@@ -80,8 +71,6 @@ public interface Array<E> extends Iterable<E> {
 
     /**
      * Gets the number of values in the array.
-     * 
-     * @return
      */
     public long size();
 }

@@ -28,30 +28,33 @@
 
 package uk.ac.rdg.resc.edal.domain;
 
-import org.joda.time.DateTime;
-import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 
 /**
- * A part of a {@link SwathDomain}, consisting of a polygon in the horizontal
- * plane and a time instant.
+ * The domain of a {@link GridFeature}, modelled as a composition of a
+ * horizontal grid, plus t and z axes.
  * 
  * @author Jon Blower
+ * @author Guy
  */
-public interface GroundPixel {
+public interface GridDomain extends DiscreteDomain<GeoPosition, GridCell4D> {
+    /**
+     * @return the horizontal component of this domain
+     */
+    public HorizontalGrid getHorizontalGrid();
 
     /**
-     * Returns the time instant at which the ground pixel was observed
-     * 
-     * @return the time instant at which the ground pixel was observed, or null
-     *         if no time information is associated with the ground pixel.
+     * @return the vertical component of this domain
      */
-    public DateTime getDateTime();
+    public VerticalAxis getVerticalAxis();
 
     /**
-     * Returns the polygon defining this ground pixel in the horizontal plane.
-     * 
-     * @return the polygon defining this ground pixel in the horizontal plane.
+     * @return the time component of this domain
      */
-    public Polygon getPolygon();
-
+    public TimeAxis getTimeAxis();
 }

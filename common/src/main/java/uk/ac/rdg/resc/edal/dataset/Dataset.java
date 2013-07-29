@@ -31,33 +31,45 @@ package uk.ac.rdg.resc.edal.dataset;
 import java.io.IOException;
 import java.util.Set;
 import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 /**
- * Provides access to data and metadata held in underlying storage, {@literal e.g.}
- * on disk, in a database or on a remote server.
- * @param <F> The type of Feature that can be read from this dataset
+ * Provides access to data and metadata held in underlying storage,
+ * {@literal e.g.} on disk, in a database or on a remote server.
+ * 
  * @author Jon
+ * @author Guy
  */
-public interface Dataset<F extends Feature>
-{
-    
+public interface Dataset {
+
+    /**
+     * Returns the IDs of features which are present in this Dataset
+     */
     public Set<String> getFeatureIds();
-    
-    public Class<F> getFeatureType();
-    
+
     /**
      * Reads an entire feature from underlying storage
      */
-    public F readFeature(String featureId) throws IOException;
-    
+    public Feature<?> readFeature(String featureId) throws IOException;
+
+    /**
+     * Returns the IDs of variables in this {@link Dataset}. Generally the term
+     * "variable" refers to a measured physical quantity
+     */
     public Set<String> getVariableIds();
-    
+
+    /**
+     * Returns the {@link VariableMetadata} associated with a particular
+     * variable ID
+     * 
+     * @param variableId
+     *            The variable ID to search for
+     * @return The desired {@link VariableMetadata}
+     */
     public VariableMetadata getVariableMetadata(String variableId);
-    
+
     /**
      * Returns the variables at the top level of the hierarchy.
-     * @todo should this just return the ids?
      */
-    public Set<VariableMetadata> getTopLevelVariables();
-    
+    public Set<? extends VariableMetadata> getTopLevelVariables();
 }

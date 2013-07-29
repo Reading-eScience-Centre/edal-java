@@ -28,19 +28,21 @@
 
 package uk.ac.rdg.resc.edal.grid;
 
+import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
  * A vertical axis in a ReferenceableGrid.
  * 
  * @author Jon Blower
+ * @author Guy
  */
-public interface VerticalAxis extends ReferenceableAxis<Double> {
-
+public interface VerticalAxis extends ReferenceableAxis<Double>, VerticalDomain{
     /**
      * Returns the vertical coordinate reference system for coordinates on this
      * axis
      */
+    @Override
     public VerticalCrs getVerticalCrs();
 
     /**

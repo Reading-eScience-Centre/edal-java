@@ -52,5 +52,4 @@ public interface HorizontalDomain extends Domain<HorizontalPosition> {
     public GeographicBoundingBox getGeographicBoundingBox();
 
     public CoordinateReferenceSystem getCoordinateReferenceSystem();
-
 }

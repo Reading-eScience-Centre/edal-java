@@ -29,8 +29,10 @@
 package uk.ac.rdg.resc.edal.domain;
 
 import java.util.List;
+
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
+
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 
 /**
@@ -39,7 +41,7 @@ import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
  * @todo Should be TimeAxis?
  * @author Jon Blower
  */
-public interface PointSeriesDomain extends DiscretePointDomain<DateTime> {
+public interface PointSeriesDomain extends DiscreteDomain<DateTime, Extent<DateTime>> {
     /**
      * @return the Chronology used by time values.
      */

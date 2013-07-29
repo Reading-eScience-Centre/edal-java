@@ -47,20 +47,7 @@ import uk.ac.rdg.resc.edal.util.Array;
  * @author Jon Blower
  */
 public interface DiscreteFeature<P, DO> extends Feature<P> {
-    /** {@inheritDoc} */
-    @Override
-    public DiscreteDomain<P, DO> getDomain();
-
     /**
-     * Gets the list of objects that comprise this coverage's range. There will
-     * be one entry in the list for each domain object, in the same order.
-     * 
-     * @return the list of objects that comprise this coverage's range.
-     * @todo Preserve for possible future use but don't implement for now
-     */
-    // public List<Record> getValues();
-
-/**
      * Gets the array of values for the given parameter.  The shape of this array
      * must match the shape of the array of domain objects
      * (from {@link DiscreteDomain#getDomainObjects()}).
@@ -70,38 +57,13 @@ public interface DiscreteFeature<P, DO> extends Feature<P> {
      *            parameter IDs.
      * @return the list of values for the requested member
      */
-    public Array<? extends Number> getValues(String paramId);
+    public Array<Number> getValues(String paramId);
 
     /**
-     * <p>
-     * Returns the domain object and its associated value corresponding with the
-     * given position.
-     * </p>
-     * <p>
-     * The name of this method is taken from the ISO19123 standard.
-     * </p>
-     * 
-     * @param position
-     *            The position within the coverage's domain
-     * @return the domain object and its associated value corresponding with the
-     *         given position, or null if the position is outside the coverage's
-     *         domain.
-     * @todo Preserve for possible future use but don't implement for now
+     * {@inheritDoc}
      */
-    // public DomainObjectValuePair<DO> locate(P position);
-
-    /**
-     * <p>
-     * Gets all the domain-object/record pairs in the coverage
-     * </p>
-     * <p>
-     * The name of this method is taken from the ISO19123 standard.
-     * </p>
-     * 
-     * @return all the domain-object/record pairs in the coverage
-     * @todo Preserve for possible future use but don't implement for now
-     */
-    // public List<DomainObjectValuePair<DO>> list();
+    @Override
+    public DiscreteDomain<P, DO> getDomain();
 
     /**
      * Gets the number of distinct values in this coverage. (Equivalent to

@@ -31,7 +31,7 @@ package uk.ac.rdg.resc.edal.domain;
 /**
  * <p>
  * Defines a contiguous domain that is defined by "low" and "high" bounds. Any
- * value between or including these values is considered part of the domain. A
+ * value (inclusively) between these values is considered part of the domain. A
  * null value for "low" or "high" indicates that the extent is unbounded at that
  * end. If both values are null, then the Extent includes all possible values of
  * P.
@@ -40,10 +40,11 @@ package uk.ac.rdg.resc.edal.domain;
  * @param P
  *            The type of object used to identify positions within this extent.
  * @author Jon Blower
+ * @author Guy
  */
 public interface Extent<P> extends Domain<P> {
     /**
-     * @return the low bound of this {@link Ehxtent}
+     * @return the low bound of this {@link Extent}
      */
     public P getLow();
 
@@ -51,15 +52,4 @@ public interface Extent<P> extends Domain<P> {
      * @return the high bound of this {@link Extent}
      */
     public P getHigh();
-
-    /*
-     * Extents should be comparable, so we need to implement hashCode and equals
-     * 
-     * @return
-     */
-    @Override
-    public int hashCode();
-
-    @Override
-    public boolean equals(Object obj);
 }

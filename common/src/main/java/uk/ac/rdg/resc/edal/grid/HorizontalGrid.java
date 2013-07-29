@@ -51,7 +51,7 @@ public interface HorizontalGrid extends DiscreteDomain<HorizontalPosition, GridC
      * system}.
      * </p>
      */
-    public GridAxis getXAxis();
+    public ReferenceableAxis<Double> getXAxis();
 
     /**
      * {@inheritDoc}
@@ -61,6 +61,6 @@ public interface HorizontalGrid extends DiscreteDomain<HorizontalPosition, GridC
      * system}.
      * </p>
      */
-    public GridAxis getYAxis();
+    public ReferenceableAxis<Double> getYAxis();
 
 }

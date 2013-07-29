@@ -28,11 +28,10 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * A two-dimensional {@link DirectPosition} that describes a point as longitude
+ * A two-dimensional {@link HorizontalPosition} that describes a point as longitude
  * and latitude using the WGS84 datum.
  * 
  * @author Jon Blower
@@ -80,27 +79,4 @@ public interface LonLatPosition extends HorizontalPosition {
      */
     @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem();
-
-    /**
-     * Returns an array of two coordinates: the first coordinate is the
-     * longitude (in the range [-180:180] and the second coordinate is the
-     * geodetic latitude.
-     */
-    @Override
-    public double[] getCoordinate();
-
-    /**
-     * Returns the ordinate at the specified dimension.
-     * 
-     * @param dimension
-     *            - The dimension in the range 0 to 1 (inclusive)
-     * @return The coordinate at the specified dimension (index = 0 gives the
-     *         longitude in the range [-180,180], index = 1 gives the geodetic
-     *         latitude).
-     * @throws IndexOutOfBoundsException
-     *             if {@code index < 0 || index > 1}
-     */
-    @Override
-    public double getOrdinate(int index);
-
 }

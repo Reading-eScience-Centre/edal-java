@@ -30,7 +30,7 @@ package uk.ac.rdg.resc.edal.grid;
 
 import java.util.List;
 
-import org.opengis.referencing.cs.CoordinateSystemAxis;
+import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
 import uk.ac.rdg.resc.edal.domain.Extent;
 
 /**
@@ -51,7 +51,16 @@ import uk.ac.rdg.resc.edal.domain.Extent;
  *            The type of object used to identify positions on this axis
  * @author Jon Blower
  */
-public interface ReferenceableAxis<P extends Comparable<? super P>> extends GridAxis {
+public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
+    /**
+     * @return The name of the axis.
+     */
+    public String getName();
+
+    /**
+     * Returns the number of points along this axis.
+     */
+    public int size();
 
     /**
      * Gets the coordinate value at the given index
@@ -118,14 +127,4 @@ public interface ReferenceableAxis<P extends Comparable<? super P>> extends Grid
      * might <i>decrease</i>, not increase).
      */
     public Extent<P> getCoordinateExtent();
-
-    /**
-     * Returns the {@link CoordinateSystemAxis} to which the points on the axis
-     * are referenced. May be null if unknown.
-     * 
-     * @return the {@link CoordinateSystemAxis} to which the points on the axis
-     *         are referenced.
-     */
-    public CoordinateSystemAxis getCoordinateSystemAxis();
-
 }
