@@ -37,27 +37,20 @@ import uk.ac.rdg.resc.edal.metadata.Parameter;
  * @author Jon Blower
  */
 public interface Record {
-
     /**
      * <p>
      * Gets the value of the given feature member..
-     * </p>
-     * <p>
-     * <i>This is called locate() in GeoAPI - I don't know why (presumably this
-     * reflects the standard, but it seems like an odd name).</i>
      * </p>
      * 
      * @param paramId
      *            The name of a member of this record as provided by the
      *            Feature's {@link Feature#getParameterIds() set of parameter
      *            ids}.
-     * @return the value of the given member. The runtime type of the value is
-     *         given by {@link #getParameter(java.lang.String)
-     *         getParameter(paramId)}.
+     * @return the value of the given member.
      * @throws IllegalArgumentException
      *             if {@code paramId} is not a valid parameter Id
      */
-    public Object getValue(String paramId);
+    public Number getValue(String paramId);
 
     /**
      * Returns a Set of unique identifiers, one for each member of the coverage.
@@ -71,14 +64,13 @@ public interface Record {
      * Returns a description of the values returned by the coverage (including
      * their units and the phenomenon they represent) for a particular member.
      * 
-     * @param memberName
+     * @param paramId
      *            The unique identifier of the member
      * @return a description of the values returned by the coverage for a
      *         particular member.
      * @throws IllegalArgumentException
-     *             if {@code memberName} is not present in the
-     *             {@link #getMemberNames() set of member names}.
+     *             if {@code paramId} is not present in the
+     *             {@link #getParameterIds() set of member names}.
      */
     public Parameter getParameter(String paramId);
-
 }

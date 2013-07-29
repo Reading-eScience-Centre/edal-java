@@ -28,26 +28,22 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * Defines the position of a point in the horizontal plane.
  * 
- * @todo May cause confusion for lat-lon coordinate systems (i.e. those with
- *       latitude first). In this case getX() would return latitude, which is
- *       counterintuitive. Do we actually need this interface at all?
  * @author Jon Blower
  */
-public interface HorizontalPosition extends DirectPosition {
+public interface HorizontalPosition {
 
     /**
-     * Returns the x coordinate of this position, equivalent to getOrdinate(0)
+     * Returns the x coordinate of this position
      */
     public double getX();
 
     /**
-     * Returns the y coordinate of this position, equivalent to getOrdinate(1)
+     * Returns the y coordinate of this position
      */
     public double getY();
 
@@ -58,32 +54,5 @@ public interface HorizontalPosition extends DirectPosition {
      * 
      * @return a two-dimensional coordinate reference system
      */
-    @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem();
-
-    /**
-     * Returns 2
-     */
-    @Override
-    public int getDimension();
-
-    /**
-     * Returns an array of two coordinates [x,y]
-     */
-    @Override
-    public double[] getCoordinate();
-
-    /**
-     * Returns the ordinate at the specified dimension.
-     * 
-     * @param dimension
-     *            - The dimension in the range 0 to 1 (inclusive)
-     * @return The coordinate at the specified dimension (index = 0 gives the x
-     *         coordinate; index = 1 gives the y coordinate)
-     * @throws IndexOutOfBoundsException
-     *             if {@code index < 0 || index > 1}
-     */
-    @Override
-    public double getOrdinate(int index);
-
 }

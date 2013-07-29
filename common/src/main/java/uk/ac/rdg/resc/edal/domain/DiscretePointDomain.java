@@ -29,8 +29,10 @@
 package uk.ac.rdg.resc.edal.domain;
 
 /**
+ * A {@link Domain} whose members are points
  * 
  * @author Jon
+ * @author Guy
  */
 public interface DiscretePointDomain<P> extends DiscreteDomain<P, P> {
 

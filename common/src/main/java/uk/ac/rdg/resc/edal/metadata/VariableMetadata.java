@@ -28,32 +28,61 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
+import java.util.Set;
+
+import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.TemporalDomain;
+import uk.ac.rdg.resc.edal.domain.VerticalDomain;
+
 /**
- * Enumeration of vocabularies that can be used to interpret a {@link Unit}
- * string.
+ * Describes a variable held within a {@link Dataset}. Variables can be
+ * hierarchically nested.
  * 
- * @author Jon Blower
+ * @author Jon
+ * @author Guy
  */
-public enum UnitVocabulary {
+public interface VariableMetadata {
     /**
-     * The Unified Code for Units of Measure.
-     * 
-     * @see http://unitsofmeasure.org/
+     * The identifier of the variable with the parent dataset.
      */
-    UCUM,
+    public String getId();
 
     /**
-     * Unidata UDUNITS
+     * The dataset to which this variable belongs
      */
-    UDUNITS,
+    public Dataset getDataset();
 
     /**
-     * UDUNITS version 2
+     * Describes what is being measured by the values of this variable.
      */
-    UDUNITS2,
+    public Parameter getParameter();
 
     /**
-     * Unknown unit vocabulary: units cannot be converted to another system.
+     * Returns the horizontal domain of the variable.
      */
-    UNKNOWN;
+    public HorizontalDomain getHorizontalDomain();
+
+    /**
+     * Returns the vertical domain of the variable
+     */
+    public VerticalDomain getVerticalDomain();
+
+    /**
+     * Returns the temporal domain of the variable
+     */
+    public TemporalDomain getTemporalDomain();
+
+    /**
+     * Returns the {@link VariableMetadata} of the parent object, or
+     * <code>null</code> if this {@link VariableMetadata} has no parent
+     */
+    public VariableMetadata getParent();
+
+    /**
+     * Returns a {@link Set} containing the children of this
+     * {@link VariableMetadata}, or an empty {@link Set} if there are none. This
+     * method may not return <code>null</code>
+     */
+    public Set<VariableMetadata> getChildren();
 }

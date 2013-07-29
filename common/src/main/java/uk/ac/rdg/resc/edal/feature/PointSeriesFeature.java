@@ -29,7 +29,9 @@
 package uk.ac.rdg.resc.edal.feature;
 
 import org.joda.time.DateTime;
-import uk.ac.rdg.resc.edal.domain.PointSeriesDomain;
+
+import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
@@ -37,22 +39,19 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  * A measurement of a time series at a point
  * 
  * @author Jon Blower
+ * @author Guy
  */
-public interface PointSeriesFeature extends DiscreteFeature<DateTime, DateTime> {
+public interface PointSeriesFeature extends DiscreteFeature<DateTime, Extent<DateTime>> {
     /**
      * Gets the horizontal location of this point series feature.
-     * 
-     * @return the horizontal location of this point series feature.
      */
     public HorizontalPosition getHorizontalPosition();
 
     /**
      * Gets the vertical location of this point series feature.
-     * 
-     * @return the vertical location of this point series feature.
      */
     public VerticalPosition getVerticalPosition();
 
     @Override
-    public PointSeriesDomain getDomain();
+    public TimeAxis getDomain();
 }

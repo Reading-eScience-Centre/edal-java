@@ -29,15 +29,13 @@
 package uk.ac.rdg.resc.edal.domain;
 
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
- * 
- * @author Jon
+ * @author Guy
  */
-public interface VerticalDomain extends Domain<VerticalPosition> {
+public interface VerticalDomain extends Domain<Double> {
 
-    public Extent<VerticalPosition> getExtent();
+    public Extent<Double> getExtent();
 
     public VerticalCrs getVerticalCrs();
 

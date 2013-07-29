@@ -42,37 +42,11 @@ import uk.ac.rdg.resc.edal.util.Array;
  * @param <DO>
  *            The type of the domain object
  * @author Jon Blower
+ * @author Guy
  */
 public interface DiscreteDomain<P, DO> extends Domain<P> {
-
-    /**
-     * Returns true if at least one of the domain objects contains the given
-     * position.
-     */
-    @Override
-    public boolean contains(P position);
-
     /**
      * Returns an {@link Array} of domain objects that comprise this domain.
      */
     public Array<DO> getDomainObjects();
-
-    /**
-     * Finds the index of the first domain object within the
-     * {@link #getDomainObjects() array of domain objects} that contains the
-     * given position.
-     * 
-     * @return the index of the domain object, or -1 if the position is outside
-     *         the domain
-     */
-    public long findIndexOf(P pos);
-
-    /**
-     * <p>
-     * Returns the number of domain objects in the domain.
-     * </p>
-     * 
-     * @return the number of domain objects in the domain
-     */
-    public long size();
 }

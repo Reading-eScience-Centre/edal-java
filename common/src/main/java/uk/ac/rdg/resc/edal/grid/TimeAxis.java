@@ -31,18 +31,19 @@ package uk.ac.rdg.resc.edal.grid;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 
+import uk.ac.rdg.resc.edal.domain.TemporalDomain;
+
 /**
  * A time axis.
  * 
  * @author Jon Blower
  */
-public interface TimeAxis extends ReferenceableAxis<DateTime> {
+public interface TimeAxis extends ReferenceableAxis<DateTime>, TemporalDomain {
 
     /**
      * Return the {@link Chronology} used in this time axis
-     * 
-     * @return the {@link Chronology} used in this time axis
      */
+    @Override
     public Chronology getChronology();
 
     /**

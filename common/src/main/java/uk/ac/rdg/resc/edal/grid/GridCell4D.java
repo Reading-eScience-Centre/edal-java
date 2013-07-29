@@ -34,14 +34,14 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.domain.Domain;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.domain.GridSeriesDomain;
+import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
- * A cell in a {@link GridSeriesDomain}, which can have up to four dimensions.
+ * A cell in a {@link GridDomain}, which can have up to four dimensions.
  * 
  * @author Jon Blower
  */
@@ -77,6 +77,11 @@ public interface GridCell4D extends Domain<GeoPosition> {
      * @return the range of valid times in the time axis of parent grid
      */
     public Extent<DateTime> getTimeExtent();
+    
+    /**
+     * @return the {@link Chronology} used in this grid cell
+     */
+    public Chronology getChronology();
 
     /**
      * @return the range of valid integers in the vertical axis of parent grid
@@ -84,13 +89,8 @@ public interface GridCell4D extends Domain<GeoPosition> {
     public Extent<VerticalPosition> getVerticalExtent();
 
     /**
-     * @return the {@link Chronology} used in this grid cell
-     */
-    public Chronology getChronology();
-
-    /**
      * @return the parent grid of this grid cell
      */
-    public GridSeriesDomain getGrid();
+    public GridDomain getGrid();
 
 }

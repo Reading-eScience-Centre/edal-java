@@ -54,14 +54,13 @@ public interface Polygon extends Domain<HorizontalPosition> {
      * Returns the list of vertices that define this polygon in the horizontal
      * plane. The coordinates of the vertices are defined in this object's
      * {@link #getCoordinateReferenceSystem() coordinate reference system}. The
-     * {@link HorizontalPosition}s may have a null CRS or may have the same CRS
-     * as this object, but they may not have a non-null CRS that is different
-     * from that of this object.
+     * {@link HorizontalPosition}s must have the same CRS as this object.
+     * 
+     * Points returned here are in clockwise order. The polygon is considered
+     * closed.
      * 
      * @return the list of vertices that define this polygon in the horizontal
      *         plane.
-     * @todo define whether the polygon is closed, and whether there is a
-     *       particular order (clockwise or anticlockwise) to the vertices.
      */
     public List<HorizontalPosition> getVertices();
 }

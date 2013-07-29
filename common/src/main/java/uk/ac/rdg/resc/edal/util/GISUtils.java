@@ -28,19 +28,49 @@
 
 package uk.ac.rdg.resc.edal.util;
 
+import org.geotoolkit.referencing.CRS;
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * A class containing static methods which are useful for GIS operations. One of
- * the main purposes of this class is to provide various feature-specific
- * retrievals (for example getting a time axis of a general feature). This means
- * that if new feature types are added, much of the work to integrate them will
- * be in this class
+ * A class containing static methods which are useful for GIS operations.
  * 
- * @author Guy Griffiths
+ * @author Guy
  * 
  */
 public final class GISUtils {
 
     private GISUtils() {
+    }
+
+    public static boolean isWgs84LonLat(CoordinateReferenceSystem coordinateReferenceSystem) {
+        try {
+            return CRS.findMathTransform(coordinateReferenceSystem, DefaultGeographicCRS.WGS84)
+                    .isIdentity();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    public static double getNextEquivalentLongitude(double reference, double target) {
+        // Find the clockwise distance from the first value on this axis
+        // to the target value. This will be a positive number from 0 to
+        // 360 degrees
+        double clockDiff = constrainLongitude360(target - reference);
+        return reference + clockDiff;
+    }
+    
+    public static double constrainLongitude180(double value) {
+        double val = constrainLongitude360(value);
+        return val > 180.0 ? val - 360.0 : val;
+    }
+
+    /**
+     * Returns a longitude value in degrees that is equal to the given value but
+     * in the range [0:360]
+     */
+    public static double constrainLongitude360(double value) {
+        double val = value % 360.0;
+        return val < 0.0 ? val + 360.0 : val;
     }
 }

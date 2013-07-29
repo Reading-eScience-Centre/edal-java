@@ -31,79 +31,102 @@ package uk.ac.rdg.resc.edal.dataset;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+
 import org.joda.time.DateTime;
+
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 
 /**
  * 
  * @author Jon
  */
 public abstract class AbstractGridDataset implements GridDataset {
-    protected final DataReadingStrategy strategy = null; // TODO populate this
+    protected final DataReadingStrategy strategy = null;
 
     @Override
-    public final GridFeature readMapData(Set<String> varIds, DateTime time, VerticalPosition zPos,
-            HorizontalGrid targetGrid) throws IOException {
-        // Open the source of data
-        GridDataSource dataSource = this.openGridDataSource();
+    public final GridFeature readMapData(Set<String> varIds, HorizontalGrid targetGrid,
+            Double zPos, DateTime time) throws IOException {
+        /*
+         * Open the source of data
+         */
+        GridDataSource dataSource = openGridDataSource();
 
-        // The procedure below can be optimized: if we know that multiple
-        // variables
-        // share the same source grid then we don't have to perform the
-        // conversion
-        // from natural coordinates to grid indices multiple times.
-        // HOWEVER, we might have to beware of this in the case of aggregation,
-        // in which different variables may have different mappings from time
-        // values to filename/tIndex.
-
+        /*
+         * The procedure below can be optimized: if we know that multiple
+         * variables share the same source grid then we don't have to perform
+         * the conversion from natural coordinates to grid indices multiple
+         * times. HOWEVER, we might have to beware of this in the case of
+         * aggregation, in which different variables may have different mappings
+         * from time values to filename/tIndex.
+         */
         Map<String, Array<? extends Number>> values = CollectionUtils.newHashMap();
         Map<String, VariableMetadata> metadata = CollectionUtils.newHashMap();
 
         for (String varId : varIds) {
-            VariableMetadata vm = this.getVariableMetadata(varId);
+            GridVariableMetadata vm = getVariableMetadata(varId);
 
-            // TODO: if this is a variable whose values are derived (rather than
-            // being read directly) we need to work out which of the underlying
-            // grids we're really going to read.
+            /*
+             * TODO: if this is a variable whose values are derived (rather than
+             * being read directly) we need to work out which of the underlying
+             * grids we're really going to read.
+             */
 
-            // Cast down the horizontal, vertical and temporal domain objects
-            // to HorizontalGrid, VerticalAxis and TimeAxis. This should always
-            // be successful because we define GridDatasets to always use these
-            // domain subclasses.
-            HorizontalGrid sourceGrid = (HorizontalGrid) vm.getHorizontalDomain();
-            VerticalAxis zAxis = (VerticalAxis) vm.getVerticalDomain();
-            TimeAxis tAxis = (TimeAxis) vm.getTemporalDomain();
+            /*
+             * Cast down the horizontal, vertical and temporal domain objects to
+             * HorizontalGrid, VerticalAxis and TimeAxis. This should always be
+             * successful because we define GridDatasets to always use these
+             * domain subclasses.
+             */
+            HorizontalGrid sourceGrid = vm.getHorizontalDomain();
+            VerticalAxis zAxis = vm.getVerticalDomain();
+            TimeAxis tAxis = vm.getTemporalDomain();
 
-            // Use these objects to convert natural coordinates to grid indices
+            /*
+             * Use these objects to convert natural coordinates to grid indices
+             */
             int tIndex = tAxis.findIndexOf(time);
             int zIndex = zAxis.findIndexOf(zPos);
-            // Create a PixelMap from the source and target grids
+            /*
+             * Create a PixelMap from the source and target grids
+             */
             PixelMap pixelMap = PixelMap.forGrid(sourceGrid, targetGrid);
 
-            // Now use the approprate DataReadingStrategy to read data
-            Array<? extends Number> data = this.strategy.readMapData(dataSource, varId, tIndex,
-                    zIndex, pixelMap);
+            /*
+             * Now use the approprate DataReadingStrategy to read data
+             */
+            ValuesArray2D data = strategy.readMapData(dataSource, varId, tIndex, zIndex, pixelMap);
 
-            // Create new VariableMetadata object with the new domain, units etc
-            VariableMetadata newVm = null; // TODO
+            /*
+             * Create new VariableMetadata object with the new domain, units etc
+             * 
+             * TODO
+             */
+            VariableMetadata newVm = null;
 
             values.put(varId, data);
             metadata.put(varId, newVm);
         }
 
-        // Release resources held by the DataSource
+        /*
+         * Release resources held by the DataSource
+         */
         dataSource.close();
 
-        // Construct the GridFeature from the t and z values, the horizontal
-        // grid
-        // and the VariableMetadata objects
-        GridFeature gf = null; // TODO
+        /*
+         * Construct the GridFeature from the t and z values, the horizontal
+         * grid and the VariableMetadata objects
+         * 
+         * TODO
+         */
+        GridFeature gf = null;
 
         return gf;
     }

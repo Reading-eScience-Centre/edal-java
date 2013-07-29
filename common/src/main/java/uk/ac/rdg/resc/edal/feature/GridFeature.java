@@ -57,10 +57,12 @@
  */
 package uk.ac.rdg.resc.edal.feature;
 
+import uk.ac.rdg.resc.edal.position.GeoPosition;
+
 /**
  * 
  * @author Jon
  */
-public interface GridFeature extends Feature {
+public interface GridFeature extends Feature<GeoPosition> {
 
 }

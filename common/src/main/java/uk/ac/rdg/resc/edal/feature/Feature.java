@@ -44,7 +44,6 @@ import uk.ac.rdg.resc.edal.metadata.Parameter;
  * @author Jon Blower
  */
 public interface Feature<P> {
-
     /**
      * Gets an identifier that is unique within the
      * {@link #getFeatureCollection() feature collection to which this feature
@@ -60,26 +59,25 @@ public interface Feature<P> {
 
     /**
      * Gets a (perhaps lengthy) human-readable description of this feature.
-     * 
-     * @return
      */
     public String getDescription();
 
     /**
      * Gets the domain of the values contained with the feature
-     * 
-     * @return
      */
     public Domain<P> getDomain();
 
     /**
      * Gets the set of identifiers of the parameters of this Feature (
      * {@literal i.e.} the variables that the feature records).
-     * 
-     * @return
      */
     public Set<String> getParameterIds();
 
+    /**
+     * Gets a {@link Parameter} associated with this {@link Feature}
+     * 
+     * @param parameterId
+     *            The ID of the desired parameter
+     */
     public Parameter getParameter(String parameterId);
-
 }

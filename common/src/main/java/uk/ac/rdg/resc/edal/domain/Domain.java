@@ -29,13 +29,12 @@
 package uk.ac.rdg.resc.edal.domain;
 
 /**
- * <p>
- * TODO: insert description
- * </p>
+ * An object describing a spatial domain.
  * 
  * @param P
  *            The type of object used to identify positions within the domain
  * @author Jon Blower
+ * @author Guy
  */
 public interface Domain<P> {
     /**

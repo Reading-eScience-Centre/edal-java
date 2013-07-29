@@ -28,8 +28,6 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-import uk.ac.rdg.resc.edal.metadata.Unit;
-
 /**
  * <p>
  * A vertical coordinate reference system.
@@ -43,24 +41,9 @@ import uk.ac.rdg.resc.edal.metadata.Unit;
  */
 public interface VerticalCrs {
     /**
-     * An enum representing which direction is positive
-     * 
-     * @author Jon Blower
+     * @return the units for the values in this {@link VerticalCrs}
      */
-    public enum PositiveDirection {
-        UP, DOWN;
-        public boolean isPositive() {
-            if (this == PositiveDirection.UP) {
-                return true;
-            }
-            return false;
-        }
-    }
-
-    /**
-     * @return the {@link Unit} for the values in this {@link VerticalCrs}
-     */
-    public Unit getUnits();
+    public String getUnits();
 
     /**
      * Return true if this axis has units of pressure. If this is true then the
@@ -92,6 +75,5 @@ public interface VerticalCrs {
     /**
      * Indicates whether coordinate values increase upward or downward.
      */
-    public PositiveDirection getPositiveDirection();
-
+    public boolean isPositiveUpwards();
 }

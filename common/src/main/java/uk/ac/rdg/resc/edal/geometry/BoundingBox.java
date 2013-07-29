@@ -28,17 +28,14 @@
 
 package uk.ac.rdg.resc.edal.geometry;
 
-import org.opengis.geometry.Envelope;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * A rectangular bounding box in the horizontal plane. Extends {@link Envelope}
- * by providing convenience methods for accessing minimum and maximum x and y
- * values.
+ * A rectangular bounding box in the horizontal plane.
  * 
  * @author Jon Blower
  */
-public interface BoundingBox extends Envelope, Polygon {
+public interface BoundingBox extends Polygon {
     /**
      * Gets the minimum ordinate along the first axis, equivalent to
      * {@code getMinimum(0)}.
@@ -76,12 +73,10 @@ public interface BoundingBox extends Envelope, Polygon {
     /**
      * Gets the position (getMinX(), getMinY())
      */
-    @Override
     public HorizontalPosition getLowerCorner();
 
     /**
      * Gets the position (getMaxX(), getMaxY())
      */
-    @Override
     public HorizontalPosition getUpperCorner();
 }

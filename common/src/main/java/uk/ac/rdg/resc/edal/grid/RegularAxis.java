@@ -37,8 +37,8 @@ package uk.ac.rdg.resc.edal.grid;
  * @author Jon Blower
  */
 public interface RegularAxis extends ReferenceableAxis<Double> {
-
-    /** Gets the spacing between coordinate values, might be negative. */
+    /**
+     * Gets the spacing between coordinate values, might be negative.
+     */
     public double getCoordinateSpacing();
-
 }
