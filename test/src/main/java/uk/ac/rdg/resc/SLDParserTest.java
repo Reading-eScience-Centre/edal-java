@@ -13,12 +13,10 @@ import uk.ac.rdg.resc.edal.graphics.style.StyleSLDParser;
 public class SLDParserTest {
 
 	public static void main(String[] args) {
-		File file = new File("C:/Users/Charles/Documents/workspace/edal-java/test/src/main/resources/xml/se_example.xml");
+        File file = new File(ClassLoader.getSystemResource("xml/se_example.xml").getFile());
 		try {
 			String xml = StyleSLDParser.SLDtoXMLString(file);
-			if (xml != null) {
-				System.out.println(xml);
-			}
+			System.out.println(xml);
 		} catch (ParserConfigurationException pce) {
 			pce.printStackTrace();
 		} catch (SAXException se) {
