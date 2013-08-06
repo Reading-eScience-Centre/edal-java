@@ -140,24 +140,26 @@ public class StyleSLDParser {
 						"</FlatOpacity>\n";
 			}
 			xmlString = xmlString + "        <DataFieldName>" + name + "</DataFieldName>\n";
+			xmlString = xmlString + "        <ThresholdColourScheme>\n";
 			for (int j = 0; j < colours.getLength(); j++) {
 				String colour = colours.item(j).getTextContent();
 				if (colour != null) {
-					xmlString = xmlString + "        <Colours>" + colour +
-							"</Colours>\n";					
+					xmlString = xmlString + "            <Colours>" + 
+							colour + "</Colours>\n";					
 				}
 			}
 			for (int j = 0; j < thresholds.getLength(); j++) {
 				String threshold = thresholds.item(j).getTextContent();
 				if (threshold != null) {
-					xmlString = xmlString + "        <Thresholds>" + threshold +
-							"</Thesholds>\n";					
+					xmlString = xmlString + "            <Thresholds>" +
+							threshold + "</Thresholds>\n";					
 				}
 			}
 			if (fallbackValue != null) {
-				xmlString = xmlString + "        <MissingDataColour>" + fallbackValue +
-						"</MissingDataColour>\n";
+				xmlString = xmlString + "            <MissingDataColour>" +
+						fallbackValue + "</MissingDataColour>\n";
 			}
+			xmlString = xmlString + "        </ThresholdColourScheme>\n";
 			xmlString = xmlString + "    </RasterLayer>\n";
 		}
 		xmlString = xmlString + "</resc:Image>\n";
