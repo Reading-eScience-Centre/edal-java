@@ -60,11 +60,9 @@ public class StyleSLDParser {
 		// Parse the XML document using DOM
 		NodeList namedLayers = document.getElementsByTagName("NamedLayer");
 		if (namedLayers == null) {
-			return null;
+			return "";
 		}
-		String xmlString =
-				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-				+ "<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>\n";
+		String xmlString = "";
 		for (int i = 0; i < namedLayers.getLength(); i++) {
 			Node layerNode = namedLayers.item(i);
 			
@@ -117,14 +115,49 @@ public class StyleSLDParser {
 			}
 			Element catElement = (Element) catNode;
 			
+			// get fall back value
+			String fallbackValue = catElement.getAttribute("fallbackValue");
 			
+			// get list of colours
+			NodeList colours = catElement.getElementsByTagName("se:Value");
+			if (colours == null) {
+				continue;
+			}
+			
+			//get list of thresholds
+			NodeList thresholds = catElement.getElementsByTagName("se:Threshold");
+			if (thresholds == null) {
+				continue;
+			}
 
 			// write out XML to string
+			xmlString = xmlString +
+					"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+					+ "<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>\n";
 			xmlString = xmlString + "    <RasterLayer>\n";
 			if (opacity != null) {
-				xmlString = xmlString + "        <FlatOpacity>" + opacity + "</FlatOpacity>\n";
+				xmlString = xmlString + "        <FlatOpacity>" + opacity +
+						"</FlatOpacity>\n";
 			}
 			xmlString = xmlString + "        <DataFieldName>" + name + "</DataFieldName>\n";
+			for (int j = 0; j < colours.getLength(); j++) {
+				String colour = colours.item(j).getTextContent();
+				if (colour != null) {
+					xmlString = xmlString + "        <Colours>" + colour +
+							"</Colours>\n";					
+				}
+			}
+			for (int j = 0; j < thresholds.getLength(); j++) {
+				String threshold = thresholds.item(j).getTextContent();
+				if (threshold != null) {
+					xmlString = xmlString + "        <Thresholds>" + threshold +
+							"</Thesholds>\n";					
+				}
+			}
+			if (fallbackValue != null) {
+				xmlString = xmlString + "        <MissingDataColour>" + fallbackValue +
+						"</MissingDataColour>\n";
+			}
 			xmlString = xmlString + "    </RasterLayer>\n";
 		}
 		xmlString = xmlString + "</resc:Image>\n";
