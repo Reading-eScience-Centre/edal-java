@@ -31,12 +31,12 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ucar.nc2.dataset.NetcdfDataset;
+import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset.Gridset;
 import ucar.nc2.dt.GridDatatype;
@@ -47,7 +47,12 @@ import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
  * {@link DatasetFactory} that creates {@link Dataset}s representing gridded
@@ -71,18 +76,18 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
             Map<String, GridVariableMetadata> vars = new HashMap<String, GridVariableMetadata>();
             for (Gridset gridset : gridDataset.getGridsets()) {
                 GridCoordSystem coordSys = gridset.getGeoCoordSystem();
+                HorizontalGrid hDomain = CdmUtils.createHorizontalGrid(coordSys);
+                VerticalAxis zDomain = CdmUtils.createVerticalAxis(coordSys);
+                TimeAxis tDomain = CdmUtils.createTimeAxis(coordSys);
                 /*
-                 * TODO: Create horizontal, vertical and temporal domains
-                 * 
                  * Create a VariableMetadata object for each GridDatatype
                  */
                 for (GridDatatype grid : gridset.getGrids()) {
-
-                    /*
-                     * Create VariableMetadata objects for each GridDatatype in
-                     * the dataset
-                     */
-                    GridVariableMetadata metadata = null; // TODO
+                    VariableDS variable = grid.getVariable();
+                    Parameter parameter = new Parameter(variable.getName(), grid.getVariable()
+                            .getShortName(), variable.getDescription(), variable.getUnitsString());
+                    GridVariableMetadata metadata = new GridVariableMetadata(variable.getName(),
+                            parameter, hDomain, zDomain, tDomain);
                     vars.put(metadata.getId(), metadata);
                 }
             }
@@ -98,46 +103,14 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
     }
 
     private static final class CdmGridDataset extends AbstractGridDataset {
-        private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
-
         private final String location;
-        private final Map<String, GridVariableMetadata> vars;
         private final DataReadingStrategy dataReadingStrategy;
 
         public CdmGridDataset(String location, Map<String, GridVariableMetadata> vars,
                 DataReadingStrategy dataReadingStrategy) {
+            super(vars);
             this.location = location;
-            this.vars = vars;
             this.dataReadingStrategy = dataReadingStrategy;
-        }
-
-        @Override
-        public Set<String> getFeatureIds() {
-            /*
-             * There is one feature per variable
-             */
-            return vars.keySet();
-        }
-
-        @Override
-        public Set<String> getVariableIds() {
-            return vars.keySet();
-        }
-
-        @Override
-        public GridVariableMetadata getVariableMetadata(String variableId) {
-            if (!vars.containsKey(variableId)) {
-                log.error("Requested variable metadata for ID: " + variableId
-                        + ", but this doesn't exist");
-                throw new IllegalArgumentException(
-                        "This dataset does not contain the specified variable (" + variableId + ")");
-            }
-            return vars.get(variableId);
-        }
-
-        @Override
-        public Set<GridVariableMetadata> getTopLevelVariables() {
-            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override

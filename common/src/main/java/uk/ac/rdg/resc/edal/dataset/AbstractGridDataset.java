@@ -30,11 +30,14 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
@@ -55,6 +58,45 @@ import uk.ac.rdg.resc.edal.util.Array2D;
  * @author Guy
  */
 public abstract class AbstractGridDataset implements GridDataset {
+    private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
+    private Map<String, ? extends GridVariableMetadata> vars;
+    
+    public AbstractGridDataset(Map<String, ? extends GridVariableMetadata> vars) {
+        this.vars = vars;
+        for(GridVariableMetadata metadata : vars.values()) {
+            metadata.setDataset(this);
+        }
+    }
+
+    @Override
+    public GridVariableMetadata getVariableMetadata(String variableId) {
+        if (!vars.containsKey(variableId)) {
+            log.error("Requested variable metadata for ID: " + variableId
+                    + ", but this doesn't exist");
+            throw new IllegalArgumentException(
+                    "This dataset does not contain the specified variable (" + variableId + ")");
+        }
+        return vars.get(variableId);
+    }
+
+    @Override
+    public Set<GridVariableMetadata> getTopLevelVariables() {
+        return new HashSet<GridVariableMetadata>(vars.values());
+    }
+    
+    @Override
+    public Set<String> getFeatureIds() {
+        /*
+         * There is one feature per variable
+         */
+        return vars.keySet();
+    }
+
+    @Override
+    public Set<String> getVariableIds() {
+        return vars.keySet();
+    }
+    
     @Override
     public final MapFeature readMapData(Set<String> varIds, HorizontalGrid targetGrid, Double zPos,
             DateTime time) throws IOException {

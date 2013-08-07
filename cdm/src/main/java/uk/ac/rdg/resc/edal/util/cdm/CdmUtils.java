@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.ac.rdg.resc.edal.dataset.cdm;
+package uk.ac.rdg.resc.edal.util.cdm;
 
 import java.io.IOException;
 import java.util.ArrayList;

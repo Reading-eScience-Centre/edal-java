@@ -1,3 +1,4 @@
+package uk.ac.rdg.resc.edal.grid.cdm;
 ///*******************************************************************************
 // * Copyright (c) 2011 The University of Reading
 // * All rights reserved.

@@ -25,7 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
-package uk.ac.rdg.resc.edal.dataset.cdm;
+package uk.ac.rdg.resc.edal.grid.cdm;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -43,6 +43,7 @@ import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
  * A two-dimensional {@link HorizontalGrid} that uses a {@link Projection} to
