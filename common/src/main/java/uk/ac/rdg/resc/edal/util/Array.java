@@ -50,7 +50,12 @@ public interface Array<E> extends Iterable<E> {
      * Gets the shape of the array, i.e. the number of points in each direction.
      */
     public int[] getShape();
-
+    
+    /**
+     * Gets the runtime class of values within the Array.
+     */
+    public Class<E> getValueClass();
+    
     /**
      * Returns an iterator over all the values in the array. The convention is
      * that the last dimension (represented by the last entry in getShape())

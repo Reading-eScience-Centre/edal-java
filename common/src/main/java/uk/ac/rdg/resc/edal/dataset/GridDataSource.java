@@ -30,7 +30,7 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
 
-import uk.ac.rdg.resc.edal.util.ValuesArray4D;
+import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
  * Low-level interface to multidimensional grids, used by
@@ -38,12 +38,13 @@ import uk.ac.rdg.resc.edal.util.ValuesArray4D;
  * 
  * @todo axis order issues: should we define that the returned Array must have
  *       the x axis varying fastest, irrespective of the ordering of the
- *       underlying data grid?
+ *       underlying data grid?  GG: Yes, probably...
  * @author Jon
+ * @author Guy
  */
 public interface GridDataSource {
 
-    public ValuesArray4D read(String variableId, int tmin, int tmax, int zmin, int zmax,
+    public Array4D read(String variableId, int tmin, int tmax, int zmin, int zmax,
             int ymin, int ymax, int xmin, int xmax) throws IOException;
 
     public void close() throws IOException;

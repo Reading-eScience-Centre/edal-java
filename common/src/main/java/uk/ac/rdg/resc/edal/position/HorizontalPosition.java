@@ -34,18 +34,33 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * Defines the position of a point in the horizontal plane.
  * 
  * @author Jon Blower
+ * @author Guy
  */
-public interface HorizontalPosition {
+public class HorizontalPosition {
+
+    private double x;
+    private double y;
+    private CoordinateReferenceSystem crs;
+
+    public HorizontalPosition(double x, double y, CoordinateReferenceSystem crs) {
+        this.x = x;
+        this.y = y;
+        this.crs = crs;
+    }
 
     /**
      * Returns the x coordinate of this position
      */
-    public double getX();
+    public double getX() {
+        return x;
+    }
 
     /**
      * Returns the y coordinate of this position
      */
-    public double getY();
+    public double getY() {
+        return y;
+    }
 
     /**
      * Returns a two-dimensional coordinate reference system. The first
@@ -54,5 +69,7 @@ public interface HorizontalPosition {
      * 
      * @return a two-dimensional coordinate reference system
      */
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return crs;
+    }
 }

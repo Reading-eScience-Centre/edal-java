@@ -43,8 +43,7 @@ import ucar.nc2.dataset.VariableDS;
  * Wraps an {@link Array}, providing a method to read data with enhancement
  * applied if necessary
  */
-final class DataChunk
-{
+final class DataChunk {
     private static final Logger log = LoggerFactory.getLogger(DataChunk.class);
 
     private final VariableDS var;
@@ -58,9 +57,7 @@ final class DataChunk
     }
 
     /** Creates a DataChunk by reading from the given variable */
-    public static DataChunk readDataChunk(VariableDS var, RangesList ranges)
-            throws IOException
-    {
+    public static DataChunk readDataChunk(VariableDS var, RangesList ranges) throws IOException {
         final Array arr;
         Variable origVar = var.getOriginalVariable();
         if (origVar == null) {
@@ -92,18 +89,14 @@ final class DataChunk
 
     /**
      * Reads from the variable, converting any InvalidRangeExceptions to
-     * IllegalArgumentExceptions (they are really run time errors and so
-     * should not be checked exceptions).
+     * IllegalArgumentExceptions (they are really run time errors and so should
+     * not be checked exceptions).
      */
-    private static Array readVariable(Variable var, RangesList ranges) throws IOException
-    {
-        try
-        {
+    private static Array readVariable(Variable var, RangesList ranges) throws IOException {
+        try {
             log.debug("Reading from variable {} with ranges {}", var.getName(), ranges.toString());
             return var.read(ranges.getRanges());
-        }
-        catch(InvalidRangeException ire)
-        {
+        } catch (InvalidRangeException ire) {
             throw new IllegalArgumentException(ire);
         }
     }
@@ -112,13 +105,14 @@ final class DataChunk
     public Index getIndex() {
         return this.arr.getIndex();
     }
-    
+
     public long size() {
         return this.arr.getSize();
     }
 
     /**
      * Reads a data value as a float, applying scale/offset if required.
+     * 
      * @return the data value, or {@link Float#NaN} if this is a missing value
      */
     public float readFloatValue(Index index) {
@@ -126,7 +120,9 @@ final class DataChunk
         if (this.needsEnhance) {
             val = this.var.convertScaleOffsetMissing(val);
         }
-        if (this.var.isMissing(val)) return Float.NaN;
-        else return (float)val;
+        if (this.var.isMissing(val))
+            return Float.NaN;
+        else
+            return (float) val;
     }
 }

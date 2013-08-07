@@ -58,11 +58,6 @@ public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
     public String getName();
 
     /**
-     * Returns the number of points along this axis.
-     */
-    public int size();
-
-    /**
      * Gets the coordinate value at the given index
      * 
      * @param index
@@ -127,4 +122,6 @@ public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
      * might <i>decrease</i>, not increase).
      */
     public Extent<P> getCoordinateExtent();
+    
+    public int size();
 }

@@ -34,6 +34,7 @@ import java.util.Set;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 
@@ -73,7 +74,7 @@ public interface GridDataset extends Dataset {
      * @throws IOException
      *             If the underlying data cannot be read for any reason
      */
-    public GridFeature readMapData(Set<String> varIds, HorizontalGrid hGrid, Double zPos,
+    public MapFeature readMapData(Set<String> varIds, HorizontalGrid hGrid, Double zPos,
             DateTime time) throws IOException;
 
 //    public PointSeriesFeature readTimeSeriesData(Set<String> varIds, HorizontalPosition hPos,

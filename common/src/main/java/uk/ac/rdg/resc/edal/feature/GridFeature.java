@@ -57,12 +57,38 @@
  */
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Map;
+
+import uk.ac.rdg.resc.edal.domain.GridDomain;
+import uk.ac.rdg.resc.edal.grid.GridCell4D;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
+ * An implementation of a {@link Feature} whose domain is a {@link GridDomain}
  * 
- * @author Jon
+ * @author Guy
  */
-public interface GridFeature extends Feature<GeoPosition> {
+public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D> {
 
+    public GridFeature(String id, String name, String description, GridDomain domain,
+            Map<String, Parameter> parameters, Map<String, Array4D> valuesMap) {
+        super(id, name, description, domain, parameters, valuesMap);
+    }
+
+    @Override
+    public Array4D getValues(String paramId) {
+        return (Array4D) super.getValues(paramId);
+    }
+
+    @Override
+    public long size() {
+        return getDomain().size();
+    }
+
+    @Override
+    public GridDomain getDomain() {
+        return (GridDomain) super.getDomain();
+    }
 }

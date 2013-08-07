@@ -28,55 +28,32 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
 /**
- * A two-dimensional {@link HorizontalPosition} that describes a point as longitude
- * and latitude using the WGS84 datum.
+ * A two-dimensional {@link HorizontalPosition} that describes a point as
+ * longitude and latitude using the WGS84 datum.
  * 
  * @author Jon Blower
+ * @author Guy
  */
-public interface LonLatPosition extends HorizontalPosition {
+public class LonLatPosition extends HorizontalPosition {
+
+    public LonLatPosition(double lon, double lat) {
+        super(lon, lat, DefaultGeographicCRS.WGS84);
+    }
 
     /**
      * Returns the longitude, in the range [-180:180] degrees.
-     * 
-     * @return the longitude, in the range [-180:180] degrees.
      */
-    @Override
-    public double getX();
+    public double getLongitude() {
+        return getX();
+    }
 
     /**
      * Returns the geodetic latitude in degrees.
-     * 
-     * @return the geodetic latitude in degrees.
      */
-    @Override
-    public double getY();
-
-    /**
-     * Returns the longitude, in the range [-180:180] degrees.
-     * 
-     * @return the longitude, in the range [-180:180] degrees.
-     */
-    public double getLongitude();
-
-    /**
-     * Returns the geodetic latitude in degrees.
-     * 
-     * @return the geodetic latitude in degrees.
-     */
-    public double getLatitude();
-
-    /**
-     * Returns a two-dimensional coordinate reference system for longitude and
-     * latitude using the WGS84 datum ({@literal i.e.} "CRS:84"). The first
-     * coordinate in the CRS is the longitude, the second is the geodetic
-     * latitude.
-     * 
-     * @return a two-dimensional coordinate reference system for longitude and
-     *         latitude using the WGS84 datum.
-     */
-    @Override
-    public CoordinateReferenceSystem getCoordinateReferenceSystem();
+    public double getLatitude() {
+        return getY();
+    }
 }

@@ -26,54 +26,34 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.dataset.temporary;
+package uk.ac.rdg.resc.edal.grid;
 
 import java.util.AbstractList;
 import java.util.List;
 
-import org.opengis.referencing.cs.CoordinateSystemAxis;
-
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
+import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
+import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Abstract superclass for {@link ReferenceableAxis} implementations. Handles
  * the tricky case of searching for longitude values in the axis (longitude
  * values wrap around the globe).
  * 
- * @todo automatically apply the maximum extent -90:90 for latitude axes? Or is
- *       this dangerous, given that some model grid cells are constructed with
- *       latitudes outside this range?
  * @author Jon
- * @author Guy Griffiths
+ * @author Guy
  */
 public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>> implements
         ReferenceableAxis<T> {
 
-    private final CoordinateSystemAxis coordSysAxis;
     private final String name;
 
     /**
-     * Creates an axis that is referenceable to the given coordinate system
-     * axis. The name of the axis will be set to the name of the given axis.
-     * 
-     * @throws NullPointerException
-     *             if coordSysAxis is null
-     */
-    protected AbstractReferenceableAxis(CoordinateSystemAxis coordSysAxis) {
-        if (coordSysAxis == null)
-            throw new NullPointerException("coordSysAxis cannot be null");
-        this.name = coordSysAxis.getName().toString();
-        this.coordSysAxis = coordSysAxis;
-    }
-
-    /**
-     * Creates an axis with the given name. The
-     * {@link #getCoordinateSystemAxis() coordinate system axis} will be null.
+     * Creates an axis with the given name.
      */
     protected AbstractReferenceableAxis(String name) {
         this.name = name;
-        coordSysAxis = null;
     }
 
     /** Gets the value of the axis at index 0 */
@@ -150,6 +130,39 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
             }
         };
         return ret;
+    }
+    
+
+    @Override
+    public Array<Extent<T>> getDomainObjects() {
+        return new AbstractImmutableArray<Extent<T>>(new int[] { size() }) {
+            @SuppressWarnings("unchecked")
+            @Override
+            public Class<Extent<T>> getValueClass() {
+                /*
+                 * Wow.  Java generics at their finest
+                 */
+                return (Class<Extent<T>>) (Class<?>) Extent.class;
+            }
+
+            @Override
+            public Extent<T> get(int... coords) {
+                /*
+                 * coords is 1D (shape set in constructor), so this is fine
+                 */
+                return getCoordinateBounds(coords[0]);
+            }
+        };
+    }
+    
+    @Override
+    public boolean contains(T position) {
+        for(Extent<T> extent : getDomainObjects()) {
+            if(extent.contains(position)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

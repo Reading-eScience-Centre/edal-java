@@ -28,8 +28,7 @@
 
 package uk.ac.rdg.resc.edal.grid;
 
-import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
@@ -40,8 +39,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * 
  * @author Jon Blower
  */
-public interface HorizontalGrid extends DiscreteDomain<HorizontalPosition, GridCell2D>,
-        HorizontalDomain {
+public interface HorizontalGrid extends DiscreteHorizontalDomain<GridCell2D> {
 
     /**
      * {@inheritDoc}
@@ -63,4 +61,23 @@ public interface HorizontalGrid extends DiscreteDomain<HorizontalPosition, GridC
      */
     public ReferenceableAxis<Double> getYAxis();
 
+    /**
+     * Returns the size of this domain. Equivalent to
+     * <code>getXAxis().size() * getYAxis().size()</code>
+     */
+    @Override
+    public long size();
+
+    /**
+     * Finds the index of the specified position within this domain
+     * 
+     * @param position
+     *            The position to find the index of
+     * @return An int[] object representing the index of the position within the
+     *         domain. int[0] is the x-coordinate, int[1] is the y-coordinate
+     * 
+     *         TODO replace the return type with something less prone to using
+     *         the wrong co-ordinate
+     */
+    public int[] findIndexOf(HorizontalPosition position);
 }

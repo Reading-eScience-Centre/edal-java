@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.dataset.temporary;
+package uk.ac.rdg.resc.edal.util;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -39,11 +39,13 @@ import uk.ac.rdg.resc.edal.domain.Extent;
  * Contains convenience methods for creating {@link Extent} objects. This class
  * is non-instantiable.
  * 
+ * @author Guy
  * @author Jon
- * @author Guy Griffiths
  */
 public final class Extents {
-    /** Prevents instantiation */
+    /*
+     * Prevents instantiation
+     */
     private Extents() {
         throw new AssertionError();
     }
@@ -51,10 +53,10 @@ public final class Extents {
     /**
      * Creates an Extent whose minimum is the lowest value in the passed
      * collection and whose maximum is the highest value in the passed
-     * collection, according to the natural order of its elements. Null values and NaNs
-     * in the passed collection are ignored; if the collection consists entirely
-     * of null values the returned Extent will have null minimum and maximum
-     * values (an empty extent).
+     * collection, according to the natural order of its elements. Null values
+     * and NaNs in the passed collection are ignored; if the collection consists
+     * entirely of null values the returned Extent will have null minimum and
+     * maximum values (an empty extent).
      * 
      * @param <T>
      *            The type of the elements in the collection
@@ -72,11 +74,13 @@ public final class Extents {
      *             {@link Comparable} with any of the others.
      */
     public static <T extends Comparable<? super T>> Extent<T> findMinMax(Collection<T> coll) {
-        // Adapted from Collections.min()
+        /*
+         * Adapted from Collections.min()
+         */
         Iterator<? extends T> i = coll.iterator();
         T minCandidate = i.next();
         T maxCandidate = minCandidate;
-        
+
         while (i.hasNext()) {
             T next = i.next();
             if (next != null && !next.equals(Float.NaN) && !next.equals(Double.NaN)) {
@@ -97,7 +101,8 @@ public final class Extents {
         return new SimpleExtent<T>(min, max);
     }
 
-    public static <T extends Comparable<? super T>> Extent<T> newExtent(T min, T max, Comparator<? super T> comp) {
+    public static <T extends Comparable<? super T>> Extent<T> newExtent(T min, T max,
+            Comparator<? super T> comp) {
         return new SimpleExtentWithComparator<T>(min, max, comp);
     }
 
@@ -105,7 +110,8 @@ public final class Extents {
         return new SimpleExtentWithComparator<T>((T) null, (T) null, null);
     }
 
-    private abstract static class AbstractExtent<T extends Comparable<? super T>> implements Extent<T> {
+    private abstract static class AbstractExtent<T extends Comparable<? super T>> implements
+            Extent<T> {
         private final T min;
         private final T max;
         protected final Comparator<? super T> comp;
@@ -119,8 +125,8 @@ public final class Extents {
             this.max = max;
             this.comp = comp;
             if (min != null && max != null && this.compare(min, max) > 0) {
-                throw new IllegalArgumentException(String
-                        .format("min (%s) must not be greater than max (%s)", min, max));
+                throw new IllegalArgumentException(String.format(
+                        "min (%s) must not be greater than max (%s)", min, max));
             }
         }
 
@@ -137,7 +143,7 @@ public final class Extents {
 
         @Override
         public final String toString() {
-            if(min == null && max == null){
+            if (min == null && max == null) {
                 return "";
             } else {
                 return String.format("%s,%s", this.min, this.max);
@@ -153,41 +159,10 @@ public final class Extents {
         public T getLow() {
             return min;
         }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((max == null) ? 0 : max.hashCode());
-            result = prime * result + ((min == null) ? 0 : min.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            @SuppressWarnings("unchecked")
-            AbstractExtent<T> other = (AbstractExtent<T>) obj;
-            if (max == null) {
-                if (other.max != null)
-                    return false;
-            } else if (!max.equals(other.max))
-                return false;
-            if (min == null) {
-                if (other.min != null)
-                    return false;
-            } else if (!min.equals(other.min))
-                return false;
-            return true;
-        }
     }
 
-    private static final class SimpleExtent<T extends Comparable<? super T>> extends AbstractExtent<T> {
+    private static final class SimpleExtent<T extends Comparable<? super T>> extends
+            AbstractExtent<T> {
         public SimpleExtent(T min, T max) {
             super(min, max, null);
         }
@@ -198,7 +173,8 @@ public final class Extents {
         }
     }
 
-    private static final class SimpleExtentWithComparator<T extends Comparable<? super T>> extends AbstractExtent<T> {
+    private static final class SimpleExtentWithComparator<T extends Comparable<? super T>> extends
+            AbstractExtent<T> {
         public SimpleExtentWithComparator(T min, T max, Comparator<? super T> comparator) {
             super(min, max, comparator);
         }

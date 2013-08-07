@@ -42,54 +42,13 @@ import java.util.TreeMap;
  * Contains some useful utility methods for working with Collections.
  * 
  * @author Jon
+ * @author Guy
  */
 public final class CollectionUtils {
 
     /** Prevents direct instantiation */
     private CollectionUtils() {
         throw new AssertionError();
-    }
-
-    /**
-     * Returns a new empty ArrayList for objects of a certain type
-     */
-    public static <T> ArrayList<T> newArrayList() {
-        return new ArrayList<T>();
-    }
-
-    /**
-     * Returns a new empty HashSet for objects of a certain type
-     */
-    public static <T> HashSet<T> newHashSet() {
-        return new HashSet<T>();
-    }
-
-    /**
-     * Returns a new empty LinkedHashSet for objects of a certain type
-     */
-    public static <T> LinkedHashSet<T> newLinkedHashSet() {
-        return new LinkedHashSet<T>();
-    }
-
-    /**
-     * Returns a new empty HashMap for objects of a certain type
-     */
-    public static <K, V> HashMap<K, V> newHashMap() {
-        return new HashMap<K, V>();
-    }
-
-    /**
-     * Returns a new empty LinkedHashMap for objects of a certain type
-     */
-    public static <K, V> LinkedHashMap<K, V> newLinkedHashMap() {
-        return new LinkedHashMap<K, V>();
-    }
-
-    /**
-     * Returns a new empty TreeMap for objects of a certain type
-     */
-    public static <K, V> TreeMap<K, V> newTreeMap() {
-        return new TreeMap<K, V>();
     }
 
     /**
@@ -148,7 +107,7 @@ public final class CollectionUtils {
      * Returns a new Set containing the given values
      */
     public static <T> Set<T> setOf(T... values) {
-        Set<T> set = newHashSet();
+        Set<T> set = new HashSet<T>();
         for (T value : values)
             set.add(value);
         return set;

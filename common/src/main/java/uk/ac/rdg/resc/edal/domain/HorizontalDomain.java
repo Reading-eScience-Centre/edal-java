@@ -27,14 +27,15 @@
  ******************************************************************************/
 package uk.ac.rdg.resc.edal.domain;
 
-import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
  * A two-dimensional {@link Domain} in the horizontal plane
  * 
+ * @author Guy
  * @author Jon
  */
 public interface HorizontalDomain extends Domain<HorizontalPosition> {
@@ -49,7 +50,13 @@ public interface HorizontalDomain extends Domain<HorizontalPosition> {
      * Returns the bounding box of the domain in WGS84 latitude-longitude
      * coordinates.
      */
-    public GeographicBoundingBox getGeographicBoundingBox();
+    /*
+     * Commented out until we have a use case for this
+     */
+//    public GeographicBoundingBox getGeographicBoundingBox();
 
+    /**
+     * Returns the co-ordinate reference system of this domain
+     */
     public CoordinateReferenceSystem getCoordinateReferenceSystem();
 }
