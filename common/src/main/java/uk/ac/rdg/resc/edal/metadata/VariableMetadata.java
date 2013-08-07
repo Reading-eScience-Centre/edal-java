@@ -54,16 +54,49 @@ public class VariableMetadata {
     private VariableMetadata parent;
     private Set<VariableMetadata> children;
 
-    public VariableMetadata(String id, Dataset dataset, Parameter parameter,
-            HorizontalDomain hDomain, VerticalDomain zDomain, TemporalDomain tDomain) {
+    /**
+     * Constructs a {@link VariableMetadata} object holding metadata about a
+     * variable.
+     * <p>
+     * Note that the this {@link VariableMetadata} object will not have a
+     * {@link Dataset} associated with it, since these objects are usually
+     * created before being attached to a {@link Dataset}. It is expected that
+     * when {@link Dataset} is created it will set itself using the
+     * {@link VariableMetadata#setDataset(Dataset)} method
+     * </p>
+     * 
+     * @param id
+     *            The ID of the variable
+     * @param parameter
+     *            The {@link Parameter} which the variable is measuring
+     * @param hDomain
+     *            The {@link HorizontalDomain} on which the variable is measured
+     * @param zDomain
+     *            The {@link VerticalDomain} on which the variable is measured
+     * @param tDomain
+     *            The {@link TemporalDomain} on which the variable is measured
+     */
+    public VariableMetadata(String id, Parameter parameter, HorizontalDomain hDomain,
+            VerticalDomain zDomain, TemporalDomain tDomain) {
         this.id = id;
-        this.dataset = dataset;
         this.parameter = parameter;
         this.hDomain = hDomain;
         this.zDomain = zDomain;
         this.tDomain = tDomain;
         parent = null;
         children = new HashSet<VariableMetadata>();
+    }
+
+    /**
+     * Recursively set the dataset for this {@link VariableMetadata}
+     * 
+     * @param dataset
+     */
+    public void setDataset(Dataset dataset) {
+        this.dataset = dataset;
+        for (VariableMetadata child : children) {
+            child.setDataset(dataset);
+        }
     }
 
     /**
