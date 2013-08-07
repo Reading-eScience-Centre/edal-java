@@ -26,13 +26,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.dataset.temporary;
-
-import org.opengis.referencing.cs.CoordinateSystemAxis;
+package uk.ac.rdg.resc.edal.grid;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.grid.RegularAxis;
-import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
@@ -44,22 +41,23 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  */
 public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> implements RegularAxis {
     private double firstValue;
-    private double spacing; // The axis spacing
-    private int size; // The number of points on the axis
+    /*
+     * The axis spacing
+     */
+    private double spacing;
+    /*
+     * The number of points on the axis
+     */
+    private int size;
     private final boolean isLongitude;
 
-    public RegularAxisImpl(CoordinateSystemAxis axis, double firstValue, double spacing, int size, boolean isLongitude) {
-        super(axis);
-        this.isLongitude = isLongitude;
-        init(firstValue, spacing, size);
-    }
-
-    public RegularAxisImpl(String name, double firstValue, double spacing, int size, boolean isLongitude) {
+    public RegularAxisImpl(String name, double firstValue, double spacing, int size,
+            boolean isLongitude) {
         super(name);
         this.isLongitude = isLongitude;
         init(firstValue, spacing, size);
     }
-
+    
     private void init(double firstValue, double spacing, int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("Axis length must not be negative or zero");
@@ -96,26 +94,30 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     }
 
     @Override
+    public String toString() {
+        return String.format("Regular axis: %s, %f, %f, %d", getName(), firstValue, spacing, size);
+    }
+
+    @Override
     public Extent<Double> getCoordinateBounds(int index) {
         double centre = getCoordinateValue(index);
-        if(spacing > 0) {
-            return Extents.newExtent(centre - 0.5 * spacing, centre + 0.5 * spacing);
-        } else {
-            return Extents.newExtent(centre + 0.5 * spacing, centre - 0.5 * spacing);
-        }
+        return Extents.newExtent(centre - 0.5 * spacing, centre + 0.5 * spacing);
     }
 
     @Override
     public int findIndexOf(Double position) {
         if (isLongitude) {
-            position = GISUtils.getNextEquivalentLongitude(this.getCoordinateExtent().getLow(), position);
+            position = GISUtils.getNextEquivalentLongitude(this.getCoordinateExtent().getLow(),
+                    position);
         }
-        // This method will generally be faster than an exhaustive search, or
-        // even a binary search
+        /*
+         * This method will generally be faster than an exhaustive search, or
+         * even a binary search
+         */
 
-        // We find the (non-integer) index of the given value
+        /* We find the (non-integer) index of the given value */
         Double indexDbl = getIndex(position);
-        // We round to the nearest integer
+        /* We round to the nearest integer */
         int index = (int) Math.round(indexDbl);
         if (index < 0 || index >= size)
             return -1;
@@ -129,7 +131,7 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     private Double getIndex(Double value) {
         return (value - firstValue) / spacing;
     }
-    
+
     @Override
     protected Double extendFirstValue(Double firstVal, Double nextVal) {
         return firstVal - 0.5 * (nextVal - firstVal);
@@ -172,17 +174,5 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         if (Double.doubleToLongBits(spacing) != Double.doubleToLongBits(other.spacing))
             return false;
         return true;
-    }
-
-    @Override
-    public Array<Extent<Double>> getDomainObjects() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean contains(Double position) {
-        // TODO Auto-generated method stub
-        return false;
     }
 }

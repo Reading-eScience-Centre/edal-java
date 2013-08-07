@@ -2,7 +2,7 @@ package uk.ac.rdg.resc.edal.util;
 
 import java.util.Iterator;
 
-public class ValuesArray4D implements Array<Number> {
+public class ValuesArray4D extends Array4D {
 
     private int[] shape = new int[4];
     private Double[][][][] data;
@@ -22,11 +22,6 @@ public class ValuesArray4D implements Array<Number> {
         shape[T_IND] = tSize;
 
         data = new Double[tSize][zSize][ySize][xSize];
-    }
-
-    @Override
-    public int getNDim() {
-        return 4;
     }
 
     @Override

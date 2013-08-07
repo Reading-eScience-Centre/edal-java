@@ -29,7 +29,6 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * A factory for {@link Dataset} objects. The intention is that one factory
@@ -47,11 +46,7 @@ public interface DatasetFactory {
      * @param location
      *            The location of the source data: this may be a file, database
      *            connection string or a remote server address.
-     * @param parameters
-     *            Parameters that affect the creation of the dataset. These are
-     *            specific to the Factory in question.
-     * @return
      */
-    public Dataset createDataset(String location, Map<String, Object> parameters)
+    public Dataset createDataset(String location)
             throws IOException;
 }

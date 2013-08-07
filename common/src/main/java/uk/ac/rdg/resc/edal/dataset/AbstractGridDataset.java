@@ -29,31 +29,35 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
+import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
-import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.util.Array;
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.ValuesArray2D;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.util.Array2D;
 
 /**
+ * A partial implementation of a {@link GridDataset}, using a
+ * {@link GridDataSource} and a {@link DataReadingStrategy}.
  * 
  * @author Jon
+ * @author Guy
  */
 public abstract class AbstractGridDataset implements GridDataset {
-    protected final DataReadingStrategy strategy = null;
-
     @Override
-    public final GridFeature readMapData(Set<String> varIds, HorizontalGrid targetGrid,
-            Double zPos, DateTime time) throws IOException {
+    public final MapFeature readMapData(Set<String> varIds, HorizontalGrid targetGrid, Double zPos,
+            DateTime time) throws IOException {
         /*
          * Open the source of data
          */
@@ -67,11 +71,21 @@ public abstract class AbstractGridDataset implements GridDataset {
          * aggregation, in which different variables may have different mappings
          * from time values to filename/tIndex.
          */
-        Map<String, Array<? extends Number>> values = CollectionUtils.newHashMap();
-        Map<String, VariableMetadata> metadata = CollectionUtils.newHashMap();
+        Map<String, Array2D> values = new HashMap<String, Array2D>();
+        Map<String, Parameter> parameters = new HashMap<String, Parameter>();
 
+        /*
+         * We need a vertical CRS. This should be the same for all variables in
+         * this dataset, so we can set it from any one of them
+         */
+        VerticalCrs vCrs = null;
+        StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
+        StringBuilder description = new StringBuilder("Map feature from variables:\n");
         for (String varId : varIds) {
-            GridVariableMetadata vm = getVariableMetadata(varId);
+            id.append(varId);
+            description.append(varId + "\n");
+
+            GridVariableMetadata existingMetadata = getVariableMetadata(varId);
 
             /*
              * TODO: if this is a variable whose values are derived (rather than
@@ -80,14 +94,16 @@ public abstract class AbstractGridDataset implements GridDataset {
              */
 
             /*
-             * Cast down the horizontal, vertical and temporal domain objects to
-             * HorizontalGrid, VerticalAxis and TimeAxis. This should always be
-             * successful because we define GridDatasets to always use these
-             * domain subclasses.
+             * Get the domain of the grid
              */
-            HorizontalGrid sourceGrid = vm.getHorizontalDomain();
-            VerticalAxis zAxis = vm.getVerticalDomain();
-            TimeAxis tAxis = vm.getTemporalDomain();
+            HorizontalGrid sourceGrid = existingMetadata.getHorizontalDomain();
+            VerticalAxis zAxis = existingMetadata.getVerticalDomain();
+            TimeAxis tAxis = existingMetadata.getTemporalDomain();
+
+            /*
+             * All variables within this dataset should share the same vertical
+             * CRS (even if they don't share the same values)
+             */
 
             /*
              * Use these objects to convert natural coordinates to grid indices
@@ -97,22 +113,23 @@ public abstract class AbstractGridDataset implements GridDataset {
             /*
              * Create a PixelMap from the source and target grids
              */
-            PixelMap pixelMap = PixelMap.forGrid(sourceGrid, targetGrid);
+            Domain2DMapper pixelMap = Domain2DMapper.forGrid(sourceGrid, targetGrid);
 
             /*
-             * Now use the approprate DataReadingStrategy to read data
+             * Now use the appropriate DataReadingStrategy to read data
              */
-            ValuesArray2D data = strategy.readMapData(dataSource, varId, tIndex, zIndex, pixelMap);
-
-            /*
-             * Create new VariableMetadata object with the new domain, units etc
-             * 
-             * TODO
-             */
-            VariableMetadata newVm = null;
+            Array2D data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
+                    pixelMap);
 
             values.put(varId, data);
-            metadata.put(varId, newVm);
+            /*
+             * We just use the existing parameter data, as it is likely to be
+             * the same.
+             * 
+             * TODO this may be different for derived variables, but we haven't
+             * figured them out just yet
+             */
+            parameters.put(varId, existingMetadata.getParameter());
         }
 
         /*
@@ -123,13 +140,22 @@ public abstract class AbstractGridDataset implements GridDataset {
         /*
          * Construct the GridFeature from the t and z values, the horizontal
          * grid and the VariableMetadata objects
-         * 
-         * TODO
          */
-        GridFeature gf = null;
+        MapDomain domain = new MapDomainImpl(targetGrid, zPos, vCrs, time);
+        if (time != null) {
+            description.append("Time: " + time + "\n");
+        }
+        if (zPos != null) {
+            description.append("Elevation: " + zPos);
+        }
 
-        return gf;
+        MapFeature mapFeature = new MapFeature(UUID.fromString(id.toString()).toString(),
+                "Extracted Map Feature", description.toString(), domain, parameters, values);
+
+        return mapFeature;
     }
 
     protected abstract GridDataSource openGridDataSource() throws IOException;
+
+    protected abstract DataReadingStrategy getDataReadingStrategy();
 }

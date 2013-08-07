@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
@@ -42,47 +43,104 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
  * @author Jon
  * @author Guy
  */
-public interface VariableMetadata {
+public class VariableMetadata {
+
+    private String id;
+    private Dataset dataset;
+    private Parameter parameter;
+    private HorizontalDomain hDomain;
+    private VerticalDomain zDomain;
+    private TemporalDomain tDomain;
+    private VariableMetadata parent;
+    private Set<VariableMetadata> children;
+
+    public VariableMetadata(String id, Dataset dataset, Parameter parameter,
+            HorizontalDomain hDomain, VerticalDomain zDomain, TemporalDomain tDomain) {
+        this.id = id;
+        this.dataset = dataset;
+        this.parameter = parameter;
+        this.hDomain = hDomain;
+        this.zDomain = zDomain;
+        this.tDomain = tDomain;
+        parent = null;
+        children = new HashSet<VariableMetadata>();
+    }
+
     /**
      * The identifier of the variable with the parent dataset.
      */
-    public String getId();
+    public String getId() {
+        return id;
+    }
 
     /**
      * The dataset to which this variable belongs
      */
-    public Dataset getDataset();
+    public Dataset getDataset() {
+        return dataset;
+    }
 
     /**
      * Describes what is being measured by the values of this variable.
      */
-    public Parameter getParameter();
+    public Parameter getParameter() {
+        return parameter;
+    }
 
     /**
      * Returns the horizontal domain of the variable.
      */
-    public HorizontalDomain getHorizontalDomain();
+    public HorizontalDomain getHorizontalDomain() {
+        return hDomain;
+    }
 
     /**
      * Returns the vertical domain of the variable
      */
-    public VerticalDomain getVerticalDomain();
+    public VerticalDomain getVerticalDomain() {
+        return zDomain;
+    }
 
     /**
      * Returns the temporal domain of the variable
      */
-    public TemporalDomain getTemporalDomain();
+    public TemporalDomain getTemporalDomain() {
+        return tDomain;
+    }
 
     /**
      * Returns the {@link VariableMetadata} of the parent object, or
      * <code>null</code> if this {@link VariableMetadata} has no parent
      */
-    public VariableMetadata getParent();
+    public VariableMetadata getParent() {
+        return parent;
+    }
 
     /**
      * Returns a {@link Set} containing the children of this
      * {@link VariableMetadata}, or an empty {@link Set} if there are none. This
      * method may not return <code>null</code>
      */
-    public Set<VariableMetadata> getChildren();
+    public Set<VariableMetadata> getChildren() {
+        return children;
+    }
+
+    /**
+     * Sets the parent-child relationship of this {@link VariableMetadata} and
+     * another one.
+     * 
+     * @param parent
+     *            The parent {@link VariableMetadata} object
+     */
+    public void setParent(VariableMetadata parent) {
+        if (this.parent != null && !this.parent.equals(parent)) {
+            /*
+             * We are changing to a new parent. Therefore, the old one will not
+             * have this as a child any more.
+             */
+            this.parent.children.remove(this);
+        }
+        this.parent = parent;
+        this.parent.children.add(this);
+    }
 }

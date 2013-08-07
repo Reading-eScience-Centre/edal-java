@@ -36,7 +36,21 @@ import uk.ac.rdg.resc.edal.feature.Feature;
  * @author Jon
  * @author Guy
  */
-public interface Parameter {
+public class Parameter {
+    
+    private String id;
+    private String title;
+    private String description;
+    /* TODO: This will probably end up as something more complex than a string */
+    private String units;
+
+    public Parameter(String id, String title, String description, String units) {
+        super();
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.units = units;
+    }
 
     /**
      * An identifier that is unique within the context ({@literal e.g.} within
@@ -44,21 +58,28 @@ public interface Parameter {
      * 
      * @return
      */
-    public String getId();
+    public String getId() {
+        return id;
+    }
 
     /**
      * Human-readable, fairly short title for the parameter.
      */
-    public String getTitle();
+    public String getTitle() {
+        return title;
+    }
 
     /**
      * Human-readable, perhaps-lengthy description of the parameter.
      */
-    public String getDescription();
+    public String getDescription() {
+        return description;
+    }
 
     /**
-     * 
-     * @return
+     * The units of this parameter
      */
-    public String getUnits();
+    public String getUnits() {
+        return units;
+    }
 }

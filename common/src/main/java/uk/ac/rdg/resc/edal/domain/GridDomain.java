@@ -39,8 +39,8 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
  * The domain of a {@link GridFeature}, modelled as a composition of a
  * horizontal grid, plus t and z axes.
  * 
- * @author Jon Blower
  * @author Guy
+ * @author Jon Blower
  */
 public interface GridDomain extends DiscreteDomain<GeoPosition, GridCell4D> {
     /**
@@ -57,4 +57,9 @@ public interface GridDomain extends DiscreteDomain<GeoPosition, GridCell4D> {
      * @return the time component of this domain
      */
     public TimeAxis getTimeAxis();
+    
+    /**
+     * @return the size of this domain
+     */
+    public long size();
 }

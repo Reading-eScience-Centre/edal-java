@@ -2,7 +2,7 @@ package uk.ac.rdg.resc.edal.util;
 
 import java.util.Iterator;
 
-public class ValuesArray2D implements Array<Number> {
+public class ValuesArray2D extends Array2D {
 
     private int[] shape = new int[2];
     private Double[][] data;
@@ -18,11 +18,6 @@ public class ValuesArray2D implements Array<Number> {
         shape[Y_IND] = ySize;
 
         data = new Double[ySize][xSize];
-    }
-
-    @Override
-    public int getNDim() {
-        return 2;
     }
 
     @Override

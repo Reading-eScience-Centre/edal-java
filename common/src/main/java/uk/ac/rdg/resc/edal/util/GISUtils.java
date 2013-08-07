@@ -31,6 +31,10 @@ package uk.ac.rdg.resc.edal.util;
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.util.FactoryException;
+
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
  * A class containing static methods which are useful for GIS operations.
@@ -51,7 +55,7 @@ public final class GISUtils {
             return false;
         }
     }
-    
+
     public static double getNextEquivalentLongitude(double reference, double target) {
         // Find the clockwise distance from the first value on this axis
         // to the target value. This will be a positive number from 0 to
@@ -59,7 +63,7 @@ public final class GISUtils {
         double clockDiff = constrainLongitude360(target - reference);
         return reference + clockDiff;
     }
-    
+
     public static double constrainLongitude180(double value) {
         double val = constrainLongitude360(value);
         return val > 180.0 ? val - 360.0 : val;
@@ -72,5 +76,61 @@ public final class GISUtils {
     public static double constrainLongitude360(double value) {
         double val = value % 360.0;
         return val < 0.0 ? val + 360.0 : val;
+    }
+
+    /**
+     * Transforms the given HorizontalPosition to a new position in the given
+     * coordinate reference system.
+     * 
+     * @param pos
+     *            The position to translate.
+     * @param targetCrs
+     *            The CRS to translate into
+     * @return a new position in the given CRS, or the same position if the new
+     *         CRS is the same as the point's CRS. The returned point's CRS will
+     *         be set to {@code targetCrs}. If the CRS of the position is null,
+     *         the CRS will simply be set to the targetCrs.
+     * @throws NullPointerException
+     *             if {@code targetCrs} is null.
+     * @todo error handling
+     */
+    public static HorizontalPosition transformPosition(HorizontalPosition pos,
+            CoordinateReferenceSystem targetCrs) {
+        if (targetCrs == null) {
+            throw new NullPointerException("Target CRS cannot be null");
+        }
+        CoordinateReferenceSystem sourceCrs = pos.getCoordinateReferenceSystem();
+        if (sourceCrs == null) {
+            return new HorizontalPosition(pos.getX(), pos.getY(), targetCrs);
+        }
+        /*
+         * CRS.findMathTransform() caches recently-used transform objects so we
+         * should incur no large penalty for multiple invocations
+         */
+        try {
+            MathTransform transform = CRS.findMathTransform(sourceCrs, targetCrs);
+            if (transform.isIdentity())
+                return pos;
+            double[] point = new double[] { pos.getX(), pos.getY() };
+            transform.transform(point, 0, point, 0, 1);
+            return new HorizontalPosition(point[0], point[1], targetCrs);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean crsMatch(CoordinateReferenceSystem sourceCrs,
+            CoordinateReferenceSystem targetCrs) {
+        MathTransform transform;
+        try {
+            transform = CRS.findMathTransform(sourceCrs, DefaultGeographicCRS.WGS84);
+            return transform.isIdentity();
+        } catch (FactoryException e) {
+            /*
+             * There is a problem performing the transfer. Say that these CRSs
+             * do not match (since we can't be sure)
+             */
+            return false;
+        }
     }
 }

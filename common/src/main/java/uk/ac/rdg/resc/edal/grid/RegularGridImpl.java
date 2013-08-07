@@ -26,46 +26,24 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.dataset.temporary;
+package uk.ac.rdg.resc.edal.grid;
 
-import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.RangeMeaning;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.grid.RegularAxis;
-import uk.ac.rdg.resc.edal.grid.RegularGrid;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.util.Array;
 
 /**
  * Immutable implementation of a {@link RegularGrid}.
  * 
+ * @author Guy
  * @author Jon
- * @author Guy Griffiths
  */
-public class RegularGridImpl implements RegularGrid
-{
-    private final RegularAxis xAxis;
-    private final RegularAxis yAxis;
-    private final CoordinateReferenceSystem crs;
+public class RegularGridImpl extends HorizontalGridImpl implements RegularGrid {
 
     public RegularGridImpl(RegularAxis xAxis, RegularAxis yAxis, CoordinateReferenceSystem crs) {
-        if (xAxis == null || yAxis == null) {
-            throw new NullPointerException("Axes cannot be null");
-        }
-        this.xAxis = xAxis;
-        this.yAxis = yAxis;
-        this.crs = crs;
-    }
-
-    /**
-     * Constructs a RegularGrid with a null coordinate reference system
-     */
-    public RegularGridImpl(RegularAxis xAxis, RegularAxis yAxis) {
-        this(xAxis, yAxis, null);
+        super(xAxis, yAxis, crs);
     }
 
     /**
@@ -136,7 +114,7 @@ public class RegularGridImpl implements RegularGrid
         if (maxx < minx || maxy < miny) {
             throw new IllegalArgumentException("Invalid bounding box");
         }
-        
+
         this.crs = crs;
 
         double xSpacing = (maxx - minx) / width;
@@ -150,8 +128,7 @@ public class RegularGridImpl implements RegularGrid
             /*
              * If we don't have a crs, we can't tell if an axis is longitude
              */
-            xAxis = new RegularAxisImpl("Unknown X axis", firstXAxisValue, xSpacing, width,
-                    false);
+            xAxis = new RegularAxisImpl("Unknown X axis", firstXAxisValue, xSpacing, width, false);
             yAxis = new RegularAxisImpl("Unknown Y axis", firstYAxisValue, ySpacing, height, false);
         } else {
             /*
@@ -163,82 +140,23 @@ public class RegularGridImpl implements RegularGrid
              * wrap value?
              */
             CoordinateSystem cs = crs.getCoordinateSystem();
-            xAxis = new RegularAxisImpl(cs.getAxis(0), firstXAxisValue, xSpacing, width,
-                    (cs.getAxis(0).getRangeMeaning()==RangeMeaning.WRAPAROUND));
-            // y axis is very unlikely to be longitude
-            yAxis = new RegularAxisImpl(cs.getAxis(1), firstYAxisValue, ySpacing, height, (cs
-                    .getAxis(1).getRangeMeaning() == RangeMeaning.WRAPAROUND));
+            xAxis = new RegularAxisImpl(cs.getAxis(0).getName().toString(), firstXAxisValue,
+                    xSpacing, width, (cs.getAxis(0).getRangeMeaning() == RangeMeaning.WRAPAROUND));
+            /*
+             * y axis is very unlikely to be longitude
+             */
+            yAxis = new RegularAxisImpl(cs.getAxis(1).getName().toString(), firstYAxisValue,
+                    ySpacing, height, (cs.getAxis(1).getRangeMeaning() == RangeMeaning.WRAPAROUND));
         }
     }
 
     @Override
     public RegularAxis getXAxis() {
-        return xAxis;
+        return getXAxis();
     }
 
     @Override
     public RegularAxis getYAxis() {
-        return yAxis;
+        return getYAxis();
     }
-
-    @Override
-    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return this.crs;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((xAxis == null) ? 0 : xAxis.hashCode());
-        result = prime * result + ((yAxis == null) ? 0 : yAxis.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        RegularGridImpl other = (RegularGridImpl) obj;
-        if (xAxis == null) {
-            if (other.xAxis != null)
-                return false;
-        } else if (!xAxis.equals(other.xAxis))
-            return false;
-        if (yAxis == null) {
-            if (other.yAxis != null)
-                return false;
-        } else if (!yAxis.equals(other.yAxis))
-            return false;
-        return true;
-    }
-
-    @Override
-    public Array<GridCell2D> getDomainObjects() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean contains(HorizontalPosition position) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public BoundingBox getBoundingBox() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public GeographicBoundingBox getGeographicBoundingBox() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

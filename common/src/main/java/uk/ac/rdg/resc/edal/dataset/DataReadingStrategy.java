@@ -31,10 +31,11 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import uk.ac.rdg.resc.edal.dataset.PixelMap.PixelMapEntry;
-import uk.ac.rdg.resc.edal.dataset.PixelMap.Scanline;
+import uk.ac.rdg.resc.edal.dataset.DomainMapper.DomainMapperEntry;
+import uk.ac.rdg.resc.edal.dataset.DomainMapper.Scanline;
+import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
-import uk.ac.rdg.resc.edal.util.ValuesArray4D;
 
 /**
  * <p>
@@ -51,7 +52,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray4D;
  * <h3>Strategy 1: read data points one at a time</h3>
  * <p>
  * Read each data point individually by iterating through
- * {@link PixelMap#getJIndices} and {@link PixelMap#getIIndices}. This minimizes
+ * {@link DomainMapper#getJIndices} and {@link DomainMapper#getIIndices}. This minimizes
  * the memory footprint as the minimum amount of data is read from disk.
  * However, in general this method is inefficient as it maximizes the overhead
  * of the low-level data extraction code by making a large number of small data
@@ -62,8 +63,8 @@ import uk.ac.rdg.resc.edal.util.ValuesArray4D;
  * <p>
  * Read all data in one operation (potentially including lots of data points
  * that are not needed) by finding the overall i-j bounding box with
- * {@link PixelMap#getMinIIndex}, {@link PixelMap#getMaxIIndex},
- * {@link PixelMap#getMinJIndex} and {@link PixelMap#getMaxJIndex}. This
+ * {@link DomainMapper#getMinIIndex}, {@link DomainMapper#getMaxIIndex},
+ * {@link DomainMapper#getMinJIndex} and {@link DomainMapper#getMaxJIndex}. This
  * minimizes the number of calls to low-level data extraction code, but may
  * result in a large memory footprint. The {@link DataReader} would then subset
  * this data array in-memory. This is the {@link #BOUNDING_BOX bounding-box}
@@ -84,10 +85,10 @@ import uk.ac.rdg.resc.edal.util.ValuesArray4D;
  * overhead of the low-level data extraction code, works as follows:
  * <ol>
  * <li>Iterate through each row (i.e. each j index) that is represented in the
- * PixelMap using {@link PixelMap#getJIndices}.</li>
+ * PixelMap using {@link DomainMapper#getJIndices}.</li>
  * <li>For each j index, extract data from the minimum to the maximum i index in
- * this row (a "scanline") using {@link PixelMap#getMinIIndexInRow} and
- * {@link PixelMap#getMaxIIndexInRow}. (This assumes that the data are stored
+ * this row (a "scanline") using {@link DomainMapper#getMinIIndexInRow} and
+ * {@link DomainMapper#getMaxIIndexInRow}. (This assumes that the data are stored
  * with the i dimension varying fastest, meaning that the scanline represents
  * contiguous data in the source files.)</li>
  * </ol>
@@ -114,15 +115,15 @@ public enum DataReadingStrategy {
      */
     SCANLINE {
         @Override
-        public ValuesArray2D readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, PixelMap pixelMap) throws IOException {
-            ValuesArray2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
+        public Array2D readMapData(GridDataSource dataSource, String varId, int tIndex,
+                int zIndex, Domain2DMapper pixelMap) throws IOException {
+            Array2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
 
-            Iterator<Scanline> it = pixelMap.scanlineIterator();
+            Iterator<Scanline<int[]>> it = pixelMap.scanlineIterator();
             while (it.hasNext()) {
-                Scanline scanline = it.next();
-                List<PixelMapEntry> entries = scanline.getPixelMapEntries();
+                Scanline<int[]> scanline = it.next();
+                List<DomainMapperEntry<int[]>> entries = scanline.getPixelMapEntries();
 
                 int j = scanline.getSourceGridJIndex();
                 int imin = entries.get(0).getSourceGridIIndex();
@@ -135,11 +136,11 @@ public enum DataReadingStrategy {
                 maxes[0] = imax;
                 maxes[1] = j;
 
-                ValuesArray4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, j, j,
+                Array4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, j, j,
                         imin, imax);
 
-                for (PixelMapEntry pme : scanline.getPixelMapEntries()) {
-                    List<int[]> targetGridPoints = pme.getTargetGridPoints();
+                for (DomainMapperEntry<int[]> pme : scanline.getPixelMapEntries()) {
+                    List<int[]> targetGridPoints = pme.getTargetIndices();
                     for (int[] targetPoint : targetGridPoints) {
                         ret.set(data.get(0, 0, 0, pme.getSourceGridIIndex() - imin), new int[] {
                                 targetPoint[1], targetPoint[0] });
@@ -157,18 +158,18 @@ public enum DataReadingStrategy {
      */
     BOUNDING_BOX {
         @Override
-        public ValuesArray2D readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, PixelMap pixelMap) throws IOException {
-            ValuesArray2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
+        public Array2D readMapData(GridDataSource dataSource, String varId, int tIndex,
+                int zIndex, Domain2DMapper pixelMap) throws IOException {
+            Array2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
             int imin = pixelMap.getMinIIndex();
             int imax = pixelMap.getMaxIIndex();
             int jmin = pixelMap.getMinJIndex();
             int jmax = pixelMap.getMaxJIndex();
-            ValuesArray4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, jmin, jmax,
+            Array4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, jmin, jmax,
                     imin, imax);
-            for (PixelMapEntry pme : pixelMap) {
-                List<int[]> targetGridPoints = pme.getTargetGridPoints();
+            for (DomainMapperEntry<int[]> pme : pixelMap) {
+                List<int[]> targetGridPoints = pme.getTargetIndices();
                 for (int[] targetPoint : targetGridPoints) {
                     ret.set(data.get(0, 0, pme.getSourceGridJIndex() - jmin,
                             pme.getSourceGridIIndex() - imin), new int[] { targetPoint[1],
@@ -185,15 +186,15 @@ public enum DataReadingStrategy {
      */
     PIXEL_BY_PIXEL {
         @Override
-        public ValuesArray2D readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, PixelMap pixelMap) throws IOException {
-            ValuesArray2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
+        public Array2D readMapData(GridDataSource dataSource, String varId, int tIndex,
+                int zIndex, Domain2DMapper pixelMap) throws IOException {
+            Array2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
-            for (PixelMapEntry pme : pixelMap) {
-                ValuesArray4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex,
+            for (DomainMapperEntry<int[]> pme : pixelMap) {
+                Array4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex,
                         pme.getSourceGridJIndex(), pme.getSourceGridJIndex(),
                         pme.getSourceGridIIndex(), pme.getSourceGridIIndex());
-                List<int[]> targetGridPoints = pme.getTargetGridPoints();
+                List<int[]> targetGridPoints = pme.getTargetIndices();
                 for (int[] targetPoint : targetGridPoints) {
                     ret.set(data.get(0, 0, 0, 0), new int[] { targetPoint[1], targetPoint[0] });
                 }
@@ -202,6 +203,6 @@ public enum DataReadingStrategy {
         }
     };
 
-    abstract public ValuesArray2D readMapData(GridDataSource dataSource, String varId, int tIndex,
-            int zIndex, PixelMap pixelMap) throws IOException;
+    abstract public Array2D readMapData(GridDataSource dataSource, String varId, int tIndex,
+            int zIndex, Domain2DMapper pixelMap) throws IOException;
 }

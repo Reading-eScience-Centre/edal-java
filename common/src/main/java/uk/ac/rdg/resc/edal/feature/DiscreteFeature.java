@@ -69,6 +69,8 @@ public interface DiscreteFeature<P, DO> extends Feature<P> {
      * Gets the number of distinct values in this coverage. (Equivalent to
      * {@code getDomain().size()}.)
      * 
+     * TODO Is there any point in this being a separate method?
+     * 
      * @return the number of distinct values in this coverage.
      */
     public long size();

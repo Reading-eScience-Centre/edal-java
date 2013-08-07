@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
+import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -37,22 +38,34 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
  * 
  * @author Guy
  */
-public interface GridVariableMetadata extends VariableMetadata {
+public class GridVariableMetadata extends VariableMetadata {
+    
+    public GridVariableMetadata(String id, Dataset dataset, Parameter parameter,
+            HorizontalGrid hDomain, VerticalAxis zDomain, TimeAxis tDomain) {
+        super(id, dataset, parameter, hDomain, zDomain, tDomain);
+    }
+
     /**
      * Returns the {@link HorizontalGrid} of the variable.
      */
     @Override
-    public HorizontalGrid getHorizontalDomain();
+    public HorizontalGrid getHorizontalDomain() {
+        return (HorizontalGrid) super.getHorizontalDomain();
+    }
 
     /**
      * Returns the {@link VerticalAxis} of the variable
      */
     @Override
-    public VerticalAxis getVerticalDomain();
+    public VerticalAxis getVerticalDomain() {
+        return (VerticalAxis) super.getVerticalDomain();
+    }
 
     /**
      * Returns the {@link TimeAxis} of the variable
      */
     @Override
-    public TimeAxis getTemporalDomain();
+    public TimeAxis getTemporalDomain() {
+        return (TimeAxis) super.getTemporalDomain();
+    }
 }

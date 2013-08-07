@@ -41,7 +41,9 @@ package uk.ac.rdg.resc.edal.position;
  */
 public interface VerticalCrs {
     /**
-     * @return the units for the values in this {@link VerticalCrs}
+     * Returns the units for the values in this {@link VerticalCrs}
+     * <p>
+     * TODO This may need replacing with a stronger type
      */
     public String getUnits();
 
@@ -66,9 +68,7 @@ public interface VerticalCrs {
      * what to do.
      * </p>
      * 
-     * @see http
-     *      ://cf-pcmdi.llnl.gov/documents/cf-conventions/1.5/cf-conventions.
-     *      html#dimensionless-v-coord
+     * @see http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.5/cf-conventions.html#dimensionless-v-coord
      */
     public boolean isDimensionless();
 
