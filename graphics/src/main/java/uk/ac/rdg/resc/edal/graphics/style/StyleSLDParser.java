@@ -19,15 +19,19 @@ import org.xml.sax.SAXException;
 
 public class StyleSLDParser {
 	
-	private static final String OUTPUT_ENCODING = "UTF-8";
-	private static final String JAXP_SCHEMA_LANGUAGE =
+	public static final String OUTPUT_ENCODING = "UTF-8";
+	public static final String JAXP_SCHEMA_LANGUAGE =
 			"http://java.sun.com/xml/jaxp/properties/schemaLanguage";
-	private static final String W3C_XML_SCHEMA =
+	public static final String W3C_XML_SCHEMA =
 			"http://www.w3.org/2001/XMLSchema";
-	private static final String JAXP_SCHEMA_SOURCE =
+	public static final String JAXP_SCHEMA_SOURCE =
 			"http://java.sun.com/xml/jaxp/properties/schemaSource";
-	private static final String SLD_SCHEMA =
+	public static final String SLD_SCHEMA =
 			"http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd";
+	public static final String SLD_NAMESPACE =
+			"http://www.opengis.net/sld";
+	public static final String SE_NAMESPACE =
+			"http://www.opengis.net/se";
 	
 	public static String SLDtoXMLString(File file)
 			throws ParserConfigurationException, SAXException, FileNotFoundException,
@@ -58,7 +62,7 @@ public class StyleSLDParser {
 		Document document = builder.parse(new FileInputStream(file));
 		
 		// Parse the XML document using DOM
-		NodeList namedLayers = document.getElementsByTagName("NamedLayer");
+		NodeList namedLayers = document.getElementsByTagNameNS(SLD_NAMESPACE, "NamedLayer");
 		if (namedLayers == null) {
 			return "";
 		}
@@ -72,60 +76,50 @@ public class StyleSLDParser {
 			}
 			Element layerElement = (Element) layerNode;
 			
-			String name = layerElement.getElementsByTagName("se:Name").item(0).getTextContent();
-			if (name == null) {
+			// get name of data field
+			Node nameNode = layerElement.getElementsByTagNameNS(SE_NAMESPACE, "Name").item(0);
+			if (nameNode == null) {
 				continue;
 			}
-			
-			// get first CoverageStyle element
-			Node csNode = layerElement.getElementsByTagName("se:CoverageStyle").item(0);
-			if (csNode == null || csNode.getNodeType() != Node.ELEMENT_NODE) {
+			String name = nameNode.getTextContent();
+			if (name.equals("")) {
 				continue;
 			}
-			Element csElement = (Element) csNode;
-			
-			// get first Rule element
-			Node ruleNode = csElement.getElementsByTagName("se:Rule").item(0);
-			if (ruleNode == null || ruleNode.getNodeType() != Node.ELEMENT_NODE) {
-				continue;
-			}
-			Element ruleElement = (Element) ruleNode;
 			
 			// get first RasterSymbolizer element
-			Node rsNode = ruleElement.getElementsByTagName("se:RasterSymbolizer").item(0);
-			if (rsNode == null || rsNode.getNodeType() != Node.ELEMENT_NODE) {
+			Node symbolizerNode = layerElement.getElementsByTagNameNS(SE_NAMESPACE, "RasterSymbolizer").item(0);
+			if (symbolizerNode == null || symbolizerNode.getNodeType() != Node.ELEMENT_NODE) {
 				continue;
 			}
-			Element rsElement = (Element) rsNode;
+			Element symbolizerElement = (Element) symbolizerNode;
 
-			// get opacity attribute
-			String opacity = layerElement.getElementsByTagName("se:Opacity").item(0).getTextContent();
+			// get opacity element
+			Node opacityNode = symbolizerElement.getElementsByTagNameNS(SE_NAMESPACE, "Opacity").item(0);
+			String opacity;
+			if (opacityNode != null) {
+				opacity = opacityNode.getTextContent();
+			} else {
+				opacity = "";
+			}
 			
-			// get first ColorMap element
-			Node cmNode = rsElement.getElementsByTagName("se:ColorMap").item(0);
-			if (cmNode == null || cmNode.getNodeType() != Node.ELEMENT_NODE) {
-				continue;
-			}
-			Element cmElement = (Element) cmNode;
-
 			// get first Categorize element
-			Node catNode = cmElement.getElementsByTagName("se:Categorize").item(0);
-			if (catNode == null || catNode.getNodeType() != Node.ELEMENT_NODE) {
+			Node categorizeNode = symbolizerElement.getElementsByTagNameNS(SE_NAMESPACE, "Categorize").item(0);
+			if (categorizeNode == null || categorizeNode.getNodeType() != Node.ELEMENT_NODE) {
 				continue;
 			}
-			Element catElement = (Element) catNode;
+			Element categorizeElement = (Element) categorizeNode;
 			
 			// get fall back value
-			String fallbackValue = catElement.getAttribute("fallbackValue");
+			String fallbackValue = categorizeElement.getAttribute("fallbackValue");
 			
 			// get list of colours
-			NodeList colours = catElement.getElementsByTagName("se:Value");
+			NodeList colours = categorizeElement.getElementsByTagNameNS(SE_NAMESPACE, "Value");
 			if (colours == null) {
 				continue;
 			}
 			
 			//get list of thresholds
-			NodeList thresholds = catElement.getElementsByTagName("se:Threshold");
+			NodeList thresholds = categorizeElement.getElementsByTagNameNS(SE_NAMESPACE, "Threshold");
 			if (thresholds == null) {
 				continue;
 			}
@@ -135,29 +129,21 @@ public class StyleSLDParser {
 					"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
 					+ "<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>\n";
 			xmlString = xmlString + "    <RasterLayer>\n";
-			if (opacity != null) {
-				xmlString = xmlString + "        <FlatOpacity>" + opacity +
-						"</FlatOpacity>\n";
+			if (!opacity.equals("")) {
+				xmlString = xmlString + "        <FlatOpacity>" + opacity + "</FlatOpacity>\n";
 			}
 			xmlString = xmlString + "        <DataFieldName>" + name + "</DataFieldName>\n";
 			xmlString = xmlString + "        <ThresholdColourScheme>\n";
 			for (int j = 0; j < colours.getLength(); j++) {
 				String colour = colours.item(j).getTextContent();
-				if (colour != null) {
-					xmlString = xmlString + "            <Colours>" + 
-							colour + "</Colours>\n";					
-				}
+				xmlString = xmlString + "            <Colours>" + colour + "</Colours>\n";
 			}
 			for (int j = 0; j < thresholds.getLength(); j++) {
 				String threshold = thresholds.item(j).getTextContent();
-				if (threshold != null) {
-					xmlString = xmlString + "            <Thresholds>" +
-							threshold + "</Thresholds>\n";					
-				}
+				xmlString = xmlString + "            <Thresholds>" + threshold + "</Thresholds>\n";					
 			}
-			if (fallbackValue != null) {
-				xmlString = xmlString + "            <MissingDataColour>" +
-						fallbackValue + "</MissingDataColour>\n";
+			if (!fallbackValue.equals("")) {
+				xmlString = xmlString + "            <MissingDataColour>" + fallbackValue + "</MissingDataColour>\n";
 			}
 			xmlString = xmlString + "        </ThresholdColourScheme>\n";
 			xmlString = xmlString + "    </RasterLayer>\n";
