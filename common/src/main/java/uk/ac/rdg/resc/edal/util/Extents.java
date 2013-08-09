@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 The University of Reading
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

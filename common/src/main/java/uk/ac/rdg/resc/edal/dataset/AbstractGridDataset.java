@@ -123,6 +123,13 @@ public abstract class AbstractGridDataset implements GridDataset {
         VerticalCrs vCrs = null;
         StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
         StringBuilder description = new StringBuilder("Map feature from variables:\n");
+        
+        /*
+         * If the user has passed in null for the variable IDs, they want all variables returned
+         */
+        if(varIds == null) {
+            varIds = getVariableIds();
+        }
         for (String varId : varIds) {
             id.append(varId);
             description.append(varId + "\n");
@@ -151,7 +158,14 @@ public abstract class AbstractGridDataset implements GridDataset {
              * Use these objects to convert natural coordinates to grid indices
              */
             int tIndex = tAxis.findIndexOf(time);
+            if(tIndex < 0) {
+                throw new IllegalArgumentException(time+" is not part of the temporal domain for the variable "+varId);
+            }
             int zIndex = zAxis.findIndexOf(zPos);
+            if(zIndex < 0) {
+                throw new IllegalArgumentException(zPos+" is not part of the vertical domain for the variable "+varId);
+            }
+            
             /*
              * Create a PixelMap from the source and target grids
              */
@@ -191,7 +205,7 @@ public abstract class AbstractGridDataset implements GridDataset {
             description.append("Elevation: " + zPos);
         }
 
-        MapFeature mapFeature = new MapFeature(UUID.fromString(id.toString()).toString(),
+        MapFeature mapFeature = new MapFeature(UUID.nameUUIDFromBytes(id.toString().getBytes()).toString(),
                 "Extracted Map Feature", description.toString(), domain, parameters, values);
 
         return mapFeature;
