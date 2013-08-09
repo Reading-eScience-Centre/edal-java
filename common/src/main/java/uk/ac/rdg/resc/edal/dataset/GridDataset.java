@@ -63,7 +63,9 @@ public interface GridDataset extends Dataset {
      * Extracts a {@link GridFeature} from this {@link GridDataset}
      * 
      * @param varIds
-     *            The variables to extract
+     *            The variables to extract. If this is <code>null</code>, all
+     *            available variables (determined by the result of
+     *            {@link GridDataset#getVariableIds()}) will be read
      * @param hGrid
      *            The target {@link HorizontalGrid}
      * @param zPos

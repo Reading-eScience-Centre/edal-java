@@ -127,8 +127,6 @@ final class CdmGridDataSource implements GridDataSource {
 
         @Override
         public Number get(int... coords) {
-            super.get(coords);
-
             /*
              * The convention is that the x coordinate varies fastest
              */

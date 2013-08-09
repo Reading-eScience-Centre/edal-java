@@ -34,15 +34,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import javax.measure.unit.Unit;
-
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.GregorianChronology;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.chrono.JulianChronology;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import ucar.nc2.Attribute;
 import ucar.nc2.constants.AxisType;
@@ -136,7 +133,7 @@ public final class CdmUtils {
          * very slow to read large grids by the BOUNDING_BOX strategy
          */
         String fileType = nc.getFileTypeId();
-        return "netCDF".equals(fileType) || "HDF4".equals(fileType) ? DataReadingStrategy.SCANLINE
+        return "netCDF".equalsIgnoreCase(fileType) || "HDF4".equalsIgnoreCase(fileType) ? DataReadingStrategy.SCANLINE
                 : DataReadingStrategy.BOUNDING_BOX;
     }
 
@@ -264,18 +261,18 @@ public final class CdmUtils {
      * Gets a Chronology from its CF string representation
      */
     private static Chronology getChronologyForString(String chronologyString) {
-        if (chronologyString == null || "gregorian".equals(chronologyString)
-                || "standard".equals(chronologyString)) {
+        if (chronologyString == null || "gregorian".equalsIgnoreCase(chronologyString)
+                || "standard".equalsIgnoreCase(chronologyString)) {
             return ISOChronology.getInstance();
-        } else if ("proleptic_gregorian".equals(chronologyString)) {
+        } else if ("proleptic_gregorian".equalsIgnoreCase(chronologyString)) {
             return GregorianChronology.getInstance();
-        } else if ("julian".equals(chronologyString)) {
+        } else if ("julian".equalsIgnoreCase(chronologyString)) {
             return JulianChronology.getInstance();
-        } else if ("noleap".equals(chronologyString) || "365_day".equals(chronologyString)) {
+        } else if ("noleap".equalsIgnoreCase(chronologyString) || "365_day".equalsIgnoreCase(chronologyString)) {
             return NoLeapChronology.getInstanceUTC();
-        } else if ("all_leap".equals(chronologyString) || "366_day".equals(chronologyString)) {
+        } else if ("all_leap".equalsIgnoreCase(chronologyString) || "366_day".equalsIgnoreCase(chronologyString)) {
             return AllLeapChronology.getInstanceUTC();
-        } else if ("360_day".equals(chronologyString)) {
+        } else if ("360_day".equalsIgnoreCase(chronologyString)) {
             return ThreeSixtyDayChronology.getInstanceUTC();
         }
         return null;

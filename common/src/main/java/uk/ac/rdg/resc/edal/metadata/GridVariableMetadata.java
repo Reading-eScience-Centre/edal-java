@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
-import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -40,9 +39,9 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
  */
 public class GridVariableMetadata extends VariableMetadata {
     
-    public GridVariableMetadata(String id, Dataset dataset, Parameter parameter,
+    public GridVariableMetadata(String id, Parameter parameter,
             HorizontalGrid hDomain, VerticalAxis zDomain, TimeAxis tDomain) {
-        super(id, dataset, parameter, hDomain, zDomain, tDomain);
+        super(id, parameter, hDomain, zDomain, tDomain);
     }
 
     /**

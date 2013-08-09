@@ -152,11 +152,11 @@ public class RegularGridImpl extends HorizontalGridImpl implements RegularGrid {
 
     @Override
     public RegularAxis getXAxis() {
-        return getXAxis();
+        return (RegularAxis) super.getXAxis();
     }
 
     @Override
     public RegularAxis getYAxis() {
-        return getYAxis();
+        return (RegularAxis) super.getYAxis();
     }
 }
