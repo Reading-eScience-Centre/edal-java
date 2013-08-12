@@ -9,8 +9,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
-import uk.ac.rdg.resc.edal.graphics.style.util.Id2FeatureAndMember;
 
 @XmlType(namespace=Image.NAMESPACE, name="Drawable")
 public abstract class Drawable {
@@ -49,7 +49,7 @@ public abstract class Drawable {
         this.opacityTransform = opacityTransform;
     }
 
-    public abstract BufferedImage drawImage(GlobalPlottingParams params, Id2FeatureAndMember id2Feature);
+    public abstract BufferedImage drawImage(GlobalPlottingParams params, FeatureCatalogue featureCatalogue);
     
     /**
      * This should return a list of all the fields used in this image layer, and

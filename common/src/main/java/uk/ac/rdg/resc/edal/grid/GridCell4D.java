@@ -31,14 +31,14 @@ package uk.ac.rdg.resc.edal.grid;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.domain.Domain;
 
+import uk.ac.rdg.resc.edal.domain.Domain;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
  * A cell in a {@link GridDomain}, which can have up to four dimensions.
@@ -86,8 +86,13 @@ public interface GridCell4D extends Domain<GeoPosition> {
     /**
      * @return the range of valid integers in the vertical axis of parent grid
      */
-    public Extent<VerticalPosition> getVerticalExtent();
+    public Extent<Double> getVerticalExtent();
 
+    /**
+     * @return the {@link VerticalCrs} associated with this {@link GridCell4D}
+     */
+    public VerticalCrs getVerticalCrs();
+    
     /**
      * @return the parent grid of this grid cell
      */

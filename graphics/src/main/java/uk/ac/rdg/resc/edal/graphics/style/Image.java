@@ -21,8 +21,8 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
-import uk.ac.rdg.resc.edal.graphics.style.util.Id2FeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.util.LegendDataGenerator;
 
 @XmlType(namespace = Image.NAMESPACE, name = "ImageType")
@@ -35,15 +35,16 @@ public class Image extends Drawable {
      */
     public static final String NAMESPACE = "http://www.resc.reading.ac.uk";
 
-    @XmlElements({ @XmlElement(name = "Image", type = Image.class),
-            @XmlElement(name = "ArrowLayer", type = ArrowLayer.class),
+    @XmlElements({
+            @XmlElement(name = "Image", type = Image.class),
+//            @XmlElement(name = "ArrowLayer", type = ArrowLayer.class),
             @XmlElement(name = "RasterLayer", type = RasterLayer.class),
             @XmlElement(name = "Raster2DLayer", type = Raster2DLayer.class),
             @XmlElement(name = "StippleLayer", type = StippleLayer.class),
-            @XmlElement(name = "ContourLayer", type = ContourLayer.class),
-            @XmlElement(name = "BasicGlyphLayer", type = BasicGlyphLayer.class),
-            @XmlElement(name = "SubsampledGlyphLayer", type = SubsampledGlyphLayer.class),
-            @XmlElement(name = "ConfidenceIntervalLayer", type = ConfidenceIntervalLayer.class)})
+//            @XmlElement(name = "BasicGlyphLayer", type = BasicGlyphLayer.class),
+//            @XmlElement(name = "SubsampledGlyphLayer", type = SubsampledGlyphLayer.class),
+//            @XmlElement(name = "ConfidenceIntervalLayer", type = ConfidenceIntervalLayer.class),
+            @XmlElement(name = "ContourLayer", type = ContourLayer.class) })
     private List<Drawable> layers = new ArrayList<Drawable>();
 
     public List<Drawable> getLayers() {
@@ -51,23 +52,23 @@ public class Image extends Drawable {
     }
 
     @Override
-    public BufferedImage drawImage(GlobalPlottingParams params, Id2FeatureAndMember id2Feature) {
+    public BufferedImage drawImage(GlobalPlottingParams params, FeatureCatalogue catalogue) {
         BufferedImage finalImage = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = finalImage.createGraphics();
 
         for (Drawable drawable : layers) {
             if (drawable != null) {
-                BufferedImage drawnImage = drawable.drawImage(params, id2Feature);
+                BufferedImage drawnImage = drawable.drawImage(params, catalogue);
                 OpacityTransform opacityTransform = drawable.getOpacityTransform();
                 if (opacityTransform != null) {
-                    opacityTransform.drawIntoImage(drawnImage, params, id2Feature);
+                    opacityTransform.drawIntoImage(drawnImage, params, catalogue);
                 }
                 graphics.drawImage(drawnImage, 0, 0, null);
             }
         }
-        if(getOpacityTransform() != null) {
-            getOpacityTransform().drawIntoImage(finalImage, params, id2Feature);
+        if (getOpacityTransform() != null) {
+            getOpacityTransform().drawIntoImage(finalImage, params, catalogue);
         }
         return finalImage;
     }
@@ -83,7 +84,8 @@ public class Image extends Drawable {
      * @return An {@link BufferedImage} representing the legend for this
      *         {@link Image}
      */
-    private static final int COLOURBAR_WIDTH = 50; 
+    private static final int COLOURBAR_WIDTH = 50;
+
     public BufferedImage getLegend(int componentSize) {
         /*
          * TODO componentSize doesn't actually specify the total size of a
@@ -98,31 +100,33 @@ public class Image extends Drawable {
          * This is the fraction of the colourbar which *gets added* as
          * out-of-range data.
          * 
-         * i.e. if it's 1, the result would be 1/3 below min, 1/3 in range,
-         * 1/3 above max.
+         * i.e. if it's 1, the result would be 1/3 below min, 1/3 in range, 1/3
+         * above max.
          */
         float extraAmountOutOfRange = 0.1f;
-        
-        if(noOfIndependentFields == 0) {
+
+        if (noOfIndependentFields == 0) {
             /*
              * TODO Return an empty image - we have no data fields
              */
             return null;
-        } else if(noOfIndependentFields == 1) {
+        } else if (noOfIndependentFields == 1) {
             /*
              * Case where we have a 1D colour bar
              */
-            
+
             /*
              * Get the field name and scale range.
              */
             NameAndRange nameAndRange = fieldsWithScales.iterator().next();
 
             /*
-             * Get the data for the colourbar and draw it. 
+             * Get the data for the colourbar and draw it.
              */
-            LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales, COLOURBAR_WIDTH, componentSize, null, extraAmountOutOfRange);
-            BufferedImage colourbar = drawImage(dataGenerator.getGlobalParams(), dataGenerator.getId2FeatureAndMember(null, nameAndRange.getFieldLabel()));
+            LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales,
+                    COLOURBAR_WIDTH, componentSize, null, extraAmountOutOfRange);
+            BufferedImage colourbar = drawImage(dataGenerator.getGlobalParams(),
+                    dataGenerator.getFeatureCatalogue(null, nameAndRange.getFieldLabel()));
             Graphics2D graphics = colourbar.createGraphics();
             graphics.setColor(fgColour);
             graphics.drawRect(0, 0, colourbar.getWidth() - 1, colourbar.getHeight() - 1);
@@ -131,12 +135,14 @@ public class Image extends Drawable {
             /*
              * Now generate the labels for this legend
              */
-            BufferedImage labels = getLabels(nameAndRange, extraAmountOutOfRange, componentSize, fgColour);
-            
+            BufferedImage labels = getLabels(nameAndRange, extraAmountOutOfRange, componentSize,
+                    fgColour);
+
             /*
              * Now create the correctly-sized final image...
              */
-            finalImage = new BufferedImage(COLOURBAR_WIDTH + labels.getWidth(), componentSize, BufferedImage.TYPE_INT_ARGB);
+            finalImage = new BufferedImage(COLOURBAR_WIDTH + labels.getWidth(), componentSize,
+                    BufferedImage.TYPE_INT_ARGB);
             /*
              * ...and draw everything into it
              */
@@ -160,20 +166,21 @@ public class Image extends Drawable {
              */
             BufferedImage[] labels = new BufferedImage[fields.size()];
             int borderSize = 0;
-            for(int i = 0; i < fields.size(); i++) {
+            for (int i = 0; i < fields.size(); i++) {
                 labels[i] = getLabels(fields.get(i), extraAmountOutOfRange, componentSize, fgColour);
-                if(labels[i].getWidth() > borderSize) {
-                    borderSize = labels[i].getWidth() + 8; 
+                if (labels[i].getWidth() > borderSize) {
+                    borderSize = labels[i].getWidth() + 8;
                 }
             }
-            
+
             int totalImageSize = (componentSize + borderSize) * numberOfImagesInOneDirection;
-            
-            finalImage = new BufferedImage(totalImageSize, totalImageSize, BufferedImage.TYPE_INT_ARGB);
+
+            finalImage = new BufferedImage(totalImageSize, totalImageSize,
+                    BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = finalImage.createGraphics();
             graphics.setColor(bgColour);
             graphics.fillRect(0, 0, totalImageSize, totalImageSize);
-            
+
             /*
              * Load the background image and the data mask
              */
@@ -185,15 +192,17 @@ public class Image extends Drawable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            for(int i = 0; i < fields.size(); i++) {
+            for (int i = 0; i < fields.size(); i++) {
                 String yName = fields.get(i).getFieldLabel();
-                int yStart = 2+ (i * (componentSize + borderSize));
-                for(int j = i + 1; j < fields.size(); j++) {
-                    int xStart = 2 +((j-i-1) * (componentSize + borderSize));
+                int yStart = 2 + (i * (componentSize + borderSize));
+                for (int j = i + 1; j < fields.size(); j++) {
+                    int xStart = 2 + ((j - i - 1) * (componentSize + borderSize));
                     String xName = fields.get(j).getFieldLabel();
-                    LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales, componentSize, componentSize, bgMask, 0.1f);
-                    BufferedImage colourbar2d = drawImage(dataGenerator.getGlobalParams(), dataGenerator.getId2FeatureAndMember(xName, yName));
-                    if(bg != null) {
+                    LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales,
+                            componentSize, componentSize, bgMask, 0.1f);
+                    BufferedImage colourbar2d = drawImage(dataGenerator.getGlobalParams(),
+                            dataGenerator.getFeatureCatalogue(xName, yName));
+                    if (bg != null) {
                         graphics.drawImage(bg, xStart, yStart, componentSize, componentSize, null);
                     }
                     /*
@@ -201,23 +210,26 @@ public class Image extends Drawable {
                      */
                     graphics.drawImage(colourbar2d, xStart, yStart, null);
                     graphics.setColor(fgColour);
-                    graphics.drawRect(xStart, yStart, colourbar2d.getWidth() - 1, colourbar2d.getHeight() - 1);
-                    graphics.drawRect(xStart - 2, yStart - 2, borderSize + colourbar2d.getWidth() - 2, borderSize + colourbar2d.getHeight() - 2);
-                    graphics.drawRect(xStart - 1, yStart - 1, borderSize + colourbar2d.getWidth() - 2, borderSize + colourbar2d.getHeight() - 2);
+                    graphics.drawRect(xStart, yStart, colourbar2d.getWidth() - 1,
+                            colourbar2d.getHeight() - 1);
+                    graphics.drawRect(xStart - 2, yStart - 2, borderSize + colourbar2d.getWidth()
+                            - 2, borderSize + colourbar2d.getHeight() - 2);
+                    graphics.drawRect(xStart - 1, yStart - 1, borderSize + colourbar2d.getWidth()
+                            - 2, borderSize + colourbar2d.getHeight() - 2);
                     /*
                      * Now draw the labels
                      */
                     AffineTransform at = new AffineTransform();
                     at.translate(xStart + componentSize, yStart + componentSize);
-                    at.rotate(Math.PI/2);
+                    at.rotate(Math.PI / 2);
                     graphics.drawImage(labels[j], at, null);
                     graphics.drawImage(labels[i], xStart + componentSize, yStart, null);
-                }                
+                }
             }
         }
         return finalImage;
     }
-    
+
     /**
      * This returns an image suitable for plotting next to a vertical colourbar.
      * Rotate it if required.
@@ -227,28 +239,29 @@ public class Image extends Drawable {
      * @param componentSize
      * @return
      */
-    private static BufferedImage getLabels(NameAndRange nameAndRange, float extraAmountOutOfRange, int componentSize, Color textColor) {
+    private static BufferedImage getLabels(NameAndRange nameAndRange, float extraAmountOutOfRange,
+            int componentSize, Color textColor) {
         String fieldName = nameAndRange.getFieldLabel();
-        
+
         Font textFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
         AffineTransform at = new AffineTransform();
-        at.rotate(-Math.PI/2.0);
+        at.rotate(-Math.PI / 2.0);
         Font sidewaysFont = textFont.deriveFont(at);
         DecimalFormat formatter = new DecimalFormat("0.###E0");
-        
+
         int textBorder = 4;
-        
+
         Float lowVal = nameAndRange.getScaleRange().getLow();
         Float highVal = nameAndRange.getScaleRange().getHigh();
-        String lowStr = formatter.format(lowVal);;
+        String lowStr = formatter.format(lowVal);
+        ;
         String medLowStr = formatter.format(lowVal + (highVal - lowVal) / 3.0);
         String medHighStr = formatter.format(lowVal + 2.0 * (highVal - lowVal) / 3.0);
         String highStr = formatter.format(highVal);
-        
+
         /*
-         * Create a temporary image so that we can get some metrics about
-         * the font. We can use these to determine the size of the final
-         * image.
+         * Create a temporary image so that we can get some metrics about the
+         * font. We can use these to determine the size of the final image.
          */
         BufferedImage tempImage = new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_BINARY);
         Graphics2D graphics = tempImage.createGraphics();
@@ -258,8 +271,8 @@ public class Image extends Drawable {
          */
         int lineHeight = fontMetrics.getHeight();
         /*
-         * The offset needed to account for the fact that the position of
-         * text refers to the position of the baseline, not the centre
+         * The offset needed to account for the fact that the position of text
+         * refers to the position of the baseline, not the centre
          */
         int textHeightOffset = lineHeight / 3;
         /*
@@ -267,7 +280,7 @@ public class Image extends Drawable {
          * labels are in the right place
          */
         int outOfRangeOffset = (int) (componentSize * extraAmountOutOfRange / (1 + 2 * extraAmountOutOfRange));
-        
+
         int lowYPos = componentSize - outOfRangeOffset + textHeightOffset;
         int highYPos = outOfRangeOffset + textHeightOffset;
         int medLowYPos = (int) (highYPos + 2.0 * (lowYPos - highYPos) / 3.0);
@@ -281,46 +294,48 @@ public class Image extends Drawable {
          * get around the fact that characters don't take up equal space. It's
          * an empirical value. Feel free to empiricise it more.
          */
-        int nLines = (int) Math.ceil((double)(fieldLength + 20) / componentSize);
-        if(nLines > 1) {
+        int nLines = (int) Math.ceil((double) (fieldLength + 20) / componentSize);
+        if (nLines > 1) {
             /*
              * It needs splitting.
              */
             int charsPerLine = 1 + fieldName.length() / nLines;
             StringBuilder newFieldName = new StringBuilder();
-            for(int i = 0; i < nLines; i++) {
+            for (int i = 0; i < nLines; i++) {
                 /*
                  * Hyphenate
                  */
-                if(i == nLines - 1) {
+                if (i == nLines - 1) {
                     newFieldName.append(fieldName.substring(i * charsPerLine));
                 } else {
-                    newFieldName.append(fieldName.substring(i * charsPerLine, (i+1) * charsPerLine)+"-\n-");
+                    newFieldName.append(fieldName.substring(i * charsPerLine, (i + 1)
+                            * charsPerLine)
+                            + "-\n-");
                 }
             }
             fieldName = newFieldName.toString();
         }
-        
+
         /*
          * Space needed for labels
          */
         int numberSpace = fontMetrics.stringWidth(lowStr);
-        if(fontMetrics.stringWidth(medLowStr) > numberSpace) {
+        if (fontMetrics.stringWidth(medLowStr) > numberSpace) {
             numberSpace = fontMetrics.stringWidth(medLowStr);
         }
-        if(fontMetrics.stringWidth(medHighStr) > numberSpace) {
+        if (fontMetrics.stringWidth(medHighStr) > numberSpace) {
             numberSpace = fontMetrics.stringWidth(medHighStr);
         }
-        if(fontMetrics.stringWidth(highStr) > numberSpace) {
+        if (fontMetrics.stringWidth(highStr) > numberSpace) {
             numberSpace = fontMetrics.stringWidth(highStr);
         }
         /*
-         * Total space needed for all text 
+         * Total space needed for all text
          */
-        int sideSpace = numberSpace + lineHeight * nLines + 2*textBorder;
+        int sideSpace = numberSpace + lineHeight * nLines + 2 * textBorder;
         // Dispose of the unused graphics context.
         graphics.dispose();
-        
+
         BufferedImage ret = new BufferedImage(sideSpace, componentSize, BufferedImage.TYPE_INT_ARGB);
         graphics = ret.createGraphics();
         /*
@@ -332,18 +347,19 @@ public class Image extends Drawable {
         graphics.drawString(medHighStr, textBorder, medHighYPos);
         graphics.drawString(medLowStr, textBorder, medLowYPos);
         graphics.drawString(lowStr, textBorder, lowYPos);
-        
+
         graphics.setFont(sidewaysFont);
-        
+
         int offset = 0;
         for (String line : fieldName.split("\n")) {
-            graphics.drawString(line, textBorder + numberSpace + lineHeight + offset, componentSize - textBorder);
+            graphics.drawString(line, textBorder + numberSpace + lineHeight + offset, componentSize
+                    - textBorder);
             offset += lineHeight;
         }
-        
+
         return ret;
     }
-    
+
     @Override
     protected Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new LinkedHashSet<Drawable.NameAndRange>();
@@ -358,24 +374,24 @@ public class Image extends Drawable {
                 }
             }
         }
-        if(getOpacityTransform() != null) {
+        if (getOpacityTransform() != null) {
             ret.addAll(getOpacityTransform().getFieldsWithScales());
         }
         return ret;
     }
-    
+
     public static void main(String[] args) throws IOException {
         Image image = new Image();
-        Drawable layer = new RasterLayer("colouredness", new PaletteColourScheme(new ColourScale(-00.0000000050f,
-                5.0f, false), new ColourMap(Color.black, Color.black, new Color(0, true),
-                "default", 250)));
+        Drawable layer = new RasterLayer("colouredness", new PaletteColourScheme(new ColourScale(
+                -00.0000000050f, 5.0f, false), new ColourMap(Color.black, Color.black, new Color(0,
+                true), "default", 250)));
 //        Drawable raster2 = new RasterLayer("raster2", new ColourScheme(new ColourScale(-5.0f,
 //                5.0f, false), new ColourMap(Color.black, Color.black, new Color(0, true),
 //                        "redblue", 250)));
 //        layer.setOpacityTransform(new FlatOpacity(0.5f));
-        
-        ArrowLayer layer2 = new ArrowLayer("pointiness", 10, Color.BLACK);
-//        ContourLayer layer3 = new ContourLayer("test3", new ColourScale(0f, 50f, false), false, 10, Color.blue, 2, null, true);
+
+//        ArrowLayer layer2 = new ArrowLayer("pointiness", 10, Color.BLACK);
+        ContourLayer layer2 = new ContourLayer("contouriness", new ColourScale(0f, 50f, false), false, 10, Color.red, 2, null, true);
         StippleLayer layer3 = new StippleLayer("stippliness", new PatternScale(8, 0f, 1f, false));
         image.getLayers().add(layer);
 //        image.getLayers().add(raster2);

@@ -36,7 +36,6 @@ import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * The domain of a {@link TrajectoryFeature}: a set of positions in space and
@@ -79,5 +78,5 @@ public interface TrajectoryDomain extends DiscretePointDomain<GeoPosition> {
      * @return an {@link Extent} which fully contains this
      *         {@link TrajectoryDomain}
      */
-    public Extent<VerticalPosition> getVerticalExtent();
+    public Extent<Double> getVerticalExtent();
 }
