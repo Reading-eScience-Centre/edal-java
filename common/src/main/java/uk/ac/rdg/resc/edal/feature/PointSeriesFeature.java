@@ -52,6 +52,9 @@ public interface PointSeriesFeature extends DiscreteFeature<DateTime, Extent<Dat
      */
     public VerticalPosition getVerticalPosition();
 
+    /**
+     * Gets the {@link TimeAxis} which makes up this domain
+     */
     @Override
     public TimeAxis getDomain();
 }

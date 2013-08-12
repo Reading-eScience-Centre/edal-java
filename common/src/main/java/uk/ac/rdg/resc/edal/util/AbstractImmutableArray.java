@@ -34,7 +34,7 @@ public abstract class AbstractImmutableArray<T> implements Array<T> {
 
     private int[] shape;
 
-    public AbstractImmutableArray(int[] shape) {
+    public AbstractImmutableArray(int... shape) {
         this.shape = shape;
     }
 

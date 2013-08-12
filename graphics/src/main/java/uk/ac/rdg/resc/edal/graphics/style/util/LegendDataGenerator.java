@@ -6,17 +6,17 @@ import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
-import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
+import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
-import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
@@ -25,19 +25,18 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * @author guy
  * 
  */
-public class LegendDataGenerator extends FeatureCollectionImpl<GridFeature> {
+public class LegendDataGenerator {
 
     private RegularAxisImpl xAxis;
     private RegularAxisImpl yAxis;
-    private RegularGridImpl domain;
+    private MapDomain domain;
     private Set<NameAndRange> dataFields;
     private boolean[][] missingBits;
-    
-    private float fractionExtra; 
 
-    public LegendDataGenerator(Set<NameAndRange> dataFields, int width, int height, BufferedImage backgroundMask, float fractionExtra) {
-        super("", "");
+    private float fractionExtra;
 
+    public LegendDataGenerator(Set<NameAndRange> dataFields, int width, int height,
+            BufferedImage backgroundMask, float fractionExtra) {
         /*
          * We use 0.0001 as the spacing. Since we're working in WGS84 (for
          * convenience - it doesn't matter what CRS we use, but we need to work
@@ -48,21 +47,23 @@ public class LegendDataGenerator extends FeatureCollectionImpl<GridFeature> {
         xAxis = new RegularAxisImpl("", 0, 0.001, width, false);
         yAxis = new RegularAxisImpl("", 0, 0.001, height, false);
 
-        domain = new RegularGridImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84);
+        domain = new MapDomainImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84, null, null, null);
 
         this.dataFields = dataFields;
-        
+
         this.fractionExtra = fractionExtra;
-        
+
         missingBits = new boolean[width][height];
-        if(backgroundMask != null) {
-            Image scaledInstance = backgroundMask.getScaledInstance(width, height, BufferedImage.SCALE_FAST);
-            BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        if (backgroundMask != null) {
+            Image scaledInstance = backgroundMask.getScaledInstance(width, height,
+                    BufferedImage.SCALE_FAST);
+            BufferedImage bufferedImage = new BufferedImage(width, height,
+                    BufferedImage.TYPE_BYTE_GRAY);
             bufferedImage.createGraphics().drawImage(scaledInstance, 0, 0, null);
-            byte[] data = ((DataBufferByte)bufferedImage.getRaster().getDataBuffer()).getData();
-            for(int i = 0; i < width; i++) {
-                for(int j = 0; j < height; j++) {
-                    if(data[i + width * (height - 1 - j)] == 0) {
+            byte[] data = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    if (data[i + width * (height - 1 - j)] == 0) {
                         missingBits[i][j] = true;
                     } else {
                         missingBits[i][j] = false;
@@ -73,111 +74,93 @@ public class LegendDataGenerator extends FeatureCollectionImpl<GridFeature> {
     }
 
     public GlobalPlottingParams getGlobalParams() {
-        return new GlobalPlottingParams(xAxis.size(), yAxis.size(), domain.getCoordinateExtent(), null, null, null, null);
+        return new GlobalPlottingParams(xAxis.size(), yAxis.size(), domain.getBoundingBox(), null,
+                null, null, null);
     }
 
-    public Id2FeatureAndMember getId2FeatureAndMember(String xFieldName, String yFieldName) {
-        final FeatureCollection<GridFeature> featureCollection = getFeatureCollection(xFieldName, yFieldName);
-        return new Id2FeatureAndMember() {
+    public FeatureCatalogue getFeatureCatalogue(String xFieldName, String yFieldName) {
+        final MapFeature feature = getFeature(xFieldName, yFieldName);
+        return new FeatureCatalogue() {
             @Override
-            public FeatureCollectionAndMemberName getFeatureAndMemberName(String id) {
-                return new FeatureCollectionAndMemberName(featureCollection, id);
+            public MapFeatureAndMember getFeatureAndMemberName(String id,
+                    GlobalPlottingParams params) {
+                return new MapFeatureAndMember(feature, id);
             }
         };
     }
 
-    private FeatureCollection<GridFeature> getFeatureCollection(String xFieldName, String yFieldName) {
+    private MapFeature getFeature(String xFieldName, String yFieldName) {
         ArrayList<NameAndRange> dataRangesList = new ArrayList<NameAndRange>(dataFields);
 
-        Map<String, GridValuesMatrix<Float>> gvms = new HashMap<String, GridValuesMatrix<Float>>();
+        Map<String, Array2D> values = new HashMap<String, Array2D>();
 
+        /*
+         * We need to initialise 3 2D-arrays here, and add them to the values
+         * map
+         */
         for (NameAndRange nameAndRange : dataRangesList) {
-            if(nameAndRange == null) {
+            if (nameAndRange == null) {
                 continue;
             }
-            GridValuesMatrix<Float> gridValuesMatrix;
+            
+            Array2D valuesArray;
             if (nameAndRange.getFieldLabel().equals(xFieldName)) {
-                gridValuesMatrix = new XYOrNullGridValuesMatrix(MatrixType.X, nameAndRange.getScaleRange());
+                valuesArray = new XYNull(MatrixType.X, nameAndRange.getScaleRange());
             } else if (nameAndRange.getFieldLabel().equals(yFieldName)) {
-                gridValuesMatrix = new XYOrNullGridValuesMatrix(MatrixType.Y, nameAndRange.getScaleRange());
+                valuesArray = new XYNull(MatrixType.Y, nameAndRange.getScaleRange());
             } else {
-                gridValuesMatrix = new XYOrNullGridValuesMatrix(MatrixType.NAN, null);
+                valuesArray = new XYNull(MatrixType.NAN, null);
             }
-            gvms.put(nameAndRange.getFieldLabel(), gridValuesMatrix);
+
+            values.put(nameAndRange.getFieldLabel(), valuesArray);
         }
-        
-        LegendFeatureCollection legendFeatureCollection = new LegendFeatureCollection(gvms);
-        return legendFeatureCollection;
+
+        MapFeature feature = new MapFeature("", "", "", domain, null, values);
+        return feature;
     }
 
-    private class LegendFeatureCollection extends FeatureCollectionImpl<GridFeature> {
-        private LegendFeatureCollection(Map<String, GridValuesMatrix<Float>> members) {
-            super("", "");
-
-            GridCoverage2DImpl coverage = new GridCoverage2DImpl("", domain,
-                    DataReadingStrategy.PIXEL_BY_PIXEL);
-
-            for (Entry<String, GridValuesMatrix<Float>> entry : members.entrySet()) {
-                coverage.addMember(entry.getKey(), domain, "", null, null, entry.getValue());
-                GridFeature f = new GridFeatureImpl(entry.getKey(), entry.getKey(), null, coverage);
-                addFeature(f);
-            }
-        }
-    }
-    
     private enum MatrixType {
         X, Y, NAN
     };
-    private class XYOrNullGridValuesMatrix extends InMemoryGridValuesMatrix<Float> {
-        
+
+    private class XYNull extends Array2D {
         private MatrixType type;
         private Extent<Float> scaleRange = null;
-        
-        public XYOrNullGridValuesMatrix(MatrixType type, Extent<Float> scaleRange) {
+
+        public XYNull(MatrixType type, Extent<Float> scaleRange) {
+            super(yAxis.size(), xAxis.size());
             this.type = type;
             /*
              * Expand scale range to include out-of-range data
              */
-            if(scaleRange != null) {
+            if (scaleRange != null) {
                 Float width = scaleRange.getHigh() - scaleRange.getLow();
-                this.scaleRange = Extents.newExtent(scaleRange.getLow() - width * fractionExtra, scaleRange.getHigh() + width * fractionExtra);
+                this.scaleRange = Extents.newExtent(scaleRange.getLow() - width * fractionExtra,
+                        scaleRange.getHigh() + width * fractionExtra);
             }
         }
-        
-        @Override
-        public Class<Float> getValueType() {
-            return Float.class;
-        }
 
         @Override
-        public int getNDim() {
-            return 2;
-        }
-
-        @Override
-        protected GridAxis doGetAxis(int n) {
-            if(n==0) return xAxis;
-            if(n==1) return yAxis;
-            throw new IllegalArgumentException("Only 2 dimensions in this GridValuesMatrix");
-        }
-
-        @Override
-        protected Float doReadPoint(int[] coords) {
-            if(missingBits[coords[0]][coords[1]]) {
+        public Number get(int... coords) {
+            if (missingBits[coords[X_IND]][yAxis.size() - coords[Y_IND] - 1]) {
                 return Float.NaN;
             }
             switch (type) {
             case X:
-                return scaleRange.getLow() + coords[0]
+                return scaleRange.getLow() + coords[X_IND]
                         * (scaleRange.getHigh() - scaleRange.getLow()) / xAxis.size();
             case Y:
-                return scaleRange.getLow() + coords[1]
+                return scaleRange.getLow() + (yAxis.size() - coords[Y_IND] - 1)
                         * (scaleRange.getHigh() - scaleRange.getLow()) / yAxis.size();
             case NAN:
             default:
                 return Float.NaN;
             }
         }
-        
+
+        @Override
+        public void set(Number value, int... coords) {
+            throw new UnsupportedOperationException("This Array2D is immutable");
+        }
     }
 }

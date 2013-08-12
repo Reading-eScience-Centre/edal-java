@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDatum;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = Image.NAMESPACE, name = "PatternLayerType")
@@ -35,15 +35,21 @@ public class StippleLayer extends ImageLayer {
     @Override
     protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
         int[][] alphas = new int[image.getWidth()][image.getHeight()];
+        Array2D values = dataReader.getDataForLayerName(dataFieldName);
+        
         /*
-         * Use the scale object to paint the image in banded shades of blue
+         * Set the alpha values
          */
-        for (PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)) {
-            /*
-             * This is an int between 0 and 255, representing the alpha channel value
-             */
-            int alpha = (int) (256 * (scale.getLevel(datum.getValue()) / (float) (scale.getNLevels()-1)));
-            alphas[datum.getGridCoords().getX()][datum.getGridCoords().getY()] = alpha;
+        for(int i=0; i< image.getWidth();i++) {
+            for(int j=0; j< image.getWidth();j++) {
+                /*
+                 * This is an int between 0 and 255, representing the alpha channel value.
+                 * 
+                 * We use values.get(j, i) because Array2Ds specify the co-ordinates as (y,x) 
+                 */
+                int alpha = (int) (256 * (scale.getLevel(values.get(j, i)) / (float) (scale.getNLevels()-1)));
+                alphas[i][j] = alpha;
+            }
         }
         /*
          * Apply black/transparent stippling to the blue image
@@ -63,13 +69,15 @@ public class StippleLayer extends ImageLayer {
     };
     
     /*
-     * This stipples an image into black and transparent pixels depending on the
-     * blueness of the pixel.
+     * This stipples an image into black and transparent pixels depending on an
+     * array of alpha values
      * 
-     * Blueness is used, because Color.getRGB() returns an int whose final 8
-     * bits correspond to the amount of blueness. This means that setting a
-     * pixel to a value between 0 and 255 corresponds to blueness, and no other
-     * calculation needs to be made
+     * The thresholdMap above specifies the order that pixels should get
+     * switched on to form 65 levels of dithering (incl. endpoints).
+     * 
+     * This algorithm switches on each pixel according to whether it would be on
+     * for an image which consisted entirely of the target alpha value. This is
+     * a standard dithering method
      */
     private static void stippleAlphas(BufferedImage image, int[][] alphas, int width, int height) {
         int black = Color.black.getRGB();

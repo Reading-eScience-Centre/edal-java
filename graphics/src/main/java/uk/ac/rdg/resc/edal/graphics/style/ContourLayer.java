@@ -27,8 +27,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDatum;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = Image.NAMESPACE, name = "ContourLayerType")
@@ -185,20 +185,27 @@ public class ContourLayer extends ImageLayer {
             scaleMax = scale.getScaleMax();
         }
         
-		for (PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)) {
-		    float val;
-		    if(datum.getValue() == null) {
-		        val = Float.NaN;
-		    } else {
-                val = datum.getValue().floatValue();
-		    }
-			values[(height * datum.getGridCoords().getX()) + datum.getGridCoords().getY()]
-					= val;
-    		if (autoscaleEnabled) {
-    			if (val < scaleMin) scaleMin = val;
-    			if (val > scaleMax) scaleMax = val;
-    		}
-	     }
+        Array2D dataValues = dataReader.getDataForLayerName(dataFieldName);
+        for(int j=0; j<height; j++) {
+            for(int i=0; i< width;i++){
+                Number value = dataValues.get(j,i);
+                float val;
+                if(value == null) {
+                    val = Float.NaN;
+                } else {
+                    val = value.floatValue();
+                }
+                /*
+                 * SGT goes against the grain somewhat by specifying that the y-axis
+                 * values vary fastest.
+                 */
+                values[j + i*height] = val;
+                if (autoscaleEnabled) {
+                    if (val < scaleMin) scaleMin = val;
+                    if (val > scaleMax) scaleMax = val;
+                }
+            }
+        }
 		
 		SGTGrid sgtGrid = new SimpleGrid(values, xAxis, yAxis, null);
 
@@ -227,7 +234,6 @@ public class ContourLayer extends ImageLayer {
 
         Graphics g = image.getGraphics();
         renderer.draw(g);
-
 	}
 
     private static CartesianGraph getCartesianGraph(SGTData data, int width, int height) {

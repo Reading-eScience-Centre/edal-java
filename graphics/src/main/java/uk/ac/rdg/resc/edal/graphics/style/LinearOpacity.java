@@ -2,12 +2,13 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDatum;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 
@@ -33,29 +34,29 @@ public class LinearOpacity extends OpacityTransform {
 //        this.opacityForMissingData = opacityForMissingData;
     }
 
-    private Float getOpacityForValue(Float value) {
-        if (value == null || Float.isNaN(value)) {
+    private Float getOpacityForValue(Number value) {
+        if (value == null || Float.isNaN(value.floatValue())) {
             return 1f;
 //            return opacityForMissingData;
         }
-
         boolean highOpaque = opaqueValue > transparentValue;
         
+        float floatValue = value.floatValue();
         if (highOpaque) {
-            if (value > opaqueValue) {
+            if (floatValue > opaqueValue) {
                 return 1.0f;
-            } else if (value < transparentValue) {
+            } else if (floatValue < transparentValue) {
                 return 0f;
             } else {
-                return (value - transparentValue) / (opaqueValue - transparentValue);
+                return (floatValue - transparentValue) / (opaqueValue - transparentValue);
             }
         } else {
-            if (value < opaqueValue) {
+            if (floatValue < opaqueValue) {
                 return 1.0f;
-            } else if (value > transparentValue) {
+            } else if (floatValue > transparentValue) {
                 return 0f;
             } else {
-                return 1f - ((value - opaqueValue) / (transparentValue - opaqueValue));
+                return 1f - ((floatValue - opaqueValue) / (transparentValue - opaqueValue));
             }
         }
     }
@@ -67,17 +68,18 @@ public class LinearOpacity extends OpacityTransform {
 
         int[] imagePixels = image.getRGB(0, 0, width, height, null, 0, width);
 
-        for(PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)){
-            int xIndex = datum.getGridCoords().getX();
-            int yIndex = datum.getGridCoords().getY();
-            int imageIndex = xIndex + yIndex * width;
-            int alpha = ((int) (getOpacityForValue(datum.getValue().floatValue()) * 255));
-            imagePixels[imageIndex] = blendPixel(imagePixels[imageIndex], alpha);
-        }
+        Array2D values = dataReader.getDataForLayerName(dataFieldName);
         
+        int index = 0;
+        Iterator<Number> iterator = values.iterator();
+        while(iterator.hasNext()) {
+            int alpha = ((int) (getOpacityForValue(iterator.next()) * 255));
+            imagePixels[index] = blendPixel(imagePixels[index], alpha);
+            index++;
+        }
         image.setRGB(0, 0, width, height, imagePixels, 0, width);
     }
-    
+
     @Override
     protected Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();

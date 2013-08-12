@@ -19,6 +19,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -27,8 +28,8 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDatum;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = Image.NAMESPACE, name = "SmoothedContourLayerType")
@@ -131,20 +132,23 @@ public class SmoothedContourLayer extends ImageLayer {
             scaleMax = scale.getScaleMax();
         }
         
-		for (PlottingDatum datum : dataReader.getDataForLayerName(dataFieldName)) {
-		    float val;
-		    if(datum.getValue() == null) {
-		        val = Float.NaN;
-		    } else {
-                val = datum.getValue().floatValue();
-		    }
-			values[(height * datum.getGridCoords().getX()) + datum.getGridCoords().getY()]
-					= val;
-    		if (autoscaleEnabled) {
-    			if (val < scaleMin) scaleMin = val;
-    			if (val > scaleMax) scaleMax = val;
-    		}
-	     }
+        Array2D dataValues = dataReader.getDataForLayerName(dataFieldName);
+        int index = 0;
+        Iterator<Number> iterator = dataValues.iterator();
+        while(iterator.hasNext()) {
+            Number dataValue = iterator.next(); 
+            float val;
+            if(dataValue == null) {
+                val = Float.NaN;
+            } else {
+                val = dataValue.floatValue();
+            }
+            values[index++] = val;
+            if (autoscaleEnabled) {
+                if (val < scaleMin) scaleMin = val;
+                if (val > scaleMax) scaleMax = val;
+            }
+        }
 		
 		SGTGrid sgtGrid = new SimpleGrid(values, xAxis, yAxis, null);
 
