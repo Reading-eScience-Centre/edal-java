@@ -10,9 +10,12 @@ import java.io.PrintWriter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -28,14 +31,10 @@ public class StyleSLDParser {
 			"http://java.sun.com/xml/jaxp/properties/schemaSource";
 	public static final String SLD_SCHEMA =
 			"http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd";
-	public static final String SLD_NAMESPACE =
-			"http://www.opengis.net/sld";
-	public static final String SE_NAMESPACE =
-			"http://www.opengis.net/se";
 	
 	public static String SLDtoXMLString(File file)
 			throws ParserConfigurationException, SAXException, FileNotFoundException,
-			IOException {
+			IOException, XPathExpressionException {
 		
 		/*
 		 *  Read in and parse an XML file to a Document object. The builder factory is
@@ -61,8 +60,14 @@ public class StyleSLDParser {
 		builder.setErrorHandler(new SAXErrorHandler(new PrintWriter(errorWriter, true)));
 		Document document = builder.parse(new FileInputStream(file));
 		
-		// Parse the XML document using DOM
-		NodeList namedLayers = document.getElementsByTagNameNS(SLD_NAMESPACE, "NamedLayer");
+		// Parse the document using XPath
+		XPath xPath =XPathFactory.newInstance().newXPath();
+		xPath.setNamespaceContext(new SLDNamespaceResolver());
+
+		// Get all the named layers in the document and loop through each one
+		NodeList namedLayers = (NodeList) xPath.evaluate(
+				"/sld:StyledLayerDescriptor/sld:NamedLayer", document,
+				XPathConstants.NODESET);
 		if (namedLayers == null) {
 			return "";
 		}
@@ -74,10 +79,10 @@ public class StyleSLDParser {
 			if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
 				continue;
 			}
-			Element layerElement = (Element) layerNode;
 			
 			// get name of data field
-			Node nameNode = layerElement.getElementsByTagNameNS(SE_NAMESPACE, "Name").item(0);
+			Node nameNode = (Node) xPath.evaluate(
+					"./se:Name", layerNode, XPathConstants.NODE);
 			if (nameNode == null) {
 				continue;
 			}
@@ -86,15 +91,10 @@ public class StyleSLDParser {
 				continue;
 			}
 			
-			// get first RasterSymbolizer element
-			Node symbolizerNode = layerElement.getElementsByTagNameNS(SE_NAMESPACE, "RasterSymbolizer").item(0);
-			if (symbolizerNode == null || symbolizerNode.getNodeType() != Node.ELEMENT_NODE) {
-				continue;
-			}
-			Element symbolizerElement = (Element) symbolizerNode;
-
 			// get opacity element
-			Node opacityNode = symbolizerElement.getElementsByTagNameNS(SE_NAMESPACE, "Opacity").item(0);
+			Node opacityNode = (Node) xPath.evaluate(
+					"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:Opacity",
+					layerNode, XPathConstants.NODE);
 			String opacity;
 			if (opacityNode != null) {
 				opacity = opacityNode.getTextContent();
@@ -102,24 +102,23 @@ public class StyleSLDParser {
 				opacity = "";
 			}
 			
-			// get first Categorize element
-			Node categorizeNode = symbolizerElement.getElementsByTagNameNS(SE_NAMESPACE, "Categorize").item(0);
-			if (categorizeNode == null || categorizeNode.getNodeType() != Node.ELEMENT_NODE) {
-				continue;
-			}
-			Element categorizeElement = (Element) categorizeNode;
-			
 			// get fall back value
-			String fallbackValue = categorizeElement.getAttribute("fallbackValue");
+			String fallbackValue = (String) xPath.evaluate(
+					"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/se:Categorize/@fallbackValue",
+					layerNode, XPathConstants.STRING);
 			
 			// get list of colours
-			NodeList colours = categorizeElement.getElementsByTagNameNS(SE_NAMESPACE, "Value");
+			NodeList colours = (NodeList) xPath.evaluate(
+					"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/se:Categorize/se:Value",
+					layerNode, XPathConstants.NODESET);
 			if (colours == null) {
 				continue;
 			}
 			
 			//get list of thresholds
-			NodeList thresholds = categorizeElement.getElementsByTagNameNS(SE_NAMESPACE, "Threshold");
+			NodeList thresholds = (NodeList) xPath.evaluate(
+					"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/se:Categorize/se:Threshold",
+					layerNode, XPathConstants.NODESET);
 			if (thresholds == null) {
 				continue;
 			}
@@ -147,8 +146,8 @@ public class StyleSLDParser {
 			}
 			xmlString = xmlString + "        </ThresholdColourScheme>\n";
 			xmlString = xmlString + "    </RasterLayer>\n";
+			xmlString = xmlString + "</resc:Image>\n";
 		}
-		xmlString = xmlString + "</resc:Image>\n";
 		return xmlString;
 	}
 }
