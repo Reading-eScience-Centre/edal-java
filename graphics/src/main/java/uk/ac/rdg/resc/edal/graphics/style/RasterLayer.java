@@ -9,11 +9,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-@XmlType(namespace = Image.NAMESPACE, name = "RasterLayerType")
+@XmlType(namespace = MapImage.NAMESPACE, name = "RasterLayerType")
 public class RasterLayer extends ImageLayer {
     
     @XmlElement(name = "DataFieldName", required = true)
@@ -22,12 +21,7 @@ public class RasterLayer extends ImageLayer {
         @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class)})
     private ColourScheme colourScheme = new PaletteColourScheme();
     
-    private RasterLayer() {
-        super(PlotType.RASTER);
-    }
-    
     public RasterLayer(String dataFieldName, ColourScheme colourScheme) {
-        super(PlotType.RASTER);
         this.dataFieldName = dataFieldName;
         this.colourScheme = colourScheme;
     }

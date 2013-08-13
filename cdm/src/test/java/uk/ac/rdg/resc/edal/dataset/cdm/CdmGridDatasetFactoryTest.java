@@ -11,12 +11,20 @@ import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
+/**
+ * These tests perform various operations on a test dataset (originally
+ * generated from {@link CreateNetCDF}). These involve reading map data from the
+ * NetCDF file and checking that the values obtained are those expected
+ * 
+ * @author Guy
+ */
 public class CdmGridDatasetFactoryTest {
 
     private GridDataset dataset;
@@ -100,22 +108,24 @@ public class CdmGridDatasetFactoryTest {
         }
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testThrowsExceptionForInvalidZ() throws IOException {
         /*
          * The z-value is invalid
          */
         @SuppressWarnings("unused")
-        MapFeature mapData = dataset.readMapData(null, hGrid, 999., new DateTime(2000, 01, 01, 00, 00));
+        MapFeature mapData = dataset.readMapData(null, hGrid, 999., new DateTime(2000, 01, 01, 00,
+                00));
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void testThrowsExceptionForInvalidTime() throws IOException {
         /*
          * The time-value is invalid
          */
         @SuppressWarnings("unused")
-        MapFeature mapData = dataset.readMapData(null, hGrid, 0.0, new DateTime(1999, 01, 01, 00, 00));
+        MapFeature mapData = dataset.readMapData(null, hGrid, 0.0, new DateTime(1999, 01, 01, 00,
+                00));
     }
 
 }

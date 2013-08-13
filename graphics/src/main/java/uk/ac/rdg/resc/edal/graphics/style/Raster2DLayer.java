@@ -8,11 +8,10 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-@XmlType(namespace = Image.NAMESPACE, name = "Raster2DLayerType")
+@XmlType(namespace = MapImage.NAMESPACE, name = "Raster2DLayerType")
 public class Raster2DLayer extends ImageLayer {
 
     @XmlElement(name = "XDataFieldName", required = true)
@@ -22,13 +21,7 @@ public class Raster2DLayer extends ImageLayer {
     @XmlElement(name = "ThresholdColourScheme2D", type = ThresholdColourScheme2D.class)
     private ColourScheme2D colourScheme = new ThresholdColourScheme2D();
 
-    public Raster2DLayer() {
-        super(PlotType.RASTER);
-    }
-
     public Raster2DLayer(String xDataFieldName, String yDataFieldName, ColourScheme2D colourScheme) {
-        super(PlotType.RASTER);
-
         this.xDataFieldName = xDataFieldName;
         this.yDataFieldName = yDataFieldName;
         this.colourScheme = colourScheme;

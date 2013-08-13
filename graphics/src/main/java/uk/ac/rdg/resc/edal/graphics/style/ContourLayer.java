@@ -26,15 +26,14 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-@XmlType(namespace = Image.NAMESPACE, name = "ContourLayerType")
+@XmlType(namespace = MapImage.NAMESPACE, name = "ContourLayerType")
 public class ContourLayer extends ImageLayer {
     
-    @XmlType(namespace = Image.NAMESPACE, name = "ContourLineStyleType")
+    @XmlType(namespace = MapImage.NAMESPACE, name = "ContourLineStyleType")
     public enum ContourLineStyle {
         SOLID {
             @Override
@@ -107,14 +106,9 @@ public class ContourLayer extends ImageLayer {
     private ContourLineStyle contourLineStyle = ContourLineStyle.DASHED;
     @XmlElement(name = "LabelEnabled")
     private Boolean labelEnabled = true;
-
-    private ContourLayer() {
-		super(PlotType.RASTER);
-	}
     
     public ContourLayer(String dataFieldName, ColourScale scale, boolean autoscaleEnabled, 
     		double numberOfContours, Color contourLineColour, int contourLineWidth, ContourLineStyle contourLineStyle, boolean labelEnabled) {
-    	super(PlotType.RASTER);
     	this.dataFieldName = dataFieldName;
     	this.scale = scale;
     	this.autoscaleEnabled = autoscaleEnabled;

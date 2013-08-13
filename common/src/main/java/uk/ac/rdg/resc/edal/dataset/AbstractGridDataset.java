@@ -121,7 +121,7 @@ public abstract class AbstractGridDataset implements GridDataset {
          * this dataset, so we can set it from any one of them
          */
         VerticalCrs vCrs = null;
-        StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
+        StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature."+System.currentTimeMillis()+":");
         StringBuilder description = new StringBuilder("Map feature from variables:\n");
         
         /*

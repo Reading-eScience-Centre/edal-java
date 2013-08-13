@@ -3,7 +3,7 @@ package uk.ac.rdg.resc.edal.graphics.style;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlType(namespace = Image.NAMESPACE, propOrder = {}, name = "PatternScaleType")
+@XmlType(namespace = MapImage.NAMESPACE, propOrder = {}, name = "PatternScaleType")
 public class PatternScale {
 
     @XmlElement(name = "PatternBands")

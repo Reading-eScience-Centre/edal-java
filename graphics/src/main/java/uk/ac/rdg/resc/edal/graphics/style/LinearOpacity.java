@@ -12,7 +12,7 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 
-@XmlType(namespace = Image.NAMESPACE, name="LinearOpacityType")
+@XmlType(namespace = MapImage.NAMESPACE, name="LinearOpacityType")
 public class LinearOpacity extends OpacityTransform {
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;

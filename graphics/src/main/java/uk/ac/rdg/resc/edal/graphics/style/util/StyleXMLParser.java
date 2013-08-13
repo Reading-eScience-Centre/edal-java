@@ -19,7 +19,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.FlatOpacity;
-import uk.ac.rdg.resc.edal.graphics.style.Image;
+import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
 
@@ -56,8 +56,8 @@ public class StyleXMLParser {
         }
     }
 
-    public static String serialise(Image image) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(Image.class);
+    public static String serialise(MapImage image) throws JAXBException {
+        JAXBContext context = JAXBContext.newInstance(MapImage.class);
 
         Marshaller marshaller = context.createMarshaller();
 
@@ -69,18 +69,18 @@ public class StyleXMLParser {
         return stringWriter.toString();
     }
 
-    public static Image deserialise(String xmlString) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(Image.class);
+    public static MapImage deserialise(String xmlString) throws JAXBException {
+        JAXBContext context = JAXBContext.newInstance(MapImage.class);
 
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
-        Image image = (Image) unmarshaller.unmarshal(new StringReader(xmlString));
+        MapImage image = (MapImage) unmarshaller.unmarshal(new StringReader(xmlString));
 
         return image;
     }
     
     public static void generateSchema(final String path) throws IOException, JAXBException {
-        JAXBContext context = JAXBContext.newInstance(Image.class);
+        JAXBContext context = JAXBContext.newInstance(MapImage.class);
         context.generateSchema(new SchemaOutputResolver() {
             @Override
             public Result createOutput(String namespaceUri, String suggestedFileName) throws IOException {
@@ -93,7 +93,7 @@ public class StyleXMLParser {
     public static void main(String[] args) throws JAXBException, IOException {
 //        generateSchema("/home/guy/");
         
-        Image image = new Image();
+        MapImage image = new MapImage();
 //        StippleLayer layer = new StippleLayer("foam/TMP", new PatternScale(5, 305f, 280f, false));
 //        image.getLayers().add(layer);
 //        System.out.println(serialise(image));

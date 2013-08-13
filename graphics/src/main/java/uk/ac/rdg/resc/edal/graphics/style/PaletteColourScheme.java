@@ -5,7 +5,7 @@ import java.awt.Color;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlType(namespace = Image.NAMESPACE, propOrder = {}, name = "PaletteColourSchemeType")
+@XmlType(namespace = MapImage.NAMESPACE, propOrder = {}, name = "PaletteColourSchemeType")
 public class PaletteColourScheme extends ColourScheme {
 
     @XmlElement(name = "ScaleRange")
