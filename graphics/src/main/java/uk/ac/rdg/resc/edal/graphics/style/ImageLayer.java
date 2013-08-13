@@ -5,24 +5,18 @@ import java.awt.image.BufferedImage;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
-import uk.ac.rdg.resc.edal.graphics.style.util.MapFeatureAndMember;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
-@XmlType(namespace = Image.NAMESPACE, name = "ImageLayerType")
+@XmlType(namespace = MapImage.NAMESPACE, name = "ImageLayerType")
 public abstract class ImageLayer extends Drawable {
 
     protected interface DataReader {
         public Array2D getDataForLayerName(String layerId);
     }
-
-    /*
-     * The type of plot. This determines how data will be extracted
-     */
-    private PlotType plotType;
 
     /*
      * For when the plot type is SUBSAMPLE
@@ -31,12 +25,7 @@ public abstract class ImageLayer extends Drawable {
     private int ySampleSize = 8;
     private SubsampleType subsampleType = SubsampleType.CLOSEST;
 
-    @SuppressWarnings("unused")
-    private ImageLayer() {
-    }
-
-    public ImageLayer(PlotType plotType) {
-        this.plotType = plotType;
+    protected ImageLayer() {
     }
 
     @Override
@@ -62,10 +51,6 @@ public abstract class ImageLayer extends Drawable {
     }
 
     protected abstract void drawIntoImage(BufferedImage image, DataReader dataReader);
-
-    public PlotType getPlotType() {
-        return plotType;
-    }
 
     public void setXSampleSize(int xSampleSize) {
         this.xSampleSize = xSampleSize;

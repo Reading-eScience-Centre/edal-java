@@ -25,9 +25,9 @@ import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.util.LegendDataGenerator;
 
-@XmlType(namespace = Image.NAMESPACE, name = "ImageType")
-@XmlRootElement(namespace = Image.NAMESPACE, name = "Image")
-public class Image extends Drawable {
+@XmlType(namespace = MapImage.NAMESPACE, name = "ImageType")
+@XmlRootElement(namespace = MapImage.NAMESPACE, name = "Image")
+public class MapImage extends Drawable {
     /*
      * This is the namespace for the XML.
      * 
@@ -36,14 +36,15 @@ public class Image extends Drawable {
     public static final String NAMESPACE = "http://www.resc.reading.ac.uk";
 
     @XmlElements({
-            @XmlElement(name = "Image", type = Image.class),
-//            @XmlElement(name = "ArrowLayer", type = ArrowLayer.class),
+            @XmlElement(name = "Image", type = MapImage.class),
+            @XmlElement(name = "ArrowLayer", type = ArrowLayer.class),
             @XmlElement(name = "RasterLayer", type = RasterLayer.class),
             @XmlElement(name = "Raster2DLayer", type = Raster2DLayer.class),
             @XmlElement(name = "StippleLayer", type = StippleLayer.class),
 //            @XmlElement(name = "BasicGlyphLayer", type = BasicGlyphLayer.class),
 //            @XmlElement(name = "SubsampledGlyphLayer", type = SubsampledGlyphLayer.class),
 //            @XmlElement(name = "ConfidenceIntervalLayer", type = ConfidenceIntervalLayer.class),
+            @XmlElement(name = "SmoothedContourLayer", type = SmoothedContourLayer.class),
             @XmlElement(name = "ContourLayer", type = ContourLayer.class) })
     private List<Drawable> layers = new ArrayList<Drawable>();
 
@@ -74,15 +75,15 @@ public class Image extends Drawable {
     }
 
     /**
-     * Generate a legend for this {@link Image}.
+     * Generate a legend for this {@link MapImage}.
      * 
      * @param componentSize
      *            A single integer specifying the size of each component of the
      *            legend. The final image size will depend upon this number as
      *            well as the number of unique data fields which this
-     *            {@link Image} depends upon
+     *            {@link MapImage} depends upon
      * @return An {@link BufferedImage} representing the legend for this
-     *         {@link Image}
+     *         {@link MapImage}
      */
     private static final int COLOURBAR_WIDTH = 50;
 
@@ -187,8 +188,8 @@ public class Image extends Drawable {
             BufferedImage bg = null;
             BufferedImage bgMask = null;
             try {
-                bg = ImageIO.read(Image.class.getResource("/img/map_bg_200.png"));
-                bgMask = ImageIO.read(Image.class.getResource("/img/map_bg_200_mask.png"));
+                bg = ImageIO.read(MapImage.class.getResource("/img/map_bg_200.png"));
+                bgMask = ImageIO.read(MapImage.class.getResource("/img/map_bg_200_mask.png"));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -381,7 +382,7 @@ public class Image extends Drawable {
     }
 
     public static void main(String[] args) throws IOException {
-        Image image = new Image();
+        MapImage image = new MapImage();
         Drawable layer = new RasterLayer("colouredness", new PaletteColourScheme(new ColourScale(
                 -00.0000000050f, 5.0f, false), new ColourMap(Color.black, Color.black, new Color(0,
                 true), "default", 250)));
@@ -397,7 +398,7 @@ public class Image extends Drawable {
 //        image.getLayers().add(raster2);
         image.getLayers().add(layer2);
         image.getLayers().add(layer3);
-        image.setOpacityTransform(new LinearOpacity("seethoughness", 0f, 1f));
+        image.setOpacityTransform(new LinearOpacity("seethroughness", 0f, 1f));
         ImageIO.write(image.getLegend(200), "png", new File("/home/guy/legendtest.png"));
     }
 }

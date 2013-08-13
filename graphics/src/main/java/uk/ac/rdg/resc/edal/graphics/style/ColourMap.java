@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
 
-@XmlType(namespace = Image.NAMESPACE, name="ColourPaletteType")
+@XmlType(namespace = MapImage.NAMESPACE, name="ColourPaletteType")
 public class ColourMap {
     // The colour to plot for values below the minimum. If null, then use the
     // lowest value in the palette

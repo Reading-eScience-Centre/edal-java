@@ -3,7 +3,7 @@ package uk.ac.rdg.resc.edal.graphics.style;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlType(namespace = Image.NAMESPACE, propOrder={}, name="ColourScaleType")
+@XmlType(namespace = MapImage.NAMESPACE, propOrder={}, name="ColourScaleType")
 public class ColourScale {
     // The scale range spanned by this colour scheme
     @XmlElement(required=true, name="ScaleMin")

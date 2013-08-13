@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
 
-@XmlType(namespace = Image.NAMESPACE, propOrder = {"thresholds", "colours", "noDataColour"}, name = "ThresholdColourSchemeType")
+@XmlType(namespace = MapImage.NAMESPACE, propOrder = {"thresholds", "colours", "noDataColour"}, name = "ThresholdColourSchemeType")
 public class ThresholdColourScheme extends ColourScheme {
 
     /*

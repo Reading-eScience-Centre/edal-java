@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.FlatOpacityAdapter;
 
-@XmlType(namespace = Image.NAMESPACE, name = "FlatOpacityType")
+@XmlType(namespace = MapImage.NAMESPACE, name = "FlatOpacityType")
 @XmlJavaTypeAdapter(FlatOpacityAdapter.class)
 public class FlatOpacity extends OpacityTransform {
     @XmlElement(name = "Opacity", required = true)

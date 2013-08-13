@@ -4,15 +4,9 @@ import java.awt.image.BufferedImage;
 
 import javax.xml.bind.annotation.XmlType;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
 
-
-@XmlType(namespace=Image.NAMESPACE, name="OpacityTransformType")
+@XmlType(namespace=MapImage.NAMESPACE, name="OpacityTransformType")
 public abstract class OpacityTransform extends ImageLayer {
-    
-    public OpacityTransform() {
-        super(PlotType.RASTER);
-    }
 
     protected abstract void applyOpacityToImage(BufferedImage image, DataReader dataReader);
 

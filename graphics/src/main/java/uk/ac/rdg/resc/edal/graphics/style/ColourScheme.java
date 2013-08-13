@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import javax.xml.bind.annotation.XmlType;
 
-@XmlType(namespace = Image.NAMESPACE, propOrder = {}, name = "ColourSchemeType")
+@XmlType(namespace = MapImage.NAMESPACE, propOrder = {}, name = "ColourSchemeType")
 public abstract class ColourScheme {
     protected ColourScheme() { }
     

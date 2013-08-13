@@ -8,11 +8,10 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.PlotType;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-@XmlType(namespace = Image.NAMESPACE, name = "PatternLayerType")
+@XmlType(namespace = MapImage.NAMESPACE, name = "PatternLayerType")
 public class StippleLayer extends ImageLayer {
     
     @XmlElement(name = "DataFieldName", required = true)
@@ -20,14 +19,8 @@ public class StippleLayer extends ImageLayer {
     
     @XmlElement(name = "Scale", required = true)
     private PatternScale scale;
-    
-    private StippleLayer() {
-        super(PlotType.RASTER);
-    }
-    
-    
+
     public StippleLayer(String dataFieldName, PatternScale scale) {
-        super(PlotType.RASTER);
         this.dataFieldName = dataFieldName;
         this.scale = scale;
     }
@@ -41,7 +34,7 @@ public class StippleLayer extends ImageLayer {
          * Set the alpha values
          */
         for(int i=0; i< image.getWidth();i++) {
-            for(int j=0; j< image.getWidth();j++) {
+            for(int j=0; j< image.getHeight();j++) {
                 /*
                  * This is an int between 0 and 255, representing the alpha channel value.
                  * 
