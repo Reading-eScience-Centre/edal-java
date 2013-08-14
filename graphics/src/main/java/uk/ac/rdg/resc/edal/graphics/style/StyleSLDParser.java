@@ -100,19 +100,10 @@ public class StyleSLDParser {
 					continue;
 				}
 				
-				// get RasterSymbolizer element if it exists
-				Node symbolizerNode = (Node) xPath.evaluate(
-						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer",
-						layerNode, XPathConstants.NODE);
-				if (symbolizerNode == null || symbolizerNode.getNodeType() != Node.ELEMENT_NODE) {
-					continue;
-				}
-				
-				
 				// get opacity element if it exists
 				Node opacityNode = (Node) xPath.evaluate(
-						"./se:Opacity",
-						symbolizerNode, XPathConstants.NODE);
+						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:Opacity",
+						layerNode, XPathConstants.NODE);
 				String opacity;
 				if (opacityNode != null) {
 					opacity = opacityNode.getTextContent();
@@ -122,8 +113,8 @@ public class StyleSLDParser {
 				
 				// get the function defining the colour map
 				Node function = (Node) xPath.evaluate(
-						"./se:ColorMap/*",
-						symbolizerNode, XPathConstants.NODE);
+						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/*",
+						layerNode, XPathConstants.NODE);
 				if (function == null || function.getNodeType() != Node.ELEMENT_NODE) {
 					continue;
 				}
