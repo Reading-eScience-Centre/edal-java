@@ -71,7 +71,11 @@ public class StyleSLDParser {
 		if (namedLayers == null) {
 			return "";
 		}
-		String xmlString = "";
+		
+		// Write the root node of the document
+		String xmlString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+				+ "<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>\n";
+		
 		for (int i = 0; i < namedLayers.getLength(); i++) {
 			Node layerNode = namedLayers.item(i);
 			
@@ -124,9 +128,6 @@ public class StyleSLDParser {
 			}
 
 			// write out XML to string
-			xmlString = xmlString +
-					"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-					+ "<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>\n";
 			xmlString = xmlString + "    <RasterLayer>\n";
 			if (!opacity.equals("")) {
 				xmlString = xmlString + "        <FlatOpacity>" + opacity + "</FlatOpacity>\n";
@@ -146,8 +147,10 @@ public class StyleSLDParser {
 			}
 			xmlString = xmlString + "        </ThresholdColourScheme>\n";
 			xmlString = xmlString + "    </RasterLayer>\n";
-			xmlString = xmlString + "</resc:Image>\n";
 		}
+
+		xmlString = xmlString + "</resc:Image>\n";
+		
 		return xmlString;
 	}
 }

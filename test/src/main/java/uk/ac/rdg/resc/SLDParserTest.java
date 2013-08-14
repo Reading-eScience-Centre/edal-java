@@ -14,7 +14,7 @@ import uk.ac.rdg.resc.edal.graphics.style.StyleSLDParser;
 public class SLDParserTest {
 
 	public static void main(String[] args) {
-        File file = new File(ClassLoader.getSystemResource("xml/se_threshold.xml").getFile());
+        File file = new File(ClassLoader.getSystemResource("xml/se_threshold_1.xml").getFile());
 		try {
 			String xml = StyleSLDParser.SLDtoXMLString(file);
 			System.out.println(xml);
