@@ -43,7 +43,9 @@ public class ThresholdColourScheme extends ColourScheme {
 
     public ThresholdColourScheme(List<Float> thresholds, List<Color> colours, Color noDataColour) {
         super();
-        this.noDataColour = noDataColour;
+        if (noDataColour != null) {
+        	this.noDataColour = noDataColour;
+        }
         this.thresholds = thresholds;
         this.colours = colours;
         initialiseColours();

@@ -1,12 +1,15 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,6 +23,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.RasterLayer;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme;
+
 public class StyleSLDParser {
 	
 	public static final String OUTPUT_ENCODING = "UTF-8";
@@ -32,9 +41,9 @@ public class StyleSLDParser {
 	public static final String SLD_SCHEMA =
 			"http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd";
 	
-	public static String SLDtoXMLString(File file)
+	public static void SLDtoXMLString(File xmlFile, File imageFile, GlobalPlottingParams params, Id2FeatureAndMember id2Feature)
 			throws ParserConfigurationException, SAXException, FileNotFoundException,
-			IOException, XPathExpressionException {
+			IOException, XPathExpressionException, IllegalArgumentException {
 		
 		/*
 		 *  Read in and parse an XML file to a Document object. The builder factory is
@@ -48,109 +57,157 @@ public class StyleSLDParser {
 		try {
 			builderFactory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
 		} catch (IllegalArgumentException iae) {
-			System.err.println("Error: JAXP DocumentBuilderFactory attribute "
-					+ "not recognized: " + JAXP_SCHEMA_LANGUAGE);
-			System.err.println("Check to see if parser conforms to JAXP spec.");
-			System.exit(1);
+			throw new IllegalArgumentException("Error: JAXP DocumentBuilderFactory "
+					+ "attribute not recognized: " + JAXP_SCHEMA_LANGUAGE + "\n"
+					+ "Check to see if parser conforms to JAXP spec.");
 		}
 		builderFactory.setAttribute(JAXP_SCHEMA_SOURCE, SLD_SCHEMA);
 		DocumentBuilder builder = builderFactory.newDocumentBuilder();
 		OutputStreamWriter errorWriter = new OutputStreamWriter(System.err,
 				OUTPUT_ENCODING);
 		builder.setErrorHandler(new SAXErrorHandler(new PrintWriter(errorWriter, true)));
-		Document document = builder.parse(new FileInputStream(file));
+		Document document = builder.parse(new FileInputStream(xmlFile));
 		
 		// Parse the document using XPath
 		XPath xPath =XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 
+		// Instantiate an image object
+		Image image = new Image();
+
 		// Get all the named layers in the document and loop through each one
 		NodeList namedLayers = (NodeList) xPath.evaluate(
 				"/sld:StyledLayerDescriptor/sld:NamedLayer", document,
 				XPathConstants.NODESET);
-		if (namedLayers == null) {
-			return "";
+
+		if (namedLayers != null) {
+			for (int i = 0; i < namedLayers.getLength(); i++) {
+				Node layerNode = namedLayers.item(i);
+				
+				// make sure it is an element node
+				if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
+					continue;
+				}
+				
+				// get name of data field
+				Node nameNode = (Node) xPath.evaluate(
+						"./se:Name", layerNode, XPathConstants.NODE);
+				if (nameNode == null) {
+					continue;
+				}
+				String name = nameNode.getTextContent();
+				if (name.equals("")) {
+					continue;
+				}
+				
+				// get RasterSymbolizer element if it exists
+				Node symbolizerNode = (Node) xPath.evaluate(
+						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer",
+						layerNode, XPathConstants.NODE);
+				if (symbolizerNode == null || symbolizerNode.getNodeType() != Node.ELEMENT_NODE) {
+					continue;
+				}
+				
+				
+				// get opacity element if it exists
+				Node opacityNode = (Node) xPath.evaluate(
+						"./se:Opacity",
+						symbolizerNode, XPathConstants.NODE);
+				String opacity;
+				if (opacityNode != null) {
+					opacity = opacityNode.getTextContent();
+				} else {
+					opacity = "";
+				}
+				
+				// get the function defining the colour map
+				Node function = (Node) xPath.evaluate(
+						"./se:ColorMap/*",
+						symbolizerNode, XPathConstants.NODE);
+				if (function == null || function.getNodeType() != Node.ELEMENT_NODE) {
+					continue;
+				}
+				
+				// get fall back value
+				String fallbackValue = (String) xPath.evaluate(
+						"./@fallbackValue",
+						function, XPathConstants.STRING);
+				if (fallbackValue == null) {
+					fallbackValue = "";
+				}
+				
+				// parse function specific parts of XML for colour scheme
+				ColourScheme colourScheme;
+				if (function.getLocalName().equals("Categorize")) {
+					// get list of colours
+					NodeList colourNodes = (NodeList) xPath.evaluate(
+							"./se:Value",
+							function, XPathConstants.NODESET);
+					if (colourNodes == null) {
+						continue;
+					}
+					// transform to colours
+					ArrayList<Color> colours = new ArrayList<Color>();
+					for (int j = 0; j < colourNodes.getLength(); j++) {
+						Node colourNode = colourNodes.item(j);
+						colours.add(decodeColour(colourNode.getTextContent()));
+					}
+					
+					//get list of thresholds
+					NodeList thresholdNodes = (NodeList) xPath.evaluate(
+							"./se:Threshold",
+	 						function, XPathConstants.NODESET);
+					if (thresholdNodes == null) {
+						continue;
+					}
+					// transform to thresholds
+					ArrayList<Float> thresholds = new ArrayList<Float>();
+					for (int j = 0; j < thresholdNodes.getLength(); j++) {
+						Node thresholdNode = thresholdNodes.item(j);
+						try {
+							thresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
+						} catch (NumberFormatException nfe) {
+							System.err.println("Error: threshold not correctly formated.");
+						}
+					}
+					
+					Color noDataColour = decodeColour(fallbackValue);  
+					colourScheme = new ThresholdColourScheme(thresholds, colours, noDataColour);
+				} else {
+					continue;
+				}
+				
+				// instantiate a new raster layer and add it to the image
+				RasterLayer rasterLayer = new RasterLayer(name, colourScheme);
+				if (!opacity.equals("")) {
+					try {
+						rasterLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
+					} catch (NumberFormatException nfe) {
+						System.err.println("Error: opacity not correctly formatted.");
+					}
+				}
+				image.getLayers().add(rasterLayer);
+			}
 		}
 		
-		// Write the root node of the document
-		String xmlString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-				+ "<resc:Image xmlns:resc='http://www.resc.reading.ac.uk'>\n";
-		
-		for (int i = 0; i < namedLayers.getLength(); i++) {
-			Node layerNode = namedLayers.item(i);
-			
-			// make sure it is an element node
-			if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
-				continue;
-			}
-			
-			// get name of data field
-			Node nameNode = (Node) xPath.evaluate(
-					"./se:Name", layerNode, XPathConstants.NODE);
-			if (nameNode == null) {
-				continue;
-			}
-			String name = nameNode.getTextContent();
-			if (name.equals("")) {
-				continue;
-			}
-			
-			// get opacity element
-			Node opacityNode = (Node) xPath.evaluate(
-					"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:Opacity",
-					layerNode, XPathConstants.NODE);
-			String opacity;
-			if (opacityNode != null) {
-				opacity = opacityNode.getTextContent();
-			} else {
-				opacity = "";
-			}
-			
-			// get fall back value
-			String fallbackValue = (String) xPath.evaluate(
-					"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/se:Categorize/@fallbackValue",
-					layerNode, XPathConstants.STRING);
-			
-			// get list of colours
-			NodeList colours = (NodeList) xPath.evaluate(
-					"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/se:Categorize/se:Value",
-					layerNode, XPathConstants.NODESET);
-			if (colours == null) {
-				continue;
-			}
-			
-			//get list of thresholds
-			NodeList thresholds = (NodeList) xPath.evaluate(
-					"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/se:Categorize/se:Threshold",
-					layerNode, XPathConstants.NODESET);
-			if (thresholds == null) {
-				continue;
-			}
-
-			// write out XML to string
-			xmlString = xmlString + "    <RasterLayer>\n";
-			if (!opacity.equals("")) {
-				xmlString = xmlString + "        <FlatOpacity>" + opacity + "</FlatOpacity>\n";
-			}
-			xmlString = xmlString + "        <DataFieldName>" + name + "</DataFieldName>\n";
-			xmlString = xmlString + "        <ThresholdColourScheme>\n";
-			for (int j = 0; j < colours.getLength(); j++) {
-				String colour = colours.item(j).getTextContent();
-				xmlString = xmlString + "            <Colours>" + colour + "</Colours>\n";
-			}
-			for (int j = 0; j < thresholds.getLength(); j++) {
-				String threshold = thresholds.item(j).getTextContent();
-				xmlString = xmlString + "            <Thresholds>" + threshold + "</Thresholds>\n";					
-			}
-			if (!fallbackValue.equals("")) {
-				xmlString = xmlString + "            <MissingDataColour>" + fallbackValue + "</MissingDataColour>\n";
-			}
-			xmlString = xmlString + "        </ThresholdColourScheme>\n";
-			xmlString = xmlString + "    </RasterLayer>\n";
+		// write out the image
+		if (image.getLayers().size() > 0) {
+			ImageIO.write(image.drawImage(params, id2Feature), "png", imageFile);
+		} else {
+			System.err.println("Error: no image layers have been parsed successfully.");
 		}
-
-		xmlString = xmlString + "</resc:Image>\n";
-		
-		return xmlString;
 	}
+	
+    private static Color decodeColour(String s) {
+        if (s.length() == 7) {
+            return Color.decode(s);
+        } else if (s.length() == 9) {
+            Color color = Color.decode("#"+s.substring(3));
+            int alpha = Integer.parseInt(s.substring(1,3), 16);
+            return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+        } else {
+            return null;
+        }
+    }
+
 }
