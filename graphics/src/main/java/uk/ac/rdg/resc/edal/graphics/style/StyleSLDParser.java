@@ -26,11 +26,21 @@ import org.xml.sax.SAXException;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.InterpolateColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.RasterLayer;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme;
 
+/**
+ * Reads in an XML file encoded with Styled Layer Descriptor and Symbology
+ * Encoding, validates it against the SLD schema and parses the document
+ * to create a corresponding image. Currently only raster symbolizers are
+ * handled.
+ * 
+ * @author Charles Roberts
+ */
+
 public class StyleSLDParser {
-	
+
 	public static final String OUTPUT_ENCODING = "UTF-8";
 	public static final String JAXP_SCHEMA_LANGUAGE =
 			"http://java.sun.com/xml/jaxp/properties/schemaLanguage";
@@ -49,7 +59,7 @@ public class StyleSLDParser {
 		 *  Read in and parse an XML file to a Document object. The builder factory is
 		 *  configured to be namespace aware and validating. The class SAXErrorHandler
 		 *  is used to handle validation errors. The schema is forced to be the SLD
-		 *  schema.
+		 *  schema v1.1.0.
 		 */
 		DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 		builderFactory.setNamespaceAware(true);
@@ -68,11 +78,13 @@ public class StyleSLDParser {
 		builder.setErrorHandler(new SAXErrorHandler(new PrintWriter(errorWriter, true)));
 		Document document = builder.parse(new FileInputStream(xmlFile));
 		
-		// Parse the document using XPath
+		/*
+		 *  Parse the document using XPath and create a corresponding image
+		 */
 		XPath xPath =XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 
-		// Instantiate an image object
+		// Instantiate an Image object
 		Image image = new Image();
 
 		// Get all the named layers in the document and loop through each one
@@ -137,7 +149,7 @@ public class StyleSLDParser {
 					if (colourNodes == null) {
 						continue;
 					}
-					// transform to colours
+					// transform to list of Color objects
 					ArrayList<Color> colours = new ArrayList<Color>();
 					for (int j = 0; j < colourNodes.getLength(); j++) {
 						Node colourNode = colourNodes.item(j);
@@ -151,7 +163,7 @@ public class StyleSLDParser {
 					if (thresholdNodes == null) {
 						continue;
 					}
-					// transform to thresholds
+					// transform to list of Floats
 					ArrayList<Float> thresholds = new ArrayList<Float>();
 					for (int j = 0; j < thresholdNodes.getLength(); j++) {
 						Node thresholdNode = thresholdNodes.item(j);
@@ -164,6 +176,45 @@ public class StyleSLDParser {
 					
 					Color noDataColour = decodeColour(fallbackValue);  
 					colourScheme = new ThresholdColourScheme(thresholds, colours, noDataColour);
+				} else if (function.getLocalName().equals("Interpolate")) {
+					// get list of data points
+					NodeList pointNodes = (NodeList) xPath.evaluate(
+							"./se:InterpolationPoint",
+	 						function, XPathConstants.NODESET);
+					if (pointNodes == null) {
+						continue;
+					}
+					// parse into an ArrayList
+					ArrayList<InterpolateColourScheme.InterpolationPoint> points =
+							new ArrayList<InterpolateColourScheme.InterpolationPoint>();
+					for (int j = 0; j < pointNodes.getLength(); j++) {
+						Node pointNode = pointNodes.item(j);
+						Node dataNode = (Node) xPath.evaluate(
+								"./se:Data",
+								pointNode, XPathConstants.NODE);
+						if (dataNode == null) {
+							continue;
+						}
+						Node valueNode = (Node) xPath.evaluate(
+								"./se:Value",
+								pointNode, XPathConstants.NODE);
+						if (valueNode == null) {
+							continue;
+						}
+						try {
+							points.add(new InterpolateColourScheme.InterpolationPoint(
+									Float.parseFloat(dataNode.getTextContent()),
+									decodeColour(valueNode.getTextContent())));
+						} catch (NumberFormatException nfe) {
+							System.err.println("Error: interpolation data not correctly formated.");
+						}
+					}
+					if (points.size() < 1) {
+						continue;
+					}
+					// create a new InterpolateColourScheme object
+					Color noDataColour = decodeColour(fallbackValue);
+					colourScheme = new InterpolateColourScheme(points, noDataColour);			
 				} else {
 					continue;
 				}
