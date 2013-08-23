@@ -53,6 +53,34 @@ public class VariableMetadata {
     private TemporalDomain tDomain;
     private VariableMetadata parent;
     private Set<VariableMetadata> children;
+    private boolean plottable;
+
+    /**
+     * Constructs a {@link VariableMetadata} object holding metadata about a
+     * plottable variable.
+     * <p>
+     * Note that the this {@link VariableMetadata} object will not have a
+     * {@link Dataset} associated with it, since these objects are usually
+     * created before being attached to a {@link Dataset}. It is expected that
+     * when {@link Dataset} is created it will set itself using the
+     * {@link VariableMetadata#setDataset(Dataset)} method
+     * </p>
+     * 
+     * @param id
+     *            The ID of the variable
+     * @param parameter
+     *            The {@link Parameter} which the variable is measuring
+     * @param hDomain
+     *            The {@link HorizontalDomain} on which the variable is measured
+     * @param zDomain
+     *            The {@link VerticalDomain} on which the variable is measured
+     * @param tDomain
+     *            The {@link TemporalDomain} on which the variable is measured
+     */
+    public VariableMetadata(String id, Parameter parameter, HorizontalDomain hDomain,
+            VerticalDomain zDomain, TemporalDomain tDomain) {
+        this(id, parameter, hDomain, zDomain, tDomain, true);
+    }
 
     /**
      * Constructs a {@link VariableMetadata} object holding metadata about a
@@ -75,9 +103,15 @@ public class VariableMetadata {
      *            The {@link VerticalDomain} on which the variable is measured
      * @param tDomain
      *            The {@link TemporalDomain} on which the variable is measured
+     * @param plottable
+     *            Whether or not this {@link VariableMetadata} represents a
+     *            plottable quantity
      */
     public VariableMetadata(String id, Parameter parameter, HorizontalDomain hDomain,
-            VerticalDomain zDomain, TemporalDomain tDomain) {
+            VerticalDomain zDomain, TemporalDomain tDomain, boolean plottable) {
+        if (parameter == null) {
+            throw new NullPointerException("Parameter cannot be null");
+        }
         this.id = id;
         this.parameter = parameter;
         this.hDomain = hDomain;
@@ -85,6 +119,7 @@ public class VariableMetadata {
         this.tDomain = tDomain;
         parent = null;
         children = new HashSet<VariableMetadata>();
+        this.plottable = plottable;
     }
 
     /**
@@ -166,6 +201,18 @@ public class VariableMetadata {
      *            The parent {@link VariableMetadata} object
      */
     public void setParent(VariableMetadata parent) {
+        VariableMetadata currentMetadata = parent;
+        while (currentMetadata != null) {
+            if (currentMetadata.equals(this)) {
+                /*
+                 * We have a circular metadata tree.
+                 */
+                throw new IllegalArgumentException(
+                        "Setting this as a parent metadata creates a circular tree");
+            }
+            currentMetadata = currentMetadata.getParent();
+        }
+
         if (this.parent != null && !this.parent.equals(parent)) {
             /*
              * We are changing to a new parent. Therefore, the old one will not
@@ -174,6 +221,22 @@ public class VariableMetadata {
             this.parent.children.remove(this);
         }
         this.parent = parent;
-        this.parent.children.add(this);
+        if (this.parent != null) {
+            /*
+             * We only add this as a child if it is not the tree root
+             */
+            this.parent.children.add(this);
+        }
+    }
+
+    /**
+     * @return Whether this {@link VariableMetadata} represents a plottable
+     *         quantity. {@link VariableMetadata} which doesn't is generally
+     *         used for grouping other {@link VariableMetadata}. It would be
+     *         extremely unusual for a {@link VariableMetadata} to be both
+     *         unplottable and have no children.
+     */
+    public boolean isPlottable() {
+        return plottable;
     }
 }

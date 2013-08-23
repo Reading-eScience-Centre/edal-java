@@ -2,9 +2,12 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Set;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
@@ -13,9 +16,11 @@ import org.junit.Test;
 
 import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
 /**
@@ -35,7 +40,7 @@ public class CdmGridDatasetFactoryTest {
     @Before
     public void setup() throws IOException {
         /*-
-         * The test dataset is 4D, and contains 4 variables:
+         * The test NetCDF dataset is 4D, and contains 4 variables:
          * 
          * vLon
          * vLat
@@ -53,6 +58,11 @@ public class CdmGridDatasetFactoryTest {
         String location = url.getPath();
         CdmGridDatasetFactory datasetFactory = new CdmGridDatasetFactory();
         dataset = datasetFactory.createDataset(location);
+        /*
+         * We also add a vector plugin, which will generate magnitudes and
+         * directions
+         */
+        dataset.addVariablePlugin(new VectorPlugin("vLon", "vLat", "Test Vector Field"));
         xSize = 36;
         ySize = 19;
         /*
@@ -82,10 +92,17 @@ public class CdmGridDatasetFactoryTest {
                 Array2D latValues = mapData.getValues("vLat");
                 Array2D depthValues = mapData.getValues("vDepth");
                 Array2D timeValues = mapData.getValues("vTime");
+
+                /* Derived vars */
+                Array2D magValues = mapData.getValues("vLonvLatmag");
+                Array2D dirValues = mapData.getValues("vLonvLatdir");
+
                 assertArrayEquals(lonValues.getShape(), new int[] { ySize, xSize });
                 assertArrayEquals(latValues.getShape(), new int[] { ySize, xSize });
                 assertArrayEquals(depthValues.getShape(), new int[] { ySize, xSize });
                 assertArrayEquals(timeValues.getShape(), new int[] { ySize, xSize });
+                assertArrayEquals(magValues.getShape(), new int[] { ySize, xSize });
+                assertArrayEquals(dirValues.getShape(), new int[] { ySize, xSize });
                 /*
                  * All arrays should be the same shape, so we can use any of
                  * them
@@ -94,6 +111,10 @@ public class CdmGridDatasetFactoryTest {
                     float expectedLat = 100f * i / (ySize - 1);
                     for (int j = 0; j < xSize; j++) {
                         float expectedLon = 100f * j / (xSize - 1);
+
+                        double expectedMag = Math.sqrt(expectedLat * expectedLat + expectedLon
+                                * expectedLon);
+                        double expectedDir = Math.atan2(expectedLat, expectedLon);
                         /*
                          * NetCDF stores these as floats, so 1e-5 is about the
                          * right accuracy.
@@ -102,6 +123,8 @@ public class CdmGridDatasetFactoryTest {
                         assertEquals(expectedLat, latValues.get(i, j).doubleValue(), 1e-5);
                         assertEquals(expectedDepth, depthValues.get(i, j).doubleValue(), 1e-5);
                         assertEquals(expectedTime, timeValues.get(i, j).doubleValue(), 1e-5);
+                        assertEquals(expectedMag, magValues.get(i, j).doubleValue(), 1e-5);
+                        assertEquals(expectedDir, dirValues.get(i, j).doubleValue(), 1e-5);
                     }
                 }
             }
@@ -128,4 +151,61 @@ public class CdmGridDatasetFactoryTest {
                 00));
     }
 
+    @Test
+    public void testVariableMetadataTreeStructure() {
+        Set<VariableMetadata> topLevelVariables = dataset.getTopLevelVariables();
+        /*
+         * This should contain vDepth, vTime, and vLonvLat-group
+         * 
+         * vLonvLat-group should then contain:
+         * 
+         * vLat vLon vLonvLatmag vLonvLatdir
+         */
+        assertEquals(3, topLevelVariables.size());
+        VariableMetadata depthMetadata = null;
+        VariableMetadata timeMetadata = null;
+        VariableMetadata lonLatGroupMetadata = null;
+        for (VariableMetadata topMetadata : topLevelVariables) {
+            if (topMetadata.getId().equals("vDepth")) {
+                depthMetadata = topMetadata;
+            }
+            if (topMetadata.getId().equals("vTime")) {
+                timeMetadata = topMetadata;
+            }
+            if (topMetadata.getId().equals("vLonvLat-group")) {
+                lonLatGroupMetadata = topMetadata;
+            }
+        }
+        assertNotNull(depthMetadata);
+        assertNotNull(timeMetadata);
+        assertNotNull(lonLatGroupMetadata);
+
+        Set<VariableMetadata> emptyMetadata = Collections.emptySet();
+        assertEquals(emptyMetadata, depthMetadata.getChildren());
+        assertEquals(emptyMetadata, timeMetadata.getChildren());
+
+        assertEquals(4, lonLatGroupMetadata.getChildren().size());
+        VariableMetadata lonMetadata = null;
+        VariableMetadata latMetadata = null;
+        VariableMetadata magMetadata = null;
+        VariableMetadata dirMetadata = null;
+        for (VariableMetadata childMetadata : lonLatGroupMetadata.getChildren()) {
+            if (childMetadata.getId().equals("vLon")) {
+                lonMetadata = childMetadata;
+            }
+            if (childMetadata.getId().equals("vLat")) {
+                latMetadata = childMetadata;
+            }
+            if (childMetadata.getId().equals("vLonvLatmag")) {
+                magMetadata = childMetadata;
+            }
+            if (childMetadata.getId().equals("vLonvLatdir")) {
+                dirMetadata = childMetadata;
+            }
+        }
+        assertNotNull(latMetadata);
+        assertNotNull(lonMetadata);
+        assertNotNull(magMetadata);
+        assertNotNull(dirMetadata);
+    }
 }

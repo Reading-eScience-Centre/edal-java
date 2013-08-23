@@ -35,7 +35,8 @@ public class HorizontalGridImpl implements HorizontalGrid {
 
     @Override
     public Array<GridCell2D> getDomainObjects() {
-        return new AbstractImmutableArray<GridCell2D>(new int[] { yAxis.size(), xAxis.size() }) {
+        return new AbstractImmutableArray<GridCell2D>(GridCell2D.class, new int[] { yAxis.size(),
+                xAxis.size() }) {
             @Override
             public Class<GridCell2D> getValueClass() {
                 return GridCell2D.class;

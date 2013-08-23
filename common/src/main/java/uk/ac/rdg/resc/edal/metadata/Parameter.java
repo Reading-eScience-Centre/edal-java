@@ -37,26 +37,34 @@ import uk.ac.rdg.resc.edal.feature.Feature;
  * @author Guy
  */
 public class Parameter {
-    
+
     private String id;
     private String title;
     private String description;
     /* TODO: This will probably end up as something more complex than a string */
     private String units;
 
+    /**
+     * @param id
+     *            The ID of the parameter
+     * @param title
+     *            A human-readable title for the quantity being measured
+     * @param description
+     *            A human-readable description of the quantity
+     * @param units
+     *            The units of the measured quantity
+     */
     public Parameter(String id, String title, String description, String units) {
         super();
         this.id = id;
         this.title = title;
         this.description = description;
-        this.units = units;
+        this.units = units == null ? "" : units;
     }
 
     /**
      * An identifier that is unique within the context ({@literal e.g.} within
      * the Feature or Dataset).
-     * 
-     * @return
      */
     public String getId() {
         return id;
