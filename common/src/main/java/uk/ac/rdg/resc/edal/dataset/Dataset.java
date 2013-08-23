@@ -30,6 +30,8 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
 import java.util.Set;
+
+import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
@@ -71,5 +73,14 @@ public interface Dataset {
     /**
      * Returns the variables at the top level of the hierarchy.
      */
-    public Set<? extends VariableMetadata> getTopLevelVariables();
+    public Set<VariableMetadata> getTopLevelVariables();
+
+    /**
+     * Adds a {@link VariablePlugin} to this dataset to generate derived
+     * variables from existing ones in the {@link Dataset}
+     * 
+     * @param plugin
+     *            The {@link VariablePlugin} to add
+     */
+    public void addVariablePlugin(VariablePlugin plugin);
 }

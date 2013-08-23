@@ -29,9 +29,13 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,6 +43,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
@@ -47,6 +52,7 @@ import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
@@ -59,17 +65,20 @@ import uk.ac.rdg.resc.edal.util.Array2D;
  */
 public abstract class AbstractGridDataset implements GridDataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
-    private Map<String, ? extends GridVariableMetadata> vars;
-    
-    public AbstractGridDataset(Map<String, ? extends GridVariableMetadata> vars) {
-        this.vars = vars;
-        for(GridVariableMetadata metadata : vars.values()) {
-            metadata.setDataset(this);
+    private Map<String, VariableMetadata> vars;
+    private List<VariablePlugin> plugins;
+
+    public AbstractGridDataset(Map<String, GridVariableMetadata> vars) {
+        this.vars = new HashMap<String, VariableMetadata>();
+        this.plugins = new ArrayList<VariablePlugin>();
+        for (Entry<String, GridVariableMetadata> entry : vars.entrySet()) {
+            this.vars.put(entry.getKey(), entry.getValue());
+            entry.getValue().setDataset(this);
         }
     }
 
     @Override
-    public GridVariableMetadata getVariableMetadata(String variableId) {
+    public VariableMetadata getVariableMetadata(String variableId) {
         if (!vars.containsKey(variableId)) {
             log.error("Requested variable metadata for ID: " + variableId
                     + ", but this doesn't exist");
@@ -80,10 +89,16 @@ public abstract class AbstractGridDataset implements GridDataset {
     }
 
     @Override
-    public Set<GridVariableMetadata> getTopLevelVariables() {
-        return new HashSet<GridVariableMetadata>(vars.values());
+    public Set<VariableMetadata> getTopLevelVariables() {
+        Set<VariableMetadata> ret = new HashSet<VariableMetadata>();
+        for (VariableMetadata metadata : vars.values()) {
+            if (metadata.getParent() == null) {
+                ret.add(metadata);
+            }
+        }
+        return ret;
     }
-    
+
     @Override
     public Set<String> getFeatureIds() {
         /*
@@ -96,7 +111,7 @@ public abstract class AbstractGridDataset implements GridDataset {
     public Set<String> getVariableIds() {
         return vars.keySet();
     }
-    
+
     @Override
     public final MapFeature readMapData(Set<String> varIds, HorizontalGrid targetGrid, Double zPos,
             DateTime time) throws IOException {
@@ -121,71 +136,93 @@ public abstract class AbstractGridDataset implements GridDataset {
          * this dataset, so we can set it from any one of them
          */
         VerticalCrs vCrs = null;
-        StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature."+System.currentTimeMillis()+":");
+        StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature."
+                + System.currentTimeMillis() + ":");
         StringBuilder description = new StringBuilder("Map feature from variables:\n");
-        
+
         /*
-         * If the user has passed in null for the variable IDs, they want all variables returned
+         * Keep a list of variable IDs which we need to generate data for from a
+         * plugin
          */
-        if(varIds == null) {
+        Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
+
+        /*
+         * If the user has passed in null for the variable IDs, they want all
+         * variables returned
+         */
+        if (varIds == null) {
             varIds = getVariableIds();
         }
-        for (String varId : varIds) {
+
+        /*
+         * We use a label here so that we can use 'continue' from a nested loop
+         */
+        processAllVarsIds: for (String varId : varIds) {
             id.append(varId);
             description.append(varId + "\n");
 
-            GridVariableMetadata existingMetadata = getVariableMetadata(varId);
-
-            /*
-             * TODO: if this is a variable whose values are derived (rather than
-             * being read directly) we need to work out which of the underlying
-             * grids we're really going to read.
-             */
-
-            /*
-             * Get the domain of the grid
-             */
-            HorizontalGrid sourceGrid = existingMetadata.getHorizontalDomain();
-            VerticalAxis zAxis = existingMetadata.getVerticalDomain();
-            TimeAxis tAxis = existingMetadata.getTemporalDomain();
-
-            /*
-             * All variables within this dataset should share the same vertical
-             * CRS (even if they don't share the same values)
-             */
-
-            /*
-             * Use these objects to convert natural coordinates to grid indices
-             */
-            int tIndex = tAxis.findIndexOf(time);
-            if(tIndex < 0) {
-                throw new IllegalArgumentException(time+" is not part of the temporal domain for the variable "+varId);
+            if (!getVariableMetadata(varId).isPlottable()) {
+                /*
+                 * Don't read map data for unplottable variables
+                 */
+                continue processAllVarsIds;
             }
-            int zIndex = zAxis.findIndexOf(zPos);
-            if(zIndex < 0) {
-                throw new IllegalArgumentException(zPos+" is not part of the vertical domain for the variable "+varId);
+            for (VariablePlugin plugin : plugins) {
+                /*
+                 * We defer plugin-generated variables until after all other
+                 * required variables have been read. This way, if any of the
+                 * plugin-generated variables require data which we will read
+                 * anyway, we don't have to read it twice.
+                 */
+                if (Arrays.asList(plugin.providesVariables()).contains(varId)) {
+                    /*
+                     * Save the variable ID and continue on the outer loop
+                     */
+                    varsToGenerate.put(varId, plugin);
+                    continue processAllVarsIds;
+                }
             }
-            
-            /*
-             * Create a PixelMap from the source and target grids
-             */
-            Domain2DMapper pixelMap = Domain2DMapper.forGrid(sourceGrid, targetGrid);
 
             /*
-             * Now use the appropriate DataReadingStrategy to read data
+             * Do the actual data reading
              */
-            Array2D data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
-                    pixelMap);
+            Array2D data = readData(varId, targetGrid, zPos, time, dataSource);
 
             values.put(varId, data);
             /*
              * We just use the existing parameter data, as it is likely to be
              * the same.
-             * 
-             * TODO this may be different for derived variables, but we haven't
-             * figured them out just yet
              */
-            parameters.put(varId, existingMetadata.getParameter());
+            parameters.put(varId, getVariableMetadata(varId).getParameter());
+        }
+
+        for (String derivedVarId : varsToGenerate.keySet()) {
+            VariablePlugin plugin = varsToGenerate.get(derivedVarId);
+            Array2D[] pluginSourceData = new Array2D[plugin.usesVariables().length];
+            VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+            /*
+             * Loop through the variable IDs required by this plugin, getting
+             * data and metadata
+             * 
+             * If we have already read the data, add it to the array, otherwise
+             * read the data first.
+             */
+            for (int i = 0; i < pluginSourceData.length; i++) {
+                String pluginSourceVarId = plugin.usesVariables()[i];
+                if (values.containsKey(pluginSourceVarId)) {
+                    pluginSourceData[i] = values.get(pluginSourceVarId);
+                } else {
+                    pluginSourceData[i] = readData(pluginSourceVarId, targetGrid, zPos, time,
+                            dataSource);
+                }
+                pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
+            }
+
+            values.put(derivedVarId, plugin.generateArray2D(derivedVarId, pluginSourceData));
+            parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
+            /*
+             * TODO This needs testing!
+             */
         }
 
         /*
@@ -205,10 +242,124 @@ public abstract class AbstractGridDataset implements GridDataset {
             description.append("Elevation: " + zPos);
         }
 
-        MapFeature mapFeature = new MapFeature(UUID.nameUUIDFromBytes(id.toString().getBytes()).toString(),
-                "Extracted Map Feature", description.toString(), domain, parameters, values);
+        MapFeature mapFeature = new MapFeature(UUID.nameUUIDFromBytes(id.toString().getBytes())
+                .toString(), "Extracted Map Feature", description.toString(), domain, parameters,
+                values);
 
         return mapFeature;
+    }
+
+    private Array2D readData(String varId, HorizontalGrid targetGrid, Double zPos, DateTime time,
+            GridDataSource dataSource) throws IOException {
+        /*
+         * This cast will always work, because we only ever call this method for
+         * non-derived variables - i.e. those whose metadata was provided in the
+         * constructor (which constrains metadata to be GridVariableMetadata
+         */
+
+        GridVariableMetadata metadata = (GridVariableMetadata) getVariableMetadata(varId);
+
+        /*
+         * Get the domain of the grid
+         */
+        HorizontalGrid sourceGrid = metadata.getHorizontalDomain();
+        VerticalAxis zAxis = metadata.getVerticalDomain();
+        TimeAxis tAxis = metadata.getTemporalDomain();
+
+        /*
+         * All variables within this dataset should share the same vertical CRS
+         * (even if they don't share the same values)
+         */
+
+        /*
+         * Use these objects to convert natural coordinates to grid indices
+         */
+        int tIndex = tAxis.findIndexOf(time);
+        if (tIndex < 0) {
+            throw new IllegalArgumentException(time
+                    + " is not part of the temporal domain for the variable " + varId);
+        }
+        int zIndex = zAxis.findIndexOf(zPos);
+        if (zIndex < 0) {
+            throw new IllegalArgumentException(zPos
+                    + " is not part of the vertical domain for the variable " + varId);
+        }
+
+        /*
+         * Create a PixelMap from the source and target grids
+         */
+        Domain2DMapper pixelMap = Domain2DMapper.forGrid(sourceGrid, targetGrid);
+
+        /*
+         * Now use the appropriate DataReadingStrategy to read data
+         */
+        Array2D data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
+                pixelMap);
+        return data;
+    }
+
+    @Override
+    public void addVariablePlugin(VariablePlugin plugin) {
+        /*-
+         * First check that the supplied plugin doesn't provide any variables
+         * which either:
+         * 
+         * a) We already have in this dataset
+         * b) Is generated by another plugin we already have
+         */
+        for (String generatedId : plugin.providesVariables()) {
+            for (String alreadyHave : vars.keySet()) {
+                if (alreadyHave.equals(generatedId)) {
+                    throw new IllegalArgumentException(
+                            "This dataset already contains the variable " + alreadyHave
+                                    + " so this plugin cannot be added");
+                }
+            }
+            for (VariablePlugin existingPlugin : plugins) {
+                for (String alreadyHave : existingPlugin.providesVariables()) {
+                    if (alreadyHave.equals(generatedId)) {
+                        throw new IllegalArgumentException(
+                                "This dataset already has a plugin which provides the variable "
+                                        + alreadyHave + " so this plugin cannot be added");
+                    }
+                }
+            }
+        }
+        /*
+         * Now check that this dataset can supply all of the required variables.
+         * 
+         * At the same time, create an array of the VariableMetadata this plugin
+         * uses for later use
+         */
+        VariableMetadata[] sourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+        int index = 0;
+        for (String requiredId : plugin.usesVariables()) {
+            if (!vars.keySet().contains(requiredId)) {
+                throw new IllegalArgumentException("This plugin needs the variable " + requiredId
+                        + ", but this dataset does not supply it.");
+            }
+            sourceMetadata[index++] = vars.get(requiredId);
+        }
+
+        plugins.add(plugin);
+
+        /*-
+         * The plugins have 2 functions:
+         * 
+         * 1) To generate data on-the-fly
+         * 2) To insert metadata into the tree
+         * 
+         * For data, it's sufficient to store the plugin and use it when
+         * required. For metadata, we immediately want to alter the metadata
+         * tree and store the VariableMetadata in the map.
+         * 
+         * Do that here.
+         */
+        VariableMetadata[] variableMetadata = plugin.processVariableMetadata(sourceMetadata);
+
+        for (VariableMetadata metadata : variableMetadata) {
+            vars.put(metadata.getId(), metadata);
+        }
     }
 
     protected abstract GridDataSource openGridDataSource() throws IOException;

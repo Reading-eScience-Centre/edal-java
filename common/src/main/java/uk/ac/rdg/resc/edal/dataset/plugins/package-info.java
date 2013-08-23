@@ -26,49 +26,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.metadata;
-
-import uk.ac.rdg.resc.edal.dataset.GridDataset;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxis;
-
 /**
- * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
- * This is used to ensure that {@link VariableMetadata} supplied to
- * {@link GridDataset}s have gridded domains, but it will not be used to
- * constrain any return types (which are all just {@link VariableMetadata})
- * 
+ * Package containing classes pertinent to plugins to generate derived variables
  * @author Guy
  */
-public class GridVariableMetadata extends VariableMetadata {
-
-    public GridVariableMetadata(String id, Parameter parameter, HorizontalGrid hDomain,
-            VerticalAxis zDomain, TimeAxis tDomain) {
-        super(id, parameter, hDomain, zDomain, tDomain);
-    }
-
-    /**
-     * Returns the {@link HorizontalGrid} of the variable.
-     */
-    @Override
-    public HorizontalGrid getHorizontalDomain() {
-        return (HorizontalGrid) super.getHorizontalDomain();
-    }
-
-    /**
-     * Returns the {@link VerticalAxis} of the variable
-     */
-    @Override
-    public VerticalAxis getVerticalDomain() {
-        return (VerticalAxis) super.getVerticalDomain();
-    }
-
-    /**
-     * Returns the {@link TimeAxis} of the variable
-     */
-    @Override
-    public TimeAxis getTemporalDomain() {
-        return (TimeAxis) super.getTemporalDomain();
-    }
-}
+package uk.ac.rdg.resc.edal.dataset.plugins;

@@ -36,7 +36,6 @@ import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 
 /**
  * Interface for reading gridded data and associated metadata.
@@ -45,20 +44,11 @@ import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
  * @author Guy
  */
 public interface GridDataset extends Dataset {
-    /**
-     * Returns the {@link GridVariableMetadata} associated with a particular
-     * variable ID
+    /*
+     * TODO perhaps this should be the signature for readFeature in GridDatasets?
      */
-    @Override
-    public GridVariableMetadata getVariableMetadata(String variableId);
-
-    /**
-     * Returns the {@link Set} of {@link GridVariableMetadata} objects which are
-     * at the top level of this {@link GridDataset}
-     */
-    @Override
-    public Set<GridVariableMetadata> getTopLevelVariables();
-
+    // public Feature<GeoPosition> readFeature(String featureId) throws IOException;
+    
     /**
      * Extracts a {@link GridFeature} from this {@link GridDataset}
      * 

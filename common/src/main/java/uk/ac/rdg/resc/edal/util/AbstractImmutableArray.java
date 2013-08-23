@@ -32,9 +32,25 @@ import java.util.Iterator;
 
 public abstract class AbstractImmutableArray<T> implements Array<T> {
 
+    private Class<T> clazz;
     private int[] shape;
 
-    public AbstractImmutableArray(int... shape) {
+    /**
+     * Instantiate a new {@link AbstractImmutableArray}
+     * 
+     * @param clazz
+     *            The class of the objects in this {@link Array}. Because of
+     *            type erasure we need to supply it to the constructor. The
+     *            other ways to do it are to either allow every subclass to
+     *            implement {@link Array#getValueClass()} itself (more code), or
+     *            use some rather complicated reflection (overkill)
+     * @param shape
+     *            The shape of the {@link Array}. The final dimension varies
+     *            fastest. In GIS applications, the standard order for
+     *            co-ordinates is T, Z, Y, X
+     */
+    public AbstractImmutableArray(Class<T> clazz, int... shape) {
+        this.clazz = clazz;
         this.shape = shape;
     }
 
@@ -51,25 +67,24 @@ public abstract class AbstractImmutableArray<T> implements Array<T> {
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
+            boolean itemsRemaining = true;
             int[] indices = new int[getNDim()];
 
             @Override
             public boolean hasNext() {
-                for (int dim = 0; dim < getNDim(); dim++) {
-                    if (indices[dim] < shape[dim]) {
-                        return true;
-                    }
-                }
-                return false;
+                return itemsRemaining;
             }
 
             @Override
             public T next() {
                 T ret = get(indices);
-                for (int dim = getNDim(); dim >= 0; dim--) {
+                for (int dim = getNDim() - 1; dim >= 0; dim--) {
                     indices[dim]++;
-                    if (indices[dim] > shape[dim]) {
+                    if (indices[dim] >= shape[dim]) {
                         indices[dim] = 0;
+                        if (dim == 0) {
+                            itemsRemaining = false;
+                        }
                     } else {
                         break;
                     }
@@ -97,5 +112,10 @@ public abstract class AbstractImmutableArray<T> implements Array<T> {
             size *= shape[dim];
         }
         return size;
+    }
+
+    @Override
+    public Class<T> getValueClass() {
+        return clazz;
     }
 }

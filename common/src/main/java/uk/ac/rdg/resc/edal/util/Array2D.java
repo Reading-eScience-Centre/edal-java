@@ -103,4 +103,18 @@ public abstract class Array2D implements Array<Number> {
     public int[] getShape() {
         return shape;
     }
+    
+    /**
+     * Convenience method to get the size in the x-direction
+     */
+    public int getXSize() {
+        return shape[X_IND];
+    }
+    
+    /**
+     * Convenience method to get the size in the y-direction
+     */
+    public int getYSize() {
+        return shape[Y_IND];
+    }
 }
