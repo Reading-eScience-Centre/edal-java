@@ -44,8 +44,23 @@ public abstract class ImageLayer extends Drawable {
             public Array2D getDataForLayerName(String layerId) {
                 MapFeatureAndMember featureAndMemberName = catalogue.getFeatureAndMemberName(
                         layerId, params);
-                return featureAndMemberName.getMapFeature().getValues(
+                final Array2D values = featureAndMemberName.getMapFeature().getValues(
                         featureAndMemberName.getMember());
+                /*
+                 * Since BufferedImages have the y-axis increasing downwards,
+                 * wrap the returned values in an Array2D with a flipped y-axis
+                 */
+                return new Array2D(values.getYSize(), values.getXSize()) {
+                    @Override
+                    public void set(Number value, int... coords) {
+                        throw new UnsupportedOperationException("This is an immutable Array2D");
+                    }
+                    
+                    @Override
+                    public Number get(int... coords) {
+                        return values.get(params.getHeight() - coords[0] - 1, coords[1]);
+                    }
+                };
             }
         });
     }
