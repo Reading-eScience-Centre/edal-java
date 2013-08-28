@@ -28,8 +28,14 @@
 
 package uk.ac.rdg.resc.edal.util;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import org.geotoolkit.factory.Hints;
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.geotoolkit.referencing.factory.epsg.EpsgInstaller;
+import org.h2.jdbcx.JdbcDataSource;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.util.FactoryException;
@@ -127,7 +133,7 @@ public final class GISUtils {
             CoordinateReferenceSystem targetCrs) {
         MathTransform transform;
         try {
-            transform = CRS.findMathTransform(sourceCrs, DefaultGeographicCRS.WGS84);
+            transform = CRS.findMathTransform(sourceCrs, targetCrs);
             return transform.isIdentity();
         } catch (FactoryException e) {
             /*
@@ -137,7 +143,7 @@ public final class GISUtils {
             return false;
         }
     }
-    
+
     /**
      * Finds a {@link CoordinateReferenceSystem} with the given code, forcing
      * longitude-first axis order.
@@ -161,14 +167,15 @@ public final class GISUtils {
             throw new InvalidCrsException(crsCode);
         }
     }
-    
+
     /**
      * Converts a string of the form "x1,y1,x2,y2" into a {@link BoundingBox}
      * 
      * @throws EdalException
      *             if the format of the bounding box is invalid
      */
-    public static BoundingBox parseBbox(String bboxStr, boolean lonFirst, String crs) throws EdalException {
+    public static BoundingBox parseBbox(String bboxStr, boolean lonFirst, String crs)
+            throws EdalException {
         String[] bboxEls = bboxStr.split(",");
         /* Check the validity of the bounding box */
         if (bboxEls.length != 4) {
@@ -194,5 +201,32 @@ public final class GISUtils {
             throw new EdalException("Invalid bounding box format");
         }
         return new BoundingBoxImpl(minx, miny, maxx, maxy, getCrs(crs));
+    }
+
+    static {
+        /*
+         * Initialise the EPSG database if necessary
+         */
+        try {
+            Class.forName("org.h2.Driver");
+            JdbcDataSource dataSource = new JdbcDataSource();
+            dataSource.setURL("jdbc:h2:.h2/epsg.db");
+            Connection conn = dataSource.getConnection();
+            conn.setAutoCommit(true);
+            Hints.putSystemDefault(Hints.EPSG_DATA_SOURCE, dataSource);
+            EpsgInstaller i = new EpsgInstaller();
+            i.setDatabase(conn);
+            if (!i.exists()) {
+                i.call();
+            }
+        } catch (FactoryException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

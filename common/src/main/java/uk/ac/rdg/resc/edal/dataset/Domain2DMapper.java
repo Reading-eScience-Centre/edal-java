@@ -160,12 +160,12 @@ public class Domain2DMapper extends DomainMapper<int[]> {
         ReferenceableAxis<Double> sourceYAxis = sourceGrid.getYAxis();
         for (int j = 0; j < targetYAxis.size(); j++) {
             for (int i = 0; i < targetXAxis.size(); i++) {
-                GISUtils.transformPosition(new HorizontalPosition(
+                HorizontalPosition transformedPosition = GISUtils.transformPosition(new HorizontalPosition(
                         targetXAxis.getCoordinateValue(i), targetYAxis.getCoordinateValue(j),
                         targetGrid.getCoordinateReferenceSystem()), sourceGrid
                         .getCoordinateReferenceSystem());
-                int sourceIIndex = sourceXAxis.findIndexOf(targetXAxis.getCoordinateValue(i));
-                int sourceJIndex = sourceYAxis.findIndexOf(targetYAxis.getCoordinateValue(j));
+                int sourceIIndex = sourceXAxis.findIndexOf(transformedPosition.getX());
+                int sourceJIndex = sourceYAxis.findIndexOf(transformedPosition.getY());
                 mapper.put(sourceIIndex, sourceJIndex, mapper.convertCoordsToIndex(i, j));
             }
         }
