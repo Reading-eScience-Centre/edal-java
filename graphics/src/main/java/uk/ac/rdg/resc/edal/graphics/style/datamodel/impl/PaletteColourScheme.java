@@ -12,20 +12,20 @@ public class PaletteColourScheme extends ColourScheme {
     ColourScale scaleRange = new ColourScale();
 
     @XmlElement(name = "ColourMap")
-    ColourMap colourPalette = new ColourMap();
+    ColourMap colourMap = new ColourMap();
 
     PaletteColourScheme() {}
 
-    public PaletteColourScheme(ColourScale scaleRange, ColourMap colourPalette) {
+    public PaletteColourScheme(ColourScale scaleRange, ColourMap colourMap) {
         super();
         this.scaleRange = scaleRange;
-        this.colourPalette = colourPalette;
+        this.colourMap = colourMap;
     }
 
     @Override
     public Color getColor(Number value) {
         Float zeroToOne = scaleRange.scaleZeroToOne(value);
-        return colourPalette.getColor(zeroToOne);
+        return colourMap.getColor(zeroToOne);
     }
 
     @Override

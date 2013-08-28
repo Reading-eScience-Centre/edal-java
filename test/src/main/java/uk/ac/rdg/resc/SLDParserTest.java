@@ -69,8 +69,8 @@ public class SLDParserTest {
             }
         };
 
-        File xmlFile = new File(ClassLoader.getSystemResource("xml/se_interpolate.xml").getFile());
-        File imageFile = new File("N:/xmlOutput/se_interpolate.png");
+        File xmlFile = new File(ClassLoader.getSystemResource("xml/se_palette.xml").getFile());
+        File imageFile = new File("N:/xmlOutput/se_palette.png");
 		try {
 			StyleSLDParser.SLDtoXMLString(xmlFile, imageFile, params, id2Feature);
 		} catch (ParserConfigurationException pce) {
