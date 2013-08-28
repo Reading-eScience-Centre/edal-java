@@ -6,14 +6,15 @@ import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
-import uk.ac.rdg.resc.edal.wms.exceptions.InvalidCrsException;
-import uk.ac.rdg.resc.edal.wms.exceptions.WmsException;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
@@ -35,18 +36,18 @@ public class GetMapParameters {
      * Creates a new instance of GetMapParameter from the given RequestParams
      * @param map 
      * 
-     * @throws WmsException
+     * @throws EdalException
      *             if the request is invalid
      */
-    public GetMapParameters(RequestParams params) throws WmsException {
+    public GetMapParameters(RequestParams params) throws EdalException {
         this.wmsVersion = params.getMandatoryWmsVersion();
         if (!WmsUtils.SUPPORTED_VERSIONS.contains(this.wmsVersion)) {
-            throw new WmsException("VERSION " + this.wmsVersion + " not supported");
+            throw new EdalException("VERSION " + this.wmsVersion + " not supported");
         }
         try {
             imageFormat = ImageFormat.get(params.getMandatoryString("format"));
         } catch (InvalidFormatException e) {
-            throw new WmsException("Unsupported image format: "+params.getMandatoryString("format"));
+            throw new EdalException("Unsupported image format: "+params.getMandatoryString("format"));
         }
         animation = params.getBoolean("animation", false);
         globalPlottingParams = parsePlottingParams(params);
@@ -73,7 +74,7 @@ public class GetMapParameters {
         return imageFormat;
     }
     
-    private GlobalPlottingParams parsePlottingParams(RequestParams params) throws WmsException {
+    private GlobalPlottingParams parsePlottingParams(RequestParams params) throws EdalException {
         Extent<DateTime> tExtent = null;
         String timeString = params.getString("time");
         if(timeString != null && !timeString.trim().equals("")) {
@@ -154,16 +155,16 @@ public class GetMapParameters {
             crsCode = params.getMandatoryString("CRS");
             if (crsCode.equalsIgnoreCase("EPSG:4326")) {
                 crsCode = "CRS:84";
-                bbox = WmsUtils.parseBbox(params.getMandatoryString("bbox"), false, crsCode);
+                bbox = GISUtils.parseBbox(params.getMandatoryString("bbox"), false, crsCode);
             } else {
-                bbox = WmsUtils.parseBbox(params.getMandatoryString("bbox"), true, crsCode);
+                bbox = GISUtils.parseBbox(params.getMandatoryString("bbox"), true, crsCode);
             }
         } else {
             crsCode = params.getMandatoryString("SRS");
             if (crsCode.equalsIgnoreCase("EPSG:4326")) {
                 crsCode = "CRS:84";
             }
-            bbox = WmsUtils.parseBbox(params.getMandatoryString("bbox"), true, crsCode);
+            bbox = GISUtils.parseBbox(params.getMandatoryString("bbox"), true, crsCode);
         }
         
         try {
@@ -177,7 +178,7 @@ public class GetMapParameters {
         } catch (NumberFormatException e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Something's wrong with your parameters");
-        } catch (WmsException e) {
+        } catch (EdalException e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Something's wrong with your parameters");
         }

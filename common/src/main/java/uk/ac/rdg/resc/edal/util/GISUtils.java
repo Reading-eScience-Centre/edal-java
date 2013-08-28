@@ -34,6 +34,10 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.util.FactoryException;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
@@ -132,5 +136,63 @@ public final class GISUtils {
              */
             return false;
         }
+    }
+    
+    /**
+     * Finds a {@link CoordinateReferenceSystem} with the given code, forcing
+     * longitude-first axis order.
+     * 
+     * @param crsCode
+     *            The code for the CRS
+     * @return a coordinate reference system with the longitude axis first
+     * @throws InvalidCrsException
+     *             if a CRS matching the code cannot be found
+     * @throws NullPointerException
+     *             if {@code crsCode} is null
+     */
+    public static CoordinateReferenceSystem getCrs(String crsCode) throws InvalidCrsException {
+        if (crsCode == null)
+            throw new NullPointerException("CRS code cannot be null");
+        try {
+            /* The "true" means "force longitude first" */
+            return CRS.decode(crsCode, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new InvalidCrsException(crsCode);
+        }
+    }
+    
+    /**
+     * Converts a string of the form "x1,y1,x2,y2" into a {@link BoundingBox}
+     * 
+     * @throws EdalException
+     *             if the format of the bounding box is invalid
+     */
+    public static BoundingBox parseBbox(String bboxStr, boolean lonFirst, String crs) throws EdalException {
+        String[] bboxEls = bboxStr.split(",");
+        /* Check the validity of the bounding box */
+        if (bboxEls.length != 4) {
+            throw new EdalException("Invalid bounding box format: need four elements");
+        }
+        double minx, miny, maxx, maxy;
+        try {
+            if (lonFirst) {
+                minx = Double.parseDouble(bboxEls[0]);
+                miny = Double.parseDouble(bboxEls[1]);
+                maxx = Double.parseDouble(bboxEls[2]);
+                maxy = Double.parseDouble(bboxEls[3]);
+            } else {
+                minx = Double.parseDouble(bboxEls[1]);
+                miny = Double.parseDouble(bboxEls[0]);
+                maxx = Double.parseDouble(bboxEls[3]);
+                maxy = Double.parseDouble(bboxEls[2]);
+            }
+        } catch (NumberFormatException nfe) {
+            throw new EdalException("Invalid bounding box format: all elements must be numeric");
+        }
+        if (minx >= maxx || miny >= maxy) {
+            throw new EdalException("Invalid bounding box format");
+        }
+        return new BoundingBoxImpl(minx, miny, maxx, maxy, getCrs(crs));
     }
 }

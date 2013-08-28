@@ -41,6 +41,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
@@ -56,8 +58,6 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
-import uk.ac.rdg.resc.edal.wms.exceptions.InvalidCrsException;
-import uk.ac.rdg.resc.edal.wms.exceptions.WmsException;
 
 /**
  * <p>
@@ -111,41 +111,6 @@ public class WmsUtils {
     }
 
     /**
-     * Converts a string of the form "x1,y1,x2,y2" into a bounding box of four
-     * doubles.
-     * 
-     * @throws WmsException
-     *             if the format of the bounding box is invalid
-     */
-    public static BoundingBox parseBbox(String bboxStr, boolean lonFirst, String crs) throws WmsException {
-        String[] bboxEls = bboxStr.split(",");
-        /* Check the validity of the bounding box */
-        if (bboxEls.length != 4) {
-            throw new WmsException("Invalid bounding box format: need four elements");
-        }
-        double minx, miny, maxx, maxy;
-        try {
-            if (lonFirst) {
-                minx = Double.parseDouble(bboxEls[0]);
-                miny = Double.parseDouble(bboxEls[1]);
-                maxx = Double.parseDouble(bboxEls[2]);
-                maxy = Double.parseDouble(bboxEls[3]);
-            } else {
-                minx = Double.parseDouble(bboxEls[1]);
-                miny = Double.parseDouble(bboxEls[0]);
-                maxx = Double.parseDouble(bboxEls[3]);
-                maxy = Double.parseDouble(bboxEls[2]);
-            }
-        } catch (NumberFormatException nfe) {
-            throw new WmsException("Invalid bounding box format: all elements must be numeric");
-        }
-        if (minx >= maxx || miny >= maxy) {
-            throw new WmsException("Invalid bounding box format");
-        }
-        return new BoundingBoxImpl(minx, miny, maxx, maxy, getCrs(crs));
-    }
-
-    /**
      * @return true if the given location represents an OPeNDAP dataset. This
      *         method simply checks to see if the location string starts with
      *         "http://", "https://" or "dods://".
@@ -166,29 +131,6 @@ public class WmsUtils {
     }
 
     /**
-     * Finds a {@link CoordinateReferenceSystem} with the given code, forcing
-     * longitude-first axis order.
-     * 
-     * @param crsCode
-     *            The code for the CRS
-     * @return a coordinate reference system with the longitude axis first
-     * @throws InvalidCrsException
-     *             if a CRS matching the code cannot be found
-     * @throws NullPointerException
-     *             if {@code crsCode} is null
-     */
-    public static CoordinateReferenceSystem getCrs(String crsCode) throws InvalidCrsException {
-        if (crsCode == null)
-            throw new NullPointerException("CRS code cannot be null");
-        try {
-            // the "true" means "force longitude first"
-            return CRS.decode(crsCode, true);
-        } catch (Exception e) {
-            throw new InvalidCrsException(crsCode);
-        }
-    }
-
-    /**
      * Gets a {@link RegularGrid} representing the image requested by a client
      * in a GetMap operation
      * 
@@ -204,11 +146,11 @@ public class WmsUtils {
     /**
      * Utility method for getting the dataset ID from the given layer name
      */
-    public static String getDatasetId(String layerName) throws WmsException {
+    public static String getDatasetId(String layerName) throws EdalException {
         // Find which layer the user is requesting
         String[] layerParts = layerName.split("/");
         if (layerParts.length != 2) {
-            throw new WmsException("Layers should be of the form Dataset/Variable");
+            throw new EdalException("Layers should be of the form Dataset/Variable");
         }
         return layerParts[0];
     }
@@ -216,11 +158,11 @@ public class WmsUtils {
     /**
      * Utility method for getting the member name from the given layer name
      */
-    public static String getMemberName(String layerName) throws WmsException {
+    public static String getMemberName(String layerName) throws EdalException {
         // Find which layer the user is requesting
         String[] layerParts = layerName.split("/");
         if (layerParts.length != 2) {
-            throw new WmsException("Layers should be of the form Dataset/Variable");
+            throw new EdalException("Layers should be of the form Dataset/Variable");
         }
         return layerParts[1];
     }

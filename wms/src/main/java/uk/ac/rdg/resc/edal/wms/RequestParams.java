@@ -5,7 +5,7 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.ac.rdg.resc.edal.wms.exceptions.WmsException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
 /**
  * Class that contains the parameters of the user's request. Parameter names are
@@ -56,10 +56,10 @@ public class RequestParams {
      * WmsException if the parameter does not exist. Use
      * getMandatoryWmsVersion() to get the requested WMS version.
      */
-    public String getMandatoryString(String paramName) throws WmsException {
+    public String getMandatoryString(String paramName) throws EdalException {
         String value = this.getString(paramName);
         if (value == null) {
-            throw new WmsException("Must provide a value for parameter " + paramName.toUpperCase());
+            throw new EdalException("Must provide a value for parameter " + paramName.toUpperCase());
         }
         return value;
     }
@@ -84,13 +84,13 @@ public class RequestParams {
      * WmsException if a version has not been set.
      * 
      * @return The request WMS version as a string
-     * @throws WmsException
+     * @throws EdalException
      *             if neither VERSION nor WMTVER have been requested
      */
-    public String getMandatoryWmsVersion() throws WmsException {
+    public String getMandatoryWmsVersion() throws EdalException {
         String version = this.getWmsVersion();
         if (version == null) {
-            throw new WmsException("Must provide a value for VERSION");
+            throw new EdalException("Must provide a value for VERSION");
         }
         return version;
     }
@@ -102,7 +102,7 @@ public class RequestParams {
      * if the value is not a valid positive integer. Zero is counted as a
      * positive integer.
      */
-    public int getPositiveInt(String paramName, int defaultValue) throws WmsException {
+    public int getPositiveInt(String paramName, int defaultValue) throws EdalException {
         String value = this.getString(paramName);
         if (value == null)
             return defaultValue;
@@ -115,24 +115,24 @@ public class RequestParams {
      * the value is not a valid positive integer. Zero is counted as a positive
      * integer.
      */
-    public int getMandatoryPositiveInt(String paramName) throws WmsException {
+    public int getMandatoryPositiveInt(String paramName) throws EdalException {
         String value = this.getString(paramName);
         if (value == null) {
-            throw new WmsException("Must provide a value for parameter " + paramName.toUpperCase());
+            throw new EdalException("Must provide a value for parameter " + paramName.toUpperCase());
         }
         return parsePositiveInt(paramName, value);
     }
 
-    private static int parsePositiveInt(String paramName, String value) throws WmsException {
+    private static int parsePositiveInt(String paramName, String value) throws EdalException {
         try {
             int i = Integer.parseInt(value);
             if (i < 0) {
-                throw new WmsException("Parameter " + paramName.toUpperCase()
+                throw new EdalException("Parameter " + paramName.toUpperCase()
                         + " must be a valid positive integer");
             }
             return i;
         } catch (NumberFormatException nfe) {
-            throw new WmsException("Parameter " + paramName.toUpperCase()
+            throw new EdalException("Parameter " + paramName.toUpperCase()
                     + " must be a valid positive integer");
         }
     }
@@ -153,11 +153,11 @@ public class RequestParams {
      * value, or the provided default if no parameter with the given name has
      * been supplied.
      * 
-     * @throws WmsException
+     * @throws EdalException
      *             if the value is not a valid boolean string ("true" or
      *             "false", case-insensitive).
      */
-    public boolean getBoolean(String paramName, boolean defaultValue) throws WmsException {
+    public boolean getBoolean(String paramName, boolean defaultValue) throws EdalException {
         String value = this.getString(paramName);
         if (value == null)
             return defaultValue;
@@ -166,18 +166,18 @@ public class RequestParams {
             return true;
         if ("false".equalsIgnoreCase(value))
             return false;
-        throw new WmsException("Invalid boolean value for parameter " + paramName);
+        throw new EdalException("Invalid boolean value for parameter " + paramName);
     }
 
     /**
      * Returns the value of the parameter with the given name, or the supplied
      * default value if the parameter does not exist.
      * 
-     * @throws WmsException
+     * @throws EdalException
      *             if the value of the parameter is not a valid floating-point
      *             number
      */
-    public float getFloat(String paramName, float defaultValue) throws WmsException {
+    public float getFloat(String paramName, float defaultValue) throws EdalException {
         String value = this.getString(paramName);
         if (value == null) {
             return defaultValue;
@@ -185,7 +185,7 @@ public class RequestParams {
         try {
             return Float.parseFloat(value);
         } catch (NumberFormatException nfe) {
-            throw new WmsException("Parameter " + paramName.toUpperCase()
+            throw new EdalException("Parameter " + paramName.toUpperCase()
                     + " must be a valid floating-point number");
         }
     }

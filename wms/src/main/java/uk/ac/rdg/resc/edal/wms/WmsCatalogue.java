@@ -4,11 +4,11 @@ import java.io.IOException;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.wms.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**

@@ -12,10 +12,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
-import uk.ac.rdg.resc.edal.wms.exceptions.WmsException;
 
 /**
  * Servlet implementation class WmsServlet
@@ -59,7 +59,7 @@ public class WmsServlet extends HttpServlet {
              */
             String request = params.getMandatoryString("request");
             dispatchWmsRequest(request, params, httpServletRequest, httpServletResponse);
-        } catch (WmsException wmse) {
+        } catch (EdalException wmse) {
             handleWmsException(wmse, httpServletResponse);
         } catch (SocketException se) {
             /*
@@ -135,7 +135,7 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getMap(RequestParams params, HttpServletResponse httpServletResponse) throws WmsException {
+    private void getMap(RequestParams params, HttpServletResponse httpServletResponse) throws EdalException {
         /*
          * TODO GetMapParameters should take the catalogue to override default values?
          */
@@ -144,7 +144,7 @@ public class WmsServlet extends HttpServlet {
         GlobalPlottingParams plottingParameters = getMapParams.getPlottingParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
         if (!(getMapParams.getImageFormat() instanceof SimpleFormat)) {
-            throw new WmsException("Currently KML is not supported.");
+            throw new EdalException("Currently KML is not supported.");
         }
         SimpleFormat simpleFormat = (SimpleFormat) getMapParams.getImageFormat();
 
@@ -159,18 +159,18 @@ public class WmsServlet extends HttpServlet {
         if (!styleParameters.isXmlDefined()) {
             if (styleParameters.isTransparent()
                     && !getMapParams.getImageFormat().supportsFullyTransparentPixels()) {
-                throw new WmsException("The image format "
+                throw new EdalException("The image format "
                         + getMapParams.getImageFormat().getMimeType()
                         + " does not support fully-transparent pixels");
             }
             if (styleParameters.getOpacity() < 100
                     && !getMapParams.getImageFormat().supportsPartiallyTransparentPixels()) {
-                throw new WmsException("The image format "
+                throw new EdalException("The image format "
                         + getMapParams.getImageFormat().getMimeType()
                         + " does not support partially-transparent pixels");
             }
             if (styleParameters.getNumLayers() > catalogue.getMaxSimultaneousLayers()) {
-                throw new WmsException("Only " + catalogue.getMaxSimultaneousLayers()
+                throw new EdalException("Only " + catalogue.getMaxSimultaneousLayers()
                         + " layer(s) can be plotted at once");
             }
         }
@@ -180,7 +180,7 @@ public class WmsServlet extends HttpServlet {
          */
         if (plottingParameters.getHeight() > catalogue.getMaxImageHeight()
                 || plottingParameters.getWidth() > catalogue.getMaxImageWidth()) {
-            throw new WmsException("Requested image size exceeds the maximum of "
+            throw new EdalException("Requested image size exceeds the maximum of "
                     + catalogue.getMaxImageWidth() + "x" + catalogue.getMaxImageHeight());
         }
 
@@ -244,7 +244,7 @@ public class WmsServlet extends HttpServlet {
 
     }
 
-    private void handleWmsException(WmsException wmse, HttpServletResponse httpServletResponse) throws IOException {
+    private void handleWmsException(EdalException wmse, HttpServletResponse httpServletResponse) throws IOException {
         /*
          * TODO this should return the exception as XML or potentially an image
          */
