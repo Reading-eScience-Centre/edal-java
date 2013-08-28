@@ -18,6 +18,8 @@ public class SLDNamespaceResolver implements NamespaceContext {
 			"http://www.opengis.net/sld";
 	public static final String SE_NAMESPACE =
 			"http://www.opengis.net/se";
+	public static final String RESC_NAMESPACE =
+			"http://www.resc.reading.ac.uk";
 
 	@Override
 	public String getNamespaceURI(String prefix) {
@@ -27,6 +29,8 @@ public class SLDNamespaceResolver implements NamespaceContext {
 			return SLD_NAMESPACE;
 		} else if (prefix.equals("se")) {
 			return SE_NAMESPACE;
+		} else if (prefix.equals("resc")) {
+			return RESC_NAMESPACE;
 		} else {
 			return XMLConstants.NULL_NS_URI;
 		}
