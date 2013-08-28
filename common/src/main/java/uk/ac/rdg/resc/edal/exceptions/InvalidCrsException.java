@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.wms.exceptions;
+package uk.ac.rdg.resc.edal.exceptions;
 
 /**
  * Exception that is thrown when a user requests an unsupported coordinate
@@ -6,7 +6,7 @@ package uk.ac.rdg.resc.edal.wms.exceptions;
  * 
  * @author Jon Blower
  */
-public class InvalidCrsException extends WmsException {
+public class InvalidCrsException extends EdalException {
     private static final long serialVersionUID = 1L;
 
     /**

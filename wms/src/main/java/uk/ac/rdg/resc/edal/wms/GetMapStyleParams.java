@@ -6,6 +6,7 @@ import javax.xml.bind.JAXBException;
 
 import net.sf.json.JSONException;
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
@@ -23,7 +24,6 @@ import uk.ac.rdg.resc.edal.graphics.style.util.StyleJSONParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.wms.exceptions.WmsException;
 
 public class GetMapStyleParams {
 
@@ -58,7 +58,7 @@ public class GetMapStyleParams {
                                                   * featureCatalogue,
                                                   * Map<String, Dataset>
                                                   * datasets
-                                                  */) throws WmsException {
+                                                  */) throws EdalException {
         /*
          * TODO We might want to put the featureCatalogue and datasets back, but
          * hopefully this is not the case...
@@ -91,7 +91,7 @@ public class GetMapStyleParams {
                 xmlStyle = StyleJSONParser.JSONtoXMLString(jsonStyle);
             } catch (JSONException e) {
                 e.printStackTrace();
-                throw new WmsException(
+                throw new EdalException(
                         "Problem parsing JSON style to XML style.  Check logs for stack trace");
             }
         }
@@ -99,11 +99,11 @@ public class GetMapStyleParams {
         if (xmlStyle == null) {
             xmlSpecified = false;
             if (layers == null) {
-                throw new WmsException(
+                throw new EdalException(
                         "You must specify either XML_STYLE, JSON_STYLE or LAYERS and STYLES");
             }
             if (styles.length != layers.length && styles.length != 0) {
-                throw new WmsException("You must request exactly one STYLE per layer, "
+                throw new EdalException("You must request exactly one STYLE per layer, "
                         + "or use the default style for each layer with STYLES=");
             }
         } else {
@@ -122,7 +122,7 @@ public class GetMapStyleParams {
             /* Parse the hexadecimal string */
             backgroundColour = cAdapter.unmarshal(bgc);
         } catch (Exception e) {
-            throw new WmsException("Invalid format for BGCOLOR");
+            throw new EdalException("Invalid format for BGCOLOR");
         }
 
         opacity = params.getPositiveInt("opacity", 100);
@@ -146,7 +146,7 @@ public class GetMapStyleParams {
     /**
      * Gets the ColorScaleRange object requested by the client
      */
-    private Extent<Float> getColorScaleRange(RequestParams params) throws WmsException {
+    private Extent<Float> getColorScaleRange(RequestParams params) throws EdalException {
         String csr = params.getString("colorscalerange");
         if (csr == null || csr.equalsIgnoreCase("default")) {
             // The client wants the layer's default scale range to be used
@@ -164,23 +164,23 @@ public class GetMapStyleParams {
             Float scaleMin = Float.parseFloat(scaleEls[0]);
             Float scaleMax = Float.parseFloat(scaleEls[1]);
             if (scaleMin > scaleMax)
-                throw new WmsException("Min > Max in COLORSCALERANGE");
+                throw new EdalException("Min > Max in COLORSCALERANGE");
             return Extents.newExtent(scaleMin, scaleMax);
         }
     }
 
-    public MapImage getImageGenerator() throws WmsException {
+    public MapImage getImageGenerator() throws EdalException {
         if (xmlStyle != null) {
             try {
                 return StyleXMLParser.deserialise(xmlStyle);
             } catch (JAXBException e) {
                 e.printStackTrace();
-                throw new WmsException("Problem parsing XML style.  Check logs for stack trace");
+                throw new EdalException("Problem parsing XML style.  Check logs for stack trace");
             }
         }
 
         if (layers.length > 1) {
-            throw new WmsException("Only 1 layer may be requested");
+            throw new EdalException("Only 1 layer may be requested");
         }
 
         String layerName = layers[0];
@@ -192,7 +192,7 @@ public class GetMapStyleParams {
 
         String[] styleParts = style.split("/");
         if (styleParts.length == 0) {
-            throw new WmsException("Style should be of the form STYLE/PALETTE ()");
+            throw new EdalException("Style should be of the form STYLE/PALETTE ()");
         }
         String plotStyleName = styleParts[0];
         String paletteName = styleParts.length > 1 ? styleParts[1] : "default";
@@ -391,7 +391,7 @@ public class GetMapStyleParams {
         }
 
         if (layer == null) {
-            throw new WmsException("Do not know how to plot the style: " + plotStyleName);
+            throw new EdalException("Do not know how to plot the style: " + plotStyleName);
         }
 
         image.getLayers().add(layer);

@@ -1,19 +1,19 @@
-package uk.ac.rdg.resc.edal.wms.exceptions;
+package uk.ac.rdg.resc.edal.exceptions;
 
 /**
  * Exception specific to WMS
  * 
  * @author Jon Blower
  */
-public class WmsException extends Exception {
+public class EdalException extends Exception {
     private static final long serialVersionUID = 1L;
     private String code = null;
 
-    public WmsException(String message) {
+    public EdalException(String message) {
         super(message);
     }
 
-    public WmsException(String message, String code) {
+    public EdalException(String message, String code) {
         super(message);
         this.code = code;
     }
