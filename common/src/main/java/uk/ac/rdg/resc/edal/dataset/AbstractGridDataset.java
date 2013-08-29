@@ -274,27 +274,33 @@ public abstract class AbstractGridDataset implements GridDataset {
         /*
          * Use these objects to convert natural coordinates to grid indices
          */
-        int tIndex = tAxis.findIndexOf(time);
+        int tIndex = 0;
+        if (tAxis != null) {
+            tAxis.findIndexOf(time);
+        }
         if (tIndex < 0) {
             throw new IllegalArgumentException(time
                     + " is not part of the temporal domain for the variable " + varId);
         }
-        int zIndex = zAxis.findIndexOf(zPos);
+        int zIndex = 0;
+        if (zAxis != null) {
+            zAxis.findIndexOf(zPos);
+        }
         if (zIndex < 0) {
             throw new IllegalArgumentException(zPos
                     + " is not part of the vertical domain for the variable " + varId);
         }
 
         /*
-         * Create a PixelMap from the source and target grids
+         * Create a DomainMapper from the source and target grids
          */
-        Domain2DMapper pixelMap = Domain2DMapper.forGrid(sourceGrid, targetGrid);
+        Domain2DMapper domainMapper = Domain2DMapper.forGrid(sourceGrid, targetGrid);
 
         /*
          * Now use the appropriate DataReadingStrategy to read data
          */
         Array2D data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
-                pixelMap);
+                domainMapper);
         return data;
     }
 

@@ -139,10 +139,10 @@ public enum DataReadingStrategy {
                 Array4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, j, j,
                         imin, imax);
 
-                for (DomainMapperEntry<int[]> pme : scanline.getPixelMapEntries()) {
-                    List<int[]> targetGridPoints = pme.getTargetIndices();
+                for (DomainMapperEntry<int[]> dme : scanline.getPixelMapEntries()) {
+                    List<int[]> targetGridPoints = dme.getTargetIndices();
                     for (int[] targetPoint : targetGridPoints) {
-                        ret.set(data.get(0, 0, 0, pme.getSourceGridIIndex() - imin), new int[] {
+                        ret.set(data.get(0, 0, 0, dme.getSourceGridIIndex() - imin), new int[] {
                                 targetPoint[1], targetPoint[0] });
                     }
                 }

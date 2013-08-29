@@ -31,10 +31,13 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ucar.nc2.Attribute;
+import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
@@ -46,6 +49,7 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -74,6 +78,11 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
             nc = openDataset(location);
             ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
             Map<String, GridVariableMetadata> vars = new HashMap<String, GridVariableMetadata>();
+            /*
+             * Store a map of component names. Key is the compound name, value
+             * is a 2-element String array with x, y component IDs
+             */
+            Map<String, String[]> xyComponentPairs = new HashMap<String, String[]>();
             for (Gridset gridset : gridDataset.getGridsets()) {
                 GridCoordSystem coordSys = gridset.getGeoCoordSystem();
                 HorizontalGrid hDomain = CdmUtils.createHorizontalGrid(coordSys);
@@ -84,19 +93,59 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
                  */
                 for (GridDatatype grid : gridset.getGrids()) {
                     VariableDS variable = grid.getVariable();
-                    Parameter parameter = new Parameter(variable.getName(), grid.getVariable()
-                            .getShortName(), variable.getDescription(), variable.getUnitsString());
+                    String varId = variable.getName();
+                    String name = getVariableName(variable);
+                    Parameter parameter = new Parameter(varId, name,
+                            variable.getDescription(), variable.getUnitsString());
                     GridVariableMetadata metadata = new GridVariableMetadata(variable.getName(),
                             parameter, hDomain, zDomain, tDomain);
                     vars.put(metadata.getId(), metadata);
+
+                    if (name != null) {
+                        /*
+                         * Check for vector components
+                         */
+                        if (name.contains("eastward")) {
+                            String compoundName = name.replaceFirst("eastward_", "");
+                            String[] cData;
+                            if (!xyComponentPairs.containsKey(compoundName)) {
+                                cData = new String[2];
+                                xyComponentPairs.put(compoundName, cData);
+                            }
+                            cData = xyComponentPairs.get(compoundName);
+                            /*
+                             * By doing this, we will end up with the merged
+                             * coverage
+                             */
+                            cData[0] = varId;
+                        } else if (name.contains("northward")) {
+                            String compoundName = name.replaceFirst("northward_", "");
+                            String[] cData;
+                            if (!xyComponentPairs.containsKey(compoundName)) {
+                                cData = new String[2];
+                                xyComponentPairs.put(compoundName, cData);
+                            }
+                            cData = xyComponentPairs.get(compoundName);
+                            /*
+                             * By doing this, we will end up with the merged
+                             * coverage
+                             */
+                            cData[1] = varId;
+                        }
+                    }
                 }
             }
 
-            /*
-             * TODO: look at variables and see whether we can create any derived
-             * variables, or group them somehow.
-             */
-            return new CdmGridDataset(location, vars, CdmUtils.getOptimumDataReadingStrategy(nc));
+            GridDataset cdmGridDataset = new CdmGridDataset(location, vars,
+                    CdmUtils.getOptimumDataReadingStrategy(nc));
+            for (Entry<String, String[]> componentData : xyComponentPairs.entrySet()) {
+                String title = componentData.getKey();
+                String[] comps = componentData.getValue();
+                if (comps[0] != null && comps[1] != null) {
+                    cdmGridDataset.addVariablePlugin(new VectorPlugin(comps[0], comps[1], title));
+                }
+            }
+            return cdmGridDataset;
         } finally {
             closeDataset(nc);
         }
@@ -194,6 +243,31 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
             log.debug("NetCDF file closed");
         } catch (IOException ex) {
             log.error("IOException closing " + nc.getLocation(), ex);
+        }
+    }
+
+    /**
+     * Returns the phenomenon that the given variable represents.
+     * 
+     * This name will be, in order of preference:
+     * 
+     * The standard name
+     * 
+     * The long name
+     * 
+     * The variable name
+     */
+    private static String getVariableName(Variable var) {
+        Attribute stdNameAtt = var.findAttributeIgnoreCase("standard_name");
+        if (stdNameAtt == null || stdNameAtt.getStringValue().trim().equals("")) {
+            Attribute longNameAtt = var.findAttributeIgnoreCase("long_name");
+            if (longNameAtt == null || longNameAtt.getStringValue().trim().equals("")) {
+                return var.getName();
+            } else {
+                return longNameAtt.getStringValue();
+            }
+        } else {
+            return stdNameAtt.getStringValue();
         }
     }
 }
