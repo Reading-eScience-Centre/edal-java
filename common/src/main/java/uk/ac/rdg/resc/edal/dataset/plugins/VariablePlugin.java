@@ -70,6 +70,9 @@ public abstract class VariablePlugin {
                 Number[] sourceValues = new Number[sourceArrays.length];
                 for (int i = 0; i < sourceValues.length; i++) {
                     sourceValues[i] = sourceArrays[i].get(coords);
+                    if(sourceValues[i] == null) {
+                        return null;
+                    }
                 }
                 return generateValue(varId.substring(prefixLength), sourceValues);
             }
@@ -114,6 +117,9 @@ public abstract class VariablePlugin {
         if (values.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " metadata sources, but you have supplied " + values.length);
+        }
+        if (values[0] == null || values[1] == null) {
+            return null;
         }
         return generateValue(varId.substring(prefixLength), values);
     }

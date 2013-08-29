@@ -146,10 +146,14 @@ final class CdmGridDataSource implements GridDataSource {
             /*
              * Set the x and y index values
              */
-            index.setDim(tAxisIndex, t);
-            index.setDim(zAxisIndex, z);
-            index.setDim(yAxisIndex, y);
-            index.setDim(xAxisIndex, x);
+            if (tAxisIndex > 0)
+                index.setDim(tAxisIndex, t);
+            if (zAxisIndex > 0)
+                index.setDim(zAxisIndex, z);
+            if (yAxisIndex > 0)
+                index.setDim(yAxisIndex, y);
+            if (xAxisIndex > 0)
+                index.setDim(xAxisIndex, x);
 
             /*
              * Now read the data, converting missing values to null if necessary
