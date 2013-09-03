@@ -197,6 +197,7 @@ public class Frame {
                     int j = (int) dj;
                     Number angle = data[i][j];
                     if (angle != null) {
+                        angle = Math.toRadians(data[i][j].doubleValue());
                         // Calculate the end point of the arrow
                         double iEnd = i + arrowLength * Math.cos(angle.doubleValue());
                         // Screen coordinates go down, but north is up, hence

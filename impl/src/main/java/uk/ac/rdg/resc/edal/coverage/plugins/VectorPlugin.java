@@ -100,7 +100,7 @@ public class VectorPlugin extends Plugin {
             return (float) Math.sqrt(Math.pow((Float) values.get(0), 2)
                     + Math.pow((Float) values.get(1), 2));
         } else if (dirName.equals(component)) {
-            return (float) Math.atan2((Float) values.get(1), (Float) values.get(0));
+            return (float) Math.toDegrees(Math.atan2((Float) values.get(1), (Float) values.get(0)));
         } else {
             throw new IllegalArgumentException("This Plugin does not provide the field "
                     + component);
