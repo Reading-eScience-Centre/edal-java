@@ -118,7 +118,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         nColorBands.addItem("20");
         nColorBands.addItem("50");
         nColorBands.addItem("100");
-        nColorBands.addItem("254");
+        nColorBands.addItem("253");
         nColorBands.setTitle("Select the number of colour bands to use for this data");
         
         paletteImage = new Image();
@@ -476,7 +476,7 @@ public class PaletteSelector implements PaletteSelectorIF {
     
     @Override
     public void setNumColorBands(int nBands){
-        int diff = 254*254;
+        int diff = 253*253;
         int minIndex = 0;
         for(int i=0; i< nColorBands.getItemCount(); i++){
             int value = Integer.parseInt(nColorBands.getValue(i));

@@ -64,7 +64,7 @@ import uk.ac.rdg.resc.edal.Extent;
  */
 public class ColorPalette {
     /**
-     * The maximum number of colours a palette can support (254). (One would be
+     * The maximum number of colours a palette can support (253). (One would be
      * hard pushed to distinguish more colours than this in a typical scenario
      * anyway.)
      */
