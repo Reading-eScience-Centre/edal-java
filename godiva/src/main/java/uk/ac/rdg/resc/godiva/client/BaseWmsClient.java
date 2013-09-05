@@ -711,6 +711,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     private void updateMapBase(String layerUpdated) {
         if (layerDetailsLoaded && dateTimeDetailsLoaded && minMaxDetailsLoaded) {
+            mapArea.updatePos();
             updateMap(mapArea, layerUpdated);
         }
     }

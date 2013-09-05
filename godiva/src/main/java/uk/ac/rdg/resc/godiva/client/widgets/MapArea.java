@@ -967,4 +967,12 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         return new ScreenPosition(getAbsoluteLeft() + getOffsetWidth() / 2, getAbsoluteTop()
                 + getOffsetHeight() / 2);
     }
+
+    /**
+     * This should be called when the position/size of the map has changed.
+     * Failing to do so will lead to e.g. incorrect positions for GetFeatureInfo
+     */
+    public void updatePos() {
+        map.updateSize();
+    }
 }
