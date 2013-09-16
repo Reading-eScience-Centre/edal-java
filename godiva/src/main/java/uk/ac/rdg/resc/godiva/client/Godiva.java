@@ -18,6 +18,7 @@ import uk.ac.rdg.resc.godiva.client.state.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.UnitsInfoIF;
+import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF.OutOfRangeState;
 import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
@@ -349,6 +350,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         }
 
         String currentPalette = widgetCollection.getPaletteSelector().getSelectedPalette();
+        String aboveMaxString = widgetCollection.getPaletteSelector().getAboveMaxString();
+        String belowMinString = widgetCollection.getPaletteSelector().getBelowMinString();
         String currentStyle = widgetCollection.getPaletteSelector().getSelectedStyle();
         String currentScaleRange = widgetCollection.getPaletteSelector().getScaleRange();
         int nColourBands = widgetCollection.getPaletteSelector().getNumColorBands();
@@ -360,9 +363,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          */
         mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID,
                 layerSelector.getSelectedId(), currentTime, colorbyTime, currentElevation,
-                colorbyElevation, currentStyle, currentPalette, currentScaleRange, nColourBands,
-                logScale, widgetCollection.getElevationSelector().getNElevations() > 1,
-                widgetCollection.getTimeSelector().hasMultipleTimes());
+                colorbyElevation, currentStyle, currentPalette, aboveMaxString, belowMinString,
+                currentScaleRange, nColourBands, logScale, widgetCollection.getElevationSelector()
+                        .getNElevations() > 1, widgetCollection.getTimeSelector()
+                        .hasMultipleTimes());
 
         /*
          * Set the opacity after updating the map, otherwise it doesn't work
@@ -542,6 +546,28 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 widgetCollection.getPaletteSelector().setNumColorBands(
                         Integer.parseInt(numColorBands));
             }
+            
+            String aboveMaxString = permalinkParamsMap.get("aboveMaxColor");
+            if(aboveMaxString != null) {
+                if("extend".equalsIgnoreCase(aboveMaxString)) {
+                    widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.EXTEND);
+                } else if("transparent".equalsIgnoreCase(aboveMaxString)) {
+                    widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.TRANSPARENT);
+                } else if("0x000000".equalsIgnoreCase(aboveMaxString)) {
+                    widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.BLACK);
+                }
+            }
+            
+            String belowMinString = permalinkParamsMap.get("belowMinColor");
+            if(belowMinString != null) {
+                if("extend".equalsIgnoreCase(belowMinString)) {
+                    widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.EXTEND);
+                } else if("transparent".equalsIgnoreCase(belowMinString)) {
+                    widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.TRANSPARENT);
+                } else if("0x000000".equalsIgnoreCase(belowMinString)) {
+                    widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.BLACK);
+                }
+            }
 
             String currentElevation = permalinkParamsMap.get("elevation");
             if (currentElevation != null) {
@@ -607,7 +633,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String urlParams = "dataset=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
                 + "&numColorBands=" + paletteSelector.getNumColorBands() + "&logScale="
                 + paletteSelector.isLogScale() + "&zoom=" + zoom + "&centre=" + centre.lon() + ","
-                + centre.lat();
+                + centre.lat() + "&abovemaxcolor=" + paletteSelector.getAboveMaxString()
+                + "&belowmincolor=" + paletteSelector.getBelowMinString();
 
         TimeSelectorIF timeSelector = widgetCollection.getTimeSelector();
         ElevationSelectorIF elevationSelector = widgetCollection.getElevationSelector();

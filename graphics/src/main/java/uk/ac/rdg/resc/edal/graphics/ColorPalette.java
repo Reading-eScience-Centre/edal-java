@@ -64,11 +64,11 @@ import uk.ac.rdg.resc.edal.Extent;
  */
 public class ColorPalette {
     /**
-     * The maximum number of colours a palette can support (253). (One would be
+     * The maximum number of colours a palette can support (250). (One would be
      * hard pushed to distinguish more colours than this in a typical scenario
      * anyway.)
      */
-    public static final int MAX_NUM_COLOURS = 253;
+    public static final int MAX_NUM_COLOURS = 250;
 
     private static final Map<String, ColorPalette> palettes = new HashMap<String, ColorPalette>();
 
@@ -363,7 +363,7 @@ public class ColorPalette {
      *             if the requested number of colour bands is less than one or
      *             greater than {@link #MAX_NUM_COLOURS}.
      */
-    public IndexColorModel getColorModel(int numColorBands, int opacity) {
+    public IndexColorModel getColorModel(int numColorBands, int opacity, Color belowMin, Color aboveMax) {
         // Gets an interpolated/subsampled version of this palette with the
         // given number of colour bands
         Color[] newPalette = this.getPalette(numColorBands);
@@ -379,10 +379,10 @@ public class ColorPalette {
             alpha = (int) (2.55 * opacity);
 
         // Now simply copy the target palette to arrays of r,g,b and a
-        byte[] r = new byte[numColorBands + 2];
-        byte[] g = new byte[numColorBands + 2];
-        byte[] b = new byte[numColorBands + 2];
-        byte[] a = new byte[numColorBands + 2];
+        byte[] r = new byte[numColorBands + 3];
+        byte[] g = new byte[numColorBands + 3];
+        byte[] b = new byte[numColorBands + 3];
+        byte[] a = new byte[numColorBands + 3];
         for (int i = 0; i < numColorBands; i++) {
             r[i] = (byte) newPalette[i].getRed();
             g[i] = (byte) newPalette[i].getGreen();
@@ -402,11 +402,35 @@ public class ColorPalette {
         b[numColorBands] = 0;
         a[numColorBands] = 0;
 
-        // The next represents out-of-range pixels (black)
-        r[numColorBands + 1] = 0;
-        g[numColorBands + 1] = 0;
-        b[numColorBands + 1] = 0;
-        a[numColorBands + 1] = (byte) alpha;
+        /*
+         * The next represents out-of-range pixels:
+         * 
+         * +1 for the below min colour
+         * +2 for the above max colour
+         */
+        if(belowMin != null) {  
+            r[numColorBands + 1] = (byte) belowMin.getRed();
+            g[numColorBands + 1] = (byte) belowMin.getGreen();
+            b[numColorBands + 1] = (byte) belowMin.getBlue();
+            a[numColorBands + 1] = (byte) belowMin.getAlpha();
+        } else {
+            r[numColorBands + 1] = r[0];
+            g[numColorBands + 1] = g[0];
+            b[numColorBands + 1] = b[0];
+            a[numColorBands + 1] = a[0];
+        }
+
+        if(aboveMax != null) {
+            r[numColorBands + 2] = (byte) aboveMax.getRed();
+            g[numColorBands + 2] = (byte) aboveMax.getGreen();
+            b[numColorBands + 2] = (byte) aboveMax.getBlue();
+            a[numColorBands + 2] = (byte) aboveMax.getAlpha();
+        } else {
+            r[numColorBands + 2] = r[numColorBands - 1];
+            g[numColorBands + 2] = g[numColorBands - 1];
+            b[numColorBands + 2] = b[numColorBands - 1];
+            a[numColorBands + 2] = a[numColorBands - 1];
+        }
 
         // Now we can create the color model
         return new IndexColorModel(8, r.length, r, g, b, a);

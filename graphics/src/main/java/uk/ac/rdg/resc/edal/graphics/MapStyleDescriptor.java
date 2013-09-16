@@ -34,18 +34,20 @@ public class MapStyleDescriptor {
      * The number of contours to show on a contour plot
      */
     private int numberOfContours = 10;
-    
+
     /*
      * We cache this for speed
      */
     private IndexColorModel indexColorModel = null;
+    private Color belowColour = Color.black;
+    private Color aboveColour = Color.black;
 
     public MapStyleDescriptor() throws InstantiationException {
         icons = new HashMap<String, ColourableIcon>();
 
         URL iconUrl;
         BufferedImage iconImage;
-        
+
         /*
          * This will work when the files are packaged as a JAR. For running
          * within an IDE, you may need to add the root directory of the project
@@ -55,7 +57,7 @@ public class MapStyleDescriptor {
             iconUrl = this.getClass().getResource("/img/circle.png");
             iconImage = ImageIO.read(iconUrl);
             icons.put("circle", new ColourableIcon(iconImage));
-            
+
             iconUrl = this.getClass().getResource("/img/square.png");
             iconImage = ImageIO.read(iconUrl);
             icons.put("square", new ColourableIcon(iconImage));
@@ -67,10 +69,11 @@ public class MapStyleDescriptor {
 
     public void setColorPalette(String colorPaletteName) {
         ColorPalette pal = ColorPalette.get(colorPaletteName);
-        if(pal != null)
+        if (pal != null)
             this.colorPalette = pal;
         else
-            throw new IllegalArgumentException("The palette "+colorPaletteName+" does not exist");
+            throw new IllegalArgumentException("The palette " + colorPaletteName
+                    + " does not exist");
     }
 
     public void setScaleRange(Extent<Float> scaleRange) {
@@ -100,20 +103,20 @@ public class MapStyleDescriptor {
     public void setArrowLength(float arrowLength) {
         this.arrowLength = arrowLength;
     }
-    
+
     public void setNumberOfContour(int numberOfContours) {
-        this.numberOfContours= numberOfContours;
+        this.numberOfContours = numberOfContours;
     }
 
     public void addIcon(String name, ColourableIcon pointIcon) {
         icons.put(name, pointIcon);
     }
-    
-    public boolean isTransparent(){
+
+    public boolean isTransparent() {
         return transparent;
     }
-    
-    public Color getBgColor(){
+
+    public Color getBgColor() {
         return bgColor;
     }
 
@@ -121,39 +124,63 @@ public class MapStyleDescriptor {
         return arrowLength;
     }
 
-    public Color getColorForValue(Number value){
-        if(value == null){
+    public Color getBelowMinColour() {
+        return belowColour;
+    }
+
+    public void setBelowMinColour(Color belowColour) {
+        this.belowColour = belowColour;
+    }
+
+    public Color getAboveMaxColour() {
+        return aboveColour;
+    }
+
+    public void setAboveMaxColour(Color aboveColour) {
+        this.aboveColour = aboveColour;
+    }
+
+    public Color getColorForValue(Number value) {
+        if (value == null) {
             return Color.white;
         }
         return new Color(getColorModel().getRGB(getColourIndex(value)));
     }
-    
-    public ColourableIcon getIcon(){
+
+    public ColourableIcon getIcon() {
         return getIcon("circle");
     }
-    
-    public ColourableIcon getIcon(String name){
+
+    public ColourableIcon getIcon(String name) {
         ColourableIcon ret = null;
-        if(name == null){
+        if (name == null) {
             ret = icons.get("circle");
         } else {
             ret = icons.get(name.toLowerCase());
         }
-        if(ret != null){
+        if (ret != null) {
             return ret;
         } else {
             return icons.get("circle");
         }
     }
-    
+
     /**
      * @return the colour index that corresponds to the given value
      */
     public int getColourIndex(Number value) {
         if (value == null || Float.isNaN(value.floatValue())) {
             return numColourBands; // represents a background pixel
-        } else if (!scaleRange.contains(value.floatValue())) {
-            return numColourBands + 1; // represents an out-of-range pixel
+        } else if (value.floatValue() < scaleRange.getLow()) {
+            /*
+             * Below the minimum range value
+             */
+            return numColourBands + 1;
+        } else if (value.floatValue() > scaleRange.getHigh()) {
+            /*
+             * Above the maximum range value
+             */
+            return numColourBands + 2;
         } else {
             float scaleMin = scaleRange.getLow().floatValue();
             float scaleMax = scaleRange.getHigh().floatValue();
@@ -174,26 +201,27 @@ public class MapStyleDescriptor {
             return index;
         }
     }
-    
-    public Extent<Float> getScaleRange(){
+
+    public Extent<Float> getScaleRange() {
         return scaleRange;
     }
-    
-    public boolean isAutoScale(){
+
+    public boolean isAutoScale() {
         return scaleRange == null || scaleRange.isEmpty();
     }
-    
-    public IndexColorModel getColorModel(){
-        if(indexColorModel == null)
-            indexColorModel = colorPalette.getColorModel(numColourBands, opacity); 
+
+    public IndexColorModel getColorModel() {
+        if (indexColorModel == null)
+            indexColorModel = colorPalette.getColorModel(numColourBands, opacity, belowColour,
+                    aboveColour);
         return indexColorModel;
     }
-    
+
     public BufferedImage getLegend(String title, String units) {
         return colorPalette.createLegend(numColourBands, title, units, logarithmic, scaleRange);
     }
-    
-    public int getNumberOfContours(){
+
+    public int getNumberOfContours() {
         return numberOfContours;
     }
 }

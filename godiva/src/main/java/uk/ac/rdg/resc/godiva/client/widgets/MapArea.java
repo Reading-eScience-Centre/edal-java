@@ -279,6 +279,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      *            The style name for this layer
      * @param palette
      *            The palette name for this layer
+     * @param aboveMaxString
+     *            The string defining the colour to display when values are above the max
+     * @param belowMinString
+     *            The string defining the colour to display when values are below the min
      * @param scaleRange
      *            The scale range (as a string: "[min],[max]")
      * @param nColourBands
@@ -292,8 +296,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     public void addLayer(String wmsUrl, String internalLayerId, String wmsLayerName, String time,
             String colorbyTime, String elevation, String colorbyElevation, String style,
-            String palette, String scaleRange, int nColourBands, boolean logScale,
-            boolean multipleElevations, boolean multipleTimes) {
+            String palette, String aboveMaxString, String belowMinString, String scaleRange,
+            int nColourBands, boolean logScale, boolean multipleElevations, boolean multipleTimes) {
         WMSParams params = new WMSParams();
         params.setFormat("image/png");
         params.setTransparent(true);
@@ -311,10 +315,18 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         if (colorbyElevation != null) {
             params.setParameter("COLORBY/DEPTH", colorbyElevation);
         }
-        if (scaleRange != null)
+        if (scaleRange != null) {
             params.setParameter("COLORSCALERANGE", scaleRange);
-        if (nColourBands > 0)
+        }
+        if (nColourBands > 0) {
             params.setParameter("NUMCOLORBANDS", nColourBands + "");
+        }
+        if(aboveMaxString != null) {
+            params.setParameter("ABOVEMAXCOLOR", aboveMaxString);
+        }
+        if(belowMinString != null) {
+            params.setParameter("BELOWMINCOLOR", belowMinString);
+        }
         params.setParameter("LOGSCALE", logScale + "");
 
         WMSOptions options = getOptionsForCurrentProjection();
