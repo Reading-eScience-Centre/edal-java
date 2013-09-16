@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
@@ -17,6 +18,7 @@ import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.StyleSLDParser;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
 public class SLDParserTest {
@@ -72,7 +74,8 @@ public class SLDParserTest {
         File xmlFile = new File(ClassLoader.getSystemResource("xml/se_palette.xml").getFile());
         File imageFile = new File("N:/xmlOutput/se_palette.png");
 		try {
-			StyleSLDParser.SLDtoXMLString(xmlFile, imageFile, params, id2Feature);
+			Image image = StyleSLDParser.SLDtoXMLString(xmlFile);
+			ImageIO.write(image.drawImage(params, id2Feature), "png", imageFile);
 		} catch (ParserConfigurationException pce) {
 			pce.printStackTrace();
 		} catch (SAXException se) {

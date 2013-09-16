@@ -9,7 +9,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -23,10 +22,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourMap;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.InterpolateColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.RasterLayer;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme;
 
@@ -51,7 +53,7 @@ public class StyleSLDParser {
 	public static final String SLD_SCHEMA =
 			"http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd";
 	
-	public static void SLDtoXMLString(File xmlFile, File imageFile, GlobalPlottingParams params, Id2FeatureAndMember id2Feature)
+	public static Image SLDtoXMLString(File xmlFile)
 			throws ParserConfigurationException, SAXException, FileNotFoundException,
 			IOException, XPathExpressionException, IllegalArgumentException {
 		
@@ -63,7 +65,8 @@ public class StyleSLDParser {
 		 */
 		DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 		builderFactory.setNamespaceAware(true);
-		builderFactory.setValidating(true);
+//		Uncomment to turn on schema validation
+//		builderFactory.setValidating(true);
 		try {
 			builderFactory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
 		} catch (IllegalArgumentException iae) {
@@ -135,8 +138,11 @@ public class StyleSLDParser {
 				String fallbackValue = (String) xPath.evaluate(
 						"./@fallbackValue",
 						function, XPathConstants.STRING);
+				Color noDataColour;
 				if (fallbackValue == null) {
-					fallbackValue = "";
+					noDataColour = null;
+				} else {
+					noDataColour = decodeColour(fallbackValue);
 				}
 				
 				// parse function specific parts of XML for colour scheme
@@ -167,14 +173,9 @@ public class StyleSLDParser {
 					ArrayList<Float> thresholds = new ArrayList<Float>();
 					for (int j = 0; j < thresholdNodes.getLength(); j++) {
 						Node thresholdNode = thresholdNodes.item(j);
-						try {
-							thresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
-						} catch (NumberFormatException nfe) {
-							System.err.println("Error: threshold not correctly formated.");
-						}
+						thresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
 					}
 					
-					Color noDataColour = decodeColour(fallbackValue);  
 					colourScheme = new ThresholdColourScheme(thresholds, colours, noDataColour);
 				} else if (function.getLocalName().equals("Interpolate")) {
 					// get list of data points
@@ -201,20 +202,51 @@ public class StyleSLDParser {
 						if (valueNode == null) {
 							continue;
 						}
-						try {
-							points.add(new InterpolateColourScheme.InterpolationPoint(
-									Float.parseFloat(dataNode.getTextContent()),
-									decodeColour(valueNode.getTextContent())));
-						} catch (NumberFormatException nfe) {
-							System.err.println("Error: interpolation data not correctly formated.");
-						}
+						points.add(new InterpolateColourScheme.InterpolationPoint(
+								Float.parseFloat(dataNode.getTextContent()),
+								decodeColour(valueNode.getTextContent())));
 					}
 					if (points.size() < 1) {
 						continue;
 					}
 					// create a new InterpolateColourScheme object
-					Color noDataColour = decodeColour(fallbackValue);
 					colourScheme = new InterpolateColourScheme(points, noDataColour);			
+				} else if (function.getLocalName().equals("Palette")) {
+					// Create the colour map
+					String paletteDefinition = (String) xPath.evaluate(
+							"./resc:PaletteDefinition",
+							function, XPathConstants.STRING);
+					String nColourBandsText = (String) xPath.evaluate(
+							"./resc:NumberOfColorBands",
+							function, XPathConstants.STRING);
+					Integer nColourBands = Integer.parseInt(nColourBandsText);
+					String belowMinColourText = (String) xPath.evaluate(
+							"./resc:BelowMinColor",
+							function, XPathConstants.STRING);
+					Color belowMinColour = decodeColour(belowMinColourText);
+					String aboveMaxColourText = (String) xPath.evaluate(
+							"./resc:AboveMaxColor",
+							function, XPathConstants.STRING);
+					Color aboveMaxColour = decodeColour(aboveMaxColourText);
+					ColourMap colourMap = new ColourMap(belowMinColour, aboveMaxColour, noDataColour, paletteDefinition, nColourBands);
+					
+					// Create the colour scale
+					String scaleMinText = (String) xPath.evaluate(
+							"./resc:ColorScale/resc:ScaleMin",
+							function, XPathConstants.STRING);
+					Float scaleMin = Float.parseFloat(scaleMinText);
+					String scaleMaxText = (String) xPath.evaluate(
+							"./resc:ColorScale/resc:ScaleMax",
+							function, XPathConstants.STRING);
+					Float scaleMax = Float.parseFloat(scaleMaxText);
+					String logarithmicText = (String) xPath.evaluate(
+							"./resc:ColorScale/resc:Logarithmic",
+							function, XPathConstants.STRING);
+					Boolean logarithmic = Boolean.parseBoolean(logarithmicText);
+					ColourScale colourScale = new ColourScale(scaleMin, scaleMax, logarithmic);
+					
+					// Create the colour scheme
+					colourScheme = new PaletteColourScheme(colourScale, colourMap);
 				} else {
 					continue;
 				}
@@ -234,9 +266,9 @@ public class StyleSLDParser {
 		
 		// write out the image
 		if (image.getLayers().size() > 0) {
-			ImageIO.write(image.drawImage(params, id2Feature), "png", imageFile);
+			return image;
 		} else {
-			System.err.println("Error: no image layers have been parsed successfully.");
+			throw new IOException("Error: no image layers have been parsed successfully.");
 		}
 	}
 	
