@@ -34,13 +34,10 @@ import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme;
 
 /**
  * Reads in an XML file encoded with Styled Layer Descriptor and Symbology
- * Encoding, validates it against the SLD schema and parses the document
- * to create a corresponding image. Currently only raster symbolizers are
- * handled.
+ * Encoding and parses the document to create a corresponding image.
  * 
  * @author Charles Roberts
  */
-
 public class StyleSLDParser {
 
 	public static final String OUTPUT_ENCODING = "UTF-8";
@@ -53,46 +50,37 @@ public class StyleSLDParser {
 	public static final String SLD_SCHEMA =
 			"http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd";
 	
-	public static Image SLDtoXMLString(File xmlFile)
-			throws ParserConfigurationException, SAXException, FileNotFoundException,
-			IOException, XPathExpressionException, IllegalArgumentException {
-		
-		/*
-		 *  Read in and parse an XML file to a Document object. The builder factory is
-		 *  configured to be namespace aware and validating. The class SAXErrorHandler
-		 *  is used to handle validation errors. The schema is forced to be the SLD
-		 *  schema v1.1.0.
-		 */
-		DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-		builderFactory.setNamespaceAware(true);
-//		Uncomment to turn on schema validation
-//		builderFactory.setValidating(true);
-		try {
-			builderFactory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
-		} catch (IllegalArgumentException iae) {
-			throw new IllegalArgumentException("Error: JAXP DocumentBuilderFactory "
-					+ "attribute not recognized: " + JAXP_SCHEMA_LANGUAGE + "\n"
-					+ "Check to see if parser conforms to JAXP spec.");
-		}
-		builderFactory.setAttribute(JAXP_SCHEMA_SOURCE, SLD_SCHEMA);
-		DocumentBuilder builder = builderFactory.newDocumentBuilder();
-		OutputStreamWriter errorWriter = new OutputStreamWriter(System.err,
-				OUTPUT_ENCODING);
-		builder.setErrorHandler(new SAXErrorHandler(new PrintWriter(errorWriter, true)));
-		Document document = builder.parse(new FileInputStream(xmlFile));
-		
-		/*
-		 *  Parse the document using XPath and create a corresponding image
-		 */
+	private Image image;
+	
+	public StyleSLDParser(File xmlFile) throws FileNotFoundException,
+			ParserConfigurationException, SAXException, IOException,
+			XPathExpressionException {
+		Document xmlDocument = readXMLFile(xmlFile);
+		parseSLD(xmlDocument);
+	}
+	
+	public StyleSLDParser(Document xmlDocument) throws XPathExpressionException,
+			IOException {
+		parseSLD(xmlDocument);
+	}
+	
+	public Image getImage() {
+		return image;
+	}
+	
+	/*
+	 *  Parse the document using XPath and create a corresponding image
+	 */
+	private void parseSLD(Document xmlDocument) throws XPathExpressionException, IOException {
 		XPath xPath =XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 
-		// Instantiate an Image object
-		Image image = new Image();
+		// Instantiate a new Image object
+		image = new Image();
 
 		// Get all the named layers in the document and loop through each one
 		NodeList namedLayers = (NodeList) xPath.evaluate(
-				"/sld:StyledLayerDescriptor/sld:NamedLayer", document,
+				"/sld:StyledLayerDescriptor/sld:NamedLayer", xmlDocument,
 				XPathConstants.NODESET);
 
 		if (namedLayers != null) {
@@ -264,15 +252,41 @@ public class StyleSLDParser {
 			}
 		}
 		
-		// write out the image
-		if (image.getLayers().size() > 0) {
-			return image;
-		} else {
-			throw new IOException("Error: no image layers have been parsed successfully.");
+		// check that the image has layers
+		if (image.getLayers().size() == 0) {
+			throw new IOException("Error: No image layers have been parsed successfully.");
 		}
 	}
 	
-    private static Color decodeColour(String s) {
+	/*
+	 *  Read in and parse an XML file to a Document object. The builder factory is
+	 *  configured to be namespace aware and validating. The class SAXErrorHandler
+	 *  is used to handle validation errors. The schema is forced to be the SLD
+	 *  schema v1.1.0.
+	 */
+	private Document readXMLFile(File xmlFile) throws ParserConfigurationException,
+			FileNotFoundException, SAXException, IOException {
+		DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+		builderFactory.setNamespaceAware(true);
+	//	Uncomment to turn on schema validation
+	//	builderFactory.setValidating(true);
+		try {
+			builderFactory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
+		} catch (IllegalArgumentException iae) {
+			throw new IllegalArgumentException("Error: JAXP DocumentBuilderFactory "
+					+ "attribute not recognized: " + JAXP_SCHEMA_LANGUAGE + "\n"
+					+ "Check to see if parser conforms to JAXP spec.");
+		}
+		builderFactory.setAttribute(JAXP_SCHEMA_SOURCE, SLD_SCHEMA);
+		DocumentBuilder builder = builderFactory.newDocumentBuilder();
+		OutputStreamWriter errorWriter = new OutputStreamWriter(System.err,
+				OUTPUT_ENCODING);
+		builder.setErrorHandler(new SAXErrorHandler(new PrintWriter(errorWriter, true)));
+		Document xmlDocument = builder.parse(new FileInputStream(xmlFile));
+		return xmlDocument;
+	}
+	
+	private static Color decodeColour(String s) {
         if (s.length() == 7) {
             return Color.decode(s);
         } else if (s.length() == 9) {
