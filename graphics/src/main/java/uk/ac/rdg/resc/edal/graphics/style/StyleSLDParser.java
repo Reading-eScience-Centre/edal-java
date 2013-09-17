@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,15 +21,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourMap;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScale;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.InterpolateColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.PaletteColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.RasterLayer;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 
 /**
  * Reads in an XML file encoded with Styled Layer Descriptor and Symbology
@@ -62,7 +54,7 @@ public class StyleSLDParser {
 	 *  Parse the document using XPath and create a corresponding image
 	 */
 	private static Image parseSLD(Document xmlDocument) throws XPathExpressionException, IOException {
-		XPath xPath =XPathFactory.newInstance().newXPath();
+		XPath xPath = XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 
 		// Instantiate a new Image object
@@ -75,170 +67,25 @@ public class StyleSLDParser {
 
 		if (namedLayers != null) {
 			for (int i = 0; i < namedLayers.getLength(); i++) {
+				
+				// get the layer node and check it is not null and is an element node
 				Node layerNode = namedLayers.item(i);
-				
-				// make sure it is an element node
-				if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
+				if (layerNode == null || layerNode.getNodeType() != Node.ELEMENT_NODE) {
 					continue;
 				}
 				
-				// get name of data field
-				Node nameNode = (Node) xPath.evaluate(
-						"./se:Name", layerNode, XPathConstants.NODE);
-				if (nameNode == null) {
-					continue;
-				}
-				String name = nameNode.getTextContent();
-				if (name.equals("")) {
-					continue;
-				}
-				
-				// get opacity element if it exists
-				Node opacityNode = (Node) xPath.evaluate(
-						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:Opacity",
+				// check for a raster symbolizer
+				Node rasterSymbolizerNode = (Node) xPath.evaluate(
+						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer",
 						layerNode, XPathConstants.NODE);
-				String opacity;
-				if (opacityNode != null) {
-					opacity = opacityNode.getTextContent();
-				} else {
-					opacity = "";
+				if (rasterSymbolizerNode != null && layerNode.getNodeType() == Node.ELEMENT_NODE) {
+					SLDRasterSymbolizer sldRasterSymbolizer = new SLDRasterSymbolizer(layerNode);
+					ImageLayer imageLayer = sldRasterSymbolizer.getImageLayer();
+					if (imageLayer != null) {
+						image.getLayers().add(imageLayer);
+					}
 				}
 				
-				// get the function defining the colour map
-				Node function = (Node) xPath.evaluate(
-						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/*",
-						layerNode, XPathConstants.NODE);
-				if (function == null || function.getNodeType() != Node.ELEMENT_NODE) {
-					continue;
-				}
-				
-				// get fall back value
-				String fallbackValue = (String) xPath.evaluate(
-						"./@fallbackValue",
-						function, XPathConstants.STRING);
-				Color noDataColour;
-				if (fallbackValue == null) {
-					noDataColour = null;
-				} else {
-					noDataColour = decodeColour(fallbackValue);
-				}
-				
-				// parse function specific parts of XML for colour scheme
-				ColourScheme colourScheme;
-				if (function.getLocalName().equals("Categorize")) {
-					// get list of colours
-					NodeList colourNodes = (NodeList) xPath.evaluate(
-							"./se:Value",
-							function, XPathConstants.NODESET);
-					if (colourNodes == null) {
-						continue;
-					}
-					// transform to list of Color objects
-					ArrayList<Color> colours = new ArrayList<Color>();
-					for (int j = 0; j < colourNodes.getLength(); j++) {
-						Node colourNode = colourNodes.item(j);
-						colours.add(decodeColour(colourNode.getTextContent()));
-					}
-					
-					//get list of thresholds
-					NodeList thresholdNodes = (NodeList) xPath.evaluate(
-							"./se:Threshold",
-	 						function, XPathConstants.NODESET);
-					if (thresholdNodes == null) {
-						continue;
-					}
-					// transform to list of Floats
-					ArrayList<Float> thresholds = new ArrayList<Float>();
-					for (int j = 0; j < thresholdNodes.getLength(); j++) {
-						Node thresholdNode = thresholdNodes.item(j);
-						thresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
-					}
-					
-					colourScheme = new ThresholdColourScheme(thresholds, colours, noDataColour);
-				} else if (function.getLocalName().equals("Interpolate")) {
-					// get list of data points
-					NodeList pointNodes = (NodeList) xPath.evaluate(
-							"./se:InterpolationPoint",
-	 						function, XPathConstants.NODESET);
-					if (pointNodes == null) {
-						continue;
-					}
-					// parse into an ArrayList
-					ArrayList<InterpolateColourScheme.InterpolationPoint> points =
-							new ArrayList<InterpolateColourScheme.InterpolationPoint>();
-					for (int j = 0; j < pointNodes.getLength(); j++) {
-						Node pointNode = pointNodes.item(j);
-						Node dataNode = (Node) xPath.evaluate(
-								"./se:Data",
-								pointNode, XPathConstants.NODE);
-						if (dataNode == null) {
-							continue;
-						}
-						Node valueNode = (Node) xPath.evaluate(
-								"./se:Value",
-								pointNode, XPathConstants.NODE);
-						if (valueNode == null) {
-							continue;
-						}
-						points.add(new InterpolateColourScheme.InterpolationPoint(
-								Float.parseFloat(dataNode.getTextContent()),
-								decodeColour(valueNode.getTextContent())));
-					}
-					if (points.size() < 1) {
-						continue;
-					}
-					// create a new InterpolateColourScheme object
-					colourScheme = new InterpolateColourScheme(points, noDataColour);			
-				} else if (function.getLocalName().equals("Palette")) {
-					// Create the colour map
-					String paletteDefinition = (String) xPath.evaluate(
-							"./resc:PaletteDefinition",
-							function, XPathConstants.STRING);
-					String nColourBandsText = (String) xPath.evaluate(
-							"./resc:NumberOfColorBands",
-							function, XPathConstants.STRING);
-					Integer nColourBands = Integer.parseInt(nColourBandsText);
-					String belowMinColourText = (String) xPath.evaluate(
-							"./resc:BelowMinColor",
-							function, XPathConstants.STRING);
-					Color belowMinColour = decodeColour(belowMinColourText);
-					String aboveMaxColourText = (String) xPath.evaluate(
-							"./resc:AboveMaxColor",
-							function, XPathConstants.STRING);
-					Color aboveMaxColour = decodeColour(aboveMaxColourText);
-					ColourMap colourMap = new ColourMap(belowMinColour, aboveMaxColour, noDataColour, paletteDefinition, nColourBands);
-					
-					// Create the colour scale
-					String scaleMinText = (String) xPath.evaluate(
-							"./resc:ColorScale/resc:ScaleMin",
-							function, XPathConstants.STRING);
-					Float scaleMin = Float.parseFloat(scaleMinText);
-					String scaleMaxText = (String) xPath.evaluate(
-							"./resc:ColorScale/resc:ScaleMax",
-							function, XPathConstants.STRING);
-					Float scaleMax = Float.parseFloat(scaleMaxText);
-					String logarithmicText = (String) xPath.evaluate(
-							"./resc:ColorScale/resc:Logarithmic",
-							function, XPathConstants.STRING);
-					Boolean logarithmic = Boolean.parseBoolean(logarithmicText);
-					ColourScale colourScale = new ColourScale(scaleMin, scaleMax, logarithmic);
-					
-					// Create the colour scheme
-					colourScheme = new PaletteColourScheme(colourScale, colourMap);
-				} else {
-					continue;
-				}
-				
-				// instantiate a new raster layer and add it to the image
-				RasterLayer rasterLayer = new RasterLayer(name, colourScheme);
-				if (!opacity.equals("")) {
-					try {
-						rasterLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
-					} catch (NumberFormatException nfe) {
-						System.err.println("Error: opacity not correctly formatted.");
-					}
-				}
-				image.getLayers().add(rasterLayer);
 			}
 		}
 		
@@ -277,8 +124,8 @@ public class StyleSLDParser {
 		Document xmlDocument = builder.parse(new FileInputStream(xmlFile));
 		return xmlDocument;
 	}
-	
-	private static Color decodeColour(String s) {
+
+	public static Color decodeColour(String s) {
         if (s.length() == 7) {
             return Color.decode(s);
         } else if (s.length() == 9) {
