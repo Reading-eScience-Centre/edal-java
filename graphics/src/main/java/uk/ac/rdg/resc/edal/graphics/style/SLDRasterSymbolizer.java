@@ -166,10 +166,18 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 			String paletteDefinition = (String) xPath.evaluate(
 					"./resc:PaletteDefinition",
 					function, XPathConstants.STRING);
+			if (paletteDefinition == null || paletteDefinition.equals("")) {
+				return null;
+			}
 			String nColourBandsText = (String) xPath.evaluate(
 					"./resc:NumberOfColorBands",
 					function, XPathConstants.STRING);
-			Integer nColourBands = Integer.parseInt(nColourBandsText);
+			Integer nColourBands;
+			if (nColourBandsText == null || nColourBandsText.equals("")) {
+				nColourBands = 254;
+			} else {
+				nColourBands = Integer.parseInt(nColourBandsText);
+			}
 			String belowMinColourText = (String) xPath.evaluate(
 					"./resc:BelowMinColor",
 					function, XPathConstants.STRING);
@@ -184,15 +192,26 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 			String scaleMinText = (String) xPath.evaluate(
 					"./resc:ColorScale/resc:ScaleMin",
 					function, XPathConstants.STRING);
+			if (scaleMinText == null || scaleMinText.equals("")) {
+				return null;
+			}
 			Float scaleMin = Float.parseFloat(scaleMinText);
 			String scaleMaxText = (String) xPath.evaluate(
 					"./resc:ColorScale/resc:ScaleMax",
 					function, XPathConstants.STRING);
+			if (scaleMaxText == null || scaleMaxText.equals("")) {
+				return null;
+			}
 			Float scaleMax = Float.parseFloat(scaleMaxText);
 			String logarithmicText = (String) xPath.evaluate(
 					"./resc:ColorScale/resc:Logarithmic",
 					function, XPathConstants.STRING);
-			Boolean logarithmic = Boolean.parseBoolean(logarithmicText);
+			Boolean logarithmic;
+			if (logarithmicText == null || logarithmicText.equals("")) {
+				logarithmic = false;
+			} else {
+				logarithmic = Boolean.parseBoolean(logarithmicText);
+			}
 			ColourScale colourScale = new ColourScale(scaleMin, scaleMax, logarithmic);
 			
 			// Create the colour scheme
@@ -204,11 +223,7 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 		// instantiate a new raster layer and add it to the image
 		RasterLayer rasterLayer = new RasterLayer(name, colourScheme);
 		if (!opacity.equals("")) {
-			try {
-				rasterLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
-			} catch (NumberFormatException nfe) {
-				System.err.println("Error: opacity not correctly formatted.");
-			}
+			rasterLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
 		}
 		return rasterLayer;
 	}
