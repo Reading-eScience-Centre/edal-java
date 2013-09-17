@@ -14,7 +14,7 @@
 	color: #111111;
 	/* top right bottom left */
 	margin: 3px 10px 10px;
-	height: 70px text-align:  left;
+	height: 70px text-align:     left;
 	background-color: transparent;
 	border: 0;
 	padding: 0;
@@ -170,4 +170,6 @@
 /* Used for layer selector */
 .gwt-ListBox {
 	background-color: transparent;
+	padding: 0px;
+	margin: 0px;
 }

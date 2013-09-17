@@ -353,6 +353,8 @@ public class PaletteSelector implements PaletteSelectorIF {
         vp.setCellHeight(minScale, "20px");
         vp.setCellVerticalAlignment(minScale, HasVerticalAlignment.ALIGN_BOTTOM);
         minScale.getElement().getStyle().setMarginBottom(OOR_SIZE, Unit.PX);
+        
+        
 
         mainPanel.add(vp);
 	}
@@ -558,7 +560,9 @@ public class PaletteSelector implements PaletteSelectorIF {
 	}
 	
 	private void setOutOfRangeImages() {
-	    
+	    String baseText = "Click to change the colour displayed when values are ";
+	    String aboveText = baseText + "above the maximum.  Currently: ";
+	    String belowText = baseText + "below the mimimum.  Currently: ";
 	    Image aboveImage = new Image();
 	    Image belowImage = new Image();
 	    
@@ -571,6 +575,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	            aboveImage.setPixelSize(OOR_SIZE * width, height);
 	            aboveImage.getElement().getStyle().setMarginLeft(-(width - 1) * OOR_SIZE, Unit.PX);
 	        }
+	        aboveMax.setTitle(aboveText+"Saturate");
             break;
 	    case TRANSPARENT:
 	        aboveImage = new Image(GWT.getModuleBaseURL()+"img/extend_transparent.png");
@@ -579,6 +584,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	        } else {
 	            aboveImage.setPixelSize(OOR_SIZE, height);
 	        }
+	        aboveMax.setTitle(aboveText+"Transparent");
 	        break;
 	    case BLACK:
         default:
@@ -588,6 +594,7 @@ public class PaletteSelector implements PaletteSelectorIF {
             } else {
                 aboveImage.setPixelSize(OOR_SIZE, height);
             }
+            aboveMax.setTitle(aboveText+"Black");
             break;
         }
 	    
@@ -596,10 +603,11 @@ public class PaletteSelector implements PaletteSelectorIF {
 	        belowImage.setUrl(paletteImage.getUrl());
 	        if (vertical) {
 	            belowImage.setPixelSize(width, OOR_SIZE * height);
-                belowImage.getElement().getStyle().setMarginTop((height - 1) * OOR_SIZE, Unit.PX);
+                belowImage.getElement().getStyle().setMarginTop((1 - height) * OOR_SIZE, Unit.PX);
 	        } else {
 	            belowImage.setPixelSize(OOR_SIZE * width, height);
 	        }
+	        belowMin.setTitle(belowText+"Saturate");
 	        break;
 	    case TRANSPARENT:
 	        belowImage = new Image(GWT.getModuleBaseURL()+"img/extend_transparent.png");
@@ -609,6 +617,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	            belowImage.setPixelSize(OOR_SIZE, height);
 	        }
 	        belowImage.getElement().getStyle().setMarginTop(0, Unit.PX);
+	        belowMin.setTitle(belowText+"Transparent");
 	        break;
 	    case BLACK:
 	    default:
@@ -619,6 +628,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	            belowImage.setPixelSize(OOR_SIZE, height);
 	        }
 	        belowImage.getElement().getStyle().setMarginTop(0, Unit.PX);
+	        belowMin.setTitle(belowText+"Black");
 	        break;
 	    }
 	    
