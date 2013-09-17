@@ -74,8 +74,7 @@ public class SLDParserTest {
         File xmlFile = new File(ClassLoader.getSystemResource("xml/se_palette.xml").getFile());
         File imageFile = new File("N:/xmlOutput/se_palette.png");
 		try {
-			StyleSLDParser styleSLDParser = new StyleSLDParser(xmlFile);
-			Image image = styleSLDParser.getImage();
+			Image image = StyleSLDParser.createImage(xmlFile);
 			ImageIO.write(image.drawImage(params, id2Feature), "png", imageFile);
 		} catch (ParserConfigurationException pce) {
 			pce.printStackTrace();

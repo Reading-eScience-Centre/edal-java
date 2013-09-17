@@ -50,33 +50,23 @@ public class StyleSLDParser {
 	public static final String SLD_SCHEMA =
 			"http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd";
 	
-	private Image image;
-	
-	public StyleSLDParser(File xmlFile) throws FileNotFoundException,
+	public static Image createImage(File xmlFile) throws FileNotFoundException,
 			ParserConfigurationException, SAXException, IOException,
 			XPathExpressionException {
 		Document xmlDocument = readXMLFile(xmlFile);
-		parseSLD(xmlDocument);
-	}
-	
-	public StyleSLDParser(Document xmlDocument) throws XPathExpressionException,
-			IOException {
-		parseSLD(xmlDocument);
-	}
-	
-	public Image getImage() {
+		Image image = parseSLD(xmlDocument);
 		return image;
 	}
 	
 	/*
 	 *  Parse the document using XPath and create a corresponding image
 	 */
-	private void parseSLD(Document xmlDocument) throws XPathExpressionException, IOException {
+	private static Image parseSLD(Document xmlDocument) throws XPathExpressionException, IOException {
 		XPath xPath =XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 
 		// Instantiate a new Image object
-		image = new Image();
+		Image image = new Image();
 
 		// Get all the named layers in the document and loop through each one
 		NodeList namedLayers = (NodeList) xPath.evaluate(
@@ -253,7 +243,9 @@ public class StyleSLDParser {
 		}
 		
 		// check that the image has layers
-		if (image.getLayers().size() == 0) {
+		if (image.getLayers().size() > 0) {
+			return image;
+		} else {
 			throw new IOException("Error: No image layers have been parsed successfully.");
 		}
 	}
@@ -264,7 +256,7 @@ public class StyleSLDParser {
 	 *  is used to handle validation errors. The schema is forced to be the SLD
 	 *  schema v1.1.0.
 	 */
-	private Document readXMLFile(File xmlFile) throws ParserConfigurationException,
+	private static Document readXMLFile(File xmlFile) throws ParserConfigurationException,
 			FileNotFoundException, SAXException, IOException {
 		DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 		builderFactory.setNamespaceAware(true);
