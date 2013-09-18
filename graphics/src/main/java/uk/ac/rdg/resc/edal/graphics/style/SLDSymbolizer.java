@@ -6,7 +6,9 @@ import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 
 public interface SLDSymbolizer {
 	
-	Node getLayerNode();
+	String getLayerName();
+	
+	Node getSymbolizerNode();
 	
 	ImageLayer getImageLayer();
 
