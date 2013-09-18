@@ -200,7 +200,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     private void initBaseWms() {
         loadingCount = 0;
-        mapArea = new MapArea(mapWidth, mapHeight, this, proxyUrl);
+        mapArea = getMapArea();
 
         /*
          * Call the subclass initialisation
@@ -217,6 +217,15 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * Now request the menu from the ncWMS server
          */
         requestAndPopulateMenu();
+    }
+    
+    /**
+     * @return A new {@link MapArea}. This will be called once. Subclasses can
+     *         override this method to use specialised subclasses of
+     *         {@link MapArea}
+     */
+    protected MapArea getMapArea() {
+        return new MapArea(mapWidth, mapHeight, this, proxyUrl);
     }
 
     /**
@@ -299,7 +308,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         layerDetailsLoaded = false;
         dateTimeDetailsLoaded = false;
         minMaxDetailsLoaded = false;
-
+        
         final LayerRequestBuilder getLayerDetailsRequest = new LayerRequestBuilder(layerId,
                 proxyUrl + wmsUrl, currentTime);
 
@@ -755,7 +764,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     @Override
     public void layerSelected(String wmsUrl, String layerId, boolean autoZoomAndPalette) {
         requestLayerDetails(wmsUrl, layerId, getCurrentTime(), autoZoomAndPalette);
-        updateMapBase(layerId);
     }
 
     @Override
@@ -827,8 +835,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     availableTimesLoaded(layerId, getAvailableTimesteps(), nearestTime);
                     datetimeSelected(layerId, getWidgetCollection(layerId).getTimeSelector()
                             .getSelectedDateTime());
-                    dateTimeDetailsLoaded = true;
-                    updateMapBase(layerId);
                 } catch (Exception e) {
                     invalidJson(e, getTimeRequest.getUrl());
                 } finally {

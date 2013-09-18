@@ -366,7 +366,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             wmsLayer.getParams().setParameter("TIME", "");
             wmsLayer.mergeNewParams(params);
             wmsLayer.addOptions(options);
-            wmsLayer.redraw();
         }
         WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, multipleElevations,
                 multipleTimes);
@@ -680,8 +679,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     protected void addBaseLayers() {
+        System.out.println("MapArea adding base layers");
         WMS openLayers;
-//        WMS bluemarbleDemis;
         WMS demis;
         WMS plurel;
         WMS weather;
@@ -702,14 +701,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         openLayers.addLayerLoadEndListener(loadEndListener);
         openLayers.setIsBaseLayer(true);
         
-        
-//        wmsParams = new WMSParams();
-//        wmsParams.setLayers("Earth Image");
-//        bluemarbleDemis = new WMS("Demis Blue Marble",
-//                "http://www2.demis.nl/wms/wms.ashx?WMS=BlueMarble", wmsParams, wmsOptions);
-//        bluemarbleDemis.setIsBaseLayer(true);
-//        bluemarbleDemis.addLayerLoadStartListener(loadStartListener);
-//        bluemarbleDemis.addLayerLoadEndListener(loadEndListener);
         wmsParams = new WMSParams();
         wmsParams
                 .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
@@ -763,19 +754,21 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsPolarOptions.setWrapDateLine(false);
         northPole = new WMS("North polar stereographic", "http://wms-basemaps.appspot.com/wms",
                 wmsParams, wmsPolarOptions);
+        northPole.setIsBaseLayer(true);
 
         wmsPolarOptions.setProjection("EPSG:32761");
         southPole = new WMS("South polar stereographic", "http://wms-basemaps.appspot.com/wms",
                 wmsParams, wmsPolarOptions);
+        southPole.setIsBaseLayer(true);
 
         map.addLayer(openLayers);
-//        map.addLayer(bluemarbleDemis);
         map.addLayer(demis);
         map.addLayer(plurel);
         map.addLayer(weather);
         map.addLayer(srtmDem);
         map.addLayer(northPole);
         map.addLayer(southPole);
+        
         currentProjection = map.getProjection();
         
         map.addMapBaseLayerChangedListener(new MapBaseLayerChangedListener() {
