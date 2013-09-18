@@ -42,18 +42,22 @@ public class StyleSLDParser {
 	public static final String SLD_SCHEMA =
 			"http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd";
 	
-	public static Image createImage(File xmlFile) throws FileNotFoundException,
-			ParserConfigurationException, SAXException, IOException,
-			XPathExpressionException {
-		Document xmlDocument = readXMLFile(xmlFile);
-		Image image = parseSLD(xmlDocument);
-		return image;
+	public static Image createImage(File xmlFile) throws FileNotFoundException, SLDException {
+		try {
+			Document xmlDocument = readXMLFile(xmlFile);
+			Image image = parseSLD(xmlDocument);
+			return image;
+		} catch (FileNotFoundException fnfe) {
+			throw fnfe;
+		} catch (Exception e) {
+			throw new SLDException(e);
+		}
 	}
 	
 	/*
-	 *  Parse the document using XPath and create a corresponding image
+	 *  Parse the document using XPath and create a corresponding image 
 	 */
-	private static Image parseSLD(Document xmlDocument) throws XPathExpressionException, IOException {
+	private static Image parseSLD(Document xmlDocument) throws XPathExpressionException, SLDException {
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 
@@ -78,7 +82,7 @@ public class StyleSLDParser {
 				Node rasterSymbolizerNode = (Node) xPath.evaluate(
 						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer",
 						layerNode, XPathConstants.NODE);
-				if (rasterSymbolizerNode != null && layerNode.getNodeType() == Node.ELEMENT_NODE) {
+				if (rasterSymbolizerNode != null && rasterSymbolizerNode.getNodeType() == Node.ELEMENT_NODE) {
 					SLDRasterSymbolizer sldRasterSymbolizer = new SLDRasterSymbolizer(layerNode);
 					ImageLayer imageLayer = sldRasterSymbolizer.getImageLayer();
 					if (imageLayer != null) {
@@ -86,6 +90,18 @@ public class StyleSLDParser {
 					}
 				}
 				
+				// check for a 2D raster symbolizer
+				Node raster2DSymbolizerNode = (Node) xPath.evaluate(
+						"./sld:UserStyle/se:CoverageStyle/se:Rule/resc:Raster2DSymbolizer",
+						layerNode, XPathConstants.NODE);
+				if (raster2DSymbolizerNode != null && raster2DSymbolizerNode.getNodeType() == Node.ELEMENT_NODE) {
+					SLDRaster2DSymbolizer sldRaster2DSymbolizer = new SLDRaster2DSymbolizer(layerNode);
+					ImageLayer imageLayer = sldRaster2DSymbolizer.getImageLayer();
+					if (imageLayer != null) {
+						image.getLayers().add(imageLayer);
+					}
+				}
+
 			}
 		}
 		
@@ -93,7 +109,7 @@ public class StyleSLDParser {
 		if (image.getLayers().size() > 0) {
 			return image;
 		} else {
-			throw new IOException("Error: No image layers have been parsed successfully.");
+			throw new SLDException("Error: No image layers have been parsed successfully.");
 		}
 	}
 	

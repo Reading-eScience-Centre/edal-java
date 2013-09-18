@@ -27,9 +27,13 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 	private Node layerNode;
 	private ImageLayer imageLayer;
 	
-	public SLDRasterSymbolizer(Node layerNode) throws XPathExpressionException {
-		this.layerNode = layerNode;
-		imageLayer = parseSymbolizer();
+	public SLDRasterSymbolizer(Node layerNode) throws SLDException {
+		try {
+			this.layerNode = layerNode;
+			imageLayer = parseSymbolizer();
+		} catch (Exception e) {
+			throw new SLDException(e);
+		}
 	}
 
 	@Override
@@ -45,7 +49,7 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 	/*
 	 * Parse symbolizer using XPath
 	 */
-	private ImageLayer parseSymbolizer() throws XPathExpressionException {
+	private ImageLayer parseSymbolizer() throws XPathExpressionException, NumberFormatException {
 		// make sure layer is not null an element node
 		if (layerNode == null || layerNode.getNodeType() != Node.ELEMENT_NODE) {
 			return null;
