@@ -42,6 +42,13 @@ public class StyleSLDParser {
 	public static final String SLD_SCHEMA =
 			"http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd";
 	
+	/**
+	 * Create an image given an XML file containing an SLD document.
+	 * @param xmlFile
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws SLDException
+	 */
 	public static Image createImage(File xmlFile) throws FileNotFoundException, SLDException {
 		try {
 			Document xmlDocument = readXMLFile(xmlFile);
@@ -68,48 +75,60 @@ public class StyleSLDParser {
 		NodeList namedLayers = (NodeList) xPath.evaluate(
 				"/sld:StyledLayerDescriptor/sld:NamedLayer", xmlDocument,
 				XPathConstants.NODESET);
-
-		if (namedLayers != null) {
-			for (int i = 0; i < namedLayers.getLength(); i++) {
-				
-				// get the layer node and check it is not null and is an element node
-				Node layerNode = namedLayers.item(i);
-				if (layerNode == null || layerNode.getNodeType() != Node.ELEMENT_NODE) {
-					continue;
-				}
-				
-				// check for a raster symbolizer
-				Node rasterSymbolizerNode = (Node) xPath.evaluate(
-						"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer",
-						layerNode, XPathConstants.NODE);
-				if (rasterSymbolizerNode != null && rasterSymbolizerNode.getNodeType() == Node.ELEMENT_NODE) {
-					SLDRasterSymbolizer sldRasterSymbolizer = new SLDRasterSymbolizer(layerNode);
-					ImageLayer imageLayer = sldRasterSymbolizer.getImageLayer();
-					if (imageLayer != null) {
-						image.getLayers().add(imageLayer);
-					}
-				}
-				
-				// check for a 2D raster symbolizer
-				Node raster2DSymbolizerNode = (Node) xPath.evaluate(
-						"./sld:UserStyle/se:CoverageStyle/se:Rule/resc:Raster2DSymbolizer",
-						layerNode, XPathConstants.NODE);
-				if (raster2DSymbolizerNode != null && raster2DSymbolizerNode.getNodeType() == Node.ELEMENT_NODE) {
-					SLDRaster2DSymbolizer sldRaster2DSymbolizer = new SLDRaster2DSymbolizer(layerNode);
-					ImageLayer imageLayer = sldRaster2DSymbolizer.getImageLayer();
-					if (imageLayer != null) {
-						image.getLayers().add(imageLayer);
-					}
-				}
-
+		if (!(namedLayers.getLength() > 0)) {
+			throw new SLDException("There must be at least one named layer.");
+		}
+		for (int i = 0; i < namedLayers.getLength(); i++) {
+			
+			// get the layer node and check it is an element node
+			Node layerNode = namedLayers.item(i);
+			if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
+				throw new SLDException("Named layer no. " + (i + 1) + " is not an element node.");
 			}
+			
+			// get name of the layer
+			Node nameNode = (Node) xPath.evaluate(
+					"./se:Name", layerNode, XPathConstants.NODE);
+			if (nameNode == null) {
+				throw new SLDException("The layer must be named.");
+			}
+			String layerName = nameNode.getTextContent();
+			if (layerName.equals("")) {
+				throw new SLDException("The name of the layer cannot be empty.");
+			}
+			
+			// get the children of the first rule and check that there is exactly one child
+			NodeList symbolizers = (NodeList) xPath.evaluate(
+					"./sld:UserStyle/se:CoverageStyle/se:Rule/*",
+					layerNode, XPathConstants.NODESET);
+			if (symbolizers.getLength() != 1) {
+				throw new SLDException("There must be exactly one symbolizer per rule");
+			}
+			Node symbolizerNode = symbolizers.item(0);
+
+			// parse the symbolizer
+			SLDSymbolizer sldSymbolizer;
+			if (symbolizerNode.getLocalName().equals("RasterSymbolizer")) {
+				sldSymbolizer = new SLDRasterSymbolizer(layerName, symbolizerNode);
+			} else if (symbolizerNode.getLocalName().equals("Raster2DSymbolizer")) {
+				sldSymbolizer = new SLDRaster2DSymbolizer(layerName, symbolizerNode);
+			} else {
+				throw new SLDException("Symbolizer type not recognized.");
+			}
+			
+			// add the resulting image layer to the image
+			ImageLayer imageLayer = sldSymbolizer.getImageLayer();
+			if (imageLayer != null) {
+				image.getLayers().add(imageLayer);
+			}
+
 		}
 		
-		// check that the image has layers
+		// check that the image has layers and if so return it
 		if (image.getLayers().size() > 0) {
 			return image;
 		} else {
-			throw new SLDException("Error: No image layers have been parsed successfully.");
+			throw new SLDException("No image layers have been parsed successfully.");
 		}
 	}
 	
@@ -141,6 +160,13 @@ public class StyleSLDParser {
 		return xmlDocument;
 	}
 
+	/**
+	 * Decode a string representing a colour in both the case when there is an opacity or not
+	 * @param s
+	 * @return
+	 * 
+	 * @author Guy Griffiths
+	 */
 	public static Color decodeColour(String s) {
         if (s.length() == 7) {
             return Color.decode(s);

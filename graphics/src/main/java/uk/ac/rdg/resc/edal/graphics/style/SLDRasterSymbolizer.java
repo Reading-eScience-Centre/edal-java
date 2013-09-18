@@ -24,12 +24,14 @@ import static uk.ac.rdg.resc.edal.graphics.style.StyleSLDParser.decodeColour;
 
 public class SLDRasterSymbolizer implements SLDSymbolizer {
 
-	private Node layerNode;
+	private String layerName;
+	private Node symbolizerNode;
 	private ImageLayer imageLayer;
 	
-	public SLDRasterSymbolizer(Node layerNode) throws SLDException {
+	public SLDRasterSymbolizer(String layerName, Node symbolizerNode) throws SLDException {
 		try {
-			this.layerNode = layerNode;
+			this.layerName = layerName;
+			this.symbolizerNode = symbolizerNode;
 			imageLayer = parseSymbolizer();
 		} catch (Exception e) {
 			throw new SLDException(e);
@@ -37,8 +39,13 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 	}
 
 	@Override
-	public Node getLayerNode() {
-		return layerNode;
+	public String getLayerName() {
+		return layerName;
+	}
+
+	@Override
+	public Node getSymbolizerNode() {
+		return symbolizerNode;
 	}
 
 	@Override
@@ -49,30 +56,19 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 	/*
 	 * Parse symbolizer using XPath
 	 */
-	private ImageLayer parseSymbolizer() throws XPathExpressionException, NumberFormatException {
+	private ImageLayer parseSymbolizer() throws XPathExpressionException, NumberFormatException, SLDException {
 		// make sure layer is not null an element node
-		if (layerNode == null || layerNode.getNodeType() != Node.ELEMENT_NODE) {
-			return null;
+		if (symbolizerNode == null || symbolizerNode.getNodeType() != Node.ELEMENT_NODE) {
+			throw new SLDException("The symbolizer node cannot be null and must be an element node.");
 		}
 				
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 		
-		// get name of data field
-		Node nameNode = (Node) xPath.evaluate(
-				"./se:Name", layerNode, XPathConstants.NODE);
-		if (nameNode == null) {
-			return null;
-		}
-		String name = nameNode.getTextContent();
-		if (name.equals("")) {
-			return null;
-		}
-		
 		// get opacity element if it exists
 		Node opacityNode = (Node) xPath.evaluate(
-				"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:Opacity",
-				layerNode, XPathConstants.NODE);
+				"./se:Opacity",
+				symbolizerNode, XPathConstants.NODE);
 		String opacity;
 		if (opacityNode != null) {
 			opacity = opacityNode.getTextContent();
@@ -82,8 +78,8 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 		
 		// get the function defining the colour map
 		Node function = (Node) xPath.evaluate(
-				"./sld:UserStyle/se:CoverageStyle/se:Rule/se:RasterSymbolizer/se:ColorMap/*",
-				layerNode, XPathConstants.NODE);
+				"./se:ColorMap/*",
+				symbolizerNode, XPathConstants.NODE);
 		if (function == null || function.getNodeType() != Node.ELEMENT_NODE) {
 			return null;
 		}
@@ -225,7 +221,7 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 		}
 		
 		// instantiate a new raster layer and add it to the image
-		RasterLayer rasterLayer = new RasterLayer(name, colourScheme);
+		RasterLayer rasterLayer = new RasterLayer(layerName, colourScheme);
 		if (!opacity.equals("")) {
 			rasterLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
 		}

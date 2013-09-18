@@ -21,12 +21,14 @@ import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme2D
 
 public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 
-	private Node layerNode;
+	private String layerName;
+	private Node symbolizerNode;
 	private ImageLayer imageLayer;
 	
-	public SLDRaster2DSymbolizer(Node layerNode) throws SLDException {
+	public SLDRaster2DSymbolizer(String layerName, Node symbolizerNode) throws SLDException {
 		try {
-			this.layerNode = layerNode;
+			this.layerName = layerName;
+			this.symbolizerNode = symbolizerNode;
 			imageLayer = parseSymbolizer();
 		} catch (Exception e) {
 			throw new SLDException(e);
@@ -34,8 +36,13 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 	}
 
 	@Override
-	public Node getLayerNode() {
-		return layerNode;
+	public String getLayerName() {
+		return layerName;
+	}
+
+	@Override
+	public Node getSymbolizerNode() {
+		return symbolizerNode;
 	}
 
 	@Override
@@ -46,10 +53,10 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 	/*
 	 * Parse symbolizer using XPath
 	 */
-	private ImageLayer parseSymbolizer() throws XPathExpressionException, NumberFormatException {
+	private ImageLayer parseSymbolizer() throws XPathExpressionException, NumberFormatException, SLDException {
 		// make sure layer is not null an element node
-		if (layerNode == null || layerNode.getNodeType() != Node.ELEMENT_NODE) {
-			return null;
+		if (symbolizerNode == null || symbolizerNode.getNodeType() != Node.ELEMENT_NODE) {
+			throw new SLDException("The symbolizer node cannot be null and must be an element node.");
 		}
 				
 		XPath xPath = XPathFactory.newInstance().newXPath();
@@ -57,8 +64,8 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 		
 		// get name of x data field
 		Node xDataFieldNameNode = (Node) xPath.evaluate(
-				"./sld:UserStyle/se:CoverageStyle/se:Rule/resc:Raster2DSymbolizer/se:Geometry/resc:XDataFieldName",
-				layerNode, XPathConstants.NODE);
+				"./se:Geometry/resc:XDataFieldName",
+				symbolizerNode, XPathConstants.NODE);
 		if (xDataFieldNameNode == null) {
 			return null;
 		}
@@ -69,8 +76,8 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 		
 		// get name of y data field
 		Node yDataFieldNameNode = (Node) xPath.evaluate(
-				"./sld:UserStyle/se:CoverageStyle/se:Rule/resc:Raster2DSymbolizer/se:Geometry/resc:YDataFieldName",
-				layerNode, XPathConstants.NODE);
+				"./se:Geometry/resc:YDataFieldName",
+				symbolizerNode, XPathConstants.NODE);
 		if (yDataFieldNameNode == null) {
 			return null;
 		}
@@ -81,8 +88,8 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 		
 		// get opacity element if it exists
 		Node opacityNode = (Node) xPath.evaluate(
-				"./sld:UserStyle/se:CoverageStyle/se:Rule/resc:Raster2DSymbolizer/se:Opacity",
-				layerNode, XPathConstants.NODE);
+				"./se:Opacity",
+				symbolizerNode, XPathConstants.NODE);
 		String opacity;
 		if (opacityNode != null) {
 			opacity = opacityNode.getTextContent();
@@ -92,8 +99,8 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 		
 		// get the function defining the colour map
 		Node function = (Node) xPath.evaluate(
-				"./sld:UserStyle/se:CoverageStyle/se:Rule/resc:Raster2DSymbolizer/se:ColorMap/*",
-				layerNode, XPathConstants.NODE);
+				"./se:ColorMap/*",
+				symbolizerNode, XPathConstants.NODE);
 		if (function == null || function.getNodeType() != Node.ELEMENT_NODE) {
 			return null;
 		}
