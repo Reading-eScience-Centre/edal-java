@@ -27,8 +27,6 @@ import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 /**
  * Reads in an XML file encoded with Styled Layer Descriptor and Symbology
  * Encoding and parses the document to create a corresponding image.
- * 
- * @author Charles Roberts
  */
 public class StyleSLDParser {
 
@@ -102,7 +100,7 @@ public class StyleSLDParser {
 					"./sld:UserStyle/se:CoverageStyle/se:Rule/*",
 					layerNode, XPathConstants.NODESET);
 			if (symbolizers.getLength() != 1) {
-				throw new SLDException("There must be exactly one symbolizer per rule");
+				throw new SLDException("There must be exactly one symbolizer within a coverage style.");
 			}
 			Node symbolizerNode = symbolizers.item(0);
 
@@ -164,8 +162,6 @@ public class StyleSLDParser {
 	 * Decode a string representing a colour in both the case when there is an opacity or not
 	 * @param s
 	 * @return
-	 * 
-	 * @author Guy Griffiths
 	 */
 	public static Color decodeColour(String s) {
         if (s.length() == 7) {
