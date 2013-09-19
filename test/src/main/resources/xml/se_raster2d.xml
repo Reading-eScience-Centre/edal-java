@@ -15,8 +15,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
       						<resc:YDataFieldName>analysis_error</resc:YDataFieldName>
 						</se:Geometry>
 						<se:Opacity>1.0</se:Opacity>
-						<se:ColorMap>
-							<se:Categorize fallbackValue="#FF006400">
+						<resc:ColorMap2D>
+							<resc:Categorize2D fallbackValue="#FF006400">
 								<se:LookupValue>Rasterdata</se:LookupValue>
 								<resc:XThreshold>276.7</resc:XThreshold>
 								<resc:XThreshold>283.3</resc:XThreshold>
@@ -64,8 +64,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
 								<se:Value>#00FFFF00</se:Value>
 								<se:Value>#00FFC800</se:Value>
 								<se:Value>#00FF0000</se:Value>
-							</se:Categorize>
-						</se:ColorMap>
+							</resc:Categorize2D>
+						</resc:ColorMap2D>
 					</resc:Raster2DSymbolizer>
 				</se:Rule>
 			</se:CoverageStyle>
