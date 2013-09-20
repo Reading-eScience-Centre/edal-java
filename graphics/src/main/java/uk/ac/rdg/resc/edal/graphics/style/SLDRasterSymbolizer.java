@@ -111,7 +111,7 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 	}
 
 	private ColourScheme parseCategorize(XPath xPath, Node function,
-			Color noDataColour) throws XPathExpressionException, SLDException {
+			Color noDataColour) throws XPathExpressionException, NumberFormatException, SLDException {
 		ColourScheme colourScheme;
 
 		// get list of colours
@@ -147,7 +147,7 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 	}
 
 	private ColourScheme parseInterpolate(XPath xPath, Node function,
-			Color noDataColour) throws XPathExpressionException, SLDException {
+			Color noDataColour) throws XPathExpressionException, NumberFormatException, SLDException {
 		ColourScheme colourScheme;
 
 		// get list of data points
@@ -183,7 +183,7 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 	}
 
 	private ColourScheme parsePalette(XPath xPath, Node function,
-			Color noDataColour) throws XPathExpressionException, SLDException {
+			Color noDataColour) throws XPathExpressionException, NumberFormatException, SLDException {
 		ColourScheme colourScheme;
 
 		// Create the colour map
@@ -223,12 +223,7 @@ public class SLDRasterSymbolizer implements SLDSymbolizer {
 		Float scaleMax = Float.parseFloat(scaleMaxText);
 		String logarithmicText = (String) xPath.evaluate(
 				"./resc:ColorScale/resc:Logarithmic", function, XPathConstants.STRING);
-		Boolean logarithmic;
-		if (logarithmicText == null || logarithmicText.equals("")) {
-			logarithmic = false;
-		} else {
-			logarithmic = Boolean.parseBoolean(logarithmicText);
-		}
+		Boolean logarithmic = Boolean.parseBoolean(logarithmicText);
 		ColourScale colourScale = new ColourScale(scaleMin, scaleMax, logarithmic);
 		
 		// Create the colour scheme

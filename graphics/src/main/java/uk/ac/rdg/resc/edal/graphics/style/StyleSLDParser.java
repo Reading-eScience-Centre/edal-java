@@ -110,6 +110,8 @@ public class StyleSLDParser {
 				sldSymbolizer = new SLDRasterSymbolizer(layerName, symbolizerNode);
 			} else if (symbolizerNode.getLocalName().equals("Raster2DSymbolizer")) {
 				sldSymbolizer = new SLDRaster2DSymbolizer(layerName, symbolizerNode);
+			} else if (symbolizerNode.getLocalName().equals("ContourSymbolizer")){
+				sldSymbolizer = new SLDContourSymbolizer(layerName, symbolizerNode);
 			} else {
 				throw new SLDException("Symbolizer type not recognized.");
 			}
