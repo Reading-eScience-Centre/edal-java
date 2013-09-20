@@ -126,7 +126,7 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 	}
 
 	private ColourScheme2D parseCategorize2D(XPath xPath, Node function,
-			Color noDataColour) throws XPathExpressionException, SLDException {
+			Color noDataColour) throws XPathExpressionException, NumberFormatException, SLDException {
 		ColourScheme2D colourScheme2D;
 
 		// get list of colours

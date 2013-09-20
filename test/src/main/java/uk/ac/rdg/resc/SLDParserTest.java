@@ -68,8 +68,8 @@ public class SLDParserTest {
             }
         };
 
-        File xmlFile = new File(ClassLoader.getSystemResource("xml/se_raster2d.xml").getFile());
-        File imageFile = new File("N:/xmlOutput/se_raster2d.png");
+        File xmlFile = new File(ClassLoader.getSystemResource("xml/se_contour.xml").getFile());
+        File imageFile = new File("N:/xmlOutput/se_contour.png");
 		try {
 			Image image = StyleSLDParser.createImage(xmlFile);
 			ImageIO.write(image.drawImage(params, id2Feature), "png", imageFile);
