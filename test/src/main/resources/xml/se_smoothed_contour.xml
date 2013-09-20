@@ -6,7 +6,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
 	<NamedLayer>
 		<se:Name>analysed_sst</se:Name>
 		<UserStyle>
-			<se:Name>Interpolated red-blue colour scheme</se:Name>
+			<se:Name>Red-blue palette showing SST</se:Name>
 			<se:CoverageStyle>
 				<se:Rule>
 					<se:RasterSymbolizer>
@@ -33,7 +33,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
 	<NamedLayer>
 		<se:Name>analysis_error</se:Name>
 		<UserStyle>
-			<se:Name>Thesholded colour scheme</se:Name>
+			<se:Name>Smoothed contours showing error</se:Name>
 			<se:CoverageStyle>
 				<se:Rule>
 					<resc:SmoothedContourSymbolizer>
