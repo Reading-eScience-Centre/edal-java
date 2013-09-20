@@ -24,10 +24,10 @@ public class SLDParserTest {
         /*
          * First, get the dataset, and find some valid values for elevation and time
          */
-        final NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
-                "testcollection", "Test Collection", "N:/Data/FOAM_ONE/FOAM_one.ncml");
 //        final NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
-//                "testcollection", "Test Collection", "N:/Data/ostia.nc");
+//                "testcollection", "Test Collection", "N:/Data/FOAM_ONE/FOAM_one.ncml");
+        final NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
+                "testcollection", "Test Collection", "N:/Data/ostia.nc");
 
         final GridSeriesFeature feature = featureCollection.getFeatureById("testcollection1");
         GridSeriesDomain domain = feature.getCoverage().getDomain();
