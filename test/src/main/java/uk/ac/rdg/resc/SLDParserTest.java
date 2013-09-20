@@ -24,10 +24,10 @@ public class SLDParserTest {
         /*
          * First, get the dataset, and find some valid values for elevation and time
          */
-//        final NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
-//                "testcollection", "Test Collection", "N:/Data/FOAM_ONE/FOAM_one.ncml");
         final NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
-                "testcollection", "Test Collection", "N:/Data/ostia.nc");
+                "testcollection", "Test Collection", "N:/Data/FOAM_ONE/FOAM_one.ncml");
+//        final NcGridSeriesFeatureCollection featureCollection = new NcGridSeriesFeatureCollection(
+//                "testcollection", "Test Collection", "N:/Data/ostia.nc");
 
         final GridSeriesFeature feature = featureCollection.getFeatureById("testcollection1");
         GridSeriesDomain domain = feature.getCoverage().getDomain();
@@ -68,8 +68,8 @@ public class SLDParserTest {
             }
         };
 
-        File xmlFile = new File(ClassLoader.getSystemResource("xml/se_contour.xml").getFile());
-        File imageFile = new File("N:/xmlOutput/se_contour.png");
+        File xmlFile = new File(ClassLoader.getSystemResource("xml/se_smoothed_contour.xml").getFile());
+        File imageFile = new File("N:/xmlOutput/se_smoothed_contour.png");
 		try {
 			Image image = StyleSLDParser.createImage(xmlFile);
 			ImageIO.write(image.drawImage(params, id2Feature), "png", imageFile);

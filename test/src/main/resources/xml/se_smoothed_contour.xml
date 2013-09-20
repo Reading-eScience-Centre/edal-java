@@ -4,7 +4,7 @@ StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://
 xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
 	<NamedLayer>
-		<se:Name>analysed_sst</se:Name>
+		<se:Name>TMP</se:Name>
 		<UserStyle>
 			<se:Name>Interpolated red-blue colour scheme</se:Name>
 			<se:CoverageStyle>
@@ -31,7 +31,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
 		</UserStyle>
 	</NamedLayer>
 	<NamedLayer>
-		<se:Name>analysis_error</se:Name>
+		<se:Name>TMP</se:Name>
 		<UserStyle>
 			<se:Name>Thesholded colour scheme</se:Name>
 			<se:CoverageStyle>
@@ -44,8 +44,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
 						<resc:ContourLineStyle>DASHED</resc:ContourLineStyle>
 						<resc:LabelEnabled>true</resc:LabelEnabled>
 						<resc:Scale>
-							<resc:ScaleMin>0.5</resc:ScaleMin>
-							<resc:ScaleMax>2.5</resc:ScaleMax>
+							<resc:ScaleMin>270.0</resc:ScaleMin>
+							<resc:ScaleMax>310.0</resc:ScaleMax>
 							<resc:Logarithmic>false</resc:Logarithmic>
 						</resc:Scale>
 						<resc:AutoscaleEnabled>false</resc:AutoscaleEnabled>
