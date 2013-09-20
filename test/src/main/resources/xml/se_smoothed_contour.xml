@@ -36,7 +36,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
 			<se:Name>Thesholded colour scheme</se:Name>
 			<se:CoverageStyle>
 				<se:Rule>
-					<resc:ContourSymbolizer>
+					<resc:SmoothedContourSymbolizer>
 						<se:Opacity>1.0</se:Opacity>
 						<resc:NumberOfContours>10</resc:NumberOfContours>
 						<resc:ContourLineColour>#FF000000</resc:ContourLineColour>
@@ -49,7 +49,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
 							<resc:Logarithmic>false</resc:Logarithmic>
 						</resc:Scale>
 						<resc:AutoscaleEnabled>false</resc:AutoscaleEnabled>
-					</resc:ContourSymbolizer>
+					</resc:SmoothedContourSymbolizer>
 				</se:Rule>
 			</se:CoverageStyle>
 		</UserStyle>
