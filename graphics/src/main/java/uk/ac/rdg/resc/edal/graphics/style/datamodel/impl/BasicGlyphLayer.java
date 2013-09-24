@@ -17,6 +17,8 @@ public class BasicGlyphLayer extends GlyphLayer {
 
    public BasicGlyphLayer() throws InstantiationException {
 		super(PlotType.GLYPH);
+		
+		icon = getIcon(this.glyphIconName);
 	}
 	
 	public BasicGlyphLayer(String dataFieldName, String glyphIconName,
@@ -25,7 +27,9 @@ public class BasicGlyphLayer extends GlyphLayer {
 		
 		this.dataFieldName = dataFieldName;
 		this.glyphIconName = glyphIconName;
-		this.colourScheme = colourScheme;	
+		this.colourScheme = colourScheme;
+		
+		icon = getIcon(this.glyphIconName);
 	}
 
 }

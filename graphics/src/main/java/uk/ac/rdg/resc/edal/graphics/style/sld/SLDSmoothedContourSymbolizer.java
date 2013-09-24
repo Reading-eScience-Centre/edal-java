@@ -1,6 +1,6 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.StyleSLDParser.decodeColour;
+import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.decodeColour;
 
 import java.awt.Color;
 

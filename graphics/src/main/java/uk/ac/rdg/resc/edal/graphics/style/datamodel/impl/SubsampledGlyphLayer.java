@@ -17,27 +17,35 @@ public class SubsampledGlyphLayer extends GlyphLayer {
      * size.
      */
     void afterUnmarshal( Unmarshaller u, Object parent ) {
-    	icon = getIcon(this.glyphIconName);
+    	initialiseIcon();
+    }
+
+	private void initialiseIcon() {
+		icon = getIcon(this.glyphIconName);
         
     	if(glyphSpacing < 1.0 || glyphSpacing == null) {
-            throw new IllegalArgumentException("Glyph spacing must be non-null and => 1.0");
+            throw new IllegalArgumentException("Glyph spacing must be non-null and >= 1.0");
         }        
     	setXSampleSize((int) (icon.getWidth()*glyphSpacing));
         setYSampleSize((int) (icon.getHeight()*glyphSpacing));
-    }
+	}
 
    public SubsampledGlyphLayer() throws InstantiationException {
 		super(PlotType.SUBSAMPLE);
+		
+		initialiseIcon();
 	}
 	
-	public SubsampledGlyphLayer(String dataFieldName, String glyphIconName, float glyphSpacing,
+	public SubsampledGlyphLayer(String dataFieldName, String glyphIconName, Float glyphSpacing,
 			ColourScheme colourScheme) throws InstantiationException {
 		super(PlotType.SUBSAMPLE);
 		
 		this.dataFieldName = dataFieldName;
 		this.glyphIconName = glyphIconName;
 		this.glyphSpacing = glyphSpacing;
-		this.colourScheme = colourScheme;	
+		this.colourScheme = colourScheme;
+		
+		initialiseIcon();
 	}
 
 	public float getGlyphSpacing() {
