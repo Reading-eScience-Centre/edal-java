@@ -13,9 +13,9 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.style.FeatureCollectionAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.Id2FeatureAndMember;
-import uk.ac.rdg.resc.edal.graphics.style.SLDException;
-import uk.ac.rdg.resc.edal.graphics.style.StyleSLDParser;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
+import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
+import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
 import uk.ac.rdg.resc.edal.position.TimePosition;
 
 public class SLDParserTest {
@@ -68,8 +68,8 @@ public class SLDParserTest {
             }
         };
 
-        File xmlFile = new File(ClassLoader.getSystemResource("xml/se_smoothed_contour.xml").getFile());
-        File imageFile = new File("N:/xmlOutput/se_smoothed_contour.png");
+        File xmlFile = new File(ClassLoader.getSystemResource("xml/se_subsampled_glyph.xml").getFile());
+        File imageFile = new File("N:/xmlOutput/se_subsampled_glyph.png");
 		try {
 			Image image = StyleSLDParser.createImage(xmlFile);
 			ImageIO.write(image.drawImage(params, id2Feature), "png", imageFile);

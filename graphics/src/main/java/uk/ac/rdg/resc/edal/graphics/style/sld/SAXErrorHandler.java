@@ -1,4 +1,4 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.sld;
 
 import java.io.PrintWriter;
 

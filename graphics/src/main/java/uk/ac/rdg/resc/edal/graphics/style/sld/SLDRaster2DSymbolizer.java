@@ -1,9 +1,9 @@
-package uk.ac.rdg.resc.edal.graphics.style;
+package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.StyleSLDParser.decodeColour;
+import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.decodeColour;
+import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.parseCategorize2D;
 
 import java.awt.Color;
-import java.util.ArrayList;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -11,13 +11,11 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Raster2DLayer;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme2D;
 
 public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 
@@ -96,7 +94,7 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 		Node function = (Node) xPath.evaluate(
 				"./resc:ColorMap2D/*", symbolizerNode, XPathConstants.NODE);
 		if (function == null || function.getNodeType() != Node.ELEMENT_NODE) {
-			throw new SLDException("The raster symbolizer must contain a function.");
+			throw new SLDException("The 2D color map must contain a function.");
 		}
 		
 		// get fall back value
@@ -123,55 +121,6 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 			raster2DLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
 		}
 		return raster2DLayer;
-	}
-
-	private ColourScheme2D parseCategorize2D(XPath xPath, Node function,
-			Color noDataColour) throws XPathExpressionException, NumberFormatException, SLDException {
-		ColourScheme2D colourScheme2D;
-
-		// get list of colours
-		NodeList colourNodes = (NodeList) xPath.evaluate(
-				"./se:Value", function, XPathConstants.NODESET);
-		if (colourNodes == null) {
-			throw new SLDException("The 2D categorize function must contain a list of values.");
-		}
-		
-		// transform to list of Color objects
-		ArrayList<Color> colours = new ArrayList<Color>();
-		for (int j = 0; j < colourNodes.getLength(); j++) {
-			Node colourNode = colourNodes.item(j);
-			colours.add(decodeColour(colourNode.getTextContent()));
-		}
-		
-		//get list of x thresholds
-		NodeList xThresholdNodes = (NodeList) xPath.evaluate(
-				"./resc:XThreshold", function, XPathConstants.NODESET);
-		if (xThresholdNodes == null) {
-			throw new SLDException("The 2D categorize function must contain a list of x thresholds.");
-		}
-
-		// transform to list of Floats
-		ArrayList<Float> xThresholds = new ArrayList<Float>();
-		for (int j = 0; j < xThresholdNodes.getLength(); j++) {
-			Node thresholdNode = xThresholdNodes.item(j);
-			xThresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
-		}
-		
-		//get list of y thresholds
-		NodeList yThresholdNodes = (NodeList) xPath.evaluate(
-				"./resc:YThreshold", function, XPathConstants.NODESET);
-		if (yThresholdNodes == null) {
-			throw new SLDException("The 2D categorize function must contain a list of y thresholds.");
-		}
-		// transform to list of Floats
-		ArrayList<Float> yThresholds = new ArrayList<Float>();
-		for (int j = 0; j < yThresholdNodes.getLength(); j++) {
-			Node thresholdNode = yThresholdNodes.item(j);
-			yThresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
-		}
-		
-		colourScheme2D = new ThresholdColourScheme2D(xThresholds, yThresholds, colours, noDataColour);
-		return colourScheme2D;
 	}
 
 }
