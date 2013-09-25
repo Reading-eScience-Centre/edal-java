@@ -48,13 +48,13 @@ public class ConfidenceIntervalLayer extends ImageLayer {
 	}
 
 	public ConfidenceIntervalLayer(String lowerFieldName, String upperFieldName,
-			int glyphSize, ColourScheme colourSceme) {
+			Integer glyphSize, ColourScheme colourScheme) {
 		super(PlotType.SUBSAMPLE);
 		
 		this.lowerFieldName = lowerFieldName;
 		this.upperFieldName = upperFieldName;
 		this.glyphSize = glyphSize;
-		this.colourScheme = colourSceme;
+		this.colourScheme = colourScheme;
 		
 		setSampleSize();
 	}
