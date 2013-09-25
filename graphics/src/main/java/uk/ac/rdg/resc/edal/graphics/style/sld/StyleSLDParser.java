@@ -131,6 +131,8 @@ public class StyleSLDParser {
 				sldSymbolizer = new SLDBasicGlyphSymbolizer(layerName, symbolizerNode);
 			} else if (symbolizerNode.getLocalName().equals("SubsampledGlyphSymbolizer")){
 				sldSymbolizer = new SLDSubsampledGlyphSymbolizer(layerName, symbolizerNode);
+			} else if (symbolizerNode.getLocalName().equals("ConfidenceIntervalSymbolizer")){
+				sldSymbolizer = new SLDConfidenceIntervalSymbolizer(layerName, symbolizerNode);
 			} else {
 				throw new SLDException("Symbolizer type not recognized.");
 			}
