@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
+import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.addOpacity;
 import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.decodeColour;
 
 import java.awt.Color;
@@ -14,7 +15,6 @@ import org.w3c.dom.Node;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ContourLayer.ContourLineStyle;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 
 public class SLDContourSymbolizer implements SLDSymbolizer {
@@ -59,14 +59,6 @@ public class SLDContourSymbolizer implements SLDSymbolizer {
 				
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
-		
-		// get opacity element if it exists
-		Node opacityNode = (Node) xPath.evaluate(
-				"./se:Opacity", symbolizerNode, XPathConstants.NODE);
-		String opacity = null;
-		if (opacityNode != null) {
-			opacity = opacityNode.getTextContent();
-		}
 		
 		// create the scale
 		String autoscaleEnabledText = (String) xPath.evaluate(
@@ -152,9 +144,7 @@ public class SLDContourSymbolizer implements SLDSymbolizer {
 		
 		// instantiate a new contour layer and add it to the image
 		ContourLayer contourLayer = new ContourLayer(layerName, scale, autoscaleEnabled, numberOfContours, contourLineColour, contourLineWidth, contourLineStyle, labelEnabled);
-		if (!(opacity == null)) {
-			contourLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
-		}
+		addOpacity(xPath, symbolizerNode, contourLayer);
 		return contourLayer;
 	}
 

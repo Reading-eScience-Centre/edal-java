@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
+import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.addOpacity;
 import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.decodeColour;
 
 import java.awt.Color;
@@ -12,7 +13,6 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Node;
 
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ArrowLayer;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 
 public class SLDArrowSymbolizer implements SLDSymbolizer {
@@ -58,14 +58,6 @@ public class SLDArrowSymbolizer implements SLDSymbolizer {
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 		
-		// get opacity element if it exists
-		Node opacityNode = (Node) xPath.evaluate(
-				"./se:Opacity", symbolizerNode, XPathConstants.NODE);
-		String opacity = null;
-		if (opacityNode != null) {
-			opacity = opacityNode.getTextContent();
-		}
-		
 		// get the arrow properties
 		String arrowSizeText = (String) xPath.evaluate(
 				"./resc:ArrowSize", symbolizerNode, XPathConstants.STRING);
@@ -82,9 +74,7 @@ public class SLDArrowSymbolizer implements SLDSymbolizer {
 				
 		// instantiate a new arrow layer and add it to the image
 		ArrowLayer arrowLayer = new ArrowLayer(layerName, arrowSize, arrowColour);
-		if (!(opacity == null)) {
-			arrowLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
-		}
+		addOpacity(xPath, symbolizerNode, arrowLayer);
 		return arrowLayer;
 	}
 
