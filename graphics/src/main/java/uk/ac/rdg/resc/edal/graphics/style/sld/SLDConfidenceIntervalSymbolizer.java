@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
+import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.addOpacity;
 import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.decodeColour;
 import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.parseCategorize;
 import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.parseInterpolate;
@@ -16,7 +17,6 @@ import org.w3c.dom.Node;
 
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ConfidenceIntervalLayer;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 
 public class SLDConfidenceIntervalSymbolizer implements SLDSymbolizer {
@@ -61,14 +61,6 @@ public class SLDConfidenceIntervalSymbolizer implements SLDSymbolizer {
 				
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
-		
-		// get opacity element if it exists
-		Node opacityNode = (Node) xPath.evaluate(
-				"./se:Opacity", symbolizerNode, XPathConstants.NODE);
-		String opacity = null;
-		if (opacityNode != null) {
-			opacity = opacityNode.getTextContent();
-		}
 		
 		// get name of upper data field
 		Node upperDataFieldNameNode = (Node) xPath.evaluate(
@@ -131,9 +123,7 @@ public class SLDConfidenceIntervalSymbolizer implements SLDSymbolizer {
 		
 		// instantiate a new confidence interval layer and add it to the image
 		ConfidenceIntervalLayer confidenceIntervalLayer = new ConfidenceIntervalLayer(lowerDataFieldName, upperDataFieldName, glyphSize, colourScheme);
-		if (!(opacity == null)) {
-			confidenceIntervalLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
-		}
+		addOpacity(xPath, symbolizerNode, confidenceIntervalLayer);
 		return confidenceIntervalLayer;
 	}
 

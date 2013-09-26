@@ -1,5 +1,6 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
+import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.addOpacity;
 import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.decodeColour;
 import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.parseCategorize2D;
 
@@ -13,7 +14,6 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Node;
 
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme2D;
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Raster2DLayer;
 
@@ -82,14 +82,6 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 			throw new SLDException("The y data field name cannot be empty.");
 		}
 		
-		// get opacity element if it exists
-		Node opacityNode = (Node) xPath.evaluate(
-				"./se:Opacity", symbolizerNode, XPathConstants.NODE);
-		String opacity = null;
-		if (opacityNode != null) {
-			opacity = opacityNode.getTextContent();
-		}
-
 		// get the function defining the colour map
 		Node function = (Node) xPath.evaluate(
 				"./resc:ColorMap2D/*", symbolizerNode, XPathConstants.NODE);
@@ -117,9 +109,7 @@ public class SLDRaster2DSymbolizer implements SLDSymbolizer {
 		
 		// instantiate a new raster layer and add it to the image
 		Raster2DLayer raster2DLayer = new Raster2DLayer(xDataFieldName, yDataFieldName, colourScheme2D);
-		if (!(opacity == null)) {
-			raster2DLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
-		}
+		addOpacity(xPath, symbolizerNode, raster2DLayer);
 		return raster2DLayer;
 	}
 

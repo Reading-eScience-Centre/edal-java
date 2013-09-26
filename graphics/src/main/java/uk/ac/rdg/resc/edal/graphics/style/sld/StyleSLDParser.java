@@ -26,9 +26,11 @@ import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ColourScheme2D;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.Image;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.InterpolateColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.LinearOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ThresholdColourScheme2D;
@@ -366,6 +368,55 @@ public class StyleSLDParser {
 		
 		colourScheme2D = new ThresholdColourScheme2D(xThresholds, yThresholds, colours, noDataColour);
 		return colourScheme2D;
+	}
+
+	/**
+	 * Adds an opacity transform parsed from a symbolizer node to an image layer.
+	 * @param xPath
+	 * @param symbolizerNode
+	 * @param imageLayer
+	 * @throws XPathExpressionException
+	 * @throws NumberFormatException
+	 * @throws SLDException
+	 */
+	public static void addOpacity(XPath xPath, Node symbolizerNode, ImageLayer imageLayer)
+			throws XPathExpressionException, NumberFormatException, SLDException {
+		Node opacityNode = (Node) xPath.evaluate(
+				"./se:Opacity", symbolizerNode, XPathConstants.NODE);
+		Node linearNode = (Node) xPath.evaluate(
+				"./resc:LinearOpacityTransform", symbolizerNode, XPathConstants.NODE);
+		
+		if (opacityNode != null) {
+			if (linearNode != null) {
+				throw new SLDException("A symbolizer can only contain one opacity transform");
+			}
+			String opacity = opacityNode.getTextContent();
+			imageLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
+			return;
+		}
+		
+		if (linearNode != null) {
+			String dataFieldName = (String) xPath.evaluate(
+					"./resc:DataFieldName", linearNode, XPathConstants.STRING);
+			if (dataFieldName == null || dataFieldName.equals("")) {
+				throw new SLDException("A linear opacity transform must contain a data field name.");
+			}
+			String opaqueValue = (String) xPath.evaluate(
+					"./resc:OpaqueValue", linearNode, XPathConstants.STRING);
+			if (opaqueValue == null || opaqueValue.equals("")) {
+				throw new SLDException("A linear opacity transform must contain an opaque value.");
+			}
+			String transparentValue = (String) xPath.evaluate(
+					"./resc:TransparentValue", linearNode, XPathConstants.STRING);
+			if (transparentValue == null || transparentValue.equals("")) {
+				throw new SLDException("A linear opacity transform must contain a transparent value.");
+			}
+			imageLayer.setOpacityTransform(new LinearOpacity(dataFieldName,
+					Float.parseFloat(opaqueValue),
+					Float.parseFloat(transparentValue)));
+			return;
+		}
+		
 	}
 
 }

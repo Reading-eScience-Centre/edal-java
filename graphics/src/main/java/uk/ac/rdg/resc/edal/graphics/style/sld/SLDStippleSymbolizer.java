@@ -1,5 +1,7 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
+import static uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.addOpacity;
+
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -7,7 +9,6 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Node;
 
-import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.PatternScale;
 import uk.ac.rdg.resc.edal.graphics.style.datamodel.impl.StippleLayer;
@@ -55,14 +56,6 @@ public class SLDStippleSymbolizer implements SLDSymbolizer {
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		xPath.setNamespaceContext(new SLDNamespaceResolver());
 		
-		// get opacity element if it exists
-		Node opacityNode = (Node) xPath.evaluate(
-				"./se:Opacity", symbolizerNode, XPathConstants.NODE);
-		String opacity = null;
-		if (opacityNode != null) {
-			opacity = opacityNode.getTextContent();
-		}
-		
 		// create the scale
 		String patternBandsText = (String) xPath.evaluate(
 				"./resc:PatternScale/resc:PatternBands", symbolizerNode, XPathConstants.STRING);
@@ -89,9 +82,7 @@ public class SLDStippleSymbolizer implements SLDSymbolizer {
 				
 		// instantiate a new stipple layer and add it to the image
 		StippleLayer stippleLayer = new StippleLayer(layerName, scale);
-		if (!(opacity == null)) {
-			stippleLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
-		}
+		addOpacity(xPath, symbolizerNode, stippleLayer);
 		return stippleLayer;
 	}
 
