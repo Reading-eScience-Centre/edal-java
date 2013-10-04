@@ -123,6 +123,11 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                 } else {
                     endTimeSelector.selectDate(availableDates.get(availableDates.size() - 1));
                 }
+                List<String> availableEndTimes = endTimeSelector.getAvailableTimes();
+//                String lastDateTime = endTimeSelector.getSelectedDate() + "T"
+//                        + availableEndTimes.get(availableEndTimes.size() - 1);
+//                endTimeSelector.selectDateTime(lastDateTime);
+                
                 setTimeSelector();
             }
         });

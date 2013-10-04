@@ -57,7 +57,7 @@ public class CdmGridDatasetFactoryTest {
         URL url = this.getClass().getResource("/test.nc");
         String location = url.getPath();
         CdmGridDatasetFactory datasetFactory = new CdmGridDatasetFactory();
-        dataset = datasetFactory.createDataset(location);
+        dataset = datasetFactory.createDataset("testdataset", location);
         /*
          * We also add a vector plugin, which will generate magnitudes and
          * directions

@@ -157,7 +157,7 @@ public class RequestParams {
      *             if the value is not a valid boolean string ("true" or
      *             "false", case-insensitive).
      */
-    public boolean getBoolean(String paramName, boolean defaultValue) throws EdalException {
+    public Boolean getBoolean(String paramName, Boolean defaultValue) throws EdalException {
         String value = this.getString(paramName);
         if (value == null)
             return defaultValue;

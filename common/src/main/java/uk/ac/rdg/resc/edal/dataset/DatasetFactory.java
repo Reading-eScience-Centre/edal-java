@@ -43,10 +43,11 @@ public interface DatasetFactory {
     /**
      * Returns a Dataset object representing the data at the given location.
      * 
+     * @param id
+     *            The ID to assign to this dataset
      * @param location
      *            The location of the source data: this may be a file, database
      *            connection string or a remote server address.
      */
-    public Dataset createDataset(String location)
-            throws IOException;
+    public Dataset createDataset(String id, String location) throws IOException;
 }

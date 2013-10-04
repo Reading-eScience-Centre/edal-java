@@ -18,6 +18,10 @@ public class EdalException extends Exception {
         this.code = code;
     }
 
+    public EdalException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public String getCode() {
         return code;
     }

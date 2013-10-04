@@ -106,6 +106,7 @@
                     <downloadSources>true</downloadSources>
                     <downloadJavadocs>true</downloadJavadocs>
                 </configuration>
+                <version>2.9</version>
             </plugin>
         </plugins>
     </build>

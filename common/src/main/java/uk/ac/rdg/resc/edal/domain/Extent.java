@@ -44,12 +44,19 @@ package uk.ac.rdg.resc.edal.domain;
  */
 public interface Extent<P> extends Domain<P> {
     /**
-     * @return the low bound of this {@link Extent}
+     * @return The low bound of this {@link Extent}
      */
     public P getLow();
 
     /**
-     * @return the high bound of this {@link Extent}
+     * @return The high bound of this {@link Extent}
      */
     public P getHigh();
+    
+    /**
+     * @return Whether or not this is an empty {@link Extent} - empty
+     *         {@link Extent}s are defined as containing <code>null</code> for
+     *         both {@link Extent#getHigh()} and {@link Extent#getLow()}
+     */
+    public boolean isEmpty();
 }

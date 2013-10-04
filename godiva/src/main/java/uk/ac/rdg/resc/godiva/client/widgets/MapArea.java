@@ -188,9 +188,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     public void addAnimationLayer(String wmsUrl, String layerId, String timeList, String currentElevation,
             String palette, String style, String scaleRange, int nColorBands, boolean logScale, String frameRate) {
-        StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.3.0");
+        StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.1.1");
         url.append("&format=image/gif" + "&transparent=true" + "&styles=" + style + "/" + palette
-                + "&layers=" + layerId + "&time=" + timeList + "&logscale=" + logScale + "&crs="
+                + "&layers=" + layerId + "&time=" + timeList + "&logscale=" + logScale + "&srs="
                 + currentProjection + "&bbox=" + map.getExtent().toBBox(6) + "&width="
                 + ((int) map.getSize().getWidth()) + "&height=" + ((int) map.getSize().getHeight())
                 + "&animation=true");
@@ -279,6 +279,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      *            The style name for this layer
      * @param palette
      *            The palette name for this layer
+     * @param aboveMaxString
+     *            The string defining the colour to display when values are above the max
+     * @param belowMinString
+     *            The string defining the colour to display when values are below the min
      * @param scaleRange
      *            The scale range (as a string: "[min],[max]")
      * @param nColourBands
@@ -292,8 +296,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     public void addLayer(String wmsUrl, String internalLayerId, String wmsLayerName, String time,
             String colorbyTime, String elevation, String colorbyElevation, String style,
-            String palette, String scaleRange, int nColourBands, boolean logScale,
-            boolean multipleElevations, boolean multipleTimes) {
+            String palette, String aboveMaxString, String belowMinString, String scaleRange,
+            int nColourBands, boolean logScale, boolean multipleElevations, boolean multipleTimes) {
         WMSParams params = new WMSParams();
         params.setFormat("image/png");
         params.setTransparent(true);
@@ -311,10 +315,18 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         if (colorbyElevation != null) {
             params.setParameter("COLORBY/DEPTH", colorbyElevation);
         }
-        if (scaleRange != null)
+        if (scaleRange != null) {
             params.setParameter("COLORSCALERANGE", scaleRange);
-        if (nColourBands > 0)
+        }
+        if (nColourBands > 0) {
             params.setParameter("NUMCOLORBANDS", nColourBands + "");
+        }
+        if(aboveMaxString != null) {
+            params.setParameter("ABOVEMAXCOLOR", aboveMaxString);
+        }
+        if(belowMinString != null) {
+            params.setParameter("BELOWMINCOLOR", belowMinString);
+        }
         params.setParameter("LOGSCALE", logScale + "");
 
         WMSOptions options = getOptionsForCurrentProjection();
@@ -338,6 +350,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             boolean multipleElevations, boolean multipleTimes) {
         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
         WMS wmsLayer;
+        
         if (wmsAndParams == null) {
             params.setParameter("VERSION", "1.3.0");
             wmsLayer = new WMS("WMS Layer", wmsUrl, params, options);
@@ -353,7 +366,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             wmsLayer.getParams().setParameter("TIME", "");
             wmsLayer.mergeNewParams(params);
             wmsLayer.addOptions(options);
-            wmsLayer.redraw();
         }
         WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, multipleElevations,
                 multipleTimes);
@@ -468,7 +480,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 
                 final String layer = layerNames.toString();
                 
-                if (multipleElevations) {
+                if (multipleElevations && layerNames.length() > 0) {
                     /*
                      * If we have multiple depths, we can plot a vertical profile here
                      */
@@ -486,7 +498,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     panel.add(profilePlot);
                 }
 
-                if (multipleTimes) {
+                if (multipleTimes && layerNames.length() > 0) {
                     /*
                      * If we have multiple times, we can plot a time series here
                      */
@@ -540,7 +552,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         });
         getFeatureInfo.setAutoActivate(true);
         map.addControl(getFeatureInfo);
-
+        
         getFeatureInfo.getJSObject().setProperty("vendorParams", vendorParams);
     }
 
@@ -667,9 +679,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     protected void addBaseLayers() {
+        System.out.println("MapArea adding base layers");
         WMS openLayers;
-//        WMS bluemarbleDemis;
-//        WMS demis;
+        WMS demis;
         WMS plurel;
         WMS weather;
         WMS srtmDem;
@@ -679,7 +691,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         WMSParams wmsParams;
         WMSOptions wmsOptions;
         wmsOptions = new WMSOptions();
-        wmsOptions.setProjection("CRS:84");
+        wmsOptions.setProjection("EPSG:4326");
         wmsOptions.setWrapDateLine(true);
         wmsParams = new WMSParams();
         wmsParams.setLayers("basic");
@@ -689,22 +701,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         openLayers.addLayerLoadEndListener(loadEndListener);
         openLayers.setIsBaseLayer(true);
         
-        
-//        wmsParams = new WMSParams();
-//        wmsParams.setLayers("Earth Image");
-//        bluemarbleDemis = new WMS("Demis Blue Marble",
-//                "http://www2.demis.nl/wms/wms.ashx?WMS=BlueMarble", wmsParams, wmsOptions);
-//        bluemarbleDemis.setIsBaseLayer(true);
-//        bluemarbleDemis.addLayerLoadStartListener(loadStartListener);
-//        bluemarbleDemis.addLayerLoadEndListener(loadEndListener);
-//        wmsParams = new WMSParams();
-//        wmsParams
-//                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
-//                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
-//        wmsParams.setFormat("image/png");
-//        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
-//                wmsOptions);
-//        demis.setIsBaseLayer(true);
+        wmsParams = new WMSParams();
+        wmsParams
+                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
+                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+        wmsParams.setFormat("image/png");
+        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
+                wmsOptions);
+        demis.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("0,2,3,4,5,8,9,10,40");
@@ -750,19 +754,21 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsPolarOptions.setWrapDateLine(false);
         northPole = new WMS("North polar stereographic", "http://wms-basemaps.appspot.com/wms",
                 wmsParams, wmsPolarOptions);
+        northPole.setIsBaseLayer(true);
 
         wmsPolarOptions.setProjection("EPSG:32761");
         southPole = new WMS("South polar stereographic", "http://wms-basemaps.appspot.com/wms",
                 wmsParams, wmsPolarOptions);
+        southPole.setIsBaseLayer(true);
 
         map.addLayer(openLayers);
-//        map.addLayer(bluemarbleDemis);
-//        map.addLayer(demis);
+        map.addLayer(demis);
         map.addLayer(plurel);
         map.addLayer(weather);
         map.addLayer(srtmDem);
         map.addLayer(northPole);
         map.addLayer(southPole);
+        
         currentProjection = map.getProjection();
         
         map.addMapBaseLayerChangedListener(new MapBaseLayerChangedListener() {
@@ -789,7 +795,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             }
         });
         
-        map.setBaseLayer(openLayers);
+        map.setBaseLayer(demis);
         baseUrlForExport = "http://labs.metacarta.com/wms-c/Basic.py?";
         layersForExport = "basic";
     }
@@ -842,7 +848,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             NodeList featureInfoNode = null;
             for (int j = 0; j < childNodes.getLength(); j++) {
                 Node child = childNodes.item(j);
-                if(child.getNodeName().equalsIgnoreCase("id")){
+                if(child.getNodeName().equalsIgnoreCase("layer")){
                     id = child.getFirstChild().getNodeValue();
                 } else if(child.getNodeName().equalsIgnoreCase("actualX")){
                     actualX = Double.parseDouble(child.getFirstChild().getNodeValue());
@@ -965,5 +971,13 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     public ScreenPosition getCentre() {
         return new ScreenPosition(getAbsoluteLeft() + getOffsetWidth() / 2, getAbsoluteTop()
                 + getOffsetHeight() / 2);
+    }
+
+    /**
+     * This should be called when the position/size of the map has changed.
+     * Failing to do so will lead to e.g. incorrect positions for GetFeatureInfo
+     */
+    public void updatePos() {
+        map.updateSize();
     }
 }

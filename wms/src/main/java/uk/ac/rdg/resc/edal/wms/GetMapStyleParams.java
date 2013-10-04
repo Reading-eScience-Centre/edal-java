@@ -33,40 +33,25 @@ public class GetMapStyleParams {
     private String xmlStyle;
 
     private boolean transparent = false;
-    private Color backgroundColour = Color.white;
-    private int opacity = 100; // Opacity of the image in the range [0,100]
-    private int numColourBands = 254; // Number of colour bands to use in the
-                                      // image
-    private boolean logarithmic = false; // True if we're using a log scale
+    private Color backgroundColour = new Color(0, true);
+    private Color belowMinColour;
+    private Color aboveMaxColour;
+    /* Opacity of the image in the range [0,100] */
+    private int opacity = 100;
+    /* Number of colour bands to use in the image */
+    private Integer numColourBands = null;
+    /* True if we're using a log scale */
+    private Boolean logarithmic = null;
 
-    private Extent<Float> colorScaleRange;
-    private boolean autoScale = false; // True if we're using a log scale
-
+    private Extent<Float> colourScaleRange = null;
+    /* true if we want to auto-scale the data */
+    private boolean autoScale = false;
+    /* true if we are using an XML/JSON style specification */
     private boolean xmlSpecified = false;
 
-    /*
-     * Used for getting server settings. This is something that needs some
-     * restructuring.
-     */
-//    private FeatureCatalogue featureCatalogue;
-//    private Map<String, Dataset> datasets;
+    private static ColorAdapter cAdapter = ColorAdapter.getInstance();
 
-    private static ColorAdapter cAdapter = new ColorAdapter();
-
-    public GetMapStyleParams(RequestParams params/*
-                                                  * , FeatureCatalogue
-                                                  * featureCatalogue,
-                                                  * Map<String, Dataset>
-                                                  * datasets
-                                                  */) throws EdalException {
-        /*
-         * TODO We might want to put the featureCatalogue and datasets back, but
-         * hopefully this is not the case...
-         * (perhaps add them as arguments to getImageGenerator() if they're really still needed)
-         */
-//        this.featureCatalogue = featureCatalogue;
-//        this.datasets = datasets;
-
+    public GetMapStyleParams(RequestParams params) throws EdalException {
         String layersStr = params.getString("layers");
         if (layersStr == null || layersStr.trim().isEmpty()) {
             layers = null;
@@ -102,7 +87,7 @@ public class GetMapStyleParams {
                 throw new EdalException(
                         "You must specify either XML_STYLE, JSON_STYLE or LAYERS and STYLES");
             }
-            if (styles.length != layers.length && styles.length != 0) {
+            if (styles != null && styles.length != layers.length && styles.length != 0) {
                 throw new EdalException("You must request exactly one STYLE per layer, "
                         + "or use the default style for each layer with STYLES=");
             }
@@ -112,30 +97,63 @@ public class GetMapStyleParams {
 
         this.transparent = params.getBoolean("transparent", false);
 
-        /*
-         * TODO - we don't currently handle the background colour
-         */
         try {
-            String bgc = params.getString("bgcolor", "0xFFFFFF");
+            String bgc = params.getString("bgcolor", "0x00000000");
             if ((bgc.length() != 8 && bgc.length() != 10) || !bgc.startsWith("0x"))
                 throw new Exception();
             /* Parse the hexadecimal string */
-            backgroundColour = cAdapter.unmarshal(bgc);
+            backgroundColour = cAdapter.unmarshal("#"+bgc.substring(2));
         } catch (Exception e) {
             throw new EdalException("Invalid format for BGCOLOR");
         }
+        
+        String bmcStr = params.getString("belowmincolor");
+        if (bmcStr == null) {
+            belowMinColour = Color.black;
+        } else if (bmcStr.equalsIgnoreCase("extend")) {
+            belowMinColour = null;
+        } else if (bmcStr.equalsIgnoreCase("transparent")) {
+            belowMinColour = new Color(0, 0, 0, 0);
+        } else {
+            try {
+                if ((bmcStr.length() != 8 && bmcStr.length() != 10)
+                        || !bmcStr.startsWith("0x"))
+                    throw new Exception();
+                /* Parse the hexadecimal string, ignoring the "0x" prefix */
+                belowMinColour = cAdapter.unmarshal("#" + bmcStr.substring(2));
+            } catch (Exception e) {
+                throw new EdalException("Invalid format for BELOWMINCOLOR");
+            }
+        }
+        
+        String amcStr = params.getString("abovemaxcolor");
+        if (amcStr == null) {
+            aboveMaxColour = Color.black;
+        } else if (amcStr.equalsIgnoreCase("extend")) {
+            aboveMaxColour = null;
+        } else if (amcStr.equalsIgnoreCase("transparent")) {
+            aboveMaxColour = new Color(0, 0, 0, 0);
+        } else {
+            try {
+                if ((amcStr.length() != 8 && amcStr.length() != 10)
+                        || !amcStr.startsWith("0x"))
+                    throw new Exception();
+                /* Parse the hexadecimal string, ignoring the "0x" prefix */
+                aboveMaxColour = cAdapter.unmarshal("#" + amcStr.substring(2));
+            } catch (Exception e) {
+                throw new EdalException("Invalid format for ABOVEMAXCOLOR");
+            }
+        }
+        
 
         opacity = params.getPositiveInt("opacity", 100);
         if (opacity > 100) {
             opacity = 100;
         }
 
-        colorScaleRange = getColorScaleRange(params);
-        if (colorScaleRange == null) {
-            autoScale = true;
-        }
+        colourScaleRange = getColorScaleRange(params);
 
-        logarithmic = params.getBoolean("logscale", false);
+        logarithmic = params.getBoolean("logscale", null);
 
         numColourBands = params.getPositiveInt("numcolorbands", ColourPalette.MAX_NUM_COLOURS);
         if (numColourBands > ColourPalette.MAX_NUM_COLOURS) {
@@ -149,14 +167,16 @@ public class GetMapStyleParams {
     private Extent<Float> getColorScaleRange(RequestParams params) throws EdalException {
         String csr = params.getString("colorscalerange");
         if (csr == null || csr.equalsIgnoreCase("default")) {
-            // The client wants the layer's default scale range to be used
-            return null;
-        } else if (csr.equalsIgnoreCase("auto")) {
-            // The client wants the image to be scaled according to the image's
-            // own min and max values (giving maximum contrast)
+            /* The client wants the layer's default scale range to be used */
             return Extents.emptyExtent(Float.class);
+        } else if (csr.equalsIgnoreCase("auto")) {
+            /*
+             * The client wants the image to be scaled according to the image's
+             * own min and max values (giving maximum contrast)
+             */
+            return null;
         } else {
-            // The client has specified an explicit colour scale range
+            /* The client has specified an explicit colour scale range */
             String[] scaleEls = csr.split(",");
             if (scaleEls.length == 0) {
                 return Extents.emptyExtent(Float.class);
@@ -169,7 +189,19 @@ public class GetMapStyleParams {
         }
     }
 
-    public MapImage getImageGenerator() throws EdalException {
+    /**
+     * Gets the object used to generate the map plot with all correct styles and
+     * layers set.
+     * 
+     * @param catalogue
+     *            A {@link WmsCatalogue} used to get server-configured default
+     *            values for each plotted layer
+     * @return A {@link MapImage} object
+     * @throws EdalException
+     *             If invalid parameters have been supplied, or there are other
+     *             issues with generating a {@link MapImage} object
+     */
+    public MapImage getImageGenerator(WmsCatalogue catalogue) throws EdalException {
         if (xmlStyle != null) {
             try {
                 return StyleXMLParser.deserialise(xmlStyle);
@@ -184,6 +216,8 @@ public class GetMapStyleParams {
         }
 
         String layerName = layers[0];
+        WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+
         String style = "default/default";
 
         if (styles.length != 0) {
@@ -195,8 +229,87 @@ public class GetMapStyleParams {
             throw new EdalException("Style should be of the form STYLE/PALETTE ()");
         }
         String plotStyleName = styleParts[0];
-        String paletteName = styleParts.length > 1 ? styleParts[1] : "default";
 
+        /*-
+         * Choose the palette name:
+         * a) from URL parameter, or failing that
+         * b) the server-configured default for this layer, or failing that
+         * c) the default colour palette name
+         */
+        String paletteName;
+        if (styleParts.length > 1) {
+            paletteName = styleParts[1];
+        } else if (layerMetadata.getPalette() != null && !"".equals(layerMetadata.getPalette())) {
+            paletteName = layerMetadata.getPalette();
+        } else {
+            paletteName = ColourPalette.DEFAULT_PALETTE_NAME;
+        }
+
+        /*-
+         * Choose the colour scale:
+         * a) from URL parameter, or failing that
+         * b) the server-configured default scale range for this layer, or failing that
+         * c) auto-scale
+         */
+        Extent<Float> colourScaleRange;
+        if(this.colourScaleRange == null) {
+            /*
+             * This is the case where this.colorScaleRange is null 
+             */
+            /*
+             * TODO How are we dealing with this?
+             */
+            colourScaleRange = null;
+        } else if(this.colourScaleRange.isEmpty()) {
+            /*
+             * We want to use the default scale range if possible
+             */
+            Extent<Float> defaultColourScaleRange = layerMetadata.getColorScaleRange();
+            if(defaultColourScaleRange == null || defaultColourScaleRange.isEmpty()) {
+                /*
+                 * We have to auto-scale
+                 */
+                colourScaleRange = null;
+            } else {
+                colourScaleRange = defaultColourScaleRange;
+            }
+        } else {
+            /*
+             * We have a specified range to use
+             */
+            colourScaleRange = this.colourScaleRange;
+        }
+        
+        /*-
+         * Choose whether this is a logarithmic plot:
+         * a) from URL parameter, or failing that
+         * b) from server-configured default for this layer, or failing that
+         * c) not logarithmic
+         */
+        boolean logarithmic;
+        if(this.logarithmic != null) {
+            logarithmic = this.logarithmic;
+        } else if(layerMetadata.isLogScaling() != null) {
+            logarithmic = layerMetadata.isLogScaling();
+        } else {
+            logarithmic = false;
+        }
+        
+        /*-
+         * Choose how many colour bands to use:
+         * a) from URL parameter, or failing that
+         * b) from server-configured default for this layer, or failing that
+         * c) the maximum
+         */
+        int numColourBands;
+        if(this.numColourBands != null) {
+            numColourBands = this.numColourBands;
+        } else if(layerMetadata.getNumColorBands() != null) {
+            numColourBands = layerMetadata.getNumColorBands();
+        } else {
+            numColourBands = ColourPalette.MAX_NUM_COLOURS;
+        }
+        
         MapImage image = new MapImage();
 
         Drawable layer = null;
@@ -254,7 +367,7 @@ public class GetMapStyleParams {
 //                            magnitudeFieldName = vectorComponent.getName();
 //                        } else if(vectorComponent.getComponentType() == VectorComponentType.DIRECTION) {
 //                            directionFieldName = vectorComponent.getName();
-//                        }
+//                        }} 
 //                    } else {
 //                        /*
 //                         * Won't get thrown unless code changes, but best to be safe.
@@ -313,7 +426,7 @@ public class GetMapStyleParams {
 //                if(meanFieldName == null || stddevFieldName == null || lowerFieldName == null || upperFieldName == null) {
 //                    throw new WmsException("Statistics must (currently) contain mean and std dev");
 //                }
-//                /*
+//                /*} 
 //                 * Treat parameters as params for magnitude field, and plot
 //                 * contour layer on top with default values taken from server
 //                 * (which should have been approximately auto-scaled
@@ -372,19 +485,19 @@ public class GetMapStyleParams {
             /*
              * Generate a RasterLayer
              */
-            ColourScale scaleRange = new ColourScale(colorScaleRange.getLow(),
-                    colorScaleRange.getHigh(), logarithmic);
-            ColourMap colourPalette = new ColourMap(Color.black, Color.black, new Color(0, true),
+            ColourScale scaleRange = new ColourScale(colourScaleRange.getLow(),
+                    colourScaleRange.getHigh(), logarithmic);
+            ColourMap colourPalette = new ColourMap(belowMinColour, aboveMaxColour, backgroundColour,
                     paletteName, numColourBands);
             ColourScheme colourScheme = new PaletteColourScheme(scaleRange, colourPalette);
             layer = new RasterLayer(layerName, colourScheme);
         } else if (plotStyleName.equalsIgnoreCase("contour")) {
-            layer = new ContourLayer(layerName, new ColourScale(colorScaleRange.getLow(),
-                    colorScaleRange.getHigh(), logarithmic), autoScale, numColourBands,
+            layer = new ContourLayer(layerName, new ColourScale(colourScaleRange.getLow(),
+                    colourScaleRange.getHigh(), logarithmic), autoScale, numColourBands,
                     Color.black, 1, ContourLineStyle.SOLID, true);
         } else if (plotStyleName.equalsIgnoreCase("stipple")) {
-            PatternScale scale = new PatternScale(numColourBands, colorScaleRange.getLow(),
-                    colorScaleRange.getHigh(), logarithmic);
+            PatternScale scale = new PatternScale(numColourBands, colourScaleRange.getLow(),
+                    colourScaleRange.getHigh(), logarithmic);
             layer = new StippleLayer(layerName, scale);
         } else if (plotStyleName.equalsIgnoreCase("arrow")) {
             layer = new ArrowLayer(layerName, 8, Color.black);
@@ -416,5 +529,9 @@ public class GetMapStyleParams {
 
     public boolean isXmlDefined() {
         return xmlSpecified;
+    }
+    
+    public String[] getLayerNames() {
+        return layers;
     }
 }
