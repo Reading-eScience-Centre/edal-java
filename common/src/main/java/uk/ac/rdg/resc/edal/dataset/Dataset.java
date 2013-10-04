@@ -43,6 +43,11 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
  * @author Guy
  */
 public interface Dataset {
+    
+    /**
+     * @return The ID which identifies this dataset.
+     */
+    public String getId();
 
     /**
      * Returns the IDs of features which are present in this Dataset

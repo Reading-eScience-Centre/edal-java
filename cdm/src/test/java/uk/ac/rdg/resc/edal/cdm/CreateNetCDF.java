@@ -40,10 +40,10 @@ public class CreateNetCDF {
             /*
              * Define dimensions
              */
-            dims.add(lonDim);
-            dims.add(latDim);
-            dims.add(depthDim);
             dims.add(timeDim);
+            dims.add(depthDim);
+            dims.add(latDim);
+            dims.add(lonDim);
 
             dataFile.addVariable("latitude", DataType.FLOAT, new Dimension[] { latDim });
             dataFile.addVariable("longitude", DataType.FLOAT, new Dimension[] { lonDim });
@@ -77,6 +77,26 @@ public class CreateNetCDF {
             dataFile.addVariable("vLat", DataType.FLOAT, dims);
             dataFile.addVariable("vDepth", DataType.FLOAT, dims);
             dataFile.addVariable("vTime", DataType.FLOAT, dims);
+            
+            dataFile.addVariable("northEastNComp", DataType.FLOAT, dims);
+            dataFile.addVariable("northEastEComp", DataType.FLOAT, dims);
+            dataFile.addVariableAttribute("northEastNComp", "standard_name", "northward_NE");
+            dataFile.addVariableAttribute("northEastEComp", "standard_name", "eastward_NE");
+            
+            dataFile.addVariable("southEastNComp", DataType.FLOAT, dims);
+            dataFile.addVariable("southEastEComp", DataType.FLOAT, dims);
+            dataFile.addVariableAttribute("southEastNComp", "standard_name", "northward_SE");
+            dataFile.addVariableAttribute("southEastEComp", "standard_name", "eastward_SE");
+            
+            dataFile.addVariable("southWestNComp", DataType.FLOAT, dims);
+            dataFile.addVariable("southWestEComp", DataType.FLOAT, dims);
+            dataFile.addVariableAttribute("southWestNComp", "standard_name", "northward_SW");
+            dataFile.addVariableAttribute("southWestEComp", "standard_name", "eastward_SW");
+            
+            dataFile.addVariable("northWestNComp", DataType.FLOAT, dims);
+            dataFile.addVariable("northWestEComp", DataType.FLOAT, dims);
+            dataFile.addVariableAttribute("northWestNComp", "standard_name", "northward_NW");
+            dataFile.addVariableAttribute("northWestEComp", "standard_name", "eastward_NW");
 
             /*
              * Write the data for the coordinate variables
@@ -113,14 +133,34 @@ public class CreateNetCDF {
              * This is the data array we will write. It will just be filled with
              * a progression of numbers for this example.
              */
-            ArrayFloat.D4 vLonDataOut = new ArrayFloat.D4(lonDim.getLength(), latDim.getLength(),
-                    depthDim.getLength(), timeDim.getLength());
-            ArrayFloat.D4 vLatDataOut = new ArrayFloat.D4(lonDim.getLength(), latDim.getLength(),
-                    depthDim.getLength(), timeDim.getLength());
-            ArrayFloat.D4 vDepthDataOut = new ArrayFloat.D4(lonDim.getLength(), latDim.getLength(),
-                    depthDim.getLength(), timeDim.getLength());
-            ArrayFloat.D4 vTimeDataOut = new ArrayFloat.D4(lonDim.getLength(), latDim.getLength(),
-                    depthDim.getLength(), timeDim.getLength());
+            ArrayFloat.D4 vLonDataOut = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            ArrayFloat.D4 vLatDataOut = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            ArrayFloat.D4 vDepthDataOut = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            ArrayFloat.D4 vTimeDataOut = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            
+            ArrayFloat.D4 northEastNComp = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            ArrayFloat.D4 northEastEComp = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            
+            ArrayFloat.D4 southEastNComp = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            ArrayFloat.D4 southEastEComp = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            
+            ArrayFloat.D4 southWestNComp = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            ArrayFloat.D4 southWestEComp = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            
+            ArrayFloat.D4 northWestNComp = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
+            ArrayFloat.D4 northWestEComp = new ArrayFloat.D4(timeDim.getLength(),
+                    depthDim.getLength(), latDim.getLength(), lonDim.getLength());
 
             /*
              * Create some pretend data. If this wasn't an example program, we
@@ -134,10 +174,22 @@ public class CreateNetCDF {
                         float depth = 100.0f * k / (depthDim.getLength() - 1);
                         for (int l = 0; l < timeDim.getLength(); l++) {
                             float time = 100.0f * l / (timeDim.getLength() - 1);
-                            vLonDataOut.set(i, j, k, l, lon);
-                            vLatDataOut.set(i, j, k, l, lat);
-                            vDepthDataOut.set(i, j, k, l, depth);
-                            vTimeDataOut.set(i, j, k, l, time);
+                            vLonDataOut.set(l, k, j, i, lon);
+                            vLatDataOut.set(l, k, j, i, lat);
+                            vDepthDataOut.set(l, k, j, i, depth);
+                            vTimeDataOut.set(l, k, j, i, time);
+                            
+                            northEastNComp.set(l, k, j, i, 1.0f);
+                            northEastEComp.set(l, k, j, i, 1.0f);
+                            
+                            southEastNComp.set(l, k, j, i, -1.0f);
+                            southEastEComp.set(l, k, j, i, 1.0f);
+                            
+                            southWestNComp.set(l, k, j, i, -1.0f);
+                            southWestEComp.set(l, k, j, i, -1.0f);
+                            
+                            northWestNComp.set(l, k, j, i, 1.0f);
+                            northWestEComp.set(l, k, j, i, -1.0f);
                         }
                     }
                 }
@@ -146,6 +198,16 @@ public class CreateNetCDF {
             dataFile.write("vLat", vLatDataOut);
             dataFile.write("vDepth", vDepthDataOut);
             dataFile.write("vTime", vTimeDataOut);
+            
+            dataFile.write("northEastNComp", northEastNComp);
+            dataFile.write("northEastEComp", northEastEComp);
+            dataFile.write("southEastNComp", southEastNComp);
+            dataFile.write("southEastEComp", southEastEComp);
+            dataFile.write("southWestNComp", southWestNComp);
+            dataFile.write("southWestEComp", southWestEComp);
+            dataFile.write("northWestNComp", northWestNComp);
+            dataFile.write("northWestEComp", northWestEComp);
+            
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InvalidRangeException e) {

@@ -25,6 +25,9 @@ import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
 
 public class StyleXMLParser {
     public static class ColorAdapter extends XmlAdapter<String, Color> {
+        private ColorAdapter() {
+        }
+        
         @Override
         public Color unmarshal(String s) {
             if (s.length() == 7) {
@@ -41,6 +44,12 @@ public class StyleXMLParser {
         @Override
         public String marshal(Color c) {
             return "#" + String.format("%08X", c.getRGB());
+        }
+        
+        private static ColorAdapter adapter = new ColorAdapter();
+        
+        public static ColorAdapter getInstance() {
+            return adapter;
         }
     }
     

@@ -9,6 +9,7 @@ import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -51,6 +52,15 @@ public class PaletteSelector implements PaletteSelectorIF {
 	private ToggleButton lockButton;
 	private Label mhLabel;
 	private Label mlLabel;
+	
+	/* Height of out-of-range elements */
+	private static final int OOR_SIZE=20;
+	
+	private PushButton aboveMax;
+	private PushButton belowMin;
+	private OutOfRangeState aboveMaxState = OutOfRangeState.BLACK;
+	private OutOfRangeState belowMinState = OutOfRangeState.BLACK;	
+	
 	private final NumberFormat format = NumberFormat.getFormat("#0.000");
 	
 	private CellPanel mainPanel;
@@ -118,7 +128,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         nColorBands.addItem("20");
         nColorBands.addItem("50");
         nColorBands.addItem("100");
-        nColorBands.addItem("254");
+        nColorBands.addItem("250");
         nColorBands.setTitle("Select the number of colour bands to use for this data");
         
         paletteImage = new Image();
@@ -223,6 +233,56 @@ public class PaletteSelector implements PaletteSelectorIF {
 		mlLabel = new Label();
 		mlLabel.setStylePrimaryName("tickmark");
 		
+		aboveMax = new PushButton();
+		aboveMax.setWidth("0px");
+		aboveMax.setHeight("0px");
+		aboveMax.setStylePrimaryName("paletteOutOfRangeButton");
+		aboveMax.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                switch (aboveMaxState) {
+                case BLACK:
+                    aboveMaxState = OutOfRangeState.EXTEND;
+                    break;
+                case EXTEND:
+                    aboveMaxState = OutOfRangeState.TRANSPARENT;
+                    break;
+                case TRANSPARENT:
+                    aboveMaxState = OutOfRangeState.BLACK;
+                    break;
+                default:
+                    break;
+                }
+                setOutOfRangeImages();
+                paletteHandler.paletteChanged(PaletteSelector.this.wmsLayerId, currentPalette, getSelectedStyle(), getNumColorBands());
+            }
+        });
+		
+		belowMin = new PushButton();
+		belowMin.setWidth("0px");
+		belowMin.setHeight("0px");
+		belowMin.setStylePrimaryName("paletteOutOfRangeButton");
+		belowMin.addClickHandler(new ClickHandler() {
+		    @Override
+		    public void onClick(ClickEvent event) {
+		        switch (belowMinState) {
+		        case BLACK:
+		            belowMinState = OutOfRangeState.EXTEND;
+		            break;
+		        case EXTEND:
+		            belowMinState = OutOfRangeState.TRANSPARENT;
+		            break;
+		        case TRANSPARENT:
+		            belowMinState = OutOfRangeState.BLACK;
+		            break;
+		        default:
+		            break;
+		        }
+		        setOutOfRangeImages();
+		        paletteHandler.paletteChanged(PaletteSelector.this.wmsLayerId, currentPalette, getSelectedStyle(), getNumColorBands());
+		    }
+		});
+		
 		if(vertical){
 		    initVertical();
 		} else {
@@ -236,7 +296,17 @@ public class PaletteSelector implements PaletteSelectorIF {
 	private void initVertical(){
         mainPanel = new HorizontalPanel();
 
-        mainPanel.add(paletteImage);
+        VerticalPanel palettePanel = new VerticalPanel();
+        palettePanel.add(aboveMax);
+        palettePanel.setCellVerticalAlignment(aboveMax, HasVerticalAlignment.ALIGN_TOP);
+        palettePanel.add(paletteImage);
+        palettePanel.add(belowMin);
+        palettePanel.setCellVerticalAlignment(belowMin, HasVerticalAlignment.ALIGN_BOTTOM);
+        
+        belowMin.getElement().getStyle().setMarginTop(-2, Unit.PX);
+        aboveMax.getElement().getStyle().setMarginBottom(1, Unit.PX);
+        
+        mainPanel.add(palettePanel);
 
         VerticalPanel vp = new VerticalPanel();
         vp.setHeight(height + "px");
@@ -251,10 +321,15 @@ public class PaletteSelector implements PaletteSelectorIF {
         buttonsPanel.setCellHorizontalAlignment(lockButton, HasHorizontalAlignment.ALIGN_LEFT);
 
         vp.add(maxScale);
-        vp.setCellHeight(maxScale, "50px");
+        vp.setCellHeight(maxScale, "20px");
+        maxScale.getElement().getStyle().setMarginTop(OOR_SIZE, Unit.PX);
+        
+        int margin = (int) ((height - 2*OOR_SIZE - 20)/3.0) - 20;
+        mhLabel.getElement().getStyle().setMarginTop(margin, Unit.PX);
+        
         vp.setCellVerticalAlignment(maxScale, HasVerticalAlignment.ALIGN_TOP);
         vp.add(mhLabel);
-        vp.setCellVerticalAlignment(mhLabel, HasVerticalAlignment.ALIGN_BOTTOM);
+        vp.setCellVerticalAlignment(mhLabel, HasVerticalAlignment.ALIGN_TOP);
 
         vp.add(styles);
         vp.setCellHeight(styles, "20px");
@@ -266,15 +341,20 @@ public class PaletteSelector implements PaletteSelectorIF {
         vp.setCellHeight(logScale, "20px");
         vp.setCellVerticalAlignment(logScale, HasVerticalAlignment.ALIGN_TOP);
         vp.add(buttonsPanel);
-        vp.setCellHeight(buttonsPanel, "40px");
+        vp.setCellHeight(buttonsPanel, "26px");
         vp.setCellVerticalAlignment(buttonsPanel, HasVerticalAlignment.ALIGN_TOP);
 
         vp.add(mlLabel);
-        vp.setCellVerticalAlignment(mlLabel, HasVerticalAlignment.ALIGN_TOP);
+        vp.setCellVerticalAlignment(mlLabel, HasVerticalAlignment.ALIGN_BOTTOM);
+        
+        mlLabel.getElement().getStyle().setMarginBottom(margin, Unit.PX);
 
         vp.add(minScale);
-        vp.setCellHeight(minScale, "40px");
+        vp.setCellHeight(minScale, "20px");
         vp.setCellVerticalAlignment(minScale, HasVerticalAlignment.ALIGN_BOTTOM);
+        minScale.getElement().getStyle().setMarginBottom(OOR_SIZE, Unit.PX);
+        
+        
 
         mainPanel.add(vp);
 	}
@@ -285,7 +365,21 @@ public class PaletteSelector implements PaletteSelectorIF {
 	private void initHorizontal(){
 	    mainPanel = new VerticalPanel();
 	    
-	    mainPanel.add(paletteImage);
+        HorizontalPanel palettePanel = new HorizontalPanel();
+        palettePanel.add(belowMin);
+        palettePanel.setCellVerticalAlignment(belowMin, HasVerticalAlignment.ALIGN_TOP);
+        palettePanel.setCellHorizontalAlignment(belowMin, HasHorizontalAlignment.ALIGN_RIGHT);
+        palettePanel.add(paletteImage);
+        palettePanel.add(aboveMax);
+        palettePanel.setCellVerticalAlignment(aboveMax, HasVerticalAlignment.ALIGN_TOP);
+        palettePanel.setCellHorizontalAlignment(aboveMax, HasHorizontalAlignment.ALIGN_LEFT);
+        
+        belowMin.getElement().getStyle().setMarginTop(0, Unit.PX);
+        aboveMax.getElement().getStyle().setMarginTop(0, Unit.PX);
+        belowMin.getElement().getStyle().setMarginRight(1, Unit.PX);
+        aboveMax.getElement().getStyle().setMarginLeft(1, Unit.PX);
+        
+        mainPanel.add(palettePanel);
 	    
 	    HorizontalPanel hp = new HorizontalPanel();
 	    hp.setHeight((height+40) + "px");
@@ -303,6 +397,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	    
 	    hp.add(minScale);
 	    hp.setCellHeight(minScale, "30px");
+	    minScale.getElement().getStyle().setMarginLeft(OOR_SIZE, Unit.PX);
 	    hp.setCellHorizontalAlignment(minScale, HasHorizontalAlignment.ALIGN_LEFT);
 	    
 	    hp.add(mlLabel);
@@ -315,6 +410,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 	    
 	    hp.add(maxScale);
 	    hp.setCellHeight(maxScale, "30px");
+	    maxScale.getElement().getStyle().setMarginRight(OOR_SIZE, Unit.PX);
 	    hp.setCellHorizontalAlignment(maxScale, HasHorizontalAlignment.ALIGN_RIGHT);
 	    
 	    mainPanel.add(hp);
@@ -413,15 +509,139 @@ public class PaletteSelector implements PaletteSelectorIF {
 	    return currentPalette;
 	}
 	
+    @Override
+    public String getAboveMaxString() {
+        switch (aboveMaxState) {
+        case EXTEND:
+            return "extend";
+        case TRANSPARENT:
+            return "transparent";
+        case BLACK:
+        default:
+            return "0x000000";
+        }
+    }
+    
+    @Override
+    public void setAboveMax(OutOfRangeState state) {
+        aboveMaxState = state;
+    }
+    
+    @Override
+    public String getBelowMinString() {
+        switch (belowMinState) {
+        case EXTEND:
+            return "extend";
+        case TRANSPARENT:
+            return "transparent";
+        case BLACK:
+        default:
+            return "0x000000";
+        }
+    }
+    
+    @Override
+    public void setBelowMin(OutOfRangeState state) {
+        belowMinState = state;
+    }
+	
 	@Override
     public void selectPalette(String paletteString){
 	    currentPalette = paletteString;
-	    paletteImage.setWidth(width+"px");
-        paletteImage.setHeight(height+"px");
-	    if(vertical)
+        
+	    if(vertical) {
 	        paletteImage.setUrl(getImageUrl(paletteString, height, 1));
-	    else
+	        paletteImage.setPixelSize(width, height- 2* OOR_SIZE);
+	    } else {
 	        paletteImage.setUrl(getImageUrl(paletteString, 1, width));
+	        paletteImage.setPixelSize(width - 2* OOR_SIZE, height);
+	    }
+	    setOutOfRangeImages();
+	}
+	
+	private void setOutOfRangeImages() {
+	    String baseText = "Click to change the colour displayed when values are ";
+	    String aboveText = baseText + "above the maximum.  Currently: ";
+	    String belowText = baseText + "below the mimimum.  Currently: ";
+	    Image aboveImage = new Image();
+	    Image belowImage = new Image();
+	    
+	    switch (aboveMaxState) {
+	    case EXTEND:
+	        aboveImage.setUrl(paletteImage.getUrl());
+	        if (vertical) {
+	            aboveImage.setPixelSize(width, OOR_SIZE * height);
+	        } else {
+	            aboveImage.setPixelSize(OOR_SIZE * width, height);
+	            aboveImage.getElement().getStyle().setMarginLeft(-(width - 1) * OOR_SIZE, Unit.PX);
+	        }
+	        aboveMax.setTitle(aboveText+"Saturate");
+            break;
+	    case TRANSPARENT:
+	        aboveImage = new Image(GWT.getModuleBaseURL()+"img/extend_transparent.png");
+	        if(vertical) {
+	            aboveImage.setPixelSize(width, OOR_SIZE);
+	        } else {
+	            aboveImage.setPixelSize(OOR_SIZE, height);
+	        }
+	        aboveMax.setTitle(aboveText+"Transparent");
+	        break;
+	    case BLACK:
+        default:
+            aboveImage = new Image(GWT.getModuleBaseURL()+"img/extend_black.png");
+            if(vertical) {
+                aboveImage.setPixelSize(width, OOR_SIZE);
+            } else {
+                aboveImage.setPixelSize(OOR_SIZE, height);
+            }
+            aboveMax.setTitle(aboveText+"Black");
+            break;
+        }
+	    
+	    switch (belowMinState) {
+	    case EXTEND:
+	        belowImage.setUrl(paletteImage.getUrl());
+	        if (vertical) {
+	            belowImage.setPixelSize(width, OOR_SIZE * height);
+                belowImage.getElement().getStyle().setMarginTop((1 - height) * OOR_SIZE, Unit.PX);
+	        } else {
+	            belowImage.setPixelSize(OOR_SIZE * width, height);
+	        }
+	        belowMin.setTitle(belowText+"Saturate");
+	        break;
+	    case TRANSPARENT:
+	        belowImage = new Image(GWT.getModuleBaseURL()+"img/extend_transparent.png");
+	        if(vertical) {
+	            belowImage.setPixelSize(width, OOR_SIZE);
+	        } else {
+	            belowImage.setPixelSize(OOR_SIZE, height);
+	        }
+	        belowImage.getElement().getStyle().setMarginTop(0, Unit.PX);
+	        belowMin.setTitle(belowText+"Transparent");
+	        break;
+	    case BLACK:
+	    default:
+	        belowImage = new Image(GWT.getModuleBaseURL()+"img/extend_black.png");
+	        if(vertical) {
+	            belowImage.setPixelSize(width, OOR_SIZE);
+	        } else {
+	            belowImage.setPixelSize(OOR_SIZE, height);
+	        }
+	        belowImage.getElement().getStyle().setMarginTop(0, Unit.PX);
+	        belowMin.setTitle(belowText+"Black");
+	        break;
+	    }
+	    
+	    aboveMax.getUpFace().setImage(aboveImage);
+	    belowMin.getUpFace().setImage(belowImage);
+	    if(vertical) {
+	        aboveMax.setPixelSize(width, OOR_SIZE);
+	        belowMin.setPixelSize(width, OOR_SIZE);
+	    } else {
+	        aboveMax.setPixelSize(OOR_SIZE, height);
+	        belowMin.setPixelSize(OOR_SIZE, height);
+	    }
+	    
 	}
 	
 	@Override
@@ -476,7 +696,7 @@ public class PaletteSelector implements PaletteSelectorIF {
     
     @Override
     public void setNumColorBands(int nBands){
-        int diff = 254*254;
+        int diff = 250*250;
         int minIndex = 0;
         for(int i=0; i< nColorBands.getItemCount(); i++){
             int value = Integer.parseInt(nColorBands.getValue(i));

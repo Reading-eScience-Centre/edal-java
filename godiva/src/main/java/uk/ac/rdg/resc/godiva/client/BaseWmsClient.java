@@ -200,7 +200,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     private void initBaseWms() {
         loadingCount = 0;
-        mapArea = new MapArea(mapWidth, mapHeight, this, proxyUrl);
+        mapArea = getMapArea();
 
         /*
          * Call the subclass initialisation
@@ -217,6 +217,15 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * Now request the menu from the ncWMS server
          */
         requestAndPopulateMenu();
+    }
+    
+    /**
+     * @return A new {@link MapArea}. This will be called once. Subclasses can
+     *         override this method to use specialised subclasses of
+     *         {@link MapArea}
+     */
+    protected MapArea getMapArea() {
+        return new MapArea(mapWidth, mapHeight, this, proxyUrl);
     }
 
     /**
@@ -299,7 +308,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         layerDetailsLoaded = false;
         dateTimeDetailsLoaded = false;
         minMaxDetailsLoaded = false;
-
+        
         final LayerRequestBuilder getLayerDetailsRequest = new LayerRequestBuilder(layerId,
                 proxyUrl + wmsUrl, currentTime);
 
@@ -517,11 +526,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     if (response.getText() != null && !response.getText().isEmpty()) {
                         JSONValue jsonMap = JSONParser.parseLenient(response.getText());
                         JSONObject parentObj = jsonMap.isObject();
-                        JSONNumber minJsonNumber = parentObj.get("min").isNumber();
-                        JSONNumber maxJsonNumber = parentObj.get("max").isNumber();
-
-                        double min = minJsonNumber == null ? -50 : minJsonNumber.doubleValue();
-                        double max = maxJsonNumber == null ? 50 : maxJsonNumber.doubleValue();
+                        JSONNumber minNum = parentObj.get("min").isNumber();
+                        JSONNumber maxNum = parentObj.get("max").isNumber();
+                        
+                        double min = minNum == null ? -50 : minNum.doubleValue();
+                        double max = maxNum == null ? 50 : maxNum.doubleValue();
                         /*
                          * Call the rangeLoaded method. All this does it set the
                          * range on the appropriate widget, but subclasses may
@@ -711,6 +720,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     private void updateMapBase(String layerUpdated) {
         if (layerDetailsLoaded && dateTimeDetailsLoaded && minMaxDetailsLoaded) {
+            mapArea.updatePos();
             updateMap(mapArea, layerUpdated);
         }
     }
@@ -754,7 +764,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     @Override
     public void layerSelected(String wmsUrl, String layerId, boolean autoZoomAndPalette) {
         requestLayerDetails(wmsUrl, layerId, getCurrentTime(), autoZoomAndPalette);
-        updateMapBase(layerId);
     }
 
     @Override
@@ -826,8 +835,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     availableTimesLoaded(layerId, getAvailableTimesteps(), nearestTime);
                     datetimeSelected(layerId, getWidgetCollection(layerId).getTimeSelector()
                             .getSelectedDateTime());
-                    dateTimeDetailsLoaded = true;
-                    updateMapBase(layerId);
                 } catch (Exception e) {
                     invalidJson(e, getTimeRequest.getUrl());
                 } finally {

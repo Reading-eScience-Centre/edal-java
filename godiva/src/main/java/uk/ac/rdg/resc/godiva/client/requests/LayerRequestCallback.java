@@ -61,10 +61,8 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 err.handleError(new IndexOutOfBoundsException(
                         "Wrong number of elements for bounding box: " + bboxArr.size()));
             } else {
-                layerDetails.setExtents(bboxArr.get(0).isString().stringValue() + ","
-                        + bboxArr.get(1).isString().stringValue() + ","
-                        + bboxArr.get(2).isString().stringValue() + ","
-                        + bboxArr.get(3).isString().stringValue());
+                layerDetails.setExtents(bboxArr.get(0) + "," + bboxArr.get(1) + ","
+                        + bboxArr.get(2) + "," + bboxArr.get(3));
             }
         }
 
@@ -75,8 +73,7 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 err.handleError(new IndexOutOfBoundsException(
                         "Wrong number of elements for scale range: " + scaleRangeArr.size()));
             } else {
-                layerDetails.setScaleRange(scaleRangeArr.get(0).isString().stringValue() + ","
-                        + scaleRangeArr.get(1).isString().stringValue());
+                layerDetails.setScaleRange(scaleRangeArr.get(0) + "," + scaleRangeArr.get(1));
             }
         }
 

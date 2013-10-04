@@ -1,13 +1,16 @@
 package uk.ac.rdg.resc.edal.wms;
 
 import java.io.IOException;
+import java.util.List;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
@@ -26,6 +29,8 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  * TODO This Javadoc is a bit crap...
  * 
  * TODO Make WmsCatalogue an interface, and rename this AbstractWmsCatalogue?
+ * TODO Actually, perhaps this should be a combination of several different
+ * interfaces?
  * 
  * @author Guy
  */
@@ -51,14 +56,29 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                 e.printStackTrace();
                 return null;
             }
+        } else {
+            throw new UnsupportedOperationException("Currently only gridded data is supported");
         }
         /*
          * TODO process other types of Dataset here (i.e. InSituDataset which
          * doesn't yet exist)
          */
-
-        return null;
     }
+
+    public VariableMetadata getVariableMetadataFromId(String layerName) throws EdalException {
+        Dataset dataset = getDatasetFromId(layerName);
+        String variableFromId = getVariableFromId(layerName);
+        if (dataset != null && variableFromId != null) {
+            return dataset.getVariableMetadata(variableFromId);
+        } else {
+            throw new EdalException("The layer name " + layerName + " doesn't map to a variable");
+        }
+    }
+
+    /*
+     * TODO These things are global server settings. Perhaps we should have a
+     * getServerSettings() method which holds these properties?
+     */
 
     /**
      * @return The maximum number of layers which can be requested in the same
@@ -77,9 +97,61 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     public abstract int getMaxImageHeight();
 
     /**
+     * @return The name of this server
+     */
+    public abstract String getServerName();
+    
+    /**
+     * @return Short descriptive text about this server
+     */
+    public abstract String getServerAbstract();
+    
+    /**
+     * @return A list of keywords which apply to this server
+     */
+    public abstract List<String> getServerKeywords();
+    
+    /**
+     * @return The main contact name for this server
+     */
+    public abstract String getServerContactName();
+    
+    /**
+     * @return The main contact organisation for this server
+     */
+    public abstract String getServerContactOrganisation();
+    
+    /**
+     * @return The main contact telephone number for this server
+     */
+    public abstract String getServerContactTelephone();
+    
+    /**
+     * @return The main contact email address for this server
+     */
+    public abstract String getServerContactEmail();
+
+    /**
+     * @return All available {@link Dataset}s on this server
+     */
+    public abstract List<Dataset> getAllDatasets();
+    
+    /**
+     * @param datasetId
+     *            The ID of the dataset
+     * @return The server-configured title of this dataset
+     */
+    public abstract String getDatasetTitle(String datasetId);
+
+    /*
+     * End of global server settings
+     */
+
+    /**
      * Returns a {@link Dataset} based on a given layer name
      * 
      * @param layerName
+     *            The full layer name
      * @return The desired dataset
      */
     public abstract Dataset getDatasetFromId(String layerName);
@@ -88,7 +160,28 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * Returns a variable ID based on a given layer name
      * 
      * @param layerName
+     *            The full layer name
      * @return The ID of the variable (within its {@link Dataset})
      */
     public abstract String getVariableFromId(String layerName);
+
+    /**
+     * Returns the layer name based on the dataset and variable ID
+     * 
+     * @param dataset
+     *            The ID of dataset containing the layer
+     * @param variableId
+     *            The ID of the variable within the dataset
+     * @return The WMS layer name of this variable
+     */
+    public abstract String getLayerName(String datasetId, String variableId);
+
+    /**
+     * Returns server-configured metadata for a given layer
+     * 
+     * @param layerName
+     *            The full layer name
+     * @return Default metadata values for the desired layer
+     */
+    public abstract WmsLayerMetadata getLayerMetadata(String layerName);
 }

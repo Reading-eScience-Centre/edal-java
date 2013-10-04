@@ -107,7 +107,7 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     @Override
     public int findIndexOf(Double position) {
         if (isLongitude) {
-            position = GISUtils.getNextEquivalentLongitude(this.getCoordinateExtent().getLow(),
+            position = GISUtils.getNextEquivalentLongitude(getCoordinateExtent().getLow(),
                     position);
         }
         /*

@@ -1,5 +1,8 @@
 package uk.ac.rdg.resc.edal.grid;
 
+import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
@@ -69,6 +72,23 @@ public class HorizontalGridImpl implements HorizontalGrid {
         return new BoundingBoxImpl(xAxis.getCoordinateExtent().getLow(), yAxis
                 .getCoordinateExtent().getLow(), xAxis.getCoordinateExtent().getHigh(), yAxis
                 .getCoordinateExtent().getHigh(), crs);
+    }
+
+    @Override
+    public GeographicBoundingBox getGeographicBoundingBox() {
+        if (GISUtils.crsMatch(crs, DefaultGeographicCRS.WGS84)) {
+            return new DefaultGeographicBoundingBox(xAxis.getCoordinateExtent().getLow(), xAxis
+                    .getCoordinateExtent().getHigh(), yAxis.getCoordinateExtent().getLow(), yAxis
+                    .getCoordinateExtent().getHigh());
+        } else {
+            /*
+             * There is no easy transformation here, so we just return a global
+             * bounding box
+             * 
+             * TODO This should be overridden for specific examples
+             */
+            return new DefaultGeographicBoundingBox(-180, 180, -90, 90);
+        }
     }
 
     @Override

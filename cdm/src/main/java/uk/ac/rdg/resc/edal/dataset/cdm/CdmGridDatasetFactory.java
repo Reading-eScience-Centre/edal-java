@@ -69,7 +69,7 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
 
     @Override
-    public GridDataset createDataset(String location) throws IOException {
+    public GridDataset createDataset(String id, String location) throws IOException {
         NetcdfDataset nc = null;
         try {
             /*
@@ -136,7 +136,7 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
                 }
             }
 
-            GridDataset cdmGridDataset = new CdmGridDataset(location, vars,
+            GridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
                     CdmUtils.getOptimumDataReadingStrategy(nc));
             for (Entry<String, String[]> componentData : xyComponentPairs.entrySet()) {
                 String title = componentData.getKey();
@@ -155,9 +155,9 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
         private final String location;
         private final DataReadingStrategy dataReadingStrategy;
 
-        public CdmGridDataset(String location, Map<String, GridVariableMetadata> vars,
+        public CdmGridDataset(String id, String location, Map<String, GridVariableMetadata> vars,
                 DataReadingStrategy dataReadingStrategy) {
-            super(vars);
+            super(id, vars);
             this.location = location;
             this.dataReadingStrategy = dataReadingStrategy;
         }

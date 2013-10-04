@@ -11,6 +11,10 @@ import com.google.gwt.user.client.ui.IsWidget;
  * 
  */
 public interface PaletteSelectorIF extends IsWidget {
+    public enum OutOfRangeState {
+        BLACK, EXTEND, TRANSPARENT
+    }
+    
     /**
      * Sets the layer ID which this palette selector is currently active on
      * 
@@ -36,6 +40,28 @@ public interface PaletteSelectorIF extends IsWidget {
      *            The name of the palette to select
      */
     public void selectPalette(String paletteString);
+
+    /**
+     * @return The string representation of the colour to display when values
+     *         are above the maximum
+     */
+    public String getAboveMaxString();
+    
+    /**
+     * Sets the behaviour of values above the maximum
+     */
+    public void setAboveMax(OutOfRangeState state);
+    
+    /**
+     * @return The string representation of the colour to display when values
+     *         are below the minimum
+     */
+    public String getBelowMinString();
+    
+    /**
+     * Sets the behaviour of values below the minimum
+     */
+    public void setBelowMin(OutOfRangeState state);
 
     /**
      * Populates the list of available style names
@@ -116,4 +142,5 @@ public interface PaletteSelectorIF extends IsWidget {
      *            The opacity, as a float ranging from 0-1
      */
     public void setOpacity(float opacity);
+
 }

@@ -117,14 +117,14 @@ public final class Extents {
         protected final Comparator<? super T> comp;
 
         protected AbstractExtent(T min, T max, Comparator<? super T> comp) {
-            // Not legal for only one of min and max to be null
+            /* Not legal for only one of min and max to be null */
             if ((min == null && max != null) || (min != null && max == null)) {
                 throw new IllegalArgumentException("min and max must both be null or non-null");
             }
             this.min = min;
             this.max = max;
             this.comp = comp;
-            if (min != null && max != null && this.compare(min, max) > 0) {
+            if (min != null && max != null && compare(min, max) > 0) {
                 throw new IllegalArgumentException(String.format(
                         "min (%s) must not be greater than max (%s)", min, max));
             }
@@ -138,7 +138,7 @@ public final class Extents {
 
         @Override
         public final boolean contains(T val) {
-            return this.compare(this.min, val) <= 0 && this.compare(this.max, val) >= 0;
+            return compare(this.min, val) <= 0 && compare(this.max, val) >= 0;
         }
 
         @Override
@@ -158,6 +158,11 @@ public final class Extents {
         @Override
         public T getLow() {
             return min;
+        }
+        
+        @Override
+        public boolean isEmpty() {
+            return (max == null && min == null);
         }
     }
 
@@ -181,7 +186,7 @@ public final class Extents {
 
         @Override
         protected int compare(T val1, T val2) {
-            return this.comp.compare(val1, val2);
+            return comp.compare(val1, val2);
         }
     }
 }

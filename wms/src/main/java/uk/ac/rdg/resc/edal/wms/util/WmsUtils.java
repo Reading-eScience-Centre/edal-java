@@ -29,35 +29,29 @@
 package uk.ac.rdg.resc.edal.wms.util;
 
 import java.io.File;
-import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.geotoolkit.referencing.CRS;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.joda.time.Chronology;
+import org.joda.time.chrono.ISOChronology;
+import org.joda.time.chrono.JulianChronology;
 
-import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.feature.GridFeature;
-import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
+import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.TimeUtils;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
+import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
+import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
 
 /**
  * <p>
@@ -168,8 +162,8 @@ public class WmsUtils {
     }
 
     /*
-     * Starting here, we have methods which are only found in the wmsUtls.tld
-     * tag library.
+     * Starting here, we have methods which are only used in the Velocity templates
+     * (mostly those defining Capabilities documents)
      * 
      * Don't delete them just because you can't find where they're used in Java
      * code
@@ -197,6 +191,49 @@ public class WmsUtils {
         public String toString() {
             return stylename + "/" + palettename;
         }
+    }
+    
+    /**
+     * <p>
+     * Returns the string to be used to display units for the TIME dimension in
+     * Capabilities documents. For standard (ISO) chronologies, this will return
+     * "ISO8601". For 360-day chronologies this will return "360_day". For other
+     * chronologies this will return "unknown".
+     * </p>
+     */
+    public static String getTimeAxisUnits(Chronology chronology) {
+        if (chronology instanceof ISOChronology)
+            return "ISO8601";
+        // The following are the CF names for these calendars
+        if (chronology instanceof JulianChronology)
+            return "julian";
+        if (chronology instanceof ThreeSixtyDayChronology)
+            return "360_day";
+        if (chronology instanceof NoLeapChronology)
+            return "noleap";
+        if (chronology instanceof AllLeapChronology)
+            return "all_leap";
+        return "unknown";
+    }
+    
+    /**
+     * Gets a list of styles supported by a specific layer.
+     * 
+     * @param metadata
+     * @return
+     */
+    public static List<StyleInfo> getSupportedStyles(VariableMetadata metadata) {
+        /*
+         * TODO Make this work. This will probably involve adding a type
+         * variable to VariableMetadata and selecting based on that.
+         * 
+         * We need a method of supplying custom styles first though, I think
+         */
+        List<StyleInfo> styles = new ArrayList<StyleInfo>();
+        for(String palette : ColourPalette.getPredefinedPalettes()) {
+            styles.add(new StyleInfo("boxfill", palette));
+        }
+        return styles;
     }
 
 //    /**

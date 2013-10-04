@@ -327,7 +327,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 		for(int i=0; i<dates.getItemCount(); i++){
 			if(dates.getValue(i).equals(dateString)){
 				dates.setSelectedIndex(i);
-				dateSelected();
+			    dateSelected();
 				return true;
 			}
 		}
@@ -336,7 +336,14 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 	
 	@Override
     public boolean selectDateTime(String timeString) {
-	    if(selectDate(timeString.substring(0,10))){
+	    boolean dateValid = false;
+	    for(int i=0; i<dates.getItemCount(); i++){
+	        if(dates.getValue(i).equals(timeString.substring(0, 10))){
+	            dates.setSelectedIndex(i);
+	            dateValid = true;
+	        }
+	    }
+	    if(dateValid){
 	        String time = timeString.substring(11);
 	        for(int i=0; i<times.getItemCount(); i++){
 	            if(times.getValue(i).equals(time)){

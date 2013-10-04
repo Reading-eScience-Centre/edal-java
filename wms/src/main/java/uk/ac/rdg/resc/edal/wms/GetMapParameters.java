@@ -26,7 +26,7 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  */
 public class GetMapParameters {
     private String wmsVersion;
-    private ImageFormat imageFormat;
+    private String imageFormatString;
     private boolean animation;
     
     private GlobalPlottingParams globalPlottingParams;
@@ -44,11 +44,7 @@ public class GetMapParameters {
         if (!WmsUtils.SUPPORTED_VERSIONS.contains(this.wmsVersion)) {
             throw new EdalException("VERSION " + this.wmsVersion + " not supported");
         }
-        try {
-            imageFormat = ImageFormat.get(params.getMandatoryString("format"));
-        } catch (InvalidFormatException e) {
-            throw new EdalException("Unsupported image format: "+params.getMandatoryString("format"));
-        }
+        imageFormatString = params.getString("format");
         animation = params.getBoolean("animation", false);
         globalPlottingParams = parsePlottingParams(params);
         styleParameters = new GetMapStyleParams(params);
@@ -70,8 +66,16 @@ public class GetMapParameters {
         return animation;
     }
     
-    public ImageFormat getImageFormat() {
-        return imageFormat;
+    public ImageFormat getImageFormat() throws EdalException {
+        if(imageFormatString == null) {
+            throw new EdalException("Parameter FORMAT was not supplied");
+        } else {
+            try {
+                return ImageFormat.get(imageFormatString);
+            } catch (InvalidFormatException e) {
+                throw new EdalException("Unsupported image format: "+imageFormatString);
+            }
+        }
     }
     
     private GlobalPlottingParams parsePlottingParams(RequestParams params) throws EdalException {

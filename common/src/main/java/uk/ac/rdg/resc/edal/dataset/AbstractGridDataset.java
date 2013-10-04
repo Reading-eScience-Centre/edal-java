@@ -32,7 +32,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -53,8 +54,10 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
  * A partial implementation of a {@link GridDataset}, using a
@@ -65,16 +68,23 @@ import uk.ac.rdg.resc.edal.util.Array2D;
  */
 public abstract class AbstractGridDataset implements GridDataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
+    private String id;
     private Map<String, VariableMetadata> vars;
     private List<VariablePlugin> plugins;
 
-    public AbstractGridDataset(Map<String, GridVariableMetadata> vars) {
-        this.vars = new HashMap<String, VariableMetadata>();
+    public AbstractGridDataset(String id, Map<String, GridVariableMetadata> vars) {
+        this.id = id;
+        this.vars = new LinkedHashMap<String, VariableMetadata>();
         this.plugins = new ArrayList<VariablePlugin>();
         for (Entry<String, GridVariableMetadata> entry : vars.entrySet()) {
             this.vars.put(entry.getKey(), entry.getValue());
             entry.getValue().setDataset(this);
         }
+    }
+
+    @Override
+    public String getId() {
+        return id;
     }
 
     @Override
@@ -90,7 +100,7 @@ public abstract class AbstractGridDataset implements GridDataset {
 
     @Override
     public Set<VariableMetadata> getTopLevelVariables() {
-        Set<VariableMetadata> ret = new HashSet<VariableMetadata>();
+        Set<VariableMetadata> ret = new LinkedHashSet<VariableMetadata>();
         for (VariableMetadata metadata : vars.values()) {
             if (metadata.getParent() == null) {
                 ret.add(metadata);
@@ -154,10 +164,7 @@ public abstract class AbstractGridDataset implements GridDataset {
             varIds = getVariableIds();
         }
 
-        /*
-         * We use a label here so that we can use 'continue' from a nested loop
-         */
-        processAllVarsIds: for (String varId : varIds) {
+        for (String varId : varIds) {
             id.append(varId);
             description.append(varId + "\n");
 
@@ -165,22 +172,22 @@ public abstract class AbstractGridDataset implements GridDataset {
                 /*
                  * Don't read map data for unplottable variables
                  */
-                continue processAllVarsIds;
+                continue;
             }
-            for (VariablePlugin plugin : plugins) {
+
+            /*
+             * We defer plugin-generated variables until after all other
+             * required variables have been read. This way, if any of the
+             * plugin-generated variables require data which we will read
+             * anyway, we don't have to read it twice.
+             */
+            VariablePlugin derivingPlugin = isDerivedVariable(varId);
+            if (derivingPlugin != null) {
                 /*
-                 * We defer plugin-generated variables until after all other
-                 * required variables have been read. This way, if any of the
-                 * plugin-generated variables require data which we will read
-                 * anyway, we don't have to read it twice.
+                 * Save the variable ID and continue on the outer loop
                  */
-                if (Arrays.asList(plugin.providesVariables()).contains(varId)) {
-                    /*
-                     * Save the variable ID and continue on the outer loop
-                     */
-                    varsToGenerate.put(varId, plugin);
-                    continue processAllVarsIds;
-                }
+                varsToGenerate.put(varId, derivingPlugin);
+                continue;
             }
 
             /*
@@ -249,6 +256,19 @@ public abstract class AbstractGridDataset implements GridDataset {
         return mapFeature;
     }
 
+    /*
+     * Determines whether a variable is derived from a plugin and returns the
+     * plugin, or null if it is a non-derived variable
+     */
+    private VariablePlugin isDerivedVariable(String varId) {
+        for (VariablePlugin plugin : plugins) {
+            if (Arrays.asList(plugin.providesVariables()).contains(varId)) {
+                return plugin;
+            }
+        }
+        return null;
+    }
+
     private Array2D readData(String varId, HorizontalGrid targetGrid, Double zPos, DateTime time,
             GridDataSource dataSource) throws IOException {
         /*
@@ -256,7 +276,6 @@ public abstract class AbstractGridDataset implements GridDataset {
          * non-derived variables - i.e. those whose metadata was provided in the
          * constructor (which constrains metadata to be GridVariableMetadata
          */
-
         GridVariableMetadata metadata = (GridVariableMetadata) getVariableMetadata(varId);
 
         /*
@@ -276,7 +295,7 @@ public abstract class AbstractGridDataset implements GridDataset {
          */
         int tIndex = 0;
         if (tAxis != null) {
-            tAxis.findIndexOf(time);
+            tIndex = tAxis.findIndexOf(time);
         }
         if (tIndex < 0) {
             throw new IllegalArgumentException(time
@@ -284,7 +303,7 @@ public abstract class AbstractGridDataset implements GridDataset {
         }
         int zIndex = 0;
         if (zAxis != null) {
-            zAxis.findIndexOf(zPos);
+            zIndex = zAxis.findIndexOf(zPos);
         }
         if (zIndex < 0) {
             throw new IllegalArgumentException(zPos
@@ -302,6 +321,61 @@ public abstract class AbstractGridDataset implements GridDataset {
         Array2D data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
                 domainMapper);
         return data;
+    }
+
+    @Override
+    public Number readSinglePoint(String variableId, HorizontalPosition position, Double zVal,
+            DateTime time) throws IOException {
+        VariablePlugin plugin = isDerivedVariable(variableId);
+        if (plugin != null) {
+            /*
+             * We have a derived variable - read all of the required variables
+             * first.
+             */
+            String[] baseVariables = plugin.usesVariables();
+            Number[] baseValues = new Number[baseVariables.length];
+
+            for (int i = 0; i < baseVariables.length; i++) {
+                /*
+                 * Read all of the required base variables. By recursing this
+                 * method, we safely cover the cases where derived variables are
+                 * derived from other derived variables
+                 */
+                baseValues[i] = readSinglePoint(baseVariables[i], position, zVal, time);
+            }
+
+            return plugin.getValue(variableId, baseValues);
+        } else {
+            /*
+             * We have a non-derived variable
+             */
+            GridDataSource gridDataSource = openGridDataSource();
+            /*
+             * This cast is OK, since this is only called for non-derived
+             * variables
+             */
+            GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(variableId);
+            int[] xy = variableMetadata.getHorizontalDomain().findIndexOf(position);
+
+            int z = 0;
+            VerticalAxis verticalDomain = variableMetadata.getVerticalDomain();
+            if (verticalDomain != null) {
+                z = verticalDomain.findIndexOf(zVal);
+            }
+
+            int t = 0;
+            TimeAxis temporalDomain = variableMetadata.getTemporalDomain();
+            if (temporalDomain != null) {
+                t = temporalDomain.findIndexOf(time);
+            }
+            Array4D readData = gridDataSource.read(variableId, t, t, z, z, xy[1], xy[1], xy[0],
+                    xy[0]);
+            /*
+             * TODO Perhaps we should cache this in case we need to do multiple reads (e.g. for derived variables)
+             */
+            gridDataSource.close();
+            return readData.get(0, 0, 0, 0);
+        }
     }
 
     @Override

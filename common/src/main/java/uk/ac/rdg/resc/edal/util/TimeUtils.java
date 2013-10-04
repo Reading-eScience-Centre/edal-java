@@ -434,4 +434,20 @@ public class TimeUtils {
         }
         return Extents.findMinMax(times);
     }
+
+    /**
+     * @return true if the two given DateTimes fall on the same day.
+     */
+    public static boolean onSameDay(DateTime dt1, DateTime dt2) {
+        /*
+         * We must make sure that the DateTimes are both in UTC or the field
+         * comparisons will not do what we expect
+         */
+        dt1 = dt1.withZone(DateTimeZone.UTC);
+        dt2 = dt2.withZone(DateTimeZone.UTC);
+        boolean onSameDay = dt1.getYear() == dt2.getYear()
+                && dt1.getMonthOfYear() == dt2.getMonthOfYear()
+                && dt1.getDayOfMonth() == dt2.getDayOfMonth();
+        return onSameDay;
+    }
 }

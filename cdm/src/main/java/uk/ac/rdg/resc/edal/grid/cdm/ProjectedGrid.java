@@ -27,7 +27,9 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.grid.cdm;
 
+import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import ucar.nc2.dataset.CoordinateAxis1D;
@@ -53,6 +55,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  *       translation between CDM Projection objects and GeoAPI
  *       CoordinateReferenceSystem objects.
  * @author Jon Blower
+ * @author Guy Griffiths
  */
 public class ProjectedGrid implements HorizontalGrid {
     private final ProjectionImpl proj;
@@ -115,6 +118,11 @@ public class ProjectedGrid implements HorizontalGrid {
     @Override
     public BoundingBox getBoundingBox() {
         return bbox;
+    }
+    
+    @Override
+    public GeographicBoundingBox getGeographicBoundingBox() {
+        return new DefaultGeographicBoundingBox(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(), bbox.getMaxY());
     }
 
     @Override

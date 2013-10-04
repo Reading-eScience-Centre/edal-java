@@ -28,7 +28,7 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
@@ -118,7 +118,7 @@ public class VariableMetadata {
         this.zDomain = zDomain;
         this.tDomain = tDomain;
         parent = null;
-        children = new HashSet<VariableMetadata>();
+        children = new LinkedHashSet<VariableMetadata>();
         this.plottable = plottable;
     }
 

@@ -30,20 +30,28 @@ package uk.ac.rdg.resc.edal.util;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import org.geotoolkit.factory.Hints;
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.geotoolkit.referencing.factory.epsg.EpsgInstaller;
 import org.h2.jdbcx.JdbcDataSource;
+import org.joda.time.DateTime;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.util.FactoryException;
 
+import uk.ac.rdg.resc.edal.domain.TemporalDomain;
+import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
@@ -67,9 +75,10 @@ public final class GISUtils {
     }
 
     public static double getNextEquivalentLongitude(double reference, double target) {
-        // Find the clockwise distance from the first value on this axis
-        // to the target value. This will be a positive number from 0 to
-        // 360 degrees
+        /*
+         * Find the clockwise distance from the first value on this axis to the
+         * target value. This will be a positive number from 0 to 360 degrees
+         */
         double clockDiff = constrainLongitude360(target - reference);
         return reference + clockDiff;
     }
@@ -86,6 +95,35 @@ public final class GISUtils {
     public static double constrainLongitude360(double value) {
         double val = value % 360.0;
         return val < 0.0 ? val + 360.0 : val;
+    }
+
+    /**
+     * Constrains a lat-lon bounding box
+     * 
+     * @param bbox
+     * @return
+     */
+    public static BoundingBox constrainBoundingBox(BoundingBox bbox) {
+        if (isWgs84LonLat(bbox.getCoordinateReferenceSystem())) {
+            if (bbox.getMaxX() > 180.0 && bbox.getMinX() < 180.0) {
+                if (bbox.getMinX() < 180.0) {
+                    /*
+                     * Bounding box crosses date line
+                     */
+                    return new BoundingBoxImpl(-180, bbox.getMinY(), 180.0, bbox.getMaxY(),
+                            bbox.getCoordinateReferenceSystem());
+                } else {
+                    /*
+                     * Bounding box doesn't cross date line, but is all above
+                     * 360
+                     */
+                    return new BoundingBoxImpl(constrainLongitude180(bbox.getMinX()),
+                            bbox.getMinY(), constrainLongitude180(bbox.getMaxX()), bbox.getMaxX(),
+                            bbox.getCoordinateReferenceSystem());
+                }
+            }
+        }
+        return bbox;
     }
 
     /**
@@ -201,6 +239,120 @@ public final class GISUtils {
             throw new EdalException("Invalid bounding box format");
         }
         return new BoundingBoxImpl(minx, miny, maxx, maxy, getCrs(crs));
+    }
+
+    /**
+     * Tests whether a {@link TemporalDomain} is discrete. Used when generating
+     * Capabilities document in WMS
+     */
+    public static boolean isTemporalDomainTimeAxis(TemporalDomain domain) {
+        return domain instanceof TimeAxis;
+    }
+
+    /**
+     * Tests whether a {@link VerticalDomain} is discrete. Used when generating
+     * Capabilities document in WMS
+     */
+    public static boolean isVerticalDomainVerticalAxis(VerticalDomain domain) {
+        return domain instanceof VerticalAxis;
+    }
+
+    /**
+     * Returns the closest time to the current time from a list of values
+     * 
+     * @param tValues
+     *            The list of times to check
+     * @return The closest from the list to the current time.
+     */
+    public static DateTime getClosestToCurrentTime(List<DateTime> tValues) {
+        return getClosestTimeTo(new DateTime(), tValues);
+    }
+
+    /**
+     * Returns the closest time within a time axis to the given time.
+     * 
+     * @param targetTime
+     *            The target time
+     * @param tValues
+     *            The time values to check
+     * @return Either the closest time within that axis, or the closest to the
+     *         current time if the target is <code>null</code>, or
+     *         <code>null</code> if the list of times is <code>null</code>
+     */
+    public static DateTime getClosestTimeTo(DateTime targetTime, List<DateTime> tValues) {
+        if (tValues == null) {
+            return null;
+        }
+        if (targetTime == null) {
+            return getClosestToCurrentTime(tValues);
+        }
+        int index = TimeUtils.findTimeIndex(tValues, targetTime);
+        if (index < 0) {
+            /*
+             * We can calculate the insertion point
+             */
+            int insertionPoint = -(index + 1);
+            /*
+             * We set the index to the most recent past time
+             */
+            if (insertionPoint == tValues.size()) {
+                index = insertionPoint - 1;
+            } else if (insertionPoint > 0) {
+                /*
+                 * We need to find which of the two possibilities is the closest
+                 * time
+                 */
+                long t1 = tValues.get(insertionPoint - 1).getMillis();
+                long t2 = tValues.get(insertionPoint).getMillis();
+
+                if ((t2 - targetTime.getMillis()) <= (targetTime.getMillis() - t1)) {
+                    index = insertionPoint;
+                } else {
+                    index = insertionPoint - 1;
+                }
+            } else {
+                /*
+                 * All DateTimes on the axis are in the future, so we take the
+                 * earliest
+                 */
+                index = 0;
+            }
+        }
+
+        return tValues.get(index);
+    }
+    
+    /**
+     * Returns the closest elevation to the surface of the given {@link VerticalAxis}
+     * 
+     * @param vAxis
+     *            The {@link VerticalAxis} to test
+     * @return The uppermost elevation, or null if no {@link VerticalAxis} is provided
+     */
+    public static Double getClosestElevationToSurface(VerticalAxis vAxis) {
+        if (vAxis == null) {
+            return null;
+        }
+
+        if (vAxis.getVerticalCrs().isPressure()) {
+            /*
+             * The vertical axis is pressure. The default (closest to the
+             * surface) is therefore the maximum value.
+             */
+            return Collections.max(vAxis.getCoordinateValues());
+        } else {
+            /*
+             * The vertical axis represents linear height, so we find which
+             * value is closest to zero (the surface), i.e. the smallest
+             * absolute value
+             */
+            return Collections.min(vAxis.getCoordinateValues(), new Comparator<Double>() {
+                @Override
+                public int compare(Double d1, Double d2) {
+                    return Double.compare(Math.abs(d1), Math.abs(d2));
+                }
+            });
+        }
     }
 
     static {

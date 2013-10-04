@@ -1,6 +1,7 @@
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -28,68 +29,68 @@ public class ColourPalette {
     public static final String DEFAULT_PALETTE_NAME = "rainbow";
 
     public static final int MAX_NUM_COLOURS = 254;
-    
+
     /**
      * This is the palette that will be used if no specific palette has been
      * chosen. This palette is taken from the SGT graphics toolkit.
      * 
      * @see DEFAULT_PALETTE_NAME
      */
-    private static final Color[] DEFAULT_COLOURS = new Color[]{
-        new Color(0, 0, 143), new Color(0, 0, 159), new Color(0, 0, 175),
-        new Color(0, 0, 191), new Color(0, 0, 207), new Color(0, 0, 223),
-        new Color(0, 0, 239), new Color(0, 0, 255), new Color(0, 11, 255),
-        new Color(0, 27, 255), new Color(0, 43, 255), new Color(0, 59, 255),
-        new Color(0, 75, 255), new Color(0, 91, 255), new Color(0, 107, 255),
-        new Color(0, 123, 255), new Color(0, 139, 255), new Color(0, 155, 255),
-        new Color(0, 171, 255), new Color(0, 187, 255), new Color(0, 203, 255),
-        new Color(0, 219, 255), new Color(0, 235, 255), new Color(0, 251, 255),
-        new Color(7, 255, 247), new Color(23, 255, 231), new Color(39, 255, 215),
-        new Color(55, 255, 199), new Color(71, 255, 183), new Color(87, 255, 167),
-        new Color(103, 255, 151), new Color(119, 255, 135), new Color(135, 255, 119),
-        new Color(151, 255, 103), new Color(167, 255, 87), new Color(183, 255, 71),
-        new Color(199, 255, 55), new Color(215, 255, 39), new Color(231, 255, 23),
-        new Color(247, 255, 7), new Color(255, 247, 0), new Color(255, 231, 0),
-        new Color(255, 215, 0), new Color(255, 199, 0), new Color(255, 183, 0),
-        new Color(255, 167, 0), new Color(255, 151, 0), new Color(255, 135, 0),
-        new Color(255, 119, 0), new Color(255, 103, 0), new Color(255, 87, 0),
-        new Color(255, 71, 0), new Color(255, 55, 0), new Color(255, 39, 0),
-        new Color(255, 23, 0), new Color(255, 7, 0), new Color(246, 0, 0),
-        new Color(228, 0, 0), new Color(211, 0, 0), new Color(193, 0, 0),
-        new Color(175, 0, 0), new Color(158, 0, 0), new Color(140, 0, 0) };
+    private static final Color[] DEFAULT_COLOURS = new Color[] { new Color(0, 0, 143),
+            new Color(0, 0, 159), new Color(0, 0, 175), new Color(0, 0, 191), new Color(0, 0, 207),
+            new Color(0, 0, 223), new Color(0, 0, 239), new Color(0, 0, 255),
+            new Color(0, 11, 255), new Color(0, 27, 255), new Color(0, 43, 255),
+            new Color(0, 59, 255), new Color(0, 75, 255), new Color(0, 91, 255),
+            new Color(0, 107, 255), new Color(0, 123, 255), new Color(0, 139, 255),
+            new Color(0, 155, 255), new Color(0, 171, 255), new Color(0, 187, 255),
+            new Color(0, 203, 255), new Color(0, 219, 255), new Color(0, 235, 255),
+            new Color(0, 251, 255), new Color(7, 255, 247), new Color(23, 255, 231),
+            new Color(39, 255, 215), new Color(55, 255, 199), new Color(71, 255, 183),
+            new Color(87, 255, 167), new Color(103, 255, 151), new Color(119, 255, 135),
+            new Color(135, 255, 119), new Color(151, 255, 103), new Color(167, 255, 87),
+            new Color(183, 255, 71), new Color(199, 255, 55), new Color(215, 255, 39),
+            new Color(231, 255, 23), new Color(247, 255, 7), new Color(255, 247, 0),
+            new Color(255, 231, 0), new Color(255, 215, 0), new Color(255, 199, 0),
+            new Color(255, 183, 0), new Color(255, 167, 0), new Color(255, 151, 0),
+            new Color(255, 135, 0), new Color(255, 119, 0), new Color(255, 103, 0),
+            new Color(255, 87, 0), new Color(255, 71, 0), new Color(255, 55, 0),
+            new Color(255, 39, 0), new Color(255, 23, 0), new Color(255, 7, 0),
+            new Color(246, 0, 0), new Color(228, 0, 0), new Color(211, 0, 0), new Color(193, 0, 0),
+            new Color(175, 0, 0), new Color(158, 0, 0), new Color(140, 0, 0) };
 
     private static Map<String, Color[]> loadedColourSets = new HashMap<String, Color[]>();
     private static ColorAdapter cParser;
-    
+
     static {
         /*
          * Make sure these are initialised here (more reliable than relying on
          * them being initialised in file order in case of future refactoring)
          */
         loadedColourSets = new HashMap<String, Color[]>();
-        cParser = new ColorAdapter();
-        
+        cParser = ColorAdapter.getInstance();
+
         loadedColourSets.put(DEFAULT_PALETTE_NAME.toLowerCase(), DEFAULT_COLOURS);
         loadedColourSets.put("default", DEFAULT_COLOURS);
-        
+
         try {
             String[] paletteFileNames = getResourceListing(ColourPalette.class, "palettes/");
             for (String paletteFileName : paletteFileNames) {
-                if(paletteFileName.endsWith(".pal")){
+                if (paletteFileName.endsWith(".pal")) {
                     try {
                         String paletteName = paletteFileName.substring(0,
                                 paletteFileName.lastIndexOf("."));
                         StringBuilder paletteString = new StringBuilder();
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(ColourPalette.class.getResource(
-                                        "/palettes/" + paletteFileName).openStream()));
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                                ColourPalette.class.getResource("/palettes/" + paletteFileName)
+                                        .openStream()));
                         String line = null;
-                        while((line = reader.readLine()) != null) {
-                            if(!line.startsWith("%")) {
+                        while ((line = reader.readLine()) != null) {
+                            if (!line.startsWith("%")) {
                                 paletteString.append(line);
                                 paletteString.append(",");
                             }
                         }
-                        paletteString.deleteCharAt(paletteString.length()-1);
+                        paletteString.deleteCharAt(paletteString.length() - 1);
                         Color[] colourSet = colourSetFromString(paletteString.toString());
                         loadedColourSets.put(paletteName, colourSet);
                     } catch (IOException e) {
@@ -101,11 +102,12 @@ public class ColourPalette {
             }
         } catch (Exception e) {
             /*
-             * This catches anything thrown whilst trying to read the palettes directory
+             * This catches anything thrown whilst trying to read the palettes
+             * directory
              */
         }
     }
-    
+
     private final Color[] colours;
 
     private ColourPalette(Color[] palette, int numColorBands) {
@@ -125,49 +127,56 @@ public class ColourPalette {
      */
     private static Color[] generateColourSet(Color[] palette, int numColorBands) {
         if (numColorBands < 1 || numColorBands > MAX_NUM_COLOURS) {
-            throw new IllegalArgumentException("numColorBands must be greater than 1 and less than "+MAX_NUM_COLOURS);
+            throw new IllegalArgumentException(
+                    "numColorBands must be greater than 1 and less than " + MAX_NUM_COLOURS);
         }
         Color[] targetPalette;
         if (numColorBands == palette.length) {
-            // We can just use the source palette directly
+            /* We can just use the source palette directly */
             targetPalette = palette;
         } else {
-            // We need to create a new palette
+            /* We need to create a new palette */
             targetPalette = new Color[numColorBands];
-            // We fix the endpoints of the target palette to the endpoints of
-            // the source palette
+            /*
+             * We fix the endpoints of the target palette to the endpoints of
+             * the source palette
+             */
             targetPalette[0] = palette[0];
             targetPalette[targetPalette.length - 1] = palette[palette.length - 1];
 
             if (targetPalette.length < palette.length) {
-                // We only need some of the colours from the source palette
-                // We search through the target palette and find the nearest
-                // colours
-                // in the source palette
+                /*
+                 * We only need some of the colours from the source palette We
+                 * search through the target palette and find the nearest
+                 * colours in the source palette
+                 */
                 for (int i = 1; i < targetPalette.length - 1; i++) {
-                    // Find the nearest index in the source palette
-                    // (Multiplying by 1.0f converts integers to floats)
+                    /*
+                     * Find the nearest index in the source palette (Multiplying
+                     * by 1.0f converts integers to floats)
+                     */
                     int nearestIndex = Math.round(palette.length * i * 1.0f
                             / (targetPalette.length - 1));
                     targetPalette[i] = palette[nearestIndex];
                 }
             } else {
-                // Transfer all the colours from the source palette into their
-                // corresponding
-                // positions in the target palette and use interpolation to find
-                // the remaining
-                // values
+                /*
+                 * Transfer all the colours from the source palette into their
+                 * corresponding positions in the target palette and use
+                 * interpolation to find the remaining values
+                 */
                 int lastIndex = 0;
                 for (int i = 1; i < palette.length - 1; i++) {
-                    // Find the nearest index in the target palette
+                    /* Find the nearest index in the target palette */
                     int nearestIndex = Math.round(targetPalette.length * i * 1.0f
                             / (palette.length - 1));
                     targetPalette[nearestIndex] = palette[i];
-                    // Now interpolate all the values we missed
+                    /* Now interpolate all the values we missed */
                     for (int j = lastIndex + 1; j < nearestIndex; j++) {
-                        // Work out how much we need from the previous colour
-                        // and how much
-                        // from the new colour
+                        /*
+                         * Work out how much we need from the previous colour
+                         * and how much from the new colour
+                         */
                         float fracFromThis = (1.0f * j - lastIndex) / (nearestIndex - lastIndex);
                         targetPalette[j] = interpolate(targetPalette[nearestIndex],
                                 targetPalette[lastIndex], fracFromThis);
@@ -175,7 +184,7 @@ public class ColourPalette {
                     }
                     lastIndex = nearestIndex;
                 }
-                // Now for the last bit of interpolation
+                /* Now for the last bit of interpolation */
                 for (int j = lastIndex + 1; j < targetPalette.length - 1; j++) {
                     float fracFromThis = (1.0f * j - lastIndex)
                             / (targetPalette.length - lastIndex);
@@ -206,35 +215,42 @@ public class ColourPalette {
                 Math.round(fracFromC1 * c1.getAlpha() + fracFromC2 * c2.getAlpha()));
     }
 
-	public Color getColor(float value) {
+    public Color getColor(float value) {
         if (value < 0.0f || value > 1.0f) {
             throw new IllegalArgumentException("value must be between 0 and 1");
         }
         // find the nearest colour in the palette
         int i = (int) (value * this.colours.length);
-        // correct in the special case that value = 1 to keep within bounds of array
-        if (i == this.colours.length) i--;
-		return this.colours[i];
-	}
+        // correct in the special case that value = 1 to keep within bounds of
+        // array
+        if (i == this.colours.length)
+            i--;
+        return this.colours[i];
+    }
 
     public static ColourPalette fromString(String paletteString, int nColourBands) {
-        if(loadedColourSets.containsKey(paletteString.toLowerCase())) {
+        if (loadedColourSets.containsKey(paletteString.toLowerCase())) {
             return new ColourPalette(loadedColourSets.get(paletteString), nColourBands);
         } else {
             try {
                 Color[] colours = colourSetFromString(paletteString);
                 return new ColourPalette(colours, nColourBands);
             } catch (Exception e) {
-                throw new IllegalArgumentException(paletteString+" is not an exisiting palette name or a palette definition");
+                throw new IllegalArgumentException(paletteString
+                        + " is not an existing palette name or a palette definition");
             }
         }
+    }
+    
+    public static Set<String> getPredefinedPalettes() {
+        return loadedColourSets.keySet();
     }
 
     private static Color[] colourSetFromString(String paletteString) {
         String[] colourStrings = paletteString.split("[,\n]");
         Color[] colours = new Color[colourStrings.length];
-        for(int i = 0; i < colourStrings.length; i++) {
-            try{
+        for (int i = 0; i < colourStrings.length; i++) {
+            try {
                 colours[i] = cParser.unmarshal(colourStrings[i]);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -264,44 +280,69 @@ public class ColourPalette {
      * @throws URISyntaxException
      * @throws IOException
      */
-    private static String[] getResourceListing(@SuppressWarnings("rawtypes") Class clazz, String path) throws URISyntaxException, IOException {
+    @SuppressWarnings("rawtypes")
+    private static String[] getResourceListing(Class clazz, String path) throws URISyntaxException,
+            IOException {
         URL dirURL = clazz.getClassLoader().getResource(path);
         if (dirURL != null && dirURL.getProtocol().equals("file")) {
-          /* A file path: easy enough */
-          return new File(dirURL.toURI()).list();
-        } 
+            /* A file path: easy enough */
+            return new File(dirURL.toURI()).list();
+        }
 
         if (dirURL == null) {
-          /* 
-           * In case of a jar file, we can't actually find a directory.
-           * Have to assume the same jar as clazz.
-           */
-          String me = clazz.getName().replace(".", "/")+".class";
-          dirURL = clazz.getClassLoader().getResource(me);
+            /*
+             * In case of a jar file, we can't actually find a directory. Have
+             * to assume the same jar as clazz.
+             */
+            String me = clazz.getName().replace(".", "/") + ".class";
+            dirURL = clazz.getClassLoader().getResource(me);
         }
-        
+
         if (dirURL.getProtocol().equals("jar")) {
-          /* A JAR path */
-          String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!")); //strip out only the JAR file
-          JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
-          Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
-          Set<String> result = new HashSet<String>(); //avoid duplicates in case it is a subdirectory
-          while(entries.hasMoreElements()) {
-            String name = entries.nextElement().getName();
-            if (name.startsWith(path)) { //filter according to the path
-              String entry = name.substring(path.length());
-              int checkSubdir = entry.indexOf("/");
-              if (checkSubdir >= 0) {
-                // if it is a subdirectory, we just return the directory name
-                entry = entry.substring(0, checkSubdir);
-              }
-              result.add(entry);
+            /* A JAR path */
+            /* strip out only the JAR file */
+            String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!"));
+            JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
+            /* gives ALL entries in jar */
+            Enumeration<JarEntry> entries = jar.entries();
+            Set<String> result = new HashSet<String>();
+            /* avoid duplicates in case it is a subdirectory */
+            while (entries.hasMoreElements()) {
+                String name = entries.nextElement().getName();
+                /* filter according to the path */
+                if (name.startsWith(path)) {
+                    String entry = name.substring(path.length());
+                    int checkSubdir = entry.indexOf("/");
+                    if (checkSubdir >= 0) {
+                        /*
+                         * if it is a subdirectory, we just return the directory
+                         * name
+                         */
+                        entry = entry.substring(0, checkSubdir);
+                    }
+                    result.add(entry);
+                }
             }
-          }
-          jar.close();
-          return result.toArray(new String[result.size()]);
-        } 
-          
-        throw new UnsupportedOperationException("Cannot list files for URL "+dirURL);
+            jar.close();
+            return result.toArray(new String[result.size()]);
+        }
+
+        throw new UnsupportedOperationException("Cannot list files for URL " + dirURL);
+    }
+
+    public BufferedImage createColourBar(int width, int height, boolean vertical) {
+        BufferedImage ret = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                float frac;
+                if (vertical) {
+                    frac = ((float) j) / height;
+                } else {
+                    frac = ((float) i) / width;
+                }
+                ret.setRGB(i, height - j - 1, getColor(frac).getRGB());
+            }
+        }
+        return ret;
     }
 }
