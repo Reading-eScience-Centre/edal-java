@@ -80,7 +80,7 @@
                 <Title>$catalogue.getDatasetTitle($dataset.id)</Title>
 #foreach($variable in $dataset.topLevelVariables)
 ## Recursively(?) insert layers here.  Depends how we want to implement layer structure in Capabilities doc...
-#layer($catalogue.getLayerMetadata($dataset) $variable $verbose true)
+#layer($dataset $variable $verbose $variable.children)
 #end                
             </Layer>
 #end        
@@ -92,11 +92,12 @@
 ## End of actual capabilities document.  Layer macro follows.
 ##
 ##
-#macro(layer $dataset $variableMetadata $verboseTimes $parent)
+#macro(layer $dataset $variableMetadata $verboseTimes $children)
+#set($parent = $children.size() > 0)
 #set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
 #set($layerMetadata = $catalogue.getLayerMetadata($layerName))
     <Layer #if($layerMetadata.queryable)queryable="1"#end>
-#if($variableMetadata.plottable && $layerName)
+#if($variableMetadata.plottable && $layerName && !$parent)
         <Name>$layerName</Name>
 #end
 #if($layerMetadata.title)
@@ -105,6 +106,14 @@
 #if($layerMetadata.description)
         <Abstract>$layerMetadata.description</Abstract>
 #end
+#if($parent)
+#if($variableMetadata.plottable)
+#layer($dataset $variableMetadata $verbose false)
+#end
+#foreach($child in $variableMetadata.children)
+#layer($dataset $child $verbose $child.children)
+#end
+#else
 #if($variableMetadata.horizontalDomain.geographicBoundingBox)
 #set($bbox = $variableMetadata.horizontalDomain.geographicBoundingBox)
         <EX_GeographicBoundingBox>
@@ -165,8 +174,9 @@
                 <Format>image/png</Format>
                 <OnlineResource xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$style.palettename&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>
             </LegendURL>
-#end                
+#end
         </Style>
-#end        
+#end
+#end
 </Layer>
 #end
