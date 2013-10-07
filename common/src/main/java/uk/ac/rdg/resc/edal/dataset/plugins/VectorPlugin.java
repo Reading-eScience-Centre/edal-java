@@ -37,7 +37,7 @@ public class VectorPlugin extends VariablePlugin {
         VariableMetadata containerMetadata = new VariableMetadata(getFullId("-group"),
                 new Parameter(getFullId("-group"), title, "Vector fields for " + title, null),
                 xMetadata.getHorizontalDomain(), xMetadata.getVerticalDomain(),
-                xMetadata.getTemporalDomain(), false);
+                xMetadata.getTemporalDomain(), true);
 
         xMetadata.setParent(containerMetadata);
         yMetadata.setParent(containerMetadata);
