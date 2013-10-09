@@ -68,4 +68,38 @@ public class VerticalCrsImpl implements VerticalCrs {
     public boolean isPositiveUpwards() {
         return positiveUpwards;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (dimensionless ? 1231 : 1237);
+        result = prime * result + (positiveUpwards ? 1231 : 1237);
+        result = prime * result + (pressure ? 1231 : 1237);
+        result = prime * result + ((units == null) ? 0 : units.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        VerticalCrsImpl other = (VerticalCrsImpl) obj;
+        if (dimensionless != other.dimensionless)
+            return false;
+        if (positiveUpwards != other.positiveUpwards)
+            return false;
+        if (pressure != other.pressure)
+            return false;
+        if (units == null) {
+            if (other.units != null)
+                return false;
+        } else if (!units.equals(other.units))
+            return false;
+        return true;
+    }
 }

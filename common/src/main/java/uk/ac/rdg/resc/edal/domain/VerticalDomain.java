@@ -31,12 +31,20 @@ package uk.ac.rdg.resc.edal.domain;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
- * @author Guy
+ * A {@link Domain} representing vertical position.
+ * 
+ * @author Guy Griffiths
  */
 public interface VerticalDomain extends Domain<Double> {
 
+    /**
+     * @return The {@link Extent} of the domain
+     */
     public Extent<Double> getExtent();
 
+    /**
+     * @return The co-ordinate reference system which applies to this domain
+     */
     public VerticalCrs getVerticalCrs();
 
 }
