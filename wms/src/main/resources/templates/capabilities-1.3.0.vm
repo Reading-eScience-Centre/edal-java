@@ -96,7 +96,7 @@
 #set($parent = $children.size() > 0)
 #set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
 #set($layerMetadata = $catalogue.getLayerMetadata($layerName))
-    <Layer #if($layerMetadata.queryable)queryable="1"#end>
+    <Layer #if(!$parent && $layerMetadata.queryable)queryable="1"#end>
 #if($variableMetadata.plottable && $layerName && !$parent)
         <Name>$layerName</Name>
 #end
