@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2010 The University of Reading
  * All rights reserved.
  *
