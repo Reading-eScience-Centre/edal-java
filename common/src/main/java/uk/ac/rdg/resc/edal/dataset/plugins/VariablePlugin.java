@@ -84,7 +84,7 @@ public abstract class VariablePlugin {
         uses = usesVariables;
         provides = new String[providesSuffixes.length];
         combineIds(usesVariables);
-        prefixLength = combinedName.length();
+        prefixLength = combinedName.length() + 1;
         for (int i = 0; i < providesSuffixes.length; i++) {
             provides[i] = getFullId(providesSuffixes[i]);
         }
@@ -253,7 +253,10 @@ public abstract class VariablePlugin {
      * @return The full ID
      */
     protected String getFullId(String suffix) {
-        return combinedName + suffix;
+        StringBuilder sb = new StringBuilder(combinedName);
+        sb.append('-');
+        sb.append(suffix);
+        return sb.toString();
     }
 
     /**
@@ -271,22 +274,22 @@ public abstract class VariablePlugin {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
-        double minLat = 90;
-        double maxLat = -90;
-        double minLon = 180;
-        double maxLon = -180;
+        double minLat = Double.MAX_VALUE;
+        double maxLat = -Double.MAX_VALUE;
+        double minLon = Double.MAX_VALUE;
+        double maxLon = -Double.MAX_VALUE;
         for (HorizontalDomain domain : domains) {
             GeographicBoundingBox gbbox = domain.getGeographicBoundingBox();
-            if (gbbox.getEastBoundLongitude() < maxLon) {
+            if (gbbox.getEastBoundLongitude() > maxLon) {
                 maxLon = gbbox.getEastBoundLongitude();
             }
-            if (gbbox.getWestBoundLongitude() > minLon) {
+            if (gbbox.getWestBoundLongitude() < minLon) {
                 minLon = gbbox.getWestBoundLongitude();
             }
-            if (gbbox.getNorthBoundLatitude() < maxLat) {
+            if (gbbox.getNorthBoundLatitude() > maxLat) {
                 maxLat = gbbox.getNorthBoundLatitude();
             }
-            if (gbbox.getSouthBoundLatitude() > minLat) {
+            if (gbbox.getSouthBoundLatitude() < minLat) {
                 minLat = gbbox.getSouthBoundLatitude();
             }
         }

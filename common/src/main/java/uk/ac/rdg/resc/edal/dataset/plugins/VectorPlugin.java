@@ -44,6 +44,7 @@ public class VectorPlugin extends VariablePlugin {
 
     public final static String MAG = "mag";
     public final static String DIR = "dir";
+    public final static String GROUP = "group";
     private String title;
 
     /**
@@ -57,7 +58,7 @@ public class VectorPlugin extends VariablePlugin {
      *            The title of the quantity which the components represent
      */
     public VectorPlugin(String xComponentId, String yComponentId, String title) {
-        super(new String[] { xComponentId, yComponentId }, new String[] { MAG, DIR });
+        super(new String[] { xComponentId, yComponentId }, new String[] { MAG, DIR, GROUP });
         this.title = title;
     }
 
@@ -103,8 +104,8 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Create a new container metadata object
          */
-        VariableMetadata containerMetadata = new VariableMetadata(getFullId("-group"),
-                new Parameter(getFullId("-group"), title, "Vector fields for " + title, null),
+        VariableMetadata containerMetadata = new VariableMetadata(getFullId(GROUP),
+                new Parameter(getFullId(GROUP), title, "Vector fields for " + title, null),
                 hDomain, vDomain, tDomain, true);
 
         /*
