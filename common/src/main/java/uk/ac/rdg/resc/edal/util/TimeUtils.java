@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.util;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,6 +43,7 @@ import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 
 /**
  * <p>
@@ -118,21 +118,26 @@ public class TimeUtils {
     /**
      * Converts an ISO8601-formatted String into a {@link DateTime} object
      * 
-     * @throws ParseException
-     * 
-     * @throws IllegalArgumentException
+     * @throws BadTimeFormatException 
      *             if the string is not a valid ISO date-time, or if it is not
      *             valid within the Chronology (e.g. 31st July in a 360-day
      *             calendar).
      */
-    public static DateTime iso8601ToDateTime(String isoDateTime, Chronology chronology)
-            throws ParseException {
-        return ISO_DATE_TIME_FORMATTER.withChronology(chronology).parseDateTime(isoDateTime);
+    public static DateTime iso8601ToDateTime(String isoDateTime, Chronology chronology) throws BadTimeFormatException {
+        try{
+            return ISO_DATE_TIME_FORMATTER.withChronology(chronology).parseDateTime(isoDateTime);
+        } catch (IllegalArgumentException e) {
+            throw new BadTimeFormatException("The string "+isoDateTime+" does not represent an ISO8601 datetime", e);
+        }
     }
 
-    public static DateTime iso8601ToDate(String isoDate, Chronology chronology)
-            throws ParseException {
-        return ISO_DATE_FORMATTER.withChronology(chronology).parseDateTime(isoDate);
+    public static DateTime iso8601ToDate(String isoDate, Chronology chronology) throws BadTimeFormatException {
+        try {
+            return ISO_DATE_FORMATTER.withChronology(chronology).parseDateTime(isoDate);
+        } catch (IllegalArgumentException e) {
+            throw new BadTimeFormatException("The string " + isoDate
+                    + " does not represent an ISO8601 date", e);
+        }
     }
 
     /**
@@ -443,8 +448,20 @@ public class TimeUtils {
         return s;
     }
 
+    /**
+     * Converts a time string into time range.
+     * 
+     * @param timeString
+     *            A string contining comma-separated times/ranges of time
+     * @param chronology
+     *            The {@link Chronology} of the time string
+     * @return An {@link Extent} representing the range of times found
+     * @throws BadTimeFormatException
+     *             If any of the individual times are incorrectly formatted for
+     *             ISO8601
+     */
     public static Extent<DateTime> getTimeRangeForString(String timeString, Chronology chronology)
-            throws ParseException {
+            throws BadTimeFormatException {
         if (timeString == null) {
             return null;
         }

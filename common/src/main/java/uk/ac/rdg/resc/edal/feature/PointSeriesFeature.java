@@ -28,33 +28,55 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Map;
+
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.util.Array1D;
 
 /**
  * A measurement of a time series at a point
  * 
+ * @author Guy Griffiths
  * @author Jon Blower
- * @author Guy
  */
-public interface PointSeriesFeature extends DiscreteFeature<DateTime, Extent<DateTime>> {
+public class PointSeriesFeature extends AbstractDiscreteFeature<DateTime, Extent<DateTime>> {
+
+    private final HorizontalPosition hPos;
+    private final VerticalPosition zPos;
+
+    public PointSeriesFeature(String id, String name, String description, TimeAxis domain,
+            HorizontalPosition hPos, VerticalPosition zPos, Map<String, Parameter> parameters,
+            Map<String, Array1D> values) {
+        super(id, name, description, domain, parameters, values);
+        this.hPos = hPos;
+        this.zPos = zPos;
+    }
+
     /**
      * Gets the horizontal location of this point series feature.
      */
-    public HorizontalPosition getHorizontalPosition();
+    public HorizontalPosition getHorizontalPosition() {
+        return hPos;
+    }
 
     /**
      * Gets the vertical location of this point series feature.
      */
-    public VerticalPosition getVerticalPosition();
+    public VerticalPosition getVerticalPosition() {
+        return zPos;
+    }
 
     /**
      * Gets the {@link TimeAxis} which makes up this domain
      */
     @Override
-    public TimeAxis getDomain();
+    public TimeAxis getDomain() {
+        return (TimeAxis) super.getDomain();
+    }
 }

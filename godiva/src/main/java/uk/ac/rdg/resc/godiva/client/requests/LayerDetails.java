@@ -58,9 +58,10 @@ public class LayerDetails {
     private String nearestTime = null;
     private String nearestDate = null;
     
-    private boolean multiFeature = false;
+    private boolean continuousT = false;
     private String startTime = null;
     private String endTime = null;
+    private boolean continuousZ = false;
     private String startZ = null;
     private String endZ = null;
 
@@ -200,12 +201,12 @@ public class LayerDetails {
         this.nearestDate = nearestDate;
     }
 
-    public boolean isMultiFeature() {
-        return multiFeature;
+    public boolean isContinuousT() {
+        return continuousT;
     }
 
-    public void setMultiFeature(boolean multiFeature) {
-        this.multiFeature = multiFeature;
+    public void setContinuousT(boolean continuousT) {
+        this.continuousT = continuousT;
     }
 
     public String getStartTime() {
@@ -218,6 +219,14 @@ public class LayerDetails {
 
     public String getEndTime() {
         return endTime;
+    }
+    
+    public boolean isContinuousZ() {
+        return continuousZ;
+    }
+    
+    public void setContinuousZ(boolean continuousZ) {
+        this.continuousZ = continuousZ;
     }
 
     public void setEndTime(String endTime) {

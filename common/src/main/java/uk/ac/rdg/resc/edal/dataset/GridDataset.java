@@ -33,10 +33,16 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * Interface for reading gridded data and associated metadata.
@@ -68,15 +74,15 @@ public interface GridDataset extends Dataset {
      *             If the underlying data cannot be read for any reason
      */
     public MapFeature readMapData(Set<String> varIds, HorizontalGrid hGrid, Double zPos,
-            DateTime time) throws IOException;
+            DateTime time) throws DataReadingException;
 
-//    public PointSeriesFeature readTimeSeriesData(Set<String> varIds, HorizontalPosition hPos,
-//            Double zPos, TimeAxis timeAxis) throws IOException;
+    public PointSeriesFeature readTimeSeriesData(Set<String> varIds, HorizontalPosition hPos,
+            VerticalPosition zPos, TimeAxis timeAxis) throws DataReadingException;
 
-//    public ProfileFeature readProfileData(Set<String> varIds, HorizontalPosition hPos,
-//            VerticalAxis zAxis, DateTime time) throws IOException;
+    public ProfileFeature readProfileData(Set<String> varIds, HorizontalPosition hPos,
+            VerticalAxis zAxis, DateTime time) throws DataReadingException;
 
     
     public Number readSinglePoint(String variableId, HorizontalPosition position, Double zVal,
-            DateTime time) throws IOException;
+            DateTime time) throws DataReadingException;
 }

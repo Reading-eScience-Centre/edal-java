@@ -30,8 +30,6 @@ package uk.ac.rdg.resc.edal.wms.util;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +37,7 @@ import java.util.Set;
 import org.joda.time.Chronology;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.chrono.JulianChronology;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
@@ -47,8 +46,9 @@ import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
-import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
@@ -162,8 +162,8 @@ public class WmsUtils {
     }
 
     /*
-     * Starting here, we have methods which are only used in the Velocity templates
-     * (mostly those defining Capabilities documents)
+     * Starting here, we have methods which are only used in the Velocity
+     * templates (mostly those defining Capabilities documents)
      * 
      * Don't delete them just because you can't find where they're used in Java
      * code
@@ -192,7 +192,7 @@ public class WmsUtils {
             return stylename + "/" + palettename;
         }
     }
-    
+
     /**
      * <p>
      * Returns the string to be used to display units for the TIME dimension in
@@ -215,7 +215,7 @@ public class WmsUtils {
             return "all_leap";
         return "unknown";
     }
-    
+
     /**
      * Gets a list of styles supported by a specific layer.
      * 
@@ -230,10 +230,35 @@ public class WmsUtils {
          * We need a method of supplying custom styles first though, I think
          */
         List<StyleInfo> styles = new ArrayList<StyleInfo>();
-        for(String palette : ColourPalette.getPredefinedPalettes()) {
+        for (String palette : ColourPalette.getPredefinedPalettes()) {
             styles.add(new StyleInfo("boxfill", palette));
         }
         return styles;
+    }
+
+    public static HorizontalPosition getPositionFromUrlArgs(String crsCode, String firstCoord,
+            String secondCoord, String wmsVersion) throws EdalException {
+        final CoordinateReferenceSystem crs = GISUtils.getCrs(crsCode);
+
+        boolean normalOrder = true;
+        if (crsCode.equalsIgnoreCase("EPSG:4326")
+                && "1.3.0".equals(wmsVersion)) {
+            normalOrder = false;
+        }
+
+        double x, y;
+        try {
+            if(normalOrder) {
+                x = Double.parseDouble(firstCoord);
+                y = Double.parseDouble(secondCoord);
+            } else {
+                x = Double.parseDouble(secondCoord);
+                y = Double.parseDouble(firstCoord);
+            }
+        } catch (NumberFormatException nfe) {
+            throw new EdalException("Co-ordinates are not properly formatted");
+        }
+        return new HorizontalPosition(x, y, crs);
     }
 
 //    /**

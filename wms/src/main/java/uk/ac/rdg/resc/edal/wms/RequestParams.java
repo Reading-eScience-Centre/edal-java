@@ -80,8 +80,8 @@ public class RequestParams {
     }
 
     /**
-     * Returns the value of the parameter with the given name, throwing a
-     * WmsException if the parameter does not exist. Use
+     * Returns the value of the parameter with the given name, throwing an
+     * {@link EdalException} if the parameter does not exist. Use
      * getMandatoryWmsVersion() to get the requested WMS version.
      */
     public String getMandatoryString(String paramName) throws EdalException {

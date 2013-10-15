@@ -28,11 +28,11 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
-import java.io.IOException;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
@@ -80,7 +80,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                  */
                 e.printStackTrace();
                 return null;
-            } catch (IOException e) {
+            } catch (DataReadingException e) {
                 e.printStackTrace();
                 return null;
             }

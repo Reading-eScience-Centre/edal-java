@@ -55,6 +55,7 @@ import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGridImpl;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
@@ -69,6 +70,7 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
@@ -174,7 +176,8 @@ public final class CdmUtils {
 //                 */
 //                return new ProjectedGrid(coordSys);
                 /*
-                 * TODO: Maybe this will work, maybe it won't, or maybe it will work but be too slow.
+                 * TODO: Maybe this will work, maybe it won't, or maybe it will
+                 * work but be too slow.
                  */
                 return new RectilinearGridImpl(xRefAxis, yRefAxis, DefaultGeographicCRS.WGS84);
             }
@@ -184,11 +187,33 @@ public final class CdmUtils {
                 throw new UnsupportedOperationException("Can't create a HorizontalGrid"
                         + " from 2D coordinate axes that are not longitude and latitude.");
             }
-//            return LookUpTableGrid.generate(coordSys);
-            /*
-             * TODO: implement lookuptablegrids...
-             */
-            throw new UnsupportedOperationException("Haven't yet implemented LookUpTableGrids...");
+            final CoordinateAxis2D lonAxis = (CoordinateAxis2D) xAxis;
+            final CoordinateAxis2D latAxis = (CoordinateAxis2D) yAxis;
+
+            Array2D lonVals = new Array2D(lonAxis.getShape(0), lonAxis.getShape(1)) {
+                @Override
+                public void set(Number value, int... coords) {
+                    throw new UnsupportedOperationException("This Array2D is immutable");
+                }
+
+                @Override
+                public Number get(int... coords) {
+                    return lonAxis.getCoordValue(coords[0], coords[1]);
+                }
+            };
+            Array2D latVals = new Array2D(latAxis.getShape(0), latAxis.getShape(1)) {
+                @Override
+                public void set(Number value, int... coords) {
+                    throw new UnsupportedOperationException("This Array2D is immutable");
+                }
+
+                @Override
+                public Number get(int... coords) {
+                    return latAxis.getCoordValue(coords[0], coords[1]);
+                }
+            };
+
+            return LookUpTableGrid.generate(lonVals, latVals);
         } else {
             /* Shouldn't get here */
             throw new IllegalStateException("Inconsistent axis types");
@@ -268,9 +293,11 @@ public final class CdmUtils {
             return GregorianChronology.getInstance();
         } else if ("julian".equalsIgnoreCase(chronologyString)) {
             return JulianChronology.getInstance();
-        } else if ("noleap".equalsIgnoreCase(chronologyString) || "365_day".equalsIgnoreCase(chronologyString)) {
+        } else if ("noleap".equalsIgnoreCase(chronologyString)
+                || "365_day".equalsIgnoreCase(chronologyString)) {
             return NoLeapChronology.getInstanceUTC();
-        } else if ("all_leap".equalsIgnoreCase(chronologyString) || "366_day".equalsIgnoreCase(chronologyString)) {
+        } else if ("all_leap".equalsIgnoreCase(chronologyString)
+                || "366_day".equalsIgnoreCase(chronologyString)) {
             return AllLeapChronology.getInstanceUTC();
         } else if ("360_day".equalsIgnoreCase(chronologyString)) {
             return ThreeSixtyDayChronology.getInstanceUTC();

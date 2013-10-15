@@ -360,19 +360,19 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * Get all of the relevant information to update the map
          */
         String currentTime = null;
-        String colorbyTime = null;
+        String targetTime = null;
         if (widgetCollection.getTimeSelector().isContinuous()) {
             currentTime = widgetCollection.getTimeSelector().getSelectedDateTimeRange();
-            colorbyTime = widgetCollection.getTimeSelector().getSelectedDateTime();
+            targetTime = widgetCollection.getTimeSelector().getSelectedDateTime();
         } else {
             currentTime = widgetCollection.getTimeSelector().getSelectedDateTime();
         }
 
         String currentElevation = null;
-        String colorbyElevation = null;
+        String targetElevation = null;
         if (widgetCollection.getElevationSelector().isContinuous()) {
             currentElevation = widgetCollection.getElevationSelector().getSelectedElevationRange();
-            colorbyElevation = widgetCollection.getElevationSelector().getSelectedElevation();
+            targetElevation = widgetCollection.getElevationSelector().getSelectedElevation();
         } else {
             currentElevation = widgetCollection.getElevationSelector().getSelectedElevation();
         }
@@ -390,8 +390,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * WMS layer because we only have a single layer ID (WMS_LAYER_ID)
          */
         mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID,
-                layerSelector.getSelectedId(), currentTime, colorbyTime, currentElevation,
-                colorbyElevation, currentStyle, currentPalette, aboveMaxString, belowMinString,
+                layerSelector.getSelectedId(), currentTime, targetTime, currentElevation,
+                targetElevation, currentStyle, currentPalette, aboveMaxString, belowMinString,
                 currentScaleRange, nColourBands, logScale, widgetCollection.getElevationSelector()
                         .getNElevations() > 1, widgetCollection.getTimeSelector()
                         .hasMultipleTimes());
@@ -688,7 +688,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 urlParams += "&time=" + timeSelector.getSelectedDateTimeRange();
             }
             if (timeSelector.getSelectedDateTime() != null) {
-                urlParams += "&colorby/time=" + timeSelector.getSelectedDateTime();
+                urlParams += "&targettime=" + timeSelector.getSelectedDateTime();
             }
             if (timeSelector.getRange() != null) {
                 urlParams += "&range=" + timeSelector.getRange();
@@ -701,7 +701,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         if(elevationSelector.isContinuous()){
             if (elevationSelector.getSelectedElevationRange() != null) {
                 currentElevation = elevationSelector.getSelectedElevation();
-                urlParams += "&colorby/depth=" + currentElevation;
+                urlParams += "&targetelevation=" + currentElevation;
             }
             if (elevationSelector.getSelectedElevationRange() != null) {
                 currentElevation = elevationSelector.getSelectedElevationRange();

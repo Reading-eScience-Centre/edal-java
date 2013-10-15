@@ -86,11 +86,6 @@ public class MapFeature extends AbstractDiscreteFeature<HorizontalPosition, Grid
     }
 
     @Override
-    public long size() {
-        return getDomain().size();
-    }
-
-    @Override
     public MapDomain getDomain() {
         return (MapDomain) super.getDomain();
     }

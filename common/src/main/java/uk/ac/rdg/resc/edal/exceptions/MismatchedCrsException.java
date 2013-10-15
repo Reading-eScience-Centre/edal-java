@@ -26,43 +26,25 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.feature;
-
-import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.util.Array;
+package uk.ac.rdg.resc.edal.exceptions;
 
 /**
- * <p>
- * A {@link Feature} whose domain consists of a finite number of domain objects,
- * each of which is associated with a single measurement value from each Feature
- * member.
- * </p>
+ * Exception that is thrown when a user requests an operation on multiple
+ * features whose CRSs do not match when they need to
  * 
- * @param <P>
- *            The type of object used to identify positions within the feature's
- *            domain. This may be a spatial, temporal, or combined
- *            spatiotemporal position.
- * @param <DO>
- *            The type of domain object
- * @author Jon Blower
  * @author Guy Griffiths
  */
-public interface DiscreteFeature<P, DO> extends Feature<P> {
-    /**
-     * Gets the array of values for the given parameter.  The shape of this array
-     * must match the shape of the array of domain objects
-     * (from {@link DiscreteDomain#getDomainObjects()}).
-     * 
-     * @param paramId
-     *            The identifier from the {@link #getParameterIds()  set of 
-     *            parameter IDs.
-     * @return the list of values for the requested member
-     */
-    public Array<Number> getValues(String paramId);
+public class MismatchedCrsException extends EdalException {
+    private static final long serialVersionUID = 1L;
 
     /**
-     * {@inheritDoc}
+     * Creates a new instance of MismatchedCrsException
+     * 
+     * @param message
+     *            The message to display to the user
      */
-    @Override
-    public DiscreteDomain<P, DO> getDomain();
+    public MismatchedCrsException(String message) {
+        super(message, "MismatchedCRS");
+    }
+
 }

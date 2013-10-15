@@ -295,12 +295,12 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      *            The WMS layer ID
      * @param time
      *            The time (or time range) at which we want data
-     * @param colorbyTime
+     * @param targetTime
      *            If we have a continuous time axis, what time should we try and
      *            colour the data's value at
      * @param elevation
      *            The elevation (or elevation range) at which we want data
-     * @param colorbyElevation
+     * @param targetElevation
      *            If we have a continuous elevation axis, what elevation should
      *            we try and colour the data's value at
      * @param style
@@ -323,7 +323,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      *            Whether we have multiple times available
      */
     public void addLayer(String wmsUrl, String internalLayerId, String wmsLayerName, String time,
-            String colorbyTime, String elevation, String colorbyElevation, String style,
+            String targetTime, String elevation, String targetElevation, String style,
             String palette, String aboveMaxString, String belowMinString, String scaleRange,
             int nColourBands, boolean logScale, boolean multipleElevations, boolean multipleTimes) {
         WMSParams params = new WMSParams();
@@ -334,14 +334,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         if (time != null) {
             params.setParameter("TIME", time);
         }
-        if(colorbyTime != null){
-            params.setParameter("COLORBY/TIME", colorbyTime);
+        if(targetTime != null){
+            params.setParameter("TARGETTIME", targetTime);
         }
         if (elevation != null) {
             params.setParameter("ELEVATION", elevation);
         }
-        if (colorbyElevation != null) {
-            params.setParameter("COLORBY/DEPTH", colorbyElevation);
+        if (targetElevation != null) {
+            params.setParameter("TARGETELEVATION", targetElevation);
         }
         if (scaleRange != null) {
             params.setParameter("COLORSCALERANGE", scaleRange);
@@ -358,15 +358,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         params.setParameter("LOGSCALE", logScale + "");
 
         WMSOptions options = getOptionsForCurrentProjection();
-        
-        if(wmsLayerName.endsWith("*")){
-            /*
-             * We are querying a parent layer. We don't want to add links for
-             * profile/timeseries plots
-             */
-            multipleElevations = false;
-            multipleTimes = false;
-        }   
 
         doAddingOfLayer(wmsUrl, internalLayerId, params, options, multipleElevations, multipleTimes);
     }
@@ -379,22 +370,25 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
         WMS wmsLayer;
         
-        if (wmsAndParams == null) {
-            params.setParameter("VERSION", "1.3.0");
-            wmsLayer = new WMS("WMS Layer", wmsUrl, params, options);
-            wmsLayer.addLayerLoadStartListener(loadStartListener);
-            wmsLayer.addLayerLoadCancelListener(loadCancelListener);
-            wmsLayer.addLayerLoadEndListener(loadEndListener);
-            wmsLayer.setIsBaseLayer(false);
-            map.addLayer(wmsLayer);
-        } else {
-            wmsLayer = wmsLayers.get(internalLayerId).wms;
-            wmsLayer.setUrl(wmsUrl);
-            wmsLayer.getParams().setParameter("ELEVATION", "");
-            wmsLayer.getParams().setParameter("TIME", "");
-            wmsLayer.mergeNewParams(params);
-            wmsLayer.addOptions(options);
+        if(wmsAndParams != null) {
+            /*
+             * If we already have an existing layer, we remove it and re-add it.
+             * 
+             * New parameters can be merged, but this can cause problems if the
+             * new layer doesn't required some parameters which the old layer
+             * had, so this is simpler.
+             */
+            map.removeLayer(wmsLayers.get(internalLayerId).wms);
         }
+        
+        params.setParameter("VERSION", "1.3.0");
+        wmsLayer = new WMS("WMS Layer", wmsUrl, params, options);
+        wmsLayer.addLayerLoadStartListener(loadStartListener);
+        wmsLayer.addLayerLoadCancelListener(loadCancelListener);
+        wmsLayer.addLayerLoadEndListener(loadEndListener);
+        wmsLayer.setIsBaseLayer(false);
+        map.addLayer(wmsLayer);
+            
         WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, multipleElevations,
                 multipleTimes);
         wmsLayers.put(internalLayerId, newWmsAndParams);
@@ -434,17 +428,17 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         if(timeStr != null){
             vendorParams.setProperty("TIME", timeStr);
         }
-        final String colorbyTimeStr = wmsLayers.get(layerId).params.getJSObject().getPropertyAsString("COLORBY/TIME");
+        final String colorbyTimeStr = wmsLayers.get(layerId).params.getJSObject().getPropertyAsString("TARGETTIME");
         if(colorbyTimeStr != null){
-            vendorParams.setProperty("COLORBY/TIME", colorbyTimeStr);
+            vendorParams.setProperty("TARGETTIME", colorbyTimeStr);
         }
         final String elevationStr = wmsLayers.get(layerId).params.getJSObject().getPropertyAsString("ELEVATION");
         if(elevationStr != null){
             vendorParams.setProperty("ELEVATION", elevationStr);
         }
-        final String colorbyElevationStr = wmsLayers.get(layerId).params.getJSObject().getPropertyAsString("COLORBY/DEPTH");
+        final String colorbyElevationStr = wmsLayers.get(layerId).params.getJSObject().getPropertyAsString("TARGETELEVATION");
         if(colorbyElevationStr != null){
-            vendorParams.setProperty("COLORBY/DEPTH", colorbyElevationStr);
+            vendorParams.setProperty("TARGETELEVATION", colorbyElevationStr);
         }
         
         if (getFeatureInfo != null) {
@@ -512,7 +506,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     /*
                      * If we have multiple depths, we can plot a vertical profile here
                      */
-                    final String link = proxyUrl + wmsUrl + "?REQUEST=GetVerticalProfile" + "&LAYER=" + layer
+                    final String link = proxyUrl + wmsUrl + "?REQUEST=GetVerticalProfile" + "&LAYERS=" + layer
                             + "&CRS=" + currentProjection + ((timeStr != null) ? ("&TIME=" + timeStr) : "")
                             + "&POINT=" + lonLat.lon() + "%20" + lonLat.lat() + "&FORMAT=image/png";
                     Anchor profilePlot = new Anchor("Vertical Profile Plot");
@@ -550,7 +544,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                     }
                                     String link = wmsUrl
                                             + "?REQUEST=GetTimeseries"
-                                            + "&LAYER=" + layer
+                                            + "&LAYERS=" + layer
                                             + "&CRS=" + currentProjection
                                             + "&TIME="
                                             + startDateTime
@@ -707,7 +701,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     protected void addBaseLayers() {
-        System.out.println("MapArea adding base layers");
         WMS openLayers;
         WMS demis;
         WMS plurel;

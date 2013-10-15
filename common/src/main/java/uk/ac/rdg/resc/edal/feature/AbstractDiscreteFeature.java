@@ -57,6 +57,7 @@
  */
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -82,6 +83,12 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
     public AbstractDiscreteFeature(String id, String name, String description,
             DiscreteDomain<P, DO> domain, Map<String, Parameter> parameters,
             Map<String, ? extends Array<Number>> values) {
+        for (Array<Number> valuesArray : values.values()) {
+            if (!Arrays.equals(valuesArray.getShape(), domain.getDomainObjects().getShape())) {
+                throw new IllegalArgumentException(
+                        "All values arrays in a feature must have the same shape as the domain of the feature");
+            }
+        }
         this.id = id;
         this.name = name;
         this.description = description;

@@ -81,7 +81,7 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
     private VerticalPanel timeSelectionPanel;
     private Label loadingLabel = new Label("Loading");
 
-    private boolean multiFeature = false;
+    private boolean continuousT = false;
     private TimeSelectorIF currentTime;
     private List<String> availableDates;
 
@@ -107,9 +107,9 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
             public void onResponseReceived(Request request, Response response) {
                 super.onResponseReceived(request, response);
                 LayerDetails layerDetails = getLayerDetails();
-                multiFeature = layerDetails.isMultiFeature();
+                continuousT = layerDetails.isContinuousT();
 
-                if(multiFeature){
+                if(continuousT){
                     availableDates = TimeSelector.getDatesInRange(layerDetails.getStartTime(),
                             layerDetails.getEndTime());
                 } else {
@@ -122,7 +122,7 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                 
                 availableTimes = new LinkedHashMap<String, List<String>>();
                 for (final String date : availableDates) {
-                    if(multiFeature) {
+                    if(continuousT) {
                         availableTimes.put(date, Arrays.asList(TimeSelector.allTimes));
                     }
                 }

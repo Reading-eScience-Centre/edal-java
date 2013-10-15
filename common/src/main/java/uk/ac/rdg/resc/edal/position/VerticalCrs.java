@@ -37,6 +37,7 @@ package uk.ac.rdg.resc.edal.position;
  * pressure and dimensionless coordinates.
  * </p>
  * 
+ * @author Guy Griffiths
  * @author Jon Blower
  */
 public interface VerticalCrs {

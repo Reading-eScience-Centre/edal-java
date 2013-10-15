@@ -153,8 +153,10 @@ public abstract class LayerRequestCallback implements RequestCallback {
             }
         }
 
-        // If we have different times, we may (will?) have a nearest
-        // time string.
+        /*
+         * If we have different times, we may (will?) have a nearest time
+         * string.
+         */
         JSONValue nearestTimeJson = parentObj.get("nearestTimeIso");
         if (nearestTimeJson != null) {
             String nearestTime = nearestTimeJson.isString().stringValue();
@@ -164,14 +166,21 @@ public abstract class LayerRequestCallback implements RequestCallback {
             }
         }
 
-        boolean multiFeature = false;
-        JSONValue multiFeatureJson = parentObj.get("multiFeature");
-        if (multiFeatureJson != null) {
-            multiFeature = multiFeatureJson.isBoolean().booleanValue();
+        boolean continuousT = false;
+        JSONValue continuousTJson = parentObj.get("continuousT");
+        if (continuousTJson != null) {
+            continuousT = continuousTJson.isBoolean().booleanValue();
         }
-        layerDetails.setMultiFeature(multiFeature);
+        layerDetails.setContinuousT(continuousT);
+        
+        boolean continuousZ = false;
+        JSONValue continuousZJson = parentObj.get("continuousZ");
+        if (continuousZJson != null) {
+            continuousZ = continuousZJson.isBoolean().booleanValue();
+        }
+        layerDetails.setContinuousZ(continuousZ);
 
-        if (multiFeature) {
+        if (continuousT) {
             JSONValue startTimeJson = parentObj.get("startTime");
             if (startTimeJson != null) {
                 layerDetails.setStartTime(startTimeJson.isString().stringValue());
@@ -179,23 +188,6 @@ public abstract class LayerRequestCallback implements RequestCallback {
             JSONValue endTimeJson = parentObj.get("endTime");
             if (endTimeJson != null) {
                 layerDetails.setEndTime(endTimeJson.isString().stringValue());
-            }
-
-            JSONValue startZJson = parentObj.get("startZ");
-            if (startZJson != null) {
-                layerDetails.setStartZ(startZJson.isString().stringValue());
-            }
-            JSONValue endZJson = parentObj.get("endZ");
-            if (endZJson != null) {
-                layerDetails.setEndZ(endZJson.isString().stringValue());
-            }
-            JSONValue zUnitsJson = parentObj.get("zUnits");
-            if (zUnitsJson != null) {
-                layerDetails.setZUnits(zUnitsJson.isString().stringValue());
-            }
-            JSONValue zPositiveJson = parentObj.get("zPositive");
-            if (zPositiveJson != null) {
-                layerDetails.setZPositive(zPositiveJson.isBoolean().booleanValue());
             }
         } else {
             JSONValue datesJson = parentObj.get("datesWithData");
@@ -219,7 +211,23 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 }
                 layerDetails.setAvailableDates(availableDates);
             }
-
+        }
+        if (continuousZ) {
+            JSONValue zvalsJson = parentObj.get("zaxis");
+            if (zvalsJson != null) {
+                JSONObject zvalsObj = zvalsJson.isObject();
+                layerDetails.setZUnits(zvalsObj.get("units").isString().stringValue());
+                layerDetails.setZPositive(zvalsObj.get("positive").isBoolean().booleanValue());
+                JSONValue startZJson = zvalsObj.get("startZ");
+                if (startZJson != null) {
+                    layerDetails.setStartZ(startZJson.isNumber().toString());
+                }
+                JSONValue endZJson = zvalsObj.get("endZ");
+                if (endZJson != null) {
+                    layerDetails.setEndZ(endZJson.isNumber().toString());
+                }
+            }
+        } else {
             JSONValue zvalsJson = parentObj.get("zaxis");
             if (zvalsJson != null) {
                 JSONObject zvalsObj = zvalsJson.isObject();

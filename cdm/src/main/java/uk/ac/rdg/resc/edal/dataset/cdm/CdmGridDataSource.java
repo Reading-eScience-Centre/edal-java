@@ -82,6 +82,7 @@ final class CdmGridDataSource implements GridDataSource {
         rangesList.setZRange(zmin, zmax);
         rangesList.setYRange(ymin, ymax);
         rangesList.setXRange(xmin, xmax);
+
         /*
          * Read data, then convert or wrap as Array
          */
@@ -94,7 +95,7 @@ final class CdmGridDataSource implements GridDataSource {
          * matter, but we need to be aware of it when using this class to create
          * features
          */
-        int[] shape = new int[] { 1, 1, (ymax - ymin + 1), (xmax - xmin + 1) };
+        int[] shape = new int[] { (tmax - tmin + 1), (zmax - zmin + 1), (ymax - ymin + 1), (xmax - xmin + 1) };
         return new WrappedArray(rangesList, data, shape);
     }
 

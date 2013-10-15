@@ -31,27 +31,70 @@ package uk.ac.rdg.resc.edal.position;
 /**
  * Defines the position of a point in vertical space.
  * 
+ * @author Guy Griffiths
  * @author Jon Blower
  */
-public interface VerticalPosition extends Comparable<VerticalPosition> {
+public class VerticalPosition implements Comparable<VerticalPosition> {
 
+    private final double z;
+    private final VerticalCrs crs;
+
+    public VerticalPosition(double z, VerticalCrs crs) {
+        this.z = z;
+        this.crs = crs;
+    }
+    
     /**
      * Returns the vertical coordinate of this position
      */
-    public double getZ();
+    public double getZ() {
+        return z;
+    }
 
     /**
      * Returns a vertical coordinate reference system.
      */
-    public VerticalCrs getCoordinateReferenceSystem();
+    public VerticalCrs getCoordinateReferenceSystem() {
+        return crs;
+    }
+    
+    @Override
+    public int compareTo(VerticalPosition o) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
     
     /*
      * Comparable, so we need to implement hashCode and equals
      */
-    
+
     @Override
-    public int hashCode();
-    
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((crs == null) ? 0 : crs.hashCode());
+        long temp;
+        temp = Double.doubleToLongBits(z);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
     @Override
-    public boolean equals(Object obj);
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        VerticalPosition other = (VerticalPosition) obj;
+        if (crs == null) {
+            if (other.crs != null)
+                return false;
+        } else if (!crs.equals(other.crs))
+            return false;
+        if (Double.doubleToLongBits(z) != Double.doubleToLongBits(other.z))
+            return false;
+        return true;
+    }
 }
