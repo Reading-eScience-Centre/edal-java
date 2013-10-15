@@ -27,13 +27,15 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.graphics.formats;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+
 /**
  * Exception that is thrown when a user requests an unsupported image format
  * 
- * @author Guy
+ * @author Guy Griffiths
  * @author Jon
  */
-public class InvalidFormatException extends Exception {
+public class InvalidFormatException extends EdalException {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -43,7 +45,7 @@ public class InvalidFormatException extends Exception {
      *            The message to display to the client
      */
     public InvalidFormatException(String message) {
-        super(message);
+        super(message, "InvalidFormat");
     }
 
 }

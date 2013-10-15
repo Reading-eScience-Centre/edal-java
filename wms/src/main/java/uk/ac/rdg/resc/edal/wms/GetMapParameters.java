@@ -28,12 +28,11 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
-import java.text.ParseException;
-
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
@@ -112,33 +111,21 @@ public class GetMapParameters {
         if(timeString != null && !timeString.trim().equals("")) {
             String[] timeStrings = timeString.split("/");
             if(timeStrings.length == 1) {
-                try {
-                    DateTime time = TimeUtils.iso8601ToDateTime(timeStrings[0], ISOChronology.getInstance());
-                    tExtent = Extents.newExtent(time, time);
-                } catch (ParseException e) {
-                    throw new IllegalArgumentException("Time format is wrong: "+timeStrings[0]);
-                }
+                DateTime time = TimeUtils.iso8601ToDateTime(timeStrings[0], ISOChronology.getInstance());
+                tExtent = Extents.newExtent(time, time);
             } else if(timeStrings.length == 2) {
-                try {
-                    tExtent = Extents.newExtent(
-                            TimeUtils.iso8601ToDateTime(timeStrings[0], ISOChronology.getInstance()),
-                            TimeUtils.iso8601ToDateTime(timeStrings[1], ISOChronology.getInstance()));
-                } catch (ParseException e) {
-                    throw new IllegalArgumentException("Time format is wrong: "+timeString);
-                }
+                tExtent = Extents.newExtent(
+                        TimeUtils.iso8601ToDateTime(timeStrings[0], ISOChronology.getInstance()),
+                        TimeUtils.iso8601ToDateTime(timeStrings[1], ISOChronology.getInstance()));
             } else {
-                throw new IllegalArgumentException("Time can either be a single value or a range");
+                throw new BadTimeFormatException("Time can either be a single value or a range");
             }
         }
             
         DateTime targetTime = null;
-        String targetTimeString = params.getString("colorby/time");
+        String targetTimeString = params.getString("targettime");
         if(targetTimeString != null) {
-            try {
-                targetTime = TimeUtils.iso8601ToDateTime(targetTimeString, ISOChronology.getInstance());
-            } catch (ParseException e) {
-                throw new IllegalArgumentException("colorby/time format is wrong: "+targetTimeString);
-            }
+            targetTime = TimeUtils.iso8601ToDateTime(targetTimeString, ISOChronology.getInstance());
         }
         if(targetTime == null && tExtent != null) {
             targetTime = tExtent.getHigh();
@@ -169,12 +156,12 @@ public class GetMapParameters {
         }
         
         Double targetDepth = null;
-        String targetDepthString = params.getString("colorby/depth");
+        String targetDepthString = params.getString("targetelevation");
         if(targetDepthString != null) {
             try {
                 targetDepth = Double.parseDouble(targetDepthString);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("colorby/depth format is wrong: "+targetDepthString);
+                throw new IllegalArgumentException("TARGETELEVATION format is wrong: "+targetDepthString);
             }
         }
         if(targetDepth == null && zExtent != null) {
@@ -206,14 +193,11 @@ public class GetMapParameters {
                     bbox, zExtent, tExtent, targetDepth, targetTime);
         } catch (InvalidCrsException e) {
             e.printStackTrace();
-            throw new IllegalArgumentException("Something's wrong with your parameters");
+            throw new EdalException("Something's wrong with your parameters");
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            throw new IllegalArgumentException("Something's wrong with your parameters");
-        } catch (EdalException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Something's wrong with your parameters");
-        }
+            throw new EdalException("Something's wrong with your parameters");
+        } 
     }
 
 }

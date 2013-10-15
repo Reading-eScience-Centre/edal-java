@@ -45,6 +45,7 @@ import org.junit.Test;
 import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
@@ -101,7 +102,7 @@ public class CdmGridDatasetFactoryTest {
     }
 
     @Test
-    public void testCorrectData() throws IOException {
+    public void testCorrectData() throws DataReadingException {
         /*- 
          * This test covers:
          * Reading the data from the location
@@ -160,7 +161,7 @@ public class CdmGridDatasetFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testThrowsExceptionForInvalidZ() throws IOException {
+    public void testThrowsExceptionForInvalidZ() throws DataReadingException {
         /*
          * The z-value is invalid
          */
@@ -170,7 +171,7 @@ public class CdmGridDatasetFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testThrowsExceptionForInvalidTime() throws IOException {
+    public void testThrowsExceptionForInvalidTime() throws DataReadingException {
         /*
          * The time-value is invalid
          */

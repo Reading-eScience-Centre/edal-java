@@ -449,7 +449,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         endDate.setSeconds(0);
         
         List<String> dates = new ArrayList<String>();
-        while(startDate.getTime() < endDate.getTime()) {
+        while(startDate.getTime() <= endDate.getTime()) {
             dates.add(datePrinter.format(startDate));
             startDate.setDate(startDate.getDate() + 1);
         }

@@ -131,6 +131,32 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
                              * coverage
                              */
                             cData[1] = varId;
+                        } else if (name.matches("u-.*component")) {
+                            String compoundName = name.replaceFirst("u-(.*) component", "$1");
+                            String[] cData;
+                            if (!xyComponentPairs.containsKey(compoundName)) {
+                                cData = new String[2];
+                                xyComponentPairs.put(compoundName, cData);
+                            }
+                            cData = xyComponentPairs.get(compoundName);
+                            /*
+                             * By doing this, we will end up with the merged
+                             * coverage
+                             */
+                            cData[0] = varId;
+                        } else if (name.matches("v-.*component")) {
+                            String compoundName = name.replaceFirst("v-(.*) component", "$1");
+                            String[] cData;
+                            if (!xyComponentPairs.containsKey(compoundName)) {
+                                cData = new String[2];
+                                xyComponentPairs.put(compoundName, cData);
+                            }
+                            cData = xyComponentPairs.get(compoundName);
+                            /*
+                             * By doing this, we will end up with the merged
+                             * coverage
+                             */
+                            cData[1] = varId;
                         }
                     }
                 }

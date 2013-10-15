@@ -44,6 +44,7 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
 /**
@@ -105,6 +106,34 @@ public abstract class VariablePlugin {
         return provides;
     }
 
+    /**
+     * Convenience method for generating an {@link Array1D} from source
+     */
+    public Array1D generateArray1D(final String varId, final Array1D... sourceArrays) {
+        if (sourceArrays.length != uses.length) {
+            throw new IllegalArgumentException("This plugin needs " + uses.length
+                    + " data sources, but you have supplied " + sourceArrays.length);
+        }
+        return new Array1D(sourceArrays[0].getShape().length) {
+            @Override
+            public void set(Number value, int... coords) {
+                throw new IllegalArgumentException("This Array is immutable");
+            }
+            
+            @Override
+            public Number get(int... coords) {
+                Number[] sourceValues = new Number[sourceArrays.length];
+                for (int i = 0; i < sourceValues.length; i++) {
+                    sourceValues[i] = sourceArrays[i].get(coords);
+                    if (sourceValues[i] == null) {
+                        return null;
+                    }
+                }
+                return generateValue(varId.substring(prefixLength), sourceValues);
+            }
+        };
+    }
+    
     /**
      * Convenience method for generating an {@link Array2D} from source
      */
@@ -279,6 +308,12 @@ public abstract class VariablePlugin {
         double minLon = Double.MAX_VALUE;
         double maxLon = -Double.MAX_VALUE;
         for (HorizontalDomain domain : domains) {
+            /*
+             * If one of the domains is null, their union is null
+             */
+            if(domain == null) {
+                return null;
+            }
             GeographicBoundingBox gbbox = domain.getGeographicBoundingBox();
             if (gbbox.getEastBoundLongitude() > maxLon) {
                 maxLon = gbbox.getEastBoundLongitude();
@@ -310,10 +345,19 @@ public abstract class VariablePlugin {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
+        if(domains[0] == null) {
+            return null;
+        }
         VerticalCrs verticalCrs = domains[0].getVerticalCrs();
         Double min = -Double.MAX_VALUE;
         Double max = Double.MAX_VALUE;
         for (VerticalDomain domain : domains) {
+            /*
+             * If one of the domains is null, their union is null
+             */
+            if(domain == null) {
+                return null;
+            }
             if ((domain.getVerticalCrs() == null && verticalCrs != null)
                     || !domain.getVerticalCrs().equals(verticalCrs)) {
                 throw new IllegalArgumentException(
@@ -342,10 +386,19 @@ public abstract class VariablePlugin {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
+        if(domains[0] == null) {
+            return null;
+        }
         Chronology chronology = domains[0].getChronology();
         DateTime min = new DateTime(0L, chronology);
         DateTime max = new DateTime(Long.MAX_VALUE, chronology);
         for (TemporalDomain domain : domains) {
+            /*
+             * If one of the domains is null, their union is null
+             */
+            if(domain == null) {
+                return null;
+            }
             if (domain.getExtent().getLow().isAfter(min)) {
                 min = domain.getExtent().getLow();
             }

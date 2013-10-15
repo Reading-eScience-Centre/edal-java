@@ -53,6 +53,14 @@ public class ValuesArray4D extends Array4D {
     }
 
     @Override
+    /**
+     * Returns the shape of the array.  The elements correspond to:
+     * 
+     * getShape()[0] = Size along time dimension
+     * getShape()[1] = Size along z dimension
+     * getShape()[2] = Size along y dimension
+     * getShape()[3] = Size along x dimension
+     */
     public int[] getShape() {
         return shape;
     }

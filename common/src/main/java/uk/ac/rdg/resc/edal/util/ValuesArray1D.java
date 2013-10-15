@@ -26,43 +26,39 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.feature;
-
-import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.util.Array;
+package uk.ac.rdg.resc.edal.util;
 
 /**
- * <p>
- * A {@link Feature} whose domain consists of a finite number of domain objects,
- * each of which is associated with a single measurement value from each Feature
- * member.
- * </p>
+ * Implementation of an {@link Array2D} which uses an array of {@link Double}s
+ * for storage.
  * 
- * @param <P>
- *            The type of object used to identify positions within the feature's
- *            domain. This may be a spatial, temporal, or combined
- *            spatiotemporal position.
- * @param <DO>
- *            The type of domain object
- * @author Jon Blower
- * @author Guy Griffiths
+ * @author Guy
  */
-public interface DiscreteFeature<P, DO> extends Feature<P> {
-    /**
-     * Gets the array of values for the given parameter.  The shape of this array
-     * must match the shape of the array of domain objects
-     * (from {@link DiscreteDomain#getDomainObjects()}).
-     * 
-     * @param paramId
-     *            The identifier from the {@link #getParameterIds()  set of 
-     *            parameter IDs.
-     * @return the list of values for the requested member
-     */
-    public Array<Number> getValues(String paramId);
+public class ValuesArray1D extends Array1D {
 
-    /**
-     * {@inheritDoc}
-     */
+    private Double[] data;
+
+    public ValuesArray1D(int size) {
+        super(size);
+
+        data = new Double[size];
+    }
+
     @Override
-    public DiscreteDomain<P, DO> getDomain();
+    public Number get(int... coords) {
+        if (coords.length != 1) {
+            throw new IllegalArgumentException("Wrong number of co-ordinates (" + coords.length
+                    + ") for this Array (needs 1)");
+        }
+        return data[coords[0]];
+    }
+
+    @Override
+    public void set(Number value, int... coords) {
+        if (coords.length != 1) {
+            throw new IllegalArgumentException("Wrong number of co-ordinates (" + coords.length
+                    + ") for this Array (needs 1)");
+        }
+        data[coords[0]] = (value == null) ? null : value.doubleValue();
+    }
 }

@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.position;
 
+import java.text.DecimalFormat;
+
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
@@ -37,7 +39,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * @author Guy
  */
 public class HorizontalPosition {
-
+    private static final DecimalFormat NUMBER_3DP = new DecimalFormat("#0.000");
     private double x;
     private double y;
     private CoordinateReferenceSystem crs;
@@ -71,5 +73,17 @@ public class HorizontalPosition {
      */
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return crs;
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append('(');
+        sb.append(NUMBER_3DP.format(x));
+        sb.append(',');
+        sb.append(NUMBER_3DP.format(y));
+        sb.append(") - ");
+        sb.append(crs.getName());
+        return sb.toString();
     }
 }

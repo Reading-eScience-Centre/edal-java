@@ -26,43 +26,28 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.feature;
-
-import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.util.Array;
+package uk.ac.rdg.resc.edal.exceptions;
 
 /**
- * <p>
- * A {@link Feature} whose domain consists of a finite number of domain objects,
- * each of which is associated with a single measurement value from each Feature
- * member.
- * </p>
+ * An exception to be thrown when the domain for the current operation is
+ * incorrect somehow (e.g. trying to create a profile from a dataset with no
+ * vertical axis etc.)
  * 
- * @param <P>
- *            The type of object used to identify positions within the feature's
- *            domain. This may be a spatial, temporal, or combined
- *            spatiotemporal position.
- * @param <DO>
- *            The type of domain object
- * @author Jon Blower
  * @author Guy Griffiths
  */
-public interface DiscreteFeature<P, DO> extends Feature<P> {
-    /**
-     * Gets the array of values for the given parameter.  The shape of this array
-     * must match the shape of the array of domain objects
-     * (from {@link DiscreteDomain#getDomainObjects()}).
-     * 
-     * @param paramId
-     *            The identifier from the {@link #getParameterIds()  set of 
-     *            parameter IDs.
-     * @return the list of values for the requested member
-     */
-    public Array<Number> getValues(String paramId);
+public class IncorrectDomainException extends EdalException {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DiscreteDomain<P, DO> getDomain();
+    private static final long serialVersionUID = 1L;
+
+    public IncorrectDomainException(String message) {
+        super(message);
+    }
+
+    public IncorrectDomainException(String message, String code) {
+        super(message, code);
+    }
+
+    public IncorrectDomainException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

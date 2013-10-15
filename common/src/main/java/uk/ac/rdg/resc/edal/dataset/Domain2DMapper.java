@@ -184,17 +184,16 @@ public class Domain2DMapper extends DomainMapper<int[]> {
          */
         final ReferenceableAxis<Double> targetXAxis = targetGrid.getXAxis();
         final ReferenceableAxis<Double> targetYAxis = targetGrid.getYAxis();
-        ReferenceableAxis<Double> sourceXAxis = sourceGrid.getXAxis();
-        ReferenceableAxis<Double> sourceYAxis = sourceGrid.getYAxis();
         for (int j = 0; j < targetYAxis.size(); j++) {
             for (int i = 0; i < targetXAxis.size(); i++) {
                 HorizontalPosition transformedPosition = GISUtils.transformPosition(new HorizontalPosition(
                         targetXAxis.getCoordinateValue(i), targetYAxis.getCoordinateValue(j),
                         targetGrid.getCoordinateReferenceSystem()), sourceGrid
                         .getCoordinateReferenceSystem());
-                int sourceIIndex = sourceXAxis.findIndexOf(transformedPosition.getX());
-                int sourceJIndex = sourceYAxis.findIndexOf(transformedPosition.getY());
-                mapper.put(sourceIIndex, sourceJIndex, mapper.convertCoordsToIndex(i, j));
+                int[] indices = sourceGrid.findIndexOf(transformedPosition);
+                if(indices != null) {
+                    mapper.put(indices[0], indices[1], mapper.convertCoordsToIndex(i, j));
+                }
             }
         }
 

@@ -30,9 +30,7 @@ package uk.ac.rdg.resc.edal.wms;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.SocketException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -61,20 +59,32 @@ import org.apache.velocity.app.event.implement.EscapeXmlReference;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
+import org.joda.time.chrono.ISOChronology;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.graphics.Charting;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
+import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
@@ -82,10 +92,14 @@ import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMem
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
@@ -94,7 +108,9 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  * Servlet implementation class WmsServlet
  */
 public class WmsServlet extends HttpServlet {
-    public static final int TEST = 1;
+    private static final Logger log = LoggerFactory.getLogger(WmsServlet.class);
+    
+    public static final int AXIS_RESOLUTION = 500;
     private static final long serialVersionUID = 1L;
     private static final String FEATURE_INFO_XML_FORMAT = "text/xml";
     private static final String FEATURE_INFO_PNG_FORMAT = "image/png";
@@ -155,7 +171,16 @@ public class WmsServlet extends HttpServlet {
             String request = params.getMandatoryString("request");
             dispatchWmsRequest(request, params, httpServletRequest, httpServletResponse);
         } catch (EdalException wmse) {
-            handleWmsException(wmse, httpServletResponse);
+            boolean v130;
+            try {
+                v130 = "1.3.0".equals(params.getMandatoryWmsVersion());
+            } catch (EdalException e) {
+                /*
+                 * No version supplied, we'll return the exception in 1.3.0 format
+                 */
+                v130 = true;
+            }
+            handleWmsException(wmse, httpServletResponse, v130);
         } catch (SocketException se) {
             /*
              * SocketExceptions usually happen when the client has aborted the
@@ -169,6 +194,7 @@ public class WmsServlet extends HttpServlet {
              */
             if (ioe.getClass().getName()
                     .equals("org.apache.catalina.connector.ClientAbortException")) {
+                return;
             }
             /*
              * Other types of IOException are potentially interesting and must
@@ -300,17 +326,14 @@ public class WmsServlet extends HttpServlet {
              * maps.
              * 
              * This gives Broken pipe errors which can be ignored.
-             * 
-             * TODO what about other exceptions?
              */
+            log.error("Problem writing output to stream", e);
         }
     }
 
     private void getCapabilities(RequestParams params, HttpServletResponse httpServletResponse,
             String baseUrl) throws EdalException {
-//        ToolManager toolManager = new ToolManager();
-//        toolManager.autoConfigure(true);
-        VelocityContext context = new VelocityContext();// toolManager.createContext());
+        VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();
         ec.addEventHandler(new EscapeXmlReference());
         ec.attachToContext(context);
@@ -329,17 +352,13 @@ public class WmsServlet extends HttpServlet {
         try {
             template.merge(context, httpServletResponse.getWriter());
         } catch (ResourceNotFoundException e) {
-            // TODO Add logging
-            e.printStackTrace();
+            log.error("Cannot find capabilities template", e);
         } catch (ParseErrorException e) {
-            // TODO Add logging
-            e.printStackTrace();
+            log.error("Cannot parse capabilities template", e);
         } catch (MethodInvocationException e) {
-            // TODO Add logging
-            e.printStackTrace();
+            log.error("Capabilities template has incorrect method", e);
         } catch (IOException e) {
-            // TODO Add logging
-            e.printStackTrace();
+            log.error("Problem writing output to stream", e);
         }
     }
 
@@ -363,14 +382,9 @@ public class WmsServlet extends HttpServlet {
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 Number value;
-                try {
-                    value = gridDataset.readSinglePoint(variableId, position,
-                            plottingParameters.getTargetZ(), plottingParameters.getTargetT());
-                    featureInfos.add(new FeatureInfoPoint(layerName, position, value));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new EdalException("Problem reading data", e);
-                }
+                value = gridDataset.readSinglePoint(variableId, position,
+                        plottingParameters.getTargetZ(), plottingParameters.getTargetT());
+                featureInfos.add(new FeatureInfoPoint(layerName, position, value));
             } else {
                 throw new UnsupportedOperationException(
                         "GetFeatureInfo not supported for non-gridded features yet");
@@ -541,7 +555,7 @@ public class WmsServlet extends HttpServlet {
                 try {
                     targetTime = TimeUtils.iso8601ToDateTime(requestedTime,
                             temporalDomain.getChronology());
-                } catch (ParseException e) {
+                } catch (BadTimeFormatException e) {
                     throw new MetadataException("Requested time has an invalid format", e);
                 }
             } else {
@@ -684,8 +698,8 @@ public class WmsServlet extends HttpServlet {
                 }
                 layerDetails.put("datesWithData", datesWithDataJson);
             } else {
-                layerDetails.put("startTime", temporalDomain.getExtent().getLow());
-                layerDetails.put("endTime", temporalDomain.getExtent().getHigh());
+                layerDetails.put("startTime", TimeUtils.dateTimeToISO8601(temporalDomain.getExtent().getLow()));
+                layerDetails.put("endTime", TimeUtils.dateTimeToISO8601(temporalDomain.getExtent().getHigh()));
             }
             layerDetails.put("timeAxisUnits",
                     WmsUtils.getTimeAxisUnits(temporalDomain.getChronology()));
@@ -731,7 +745,7 @@ public class WmsServlet extends HttpServlet {
         DateTime day;
         try {
             day = TimeUtils.iso8601ToDate(dayStr, temporalDomain.getChronology());
-        } catch (ParseException e) {
+        } catch (BadTimeFormatException e) {
             throw new MetadataException("\"day\" parameter must be an ISO-formatted date");
         }
 
@@ -821,7 +835,7 @@ public class WmsServlet extends HttpServlet {
                         timeAxis.getChronology()));
                 endIndex = timeAxis.findIndexOf(TimeUtils.iso8601ToDateTime(endStr,
                         timeAxis.getChronology()));
-            } catch (ParseException e) {
+            } catch (BadTimeFormatException e) {
                 throw new MetadataException("Time string is not ISO8601 formatted");
             }
             if (startIndex < 0 || endIndex < 0) {
@@ -857,7 +871,7 @@ public class WmsServlet extends HttpServlet {
             response.put("timeStrings", timeStrings);
             return response.toString();
         } else {
-            Extent<DateTime> extent = temporalDomain.getExtent();
+//            Extent<DateTime> extent = temporalDomain.getExtent();
             /*
              * TODO How do we deal with timesteps for a continuous time domain?
              */
@@ -942,9 +956,92 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse) {
-        // TODO Auto-generated method stub
+    private void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse) throws EdalException {
+        String outputFormat = params.getMandatoryString("format");
+        if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
+                && !"image/jpg".equals(outputFormat)) {
+            throw new InvalidFormatException(outputFormat + " is not a valid output format for a time series plot");
+        }
+        
+        String[] layers = params.getMandatoryString("layers").split(",");
 
+        String[] lonLat = params.getMandatoryString("point").split(" +");
+        HorizontalPosition hPos;
+        try{
+            double lon = Double.parseDouble(lonLat[0]);
+            double lat = Double.parseDouble(lonLat[1]);
+            hPos = new HorizontalPosition(lon, lat, DefaultGeographicCRS.WGS84);
+        } catch (NumberFormatException nfe) {
+            log.error("Badly formed co-ordinates for time series", nfe);
+            throw new EdalException("POINT is not well-formed");
+        }
+        
+        String timeStr = params.getMandatoryString("time");
+        
+        List<PointSeriesFeature> pointSeriesFeatures = new ArrayList<PointSeriesFeature>();
+        for(String layerName : layers) {
+            Dataset dataset = catalogue.getDatasetFromId(layerName);
+            if(dataset instanceof GridDataset) {
+                GridDataset gridDataset = (GridDataset) dataset;
+                String varId = catalogue.getVariableFromId(layerName);
+                VariableMetadata variableMetadata = catalogue.getVariableMetadataFromId(layerName);
+                TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
+                VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
+                if(temporalDomain == null) {
+                    throw new IncorrectDomainException("Variable must have a temporal domain to plot a time series");
+                }
+                Extent<DateTime> timeRange = TimeUtils.getTimeRangeForString(timeStr, temporalDomain.getChronology());
+
+                VerticalPosition zPos = null;
+                String elevationStr = params.getString("elevation");
+                if(elevationStr != null && verticalDomain != null) {
+                    zPos = new VerticalPosition(Double.parseDouble(elevationStr), verticalDomain.getVerticalCrs());
+                }
+                
+                List<DateTime> axisValues = new ArrayList<DateTime>();
+                if(temporalDomain instanceof TimeAxis) {
+                    TimeAxis varTimeAxis = (TimeAxis) temporalDomain;
+                    for (DateTime time : varTimeAxis.getCoordinateValues()) {
+                        if ((time.isAfter(timeRange.getLow()) || time.isEqual(timeRange.getLow()) )
+                                && (time.isBefore(timeRange.getHigh()) || time.isEqual(timeRange
+                                        .getHigh()))) {
+                            axisValues.add(time);
+                        }
+                    }
+                } else {
+                    long min = timeRange.getLow().getMillis();
+                    long max = timeRange.getHigh().getMillis();
+                    for(int i=0; i < AXIS_RESOLUTION; i++) {
+                        axisValues.add(new DateTime(min + (max - min) * ((double) i) / AXIS_RESOLUTION));
+                    }
+                }
+                TimeAxis timeAxis = new TimeAxisImpl("Artifical time-axis", axisValues);    
+                PointSeriesFeature feature = gridDataset.readTimeSeriesData(CollectionUtils.setOf(varId), hPos, zPos, timeAxis);
+                pointSeriesFeatures.add(feature);
+            } else {
+                throw new UnsupportedOperationException(
+                        "Currently only gridded datasets are supported for time series plots");
+            }
+        }
+
+        int width = params.getPositiveInt("width", 700);
+        int height = params.getPositiveInt("height", 600);
+
+        /* Now create the time series plot */
+        JFreeChart chart = Charting.createTimeSeriesPlot(pointSeriesFeatures, hPos);
+
+        httpServletResponse.setContentType(outputFormat);
+        try {
+            if ("image/png".equals(outputFormat)) {
+                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width, height);
+            } else {
+                /* Must be a JPEG */
+                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart, width, height);
+            }
+        } catch (IOException e) {
+            log.error("Cannot write to output stream", e);
+            throw new EdalException("Problem writing data to output stream", e);
+        }
     }
 
     private void getTransect(RequestParams params, HttpServletResponse httpServletResponse) {
@@ -952,22 +1049,102 @@ public class WmsServlet extends HttpServlet {
 
     }
 
-    private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse) {
-        // TODO Auto-generated method stub
+    private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse) throws EdalException {
+        String outputFormat = params.getMandatoryString("format");
+        if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
+                && !"image/jpg".equals(outputFormat)) {
+            throw new InvalidFormatException(outputFormat + " is not a valid output format for a profile plot");
+        }
+        
+        String[] layers = params.getMandatoryString("layers").split(",");
 
+        String[] lonLat = params.getMandatoryString("point").split(" +");
+        HorizontalPosition hPos;
+        try{
+            double lon = Double.parseDouble(lonLat[0]);
+            double lat = Double.parseDouble(lonLat[1]);
+            hPos = new HorizontalPosition(lon, lat, DefaultGeographicCRS.WGS84);
+        } catch (NumberFormatException nfe) {
+            log.error("Badly formed co-ordinates for vertical profile", nfe);
+            throw new EdalException("POINT is not well-formed");
+        }
+        
+        DateTime time = null;
+        String timeStr = params.getString("time");
+        if(timeStr != null) {
+            time = TimeUtils.iso8601ToDateTime(timeStr, ISOChronology.getInstance());
+        }
+        List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
+        for(String layerName : layers) {
+            Dataset dataset = catalogue.getDatasetFromId(layerName);
+            if(dataset instanceof GridDataset) {
+                GridDataset gridDataset = (GridDataset) dataset;
+                String varId = catalogue.getVariableFromId(layerName);
+                VerticalDomain verticalDomain = gridDataset.getVariableMetadata(varId).getVerticalDomain();
+                VerticalAxis zAxis;
+                if(verticalDomain instanceof VerticalAxis) {
+                    zAxis = (VerticalAxis) verticalDomain;
+                } else {
+                    List<Double> values = new ArrayList<Double>();
+                    Double min = verticalDomain.getExtent().getLow();
+                    Double max = verticalDomain.getExtent().getHigh();
+                    if(min == null || max == null) {
+                        log.error("Cannot plot profile for "+layerName+" - vertical domain is not well-defined");
+                        continue;
+                    }
+                    for(int i=0; i < AXIS_RESOLUTION; i++) {
+                        values.add(min + (max - min) * ((double) i) / AXIS_RESOLUTION);
+                    }
+                    zAxis = new VerticalAxisImpl("Artificial z-axis", values, verticalDomain.getVerticalCrs());
+                }
+                ProfileFeature feature = gridDataset.readProfileData(CollectionUtils.setOf(varId), hPos, zAxis, time);
+                profileFeatures.add(feature);
+            } else {
+                throw new UnsupportedOperationException(
+                        "Currently only gridded datasets are supported for vertical profile plots");
+            }
+        }
+
+        int width = params.getPositiveInt("width", 700);
+        int height = params.getPositiveInt("height", 600);
+
+        /* Now create the vertical profile plot */
+        JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, hPos);
+
+        httpServletResponse.setContentType(outputFormat);
+        try {
+            if ("image/png".equals(outputFormat)) {
+                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width, height);
+            } else {
+                /* Must be a JPEG */
+                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart, width, height);
+            }
+        } catch (IOException e) {
+            log.error("Cannot write to output stream", e);
+            throw new EdalException("Problem writing data to output stream", e);
+        }
     }
-
+    
     private void getVerticalSection(RequestParams params, HttpServletResponse httpServletResponse) {
         // TODO Auto-generated method stub
 
     }
 
-    private void handleWmsException(EdalException wmse, HttpServletResponse httpServletResponse)
+    private void handleWmsException(EdalException wmse, HttpServletResponse httpServletResponse, boolean v130)
             throws IOException {
-        /*
-         * TODO this should return the exception as XML or potentially an image
-         */
-        PrintWriter writer = httpServletResponse.getWriter();
-        wmse.printStackTrace(writer);
+        VelocityContext context = new VelocityContext();
+        EventCartridge ec = new EventCartridge();
+        ec.addEventHandler(new EscapeXmlReference());
+        ec.attachToContext(context);
+        
+        context.put("exception", wmse);
+        
+        Template template;
+        if(v130) {
+            template = velocityEngine.getTemplate("templates/exception-1.3.0.vm");
+        } else {
+            template = velocityEngine.getTemplate("templates/exception-1.1.1.vm");
+        }
+        template.merge(context, httpServletResponse.getWriter());
     }
 }

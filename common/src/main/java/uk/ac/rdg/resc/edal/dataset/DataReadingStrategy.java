@@ -129,17 +129,10 @@ public enum DataReadingStrategy {
                 int imin = entries.get(0).getSourceGridIIndex();
                 int imax = entries.get(entries.size() - 1).getSourceGridIIndex();
 
-                int[] mins = new int[2];
-                mins[0] = imin;
-                mins[1] = j;
-                int[] maxes = new int[2];
-                maxes[0] = imax;
-                maxes[1] = j;
-
                 Array4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, j, j,
                         imin, imax);
 
-                for (DomainMapperEntry<int[]> dme : scanline.getPixelMapEntries()) {
+                for (DomainMapperEntry<int[]> dme : entries) {
                     List<int[]> targetGridPoints = dme.getTargetIndices();
                     for (int[] targetPoint : targetGridPoints) {
                         ret.set(data.get(0, 0, 0, dme.getSourceGridIIndex() - imin), new int[] {

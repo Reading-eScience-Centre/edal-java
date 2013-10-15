@@ -28,30 +28,52 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Map;
+
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Array1D;
 
 /**
  * A measurement of a vertical profile at a point
  * 
- * @author Guy
+ * @author Guy Griffiths
  */
-public interface ProfileFeature extends DiscreteFeature<Double, Extent<Double>> {
+public class ProfileFeature extends AbstractDiscreteFeature<Double, Extent<Double>> {
+
+    private final HorizontalPosition hPos;
+    private final DateTime time;
+
+    public ProfileFeature(String id, String name, String description, VerticalAxis domain,
+            HorizontalPosition hPos, DateTime time, Map<String, Parameter> parameters,
+            Map<String, Array1D> values) {
+        super(id, name, description, domain, parameters, values);
+        this.hPos = hPos;
+        this.time = time;
+    }
+
     /**
      * Gets the horizontal location of this profile feature.
      */
-    public HorizontalPosition getHorizontalPosition();
+    public HorizontalPosition getHorizontalPosition() {
+        return hPos;
+    }
 
     /**
      * Gets the time associated with this point series feature.
      * 
      * May return <code>null</code> if no time is associated
      */
-    public DateTime getTime();
+    public DateTime getTime() {
+        return time;
+    }
 
     @Override
-    public VerticalAxis getDomain();
+    public VerticalAxis getDomain() {
+        return (VerticalAxis) super.getDomain();
+    }
 }

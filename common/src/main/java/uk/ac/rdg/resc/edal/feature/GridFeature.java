@@ -83,11 +83,6 @@ public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D
     }
 
     @Override
-    public long size() {
-        return getDomain().size();
-    }
-
-    @Override
     public GridDomain getDomain() {
         return (GridDomain) super.getDomain();
     }

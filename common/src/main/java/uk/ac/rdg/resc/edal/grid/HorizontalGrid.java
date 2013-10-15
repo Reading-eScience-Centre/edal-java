@@ -74,7 +74,9 @@ public interface HorizontalGrid extends DiscreteHorizontalDomain<GridCell2D> {
      * @param position
      *            The position to find the index of
      * @return An int[] object representing the index of the position within the
+     *         domain, or <code>null</code> if the position is outside the
      *         domain. int[0] is the x-coordinate, int[1] is the y-coordinate
+     * 
      * 
      *         TODO replace the return type with something less prone to using
      *         the wrong co-ordinate

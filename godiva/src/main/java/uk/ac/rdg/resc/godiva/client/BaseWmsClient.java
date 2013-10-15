@@ -482,10 +482,10 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         if (widgetCollection.getTimeSelector().isContinuous()) {
             /*
              * Continuous time ranges need both a "time" (a range) and a
-             * "colorby/time" (single value) from the time selector
+             * "targettime" (single value) from the time selector
              */
             if (widgetCollection.getTimeSelector().getSelectedDateTime() != null) {
-                parameters.put("colorby/time", widgetCollection.getTimeSelector()
+                parameters.put("TARGETTIME", widgetCollection.getTimeSelector()
                         .getSelectedDateTime());
             }
             if (widgetCollection.getTimeSelector().getSelectedDateTimeRange() != null) {
@@ -507,7 +507,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
              * "colorby/depth" (single value) from the elevation selector
              */
             if (widgetCollection.getElevationSelector().getSelectedElevation() != null) {
-                parameters.put("colorby/depth", widgetCollection.getElevationSelector()
+                parameters.put("TARGETELEVATION", widgetCollection.getElevationSelector()
                         .getSelectedElevation());
             }
             if (widgetCollection.getElevationSelector().getSelectedElevationRange() != null) {
@@ -695,30 +695,32 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * features. This usually corresponds to in-situ data, but not
          * necessarily)
          */
-        widgetCollection.getTimeSelector().setContinuous(layerDetails.isMultiFeature());
-        widgetCollection.getElevationSelector().setContinuous(layerDetails.isMultiFeature());
-        mapArea.setMultiFeature(layerDetails.isMultiFeature());
+        widgetCollection.getTimeSelector().setContinuous(layerDetails.isContinuousT());
+        widgetCollection.getElevationSelector().setContinuous(layerDetails.isContinuousZ());
+        mapArea.setMultiFeature(layerDetails.isContinuousT() || layerDetails.isContinuousZ());
 
-        if (layerDetails.isMultiFeature()) {
+        if (layerDetails.isContinuousT()) {
             /*
-             * Set all options which depend on this being a multi-feature layer
+             * Set all options which depend on this being a layer with a continuous t-axis
              */
             if (layerDetails.getStartTime().equals(layerDetails.getEndTime())) {
-                widgetCollection.getTimeSelector().populateDates(null);
+                /*
+                 * We have a continuous axis with one value.  We can treat it as non-continuous...
+                 */
+                widgetCollection.getTimeSelector().setContinuous(false);
+                String[] split = layerDetails.getStartTime().split("T");
+                List<String> date = new ArrayList<String>();
+                date.add(split[0]);
+                widgetCollection.getTimeSelector().populateDates(date);
+                List<String> time = new ArrayList<String>();
+                time.add(split[1]);
+                widgetCollection.getTimeSelector().populateTimes(time);
+                dateTimeDetailsLoaded = true;
             } else {
                 List<String> startEndDates = new ArrayList<String>();
                 startEndDates.add(layerDetails.getStartTime());
                 startEndDates.add(layerDetails.getEndTime());
                 widgetCollection.getTimeSelector().populateDates(startEndDates);
-            }
-
-            if (layerDetails.getStartZ().equals(layerDetails.getEndZ())) {
-                widgetCollection.getElevationSelector().populateElevations(null);
-            } else {
-                List<String> startEndZs = new ArrayList<String>();
-                startEndZs.add(layerDetails.getStartZ());
-                startEndZs.add(layerDetails.getEndZ());
-                widgetCollection.getElevationSelector().populateElevations(startEndZs);
             }
             if (layerDetails.getNearestDateTime() != null) {
                 widgetCollection.getTimeSelector()
@@ -728,17 +730,35 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             }
         } else {
             /*
-             * Set all options which depend on this being a single-feature layer
+             * Set all options which depend on this having a discrete t-axis
              */
             widgetCollection.getTimeSelector().populateDates(layerDetails.getAvailableDates());
-            widgetCollection.getElevationSelector().populateElevations(
-                    layerDetails.getAvailableZs());
             if (layerDetails.getNearestDateTime() != null) {
                 nearestTime = layerDetails.getNearestDateTime();
                 widgetCollection.getTimeSelector().selectDate(layerDetails.getNearestDate());
             } else {
                 dateTimeDetailsLoaded = true;
             }
+        }
+        if (layerDetails.isContinuousZ()) {
+            /*
+             * Set all options which depend on this being a layer with a continuous z-axis
+             */
+            
+            if (layerDetails.getStartZ().equals(layerDetails.getEndZ())) {
+                widgetCollection.getElevationSelector().populateElevations(null);
+            } else {
+                List<String> startEndZs = new ArrayList<String>();
+                startEndZs.add(layerDetails.getStartZ());
+                startEndZs.add(layerDetails.getEndZ());
+                widgetCollection.getElevationSelector().populateElevations(startEndZs);
+            }
+        } else {
+            /*
+             * Set all options which depend on this having a discrete z-axis
+             */
+            widgetCollection.getElevationSelector().populateElevations(
+                    layerDetails.getAvailableZs());
         }
     }
 
