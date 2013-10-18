@@ -28,18 +28,34 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Map;
+
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.util.Array1D;
 
 /**
  * A {@link Feature} representing values over a 1-dimensional domain of
  * time-ordered points, where each point has a distinct value in 4-dimensional
  * space
  * 
- * @author Guy
+ * @author Guy Griffiths
  * 
  */
-public interface TrajectoryFeature extends DiscreteFeature<GeoPosition, GeoPosition> {
+public class TrajectoryFeature extends AbstractDiscreteFeature<GeoPosition, GeoPosition> {
+    public TrajectoryFeature(String id, String name, String description, TrajectoryDomain domain,
+            Map<String, Parameter> parameters, Map<String, ? extends Array1D<Number>> values) {
+        super(id, name, description, domain, parameters, values);
+    }
+
     @Override
-    public TrajectoryDomain getDomain();
+    public TrajectoryDomain getDomain() {
+        return (TrajectoryDomain) super.getDomain();
+    }
+    
+    @Override
+    public Array1D<Number> getValues(String paramId) {
+        return (Array1D<Number>) super.getValues(paramId);
+    }
 }

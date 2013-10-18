@@ -26,47 +26,25 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.domain;
+package uk.ac.rdg.resc.edal.exceptions;
 
-import java.util.List;
-
-import org.joda.time.Chronology;
-import org.joda.time.DateTime;
-
-import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.util.Array;
 
 /**
- * The domain of a {@link PointSeriesFeature}: a set of time instants.
+ * An exception to be thrown when an {@link Array} object is accessed
+ * incorrectly (e.g. trying to get/set out of bounds)
  * 
- * @todo Should be TimeAxis?
- * @author Jon Blower
+ * @author Guy Griffiths
  */
-public interface PointSeriesDomain extends DiscreteDomain<DateTime, Extent<DateTime>> {
-    /**
-     * @return the Chronology used by time values.
-     */
-    public Chronology getChronology();
+public class ArrayAccessException extends RuntimeException {
 
-    /**
-     * <p>
-     * Returns the list of time coordinate values that comprise this domain, in
-     * the domain's {@link #getCalendarSystem() calendar system}. The values
-     * will be in ascending order of time.
-     * </p>
-     * <p>
-     * This is exactly equivalent to {@link #getDomainObjects()}.
-     * </p>
-     * 
-     * @return the {@link List} of times in this domain
-     */
-    public List<DateTime> getTimes();
+    private static final long serialVersionUID = 1L;
 
-    /**
-     * Returns the extent of the domain. (This information could also be
-     * calculated from the first and last values in {@link #getDomainObjects()}.
-     * 
-     * @return the extent of the domain.
-     */
-    public Extent<DateTime> getExtent();
+    public ArrayAccessException(String message) {
+        super(message);
+    }
 
+    public ArrayAccessException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -76,13 +76,13 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 public class MapFeature extends AbstractDiscreteFeature<HorizontalPosition, GridCell2D> {
 
     public MapFeature(String id, String name, String description, MapDomain domain,
-            Map<String, Parameter> parameters, Map<String, Array2D> valuesMap) {
+            Map<String, Parameter> parameters, Map<String, Array2D<Number>> valuesMap) {
         super(id, name, description, domain, parameters, valuesMap);
     }
 
     @Override
-    public Array2D getValues(String paramId) {
-        return (Array2D) super.getValues(paramId);
+    public Array2D<Number> getValues(String paramId) {
+        return (Array2D<Number>) super.getValues(paramId);
     }
 
     @Override

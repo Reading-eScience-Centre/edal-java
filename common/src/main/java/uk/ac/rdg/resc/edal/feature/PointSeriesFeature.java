@@ -52,7 +52,7 @@ public class PointSeriesFeature extends AbstractDiscreteFeature<DateTime, Extent
 
     public PointSeriesFeature(String id, String name, String description, TimeAxis domain,
             HorizontalPosition hPos, VerticalPosition zPos, Map<String, Parameter> parameters,
-            Map<String, Array1D> values) {
+            Map<String, Array1D<Number>> values) {
         super(id, name, description, domain, parameters, values);
         this.hPos = hPos;
         this.zPos = zPos;
@@ -78,5 +78,10 @@ public class PointSeriesFeature extends AbstractDiscreteFeature<DateTime, Extent
     @Override
     public TimeAxis getDomain() {
         return (TimeAxis) super.getDomain();
+    }
+    
+    @Override
+    public Array1D<Number> getValues(String paramId) {
+        return (Array1D<Number>) super.getValues(paramId);
     }
 }

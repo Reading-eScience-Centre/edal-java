@@ -120,7 +120,7 @@ public class LegendDataGenerator {
     private MapFeature getFeature(String xFieldName, String yFieldName) {
         ArrayList<NameAndRange> dataRangesList = new ArrayList<NameAndRange>(dataFields);
 
-        Map<String, Array2D> values = new HashMap<String, Array2D>();
+        Map<String, Array2D<Number>> values = new HashMap<String, Array2D<Number>>();
 
         /*
          * We need to initialise 3 2D-arrays here, and add them to the values
@@ -131,7 +131,7 @@ public class LegendDataGenerator {
                 continue;
             }
             
-            Array2D valuesArray;
+            Array2D<Number> valuesArray;
             if (nameAndRange.getFieldLabel().equals(xFieldName)) {
                 valuesArray = new XYNull(MatrixType.X, nameAndRange.getScaleRange());
             } else if (nameAndRange.getFieldLabel().equals(yFieldName)) {
@@ -151,7 +151,7 @@ public class LegendDataGenerator {
         X, Y, NAN
     };
 
-    private class XYNull extends Array2D {
+    private class XYNull extends Array2D<Number> {
         private MatrixType type;
         private Extent<Float> scaleRange = null;
 
@@ -189,6 +189,11 @@ public class LegendDataGenerator {
         @Override
         public void set(Number value, int... coords) {
             throw new UnsupportedOperationException("This Array2D is immutable");
+        }
+
+        @Override
+        public Class<Number> getValueClass() {
+            return Number.class;
         }
     }
 }

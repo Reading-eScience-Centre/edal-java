@@ -56,7 +56,7 @@ final class CdmGridDataSource implements GridDataSource {
     }
 
     @Override
-    public Array4D read(String variableId, int tmin, int tmax, int zmin, int zmax, int ymin,
+    public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax, int ymin,
             int ymax, int xmin, int xmax) throws IOException {
 
         /*
@@ -104,7 +104,7 @@ final class CdmGridDataSource implements GridDataSource {
         gridDataset.close();
     }
 
-    private static final class WrappedArray extends Array4D {
+    private static final class WrappedArray extends Array4D<Number> {
         private final DataChunk dataChunk;
         private final int[] shape;
         private final int xAxisIndex;
@@ -113,6 +113,7 @@ final class CdmGridDataSource implements GridDataSource {
         private final int tAxisIndex;
 
         public WrappedArray(RangesList rangesList, DataChunk dataChunk, int[] shape) {
+            super(shape[0], shape[1], shape[2], shape[3]);
             this.dataChunk = dataChunk;
             this.shape = shape;
             xAxisIndex = rangesList.getXAxisIndex();
@@ -176,6 +177,11 @@ final class CdmGridDataSource implements GridDataSource {
         @Override
         public long size() {
             return shape[0] * shape[1] * shape[2] * shape[3];
+        }
+
+        @Override
+        public Class<Number> getValueClass() {
+            return Number.class;
         }
     }
 }

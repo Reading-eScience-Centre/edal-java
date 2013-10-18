@@ -79,4 +79,10 @@ public interface BoundingBox extends Polygon {
      * Gets the position (getMaxX(), getMaxY())
      */
     public HorizontalPosition getUpperCorner();
+    
+    @Override
+    public boolean equals(Object obj);
+    
+    @Override
+    public int hashCode();
 }

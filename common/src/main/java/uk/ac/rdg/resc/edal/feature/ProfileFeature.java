@@ -50,7 +50,7 @@ public class ProfileFeature extends AbstractDiscreteFeature<Double, Extent<Doubl
 
     public ProfileFeature(String id, String name, String description, VerticalAxis domain,
             HorizontalPosition hPos, DateTime time, Map<String, Parameter> parameters,
-            Map<String, Array1D> values) {
+            Map<String, Array1D<Number>> values) {
         super(id, name, description, domain, parameters, values);
         this.hPos = hPos;
         this.time = time;
@@ -75,5 +75,10 @@ public class ProfileFeature extends AbstractDiscreteFeature<Double, Extent<Doubl
     @Override
     public VerticalAxis getDomain() {
         return (VerticalAxis) super.getDomain();
+    }
+    
+    @Override
+    public Array1D<Number> getValues(String paramId) {
+        return (Array1D<Number>) super.getValues(paramId);
     }
 }

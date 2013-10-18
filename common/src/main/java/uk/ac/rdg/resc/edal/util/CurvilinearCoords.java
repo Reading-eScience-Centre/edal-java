@@ -70,13 +70,13 @@ public final class CurvilinearCoords {
     private final float[] latitudes;
 
     /** The longitudes of the corners of the grid cells */
-    private final Array2D cornerLons;
+    private final Array2D<Number> cornerLons;
     /** The latitudes of the corners of the grid cells */
-    private final Array2D cornerLats;
+    private final Array2D<Number> cornerLats;
     /** The lon-lat bounding box of the grid */
     private final BoundingBox lonLatBbox;
 
-    public CurvilinearCoords(Array2D lonVals, Array2D latVals) {
+    public CurvilinearCoords(Array2D<Number> lonVals, Array2D<Number> latVals) {
         /* Sanity check */
         if (!Arrays.equals(lonVals.getShape(), latVals.getShape())) {
             throw new IllegalArgumentException(String.format(
@@ -133,8 +133,8 @@ public final class CurvilinearCoords {
     /**
      * Adapted from previous ncWMS
      */
-    private Array2D makeCorners(float[] midpoints, boolean isLongitude) {
-        Array2D edges = new ValuesArray2D(nj + 1, ni + 1);
+    private Array2D<Number> makeCorners(float[] midpoints, boolean isLongitude) {
+        Array2D<Number> edges = new ValuesArray2D(nj + 1, ni + 1);
 
         for (int j = 0; j < nj - 1; j++) {
             for (int i = 0; i < ni - 1; i++) {

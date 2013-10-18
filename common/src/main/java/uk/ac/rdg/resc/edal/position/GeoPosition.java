@@ -35,23 +35,42 @@ import org.joda.time.DateTime;
  * Defines the position of a point in four-dimensional space and time.
  * </p>
  * 
+ * @author Guy Griffiths
  * @author Jon Blower
  */
-public interface GeoPosition {
+public class GeoPosition {
+
+    private final HorizontalPosition hPos;
+    private final VerticalPosition zPos;
+    private final DateTime time;
+
+    public GeoPosition(HorizontalPosition hPos, VerticalPosition zPos, DateTime time) {
+        super();
+        this.hPos = hPos;
+        this.zPos = zPos;
+        this.time = time;
+    }
+
     /**
      * @return the {@link HorizontalPosition} component of this
      *         {@link GeoPosition}
      */
-    public HorizontalPosition getHorizontalPosition();
+    public HorizontalPosition getHorizontalPosition() {
+        return hPos;
+    }
 
     /**
      * @return the {@link VerticalPosition} component of this
      *         {@link GeoPosition}
      */
-    public VerticalPosition getVerticalPosition();
+    public VerticalPosition getVerticalPosition() {
+        return zPos;
+    }
 
     /**
      * @return the time component of this {@link GeoPosition}
      */
-    public DateTime getTime();
+    public DateTime getTime() {
+        return time;
+    }
 }

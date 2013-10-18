@@ -33,7 +33,7 @@ import java.util.Iterator;
 public abstract class AbstractImmutableArray<T> implements Array<T> {
 
     private Class<T> clazz;
-    private int[] shape;
+    protected int[] shape;
 
     /**
      * Instantiate a new {@link AbstractImmutableArray}

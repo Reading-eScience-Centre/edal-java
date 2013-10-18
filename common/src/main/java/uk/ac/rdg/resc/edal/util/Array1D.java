@@ -30,7 +30,7 @@ package uk.ac.rdg.resc.edal.util;
 
 import java.util.Iterator;
 
-public abstract class Array1D implements Array<Number> {
+public abstract class Array1D<T> implements Array<T> {
 
     private int size;
 
@@ -47,8 +47,8 @@ public abstract class Array1D implements Array<Number> {
     }
 
     @Override
-    public Iterator<Number> iterator() {
-        return new Iterator<Number>() {
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
             private int counter = 0;
 
             boolean done = false;
@@ -59,8 +59,8 @@ public abstract class Array1D implements Array<Number> {
             }
 
             @Override
-            public Number next() {
-                Number value = get(counter);
+            public T next() {
+                T value = get(counter);
                 /*
                  * Increment the counters if necessary, resetting to zero if
                  * necessary
@@ -80,17 +80,12 @@ public abstract class Array1D implements Array<Number> {
     }
 
     @Override
-    public Class<Number> getValueClass() {
-        return Number.class;
-    }
-
-    @Override
     public long size() {
         return size;
     }
 
     @Override
     public int[] getShape() {
-        return new int[]{size};
+        return new int[] { size };
     }
 }

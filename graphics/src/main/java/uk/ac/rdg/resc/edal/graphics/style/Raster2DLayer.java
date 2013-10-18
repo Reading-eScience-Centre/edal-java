@@ -60,8 +60,8 @@ public class Raster2DLayer extends ImageLayer {
         /*
          * Read fields into arrays
          */
-        Array2D xValues = dataReader.getDataForLayerName(xDataFieldName);
-        Array2D yValues = dataReader.getDataForLayerName(yDataFieldName);
+        Array2D<Number> xValues = dataReader.getDataForLayerName(xDataFieldName);
+        Array2D<Number> yValues = dataReader.getDataForLayerName(yDataFieldName);
         
         Iterator<Number> xIterator = xValues.iterator();
         Iterator<Number> yIterator = yValues.iterator();

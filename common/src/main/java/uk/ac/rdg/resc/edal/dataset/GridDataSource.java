@@ -44,7 +44,7 @@ import uk.ac.rdg.resc.edal.util.Array4D;
  */
 public interface GridDataSource {
 
-    public Array4D read(String variableId, int tmin, int tmax, int zmin, int zmax,
+    public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax,
             int ymin, int ymax, int xmin, int xmax) throws IOException;
 
     public void close() throws IOException;

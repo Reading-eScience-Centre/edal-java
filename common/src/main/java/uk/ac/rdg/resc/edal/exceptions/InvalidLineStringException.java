@@ -26,43 +26,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.domain;
+package uk.ac.rdg.resc.edal.exceptions;
 
 /**
- * <p>
- * Defines a contiguous domain that is defined by "low" and "high" bounds. Any
- * value (inclusively) between these values is considered part of the domain. A
- * null value for "low" or "high" indicates that the extent is unbounded at that
- * end. If both values are null, then the Extent includes all possible values of
- * P.
- * </p>
+ * An exception to be thrown when trying to parse a line string which is badly
+ * formatted
  * 
- * @param P
- *            The type of object used to identify positions within this extent.
- * @author Jon Blower
- * @author Guy
+ * @author Guy Griffiths
  */
-public interface Extent<P> extends Domain<P> {
-    /**
-     * @return The low bound of this {@link Extent}
-     */
-    public P getLow();
+public class InvalidLineStringException extends EdalParseException {
 
-    /**
-     * @return The high bound of this {@link Extent}
-     */
-    public P getHigh();
-    
-    /**
-     * @return Whether or not this is an empty {@link Extent} - empty
-     *         {@link Extent}s are defined as containing <code>null</code> for
-     *         both {@link Extent#getHigh()} and {@link Extent#getLow()}
-     */
-    public boolean isEmpty();
-    
-    @Override
-    public boolean equals(Object obj);
-    
-    @Override
-    public int hashCode();
+    private static final long serialVersionUID = 1L;
+
+    public InvalidLineStringException(String message) {
+        super(message);
+    }
+
+    public InvalidLineStringException(String message, String code) {
+        super(message, code);
+    }
+
+    public InvalidLineStringException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

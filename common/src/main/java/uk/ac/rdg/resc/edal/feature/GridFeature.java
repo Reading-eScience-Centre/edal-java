@@ -73,13 +73,13 @@ import uk.ac.rdg.resc.edal.util.Array4D;
 public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D> {
 
     public GridFeature(String id, String name, String description, GridDomain domain,
-            Map<String, Parameter> parameters, Map<String, Array4D> valuesMap) {
+            Map<String, Parameter> parameters, Map<String, Array4D<Number>> valuesMap) {
         super(id, name, description, domain, parameters, valuesMap);
     }
 
     @Override
-    public Array4D getValues(String paramId) {
-        return (Array4D) super.getValues(paramId);
+    public Array4D<Number> getValues(String paramId) {
+        return (Array4D<Number>) super.getValues(paramId);
     }
 
     @Override

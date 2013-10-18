@@ -31,21 +31,44 @@ package uk.ac.rdg.resc.edal.graphics;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.geom.Ellipse2D;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CombinedDomainXYPlot;
+import org.jfree.chart.plot.IntervalMarker;
+import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.PaintScale;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
+import org.jfree.chart.renderer.xy.XYBlockRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.PaintScaleLegend;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.title.Title;
+import org.jfree.data.Range;
 import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.AbstractXYZDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.xy.XYZDataset;
+import org.jfree.ui.HorizontalAlignment;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
+import org.jfree.ui.TextAnchor;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 
@@ -53,9 +76,14 @@ import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
+import uk.ac.rdg.resc.edal.geometry.LineString;
+import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.util.Array1D;
 
 /**
  * Code to produce various types of chart.
@@ -65,7 +93,8 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
  * @author Kevin X. Yang
  */
 final public class Charting {
-//    private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+    private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+    private static final Locale US_LOCALE = new Locale("us", "US");
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getNumberInstance();
     static {
         NUMBER_FORMAT.setMinimumFractionDigits(0);
@@ -277,8 +306,454 @@ final public class Charting {
         return new JFreeChart(title.toString(), null, plot, timeSeriesColl.getSeriesCount() > 1);
     }
 
+    /**
+     * Creates a plot of {@link TrajectoryFeature}s which have been extracted
+     * along a transect.
+     * 
+     * All {@link TrajectoryFeature}s must have been extracted along the same
+     * {@link LineString} for this graph to be correctly displayed.
+     * 
+     * @param features
+     *            A {@link List} of {@link TrajectoryFeature}s to plot
+     * @param transectDomain
+     *            The transect domain along which *all* features must have been
+     *            extracted.
+     * @param hasVerticalAxis
+     * @param copyrightStatement
+     *            A copyright notice to display under the graph
+     * @return The plot
+     */
+    public static JFreeChart createTransectPlot(List<TrajectoryFeature> features,
+            LineString transectDomain, boolean hasVerticalAxis, String copyrightStatement) {
+        JFreeChart chart;
+        XYPlot plot;
+
+        XYSeriesCollection xySeriesColl = new XYSeriesCollection();
+
+        StringBuilder title = new StringBuilder("Trajectory plot of ");
+        StringBuilder yLabel = new StringBuilder();
+        int size = 0;
+        boolean multiplePlots = false;
+        if (features.size() > 1) {
+            multiplePlots = true;
+        }
+        for (TrajectoryFeature feature : features) {
+            if (feature.getParameterIds().size() > 1) {
+                multiplePlots = true;
+            }
+            for (String paramId : feature.getParameterIds()) {
+                XYSeries series = new XYSeries(feature.getName() + ":" + paramId, true);
+                double k = 0;
+                Array1D<Number> values = feature.getValues(paramId);
+                size = (int) values.size();
+                for (int i = 0; i < size; i++) {
+                    series.add(k++, values.get(i));
+                }
+
+                xySeriesColl.addSeries(series);
+                yLabel.append(getAxisLabel(feature, paramId));
+                yLabel.append("; ");
+                title.append(paramId);
+                title.append(", ");
+            }
+        }
+        yLabel.deleteCharAt(yLabel.length() - 1);
+        yLabel.deleteCharAt(yLabel.length() - 1);
+        title.deleteCharAt(title.length() - 1);
+        title.deleteCharAt(title.length() - 1);
+
+        /*
+         * If we have a layer with more than one elevation value, we create a
+         * transect chart using standard XYItem Renderer to keep the plot
+         * renderer consistent with that of vertical section plot
+         */
+        if (hasVerticalAxis) {
+            final XYItemRenderer renderer1 = new StandardXYItemRenderer();
+            final NumberAxis rangeAxis1 = new NumberAxis(yLabel.toString());
+            plot = new XYPlot(xySeriesColl, new NumberAxis(), rangeAxis1, renderer1);
+            plot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT);
+            plot.setBackgroundPaint(Color.lightGray);
+            plot.setDomainGridlinesVisible(false);
+            plot.setRangeGridlinePaint(Color.white);
+            for (int i = 0; i < xySeriesColl.getSeriesCount(); i++) {
+                plot.getRenderer().setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
+            }
+            plot.setOrientation(PlotOrientation.VERTICAL);
+            chart = new JFreeChart(null, null, plot, multiplePlots);
+        } else {
+            /*
+             * If we have a layer which only has one elevation value, we simply
+             * create XY Line chart
+             */
+            chart = ChartFactory.createXYLineChart(title.toString(),
+                    "Distance along transect (arbitrary units)", yLabel.toString(), xySeriesColl,
+                    PlotOrientation.VERTICAL, multiplePlots, false, false);
+            plot = chart.getXYPlot();
+            for (int i = 0; i < xySeriesColl.getSeriesCount(); i++) {
+                plot.getRenderer().setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
+            }
+        }
+
+        if (copyrightStatement != null && !hasVerticalAxis) {
+            final TextTitle textTitle = new TextTitle(copyrightStatement);
+            textTitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
+            textTitle.setPosition(RectangleEdge.BOTTOM);
+            textTitle.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+            chart.addSubtitle(textTitle);
+        }
+        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+
+        rangeAxis.setAutoRangeIncludesZero(false);
+        plot.setNoDataMessage("There is no data for what you have chosen.");
+
+        /* Iterate through control points to show segments of transect */
+        Double prevCtrlPointDistance = null;
+        for (int i = 0; i < transectDomain.getControlPoints().size(); i++) {
+            double ctrlPointDistance = transectDomain.getFractionalControlPointDistance(i);
+            if (prevCtrlPointDistance != null) {
+                /*
+                 * Determine start end end value for marker based on index of
+                 * ctrl point
+                 */
+                IntervalMarker target = new IntervalMarker(size * prevCtrlPointDistance, size
+                        * ctrlPointDistance);
+                target.setLabel("["
+                        + printTwoDecimals(transectDomain.getControlPoints().get(i - 1).getY())
+                        + ","
+                        + printTwoDecimals(transectDomain.getControlPoints().get(i - 1).getX())
+                        + "]");
+                target.setLabelFont(new Font("SansSerif", Font.ITALIC, 11));
+                /*
+                 * Alter colour of segment and position of label based on
+                 * odd/even index
+                 */
+                if (i % 2 == 0) {
+                    target.setPaint(new Color(222, 222, 255, 128));
+                    target.setLabelAnchor(RectangleAnchor.TOP_LEFT);
+                    target.setLabelTextAnchor(TextAnchor.TOP_LEFT);
+                } else {
+                    target.setPaint(new Color(233, 225, 146, 128));
+                    target.setLabelAnchor(RectangleAnchor.BOTTOM_LEFT);
+                    target.setLabelTextAnchor(TextAnchor.BOTTOM_LEFT);
+                }
+                /* Add marker to plot */
+                plot.addDomainMarker(target);
+            }
+            prevCtrlPointDistance = transectDomain.getFractionalControlPointDistance(i);
+        }
+
+        return chart;
+    }
+
+    /**
+     * Plot a vertical section chart
+     * 
+     * @param features
+     *            A {@link List} of evenly-spaced {@link ProfileFeature}s making
+     *            up this vertical section. All features <i>must</i> have been
+     *            extracted onto the same {@link VerticalAxis}. They must each
+     *            only contain a single parameter.
+     * @param horizPath
+     *            The {@link LineString} along which the {@link ProfileFeature}s
+     *            have been extracted
+     * @param colourScheme
+     *            The {@link ColourScheme} to use for the plot
+     * @param zValue
+     *            The elevation at which a matching transect is plotted (will be
+     *            marked on the chart) - can be <code>null</code>
+     * @return The resulting chart
+     */
+    public static JFreeChart createVerticalSectionChart(List<ProfileFeature> features,
+            LineString horizPath, ColourScheme colourScheme, Double zValue) {
+        if (features == null || features.size() == 0) {
+            throw new IllegalArgumentException(
+                    "You need at least one profile to plot a vertical section.");
+        }
+
+        VerticalSectionDataset dataset = new VerticalSectionDataset(features);
+
+        NumberAxis xAxis = new NumberAxis("Distance along path (arbitrary units)");
+        xAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+
+        PaintScale scale = createPaintScale(colourScheme);
+
+        NumberAxis colourScaleBar = new NumberAxis();
+        Range colorBarRange = new Range(colourScheme.getScaleMin(), colourScheme.getScaleMax());
+        colourScaleBar.setRange(colorBarRange);
+
+        PaintScaleLegend paintScaleLegend = new PaintScaleLegend(scale, colourScaleBar);
+        paintScaleLegend.setPosition(RectangleEdge.BOTTOM);
+
+        XYBlockRenderer renderer = new XYBlockRenderer();
+        double elevationResolution = dataset.getElevationResolution();
+        renderer.setBlockHeight(elevationResolution);
+        renderer.setPaintScale(scale);
+
+        XYPlot plot = new XYPlot(dataset, xAxis, getZAxis(features.get(0).getDomain()
+                .getVerticalCrs()), renderer);
+        plot.setBackgroundPaint(Color.lightGray);
+        plot.setDomainGridlinesVisible(false);
+        plot.setRangeGridlinePaint(Color.white);
+
+        /* Iterate through control points to show segments of transect */
+        Double prevCtrlPointDistance = null;
+        int xAxisLength = features.size();
+        for (int i = 0; i < horizPath.getControlPoints().size(); i++) {
+            double ctrlPointDistance = horizPath.getFractionalControlPointDistance(i);
+            if (prevCtrlPointDistance != null) {
+                /*
+                 * Determine start end end value for marker based on index of
+                 * ctrl point
+                 */
+                IntervalMarker target = new IntervalMarker(xAxisLength * prevCtrlPointDistance,
+                        xAxisLength * ctrlPointDistance);
+                target.setPaint(TRANSPARENT);
+                /* Add marker to plot */
+                plot.addDomainMarker(target);
+                /* Add line marker to vertical section plot */
+                if (zValue != null) {
+                    final Marker verticalLevel = new ValueMarker(Math.abs(zValue));
+                    verticalLevel.setPaint(Color.lightGray);
+                    verticalLevel.setLabel("at " + zValue + "  level ");
+                    verticalLevel.setLabelAnchor(RectangleAnchor.BOTTOM_RIGHT);
+                    verticalLevel.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
+                    plot.addRangeMarker(verticalLevel);
+                }
+
+            }
+            prevCtrlPointDistance = horizPath.getFractionalControlPointDistance(i);
+        }
+
+        JFreeChart chart = new JFreeChart(null, plot);
+        chart.removeLegend();
+        chart.addSubtitle(paintScaleLegend);
+        chart.setBackgroundPaint(Color.white);
+        return chart;
+    }
+
+    public static JFreeChart addVerticalSectionChart(JFreeChart transectChart,
+            JFreeChart verticalSectionChart) {
+        /*
+         * Create the combined chart with both the transect and the vertical
+         * section
+         */
+        CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis(
+                "Distance along path (arbitrary units)"));
+        plot.setGap(20.0);
+        plot.add(transectChart.getXYPlot(), 1);
+        plot.add(verticalSectionChart.getXYPlot(), 1);
+        plot.setOrientation(PlotOrientation.VERTICAL);
+        String title = transectChart.getTitle().getText();
+        String copyright = null;
+        for (int i = 0; i < transectChart.getSubtitleCount(); i++) {
+            Title subtitle = transectChart.getSubtitle(i);
+            if (subtitle instanceof TextTitle) {
+                copyright = ((TextTitle) transectChart.getSubtitle(0)).getText();
+                break;
+            }
+        }
+
+        JFreeChart combinedChart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
+        /*
+         * This is not ideal. We have already added the copyright label to the
+         * first chart, but then we extract the actual plot, so we need to add
+         * it again here
+         */
+        if (copyright != null) {
+            final TextTitle textTitle = new TextTitle(copyright);
+            textTitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
+            textTitle.setPosition(RectangleEdge.BOTTOM);
+            textTitle.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+            transectChart.addSubtitle(textTitle);
+        }
+
+        /* Set left margin to 10 to avoid number wrap at color bar */
+        RectangleInsets r = new RectangleInsets(0, 10, 0, 0);
+        transectChart.setPadding(r);
+
+        /* Use the legend from the vertical section chart */
+        transectChart.addSubtitle(verticalSectionChart.getSubtitle(0));
+
+        return combinedChart;
+    }
+
     private static String getAxisLabel(Feature<?> feature, String memberName) {
         Parameter parameter = feature.getParameter(memberName);
         return parameter.getTitle() + " (" + parameter.getUnits() + ")";
+    }
+
+    /**
+     * Prints a double-precision number to 2 decimal places
+     * 
+     * @param d
+     *            the double
+     * @return rounded value to 2 places, as a String
+     */
+    private static String printTwoDecimals(double d) {
+        DecimalFormat twoDForm = new DecimalFormat("#.##");
+        /*
+         * We need to set the Locale properly, otherwise the DecimalFormat
+         * doesn't work in locales that use commas instead of points. Thanks to
+         * Justino Martinez for this fix!
+         */
+        DecimalFormatSymbols decSym = DecimalFormatSymbols.getInstance(US_LOCALE);
+        twoDForm.setDecimalFormatSymbols(decSym);
+        return twoDForm.format(d);
+    }
+
+    /**
+     * An {@link XYZDataset} that is created by interpolating a set of values
+     * from a discrete set of elevations.
+     */
+    private static class VerticalSectionDataset extends AbstractXYZDataset {
+        private static final long serialVersionUID = 1L;
+        private final int horizPathLength;
+        private final List<ProfileFeature> features;
+        private final String paramId;
+        private final List<Double> elevationValues;
+        private final double minElValue;
+        private final double elevationResolution;
+        private final int numElevations;
+
+        public VerticalSectionDataset(List<ProfileFeature> features) {
+            this.features = features;
+            this.horizPathLength = features.size();
+
+            double minElValue = 0.0;
+            double maxElValue = 1.0;
+            VerticalAxis vAxis = features.get(0).getDomain();
+
+            if (vAxis.size() > 0) {
+                minElValue = vAxis.getCoordinateValue(0);
+                maxElValue = vAxis.getCoordinateValue(vAxis.size() - 1);
+            }
+
+            /* Sometimes values on the axes are reversed */
+            if (minElValue > maxElValue) {
+                double temp = minElValue;
+                minElValue = maxElValue;
+                maxElValue = temp;
+            }
+            this.minElValue = minElValue;
+
+            double minGap = Double.MAX_VALUE;
+            for (int i = 1; i < vAxis.size(); i++) {
+                minGap = Math.min(minGap,
+                        Math.abs(vAxis.getCoordinateValue(i) - vAxis.getCoordinateValue(i - 1)));
+            }
+            this.numElevations = (int) ((maxElValue - minElValue) / minGap);
+            this.elevationResolution = (maxElValue - minElValue) / numElevations;
+
+            this.paramId = features.get(0).getParameterIds().iterator().next();
+            this.elevationValues = vAxis.getCoordinateValues();
+        }
+
+        public double getElevationResolution() {
+            return elevationResolution;
+        }
+
+        @Override
+        public int getSeriesCount() {
+            return 1;
+        }
+
+        @Override
+        public String getSeriesKey(int series) {
+            checkSeries(series);
+            return "Vertical section";
+        }
+
+        @Override
+        public int getItemCount(int series) {
+            checkSeries(series);
+            return horizPathLength * numElevations;
+        }
+
+        @Override
+        public Integer getX(int series, int item) {
+            checkSeries(series);
+            /*
+             * The x coordinate is just the integer index of the point along the
+             * horizontal path
+             */
+            return item % horizPathLength;
+        }
+
+        /**
+         * Gets the value of elevation, assuming linear variation between min
+         * and max.
+         */
+        @Override
+        public Double getY(int series, int item) {
+            checkSeries(series);
+            int yIndex = item / horizPathLength;
+            return minElValue + yIndex * elevationResolution;
+        }
+
+        /**
+         * Gets the data value corresponding with the given item, interpolating
+         * between the recorded data values using nearest-neighbour
+         * interpolation
+         */
+        @Override
+        public Float getZ(int series, int item) {
+            checkSeries(series);
+            int xIndex = item % horizPathLength;
+            double elevation = getY(series, item);
+            /*
+             * What is the index of the nearest elevation in the list of
+             * elevations for which we have data?
+             */
+            int nearestElevationIndex = -1;
+            double minDiff = Double.MAX_VALUE;
+            for (int i = 0; i < elevationValues.size(); i++) {
+                double el = elevationValues.get(i);
+                double diff = Math.abs(el - elevation);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    nearestElevationIndex = i;
+                }
+            }
+            
+            Number number = features.get(xIndex).getValues(paramId).get(nearestElevationIndex);
+            if(number != null) {
+                return number.floatValue();
+            } else {
+                return null;
+            }
+        }
+
+        /**
+         * @throws IllegalArgumentException
+         *             if the argument is not zero.
+         */
+        private static void checkSeries(int series) {
+            if (series != 0) {
+                throw new IllegalArgumentException("Series must be zero");
+            }
+        }
+    }
+
+    /**
+     * Creates and returns a JFreeChart {@link PaintScale} that converts data
+     * values to {@link Color}s.
+     */
+    public static PaintScale createPaintScale(final ColourScheme colourScheme) {
+        return new PaintScale() {
+            @Override
+            public double getLowerBound() {
+                return colourScheme.getScaleMin();
+            }
+
+            @Override
+            public double getUpperBound() {
+                return colourScheme.getScaleMax();
+            }
+
+            @Override
+            public Color getPaint(double value) {
+                return colourScheme.getColor(value);
+            }
+        };
     }
 }

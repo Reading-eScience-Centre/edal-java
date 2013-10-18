@@ -105,7 +105,7 @@ public class PlotTests {
 
         HorizontalGrid hGrid = new RegularGridImpl(bbox, WIDTH, HEIGHT);
         MapDomain domain = new MapDomainImpl(hGrid, null, null, null);
-        Map<String, Array2D> valuesMap = new HashMap<String, Array2D>();
+        Map<String, Array2D<Number>> valuesMap = new HashMap<String, Array2D<Number>>();
 
         /*
          * These reference static vars defined at the end of the file (for
@@ -246,7 +246,7 @@ public class PlotTests {
      * Static arrays defined at the bottom to stay out of the way
      */
 
-    private final static Array2D arr = new Array2D(HEIGHT, WIDTH) {
+    private final static Array2D<Number> arr = new Array2D<Number>(HEIGHT, WIDTH) {
         @Override
         public void set(Number value, int... coords) {
             throw new UnsupportedOperationException("Not supported");
@@ -269,9 +269,14 @@ public class PlotTests {
             double yComp = ((double) y) / HEIGHT;
             return xComp * yComp;
         }
+
+        @Override
+        public Class<Number> getValueClass() {
+            return Number.class;
+        }
     };
 
-    private final static Array2D xarr = new Array2D(HEIGHT, WIDTH) {
+    private final static Array2D<Number> xarr = new Array2D<Number>(HEIGHT, WIDTH) {
         @Override
         public void set(Number value, int... coords) {
             throw new UnsupportedOperationException("Not supported");
@@ -281,9 +286,14 @@ public class PlotTests {
         public Number get(int... coords) {
             return ((double) coords[1]) / WIDTH;
         }
+        
+        @Override
+        public Class<Number> getValueClass() {
+            return Number.class;
+        }
     };
 
-    private final static Array2D yarr = new Array2D(HEIGHT, WIDTH) {
+    private final static Array2D<Number> yarr = new Array2D<Number>(HEIGHT, WIDTH) {
         @Override
         public void set(Number value, int... coords) {
             throw new UnsupportedOperationException("Not supported");
@@ -293,9 +303,14 @@ public class PlotTests {
         public Number get(int... coords) {
             return ((double) coords[0]) / HEIGHT;
         }
+        
+        @Override
+        public Class<Number> getValueClass() {
+            return Number.class;
+        }
     };
 
-    private final static Array2D thetaarr = new Array2D(HEIGHT, WIDTH) {
+    private final static Array2D<Number> thetaarr = new Array2D<Number>(HEIGHT, WIDTH) {
         @Override
         public void set(Number value, int... coords) {
             throw new UnsupportedOperationException("Not supported");
@@ -304,6 +319,11 @@ public class PlotTests {
         @Override
         public Number get(int... coords) {
             return 2*Math.PI*((double) coords[1]) / WIDTH;
+        }
+        
+        @Override
+        public Class<Number> getValueClass() {
+            return Number.class;
         }
     };
 }

@@ -96,7 +96,7 @@ public class LinearOpacity extends OpacityTransform {
 
         int[] imagePixels = image.getRGB(0, 0, width, height, null, 0, width);
 
-        Array2D values = dataReader.getDataForLayerName(dataFieldName);
+        Array2D<Number> values = dataReader.getDataForLayerName(dataFieldName);
         
         int index = 0;
         Iterator<Number> iterator = values.iterator();

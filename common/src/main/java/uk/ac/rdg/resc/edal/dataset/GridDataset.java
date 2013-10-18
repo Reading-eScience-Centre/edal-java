@@ -33,11 +33,13 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 
+import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -81,8 +83,9 @@ public interface GridDataset extends Dataset {
 
     public ProfileFeature readProfileData(Set<String> varIds, HorizontalPosition hPos,
             VerticalAxis zAxis, DateTime time) throws DataReadingException;
-
     
+    public TrajectoryFeature readTrajectoryData(Set<String> varIds, TrajectoryDomain domain) throws DataReadingException;
+
     public Number readSinglePoint(String variableId, HorizontalPosition position, Double zVal,
             DateTime time) throws DataReadingException;
 }

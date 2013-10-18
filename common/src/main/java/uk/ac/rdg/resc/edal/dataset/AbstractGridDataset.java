@@ -47,20 +47,24 @@ import org.slf4j.LoggerFactory;
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
+import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
+import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
@@ -138,44 +142,44 @@ public abstract class AbstractGridDataset implements GridDataset {
              * Open the source of data
              */
             dataSource = openGridDataSource();
-    
+
             /*
              * The procedure below can be optimized: if we know that multiple
-             * variables share the same source grid then we don't have to perform
-             * the conversion from natural coordinates to grid indices multiple
-             * times. HOWEVER, we might have to beware of this in the case of
-             * aggregation, in which different variables may have different mappings
-             * from time values to filename/tIndex.
+             * variables share the same source grid then we don't have to
+             * perform the conversion from natural coordinates to grid indices
+             * multiple times. HOWEVER, we might have to beware of this in the
+             * case of aggregation, in which different variables may have
+             * different mappings from time values to filename/tIndex.
              * 
              * TODO Remove/correct this doc
              */
-            Map<String, Array2D> values = new HashMap<String, Array2D>();
+            Map<String, Array2D<Number>> values = new HashMap<String, Array2D<Number>>();
             Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-    
+
             /*
-             * We need a vertical CRS. This should be the same for all variables in
-             * this dataset, so we can set it from any one of them
+             * We need a vertical CRS. This should be the same for all variables
+             * in this dataset, so we can set it from any one of them
              */
             VerticalCrs vCrs = null;
             StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
             id.append(System.currentTimeMillis());
             id.append(":");
             StringBuilder description = new StringBuilder("Map feature from variables:\n");
-    
+
             /*
-             * Keep a list of variable IDs which we need to generate data for from a
-             * plugin
+             * Keep a list of variable IDs which we need to generate data for
+             * from a plugin
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
-    
+
             /*
-             * If the user has passed in null for the variable IDs, they want all
-             * variables returned
+             * If the user has passed in null for the variable IDs, they want
+             * all variables returned
              */
             if (varIds == null) {
                 varIds = getVariableIds();
             }
-    
+
             for (String varId : varIds) {
                 if (!getVariableMetadata(varId).isPlottable()) {
                     /*
@@ -183,10 +187,10 @@ public abstract class AbstractGridDataset implements GridDataset {
                      */
                     continue;
                 }
-    
+
                 id.append(varId);
                 description.append(varId + "\n");
-    
+
                 /*
                  * We defer plugin-generated variables until after all other
                  * required variables have been read. This way, if any of the
@@ -201,50 +205,53 @@ public abstract class AbstractGridDataset implements GridDataset {
                     varsToGenerate.put(varId, derivingPlugin);
                     continue;
                 }
-    
+
                 /*
                  * Do the actual data reading
                  */
-                Array2D data = readHorizontalData(varId, targetGrid, zPos, time, dataSource);
-    
+                Array2D<Number> data = readHorizontalData(varId, targetGrid, zPos, time, dataSource);
+
                 values.put(varId, data);
                 /*
-                 * We just use the existing parameter data, as it will be the same.
+                 * We just use the existing parameter data, as it will be the
+                 * same.
                  */
                 parameters.put(varId, getVariableMetadata(varId).getParameter());
             }
-    
+
             for (String derivedVarId : varsToGenerate.keySet()) {
                 VariablePlugin plugin = varsToGenerate.get(derivedVarId);
-                Array2D[] pluginSourceData = new Array2D[plugin.usesVariables().length];
-                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+                @SuppressWarnings("unchecked")
+                Array2D<Number>[] pluginSourceData = new Array2D[plugin.usesVariables().length];
+                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin
+                        .usesVariables().length];
                 /*
-                 * Loop through the variable IDs required by this plugin, getting
-                 * data and metadata
+                 * Loop through the variable IDs required by this plugin,
+                 * getting data and metadata
                  * 
-                 * If we have already read the data, add it to the array, otherwise
-                 * read the data first.
+                 * If we have already read the data, add it to the array,
+                 * otherwise read the data first.
                  */
                 for (int i = 0; i < pluginSourceData.length; i++) {
                     String pluginSourceVarId = plugin.usesVariables()[i];
                     if (values.containsKey(pluginSourceVarId)) {
                         pluginSourceData[i] = values.get(pluginSourceVarId);
                     } else {
-                        pluginSourceData[i] = readHorizontalData(pluginSourceVarId, targetGrid, zPos,
-                                time, dataSource);
+                        pluginSourceData[i] = readHorizontalData(pluginSourceVarId, targetGrid,
+                                zPos, time, dataSource);
                     }
                     pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
                 }
-    
+
                 values.put(derivedVarId, plugin.generateArray2D(derivedVarId, pluginSourceData));
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
             }
-    
+
             /*
              * Release resources held by the DataSource
              */
             dataSource.close();
-    
+
             /*
              * Construct the GridFeature from the t and z values, the horizontal
              * grid and the VariableMetadata objects
@@ -256,16 +263,16 @@ public abstract class AbstractGridDataset implements GridDataset {
             if (zPos != null) {
                 description.append("Elevation: " + zPos);
             }
-    
+
             MapFeature mapFeature = new MapFeature(UUID.nameUUIDFromBytes(id.toString().getBytes())
-                    .toString(), "Extracted Map Feature", description.toString(), domain, parameters,
-                    values);
-    
+                    .toString(), "Extracted Map Feature", description.toString(), domain,
+                    parameters, values);
+
             return mapFeature;
         } catch (IOException e) {
             throw new DataReadingException("Problem reading map feature", e);
         } finally {
-            if(dataSource != null) {
+            if (dataSource != null) {
                 try {
                     dataSource.close();
                 } catch (IOException e) {
@@ -275,7 +282,7 @@ public abstract class AbstractGridDataset implements GridDataset {
         }
     }
 
-    private Array2D readHorizontalData(String varId, HorizontalGrid targetGrid, Double zPos,
+    private Array2D<Number> readHorizontalData(String varId, HorizontalGrid targetGrid, Double zPos,
             DateTime time, GridDataSource dataSource) throws IOException {
         /*
          * This cast will always work, because we only ever call this method for
@@ -324,7 +331,7 @@ public abstract class AbstractGridDataset implements GridDataset {
         /*
          * Now use the appropriate DataReadingStrategy to read data
          */
-        Array2D data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
+        Array2D<Number> data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
                 domainMapper);
         return data;
     }
@@ -338,29 +345,29 @@ public abstract class AbstractGridDataset implements GridDataset {
              * Open the source of data
              */
             dataSource = openGridDataSource();
-    
-            Map<String, Array1D> values = new HashMap<String, Array1D>();
+
+            Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
             Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-    
+
             StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
             id.append(System.currentTimeMillis());
             id.append(":");
             StringBuilder description = new StringBuilder("Profile feature from variables:\n");
-    
+
             /*
-             * Keep a list of variable IDs which we need to generate data for from a
-             * plugin
+             * Keep a list of variable IDs which we need to generate data for
+             * from a plugin
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
-    
+
             /*
-             * If the user has passed in null for the variable IDs, they want all
-             * variables returned
+             * If the user has passed in null for the variable IDs, they want
+             * all variables returned
              */
             if (varIds == null) {
                 varIds = getVariableIds();
             }
-    
+
             for (String varId : varIds) {
                 if (!getVariableMetadata(varId).isPlottable()) {
                     /*
@@ -368,10 +375,10 @@ public abstract class AbstractGridDataset implements GridDataset {
                      */
                     continue;
                 }
-    
+
                 id.append(varId);
                 description.append(varId + "\n");
-    
+
                 /*
                  * We defer plugin-generated variables until after all other
                  * required variables have been read. This way, if any of the
@@ -386,53 +393,56 @@ public abstract class AbstractGridDataset implements GridDataset {
                     varsToGenerate.put(varId, derivingPlugin);
                     continue;
                 }
-    
+
                 /*
                  * Do the actual data reading
                  */
-                Array1D data = readVerticalData(varId, zAxis, hPos, time, dataSource);
-    
+                Array1D<Number> data = readVerticalData(varId, zAxis, hPos, time, dataSource);
+
                 values.put(varId, data);
                 /*
-                 * We just use the existing parameter data, as it will be the same.
+                 * We just use the existing parameter data, as it will be the
+                 * same.
                  */
                 parameters.put(varId, getVariableMetadata(varId).getParameter());
             }
-    
+
             for (String derivedVarId : varsToGenerate.keySet()) {
                 VariablePlugin plugin = varsToGenerate.get(derivedVarId);
-                Array1D[] pluginSourceData = new Array1D[plugin.usesVariables().length];
-                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+                @SuppressWarnings("unchecked")
+                Array1D<Number>[] pluginSourceData = new Array1D[plugin.usesVariables().length];
+                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin
+                        .usesVariables().length];
                 /*
-                 * Loop through the variable IDs required by this plugin, getting
-                 * data and metadata
+                 * Loop through the variable IDs required by this plugin,
+                 * getting data and metadata
                  * 
-                 * If we have already read the data, add it to the array, otherwise
-                 * read the data first.
+                 * If we have already read the data, add it to the array,
+                 * otherwise read the data first.
                  */
                 for (int i = 0; i < pluginSourceData.length; i++) {
                     String pluginSourceVarId = plugin.usesVariables()[i];
                     if (values.containsKey(pluginSourceVarId)) {
                         pluginSourceData[i] = values.get(pluginSourceVarId);
                     } else {
-                        pluginSourceData[i] = readVerticalData(pluginSourceVarId, zAxis, hPos, time,
-                                dataSource);
+                        pluginSourceData[i] = readVerticalData(pluginSourceVarId, zAxis, hPos,
+                                time, dataSource);
                     }
                     pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
                 }
-    
+
                 values.put(derivedVarId, plugin.generateArray1D(derivedVarId, pluginSourceData));
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
                 /*
                  * TODO This needs testing!
                  */
             }
-    
+
             /*
              * Release resources held by the DataSource
              */
             dataSource.close();
-    
+
             /*
              * Construct the GridFeature from the t and z values, the horizontal
              * grid and the VariableMetadata objects
@@ -441,16 +451,16 @@ public abstract class AbstractGridDataset implements GridDataset {
             if (time != null) {
                 description.append("Time: " + time + "\n");
             }
-    
+
             ProfileFeature profileFeature = new ProfileFeature(UUID.nameUUIDFromBytes(
                     id.toString().getBytes()).toString(), "Extracted Profile Feature",
                     description.toString(), zAxis, hPos, time, parameters, values);
-    
+
             return profileFeature;
         } catch (IOException e) {
             throw new DataReadingException("Problem reading profile feature", e);
         } finally {
-            if(dataSource != null) {
+            if (dataSource != null) {
                 try {
                     dataSource.close();
                 } catch (IOException e) {
@@ -460,7 +470,7 @@ public abstract class AbstractGridDataset implements GridDataset {
         }
     }
 
-    private Array1D readVerticalData(String varId, VerticalAxis zAxis, HorizontalPosition hPos,
+    private Array1D<Number> readVerticalData(String varId, VerticalAxis zAxis, HorizontalPosition hPos,
             DateTime time, GridDataSource dataSource) throws IOException {
         /*
          * This conversion is safe, because we are not dealing with derived
@@ -509,10 +519,10 @@ public abstract class AbstractGridDataset implements GridDataset {
         /*
          * Read the data and move it to a 1D Array
          */
-        Array4D data4d = dataSource.read(varId, tIndex, tIndex, zMin, zMax, yIndex, yIndex, xIndex,
+        Array4D<Number> data4d = dataSource.read(varId, tIndex, tIndex, zMin, zMax, yIndex, yIndex, xIndex,
                 xIndex);
         int zSize = zAxis.size();
-        Array1D data = new ValuesArray1D(zSize);
+        Array1D<Number> data = new ValuesArray1D(zSize);
 
         for (int i = 0; i < zSize; i++) {
             Double zVal = zAxis.getCoordinateValue(i);
@@ -529,7 +539,7 @@ public abstract class AbstractGridDataset implements GridDataset {
 
         return data;
     }
-    
+
     @Override
     public PointSeriesFeature readTimeSeriesData(Set<String> varIds, HorizontalPosition hPos,
             VerticalPosition zPos, TimeAxis tAxis) throws DataReadingException {
@@ -539,29 +549,29 @@ public abstract class AbstractGridDataset implements GridDataset {
              * Open the source of data
              */
             dataSource = openGridDataSource();
-    
-            Map<String, Array1D> values = new HashMap<String, Array1D>();
+
+            Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
             Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-    
+
             StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
             id.append(System.currentTimeMillis());
             id.append(":");
             StringBuilder description = new StringBuilder("Profile feature from variables:\n");
-    
+
             /*
-             * Keep a list of variable IDs which we need to generate data for from a
-             * plugin
+             * Keep a list of variable IDs which we need to generate data for
+             * from a plugin
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
-    
+
             /*
-             * If the user has passed in null for the variable IDs, they want all
-             * variables returned
+             * If the user has passed in null for the variable IDs, they want
+             * all variables returned
              */
             if (varIds == null) {
                 varIds = getVariableIds();
             }
-    
+
             for (String varId : varIds) {
                 if (!getVariableMetadata(varId).isPlottable()) {
                     /*
@@ -569,10 +579,10 @@ public abstract class AbstractGridDataset implements GridDataset {
                      */
                     continue;
                 }
-    
+
                 id.append(varId);
                 description.append(varId + "\n");
-    
+
                 /*
                  * We defer plugin-generated variables until after all other
                  * required variables have been read. This way, if any of the
@@ -587,73 +597,76 @@ public abstract class AbstractGridDataset implements GridDataset {
                     varsToGenerate.put(varId, derivingPlugin);
                     continue;
                 }
-    
+
                 /*
                  * Do the actual data reading
                  */
-                Array1D data = readTemporalData(varId, tAxis, hPos, zPos, dataSource);
-    
+                Array1D<Number> data = readTemporalData(varId, tAxis, hPos, zPos, dataSource);
+
                 values.put(varId, data);
                 /*
-                 * We just use the existing parameter data, as it will be the same.
+                 * We just use the existing parameter data, as it will be the
+                 * same.
                  */
                 parameters.put(varId, getVariableMetadata(varId).getParameter());
             }
-    
+
             for (String derivedVarId : varsToGenerate.keySet()) {
                 VariablePlugin plugin = varsToGenerate.get(derivedVarId);
-                Array1D[] pluginSourceData = new Array1D[plugin.usesVariables().length];
-                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+                @SuppressWarnings("unchecked")
+                Array1D<Number>[] pluginSourceData = new Array1D[plugin.usesVariables().length];
+                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin
+                        .usesVariables().length];
                 /*
-                 * Loop through the variable IDs required by this plugin, getting
-                 * data and metadata
+                 * Loop through the variable IDs required by this plugin,
+                 * getting data and metadata
                  * 
-                 * If we have already read the data, add it to the array, otherwise
-                 * read the data first.
+                 * If we have already read the data, add it to the array,
+                 * otherwise read the data first.
                  */
                 for (int i = 0; i < pluginSourceData.length; i++) {
                     String pluginSourceVarId = plugin.usesVariables()[i];
                     if (values.containsKey(pluginSourceVarId)) {
                         pluginSourceData[i] = values.get(pluginSourceVarId);
                     } else {
-                        pluginSourceData[i] = readTemporalData(pluginSourceVarId, tAxis, hPos, zPos,
-                                dataSource);
+                        pluginSourceData[i] = readTemporalData(pluginSourceVarId, tAxis, hPos,
+                                zPos, dataSource);
                     }
                     pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
                 }
-    
+
                 values.put(derivedVarId, plugin.generateArray1D(derivedVarId, pluginSourceData));
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
                 /*
                  * TODO This needs testing!
                  */
             }
-    
+
             /*
              * Release resources held by the DataSource
              */
             dataSource.close();
-    
+
             /*
              * Construct the GridFeature from the t and z values, the horizontal
              * grid and the VariableMetadata objects
              */
             description.append("Position: " + hPos + "\n");
             if (zPos != null) {
-                description.append("Elevation: " + zPos+ "\n");
+                description.append("Elevation: " + zPos + "\n");
             }
-    
+
             PointSeriesFeature pointSeriesFeature = new PointSeriesFeature(UUID.nameUUIDFromBytes(
                     id.toString().getBytes()).toString(), "Extracted Profile Feature",
                     description.toString(), tAxis, hPos, zPos, parameters, values);
-    
+
             return pointSeriesFeature;
         } catch (IOException e) {
             throw new DataReadingException("Problem reading profile feature", e);
         } catch (MismatchedCrsException e) {
             throw new DataReadingException("Problem reading profile feature", e);
         } finally {
-            if(dataSource != null) {
+            if (dataSource != null) {
                 try {
                     dataSource.close();
                 } catch (IOException e) {
@@ -662,10 +675,10 @@ public abstract class AbstractGridDataset implements GridDataset {
             }
         }
     }
-    
 
-    private Array1D readTemporalData(String varId, TimeAxis tAxis, HorizontalPosition hPos,
-            VerticalPosition zPos, GridDataSource dataSource) throws IOException, MismatchedCrsException {
+    private Array1D<Number> readTemporalData(String varId, TimeAxis tAxis, HorizontalPosition hPos,
+            VerticalPosition zPos, GridDataSource dataSource) throws IOException,
+            MismatchedCrsException {
         /*
          * This conversion is safe, because we are not dealing with derived
          * variables, and all non-derived must have GridVariableMetadata
@@ -679,7 +692,7 @@ public abstract class AbstractGridDataset implements GridDataset {
         HorizontalGrid hDomain = metadata.getHorizontalDomain();
         VerticalAxis zAxis = metadata.getVerticalDomain();
         TimeAxis variableTAxis = metadata.getTemporalDomain();
-        if(zAxis != null && !zAxis.getVerticalCrs().equals(zPos.getCoordinateReferenceSystem())) {
+        if (zAxis != null && !zAxis.getVerticalCrs().equals(zPos.getCoordinateReferenceSystem())) {
             throw new MismatchedCrsException("Vertical CRSs must match to extract time series");
         }
 
@@ -716,10 +729,10 @@ public abstract class AbstractGridDataset implements GridDataset {
         /*
          * Read the data and move it to a 1D Array
          */
-        Array4D data4d = dataSource.read(varId, tMin, tMax, zIndex, zIndex, yIndex, yIndex, xIndex,
+        Array4D<Number> data4d = dataSource.read(varId, tMin, tMax, zIndex, zIndex, yIndex, yIndex, xIndex,
                 xIndex);
         int tSize = tAxis.size();
-        Array1D data = new ValuesArray1D(tSize);
+        Array1D<Number> data = new ValuesArray1D(tSize);
 
         for (int i = 0; i < tSize; i++) {
             DateTime time = tAxis.getCoordinateValue(i);
@@ -738,8 +751,173 @@ public abstract class AbstractGridDataset implements GridDataset {
     }
 
     @Override
+    public TrajectoryFeature readTrajectoryData(Set<String> varIds, TrajectoryDomain domain)
+            throws DataReadingException {
+        GridDataSource dataSource = null;
+        try {
+            /*
+             * Open the source of data
+             */
+            dataSource = openGridDataSource();
+
+            Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
+            Map<String, Parameter> parameters = new HashMap<String, Parameter>();
+
+            StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
+            id.append(System.currentTimeMillis());
+            id.append(":");
+            StringBuilder description = new StringBuilder("Trajectory feature from variables:\n");
+
+            /*
+             * Keep a list of variable IDs which we need to generate data for
+             * from a plugin
+             */
+            Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
+
+            /*
+             * If the user has passed in null for the variable IDs, they want
+             * all variables returned
+             */
+            if (varIds == null) {
+                varIds = getVariableIds();
+            }
+
+            for (String varId : varIds) {
+                if (!getVariableMetadata(varId).isPlottable()) {
+                    /*
+                     * Don't read profile data for unplottable variables
+                     */
+                    continue;
+                }
+
+                id.append(varId);
+                description.append(varId + "\n");
+
+                /*
+                 * We defer plugin-generated variables until after all other
+                 * required variables have been read. This way, if any of the
+                 * plugin-generated variables require data which we will read
+                 * anyway, we don't have to read it twice.
+                 */
+                VariablePlugin derivingPlugin = isDerivedVariable(varId);
+                if (derivingPlugin != null) {
+                    /*
+                     * Save the variable ID and continue on the outer loop
+                     */
+                    varsToGenerate.put(varId, derivingPlugin);
+                    continue;
+                }
+
+                /*
+                 * Do the actual data reading
+                 */
+                Array1D<Number> data = readMultiplePointData(varId, domain, dataSource);
+
+                values.put(varId, data);
+                /*
+                 * We just use the existing parameter data, as it will be the
+                 * same.
+                 */
+                parameters.put(varId, getVariableMetadata(varId).getParameter());
+            }
+
+            for (String derivedVarId : varsToGenerate.keySet()) {
+                VariablePlugin plugin = varsToGenerate.get(derivedVarId);
+                @SuppressWarnings("unchecked")
+                Array1D<Number>[] pluginSourceData = new Array1D[plugin.usesVariables().length];
+                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin
+                        .usesVariables().length];
+                /*
+                 * Loop through the variable IDs required by this plugin,
+                 * getting data and metadata
+                 * 
+                 * If we have already read the data, add it to the array,
+                 * otherwise read the data first.
+                 */
+                for (int i = 0; i < pluginSourceData.length; i++) {
+                    String pluginSourceVarId = plugin.usesVariables()[i];
+                    if (values.containsKey(pluginSourceVarId)) {
+                        pluginSourceData[i] = values.get(pluginSourceVarId);
+                    } else {
+                        pluginSourceData[i] = readMultiplePointData(pluginSourceVarId, domain,
+                                dataSource);
+                    }
+                    pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
+                }
+
+                values.put(derivedVarId, plugin.generateArray1D(derivedVarId, pluginSourceData));
+                parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
+                /*
+                 * TODO This needs testing!
+                 */
+            }
+
+            /*
+             * Release resources held by the DataSource
+             */
+            dataSource.close();
+
+            /*
+             * Construct the TrajectoryFeature from the t and z values, the horizontal
+             * grid and the VariableMetadata objects
+             */
+            TrajectoryFeature trajectoryFeature = new TrajectoryFeature(UUID.nameUUIDFromBytes(
+                    id.toString().getBytes()).toString(), "Extracted Trajectory Feature",
+                    description.toString(), domain, parameters, values);
+
+            return trajectoryFeature;
+        } catch (IOException e) {
+            throw new DataReadingException("Problem reading trajectory feature", e);
+        } finally {
+            if (dataSource != null) {
+                try {
+                    dataSource.close();
+                } catch (IOException e) {
+                    log.error("Problem closing data source");
+                }
+            }
+        }
+    }
+
+    @Override
     public final Number readSinglePoint(String variableId, HorizontalPosition position,
             Double zVal, DateTime time) throws DataReadingException {
+        GridDataSource gridDataSource = null;
+        try {
+            gridDataSource = openGridDataSource();
+            return readPointData(variableId, position, zVal, time, gridDataSource);
+        } catch (IOException e) {
+            throw new DataReadingException("Problem reading data", e);
+        } finally {
+            if (gridDataSource != null) {
+                try {
+                    gridDataSource.close();
+                } catch (IOException e) {
+                    log.error("Problem closing data source");
+                }
+            }
+        }
+    }
+
+    private final Array1D<Number> readMultiplePointData(String variableId, TrajectoryDomain domain,
+            GridDataSource dataSource) throws DataReadingException {
+        Array1D<Number> data = new ValuesArray1D(domain.size());
+        Array<GeoPosition> domainObjects = domain.getDomainObjects();
+        for (int i = 0; i < domain.size(); i++) {
+            GeoPosition position = domainObjects.get(i);
+            Double z = null;
+            if(position.getVerticalPosition() != null) {
+                z = position.getVerticalPosition().getZ();
+            }
+            Number value = readPointData(variableId, position.getHorizontalPosition(), z,
+                    position.getTime(), dataSource);
+            data.set(value, i);
+        }
+        return data;
+    }
+
+    private Number readPointData(String variableId, HorizontalPosition position, Double zVal,
+            DateTime time, GridDataSource gridDataSource) throws DataReadingException {
         VariablePlugin plugin = isDerivedVariable(variableId);
         if (plugin != null) {
             /*
@@ -760,48 +938,33 @@ public abstract class AbstractGridDataset implements GridDataset {
 
             return plugin.getValue(variableId, baseValues);
         } else {
-            GridDataSource gridDataSource = null;
             try {
                 /*
                  * We have a non-derived variable
                  */
-                gridDataSource = openGridDataSource();
                 /*
                  * This cast is OK, since this is only called for non-derived
                  * variables
                  */
                 GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(variableId);
                 int[] xy = variableMetadata.getHorizontalDomain().findIndexOf(position);
-    
+
                 int z = 0;
                 VerticalAxis verticalDomain = variableMetadata.getVerticalDomain();
                 if (verticalDomain != null) {
                     z = verticalDomain.findIndexOf(zVal);
                 }
-    
+
                 int t = 0;
                 TimeAxis temporalDomain = variableMetadata.getTemporalDomain();
                 if (temporalDomain != null) {
                     t = temporalDomain.findIndexOf(time);
                 }
-                Array4D readData = gridDataSource.read(variableId, t, t, z, z, xy[1], xy[1], xy[0],
+                Array4D<Number> readData = gridDataSource.read(variableId, t, t, z, z, xy[1], xy[1], xy[0],
                         xy[0]);
-                /*
-                 * TODO Perhaps we should cache this in case we need to do multiple
-                 * reads (e.g. for derived variables)
-                 */
-                gridDataSource.close();
                 return readData.get(0, 0, 0, 0);
             } catch (IOException e) {
                 throw new DataReadingException("Problem reading data", e);
-            } finally {
-                if(gridDataSource != null) {
-                    try {
-                        gridDataSource.close();
-                    } catch (IOException e) {
-                        log.error("Problem closing data source");
-                    }
-                }
             }
         }
     }
