@@ -72,7 +72,7 @@ public class RasterLayer extends ImageLayer {
         /*
          * Extract the data from the catalogue
          */
-        Array2D values = dataReader.getDataForLayerName(dataFieldName);
+        Array2D<Number> values = dataReader.getDataForLayerName(dataFieldName);
 
         /*
          * The iterator iterates over the x-dimension first, which is the same

@@ -32,7 +32,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.geotoolkit.factory.Hints;
 import org.geotoolkit.referencing.CRS;
@@ -50,9 +52,12 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.geometry.LineString;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A class containing static methods which are useful for GIS operations.
@@ -96,14 +101,16 @@ public final class GISUtils {
         double val = value % 360.0;
         return val < 0.0 ? val + 360.0 : val;
     }
-    
+
     /**
      * Given a target longitude and a longitude, this returns the longitude
      * value which is nearest to the target, taking wrapping into account
      * 
-     * @param target The longitude which we are aiming to be nearest to
-     * @param longitude The longitude which we want to be nearest to the target
-     * @return A longitude value which is equivalent to <code>longitude</code> 
+     * @param target
+     *            The longitude which we are aiming to be nearest to
+     * @param longitude
+     *            The longitude which we want to be nearest to the target
+     * @return A longitude value which is equivalent to <code>longitude</code>
      */
     public static double getNearestEquivalentLongitude(double target, double longitude) {
         if (target < -180.0 || target > 180.0) {
@@ -341,13 +348,15 @@ public final class GISUtils {
 
         return tValues.get(index);
     }
-    
+
     /**
-     * Returns the closest elevation to the surface of the given {@link VerticalAxis}
+     * Returns the closest elevation to the surface of the given
+     * {@link VerticalAxis}
      * 
      * @param vAxis
      *            The {@link VerticalAxis} to test
-     * @return The uppermost elevation, or null if no {@link VerticalAxis} is provided
+     * @return The uppermost elevation, or null if no {@link VerticalAxis} is
+     *         provided
      */
     public static Double getClosestElevationToSurface(VerticalAxis vAxis) {
         if (vAxis == null) {
@@ -374,7 +383,95 @@ public final class GISUtils {
             });
         }
     }
-    
+
+    /**
+     * Gets a HorizontalDomain that contains (near) the minimum necessary number
+     * of points to sample a layer's source grid of data. That is to say,
+     * creating a HorizontalDomain at higher resolution would not result in
+     * sampling significantly more points in the layer's source grid.
+     * 
+     * @param feature
+     *            The feature for which the transect will be generated
+     * @param transect
+     *            The transect as specified in the request
+     * @return a HorizontalDomain that contains (near) the minimum necessary
+     *         number of points to sample a layer's source grid of data.
+     */
+    public static List<HorizontalPosition> getOptimalTransectPoints(HorizontalGrid hGrid,
+            LineString transect, VerticalPosition zPos, DateTime time, int dataGridPoints) {
+        /*
+         * We need to work out how many points we need to include in order to
+         * completely sample the data grid (i.e. we need the resolution of the
+         * points to be higher than that of the data grid). It's hard to work
+         * this out neatly (data grids can be irregular) but we can estimate
+         * this by creating transects at progressively higher resolution, and
+         * working out how many grid points will be sampled.
+         */
+        int lastNumUniqueGridPointsSampled = -1;
+        int dataGridIncrease = dataGridPoints;
+        List<HorizontalPosition> pointList = null;
+        while (true) {
+            /*
+             * Create a transect with the required number of points,
+             * interpolating between the control points in the line string
+             */
+            List<HorizontalPosition> points = transect.getPointsOnPath(dataGridPoints);
+
+            /*
+             * Work out how many grid points will be sampled by this transect
+             */
+            Set<int[]> gridCoords = new HashSet<int[]>();
+            for (HorizontalPosition pos : points) {
+                int[] gridCoord = hGrid.findIndexOf(pos);
+                if (gridCoord != null) {
+                    gridCoords.add(gridCoord);
+                }
+            }
+
+            int numUniqueGridPointsSampled = gridCoords.size();
+
+            /*
+             * If this increase in resolution results in at least 10% more
+             * points being sampled we'll go around the loop again
+             */
+            if (numUniqueGridPointsSampled > lastNumUniqueGridPointsSampled * 1.1) {
+                /* We need to increase the transect resolution and try again */
+                lastNumUniqueGridPointsSampled = numUniqueGridPointsSampled;
+                dataGridPoints += dataGridIncrease;
+                pointList = points;
+            } else {
+                /* We've gained little advantage by the last resolution increase */
+                return pointList;
+            }
+        }
+    }
+
+//    /**
+//     * Finds the distance between 2 positions in units of the CRS.
+//     * 
+//     * @param pos1
+//     *            The first position
+//     * @param pos2
+//     *            The second position
+//     * @return The distance between the 2 positions in units of the CRS.
+//     */
+//    public static double getDistance(HorizontalPosition pos1, HorizontalPosition pos2) {
+//        if (pos1 == null || pos2 == null) {
+//            return Double.NaN;
+//        }
+//        if (!crsMatch(pos1.getCoordinateReferenceSystem(), pos2.getCoordinateReferenceSystem())) {
+//            pos2 = transformPosition(pos2, pos1.getCoordinateReferenceSystem());
+//        }
+//        double x1 = pos1.getX();
+//        double x2 = pos2.getX();
+//        double y1 = pos1.getY();
+//        double y2 = pos2.getY();
+//        if (isWgs84LonLat(pos1.getCoordinateReferenceSystem())) {
+//            x2 = getNearestEquivalentLongitude(x1, x2);
+//        }
+//        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+//    }
+
     static {
         /*
          * Initialise the EPSG database if necessary

@@ -82,4 +82,10 @@ public interface Array<E> extends Iterable<E> {
      * Gets the number of values in the array.
      */
     public long size();
+    
+    @Override
+    public int hashCode();
+    
+    @Override
+    public boolean equals(Object obj);
 }

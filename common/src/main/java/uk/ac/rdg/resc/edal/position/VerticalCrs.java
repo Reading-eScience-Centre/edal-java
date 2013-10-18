@@ -77,4 +77,10 @@ public interface VerticalCrs {
      * Indicates whether coordinate values increase upward or downward.
      */
     public boolean isPositiveUpwards();
+    
+    @Override
+    public int hashCode();
+    
+    @Override
+    public boolean equals(Object obj);
 }

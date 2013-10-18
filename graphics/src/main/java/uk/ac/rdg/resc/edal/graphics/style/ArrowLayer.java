@@ -88,7 +88,7 @@ public class ArrowLayer extends ImageLayer {
 
     @Override
     protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
-        Array2D values = dataReader.getDataForLayerName(directionFieldName);
+        Array2D<Number> values = dataReader.getDataForLayerName(directionFieldName);
 
         Graphics2D g = image.createGraphics();
         g.setColor(arrowColour);

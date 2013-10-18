@@ -69,9 +69,8 @@ import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.LoadEvent;
-import com.google.gwt.event.dom.client.LoadHandler;
 import com.google.gwt.i18n.client.NumberFormat;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
@@ -588,23 +587,25 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      *            The title of the popup box
      */
     protected void displayImagePopup(String url, String title) {
-        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(this);
-        final com.google.gwt.user.client.ui.Image image = new com.google.gwt.user.client.ui.Image(url);
-        image.addLoadHandler(new LoadHandler() {
-            @Override
-            public void onLoad(LoadEvent event) {
-                popup.center();
-            }
-        });
-        /*
-         * TODO this doesn't seem to appear on Chromium...
-         */
-        image.setAltText("Image loading...");
-        if(title != null){
-            popup.setHTML(title);
-        }
-        popup.add(image);
-        popup.center();
+        Window.open(url, title, null);
+//        
+//        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(this);
+//        final com.google.gwt.user.client.ui.Image image = new com.google.gwt.user.client.ui.Image(url);
+//        image.addLoadHandler(new LoadHandler() {
+//            @Override
+//            public void onLoad(LoadEvent event) {
+//                popup.center();
+//            }
+//        });
+//        /*
+//         * TODO this doesn't seem to appear on Chromium...
+//         */
+//        image.setAltText("Image loading...");
+//        if(title != null){
+//            popup.setHTML(title);
+//        }
+//        popup.add(image);
+//        popup.center();
     }
     
     public void zoomToExtents(String extents) throws Exception {
@@ -930,17 +931,40 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     }
                     lineStringBuilder.append(points[points.length - 1].getX() + " "
                             + points[points.length - 1].getY());
-                    String transectUrl = wmsAndParams.wmsUrl + "?REQUEST=GetTransect" + "&LAYER="
-                            + wmsLayer.getParams().getLayers() + "&CRS=" + currentProjection
-                            + "&LINESTRING=" + lineStringBuilder + "&FORMAT=image/png";
-                    String elevation = wmsLayer.getParams().getJSObject()
-                            .getPropertyAsString("ELEVATION");
-                    String time = wmsLayer.getParams().getJSObject().getPropertyAsString("TIME");
-                    if (elevation != null && !elevation.equals("")) {
-                        transectUrl += "&ELEVATION=" + elevation;
+                    String projection = currentProjection;
+                    if("EPSG:4326".equals(projection)) {
+                        /*
+                         * We are using x,y order for the co-ords, so ensure
+                         * that the projection will match this
+                         */
+                        projection = "CRS:84";
                     }
-                    if (time != null && !time.equals("")) {
-                        transectUrl += "&TIME=" + time;
+                    String transectUrl = wmsAndParams.wmsUrl + "?REQUEST=GetTransect" + "&LAYERS="
+                            + wmsLayer.getParams().getLayers() + "&CRS=" + projection
+                            + "&LINESTRING=" + lineStringBuilder + "&FORMAT=image/png";
+                    
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "ELEVATION");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "TARGETELEVATION");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "TIME");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "TARGETTIME");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "COLORSCALERANGE");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "NUMCOLORBANDS");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "LOGSCALE");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "ABOVEMAXCOLOR");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "BELOWMINCOLOR");
+                    transectUrl = addParameterValue(wmsLayer, transectUrl, "BGCOLOR");
+
+                    String stylesStr = wmsLayer.getParams().getStyles();
+                    if (stylesStr != null && !stylesStr.equals("")) {
+                        String[] styles = stylesStr.split(",");
+                        String palette = null;
+                        String[] styleParts = styles[0].split("/");
+                        if(styleParts.length == 2) {
+                            palette = styleParts[1];
+                        }
+                        if(palette != null) {
+                            transectUrl += "&PALETTE=" + palette;
+                        }
                     }
                     /*
                      * Yes, this is peculiar. Yes, it is also necessary.
@@ -956,6 +980,19 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         getFeatureInfo.activate();
                     }
                     displayImagePopup(transectUrl, "Transect");
+                }
+            }
+            
+            /*
+             * Adds the value of the requested parameter to the URL string if it exists on the WMS layer
+             */
+            private String addParameterValue(WMS wmsLayer, String transectUrl, String parameterName) {
+                String parameterValue = wmsLayer.getParams().getJSObject()
+                        .getPropertyAsString(parameterName);
+                if (parameterValue != null && !parameterValue.equals("")) {
+                    return transectUrl + "&"+parameterName+"=" + parameterValue;
+                } else {
+                    return transectUrl;
                 }
             }
         });

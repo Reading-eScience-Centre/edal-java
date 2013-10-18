@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import org.h2.store.DataReader;
+
 import uk.ac.rdg.resc.edal.dataset.DomainMapper.DomainMapperEntry;
 import uk.ac.rdg.resc.edal.dataset.DomainMapper.Scanline;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -115,9 +117,9 @@ public enum DataReadingStrategy {
      */
     SCANLINE {
         @Override
-        public Array2D readMapData(GridDataSource dataSource, String varId, int tIndex,
+        public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
                 int zIndex, Domain2DMapper pixelMap) throws IOException {
-            Array2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
+            Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
 
             Iterator<Scanline<int[]>> it = pixelMap.scanlineIterator();
@@ -129,7 +131,7 @@ public enum DataReadingStrategy {
                 int imin = entries.get(0).getSourceGridIIndex();
                 int imax = entries.get(entries.size() - 1).getSourceGridIIndex();
 
-                Array4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, j, j,
+                Array4D<Number> data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, j, j,
                         imin, imax);
 
                 for (DomainMapperEntry<int[]> dme : entries) {
@@ -151,15 +153,15 @@ public enum DataReadingStrategy {
      */
     BOUNDING_BOX {
         @Override
-        public Array2D readMapData(GridDataSource dataSource, String varId, int tIndex,
+        public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
                 int zIndex, Domain2DMapper pixelMap) throws IOException {
-            Array2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
+            Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
             int imin = pixelMap.getMinIIndex();
             int imax = pixelMap.getMaxIIndex();
             int jmin = pixelMap.getMinJIndex();
             int jmax = pixelMap.getMaxJIndex();
-            Array4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, jmin, jmax,
+            Array4D<Number> data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, jmin, jmax,
                     imin, imax);
             for (DomainMapperEntry<int[]> pme : pixelMap) {
                 List<int[]> targetGridPoints = pme.getTargetIndices();
@@ -179,12 +181,12 @@ public enum DataReadingStrategy {
      */
     PIXEL_BY_PIXEL {
         @Override
-        public Array2D readMapData(GridDataSource dataSource, String varId, int tIndex,
+        public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
                 int zIndex, Domain2DMapper pixelMap) throws IOException {
-            Array2D ret = new ValuesArray2D(pixelMap.getTargetYSize(),
+            Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
             for (DomainMapperEntry<int[]> pme : pixelMap) {
-                Array4D data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex,
+                Array4D<Number> data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex,
                         pme.getSourceGridJIndex(), pme.getSourceGridJIndex(),
                         pme.getSourceGridIIndex(), pme.getSourceGridIIndex());
                 List<int[]> targetGridPoints = pme.getTargetIndices();
@@ -196,6 +198,6 @@ public enum DataReadingStrategy {
         }
     };
 
-    abstract public Array2D readMapData(GridDataSource dataSource, String varId, int tIndex,
+    abstract public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
             int zIndex, Domain2DMapper pixelMap) throws IOException;
 }

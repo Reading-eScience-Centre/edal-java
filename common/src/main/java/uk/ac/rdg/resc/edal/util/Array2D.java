@@ -30,7 +30,7 @@ package uk.ac.rdg.resc.edal.util;
 
 import java.util.Iterator;
 
-public abstract class Array2D implements Array<Number> {
+public abstract class Array2D<T> implements Array<T> {
 
     private int[] shape = new int[2];
 
@@ -51,8 +51,8 @@ public abstract class Array2D implements Array<Number> {
     }
 
     @Override
-    public Iterator<Number> iterator() {
-        return new Iterator<Number>() {
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
             private int xCounter = 0;
             private int yCounter = 0;
 
@@ -64,8 +64,8 @@ public abstract class Array2D implements Array<Number> {
             }
 
             @Override
-            public Number next() {
-                Number value = get(yCounter, xCounter);
+            public T next() {
+                T value = get(yCounter, xCounter);
                 /*
                  * Increment the counters if necessary, resetting to zero if
                  * necessary
@@ -87,11 +87,6 @@ public abstract class Array2D implements Array<Number> {
                 throw new UnsupportedOperationException("Remove is not supported for this iterator");
             }
         };
-    }
-
-    @Override
-    public Class<Number> getValueClass() {
-        return Number.class;
     }
 
     @Override

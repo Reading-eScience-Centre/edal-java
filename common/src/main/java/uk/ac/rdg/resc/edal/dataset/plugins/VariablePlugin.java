@@ -109,12 +109,12 @@ public abstract class VariablePlugin {
     /**
      * Convenience method for generating an {@link Array1D} from source
      */
-    public Array1D generateArray1D(final String varId, final Array1D... sourceArrays) {
+    public Array1D<Number> generateArray1D(final String varId, final Array1D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
         }
-        return new Array1D(sourceArrays[0].getShape().length) {
+        return new Array1D<Number>(sourceArrays[0].getShape().length) {
             @Override
             public void set(Number value, int... coords) {
                 throw new IllegalArgumentException("This Array is immutable");
@@ -131,18 +131,23 @@ public abstract class VariablePlugin {
                 }
                 return generateValue(varId.substring(prefixLength), sourceValues);
             }
+
+            @Override
+            public Class<Number> getValueClass() {
+                return Number.class;
+            }
         };
     }
     
     /**
      * Convenience method for generating an {@link Array2D} from source
      */
-    public Array2D generateArray2D(final String varId, final Array2D... sourceArrays) {
+    public Array2D<Number> generateArray2D(final String varId, final Array2D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
         }
-        return new Array2D(sourceArrays[0].getYSize(), sourceArrays[0].getXSize()) {
+        return new Array2D<Number>(sourceArrays[0].getYSize(), sourceArrays[0].getXSize()) {
             @Override
             public void set(Number value, int... coords) {
                 throw new IllegalArgumentException("This Array is immutable");
@@ -158,6 +163,11 @@ public abstract class VariablePlugin {
                     }
                 }
                 return generateValue(varId.substring(prefixLength), sourceValues);
+            }
+
+            @Override
+            public Class<Number> getValueClass() {
+                return Number.class;
             }
         };
     }

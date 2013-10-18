@@ -29,12 +29,12 @@
 package uk.ac.rdg.resc.edal.util;
 
 /**
- * Implementation of an {@link Array2D} which uses an array of {@link Double}s
+ * Implementation of an {@link Array1D} which uses an array of {@link Double}s
  * for storage.
  * 
- * @author Guy
+ * @author Guy Griffiths
  */
-public class ValuesArray1D extends Array1D {
+public class ValuesArray1D extends Array1D<Number> {
 
     private Double[] data;
 
@@ -60,5 +60,10 @@ public class ValuesArray1D extends Array1D {
                     + ") for this Array (needs 1)");
         }
         data[coords[0]] = (value == null) ? null : value.doubleValue();
+    }
+
+    @Override
+    public Class<Number> getValueClass() {
+        return Number.class;
     }
 }

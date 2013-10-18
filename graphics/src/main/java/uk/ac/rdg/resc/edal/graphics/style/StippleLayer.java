@@ -56,7 +56,7 @@ public class StippleLayer extends ImageLayer {
     @Override
     protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
         int[][] alphas = new int[image.getWidth()][image.getHeight()];
-        Array2D values = dataReader.getDataForLayerName(dataFieldName);
+        Array2D<Number> values = dataReader.getDataForLayerName(dataFieldName);
         
         /*
          * Set the alpha values

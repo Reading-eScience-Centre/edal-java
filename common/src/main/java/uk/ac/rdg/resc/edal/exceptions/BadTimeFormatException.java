@@ -34,7 +34,7 @@ package uk.ac.rdg.resc.edal.exceptions;
  * 
  * @author Guy Griffiths
  */
-public class BadTimeFormatException extends EdalException {
+public class BadTimeFormatException extends EdalParseException {
 
     private static final long serialVersionUID = 1L;
 

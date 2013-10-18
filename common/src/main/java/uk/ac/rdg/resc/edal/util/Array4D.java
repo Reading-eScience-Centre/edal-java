@@ -28,7 +28,26 @@
 
 package uk.ac.rdg.resc.edal.util;
 
-public abstract class Array4D implements Array<Number> {
+import java.util.Iterator;
+
+public abstract class Array4D<T> implements Array<T> {
+
+    private int[] shape = new int[4];
+
+    protected static final int X_IND = 3;
+    protected static final int Y_IND = 2;
+    protected static final int Z_IND = 1;
+    protected static final int T_IND = 0;
+
+    public Array4D(int tSize, int zSize, int ySize, int xSize) {
+        if (xSize < 1 || ySize < 1 || zSize < 1 || tSize < 1) {
+            throw new IllegalArgumentException("All dimension sizes must be at least 1");
+        }
+        shape[X_IND] = xSize;
+        shape[Y_IND] = ySize;
+        shape[Z_IND] = zSize;
+        shape[T_IND] = tSize;
+    }
 
     @Override
     public final int getNDim() {
@@ -36,25 +55,93 @@ public abstract class Array4D implements Array<Number> {
     }
 
     @Override
-    public Number get(int... coords) {
-        if (coords == null || coords.length != 4) {
-            throw new IllegalArgumentException("Wrong number of co-ordinates (" + coords.length
-                    + ") for this Array (needs 4)");
-        }
-        return get(coords);
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            private int xCounter = 0;
+            private int yCounter = 0;
+            private int zCounter = 0;
+            private int tCounter = 0;
+
+            boolean done = false;
+
+            @Override
+            public boolean hasNext() {
+                return (!done);
+            }
+
+            @Override
+            public T next() {
+                T value = get(tCounter, zCounter, yCounter, xCounter);
+                /*
+                 * Increment the counters if necessary, resetting to zero if
+                 * necessary
+                 */
+                if (xCounter++ >= shape[X_IND]) {
+                    xCounter = 0;
+                    if (yCounter++ >= shape[Y_IND]) {
+                        yCounter = 0;
+                        if (zCounter++ >= shape[Z_IND]) {
+                            zCounter = 0;
+                            if (tCounter++ >= shape[T_IND]) {
+                                tCounter = 0;
+                                done = true;
+                            }
+                        }
+                    }
+                }
+                return value;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("Remove is not supported for this iterator");
+            }
+        };
     }
 
     @Override
-    public void set(Number value, int... coords) {
-        if (coords.length != 4) {
-            throw new IllegalArgumentException("Wrong number of co-ordinates (" + coords.length
-                    + ") for this Array (needs 4)");
-        }
-        set(value, coords);
+    public long size() {
+        return shape[X_IND] * shape[Y_IND] * shape[Z_IND] * shape[T_IND];
     }
-    
+
     @Override
-    public Class<Number> getValueClass() {
-        return Number.class;
+    /**
+     * Returns the shape of the array.  The elements correspond to:
+     * 
+     * getShape()[0] = Size along time dimension
+     * getShape()[1] = Size along z dimension
+     * getShape()[2] = Size along y dimension
+     * getShape()[3] = Size along x dimension
+     */
+    public int[] getShape() {
+        return shape;
+    }
+
+    /**
+     * Convenience method to get the size in the x-direction
+     */
+    public int getXSize() {
+        return shape[X_IND];
+    }
+
+    /**
+     * Convenience method to get the size in the y-direction
+     */
+    public int getYSize() {
+        return shape[Y_IND];
+    }
+
+    /**
+     * Convenience method to get the size in the z-direction
+     */
+    public int getZSize() {
+        return shape[Z_IND];
+    }
+
+    /**
+     * Convenience method to get the size in the t-direction
+     */
+    public int getTSize() {
+        return shape[T_IND];
     }
 }

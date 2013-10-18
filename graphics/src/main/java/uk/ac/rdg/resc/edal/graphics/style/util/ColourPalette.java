@@ -139,7 +139,7 @@ public class ColourPalette {
     private final Color[] colours;
 
     private ColourPalette(Color[] palette, int numColorBands) {
-        this.colours = generateColourSet(palette, numColorBands);
+        colours = generateColourSet(palette, numColorBands);
     }
 
     /**
@@ -247,12 +247,15 @@ public class ColourPalette {
         if (value < 0.0f || value > 1.0f) {
             throw new IllegalArgumentException("value must be between 0 and 1");
         }
-        // find the nearest colour in the palette
+        /* Find the nearest colour in the palette */
         int i = (int) (value * this.colours.length);
-        // correct in the special case that value = 1 to keep within bounds of
-        // array
-        if (i == this.colours.length)
+        /*
+         * Correct in the special case that value = 1 to keep within bounds of
+         * array
+         */
+        if (i == this.colours.length) {
             i--;
+        }
         return this.colours[i];
     }
 
@@ -269,7 +272,7 @@ public class ColourPalette {
             }
         }
     }
-    
+
     public static Set<String> getPredefinedPalettes() {
         return loadedColourSets.keySet();
     }

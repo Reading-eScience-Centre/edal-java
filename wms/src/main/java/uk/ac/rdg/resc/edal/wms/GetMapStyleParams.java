@@ -48,9 +48,9 @@ import uk.ac.rdg.resc.edal.graphics.style.PatternScale;
 import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleJSONParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public class GetMapStyleParams {
@@ -76,8 +76,6 @@ public class GetMapStyleParams {
     private boolean autoScale = false;
     /* true if we are using an XML/JSON style specification */
     private boolean xmlSpecified = false;
-
-    private static ColorAdapter cAdapter = ColorAdapter.getInstance();
 
     public GetMapStyleParams(RequestParams params) throws EdalException {
         String layersStr = params.getString("layers");
@@ -125,15 +123,8 @@ public class GetMapStyleParams {
 
         this.transparent = params.getBoolean("transparent", false);
 
-        try {
-            String bgc = params.getString("bgcolor", "0x00000000");
-            if ((bgc.length() != 8 && bgc.length() != 10) || !bgc.startsWith("0x"))
-                throw new Exception();
-            /* Parse the hexadecimal string */
-            backgroundColour = cAdapter.unmarshal("#"+bgc.substring(2));
-        } catch (Exception e) {
-            throw new EdalException("Invalid format for BGCOLOR");
-        }
+        String bgcStr = params.getString("bgcolor", "0x00000000");
+        backgroundColour = GraphicsUtils.parseColour(bgcStr);
         
         String bmcStr = params.getString("belowmincolor");
         if (bmcStr == null) {
@@ -143,15 +134,7 @@ public class GetMapStyleParams {
         } else if (bmcStr.equalsIgnoreCase("transparent")) {
             belowMinColour = new Color(0, 0, 0, 0);
         } else {
-            try {
-                if ((bmcStr.length() != 8 && bmcStr.length() != 10)
-                        || !bmcStr.startsWith("0x"))
-                    throw new Exception();
-                /* Parse the hexadecimal string, ignoring the "0x" prefix */
-                belowMinColour = cAdapter.unmarshal("#" + bmcStr.substring(2));
-            } catch (Exception e) {
-                throw new EdalException("Invalid format for BELOWMINCOLOR");
-            }
+            belowMinColour = GraphicsUtils.parseColour(bmcStr);
         }
         
         String amcStr = params.getString("abovemaxcolor");
@@ -162,15 +145,7 @@ public class GetMapStyleParams {
         } else if (amcStr.equalsIgnoreCase("transparent")) {
             aboveMaxColour = new Color(0, 0, 0, 0);
         } else {
-            try {
-                if ((amcStr.length() != 8 && amcStr.length() != 10)
-                        || !amcStr.startsWith("0x"))
-                    throw new Exception();
-                /* Parse the hexadecimal string, ignoring the "0x" prefix */
-                aboveMaxColour = cAdapter.unmarshal("#" + amcStr.substring(2));
-            } catch (Exception e) {
-                throw new EdalException("Invalid format for ABOVEMAXCOLOR");
-            }
+            aboveMaxColour = GraphicsUtils.parseColour(amcStr);
         }
         
 
@@ -192,7 +167,7 @@ public class GetMapStyleParams {
     /**
      * Gets the ColorScaleRange object requested by the client
      */
-    private Extent<Float> getColorScaleRange(RequestParams params) throws EdalException {
+    public static Extent<Float> getColorScaleRange(RequestParams params) throws EdalException {
         String csr = params.getString("colorscalerange");
         if (csr == null || csr.equalsIgnoreCase("default")) {
             /* The client wants the layer's default scale range to be used */
@@ -513,15 +488,13 @@ public class GetMapStyleParams {
             /*
              * Generate a RasterLayer
              */
-            ColourScale scaleRange = new ColourScale(colourScaleRange.getLow(),
-                    colourScaleRange.getHigh(), logarithmic);
+            ColourScale scaleRange = new ColourScale(colourScaleRange, logarithmic);
             ColourMap colourPalette = new ColourMap(belowMinColour, aboveMaxColour, backgroundColour,
                     paletteName, numColourBands);
             ColourScheme colourScheme = new PaletteColourScheme(scaleRange, colourPalette);
             layer = new RasterLayer(layerName, colourScheme);
         } else if (plotStyleName.equalsIgnoreCase("contour")) {
-            layer = new ContourLayer(layerName, new ColourScale(colourScaleRange.getLow(),
-                    colourScaleRange.getHigh(), logarithmic), autoScale, numColourBands,
+            layer = new ContourLayer(layerName, new ColourScale(colourScaleRange, logarithmic), autoScale, numColourBands,
                     Color.black, 1, ContourLineStyle.SOLID, true);
         } else if (plotStyleName.equalsIgnoreCase("stipple")) {
             PatternScale scale = new PatternScale(numColourBands, colourScaleRange.getLow(),

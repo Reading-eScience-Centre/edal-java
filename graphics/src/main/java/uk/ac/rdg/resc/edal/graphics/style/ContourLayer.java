@@ -207,7 +207,7 @@ public class ContourLayer extends ImageLayer {
             scaleMax = scale.getScaleMax();
         }
         
-        Array2D dataValues = dataReader.getDataForLayerName(dataFieldName);
+        Array2D<Number> dataValues = dataReader.getDataForLayerName(dataFieldName);
         for(int j=0; j<height; j++) {
             for(int i=0; i< width;i++){
                 Number value = dataValues.get(j,i);

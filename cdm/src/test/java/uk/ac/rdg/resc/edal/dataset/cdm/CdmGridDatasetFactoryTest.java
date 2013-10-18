@@ -117,14 +117,14 @@ public class CdmGridDatasetFactoryTest {
 
                 MapFeature mapData = dataset.readMapData(null, hGrid, zPos, time);
 
-                Array2D lonValues = mapData.getValues("vLon");
-                Array2D latValues = mapData.getValues("vLat");
-                Array2D depthValues = mapData.getValues("vDepth");
-                Array2D timeValues = mapData.getValues("vTime");
+                Array2D<Number> lonValues = mapData.getValues("vLon");
+                Array2D<Number> latValues = mapData.getValues("vLat");
+                Array2D<Number> depthValues = mapData.getValues("vDepth");
+                Array2D<Number> timeValues = mapData.getValues("vTime");
 
                 /* Derived vars */
-                Array2D magValues = mapData.getValues("vLonvLat-mag");
-                Array2D dirValues = mapData.getValues("vLonvLat-dir");
+                Array2D<Number> magValues = mapData.getValues("vLonvLat-mag");
+                Array2D<Number> dirValues = mapData.getValues("vLonvLat-dir");
 
                 assertArrayEquals(lonValues.getShape(), new int[] { ySize, xSize });
                 assertArrayEquals(latValues.getShape(), new int[] { ySize, xSize });

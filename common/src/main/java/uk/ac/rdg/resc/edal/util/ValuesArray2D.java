@@ -34,7 +34,7 @@ package uk.ac.rdg.resc.edal.util;
  * 
  * @author Guy
  */
-public class ValuesArray2D extends Array2D {
+public class ValuesArray2D extends Array2D<Number> {
 
     private Double[][] data;
 
@@ -60,5 +60,10 @@ public class ValuesArray2D extends Array2D {
                     + ") for this Array (needs 2)");
         }
         data[coords[Y_IND]][coords[X_IND]] = (value == null) ? null : value.doubleValue();
+    }
+
+    @Override
+    public Class<Number> getValueClass() {
+        return Number.class;
     }
 }

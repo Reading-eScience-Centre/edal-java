@@ -26,43 +26,60 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.domain;
+package uk.ac.rdg.resc.edal.util;
 
-/**
- * <p>
- * Defines a contiguous domain that is defined by "low" and "high" bounds. Any
- * value (inclusively) between these values is considered part of the domain. A
- * null value for "low" or "high" indicates that the extent is unbounded at that
- * end. If both values are null, then the Extent includes all possible values of
- * P.
- * </p>
- * 
- * @param P
- *            The type of object used to identify positions within this extent.
- * @author Jon Blower
- * @author Guy
- */
-public interface Extent<P> extends Domain<P> {
-    /**
-     * @return The low bound of this {@link Extent}
-     */
-    public P getLow();
+import uk.ac.rdg.resc.edal.exceptions.ArrayAccessException;
+
+public class ImmutableArray1D<T> extends Array1D<T> {
+    private final T[] data;
+    private final Class<T> clazz;
 
     /**
-     * @return The high bound of this {@link Extent}
+     * Create a new in-memory array.
+     * 
+     * @param clazz
+     *            The class of the objects which this {@link Array1D} will hold
+     * @param size
+     *            The shape of the data
+     * @param values
+     *            An array containing the data.
      */
-    public P getHigh();
-    
-    /**
-     * @return Whether or not this is an empty {@link Extent} - empty
-     *         {@link Extent}s are defined as containing <code>null</code> for
-     *         both {@link Extent#getHigh()} and {@link Extent#getLow()}
-     */
-    public boolean isEmpty();
-    
+    public ImmutableArray1D(Class<T> clazz, int size, T[] values) {
+        super(size);
+        this.clazz = clazz;
+        this.data = values;
+    }
+
     @Override
-    public boolean equals(Object obj);
-    
+    public T get(int... coords) {
+        if (coords.length != 1) {
+            throw new ArrayAccessException("This Array is 1-dimensional, but you have asked for "
+                    + coords.length + " dimensions");
+        }
+        return data[coords[0]];
+        
+        /*
+         * General method for nD arrays
+         */
+//        for (int i = coords.length - 1; i >= 0; i--) {
+//            int stepIndex = coords[i];
+//            int multiplier = 1;
+//            for (int j = i + 1; j < coords.length; j++) {
+//                multiplier *= shape[j];
+//            }
+//            index += stepIndex * multiplier;
+//        }
+//
+//        return data[index];
+    }
+
     @Override
-    public int hashCode();
+    public Class<T> getValueClass() {
+        return clazz;
+    }
+
+    @Override
+    public void set(T value, int... coords) {
+        throw new UnsupportedOperationException("This Array1D is immutable.");
+    }
 }

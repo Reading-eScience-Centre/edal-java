@@ -31,6 +31,8 @@ package uk.ac.rdg.resc.edal.graphics.style;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.domain.Extent;
+
 @XmlType(namespace = MapImage.NAMESPACE, propOrder={}, name="ColourScaleType")
 public class ColourScale {
     // The scale range spanned by this colour scheme
@@ -43,6 +45,12 @@ public class ColourScale {
     private Boolean logarithmic = false;
     
     ColourScale(){}
+    
+    public ColourScale(Extent<Float> scaleRange, Boolean logarithmic) {
+        this.scaleMin = scaleRange.getLow();
+        this.scaleMax = scaleRange.getHigh();
+        this.logarithmic = logarithmic;
+    }
     
     public ColourScale(Float scaleMin, Float scaleMax, Boolean logarithmic) {
         this.scaleMin = scaleMin;
