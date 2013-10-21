@@ -144,7 +144,7 @@ abstract class DomainMapper<T> implements Iterable<DomainMapper.DomainMapperEntr
         }
 
         this.targetDomainSize = (int) targetDomainSize;
-        sourceGridISize = sourceGrid.getXAxis().size();
+        sourceGridISize = sourceGrid.getXSize();
 
         /*
          * Create an estimate of a suitable chunk size. We don't want this to be

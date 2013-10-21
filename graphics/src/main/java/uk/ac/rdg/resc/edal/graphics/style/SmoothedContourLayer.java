@@ -53,6 +53,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -126,7 +127,7 @@ public class SmoothedContourLayer extends ImageLayer {
 	}
 
 	@Override
-	protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
+	protected void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
 		int width = image.getWidth();
 		int height = image.getHeight();
 		double[] values = new double[width * height];

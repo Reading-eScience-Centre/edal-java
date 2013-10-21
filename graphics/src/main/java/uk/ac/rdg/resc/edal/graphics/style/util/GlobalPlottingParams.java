@@ -28,11 +28,14 @@
 
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
+import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.TimeUtils;
 
 public class GlobalPlottingParams {
     private int width = 256;
@@ -40,27 +43,31 @@ public class GlobalPlottingParams {
 
     private BoundingBox bbox;
     private Extent<Double> zExtent;
-    private Extent<DateTime> tExtent;
     private Double targetZ;
-    private DateTime targetT;
+    
+    private String endTime;
+    private String startTime;
+    private String targetT;
 
     public GlobalPlottingParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
-            Extent<DateTime> tExtent, Double targetZ, DateTime targetT) {
+            String startTime, String endTime, Double targetZ, String targetT) {
         super();
         this.width = width;
         this.height = height;
         this.bbox = bbox;
         this.zExtent = zExtent;
-        this.tExtent = tExtent;
         this.targetZ = targetZ;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.targetT = targetT;
         
         if(zExtent == null && targetZ != null) {
             zExtent = Extents.newExtent(targetZ, targetZ);
         }
         
-        if(tExtent == null && targetT != null) {
-            tExtent = Extents.newExtent(targetT, targetT);
+        if(startTime == null && targetT != null) {
+            startTime = targetT;
+            endTime = targetT;
         }
     }
 
@@ -80,15 +87,15 @@ public class GlobalPlottingParams {
         return zExtent;
     }
 
-    public Extent<DateTime> getTExtent() {
-        return tExtent;
+    public Extent<DateTime> getTExtent(Chronology chronology) throws BadTimeFormatException {
+        return Extents.newExtent(TimeUtils.iso8601ToDateTime(startTime, chronology), TimeUtils.iso8601ToDateTime(endTime, chronology));
     }
 
     public Double getTargetZ() {
         return targetZ;
     }
 
-    public DateTime getTargetT() {
-        return targetT;
+    public DateTime getTargetT(Chronology chronology) throws BadTimeFormatException {
+        return TimeUtils.iso8601ToDateTime(targetT, chronology);
     }
 }

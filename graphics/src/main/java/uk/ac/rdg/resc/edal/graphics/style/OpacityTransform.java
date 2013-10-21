@@ -32,14 +32,16 @@ import java.awt.image.BufferedImage;
 
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+
 
 @XmlType(namespace=MapImage.NAMESPACE, name="OpacityTransformType")
 public abstract class OpacityTransform extends ImageLayer {
 
-    protected abstract void applyOpacityToImage(BufferedImage image, DataReader dataReader);
+    protected abstract void applyOpacityToImage(BufferedImage image, DataReader dataReader) throws EdalException;
 
     @Override
-    protected final void drawIntoImage(BufferedImage image, DataReader dataReader) {
+    protected final void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
         applyOpacityToImage(image, dataReader);
     }
     

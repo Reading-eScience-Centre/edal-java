@@ -28,9 +28,6 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
-import org.joda.time.DateTime;
-import org.joda.time.chrono.ISOChronology;
-
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
@@ -41,7 +38,6 @@ import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
@@ -106,29 +102,25 @@ public class GetMapParameters {
     }
     
     private GlobalPlottingParams parsePlottingParams(RequestParams params) throws EdalException {
-        Extent<DateTime> tExtent = null;
+        String startTime = null;
+        String endTime = null;
         String timeString = params.getString("time");
         if(timeString != null && !timeString.trim().equals("")) {
             String[] timeStrings = timeString.split("/");
             if(timeStrings.length == 1) {
-                DateTime time = TimeUtils.iso8601ToDateTime(timeStrings[0], ISOChronology.getInstance());
-                tExtent = Extents.newExtent(time, time);
+                startTime = timeStrings[0];
+                endTime = timeStrings[0];
             } else if(timeStrings.length == 2) {
-                tExtent = Extents.newExtent(
-                        TimeUtils.iso8601ToDateTime(timeStrings[0], ISOChronology.getInstance()),
-                        TimeUtils.iso8601ToDateTime(timeStrings[1], ISOChronology.getInstance()));
+                startTime = timeStrings[0];
+                endTime = timeStrings[1];
             } else {
                 throw new BadTimeFormatException("Time can either be a single value or a range");
             }
         }
             
-        DateTime targetTime = null;
-        String targetTimeString = params.getString("targettime");
-        if(targetTimeString != null) {
-            targetTime = TimeUtils.iso8601ToDateTime(targetTimeString, ISOChronology.getInstance());
-        }
-        if(targetTime == null && tExtent != null) {
-            targetTime = tExtent.getHigh();
+        String targetTime = params.getString("targettime");
+        if(targetTime == null && endTime != null) {
+            targetTime = endTime;
         }
         
         Extent<Double> zExtent = null;
@@ -190,7 +182,7 @@ public class GetMapParameters {
             return new GlobalPlottingParams(
                     params.getMandatoryPositiveInt("width"),
                     params.getMandatoryPositiveInt("height"),
-                    bbox, zExtent, tExtent, targetDepth, targetTime);
+                    bbox, zExtent, startTime, endTime, targetDepth, targetTime);
         } catch (InvalidCrsException e) {
             e.printStackTrace();
             throw new EdalException("Something's wrong with your parameters");

@@ -40,12 +40,10 @@ public interface RectilinearGrid extends HorizontalGrid {
     /**
      * Gets the x axis of the grid.
      */
-    @Override
     public ReferenceableAxis<Double> getXAxis();
 
     /**
      * Gets the y axis of the grid.
      */
-    @Override
     public ReferenceableAxis<Double> getYAxis();
 }

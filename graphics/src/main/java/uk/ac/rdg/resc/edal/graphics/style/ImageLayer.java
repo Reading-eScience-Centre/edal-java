@@ -33,6 +33,8 @@ import java.awt.image.BufferedImage;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
@@ -43,7 +45,7 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 public abstract class ImageLayer extends Drawable {
 
     protected interface DataReader {
-        public Array2D<Number> getDataForLayerName(String layerId);
+        public Array2D<Number> getDataForLayerName(String layerId) throws EdalException;
     }
 
     /*
@@ -58,7 +60,7 @@ public abstract class ImageLayer extends Drawable {
 
     @Override
     public BufferedImage drawImage(final GlobalPlottingParams params,
-            final FeatureCatalogue catalogue) {
+            final FeatureCatalogue catalogue) throws EdalException {
         BufferedImage image = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
         drawIntoImage(image, params, catalogue);
@@ -66,10 +68,10 @@ public abstract class ImageLayer extends Drawable {
     }
 
     protected void drawIntoImage(BufferedImage image, final GlobalPlottingParams params,
-            final FeatureCatalogue catalogue) {
+            final FeatureCatalogue catalogue) throws EdalException {
         drawIntoImage(image, new DataReader() {
             @Override
-            public Array2D<Number> getDataForLayerName(String layerId) {
+            public Array2D<Number> getDataForLayerName(String layerId) throws BadTimeFormatException {
                 MapFeatureAndMember featureAndMemberName = catalogue.getFeatureAndMemberName(
                         layerId, params);
                 final Array2D<Number> values = featureAndMemberName.getMapFeature().getValues(
@@ -98,7 +100,8 @@ public abstract class ImageLayer extends Drawable {
         });
     }
 
-    protected abstract void drawIntoImage(BufferedImage image, DataReader dataReader);
+    protected abstract void drawIntoImage(BufferedImage image, DataReader dataReader)
+            throws EdalException;
 
     public void setXSampleSize(int xSampleSize) {
         this.xSampleSize = xSampleSize;

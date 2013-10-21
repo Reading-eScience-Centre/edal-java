@@ -68,8 +68,8 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
     private final Chronology chronology;
 
     public TrajectoryDomain(List<GeoPosition> positions) throws MismatchedCrsException {
-        this.positions = new ImmutableArray1D<GeoPosition>(GeoPosition.class,
-                positions.size(), positions.toArray(new GeoPosition[0]));
+        this.positions = new ImmutableArray1D<GeoPosition>(GeoPosition.class, positions.size(),
+                positions.toArray(new GeoPosition[0]));
         CoordinateReferenceSystem commonCrs = null;
         VerticalCrs commonVCrs = null;
         Chronology commonChronology = null;
@@ -94,21 +94,31 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
                     hPos = GISUtils.transformPosition(hPos, commonCrs);
                 }
             }
-            if (commonVCrs == null) {
-                commonVCrs = zPos.getCoordinateReferenceSystem();
-            } else {
-                if (!commonVCrs.equals(zPos.getCoordinateReferenceSystem())) {
-                    throw new MismatchedCrsException(
-                            "Vertical CRSs must match for all points in a Trajectory Domain");
+            if (zPos != null) {
+                if (commonVCrs == null) {
+                    commonVCrs = zPos.getCoordinateReferenceSystem();
+                } else {
+                    if (!commonVCrs.equals(zPos.getCoordinateReferenceSystem())) {
+                        throw new MismatchedCrsException(
+                                "Vertical CRSs must match for all points in a Trajectory Domain");
+                    }
+                }
+                if (!Double.isNaN(zPos.getZ())) {
+                    minz = Math.min(minz, zPos.getZ());
+                    maxz = Math.max(maxz, zPos.getZ());
                 }
             }
-            if (commonChronology == null) {
-                commonChronology = time.getChronology();
-            } else {
-                if (!commonChronology.equals(time.getChronology())) {
-                    throw new MismatchedCrsException(
-                            "Chronologies must match for all points in a Trajectory Domain");
+            if (time != null) {
+                if (commonChronology == null) {
+                    commonChronology = time.getChronology();
+                } else {
+                    if (!commonChronology.equals(time.getChronology())) {
+                        throw new MismatchedCrsException(
+                                "Chronologies must match for all points in a Trajectory Domain");
+                    }
                 }
+                mint = Math.min(mint, time.getMillis());
+                maxt = Math.max(maxt, time.getMillis());
             }
 
             if (!Double.isNaN(hPos.getX())) {
@@ -119,21 +129,31 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
                 miny = Math.min(miny, hPos.getY());
                 maxy = Math.max(maxy, hPos.getY());
             }
-            if (!Double.isNaN(zPos.getZ())) {
-                minz = Math.min(minz, zPos.getZ());
-                maxz = Math.max(maxz, zPos.getZ());
-            }
-            mint = Math.min(mint, time.getMillis());
-            maxt = Math.max(maxt, time.getMillis());
 
         }
         crs = commonCrs;
         vCrs = commonVCrs;
         chronology = commonChronology;
-        
+
         bbox = new BoundingBoxImpl(minx, miny, maxx, maxy, crs);
-        zExtent = Extents.newExtent(minz, maxz);
-        tExtent = Extents.newExtent(new DateTime(mint), new DateTime(maxt));
+        if (minz != Double.MAX_VALUE) {
+            zExtent = Extents.newExtent(minz, maxz);
+        } else {
+            /*
+             * The minimum z-value hasn't changed, so we don't have a z-axis for
+             * any of the positions in this domain
+             */
+            zExtent = Extents.emptyExtent(Double.class);
+        }
+        if (mint != Long.MAX_VALUE) {
+            tExtent = Extents.newExtent(new DateTime(mint), new DateTime(maxt));
+        } else {
+            /*
+             * The minimum time hasn't changed, so we don't have a time-axis for
+             * any of the positions in this domain
+             */
+            tExtent = Extents.emptyExtent(DateTime.class);
+        }
     }
 
     /**

@@ -37,6 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 
@@ -77,7 +78,8 @@ public abstract class Drawable {
         this.opacityTransform = opacityTransform;
     }
 
-    public abstract BufferedImage drawImage(GlobalPlottingParams params, FeatureCatalogue featureCatalogue);
+    public abstract BufferedImage drawImage(GlobalPlottingParams params,
+            FeatureCatalogue featureCatalogue) throws EdalException;
     
     /**
      * This should return a list of all the fields used in this image layer, and

@@ -43,7 +43,9 @@ import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
+import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -75,7 +77,8 @@ public class LegendDataGenerator {
         xAxis = new RegularAxisImpl("", 0, 0.001, width, false);
         yAxis = new RegularAxisImpl("", 0, 0.001, height, false);
 
-        domain = new MapDomainImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84, null, null, null);
+        HorizontalGrid hGrid = new RegularGridImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84);
+        domain = new MapDomainImpl(hGrid, null, null, null);
 
         this.dataFields = dataFields;
 
@@ -103,7 +106,7 @@ public class LegendDataGenerator {
 
     public GlobalPlottingParams getGlobalParams() {
         return new GlobalPlottingParams(xAxis.size(), yAxis.size(), domain.getBoundingBox(), null,
-                null, null, null);
+                null, null, null, null);
     }
 
     public FeatureCatalogue getFeatureCatalogue(String xFieldName, String yFieldName) {
