@@ -30,11 +30,11 @@ package uk.ac.rdg.resc.edal.grid;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-public abstract class HorizontalGridImpl implements HorizontalGrid {
+public abstract class AbstractHorizontalGrid implements HorizontalGrid {
 
     protected CoordinateReferenceSystem crs;
 
-    public HorizontalGridImpl(CoordinateReferenceSystem crs) {
+    public AbstractHorizontalGrid(CoordinateReferenceSystem crs) {
         this.crs = crs;
     }
 

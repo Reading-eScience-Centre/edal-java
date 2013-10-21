@@ -36,6 +36,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.LookUpTable;
 
 /**
@@ -104,7 +105,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     }
 
     @Override
-    public int[] findIndexOf(HorizontalPosition position) {
+    public GridCoordinates2D findIndexOf(HorizontalPosition position) {
         double x = position.getX();
         double y = position.getY();
         /*
@@ -121,7 +122,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
          */
         Cell cell = curvCoords.getCell(lutCoords[0], lutCoords[1]);
         if (cell.contains(x, y)) {
-            return new int[] { lutCoords[0], lutCoords[1] };
+            return new GridCoordinates2D(lutCoords[0], lutCoords[1]);
         }
 
         /*
@@ -159,11 +160,11 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
          * actually contained within one of the cell's neighbours
          */
         if (cell.contains(x, y)) {
-            return new int[] { cell.getI(), cell.getJ() };
+            return new GridCoordinates2D(cell.getI(), cell.getJ());
         }
         for (Cell neighbour : cell.getNeighbours()) {
             if (neighbour.contains(x, y)) {
-                return new int[] { neighbour.getI(), neighbour.getJ() };
+                return new GridCoordinates2D(neighbour.getI(), neighbour.getJ());
             }
         }
 
@@ -172,7 +173,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
          * the contains() checks. This is probably OK in the middle of a grid,
          * but we might need to be careful at the edges
          */
-        return new int[] { cell.getI(), cell.getJ() };
+        return new GridCoordinates2D(cell.getI(), cell.getJ());
     }
 
     @Override

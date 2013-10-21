@@ -420,9 +420,9 @@ public final class GISUtils {
             /*
              * Work out how many grid points will be sampled by this transect
              */
-            Set<int[]> gridCoords = new HashSet<int[]>();
+            Set<GridCoordinates2D> gridCoords = new HashSet<GridCoordinates2D>();
             for (HorizontalPosition pos : points) {
-                int[] gridCoord = hGrid.findIndexOf(pos);
+                GridCoordinates2D gridCoord = hGrid.findIndexOf(pos);
                 if (gridCoord != null) {
                     gridCoords.add(gridCoord);
                 }

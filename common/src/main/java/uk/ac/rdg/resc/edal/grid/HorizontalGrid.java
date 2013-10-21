@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.grid;
 
 import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * A two-dimensional grid in the horizontal plane that is referenced to a 2D
@@ -63,13 +64,9 @@ public interface HorizontalGrid extends DiscreteHorizontalDomain<GridCell2D> {
      * 
      * @param position
      *            The position to find the index of
-     * @return An int[] object representing the index of the position within the
-     *         domain, or <code>null</code> if the position is outside the
-     *         domain. int[0] is the x-coordinate, int[1] is the y-coordinate
-     * 
-     * 
-     *         TODO replace the return type with something less prone to using
-     *         the wrong co-ordinate
+     * @return A {@link GridCoordinates2D} object representing the index of the
+     *         position within the domain, or <code>null</code> if the position
+     *         is outside the domain.
      */
-    public int[] findIndexOf(HorizontalPosition position);
+    public GridCoordinates2D findIndexOf(HorizontalPosition position);
 }

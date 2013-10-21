@@ -32,6 +32,7 @@ import java.util.Collection;
 
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * This is an implementation of a {@link DomainMapper} which maps 2D indices
@@ -81,8 +82,10 @@ public class Domain1DMapper extends DomainMapper<Integer> {
             /*
              * Find the index of the cell containing this position
              */
-            int[] indices = sourceGrid.findIndexOf(pos);
-            mapper.put(indices[0], indices[1], pixelIndex);
+            GridCoordinates2D indices = sourceGrid.findIndexOf(pos);
+            if(indices != null) {
+                mapper.put(indices.getX(), indices.getY(), pixelIndex);
+            }
             pixelIndex++;
         }
         long end = System.currentTimeMillis();

@@ -56,6 +56,7 @@ import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
@@ -172,12 +173,12 @@ public class ProjectedGrid implements HorizontalGrid {
                              * The x,y coordinates are in the external CRS of
                              * this grid
                              */
-                            int[] posCoords = ProjectedGrid.this
+                            GridCoordinates2D posCoords = ProjectedGrid.this
                                     .findIndexOf(new HorizontalPosition(x, y,
                                             DefaultGeographicCRS.WGS84));
                             if (posCoords == null)
                                 return false;
-                            return (posCoords[0] == coords[1] && posCoords[1] == coords[0]);
+                            return (posCoords.getX() == coords[1] && posCoords.getY() == coords[0]);
                         }
                     };
 
@@ -189,16 +190,16 @@ public class ProjectedGrid implements HorizontalGrid {
     }
 
     @Override
-    public int[] findIndexOf(HorizontalPosition position) {
+    public GridCoordinates2D findIndexOf(HorizontalPosition position) {
         if (GISUtils.crsMatch(getCoordinateReferenceSystem(),
                 position.getCoordinateReferenceSystem())) {
-            return new int[] { xAxis.findIndexOf(position.getX()),
-                    yAxis.findIndexOf(position.getY()) };
+            return new GridCoordinates2D(xAxis.findIndexOf(position.getX()),
+                    yAxis.findIndexOf(position.getY()));
         } else {
             HorizontalPosition transformedPosition = GISUtils.transformPosition(position,
                     getCoordinateReferenceSystem());
-            return new int[] { xAxis.findIndexOf(transformedPosition.getX()),
-                    yAxis.findIndexOf(transformedPosition.getY()) };
+            return new GridCoordinates2D(xAxis.findIndexOf(transformedPosition.getX()),
+                    yAxis.findIndexOf(transformedPosition.getY()));
         }
     }
 
