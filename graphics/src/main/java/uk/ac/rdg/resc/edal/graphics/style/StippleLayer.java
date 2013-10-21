@@ -36,6 +36,7 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -54,7 +55,7 @@ public class StippleLayer extends ImageLayer {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
+    protected void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
         int[][] alphas = new int[image.getWidth()][image.getHeight()];
         Array2D<Number> values = dataReader.getDataForLayerName(dataFieldName);
         

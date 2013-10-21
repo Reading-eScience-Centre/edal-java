@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 
 public interface FeatureCatalogue {
@@ -50,5 +51,6 @@ public interface FeatureCatalogue {
         }
     }
 
-    public MapFeatureAndMember getFeatureAndMemberName(String id, GlobalPlottingParams params);
+    public MapFeatureAndMember getFeatureAndMemberName(String id, GlobalPlottingParams params)
+            throws BadTimeFormatException;
 }

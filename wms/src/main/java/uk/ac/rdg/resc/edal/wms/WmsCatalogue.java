@@ -30,8 +30,12 @@ package uk.ac.rdg.resc.edal.wms;
 
 import java.util.List;
 
+import org.joda.time.Chronology;
+
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.domain.TemporalDomain;
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
@@ -65,14 +69,19 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 public abstract class WmsCatalogue implements FeatureCatalogue {
 
     @Override
-    public MapFeatureAndMember getFeatureAndMemberName(String id, GlobalPlottingParams params) {
+    public MapFeatureAndMember getFeatureAndMemberName(String id, GlobalPlottingParams params) throws BadTimeFormatException {
         Dataset dataset = getDatasetFromId(id);
         String variable = getVariableFromId(id);
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
             try {
+                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variable).getTemporalDomain();
+                Chronology chronology = null;
+                if(temporalDomain != null) {
+                    chronology = temporalDomain.getChronology();
+                }
                 MapFeature mapData = gridDataset.readMapData(CollectionUtils.setOf(variable),
-                        WmsUtils.getImageGrid(params), params.getTargetZ(), params.getTargetT());
+                        WmsUtils.getImageGrid(params), params.getTargetZ(), params.getTargetT(chronology));
                 return new MapFeatureAndMember(mapData, variable);
             } catch (InvalidCrsException e) {
                 /*

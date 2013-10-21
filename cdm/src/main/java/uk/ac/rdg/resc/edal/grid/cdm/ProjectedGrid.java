@@ -27,6 +27,10 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.grid.cdm;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
@@ -34,15 +38,22 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import ucar.nc2.dataset.CoordinateAxis1D;
 import ucar.nc2.dt.GridCoordSystem;
+import ucar.unidata.geoloc.LatLonPoint;
 import ucar.unidata.geoloc.Projection;
 import ucar.unidata.geoloc.ProjectionImpl;
 import ucar.unidata.geoloc.projection.RotatedPole;
+import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.geometry.AbstractPolygon;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
+import uk.ac.rdg.resc.edal.grid.GridCell2DImpl;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.LonLatPosition;
+import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
@@ -51,9 +62,6 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * A two-dimensional {@link HorizontalGrid} that uses a {@link Projection} to
  * convert from lat-lon coordinates to grid coordinates.
  * 
- * @todo Relax restriction that external CRS must be lat-lon. This requires some
- *       translation between CDM Projection objects and GeoAPI
- *       CoordinateReferenceSystem objects.
  * @author Jon Blower
  * @author Guy Griffiths
  */
@@ -62,6 +70,8 @@ public class ProjectedGrid implements HorizontalGrid {
     private final ReferenceableAxis<Double> xAxis;
     private final ReferenceableAxis<Double> yAxis;
     private final BoundingBox bbox;
+
+    private transient Array<GridCell2D> domainObjs = null;
 
     /**
      * The GridCoordSystem must have one-dimensional x and y coordinate axes
@@ -81,16 +91,6 @@ public class ProjectedGrid implements HorizontalGrid {
         bbox = new BoundingBoxImpl(coordSys.getLatLonBoundingBox().getLonMin(), coordSys
                 .getLatLonBoundingBox().getLatMin(), coordSys.getLatLonBoundingBox().getLonMax(),
                 coordSys.getLatLonBoundingBox().getLatMax(), DefaultGeographicCRS.WGS84);
-    }
-
-    @Override
-    public ReferenceableAxis<Double> getXAxis() {
-        return xAxis;
-    }
-
-    @Override
-    public ReferenceableAxis<Double> getYAxis() {
-        return yAxis;
     }
 
     @Override
@@ -119,10 +119,11 @@ public class ProjectedGrid implements HorizontalGrid {
     public BoundingBox getBoundingBox() {
         return bbox;
     }
-    
+
     @Override
     public GeographicBoundingBox getGeographicBoundingBox() {
-        return new DefaultGeographicBoundingBox(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(), bbox.getMaxY());
+        return new DefaultGeographicBoundingBox(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(),
+                bbox.getMaxY());
     }
 
     @Override
@@ -132,8 +133,59 @@ public class ProjectedGrid implements HorizontalGrid {
 
     @Override
     public Array<GridCell2D> getDomainObjects() {
-        // TODO Auto-generated method stub
-        return null;
+        if (domainObjs == null) {
+            domainObjs = new AbstractImmutableArray<GridCell2D>(GridCell2D.class, getYSize(),
+                    getXSize()) {
+                @Override
+                public GridCell2D get(final int... coords) {
+                    double x = xAxis.getCoordinateValue(coords[1]);
+                    double y = yAxis.getCoordinateValue(coords[0]);
+                    /* Translate this point to lon-lat coordinates */
+                    LatLonPoint latLon = proj.projToLatLon(x, y);
+                    HorizontalPosition centre = new LonLatPosition(latLon.getLongitude(),
+                            latLon.getLatitude());
+
+                    Extent<Double> xExtent = xAxis.getCoordinateBounds(coords[1]);
+                    Extent<Double> yExtent = yAxis.getCoordinateBounds(coords[0]);
+                    List<HorizontalPosition> vertices = new ArrayList<HorizontalPosition>(4);
+                    vertices.add(new LonLatPosition(xExtent.getLow(), yExtent.getLow()));
+                    vertices.add(new LonLatPosition(xExtent.getHigh(), yExtent.getLow()));
+                    vertices.add(new LonLatPosition(xExtent.getHigh(), yExtent.getHigh()));
+                    vertices.add(new LonLatPosition(xExtent.getLow(), yExtent.getHigh()));
+                    final List<HorizontalPosition> iVertices = Collections
+                            .unmodifiableList(vertices);
+
+                    Polygon footprint = new AbstractPolygon() {
+                        @Override
+                        public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+                            return ProjectedGrid.this.getCoordinateReferenceSystem();
+                        }
+
+                        @Override
+                        public List<HorizontalPosition> getVertices() {
+                            return iVertices;
+                        }
+
+                        @Override
+                        public boolean contains(double x, double y) {
+                            /*
+                             * The x,y coordinates are in the external CRS of
+                             * this grid
+                             */
+                            int[] posCoords = ProjectedGrid.this
+                                    .findIndexOf(new HorizontalPosition(x, y,
+                                            DefaultGeographicCRS.WGS84));
+                            if (posCoords == null)
+                                return false;
+                            return (posCoords[0] == coords[1] && posCoords[1] == coords[0]);
+                        }
+                    };
+
+                    return new GridCell2DImpl(coords, centre, footprint, ProjectedGrid.this);
+                }
+            };
+        }
+        return domainObjs;
     }
 
     @Override
@@ -148,5 +200,15 @@ public class ProjectedGrid implements HorizontalGrid {
             return new int[] { xAxis.findIndexOf(transformedPosition.getX()),
                     yAxis.findIndexOf(transformedPosition.getY()) };
         }
+    }
+
+    @Override
+    public int getXSize() {
+        return xAxis.size();
+    }
+
+    @Override
+    public int getYSize() {
+        return yAxis.size();
     }
 }

@@ -68,7 +68,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     /**
      * The passed-in coordSys must have 2D horizontal coordinate axes.
      */
-    public static LookUpTableGrid generate(Array2D lonVals, Array2D latVals) {
+    public static LookUpTableGrid generate(Array2D<Number> lonVals, Array2D<Number> latVals) {
         CurvilinearCoords curvCoords = new CurvilinearCoords(lonVals, latVals);
 
         /*
@@ -173,5 +173,15 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
          * but we might need to be careful at the edges
          */
         return new int[] { cell.getI(), cell.getJ() };
+    }
+
+    @Override
+    public int getXSize() {
+        return lut.getNumLonPoints();
+    }
+
+    @Override
+    public int getYSize() {
+        return lut.getNumLatPoints();
     }
 }

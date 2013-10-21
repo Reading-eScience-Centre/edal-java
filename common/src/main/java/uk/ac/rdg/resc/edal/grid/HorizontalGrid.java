@@ -42,31 +42,21 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 public interface HorizontalGrid extends DiscreteHorizontalDomain<GridCell2D> {
 
     /**
-     * {@inheritDoc}
-     * <p>
-     * This may or may not be aligned with any of the real-world coordinate axes
-     * in the {@link #getCoordinateReferenceSystem() coordinate reference
-     * system}.
-     * </p>
-     */
-    public ReferenceableAxis<Double> getXAxis();
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This may or may not be aligned with any of the real-world coordinate axes
-     * in the {@link #getCoordinateReferenceSystem() coordinate reference
-     * system}.
-     * </p>
-     */
-    public ReferenceableAxis<Double> getYAxis();
-
-    /**
      * Returns the size of this domain. Equivalent to
-     * <code>getXAxis().size() * getYAxis().size()</code>
+     * <code>getXSize() * getYSize()</code>
      */
     @Override
     public long size();
+
+    /**
+     * @return The size of the x-axis
+     */
+    public int getXSize();
+
+    /**
+     * @return The size of the y-axis
+     */
+    public int getYSize();
 
     /**
      * Finds the index of the specified position within this domain

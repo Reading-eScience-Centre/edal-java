@@ -39,6 +39,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
@@ -87,7 +88,7 @@ public class ArrowLayer extends ImageLayer {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, DataReader dataReader) {
+    protected void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
         Array2D<Number> values = dataReader.getDataForLayerName(directionFieldName);
 
         Graphics2D g = image.createGraphics();

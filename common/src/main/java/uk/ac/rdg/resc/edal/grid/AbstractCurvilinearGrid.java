@@ -100,16 +100,6 @@ public abstract class AbstractCurvilinearGrid implements HorizontalGrid {
     }
 
     @Override
-    public ReferenceableAxis<Double> getXAxis() {
-        return new RegularAxisImpl("Grid x-axis", 0, 1, curvCoords.getNi(), false);
-    }
-
-    @Override
-    public ReferenceableAxis<Double> getYAxis() {
-        return new RegularAxisImpl("Grid y-axis", 0, 1, curvCoords.getNj(), false);
-    }
-
-    @Override
     public long size() {
         return curvCoords.size();
     }

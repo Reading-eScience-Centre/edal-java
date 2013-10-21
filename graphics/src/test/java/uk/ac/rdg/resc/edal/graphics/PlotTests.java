@@ -47,6 +47,7 @@ import org.junit.Test;
 
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
@@ -139,7 +140,7 @@ public class PlotTests {
                 }
             }
         };
-        params = new GlobalPlottingParams(WIDTH, HEIGHT, bbox, null, null, null, null);
+        params = new GlobalPlottingParams(WIDTH, HEIGHT, bbox, null, null, null, null, null);
 
     }
 
@@ -170,7 +171,7 @@ public class PlotTests {
     }
 
     @Test
-    public void testRaster() {
+    public void testRaster() throws EdalException {
         ColourScheme colourScheme = new PaletteColourScheme(scale, new ColourMap(Color.blue,
                 Color.red, new Color(0, true), "#000000,#00ff00", 10));
         RasterLayer rasterLayer = new RasterLayer("test", colourScheme);
@@ -182,7 +183,7 @@ public class PlotTests {
     }
 
     @Test
-    public void testContour() {
+    public void testContour() throws EdalException {
         ContourLayer contourLayer = new ContourLayer("test", scale, false, 5, Color.cyan, 1,
                 ContourLineStyle.SOLID, true);
         MapImage mapImage = new MapImage();
@@ -193,7 +194,7 @@ public class PlotTests {
     }
 
     @Test
-    public void testSmoothedContour() {
+    public void testSmoothedContour() throws EdalException {
         SmoothedContourLayer smoothedContourLayer = new SmoothedContourLayer("test", scale, false,
                 5, Color.red, 1, ContourLineStyle.SOLID, true);
         MapImage mapImage = new MapImage();
@@ -204,7 +205,7 @@ public class PlotTests {
     }
 
     @Test
-    public void testStipple() {
+    public void testStipple() throws EdalException {
         PatternScale pattern = new PatternScale(10, 0f, 1f, false);
         StippleLayer stippleLayer = new StippleLayer("test", pattern);
         MapImage mapImage = new MapImage();
@@ -215,7 +216,7 @@ public class PlotTests {
     }
 
     @Test
-    public void testRaster2D() {
+    public void testRaster2D() throws EdalException {
         ColourScheme2D colourScheme = new ThresholdColourScheme2D(Arrays.asList(0.1f, 0.5f, 0.9f),
                 Arrays.asList(0.1f, 0.5f, 0.9f), Arrays.asList(new Color(0, 0, 0), new Color(0,
                         100, 0), new Color(0, 200, 0), new Color(0, 255, 0), new Color(100, 0, 0),
@@ -233,7 +234,7 @@ public class PlotTests {
     }
 
     @Test
-    public void testArrow() {
+    public void testArrow() throws EdalException {
         ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(arrowLayer);

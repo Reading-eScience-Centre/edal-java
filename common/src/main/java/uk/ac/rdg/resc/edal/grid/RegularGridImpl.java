@@ -40,7 +40,7 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
  * @author Guy
  * @author Jon
  */
-public class RegularGridImpl extends HorizontalGridImpl implements RegularGrid {
+public class RegularGridImpl extends RectilinearGridImpl implements RegularGrid {
 
     public RegularGridImpl(RegularAxis xAxis, RegularAxis yAxis, CoordinateReferenceSystem crs) {
         super(xAxis, yAxis, crs);
@@ -111,6 +111,7 @@ public class RegularGridImpl extends HorizontalGridImpl implements RegularGrid {
      */
     public RegularGridImpl(double minx, double miny, double maxx, double maxy,
             CoordinateReferenceSystem crs, int width, int height) {
+        super(crs);
         if (maxx < minx || maxy < miny) {
             throw new IllegalArgumentException("Invalid bounding box");
         }
@@ -152,11 +153,11 @@ public class RegularGridImpl extends HorizontalGridImpl implements RegularGrid {
 
     @Override
     public RegularAxis getXAxis() {
-        return (RegularAxis) super.getXAxis();
+        return (RegularAxis) xAxis;
     }
 
     @Override
     public RegularAxis getYAxis() {
-        return (RegularAxis) super.getYAxis();
+        return (RegularAxis) yAxis;
     }
 }

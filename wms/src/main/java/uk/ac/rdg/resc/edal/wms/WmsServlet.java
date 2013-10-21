@@ -64,6 +64,7 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
@@ -397,9 +398,14 @@ public class WmsServlet extends HttpServlet {
 
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
+                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variableId).getTemporalDomain();
+                Chronology chronology = null;
+                if(temporalDomain != null) {
+                    chronology = temporalDomain.getChronology();
+                }
                 Number value;
                 value = gridDataset.readSinglePoint(variableId, position,
-                        plottingParameters.getTargetZ(), plottingParameters.getTargetT());
+                        plottingParameters.getTargetZ(), plottingParameters.getTargetT(chronology));
                 featureInfos.add(new FeatureInfoPoint(layerName, position, value));
             } else {
                 throw new UnsupportedOperationException(
@@ -798,8 +804,14 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Can only find min/max for exactly one layer at a time");
         }
 
-        MapFeatureAndMember featureAndMember = catalogue.getFeatureAndMemberName(layerNames[0],
-                getMapParams.getPlottingParameters());
+        MapFeatureAndMember featureAndMember;
+        try {
+            featureAndMember = catalogue.getFeatureAndMemberName(layerNames[0],
+                    getMapParams.getPlottingParameters());
+        } catch (BadTimeFormatException e) {
+            log.error("Bad time format", e);
+            throw new MetadataException("Bad time format", e);
+        }
         MapFeature mapFeature = featureAndMember.getMapFeature();
         Array2D<Number> values = mapFeature.getValues(featureAndMember.getMember());
 
@@ -1069,13 +1081,7 @@ public class WmsServlet extends HttpServlet {
         String[] layers = params.getMandatoryString("layers").split(",");
         CoordinateReferenceSystem crs = GISUtils.getCrs(params.getMandatoryString("CRS"));
         LineString lineString = new LineString(params.getMandatoryString("linestring"), crs);
-        final DateTime time;
         String timeStr = params.getString("time");
-        if(timeStr != null) {
-            time = TimeUtils.iso8601ToDateTime(timeStr, ISOChronology.getInstance());
-        } else {
-            time = null;
-        }
         
         String elevationStr = params.getString("elevation");
         Double zValue = null;
@@ -1108,6 +1114,14 @@ public class WmsServlet extends HttpServlet {
                 }
                 if(verticalDomain != null && layers.length == 1) {
                     verticalSection = true;
+                }
+                
+                final DateTime time;
+                TemporalDomain temporalDomain = metadata.getTemporalDomain();
+                if(timeStr != null) {
+                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
+                } else {
+                    time = null;
                 }
                 HorizontalDomain hDomain = metadata.getHorizontalDomain();
                 final List<HorizontalPosition> transectPoints;
@@ -1188,6 +1202,11 @@ public class WmsServlet extends HttpServlet {
                     }
                     vAxis = new VerticalAxisImpl("Vertical section axis", values, verticalDomain.getVerticalCrs());
                 }
+                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId).getTemporalDomain();
+                DateTime time = null;
+                if(timeStr != null) {
+                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
+                }
                 for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
                     ProfileFeature profileFeature = gridDataset.readProfileData(
                             CollectionUtils.setOf(varId), pos,
@@ -1240,9 +1259,6 @@ public class WmsServlet extends HttpServlet {
         
         DateTime time = null;
         String timeStr = params.getString("time");
-        if(timeStr != null) {
-            time = TimeUtils.iso8601ToDateTime(timeStr, ISOChronology.getInstance());
-        }
         List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
         for(String layerName : layers) {
             Dataset dataset = catalogue.getDatasetFromId(layerName);
@@ -1263,6 +1279,10 @@ public class WmsServlet extends HttpServlet {
                     }
                     for(int i=0; i < AXIS_RESOLUTION; i++) {
                         values.add(min + (max - min) * ((double) i) / AXIS_RESOLUTION);
+                    }
+                    TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId).getTemporalDomain();
+                    if(timeStr != null) {
+                        time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
                     }
                     zAxis = new VerticalAxisImpl("Artificial z-axis", values, verticalDomain.getVerticalCrs());
                 }

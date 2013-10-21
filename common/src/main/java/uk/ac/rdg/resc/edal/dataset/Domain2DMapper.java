@@ -30,10 +30,12 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.util.List;
 
+import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
@@ -177,18 +179,16 @@ public class Domain2DMapper extends DomainMapper<int[]> {
      */
     private static Domain2DMapper forGeneralGrids(HorizontalGrid sourceGrid,
             final HorizontalGrid targetGrid) {
-        Domain2DMapper mapper = new Domain2DMapper(sourceGrid, targetGrid.getXAxis().size(),
-                targetGrid.getYAxis().size());
+        Domain2DMapper mapper = new Domain2DMapper(sourceGrid, targetGrid.getXSize(),
+                targetGrid.getYSize());
         /*
          * Find the nearest grid coordinates to all the points in the domain
          */
-        final ReferenceableAxis<Double> targetXAxis = targetGrid.getXAxis();
-        final ReferenceableAxis<Double> targetYAxis = targetGrid.getYAxis();
-        for (int j = 0; j < targetYAxis.size(); j++) {
-            for (int i = 0; i < targetXAxis.size(); i++) {
-                HorizontalPosition transformedPosition = GISUtils.transformPosition(new HorizontalPosition(
-                        targetXAxis.getCoordinateValue(i), targetYAxis.getCoordinateValue(j),
-                        targetGrid.getCoordinateReferenceSystem()), sourceGrid
+        Array<GridCell2D> targetDomainObjects = targetGrid.getDomainObjects();
+        for (int j = 0; j < targetGrid.getYSize(); j++) {
+            for (int i = 0; i < targetGrid.getXSize(); i++) {
+                targetGrid.getDomainObjects().get(j, i).getCentre();
+                HorizontalPosition transformedPosition = GISUtils.transformPosition(targetDomainObjects.get(j,i).getCentre(), sourceGrid
                         .getCoordinateReferenceSystem());
                 int[] indices = sourceGrid.findIndexOf(transformedPosition);
                 if(indices != null) {

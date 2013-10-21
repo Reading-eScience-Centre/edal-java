@@ -35,7 +35,6 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -49,6 +48,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.graphics.style.util.LegendDataGenerator;
@@ -81,7 +81,7 @@ public class MapImage extends Drawable {
     }
 
     @Override
-    public BufferedImage drawImage(GlobalPlottingParams params, FeatureCatalogue catalogue) {
+    public BufferedImage drawImage(GlobalPlottingParams params, FeatureCatalogue catalogue) throws EdalException {
         BufferedImage finalImage = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = finalImage.createGraphics();
@@ -115,7 +115,7 @@ public class MapImage extends Drawable {
      */
     private static final int COLOURBAR_WIDTH = 50;
 
-    public BufferedImage getLegend(int componentSize) {
+    public BufferedImage getLegend(int componentSize) throws EdalException {
         /*
          * TODO componentSize doesn't actually specify the total size of a
          * component, just the data bit of it. We *may* want to fix this
@@ -407,26 +407,5 @@ public class MapImage extends Drawable {
             ret.addAll(getOpacityTransform().getFieldsWithScales());
         }
         return ret;
-    }
-
-    public static void main(String[] args) throws IOException {
-        MapImage image = new MapImage();
-        Drawable layer = new RasterLayer("colouredness", new PaletteColourScheme(new ColourScale(
-                -00.0000000050f, 5.0f, false), new ColourMap(Color.black, Color.black, new Color(0,
-                true), "default", 250)));
-//        Drawable raster2 = new RasterLayer("raster2", new ColourScheme(new ColourScale(-5.0f,
-//                5.0f, false), new ColourMap(Color.black, Color.black, new Color(0, true),
-//                        "redblue", 250)));
-//        layer.setOpacityTransform(new FlatOpacity(0.5f));
-
-//        ArrowLayer layer2 = new ArrowLayer("pointiness", 10, Color.BLACK);
-        ContourLayer layer2 = new ContourLayer("contouriness", new ColourScale(0f, 50f, false), false, 10, Color.red, 2, null, true);
-        StippleLayer layer3 = new StippleLayer("stippliness", new PatternScale(8, 0f, 1f, false));
-        image.getLayers().add(layer);
-//        image.getLayers().add(raster2);
-        image.getLayers().add(layer2);
-        image.getLayers().add(layer3);
-        image.setOpacityTransform(new LinearOpacity("seethroughness", 0f, 1f));
-        ImageIO.write(image.getLegend(200), "png", new File("/home/guy/legendtest.png"));
     }
 }

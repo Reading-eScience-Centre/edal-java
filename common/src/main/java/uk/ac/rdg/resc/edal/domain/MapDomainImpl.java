@@ -29,33 +29,29 @@
 package uk.ac.rdg.resc.edal.domain;
 
 import org.joda.time.DateTime;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.HorizontalGridImpl;
-import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.util.Array;
 
 /**
  * Implementation of a {@link MapDomain}
  *
  * @author Guy
  */
-public class MapDomainImpl extends HorizontalGridImpl implements MapDomain {
+public class MapDomainImpl implements MapDomain {
+    private HorizontalGrid hGrid;
     private Double z;
     private VerticalCrs vCrs;
     private DateTime time;
     
     public MapDomainImpl(HorizontalGrid hGrid, Double z, VerticalCrs vCrs, DateTime time) {
-        super(hGrid.getXAxis(), hGrid.getYAxis(), hGrid.getCoordinateReferenceSystem());
-        this.z = z;
-        this.vCrs = vCrs;
-        this.time = time;
-    }
-
-    public MapDomainImpl(ReferenceableAxis<Double> xAxis, ReferenceableAxis<Double> yAxis,
-            CoordinateReferenceSystem crs, Double z, VerticalCrs vCrs, DateTime time) {
-        super(xAxis, yAxis, crs);
+        this.hGrid = hGrid;
         this.z = z;
         this.vCrs = vCrs;
         this.time = time;
@@ -74,5 +70,50 @@ public class MapDomainImpl extends HorizontalGridImpl implements MapDomain {
     @Override
     public DateTime getTime() {
         return time;
+    }
+
+    @Override
+    public long size() {
+        return hGrid.size();
+    }
+
+    @Override
+    public int getXSize() {
+        return hGrid.getXSize();
+    }
+
+    @Override
+    public int getYSize() {
+        return hGrid.getYSize();
+    }
+
+    @Override
+    public int[] findIndexOf(HorizontalPosition position) {
+        return hGrid.findIndexOf(position);
+    }
+
+    @Override
+    public Array<GridCell2D> getDomainObjects() {
+        return hGrid.getDomainObjects();
+    }
+
+    @Override
+    public boolean contains(HorizontalPosition position) {
+        return hGrid.contains(position);
+    }
+
+    @Override
+    public BoundingBox getBoundingBox() {
+        return hGrid.getBoundingBox();
+    }
+
+    @Override
+    public GeographicBoundingBox getGeographicBoundingBox() {
+        return hGrid.getGeographicBoundingBox();
+    }
+
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return hGrid.getCoordinateReferenceSystem();
     }
 }

@@ -36,6 +36,7 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -90,7 +91,7 @@ public class LinearOpacity extends OpacityTransform {
     }
 
     @Override
-    protected void applyOpacityToImage(BufferedImage image, DataReader dataReader) {
+    protected void applyOpacityToImage(BufferedImage image, DataReader dataReader) throws EdalException {
         int width = image.getWidth();
         int height = image.getHeight();
 

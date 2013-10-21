@@ -68,6 +68,7 @@ import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
+import uk.ac.rdg.resc.edal.grid.cdm.ProjectedGrid;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -169,17 +170,12 @@ public final class CdmUtils {
                     return new RectilinearGridImpl(xRefAxis, yRefAxis, DefaultGeographicCRS.WGS84);
                 }
             } else {
-//                /*
-//                 * Axes are not latitude and longitude so we need to create a
-//                 * ReferenceableGrid that uses the coordinate system's
-//                 * Projection object to convert from x and y to lat and lon
-//                 */
-//                return new ProjectedGrid(coordSys);
                 /*
-                 * TODO: Maybe this will work, maybe it won't, or maybe it will
-                 * work but be too slow.
+                 * Axes are not latitude and longitude so we need to create a
+                 * ReferenceableGrid that uses the coordinate system's
+                 * Projection object to convert from x and y to lat and lon
                  */
-                return new RectilinearGridImpl(xRefAxis, yRefAxis, DefaultGeographicCRS.WGS84);
+                return new ProjectedGrid(coordSys);
             }
         } else if (xAxis instanceof CoordinateAxis2D && yAxis instanceof CoordinateAxis2D) {
             /* The axis must be 2D so we have to create look-up tables */

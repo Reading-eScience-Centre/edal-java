@@ -63,7 +63,7 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implemen
     protected DateTime extendLastValue(DateTime lastVal, DateTime secondLastVal) {
         long tVal = (long) (lastVal.getMillis() + 0.5 * (lastVal.getMillis() - secondLastVal
                 .getMillis()));
-        return new DateTime(tVal);
+        return new DateTime(tVal, chronology);
     }
 
     @Override

@@ -29,14 +29,9 @@
 package uk.ac.rdg.resc.edal.util;
 
 import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Contains some useful utility methods for working with Collections.
