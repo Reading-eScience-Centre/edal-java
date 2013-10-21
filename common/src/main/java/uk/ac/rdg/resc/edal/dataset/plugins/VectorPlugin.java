@@ -74,11 +74,11 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Get domains where both components are valid
          */
-        HorizontalDomain hDomain = getUnionOfHorizontalDomains(xMetadata.getHorizontalDomain(),
+        HorizontalDomain hDomain = getIntersectionOfHorizontalDomains(xMetadata.getHorizontalDomain(),
                 yMetadata.getHorizontalDomain());
-        VerticalDomain vDomain = getUnionOfVerticalDomains(xMetadata.getVerticalDomain(),
+        VerticalDomain vDomain = getIntersectionOfVerticalDomains(xMetadata.getVerticalDomain(),
                 yMetadata.getVerticalDomain());
-        TemporalDomain tDomain = getUnionOfTemporalDomains(xMetadata.getTemporalDomain(),
+        TemporalDomain tDomain = getIntersectionOfTemporalDomains(xMetadata.getTemporalDomain(),
                 yMetadata.getTemporalDomain());
 
         /*
