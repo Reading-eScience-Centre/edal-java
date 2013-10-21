@@ -365,7 +365,13 @@ public class WmsServlet extends HttpServlet {
         context.put("WmsUtils", WmsUtils.class);
         context.put("verbose", params.getBoolean("verbose", false));
 
-        Template template = velocityEngine.getTemplate("templates/capabilities-1.3.0.vm");
+        String wmsVersion = params.getMandatoryWmsVersion();
+        Template template;
+        if("1.1.1".equals(wmsVersion)) {
+            template = velocityEngine.getTemplate("templates/capabilities-1.1.1.vm");
+        } else {
+            template = velocityEngine.getTemplate("templates/capabilities-1.3.0.vm");
+        }
         try {
             template.merge(context, httpServletResponse.getWriter());
         } catch (ResourceNotFoundException e) {

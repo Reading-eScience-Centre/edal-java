@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.wms;
 import java.util.List;
 
 import org.joda.time.Chronology;
+import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
@@ -167,6 +168,11 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * @return The main contact email address for this server
      */
     public abstract String getServerContactEmail();
+    
+    /**
+     * @return The last time that data on this server was updated
+     */
+    public abstract DateTime getServerLastUpdate();
 
     /**
      * @return All available {@link Dataset}s on this server
