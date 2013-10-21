@@ -37,6 +37,7 @@ import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * This is an implementation of a {@link DomainMapper} which maps 2D indices
@@ -190,9 +191,9 @@ public class Domain2DMapper extends DomainMapper<int[]> {
                 targetGrid.getDomainObjects().get(j, i).getCentre();
                 HorizontalPosition transformedPosition = GISUtils.transformPosition(targetDomainObjects.get(j,i).getCentre(), sourceGrid
                         .getCoordinateReferenceSystem());
-                int[] indices = sourceGrid.findIndexOf(transformedPosition);
+                GridCoordinates2D indices = sourceGrid.findIndexOf(transformedPosition);
                 if(indices != null) {
-                    mapper.put(indices[0], indices[1], mapper.convertCoordsToIndex(i, j));
+                    mapper.put(indices.getX(), indices.getY(), mapper.convertCoordsToIndex(i, j));
                 }
             }
         }

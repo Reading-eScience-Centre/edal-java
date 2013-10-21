@@ -32,20 +32,55 @@ package uk.ac.rdg.resc.edal.util;
  * Class representing a pair of integer co-ordinates. This is used in preference
  * to int[] so that the order does not cause issues
  * 
- * @author Guy
+ * @author Guy Griffiths
  */
-public class GridCoordinates2D {
-    int[] coords;
+public final class GridCoordinates2D {
+    private int x;
+    private int y;
 
+    /**
+     * Create a new {@link GridCoordinates2D} object
+     * 
+     * @param x
+     *            The x-index
+     * @param y
+     *            The y-index
+     */
     public GridCoordinates2D(int x, int y) {
-        coords = new int[] { x, y };
+        this.x = x;
+        this.y = y;
     }
 
     public int getX() {
-        return coords[0];
+        return x;
     }
 
     public int getY() {
-        return coords[1];
+        return y;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + x;
+        result = prime * result + y;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GridCoordinates2D other = (GridCoordinates2D) obj;
+        if (x != other.x)
+            return false;
+        if (y != other.y)
+            return false;
+        return true;
     }
 }

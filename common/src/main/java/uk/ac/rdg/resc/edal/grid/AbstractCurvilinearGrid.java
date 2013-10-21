@@ -37,6 +37,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
 
 /**
@@ -84,7 +85,7 @@ public abstract class AbstractCurvilinearGrid implements HorizontalGrid {
 
     @Override
     public boolean contains(HorizontalPosition position) {
-        int[] coords = findIndexOf(position);
+        GridCoordinates2D coords = findIndexOf(position);
         return (coords != null);
     }
 

@@ -39,13 +39,14 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * Immutable implementation of a {@link RectilinearGrid} using {@link Double}s.
  * 
  * @author Guy Griffiths
  */
-public class RectilinearGridImpl extends HorizontalGridImpl implements RectilinearGrid {
+public class RectilinearGridImpl extends AbstractHorizontalGrid implements RectilinearGrid {
     protected ReferenceableAxis<Double> xAxis;
     protected ReferenceableAxis<Double> yAxis;
 
@@ -151,8 +152,14 @@ public class RectilinearGridImpl extends HorizontalGridImpl implements Rectiline
     }
 
     @Override
-    public int[] findIndexOf(HorizontalPosition position) {
-        return new int[] { xAxis.findIndexOf(position.getX()), yAxis.findIndexOf(position.getY()) };
+    public GridCoordinates2D findIndexOf(HorizontalPosition position) {
+        int x = xAxis.findIndexOf(position.getX());
+        int y = yAxis.findIndexOf(position.getY());
+        if(x > 0 && y > 0) {
+            return new GridCoordinates2D(x, y);
+        } else {
+            return null;
+        }
     }
 
     @Override

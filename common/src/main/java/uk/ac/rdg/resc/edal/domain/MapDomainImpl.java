@@ -38,6 +38,7 @@ import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * Implementation of a {@link MapDomain}
@@ -88,7 +89,7 @@ public class MapDomainImpl implements MapDomain {
     }
 
     @Override
-    public int[] findIndexOf(HorizontalPosition position) {
+    public GridCoordinates2D findIndexOf(HorizontalPosition position) {
         return hGrid.findIndexOf(position);
     }
 

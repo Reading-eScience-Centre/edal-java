@@ -68,6 +68,7 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
 /**
@@ -489,9 +490,9 @@ public abstract class AbstractGridDataset implements GridDataset {
         /*
          * Use these objects to convert natural coordinates to grid indices
          */
-        int[] hIndices = hDomain.findIndexOf(hPos);
-        int xIndex = hIndices[0];
-        int yIndex = hIndices[1];
+        GridCoordinates2D hIndices = hDomain.findIndexOf(hPos);
+        int xIndex = hIndices.getX();
+        int yIndex = hIndices.getY();
 
         int tIndex = 0;
         if (tAxis != null) {
@@ -699,9 +700,9 @@ public abstract class AbstractGridDataset implements GridDataset {
         /*
          * Use these objects to convert natural coordinates to grid indices
          */
-        int[] hIndices = hDomain.findIndexOf(hPos);
-        int xIndex = hIndices[0];
-        int yIndex = hIndices[1];
+        GridCoordinates2D hIndices = hDomain.findIndexOf(hPos);
+        int xIndex = hIndices.getX();
+        int yIndex = hIndices.getY();
 
         int zIndex = 0;
         if (zAxis != null) {
@@ -947,7 +948,7 @@ public abstract class AbstractGridDataset implements GridDataset {
                  * variables
                  */
                 GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(variableId);
-                int[] xy = variableMetadata.getHorizontalDomain().findIndexOf(position);
+                GridCoordinates2D xy = variableMetadata.getHorizontalDomain().findIndexOf(position);
 
                 int z = 0;
                 VerticalAxis verticalDomain = variableMetadata.getVerticalDomain();
@@ -960,8 +961,8 @@ public abstract class AbstractGridDataset implements GridDataset {
                 if (temporalDomain != null) {
                     t = temporalDomain.findIndexOf(time);
                 }
-                Array4D<Number> readData = gridDataSource.read(variableId, t, t, z, z, xy[1], xy[1], xy[0],
-                        xy[0]);
+                Array4D<Number> readData = gridDataSource.read(variableId, t, t, z, z, xy.getY(), xy.getY(), xy.getX(),
+                        xy.getX());
                 return readData.get(0, 0, 0, 0);
             } catch (IOException e) {
                 throw new DataReadingException("Problem reading data", e);
