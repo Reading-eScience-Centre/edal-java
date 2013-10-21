@@ -70,6 +70,14 @@ public final class GISUtils {
     private GISUtils() {
     }
 
+    /**
+     * Tests if a coordinate reference system is equivalent to WGS84 Lon-Lat
+     * 
+     * @param coordinateReferenceSystem
+     *            The {@link CoordinateReferenceSystem} to test
+     * @return <code>true</code> if the supplied
+     *         {@link CoordinateReferenceSystem} is equivalent to WGS84
+     */
     public static boolean isWgs84LonLat(CoordinateReferenceSystem coordinateReferenceSystem) {
         try {
             return CRS.findMathTransform(coordinateReferenceSystem, DefaultGeographicCRS.WGS84)
@@ -79,6 +87,17 @@ public final class GISUtils {
         }
     }
 
+    /**
+     * Finds the next longitude which is greater than the reference longitude
+     * and equivalent to the target longitude
+     * 
+     * @param reference
+     *            The reference longitude
+     * @param target
+     *            The target longitude
+     * @return A longitude which is equivalent to the target and greater than
+     *         the reference
+     */
     public static double getNextEquivalentLongitude(double reference, double target) {
         /*
          * Find the clockwise distance from the first value on this axis to the
@@ -88,6 +107,10 @@ public final class GISUtils {
         return reference + clockDiff;
     }
 
+    /**
+     * Returns a longitude value in degrees that is equal to the given value but
+     * in the range (-180:180]
+     */
     public static double constrainLongitude180(double value) {
         double val = constrainLongitude360(value);
         return val > 180.0 ? val - 360.0 : val;
@@ -95,7 +118,7 @@ public final class GISUtils {
 
     /**
      * Returns a longitude value in degrees that is equal to the given value but
-     * in the range [0:360]
+     * in the range [0:360)
      */
     public static double constrainLongitude360(double value) {
         double val = value % 360.0;
@@ -107,15 +130,16 @@ public final class GISUtils {
      * value which is nearest to the target, taking wrapping into account
      * 
      * @param target
-     *            The longitude which we are aiming to be nearest to
+     *            The longitude which we are aiming to be nearest to, in the
+     *            range (-180:180]
      * @param longitude
      *            The longitude which we want to be nearest to the target
      * @return A longitude value which is equivalent to <code>longitude</code>
      */
     public static double getNearestEquivalentLongitude(double target, double longitude) {
-        if (target < -180.0 || target > 180.0) {
+        if (target <= -180.0 || target > 180.0) {
             throw new IllegalArgumentException(
-                    "Reference longitude must be in the range [-180,180]");
+                    "Reference longitude must be in the range (-180,180]");
         }
         double lon1 = constrainLongitude180(longitude);
         double lon2 = target < 0.0 ? lon1 - 360.0 : lon1 + 360.0;
@@ -125,14 +149,18 @@ public final class GISUtils {
     }
 
     /**
-     * Constrains a lat-lon bounding box
+     * Constrains a lat-lon bounding box to have all longitude values in the
+     * range [-180:180]
      * 
      * @param bbox
-     * @return
+     *            The {@link BoundingBox} to constrain
+     * @return The constrained {@link BoundingBox}. If the {@link BoundingBox}
+     *         crosses the date line, a {@link BoundingBox} which spans the
+     *         entire range (-180:180] will be returned
      */
     public static BoundingBox constrainBoundingBox(BoundingBox bbox) {
         if (isWgs84LonLat(bbox.getCoordinateReferenceSystem())) {
-            if (bbox.getMaxX() > 180.0 && bbox.getMinX() < 180.0) {
+            if (bbox.getMaxX() > 180.0) {
                 if (bbox.getMinX() < 180.0) {
                     /*
                      * Bounding box crosses date line
@@ -145,7 +173,7 @@ public final class GISUtils {
                      * 360
                      */
                     return new BoundingBoxImpl(constrainLongitude180(bbox.getMinX()),
-                            bbox.getMinY(), constrainLongitude180(bbox.getMaxX()), bbox.getMaxX(),
+                            bbox.getMinY(), constrainLongitude180(bbox.getMaxX()), bbox.getMaxY(),
                             bbox.getCoordinateReferenceSystem());
                 }
             }
@@ -167,7 +195,6 @@ public final class GISUtils {
      *         the CRS will simply be set to the targetCrs.
      * @throws NullPointerException
      *             if {@code targetCrs} is null.
-     * @todo error handling
      */
     public static HorizontalPosition transformPosition(HorizontalPosition pos,
             CoordinateReferenceSystem targetCrs) {
@@ -194,6 +221,14 @@ public final class GISUtils {
         }
     }
 
+    /**
+     * Tests whether 2 {@link CoordinateReferenceSystem}s are equivalent
+     * 
+     * @param sourceCrs
+     *            The first {@link CoordinateReferenceSystem} to test
+     * @param targetCrs
+     *            The second {@link CoordinateReferenceSystem} to test
+     */
     public static boolean crsMatch(CoordinateReferenceSystem sourceCrs,
             CoordinateReferenceSystem targetCrs) {
         MathTransform transform;
@@ -228,18 +263,28 @@ public final class GISUtils {
             /* The "true" means "force longitude first" */
             return CRS.decode(crsCode, true);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new InvalidCrsException(crsCode);
         }
     }
 
     /**
-     * Converts a string of the form "x1,y1,x2,y2" into a {@link BoundingBox}
+     * Converts a string of the form "a1,b1,a2,b2" into a {@link BoundingBox}
+     * 
+     * @param bboxStr
+     *            A string of the form "a1,b1,a2,b2". If xFirst is
+     *            <code>true</code>, then a1, a2 represent the x-coordinates and
+     *            b1,b2 represent the y-coordinates, otherwise it is the other
+     *            way around
+     * @param xFirst
+     *            Whether the x-coordinates are first or second in the list
+     * @param crs
+     *            A string representing the {@link CoordinateReferenceSystem} of
+     *            the {@link BoundingBox}
      * 
      * @throws EdalException
      *             if the format of the bounding box is invalid
      */
-    public static BoundingBox parseBbox(String bboxStr, boolean lonFirst, String crs)
+    public static BoundingBox parseBbox(String bboxStr, boolean xFirst, String crs)
             throws EdalException {
         String[] bboxEls = bboxStr.split(",");
         /* Check the validity of the bounding box */
@@ -248,7 +293,7 @@ public final class GISUtils {
         }
         double minx, miny, maxx, maxy;
         try {
-            if (lonFirst) {
+            if (xFirst) {
                 minx = Double.parseDouble(bboxEls[0]);
                 miny = Double.parseDouble(bboxEls[1]);
                 maxx = Double.parseDouble(bboxEls[2]);
