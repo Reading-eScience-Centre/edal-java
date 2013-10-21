@@ -197,13 +197,6 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
             return false;
         if (getClass() != obj.getClass())
             return false;
-        @SuppressWarnings("unchecked")
-        AbstractReferenceableAxis<T> other = (AbstractReferenceableAxis<T>) obj;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
-            return false;
         return true;
     }
 }

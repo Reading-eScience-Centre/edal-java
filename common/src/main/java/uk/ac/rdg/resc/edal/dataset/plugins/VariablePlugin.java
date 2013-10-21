@@ -28,7 +28,12 @@
 
 package uk.ac.rdg.resc.edal.dataset.plugins;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
@@ -42,6 +47,10 @@ import uk.ac.rdg.resc.edal.domain.SimpleVerticalDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array1D;
@@ -109,7 +118,8 @@ public abstract class VariablePlugin {
     /**
      * Convenience method for generating an {@link Array1D} from source
      */
-    public Array1D<Number> generateArray1D(final String varId, final Array1D<Number>... sourceArrays) {
+    public Array1D<Number> generateArray1D(final String varId,
+            final Array1D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
@@ -119,7 +129,7 @@ public abstract class VariablePlugin {
             public void set(Number value, int... coords) {
                 throw new IllegalArgumentException("This Array is immutable");
             }
-            
+
             @Override
             public Number get(int... coords) {
                 Number[] sourceValues = new Number[sourceArrays.length];
@@ -138,11 +148,12 @@ public abstract class VariablePlugin {
             }
         };
     }
-    
+
     /**
      * Convenience method for generating an {@link Array2D} from source
      */
-    public Array2D<Number> generateArray2D(final String varId, final Array2D<Number>... sourceArrays) {
+    public Array2D<Number> generateArray2D(final String varId,
+            final Array2D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
@@ -309,7 +320,7 @@ public abstract class VariablePlugin {
      *         {@link CoordinateReferenceSystem} of the returned
      *         {@link HorizontalDomain} will be WGS84
      */
-    protected HorizontalDomain getUnionOfHorizontalDomains(HorizontalDomain... domains) {
+    protected HorizontalDomain getIntersectionOfHorizontalDomains(HorizontalDomain... domains) {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
@@ -319,9 +330,9 @@ public abstract class VariablePlugin {
         double maxLon = -Double.MAX_VALUE;
         for (HorizontalDomain domain : domains) {
             /*
-             * If one of the domains is null, their union is null
+             * If one of the domains is null, their intersection is null
              */
-            if(domain == null) {
+            if (domain == null) {
                 return null;
             }
             GeographicBoundingBox gbbox = domain.getGeographicBoundingBox();
@@ -351,21 +362,23 @@ public abstract class VariablePlugin {
      *         where valid values can be found in all the supplied
      *         {@link VerticalDomain}s
      */
-    protected VerticalDomain getUnionOfVerticalDomains(VerticalDomain... domains) {
+    protected VerticalDomain getIntersectionOfVerticalDomains(VerticalDomain... domains) {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
-        if(domains[0] == null) {
+        if (domains[0] == null) {
             return null;
         }
         VerticalCrs verticalCrs = domains[0].getVerticalCrs();
         Double min = -Double.MAX_VALUE;
         Double max = Double.MAX_VALUE;
+        boolean allVerticalAxes = true;
+        Set<Double> axisVals = new HashSet<Double>();
         for (VerticalDomain domain : domains) {
             /*
-             * If one of the domains is null, their union is null
+             * If one of the domains is null, their intersection is null
              */
-            if(domain == null) {
+            if (domain == null) {
                 return null;
             }
             if ((domain.getVerticalCrs() == null && verticalCrs != null)
@@ -373,6 +386,20 @@ public abstract class VariablePlugin {
                 throw new IllegalArgumentException(
                         "Vertical domain CRSs must match to calculate their union");
             }
+            if (!(domain instanceof VerticalAxis)) {
+                /*
+                 * Not all of our domains are vertical axes
+                 */
+                allVerticalAxes = false;
+            }
+            if (allVerticalAxes) {
+                /*
+                 * If we still think we have all vertical axes, add the axis
+                 * values to the list
+                 */
+                axisVals.addAll(((VerticalAxis) domain).getCoordinateValues());
+            }
+
             if (domain.getExtent().getLow() > min) {
                 min = domain.getExtent().getLow();
             }
@@ -380,7 +407,19 @@ public abstract class VariablePlugin {
                 max = domain.getExtent().getHigh();
             }
         }
-        return new SimpleVerticalDomain(min, max, verticalCrs);
+
+        if (allVerticalAxes) {
+            /*
+             * All of our domains were vertical axes, so we create a new axis
+             * out of the intersection of all their points. Often it's the case
+             * that all domains are the same.
+             */
+            List<Double> values = new ArrayList<Double>(axisVals);
+            Collections.sort(values);
+            return new VerticalAxisImpl("Derived vertical axis", values, verticalCrs);
+        } else {
+            return new SimpleVerticalDomain(min, max, verticalCrs);
+        }
     }
 
     /**
@@ -392,22 +431,39 @@ public abstract class VariablePlugin {
      *         where valid values can be found in all the supplied
      *         {@link TemporalDomain}s
      */
-    protected TemporalDomain getUnionOfTemporalDomains(TemporalDomain... domains) {
+    protected TemporalDomain getIntersectionOfTemporalDomains(TemporalDomain... domains) {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
-        if(domains[0] == null) {
+        if (domains[0] == null) {
             return null;
         }
         Chronology chronology = domains[0].getChronology();
         DateTime min = new DateTime(0L, chronology);
         DateTime max = new DateTime(Long.MAX_VALUE, chronology);
+        boolean allTimeAxes = true;
+        Set<DateTime> axisVals = new HashSet<DateTime>();
         for (TemporalDomain domain : domains) {
             /*
-             * If one of the domains is null, their union is null
+             * If one of the domains is null, their intersection is null
              */
-            if(domain == null) {
+            if (domain == null) {
                 return null;
+            }
+            if(!(domain instanceof TimeAxis)) {
+                /*
+                 * Not all of our domains are time axes
+                 */
+                allTimeAxes = false;
+            }
+            if(allTimeAxes) {
+                /*
+                 * If we still think we have all time axes, add the axis
+                 * values to the list, ensuring they are in the same chronology.
+                 */
+                for(DateTime time : ((TimeAxis) domain).getCoordinateValues()) {
+                    axisVals.add(time.toDateTime(chronology));
+                }
             }
             if (domain.getExtent().getLow().isAfter(min)) {
                 min = domain.getExtent().getLow();
@@ -416,6 +472,18 @@ public abstract class VariablePlugin {
                 max = domain.getExtent().getHigh();
             }
         }
-        return new SimpleTemporalDomain(min, max, chronology);
+        
+        if (allTimeAxes) {
+            /*
+             * All of our domains were vertical axes, so we create a new axis
+             * out of the intersection of all their points. Often it's the case
+             * that all domains are the same.
+             */
+            List<DateTime> values = new ArrayList<DateTime>(axisVals);
+            Collections.sort(values);
+            return new TimeAxisImpl("Derived time axis", values);
+        } else {
+            return new SimpleTemporalDomain(min, max, chronology);
+        }
     }
 }
