@@ -49,6 +49,9 @@ public class StippleLayer extends ImageLayer {
     @XmlElement(name = "Scale", required = true)
     private PatternScale scale;
 
+    private StippleLayer() {
+    }
+    
     public StippleLayer(String dataFieldName, PatternScale scale) {
         this.dataFieldName = dataFieldName;
         this.scale = scale;

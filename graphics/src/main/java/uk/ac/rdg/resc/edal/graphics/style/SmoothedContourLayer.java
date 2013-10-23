@@ -82,6 +82,9 @@ public class SmoothedContourLayer extends ImageLayer {
     @XmlElement(name = "LabelEnabled")
     private Boolean labelEnabled = true;
 
+    private SmoothedContourLayer() {
+    }
+    
     public SmoothedContourLayer(String dataFieldName, ColourScale scale, boolean autoscaleEnabled, 
     		double numberOfContours, Color contourLineColour, int contourLineWidth, ContourLineStyle contourLineStyle, boolean labelEnabled) {
     	this.dataFieldName = dataFieldName;

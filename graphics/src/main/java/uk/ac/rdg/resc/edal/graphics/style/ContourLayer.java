@@ -136,6 +136,9 @@ public class ContourLayer extends ImageLayer {
     @XmlElement(name = "LabelEnabled")
     private Boolean labelEnabled = true;
     
+    private ContourLayer() {
+    }
+    
     public ContourLayer(String dataFieldName, ColourScale scale, boolean autoscaleEnabled, 
     		double numberOfContours, Color contourLineColour, int contourLineWidth, ContourLineStyle contourLineStyle, boolean labelEnabled) {
     	this.dataFieldName = dataFieldName;

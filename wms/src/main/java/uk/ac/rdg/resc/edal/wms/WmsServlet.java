@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.SocketException;
@@ -68,7 +67,6 @@ import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
-import org.joda.time.chrono.ISOChronology;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,9 +98,9 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -112,13 +110,13 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
+import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
@@ -364,6 +362,7 @@ public class WmsServlet extends HttpServlet {
         context.put("TimeUtils", TimeUtils.class);
         context.put("WmsUtils", WmsUtils.class);
         context.put("verbose", params.getBoolean("verbose", false));
+        context.put("availablePalettes", ColourPalette.getPredefinedPalettes());
 
         String wmsVersion = params.getMandatoryWmsVersion();
         Template template;
@@ -517,8 +516,8 @@ public class WmsServlet extends HttpServlet {
             String title = layerMetadata.getTitle();
             child.put("label", title);
 
-            boolean plottable = variable.isPlottable();
-            child.put("plottable", plottable);
+            List<StyleDef> supportedStyles = catalogue.getSupportedStyles(variable);
+            child.put("plottable", (supportedStyles != null && supportedStyles.size() > 0));
 
             Set<VariableMetadata> children = variable.getChildren();
             if (children.size() > 0) {
@@ -538,6 +537,7 @@ public class WmsServlet extends HttpServlet {
          */
         String layerName = params.getString("layerName");
         if (layerName == null) {
+            log.error("Layer "+layerName+" doesn't exist - can't get layer details");
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
         String requestedTime = params.getString("time");
@@ -552,6 +552,7 @@ public class WmsServlet extends HttpServlet {
         String variableId = catalogue.getVariableFromId(layerName);
         WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
         if (dataset == null || variableId == null || layerMetadata == null) {
+            log.error("Layer "+layerName+" doesn't exist - can't get layer details");
             throw new MetadataException("Must supply a valid LAYERNAME to get layer details");
         }
 
@@ -565,10 +566,8 @@ public class WmsServlet extends HttpServlet {
                 .getHorizontalDomain().getBoundingBox());
         Extent<Float> scaleRange = layerMetadata.getColorScaleRange();
         Integer numColorBands = layerMetadata.getNumColorBands();
-        /*
-         * TODO Supported styles?
-         */
-        List<String> supportedStyles = Arrays.asList("default", "boxfill");
+
+        List<StyleDef> supportedStyles = catalogue.getSupportedStyles(variableMetadata);
 
         VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
@@ -640,12 +639,12 @@ public class WmsServlet extends HttpServlet {
         scaleRangeJson.add(scaleRange.getLow());
         scaleRangeJson.add(scaleRange.getHigh());
         layerDetails.put("scaleRange", scaleRangeJson);
-
+        
         layerDetails.put("numColorBands", numColorBands);
 
         JSONArray supportedStylesJson = new JSONArray();
-        for (String supportedStyle : supportedStyles) {
-            supportedStylesJson.add(supportedStyle);
+        for (StyleDef supportedStyle : supportedStyles) {
+            supportedStylesJson.add(supportedStyle.getStyleName() );
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
 
@@ -820,6 +819,9 @@ public class WmsServlet extends HttpServlet {
         }
         MapFeature mapFeature = featureAndMember.getMapFeature();
         Array2D<Number> values = mapFeature.getValues(featureAndMember.getMember());
+        if(values == null) {
+            throw new MetadataException("Cannot find min/max - this is not a scalar layer");
+        }
 
         double min = Double.MAX_VALUE;
         double max = -Double.MAX_VALUE;

@@ -29,24 +29,22 @@
 package uk.ac.rdg.resc.edal.wms;
 
 import java.awt.Color;
+import java.io.StringWriter;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.xml.bind.JAXBException;
 
 import net.sf.json.JSONException;
+
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
-import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
-import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
-import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
-import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
-import uk.ac.rdg.resc.edal.graphics.style.Drawable;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
-import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.PatternScale;
-import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
-import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleJSONParser;
@@ -77,7 +75,12 @@ public class GetMapStyleParams {
     /* true if we are using an XML/JSON style specification */
     private boolean xmlSpecified = false;
 
+    /* Velocity templating engine used for reading fixed styles */
+    private VelocityEngine velocityEngine;
+
     public GetMapStyleParams(RequestParams params) throws EdalException {
+        initVelocity();
+
         String layersStr = params.getString("layers");
         if (layersStr == null || layersStr.trim().isEmpty()) {
             layers = null;
@@ -125,7 +128,7 @@ public class GetMapStyleParams {
 
         String bgcStr = params.getString("bgcolor", "0x00000000");
         backgroundColour = GraphicsUtils.parseColour(bgcStr);
-        
+
         String bmcStr = params.getString("belowmincolor");
         if (bmcStr == null) {
             belowMinColour = Color.black;
@@ -136,7 +139,7 @@ public class GetMapStyleParams {
         } else {
             belowMinColour = GraphicsUtils.parseColour(bmcStr);
         }
-        
+
         String amcStr = params.getString("abovemaxcolor");
         if (amcStr == null) {
             aboveMaxColour = Color.black;
@@ -147,7 +150,6 @@ public class GetMapStyleParams {
         } else {
             aboveMaxColour = GraphicsUtils.parseColour(amcStr);
         }
-        
 
         opacity = params.getPositiveInt("opacity", 100);
         if (opacity > 100) {
@@ -162,6 +164,15 @@ public class GetMapStyleParams {
         if (numColourBands > ColourPalette.MAX_NUM_COLOURS) {
             numColourBands = ColourPalette.MAX_NUM_COLOURS;
         }
+    }
+
+    private void initVelocity() {
+        Properties props = new Properties();
+        props.put("resource.loader", "class");
+        props.put("class.resource.loader.class",
+                "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        velocityEngine = new VelocityEngine();
+        velocityEngine.init(props);
     }
 
     /**
@@ -223,14 +234,12 @@ public class GetMapStyleParams {
 
         String style = "default/default";
 
-        if (styles.length != 0) {
+        if (styles.length != 0 && !"".equals(styles[0])) {
             style = styles[0];
         }
 
         String[] styleParts = style.split("/");
-        if (styleParts.length == 0) {
-            throw new EdalException("Style should be of the form STYLE/PALETTE ()");
-        }
+
         String plotStyleName = styleParts[0];
 
         /*-
@@ -255,20 +264,21 @@ public class GetMapStyleParams {
          * c) auto-scale
          */
         Extent<Float> colourScaleRange;
-        if(this.colourScaleRange == null) {
+        if (this.colourScaleRange == null) {
             /*
-             * This is the case where this.colorScaleRange is null 
+             * This is the case where this.colorScaleRange is null and we want
+             * auto-scaling
              */
             /*
              * TODO How are we dealing with this?
              */
             colourScaleRange = null;
-        } else if(this.colourScaleRange.isEmpty()) {
+        } else if (this.colourScaleRange.isEmpty()) {
             /*
              * We want to use the default scale range if possible
              */
             Extent<Float> defaultColourScaleRange = layerMetadata.getColorScaleRange();
-            if(defaultColourScaleRange == null || defaultColourScaleRange.isEmpty()) {
+            if (defaultColourScaleRange == null || defaultColourScaleRange.isEmpty()) {
                 /*
                  * We have to auto-scale
                  */
@@ -282,7 +292,7 @@ public class GetMapStyleParams {
              */
             colourScaleRange = this.colourScaleRange;
         }
-        
+
         /*-
          * Choose whether this is a logarithmic plot:
          * a) from URL parameter, or failing that
@@ -290,14 +300,14 @@ public class GetMapStyleParams {
          * c) not logarithmic
          */
         boolean logarithmic;
-        if(this.logarithmic != null) {
+        if (this.logarithmic != null) {
             logarithmic = this.logarithmic;
-        } else if(layerMetadata.isLogScaling() != null) {
+        } else if (layerMetadata.isLogScaling() != null) {
             logarithmic = layerMetadata.isLogScaling();
         } else {
             logarithmic = false;
         }
-        
+
         /*-
          * Choose how many colour bands to use:
          * a) from URL parameter, or failing that
@@ -305,212 +315,63 @@ public class GetMapStyleParams {
          * c) the maximum
          */
         int numColourBands;
-        if(this.numColourBands != null) {
+        if (this.numColourBands != null) {
             numColourBands = this.numColourBands;
-        } else if(layerMetadata.getNumColorBands() != null) {
+        } else if (layerMetadata.getNumColorBands() != null) {
             numColourBands = layerMetadata.getNumColorBands();
         } else {
             numColourBands = ColourPalette.MAX_NUM_COLOURS;
         }
-        
-        MapImage image = new MapImage();
-
-        Drawable layer = null;
 
         /*
-         * TODO Handling of default styles...
-         * 
-         * Currently we just treat default as boxfill, and don't bother about
-         * hierarchy.
+         * Now that we have all the URL parameters + any server defined
+         * defaults, we get the style XML template
          */
-//        if(plotStyleName.toLowerCase().startsWith("default")) {
-//            /*
-//             * Check for parent layers which can't be directly plotted
-//             */
-//            FeatureCollectionAndMemberName featureAndMemberName = featureCatalogue.getFeatureAndMemberName(layerName);
-//            String memberName = featureAndMemberName.getMemberName();
-//            String datasetName = featureAndMemberName.getFeatureCollection().getId();
-//            /*
-//             * Only one member supplied = max 1 feature returned
-//             */
-//            @SuppressWarnings("unchecked")
-//            Collection<Feature> findFeatures = (Collection<Feature>) featureAndMemberName.getFeatureCollection().findFeatures(null, null, null,
-//                    CollectionUtils.setOf(memberName));
-//            Feature feature = null;
-//            for(Feature f :findFeatures) {
-//                feature = f;
-//            }
-//            if(feature == null) {
-//                throw new WmsException("No features fit this description");
-//            }
-//            RangeMetadata topMetadata = feature.getCoverage().getRangeMetadata();
-//            RangeMetadata memberMetadata = MetadataUtils.getDescendantMetadata(topMetadata, memberName);
-//            /*
-//             * Default plotting info
-//             */
-//            Dataset dataset = datasets.get(featureAndMemberName.getFeatureCollection().getId());
-//            if(memberMetadata instanceof ScalarMetadata) {
-//                /*
-//                 * We don't have a parent layer.  This makes things somewhat easier.
-//                 */
-//                /*
-//                 * TODO For the time being, we assume that "boxfill" is the default,
-//                 * but this really depends on the feature type.
-//                 */
-//                plotStyleName = "boxfill";
-//            } else if(memberMetadata instanceof VectorMetadata) {
-//                VectorMetadata vectorMetadata = (VectorMetadata) memberMetadata;
-//                List<ScalarMetadata> representativeChildren = vectorMetadata.getRepresentativeChildren();
-//                String magnitudeFieldName = null;
-//                String directionFieldName = null;
-//                for(ScalarMetadata m : representativeChildren) {
-//                    if(m instanceof VectorComponent) {
-//                        VectorComponent vectorComponent = (VectorComponent) m;
-//                        if(vectorComponent.getComponentType() == VectorComponentType.MAGNITUDE) {
-//                            magnitudeFieldName = vectorComponent.getName();
-//                        } else if(vectorComponent.getComponentType() == VectorComponentType.DIRECTION) {
-//                            directionFieldName = vectorComponent.getName();
-//                        }} 
-//                    } else {
-//                        /*
-//                         * Won't get thrown unless code changes, but best to be safe.
-//                         */
-//                        throw new WmsException("Vector Metadata must contain vector components");
-//                    }
-//                }
-//                if(magnitudeFieldName == null || directionFieldName == null) {
-//                    throw new WmsException("Vector Metadata must contain magnitude and direction");
-//                }
-//                /*
-//                 * Treat parameters as params for magnitude field, and plot arrow layer on top with default values
-//                 */
-//                /*
-//                 * Generate a RasterLayer
-//                 */
-//                ColourScale scaleRange = new ColourScale(colorScaleRange.getLow(),
-//                        colorScaleRange.getHigh(), logarithmic);
-//                ColourMap colourPalette = new ColourMap(Color.black, Color.black, new Color(0, true),
-//                        paletteName, numColourBands);
-//                ColourScheme colourScheme = new PaletteColourScheme(scaleRange, colourPalette);
-//                
-//                layer = new RasterLayer(datasetName+"/"+magnitudeFieldName, colourScheme);
-//                image.getLayers().add(layer);
-//                
-//                layer = new ArrowLayer(datasetName+"/"+directionFieldName, 8, Color.black);
-//                image.getLayers().add(layer);
-//                return image;
-//            } else if(memberMetadata instanceof StatisticsCollection) {
-//                StatisticsCollection statisticsCollection = (StatisticsCollection) memberMetadata;
-//                List<ScalarMetadata> children = statisticsCollection.getRepresentativeChildren();
-//                String meanFieldName = null;
-//                String stddevFieldName = null;
-//                String lowerFieldName = null;
-//                String upperFieldName = null;
-//                for(String childName : statisticsCollection.getMemberNames()) {
-//                    ScalarMetadata m = (ScalarMetadata) statisticsCollection.getMemberMetadata(childName);
-//                    if(m instanceof Statistic) {
-//                        Statistic statistic = (Statistic) m;
-//                        if(statistic.getStatisticType() == StatisticType.MEAN) {
-//                            meanFieldName = statistic.getName();
-//                        } else if(statistic.getStatisticType() == StatisticType.STANDARD_DEVIATION) {
-//                            stddevFieldName = statistic.getName();
-//                        } else if(statistic.getStatisticType() == StatisticType.LOWER_CONFIDENCE_BOUND) {
-//                            lowerFieldName = statistic.getName();
-//                        } else if(statistic.getStatisticType() == StatisticType.UPPER_CONFIDENCE_BOUND) {
-//                            upperFieldName = statistic.getName();
-//                        }
-//                    } else {
-//                        /*
-//                         * Won't get thrown unless code changes, but best to be safe.
-//                         */
-//                        throw new WmsException("Statistics must (currently) contain mean and std dev");
-//                    }
-//                }
-//                if(meanFieldName == null || stddevFieldName == null || lowerFieldName == null || upperFieldName == null) {
-//                    throw new WmsException("Statistics must (currently) contain mean and std dev");
-//                }
-//                /*} 
-//                 * Treat parameters as params for magnitude field, and plot
-//                 * contour layer on top with default values taken from server
-//                 * (which should have been approximately auto-scaled
-//                 */
-//                /*
-//                 * Generate a RasterLayer
-//                 */
-//                ColourScale scaleRange = new ColourScale(colorScaleRange.getLow(),
-//                        colorScaleRange.getHigh(), logarithmic);
-//                ColourMap colourPalette = new ColourMap(Color.black, Color.black, new Color(0, true),
-//                        paletteName, numColourBands);
-//                ColourScheme colourScheme = new PaletteColourScheme(scaleRange, colourPalette);
-//                
-//                layer = new RasterLayer(datasetName+"/"+meanFieldName, colourScheme);
-//                image.getLayers().add(layer);
-//                
-//                FeaturePlottingMetadata stddevPlottingMetadata = dataset.getPlottingMetadataMap().get(stddevFieldName);
-//                Extent<Float> sdRange = stddevPlottingMetadata.getColorScaleRange();
-//                
-//                
-//                if(plotStyleName.toLowerCase().endsWith("contour") || plotStyleName.equalsIgnoreCase("default")) {
-//                    layer = new ContourLayer(datasetName + "/" + stddevFieldName, new ColourScale(
-//                            sdRange.getLow(), sdRange.getHigh(), logarithmic), autoScale, 8,
-//                            Color.black, 1, ContourLineStyle.SOLID, true);
-//                } else if(plotStyleName.toLowerCase().endsWith("smooth")) {
-//                    layer = new SmoothedContourLayer(datasetName + "/" + stddevFieldName, new ColourScale(
-//                            sdRange.getLow(), sdRange.getHigh(), logarithmic), autoScale, 8,
-//                            Color.black, 1, ContourLineStyle.SOLID, true);
-//                } else if(plotStyleName.toLowerCase().endsWith("stipple")) {
-//                    float range = sdRange.getHigh() - sdRange.getLow();
-//                    float low = sdRange.getLow() + 0.1f * range;
-//                    float high = sdRange.getHigh() - 0.1f * range;
-//                    layer = new StippleLayer(datasetName + "/" + stddevFieldName, new PatternScale(
-//                            5, low, high, false));
-//                } else if(plotStyleName.toLowerCase().endsWith("confidence")) {
-//                    image.getLayers().remove(0);
-//                    layer = new ConfidenceIntervalLayer(datasetName + "/" + lowerFieldName,
-//                            datasetName + "/" + upperFieldName, 8, colourScheme);
-//                } else if (plotStyleName.toLowerCase().endsWith("fade_black")) {
-//                    layer = new RasterLayer(datasetName + "/" + stddevFieldName,
-//                            new PaletteColourScheme(new ColourScale(sdRange.getLow(),
-//                                    sdRange.getHigh(), logarithmic), new ColourMap(new Color(0,
-//                                    true), Color.black, new Color(0, true), "#00000000,#ff000000", 15)));
-//                } else if (plotStyleName.toLowerCase().endsWith("fade_white")) {
-//                    layer = new RasterLayer(datasetName + "/" + stddevFieldName,
-//                            new PaletteColourScheme(new ColourScale(sdRange.getLow(),
-//                                    sdRange.getHigh(), logarithmic), new ColourMap(new Color(0,
-//                                    true), Color.white, new Color(0, true), "#00ffffff,#ffffffff", 15)));
-//                }
-//                image.getLayers().add(layer);
-//                return image;
-//            }
-//        }
+        Template template = velocityEngine.getTemplate("styles/" + plotStyleName.toLowerCase()
+                + ".xml");
 
-        if ("default".equalsIgnoreCase(plotStyleName) || "boxfill".equalsIgnoreCase(plotStyleName)) {
+        
+        /*
+         * Set all of the variables for replacing in the template
+         */
+        VelocityContext context = new VelocityContext();
+        context.put("paletteName", paletteName);
+        context.put("scaleMin", colourScaleRange.getLow());
+        context.put("scaleMax", colourScaleRange.getHigh());
+        context.put("logarithmic", logarithmic);
+        context.put("numColorBands", numColourBands);
+        context.put("bgColor", GraphicsUtils.colourToString(backgroundColour));
+        context.put("belowMinColor", GraphicsUtils.colourToString(belowMinColour));
+        context.put("aboveMaxColor", GraphicsUtils.colourToString(aboveMaxColour));
+
+        /*
+         * Now deal with the layer names 
+         * 
+         * TODO: handle multiple/derived layers
+         */
+        Map<String, String> layerKeysToLayerNames = catalogue.getStyleTemplateLayerNames(layerName, plotStyleName);
+        for(Entry<String, String> keyToLayerName : layerKeysToLayerNames.entrySet()) {
+            context.put(keyToLayerName.getKey(), keyToLayerName.getValue());
+        }
+
+        /*
+         * Process the template, replacing all parameters with their actual
+         * value for this request
+         */
+        StringWriter xmlStringWriter = new StringWriter();
+        template.merge(context, xmlStringWriter);
+        try {
             /*
-             * Generate a RasterLayer
+             * We now have an XML description of the style for this request.
+             * Parse it into a MapImage and return the result.
              */
-            ColourScale scaleRange = new ColourScale(colourScaleRange, logarithmic);
-            ColourMap colourPalette = new ColourMap(belowMinColour, aboveMaxColour, backgroundColour,
-                    paletteName, numColourBands);
-            ColourScheme colourScheme = new PaletteColourScheme(scaleRange, colourPalette);
-            layer = new RasterLayer(layerName, colourScheme);
-        } else if (plotStyleName.equalsIgnoreCase("contour")) {
-            layer = new ContourLayer(layerName, new ColourScale(colourScaleRange, logarithmic), autoScale, numColourBands,
-                    Color.black, 1, ContourLineStyle.SOLID, true);
-        } else if (plotStyleName.equalsIgnoreCase("stipple")) {
-            PatternScale scale = new PatternScale(numColourBands, colourScaleRange.getLow(),
-                    colourScaleRange.getHigh(), logarithmic);
-            layer = new StippleLayer(layerName, scale);
-        } else if (plotStyleName.equalsIgnoreCase("arrow")) {
-            layer = new ArrowLayer(layerName, 8, Color.black);
+            return StyleXMLParser.deserialise(xmlStringWriter.toString());
+        } catch (JAXBException e) {
+            /*
+             * There is a problem parsing the XML
+             */
+            throw new EdalException("Problem parsing XML template for style "+plotStyleName);
         }
-
-        if (layer == null) {
-            throw new EdalException("Do not know how to plot the style: " + plotStyleName);
-        }
-
-        image.getLayers().add(layer);
-
-        return image;
     }
 
     public boolean isTransparent() {
@@ -531,7 +392,7 @@ public class GetMapStyleParams {
     public boolean isXmlDefined() {
         return xmlSpecified;
     }
-    
+
     public String[] getLayerNames() {
         return layers;
     }

@@ -55,6 +55,9 @@ public class ArrowLayer extends ImageLayer {
 
     private Integer arrowSize = 8;
 
+    private ArrowLayer() {
+    }
+    
     @XmlElement(name = "ArrowSize")
     public void setArrowSize(Integer arrowSize) {
         this.arrowSize = arrowSize;
