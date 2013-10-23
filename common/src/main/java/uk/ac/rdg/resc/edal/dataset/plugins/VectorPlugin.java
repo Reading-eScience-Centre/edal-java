@@ -84,13 +84,13 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Generate metadata for new components
          */
-        VariableMetadata magMetadata = new VariableMetadata(getFullId(MAG), new Parameter(
-                getFullId(MAG), "Magnitude of " + title, "Magnitude of components:\n"
+        VariableMetadata magMetadata = new VariableMetadata(MAG, new Parameter(
+                MAG, "Magnitude of " + title, "Magnitude of components:\n"
                         + xMetadata.getParameter().getDescription() + " and\n"
                         + yMetadata.getParameter().getDescription(), xMetadata.getParameter()
                         .getUnits()), hDomain, vDomain, tDomain);
-        VariableMetadata dirMetadata = new VariableMetadata(getFullId(DIR), new Parameter(
-                getFullId(DIR), "Direction of " + title, "Direction of components:\n"
+        VariableMetadata dirMetadata = new VariableMetadata(DIR, new Parameter(
+                DIR, "Direction of " + title, "Direction of components:\n"
                         + xMetadata.getParameter().getDescription() + " and\n"
                         + yMetadata.getParameter().getDescription(), "degrees"), hDomain, vDomain,
                 tDomain);
@@ -104,9 +104,9 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Create a new container metadata object
          */
-        VariableMetadata containerMetadata = new VariableMetadata(getFullId(GROUP),
-                new Parameter(getFullId(GROUP), title, "Vector fields for " + title, null),
-                hDomain, vDomain, tDomain, true);
+        VariableMetadata containerMetadata = new VariableMetadata(getCombinedId(),
+                new Parameter(getCombinedId(), title, "Vector fields for " + title, null),
+                hDomain, vDomain, tDomain, false);
 
         /*
          * Set all components to have a new parent

@@ -182,7 +182,7 @@ public abstract class AbstractGridDataset implements GridDataset {
             }
 
             for (String varId : varIds) {
-                if (!getVariableMetadata(varId).isPlottable()) {
+                if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read map data for unplottable variables
                      */
@@ -370,7 +370,7 @@ public abstract class AbstractGridDataset implements GridDataset {
             }
 
             for (String varId : varIds) {
-                if (!getVariableMetadata(varId).isPlottable()) {
+                if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read profile data for unplottable variables
                      */
@@ -574,7 +574,7 @@ public abstract class AbstractGridDataset implements GridDataset {
             }
 
             for (String varId : varIds) {
-                if (!getVariableMetadata(varId).isPlottable()) {
+                if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read profile data for unplottable variables
                      */
@@ -784,7 +784,7 @@ public abstract class AbstractGridDataset implements GridDataset {
             }
 
             for (String varId : varIds) {
-                if (!getVariableMetadata(varId).isPlottable()) {
+                if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read profile data for unplottable variables
                      */
@@ -975,8 +975,9 @@ public abstract class AbstractGridDataset implements GridDataset {
      * plugin, or null if it is a non-derived variable
      */
     private VariablePlugin isDerivedVariable(String varId) {
+        String[] split = varId.split(":");
         for (VariablePlugin plugin : plugins) {
-            if (Arrays.asList(plugin.providesVariables()).contains(varId)) {
+            if (Arrays.asList(plugin.providesVariables()).contains(split[split.length - 1])) {
                 return plugin;
             }
         }

@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -40,8 +42,8 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
  * Describes a variable held within a {@link Dataset}. Variables can be
  * hierarchically nested.
  * 
- * @author Jon
- * @author Guy
+ * @author Guy Griffiths
+ * @author Jon Blower
  */
 public class VariableMetadata {
 
@@ -53,7 +55,7 @@ public class VariableMetadata {
     private TemporalDomain tDomain;
     private VariableMetadata parent;
     private Set<VariableMetadata> children;
-    private boolean plottable;
+    private boolean scalar;
 
     /**
      * Constructs a {@link VariableMetadata} object holding metadata about a
@@ -67,7 +69,8 @@ public class VariableMetadata {
      * </p>
      * 
      * @param id
-     *            The ID of the variable
+     *            The ID of the variable. This must be unique amongst its
+     *            siblings
      * @param parameter
      *            The {@link Parameter} which the variable is measuring
      * @param hDomain
@@ -94,7 +97,8 @@ public class VariableMetadata {
      * </p>
      * 
      * @param id
-     *            The ID of the variable
+     *            The ID of the variable. This must be unique amongst its
+     *            siblings
      * @param parameter
      *            The {@link Parameter} which the variable is measuring
      * @param hDomain
@@ -103,12 +107,12 @@ public class VariableMetadata {
      *            The {@link VerticalDomain} on which the variable is measured
      * @param tDomain
      *            The {@link TemporalDomain} on which the variable is measured
-     * @param plottable
-     *            Whether or not this {@link VariableMetadata} represents a
-     *            plottable quantity
+     * @param scalar
+     *            Whether or not this {@link VariableMetadata} can be read as a
+     *            scalar quantity
      */
     public VariableMetadata(String id, Parameter parameter, HorizontalDomain hDomain,
-            VerticalDomain zDomain, TemporalDomain tDomain, boolean plottable) {
+            VerticalDomain zDomain, TemporalDomain tDomain, boolean scalar) {
         if (parameter == null) {
             throw new NullPointerException("Parameter cannot be null");
         }
@@ -119,7 +123,7 @@ public class VariableMetadata {
         this.tDomain = tDomain;
         parent = null;
         children = new LinkedHashSet<VariableMetadata>();
-        this.plottable = plottable;
+        this.scalar = scalar;
     }
 
     /**
@@ -135,10 +139,25 @@ public class VariableMetadata {
     }
 
     /**
-     * The identifier of the variable with the parent dataset.
+     * The identifier of the variable. This is a full ID which indicates the
+     * path of the variable within the {@link VariableMetadata} tree.
      */
     public String getId() {
-        return id;
+        Deque<String> path = new ArrayDeque<String>();
+        path.push(id);
+
+        VariableMetadata parent = getParent();
+        while (parent != null) {
+            path.push(parent.id);
+            parent = parent.getParent();
+        }
+        StringBuilder pathId = new StringBuilder();
+        while (path.size() > 0) {
+            pathId.append(path.pop());
+            pathId.append(':');
+        }
+        pathId.deleteCharAt(pathId.length() - 1);
+        return pathId.toString();
     }
 
     /**
@@ -230,13 +249,11 @@ public class VariableMetadata {
     }
 
     /**
-     * @return Whether this {@link VariableMetadata} represents a plottable
+     * @return Whether this {@link VariableMetadata} represents a scalar
      *         quantity. {@link VariableMetadata} which doesn't is generally
-     *         used for grouping other {@link VariableMetadata}. It would be
-     *         extremely unusual for a {@link VariableMetadata} to be both
-     *         unplottable and have no children.
+     *         used for grouping other {@link VariableMetadata}.
      */
-    public boolean isPlottable() {
-        return plottable;
+    public boolean isScalar() {
+        return scalar;
     }
 }

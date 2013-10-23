@@ -50,6 +50,9 @@ public class RasterLayer extends ImageLayer {
         @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class)})
     private ColourScheme colourScheme = new PaletteColourScheme();
     
+    private RasterLayer() {
+    }
+    
     public RasterLayer(String dataFieldName, ColourScheme colourScheme) {
         this.dataFieldName = dataFieldName;
         this.colourScheme = colourScheme;

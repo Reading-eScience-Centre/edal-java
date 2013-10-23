@@ -100,6 +100,9 @@ public class GraphicsUtils {
     }
 
     public static String colourToString(Color colour) {
+        if(colour == null) {
+            return "extend";
+        }
         return String.format("#%08X", colour.getRGB());
     }
 }

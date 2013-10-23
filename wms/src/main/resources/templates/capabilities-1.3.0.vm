@@ -96,6 +96,7 @@
 #set($parent = $children.size() > 0)
 #set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
 #set($layerMetadata = $catalogue.getLayerMetadata($layerName))
+#set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
     <Layer #if(!$parent && $layerMetadata.queryable)queryable="1"#end>
 #if($variableMetadata.plottable && $layerName && !$parent)
         <Name>$layerName</Name>
@@ -107,7 +108,7 @@
         <Abstract>$layerMetadata.description</Abstract>
 #end
 #if($parent)
-#if($variableMetadata.plottable)
+#if($supportedStyles.size() > 0)
 #layer($dataset $variableMetadata $verbose false)
 #end
 #foreach($child in $variableMetadata.children)
@@ -164,18 +165,26 @@
         </Dimension>
 #end
 #end
-#foreach($style in $WmsUtils.getSupportedStyles($variableMetadata))
+#foreach($style in $supportedStyles)
+#if($style.usesPalette())
+#foreach($paletteName in $availablePalettes)
         <Style>
-            <Name>$style</Name>
-            <Title>$style</Title>
-            <Abstract>$style.stylename style#if($style.palettename), using the $style.palettename palette#end</Abstract>
-#if($style.palettename)
+            <Name>$style.styleName/$paletteName</Name>
+            <Title>$style.styleName/$paletteName</Title>
+            <Abstract>$style.styleName style, using the $paletteName palette</Abstract>
             <LegendURL width="110" height="264">
                 <Format>image/png</Format>
-                <OnlineResource xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$style.palettename&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>
+                <OnlineResource xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$paletteName&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>
             </LegendURL>
-#end
         </Style>
+#end
+#else
+        <Style>
+            <Name>$style.styleName</Name>
+            <Title>$style.styleName</Title>
+            <Abstract>$style.styleName style</Abstract>
+        </Style>
+#end
 #end
 #end
 </Layer>
