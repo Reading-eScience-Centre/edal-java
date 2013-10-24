@@ -357,10 +357,14 @@ final public class Charting {
                 title.append(", ");
             }
         }
-        yLabel.deleteCharAt(yLabel.length() - 1);
-        yLabel.deleteCharAt(yLabel.length() - 1);
-        title.deleteCharAt(title.length() - 1);
-        title.deleteCharAt(title.length() - 1);
+        if(yLabel.length() > 1) {
+            yLabel.deleteCharAt(yLabel.length() - 1);
+            yLabel.deleteCharAt(yLabel.length() - 1);
+        }
+        if(title.length() > 1) {
+            title.deleteCharAt(title.length() - 1);
+            title.deleteCharAt(title.length() - 1);
+        }
 
         /*
          * If we have a layer with more than one elevation value, we create a

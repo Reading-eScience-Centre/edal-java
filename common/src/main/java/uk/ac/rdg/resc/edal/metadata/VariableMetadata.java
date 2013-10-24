@@ -28,9 +28,10 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
@@ -56,6 +57,13 @@ public class VariableMetadata {
     private VariableMetadata parent;
     private Set<VariableMetadata> children;
     private boolean scalar;
+
+    /*
+     * A Map containing arbitrary roles of child VariableMetadata objects in
+     * relation to this one. This can be used to specify e.g. a certain child
+     * represents magnitude of a vector group
+     */
+    private Map<String, VariableMetadata> childrenWithRoles = new HashMap<String, VariableMetadata>();
 
     /**
      * Constructs a {@link VariableMetadata} object holding metadata about a
@@ -139,25 +147,10 @@ public class VariableMetadata {
     }
 
     /**
-     * The identifier of the variable. This is a full ID which indicates the
-     * path of the variable within the {@link VariableMetadata} tree.
+     * @return The identifier of the variable.
      */
     public String getId() {
-        Deque<String> path = new ArrayDeque<String>();
-        path.push(id);
-
-        VariableMetadata parent = getParent();
-        while (parent != null) {
-            path.push(parent.id);
-            parent = parent.getParent();
-        }
-        StringBuilder pathId = new StringBuilder();
-        while (path.size() > 0) {
-            pathId.append(path.pop());
-            pathId.append(':');
-        }
-        pathId.deleteCharAt(pathId.length() - 1);
-        return pathId.toString();
+        return id;
     }
 
     /**
@@ -218,8 +211,25 @@ public class VariableMetadata {
      * 
      * @param parent
      *            The parent {@link VariableMetadata} object
+     * @param relationshipToParent
+     *            A {@link String} representing the relationship this
+     *            {@link VariableMetadata} has with its parent. This is an
+     *            arbitrary value which can be used to access
+     *            {@link VariableMetadata#getChildWithRole(String)}
      */
-    public void setParent(VariableMetadata parent) {
+    public void setParent(VariableMetadata parent, String relationshipToParent) {
+        /*
+         * If we're setting a named relationship, we need to check that the
+         * parent doesn't already have such a child
+         */
+        if (relationshipToParent != null && parent != null) {
+            if (parent.childrenWithRoles.containsKey(relationshipToParent)) {
+                throw new IllegalArgumentException(
+                        "The parent already has a child with the relationship: "
+                                + relationshipToParent);
+            }
+        }
+
         VariableMetadata currentMetadata = parent;
         while (currentMetadata != null) {
             if (currentMetadata.equals(this)) {
@@ -238,6 +248,12 @@ public class VariableMetadata {
              * have this as a child any more.
              */
             this.parent.children.remove(this);
+            for (Entry<String, VariableMetadata> children : this.parent.childrenWithRoles
+                    .entrySet()) {
+                if (children.getValue().equals(this)) {
+                    this.parent.childrenWithRoles.remove(children.getKey());
+                }
+            }
         }
         this.parent = parent;
         if (this.parent != null) {
@@ -245,7 +261,21 @@ public class VariableMetadata {
              * We only add this as a child if it is not the tree root
              */
             this.parent.children.add(this);
+            this.parent.childrenWithRoles.put(relationshipToParent, this);
+            dataset = parent.getDataset();
         }
+    }
+
+    /**
+     * Returns all child {@link VariableMetadata} with the designated role
+     * 
+     * @param role
+     *            The role to search for
+     * @return The child {@link VariableMetadata} which has this role, or
+     *         <code>null</code> if there are none
+     */
+    public VariableMetadata getChildWithRole(String role) {
+        return childrenWithRoles.get(role);
     }
 
     /**
