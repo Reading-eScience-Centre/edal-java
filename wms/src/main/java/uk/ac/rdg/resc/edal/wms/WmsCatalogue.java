@@ -240,40 +240,17 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                 currentStyleSupported = false;
                 continue;
             }
-            /*
-             * Now check that all required children for this style are present
-             * in the variable
-             * 
-             * TODO multiply-nested children...
-             */
-            List<String> variableChildren = new ArrayList<String>();
-            for(VariableMetadata childMetadata : variableMetadata.getChildren()) {
-                variableChildren.add(childMetadata.getId());
-            }
-            if (variableChildren != null && !variableChildren.isEmpty()) {
-                List<String> requiredChildren = styleDef.getRequiredChildren();
-                if(requiredChildren == null || requiredChildren.isEmpty()) {
-                    currentStyleSupported = false;
-                }
+
+            List<String> requiredChildren = styleDef.getRequiredChildren();
+            if (requiredChildren != null && !requiredChildren.isEmpty()) {
                 for (String requiredChild : requiredChildren) {
-                    String fullChildName = variableMetadata.getId() + ":" + requiredChild;
-                    if (!variableChildren.contains(fullChildName)) {
+                    if (variableMetadata.getChildWithRole(requiredChild) == null) {
                         /*
-                         * We have a required child ID which this variable
-                         * doesn't have
+                         * We required a child layer which we don't have
                          */
                         currentStyleSupported = false;
-                        break;
+                        continue;
                     }
-                }
-            } else {
-                /*
-                 * The requested variable has no children. If this is not true
-                 * of the style def, it is not supported.
-                 */
-                if (styleDef.getRequiredChildren() != null
-                        && !styleDef.getRequiredChildren().isEmpty()) {
-                    currentStyleSupported = false;
                 }
             }
             if (currentStyleSupported) {
@@ -282,20 +259,33 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
         }
         return supportedStyles;
     }
-    
+
     /**
+     * Returns the a {@link Map} of keys used in XML templates to the concrete
+     * WMS layer names which they represent.
      * 
      * @param layerName
-     * @return
+     *            The WMS layer name to plot
+     * @param styleName
+     *            The style name to be plotted
+     * @return A {@link Map} of keys used in XML templates to the concrete WMS
+     *         layer names which they represent.
+     * @throws WmsLayerNotFoundException
+     *             If the layer specified does not exist on this WMS server
      */
-    public Map<String, String> getStyleTemplateLayerNames(String layerName, String styleName) {
+    public Map<String, String> getStyleTemplateLayerNames(String layerName, String styleName)
+            throws WmsLayerNotFoundException {
         StyleDef styleDef = styleDefs.get(styleName);
         Map<String, String> layerKeyToLayerName = new HashMap<String, String>();
-        if(styleDef.needsNamedLayer()) {
+        if (styleDef.needsNamedLayer()) {
             layerKeyToLayerName.put("layerName", layerName);
         }
-        for(String childSuffix : styleDef.getRequiredChildren()) {
-            layerKeyToLayerName.put("layerName-"+childSuffix, layerName+":"+childSuffix);
+        VariableMetadata layerMetadata = getVariableMetadataFromId(layerName);
+        for (String childPurpose : styleDef.getRequiredChildren()) {
+            layerKeyToLayerName.put(
+                    "layerName-" + childPurpose,
+                    getLayerName(layerMetadata.getDataset().getId(), layerMetadata
+                            .getChildWithRole(childPurpose).getId()));
         }
         return layerKeyToLayerName;
     }

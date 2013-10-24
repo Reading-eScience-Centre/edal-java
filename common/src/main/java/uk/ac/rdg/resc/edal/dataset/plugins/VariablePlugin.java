@@ -88,8 +88,7 @@ public abstract class VariablePlugin {
      *            The IDs of the variables used to generate new values
      * @param providesSuffixes
      *            The suffixes of the generated variables. These will not form
-     *            the actual variable IDs. Suffixes must only contain
-     *            alphanumeric characters and underscores
+     *            the actual variable IDs.
      */
     public VariablePlugin(String[] usesVariables, String[] providesSuffixes) {
         uses = usesVariables;
@@ -97,14 +96,10 @@ public abstract class VariablePlugin {
         combineIds(usesVariables);
         prefixLength = combinedName.length() + 1;
         for (int i = 0; i < providesSuffixes.length; i++) {
-            if (!providesSuffixes[i].matches("^\\w*$")) {
-                throw new IllegalArgumentException(
-                        "Plugin suffixes must only consist of alphanumeric characters and underscores");
-            }
-            provides[i] = providesSuffixes[i];
+            provides[i] = getFullId(providesSuffixes[i]);
         }
     }
-    
+
     /**
      * @return The IDs of the variables which this plugin uses,
      *         <em>in the order it needs them</em>
@@ -295,12 +290,23 @@ public abstract class VariablePlugin {
     }
 
     /**
-     * @return An ID based on the combined ID of all used variables.
+     * Returns an ID based on the combined ID of all used variables and the
+     * suffix of a provided variable.
      * 
-     * This can be used by subclasses to generate an ID for a parent variable
+     * This should be used by subclasses to generate new
+     * {@link VariableMetadata} objects in
+     * {@link VariablePlugin#doProcessVariableMetadata(VariableMetadata...)} if
+     * required
+     * 
+     * @param suffix
+     *            The suffix used to identify the generated variable.
+     * @return The full ID
      */
-    protected String getCombinedId() {
-        return combinedName;
+    protected String getFullId(String suffix) {
+        StringBuilder sb = new StringBuilder(combinedName);
+        sb.append('-');
+        sb.append(suffix);
+        return sb.toString();
     }
 
     /**
@@ -444,18 +450,18 @@ public abstract class VariablePlugin {
             if (domain == null) {
                 return null;
             }
-            if (!(domain instanceof TimeAxis)) {
+            if(!(domain instanceof TimeAxis)) {
                 /*
                  * Not all of our domains are time axes
                  */
                 allTimeAxes = false;
             }
-            if (allTimeAxes) {
+            if(allTimeAxes) {
                 /*
-                 * If we still think we have all time axes, add the axis values
-                 * to the list, ensuring they are in the same chronology.
+                 * If we still think we have all time axes, add the axis
+                 * values to the list, ensuring they are in the same chronology.
                  */
-                for (DateTime time : ((TimeAxis) domain).getCoordinateValues()) {
+                for(DateTime time : ((TimeAxis) domain).getCoordinateValues()) {
                     axisVals.add(time.toDateTime(chronology));
                 }
             }
@@ -466,7 +472,7 @@ public abstract class VariablePlugin {
                 max = domain.getExtent().getHigh();
             }
         }
-
+        
         if (allTimeAxes) {
             /*
              * All of our domains were vertical axes, so we create a new axis

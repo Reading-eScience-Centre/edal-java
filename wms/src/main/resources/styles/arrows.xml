@@ -2,7 +2,7 @@
 <resc:Image xmlns:resc='http://www.resc.reading.ac.uk' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
     <ArrowLayer>
         <DirectionFieldName>$layerName</DirectionFieldName>
-        <ArrowSize>11</ArrowSize>
+        <ArrowSize>8</ArrowSize>
         <ArrowColour>#000000</ArrowColour>
     </ArrowLayer>
 </resc:Image>

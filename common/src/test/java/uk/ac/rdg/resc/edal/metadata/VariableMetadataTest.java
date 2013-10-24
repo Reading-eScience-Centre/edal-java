@@ -68,9 +68,9 @@ public class VariableMetadataTest {
         /*
          * Setup a linear tree
          */
-        metadata4.setParent(metadata3);
-        metadata3.setParent(metadata2);
-        metadata2.setParent(metadata1);
+        metadata4.setParent(metadata3, null);
+        metadata3.setParent(metadata2, null);
+        metadata2.setParent(metadata1, null);
 
         testExpectedChildren(Arrays.asList(metadata2), Arrays.asList(metadata3),
                 Arrays.asList(metadata4), new ArrayList<VariableMetadata>());
@@ -83,7 +83,7 @@ public class VariableMetadataTest {
         /*
          * Linear tree tested, now move 3 to be a child of 1
          */
-        metadata3.setParent(metadata1);
+        metadata3.setParent(metadata1, null);
         testExpectedChildren(Arrays.asList(metadata2, metadata3),
                 new ArrayList<VariableMetadata>(), Arrays.asList(metadata4),
                 new ArrayList<VariableMetadata>());
@@ -96,7 +96,7 @@ public class VariableMetadataTest {
          * Now try and make 4 the tree root
          */
         try {
-            metadata1.setParent(metadata4);
+            metadata1.setParent(metadata4, null);
             fail("Circular tree created");
         } catch (IllegalArgumentException e) {
             /*
@@ -106,8 +106,8 @@ public class VariableMetadataTest {
         /*
          * Detatch it first and try again
          */
-        metadata4.setParent(null);
-        metadata1.setParent(metadata4);
+        metadata4.setParent(null, null);
+        metadata1.setParent(metadata4, null);
         
         testExpectedChildren(Arrays.asList(metadata2, metadata3),
                 new ArrayList<VariableMetadata>(), new ArrayList<VariableMetadata>(), 
@@ -130,10 +130,10 @@ public class VariableMetadataTest {
     @Test(expected = IllegalArgumentException.class)
     public void testNonCircularTrees() {
         setUp();
-        metadata4.setParent(metadata3);
-        metadata3.setParent(metadata2);
-        metadata2.setParent(metadata1);
-        metadata1.setParent(metadata4);
+        metadata4.setParent(metadata3, null);
+        metadata3.setParent(metadata2, null);
+        metadata2.setParent(metadata1, null);
+        metadata1.setParent(metadata4, null);
     }
 
     @Test(expected = NullPointerException.class)

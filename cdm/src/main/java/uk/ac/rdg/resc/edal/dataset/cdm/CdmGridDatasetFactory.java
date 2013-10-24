@@ -29,7 +29,10 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -77,7 +80,7 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
              */
             nc = openDataset(location);
             ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
-            Map<String, GridVariableMetadata> vars = new HashMap<String, GridVariableMetadata>();
+            List<GridVariableMetadata> vars = new ArrayList<GridVariableMetadata>();
             /*
              * Store a map of component names. Key is the compound name, value
              * is a 2-element String array with x, y component IDs
@@ -99,7 +102,7 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
                             variable.getDescription(), variable.getUnitsString());
                     GridVariableMetadata metadata = new GridVariableMetadata(variable.getName(),
                             parameter, hDomain, zDomain, tDomain);
-                    vars.put(metadata.getId(), metadata);
+                    vars.add(metadata);
 
                     if (name != null) {
                         /*
@@ -181,7 +184,7 @@ public final class CdmGridDatasetFactory implements DatasetFactory {
         private final String location;
         private final DataReadingStrategy dataReadingStrategy;
 
-        public CdmGridDataset(String id, String location, Map<String, GridVariableMetadata> vars,
+        public CdmGridDataset(String id, String location, Collection<GridVariableMetadata> vars,
                 DataReadingStrategy dataReadingStrategy) {
             super(id, vars);
             this.location = location;
