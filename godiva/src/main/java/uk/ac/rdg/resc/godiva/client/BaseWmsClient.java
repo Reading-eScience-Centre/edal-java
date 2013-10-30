@@ -381,7 +381,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                      */
                     updateMapBase(layerId);
                 } catch (Exception e) {
-                    invalidJson(e, getLayerDetailsRequest.getUrl());
+                    invalidJson(e, response.getText(), getLayerDetailsRequest.getUrl());
                 } finally {
                     /*
                      * Indicate that we have finished this loading operation
@@ -568,7 +568,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         rangeLoaded(layerId, min, max);
                     }
                 } catch (Exception e) {
-                    invalidJson(e, getMinMaxRequest.getUrl());
+                    invalidJson(e, response.getText(), getMinMaxRequest.getUrl());
                 } finally {
                     /*
                      * Set the state correctly and update the map, regardless of
@@ -783,8 +783,9 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            The exception which was caught
      * @param url
      *            The URL which caused the exception
+     * @param string 
      */
-    protected void invalidJson(Exception e, String url) {
+    protected void invalidJson(Exception e, String response, String url) {
         e.printStackTrace();
         final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(mapArea);
         VerticalPanel v = new VerticalPanel();
@@ -795,6 +796,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             v.add(new Label("Please try again in a short while"));
             v.add(new Label("The URL which behaved unexpectedly was:"));
             v.add(new Label(url));
+            v.add(new Label("The response from the server was:"));
+            v.add(new Label(response));
         }
         popup.setHTML("Server Error");
         popup.setWidget(v);
@@ -884,7 +887,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     datetimeSelected(layerId, getWidgetCollection(layerId).getTimeSelector()
                             .getSelectedDateTime());
                 } catch (Exception e) {
-                    invalidJson(e, getTimeRequest.getUrl());
+                    invalidJson(e, response.getText(), getTimeRequest.getUrl());
                 } finally {
                     setLoading(false);
                 }

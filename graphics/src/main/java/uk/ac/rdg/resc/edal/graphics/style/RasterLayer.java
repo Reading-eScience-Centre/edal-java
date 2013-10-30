@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -48,8 +47,9 @@ public class RasterLayer extends ImageLayer {
     private String dataFieldName;
     @XmlElements({@XmlElement(name = "PaletteColourScheme", type = PaletteColourScheme.class),
         @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class)})
-    private ColourScheme colourScheme = new PaletteColourScheme();
+    private ColourScheme colourScheme;
     
+    @SuppressWarnings("unused")
     private RasterLayer() {
     }
     
@@ -84,9 +84,8 @@ public class RasterLayer extends ImageLayer {
          * below
          */
         int index = 0;
-        Iterator<Number> iterator = values.iterator();
-        while(iterator.hasNext()) {
-            pixels[index++] = colourScheme.getColor(iterator.next()).getRGB();
+        for(Number value : values) {
+            pixels[index++] = colourScheme.getColor(value).getRGB();
         }
         image.setRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
     }
