@@ -284,7 +284,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
                     menuLoaded(menuTree);
                 } catch (Exception e) {
-                    invalidJson(e, getMenuRequest.getUrl());
+                    invalidJson(e, response.getText(), getMenuRequest.getUrl());
                 } finally {
                     setLoading(false);
                 }

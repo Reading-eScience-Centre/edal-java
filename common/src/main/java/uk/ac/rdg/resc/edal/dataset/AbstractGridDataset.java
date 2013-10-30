@@ -90,16 +90,6 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
              */
             dataSource = openGridDataSource();
 
-            /*
-             * The procedure below can be optimized: if we know that multiple
-             * variables share the same source grid then we don't have to
-             * perform the conversion from natural coordinates to grid indices
-             * multiple times. HOWEVER, we might have to beware of this in the
-             * case of aggregation, in which different variables may have
-             * different mappings from time values to filename/tIndex.
-             * 
-             * TODO Remove/correct this doc
-             */
             Map<String, Array2D<Number>> values = new HashMap<String, Array2D<Number>>();
             Map<String, Parameter> parameters = new HashMap<String, Parameter>();
 
