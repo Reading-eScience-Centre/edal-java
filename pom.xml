@@ -221,6 +221,7 @@
     </scm>
     <distributionManagement>
         <!-- use the following if you're not using a snapshot version. -->
+        <!--
         <repository>
             <id>edal-java-release</id>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
@@ -229,6 +230,7 @@
             <id>edal-snapshots</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
+        -->
     </distributionManagement>
     <modules>
         <!-- Note that these are relative directory paths, not artifactIds! -->

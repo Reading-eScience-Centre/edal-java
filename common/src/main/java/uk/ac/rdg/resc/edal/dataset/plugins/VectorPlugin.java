@@ -111,10 +111,10 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Set all components to have a new parent
          */
-        xMetadata.setParent(containerMetadata, "x");
-        yMetadata.setParent(containerMetadata, "y");
         magMetadata.setParent(containerMetadata, MAG);
         dirMetadata.setParent(containerMetadata, DIR);
+        xMetadata.setParent(containerMetadata, "x");
+        yMetadata.setParent(containerMetadata, "y");
 
         /*
          * Add the container to the original parent

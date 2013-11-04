@@ -116,6 +116,7 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
+import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
@@ -490,19 +491,32 @@ public class WmsServlet extends HttpServlet {
             String datasetId = dataset.getId();
 
             Set<VariableMetadata> topLevelVariables = dataset.getTopLevelVariables();
-            JSONArray datasetChildren = addVariablesToArray(topLevelVariables, datasetId);
-            String datasetLabel = catalogue.getDatasetTitle(datasetId);
-            JSONObject datasetJson = new JSONObject();
-            datasetJson.put("label", datasetLabel);
-            datasetJson.put("children", datasetChildren);
-            children.add(datasetJson);
+            JSONArray datasetChildren;
+            try {
+                datasetChildren = addVariablesToArray(topLevelVariables, datasetId);
+                String datasetLabel = catalogue.getDatasetTitle(datasetId);
+                JSONObject datasetJson = new JSONObject();
+                datasetJson.put("label", datasetLabel);
+                datasetJson.put("children", datasetChildren);
+                children.add(datasetJson);
+            } catch (WmsLayerNotFoundException e) {
+                /*
+                 * This shouldn't happen - it means that we've failed to get
+                 * layer metadata for a layer which definitely exists.
+                 * 
+                 * If it does happen, we just miss this bit out of the menu and
+                 * log the message. That'll lead back to here, and the debugging
+                 * can begin!
+                 */
+                log.error("Failed to get layer metadata", e);
+            }
         }
 
         menu.put("children", children);
         return menu.toString(4);
     }
 
-    private JSONArray addVariablesToArray(Set<VariableMetadata> variables, String datasetId) {
+    private JSONArray addVariablesToArray(Set<VariableMetadata> variables, String datasetId) throws WmsLayerNotFoundException {
         JSONArray ret = new JSONArray();
         for (VariableMetadata variable : variables) {
             JSONObject child = new JSONObject();
@@ -550,7 +564,13 @@ public class WmsServlet extends HttpServlet {
          */
         Dataset dataset = catalogue.getDatasetFromId(layerName);
         String variableId = catalogue.getVariableFromId(layerName);
-        WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+        
+        WmsLayerMetadata layerMetadata;
+        try {
+            layerMetadata = catalogue.getLayerMetadata(layerName);
+        } catch (WmsLayerNotFoundException e1) {
+            throw new MetadataException("Layer not found", e1);
+        }
         if (dataset == null || variableId == null || layerMetadata == null) {
             log.error("Layer "+layerName+" doesn't exist - can't get layer details");
             throw new MetadataException("Must supply a valid LAYERNAME to get layer details");

@@ -29,25 +29,37 @@
 package uk.ac.rdg.resc.edal.wms.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.jfree.util.Log;
 import org.joda.time.Chronology;
+import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.chrono.JulianChronology;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
@@ -241,14 +253,13 @@ public class WmsUtils {
         final CoordinateReferenceSystem crs = GISUtils.getCrs(crsCode);
 
         boolean normalOrder = true;
-        if (crsCode.equalsIgnoreCase("EPSG:4326")
-                && "1.3.0".equals(wmsVersion)) {
+        if (crsCode.equalsIgnoreCase("EPSG:4326") && "1.3.0".equals(wmsVersion)) {
             normalOrder = false;
         }
 
         double x, y;
         try {
-            if(normalOrder) {
+            if (normalOrder) {
                 x = Double.parseDouble(firstCoord);
                 y = Double.parseDouble(secondCoord);
             } else {
@@ -261,6 +272,94 @@ public class WmsUtils {
         return new HorizontalPosition(x, y, crs);
     }
 
+    /**
+     * Estimate the range of values in this layer by reading a sample of data
+     * from the default time and elevation. Works for both Scalar and Vector
+     * layers.
+     * 
+     * @return
+     * @throws DataReadingException
+     * @throws IOException
+     *             if there was an error reading from the source data
+     */
+    public static Extent<Float> estimateValueRange(Dataset dataset, String varId) {
+        if (dataset instanceof GridDataset) {
+            GridDataset gridDataset = (GridDataset) dataset;
+            VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
+            if(!variableMetadata.isScalar()) {
+                /*
+                 * We have a non-scalar variable. We will attempt to use the
+                 * first child member to estimate the value range. This may not
+                 * work in which case we ignore it - worst case scenario is that
+                 * we end up with a bad scale range set - administrators can
+                 * just override it.
+                 */
+                try{
+                    variableMetadata = variableMetadata.getChildren().iterator().next();
+                    varId = variableMetadata.getId();
+                } catch (Exception e) {
+                    /*
+                     * Ignore this error and just generate a (probably) inaccurate range
+                     */
+                }
+            }
+            HorizontalGrid hGrid = new RegularGridImpl(variableMetadata.getHorizontalDomain()
+                    .getBoundingBox(), 100, 100);
+            Double zPos = null;
+            if (variableMetadata.getVerticalDomain() != null) {
+                zPos = variableMetadata.getVerticalDomain().getExtent().getLow();
+            }
+            DateTime time = null;
+            if (variableMetadata.getTemporalDomain() != null) {
+                time = variableMetadata.getTemporalDomain().getExtent().getHigh();
+            }
+            float min = Float.MAX_VALUE;
+            float max = -Float.MAX_VALUE;
+            try {
+                MapFeature sampleData = gridDataset.readMapData(CollectionUtils.setOf(varId), hGrid,
+                        zPos, time);
+                Array2D<Number> values = sampleData.getValues(varId);
+                if(values != null) {
+                    for (Number value : values) {
+                        if (value != null) {
+                            min = (float) Math.min(value.doubleValue(), min);
+                            max = (float) Math.max(value.doubleValue(), max);
+                        }
+                    }
+                }
+            } catch (DataReadingException e) {
+                /*
+                 * TODO we are ignoring this, but we should log it too
+                 */
+                e.printStackTrace();
+            }
+            
+            if(max == -Float.MAX_VALUE || min == Float.MAX_VALUE) {
+                /*
+                 * Defensive - either they are both equal to their start values,
+                 * or neither is.
+                 * 
+                 * Anyway, here we have no data, or can't read it. Pick a range.
+                 * I've chosen 0 to 100, but it really doesn't matter.
+                 */
+                min = 0;
+                max = 100;
+            } else if(min == max) {
+                /*
+                 * We've hit an area of uniform data.  Make sure that max > min
+                 */
+                max += 1.0f;
+            } else {
+                float diff = max - min;
+                min -= 0.05 * diff;
+                max += 0.05 * diff;
+            }
+            
+            return Extents.newExtent(min, max);
+        } else {
+            throw new UnsupportedOperationException("Currently only gridded datasets are supported");
+        }
+    }
 //    /**
 //     * Gets the styles available for a particular layer
 //     * 

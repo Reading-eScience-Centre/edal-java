@@ -29,6 +29,8 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A factory for {@link Dataset} objects. The intention is that one factory
@@ -36,10 +38,46 @@ import java.io.IOException;
  * per file format). These objects can be stateless (hence thread-safe)
  * singletons and shared between datasets.
  * 
+ * @author Guy Griffiths
  * @author Jon
- * @author Guy
  */
-public interface DatasetFactory {
+public abstract class DatasetFactory {
+    /**
+     * Maps class names to {@link DatasetFactory} objects. Only one
+     * {@link DatasetFactory} object of each class will ever be created.
+     */
+    private static Map<String, DatasetFactory> readers = new HashMap<String, DatasetFactory>();
+
+    private static String defaultDatasetFactoryName = null;
+
+    public static void setDefaultDatasetFactoryClass(Class<?> clazz) {
+        defaultDatasetFactoryName = clazz.getName();
+    }
+
+    public static DatasetFactory forName(String clazz) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        if ((clazz == null || clazz.trim().equals(""))) {
+            if (defaultDatasetFactoryName == null) {
+                throw new ClassNotFoundException(
+                        "No default data reader class defined.  You should set one using DatasetFactory.setDefaultDatasetFactoryClass");
+            } else {
+                clazz = defaultDatasetFactoryName;
+            }
+        }
+        if (!readers.containsKey(clazz)) {
+            /* Create the DatasetFactory object */
+            System.out.println("DatasetFactory creating class: "+clazz);
+            Object dfObj = Class.forName(clazz).newInstance();
+            /*
+             * This will throw a ClassCastException if dfObj is not a
+             * DatasetFactory
+             */
+            readers.put(clazz, (DatasetFactory) dfObj);
+        }
+        return readers.get(clazz);
+
+    }
+
     /**
      * Returns a Dataset object representing the data at the given location.
      * 
@@ -49,5 +87,5 @@ public interface DatasetFactory {
      *            The location of the source data: this may be a file, database
      *            connection string or a remote server address.
      */
-    public Dataset createDataset(String id, String location) throws IOException;
+    public abstract Dataset createDataset(String id, String location) throws IOException;
 }
