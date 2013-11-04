@@ -75,7 +75,7 @@
 #foreach($supportedCrs in $supportedCrsCodes)
             <CRS>$supportedCrs</CRS>
 #end            
-#foreach($dataset in $catalogue.allDatasets)            
+#foreach($dataset in $datasets)            
             <Layer>
                 <Title>$catalogue.getDatasetTitle($dataset.id)</Title>
 #foreach($variable in $dataset.topLevelVariables)

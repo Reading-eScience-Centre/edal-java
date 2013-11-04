@@ -388,6 +388,12 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     public abstract ContactInfo getContactInfo();
 
     /**
+     * @return <code>true</code> if this server allows capabilities documents to
+     *         be generated for all datasets
+     */
+    public abstract boolean allowsGlobalCapabilities();
+    
+    /**
      * @return The last time that data on this server was updated
      */
     public abstract DateTime getServerLastUpdate();

@@ -34,6 +34,7 @@ import java.net.SocketException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -128,7 +129,7 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  */
 public class WmsServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(WmsServlet.class);
-    
+
     public static final int AXIS_RESOLUTION = 500;
     private static final long serialVersionUID = 1L;
     private static final String FEATURE_INFO_XML_FORMAT = "text/xml";
@@ -195,7 +196,8 @@ public class WmsServlet extends HttpServlet {
                 v130 = "1.3.0".equals(params.getMandatoryWmsVersion());
             } catch (EdalException e) {
                 /*
-                 * No version supplied, we'll return the exception in 1.3.0 format
+                 * No version supplied, we'll return the exception in 1.3.0
+                 * format
                  */
                 v130 = true;
             }
@@ -352,39 +354,23 @@ public class WmsServlet extends HttpServlet {
 
     private void getCapabilities(RequestParams params, HttpServletResponse httpServletResponse,
             String baseUrl) throws EdalException {
-        VelocityContext context = new VelocityContext();
-        EventCartridge ec = new EventCartridge();
-        ec.addEventHandler(new EscapeXmlReference());
-        ec.attachToContext(context);
-        context.put("baseUrl", baseUrl);
-        context.put("catalogue", catalogue);
-        context.put("supportedImageFormats", ImageFormat.getSupportedMimeTypes());
-        context.put("supportedFeatureInfoFormats", new String[] { FEATURE_INFO_PNG_FORMAT,
-                FEATURE_INFO_XML_FORMAT });
-        context.put("supportedCrsCodes", SUPPORTED_CRS_CODES);
-        context.put("GISUtils", GISUtils.class);
-        context.put("TimeUtils", TimeUtils.class);
-        context.put("WmsUtils", WmsUtils.class);
-        context.put("verbose", params.getBoolean("verbose", false));
-        context.put("availablePalettes", ColourPalette.getPredefinedPalettes());
-
         /*
          * We only advertise text/xml as a GetCapabilities format. The spec says
          * we can return text/xml for unknown formats, so we don't even need to
          * bother retrieving the requested format
          */
-        
+
         /*
          * Now handle the UPDATESEQUENCE param as per 7.2.3.5 of the WMS spec
          */
         String updateSeqStr = params.getString("updatesequence");
-        if(updateSeqStr != null) {
+        if (updateSeqStr != null) {
             DateTime updateSequence;
             try {
-                updateSequence = TimeUtils.iso8601ToDateTime(updateSeqStr, ISOChronology.getInstanceUTC());
+                updateSequence = TimeUtils.iso8601ToDateTime(updateSeqStr,
+                        ISOChronology.getInstanceUTC());
             } catch (IllegalArgumentException iae) {
-                throw new InvalidUpdateSequence(updateSeqStr +
-                        " is not a valid ISO date-time");
+                throw new InvalidUpdateSequence(updateSeqStr + " is not a valid ISO date-time");
             }
             /*
              * We use isEqual(), which compares dates based on millisecond
@@ -397,18 +383,80 @@ public class WmsServlet extends HttpServlet {
             if (updateSequence.isEqual(catalogue.getServerLastUpdate())) {
                 throw new CurrentUpdateSequence(updateSeqStr);
             } else if (updateSequence.isAfter(catalogue.getServerLastUpdate())) {
-                throw new InvalidUpdateSequence(updateSeqStr +
-                        " is later than the current server updatesequence value");
+                throw new InvalidUpdateSequence(updateSeqStr
+                        + " is later than the current server updatesequence value");
             }
         }
-        
+
         String wmsVersion = params.getString("version", "1.3.0");
         Template template;
-        if("1.1.1".equals(wmsVersion)) {
+        if ("1.1.1".equals(wmsVersion)) {
             template = velocityEngine.getTemplate("templates/capabilities-1.1.1.vm");
         } else {
             template = velocityEngine.getTemplate("templates/capabilities-1.3.0.vm");
         }
+
+        /*
+         * The DATASET parameter is an optional parameter that allows a
+         * Capabilities document to be generated for a single dataset only
+         */
+        String datasetId = params.getString("dataset");
+
+        Collection<Dataset> datasets;
+        if (datasetId == null || "".equals(datasetId.trim())) {
+            /*
+             * No specific dataset has been chosen so we create a Capabilities
+             * document including every dataset. First we check to see that the
+             * system admin has allowed us to create a global Capabilities doc
+             * (this can be VERY large)
+             */
+            if (catalogue.allowsGlobalCapabilities()) {
+                datasets = catalogue.getAllDatasets();
+            } else {
+                throw new EdalException("Cannot create a Capabilities document "
+                        + "that includes all datasets on this server. "
+                        + "You must specify a dataset identifier with &amp;DATASET=");
+            }
+        } else {
+            /*
+             * Look for this dataset. The ID supplied will only contain the
+             * dataset name. We don't have a catalogue method for getting the
+             * Dataset from its own ID, so we loop through checking. This should
+             * be quick, and it's less confusing than having both a
+             * getDatasetFromLayerName and a getDatasetFromDatasetId method on
+             * the catalogue
+             */
+            Dataset ds = null;
+            for (Dataset dataset : catalogue.getAllDatasets()) {
+                if (datasetId.equals(dataset.getId())) {
+                    ds = dataset;
+                    break;
+                }
+            }
+            if (ds == null) {
+                throw new EdalException("There is no dataset with ID " + datasetId);
+            }
+            datasets = new ArrayList<Dataset>();
+            datasets.add(ds);
+        }
+
+        VelocityContext context = new VelocityContext();
+        EventCartridge ec = new EventCartridge();
+        ec.addEventHandler(new EscapeXmlReference());
+        ec.attachToContext(context);
+        context.put("baseUrl", baseUrl);
+        context.put("catalogue", catalogue);
+        context.put("datasets", datasets);
+        context.put("supportedImageFormats", ImageFormat.getSupportedMimeTypes());
+        context.put("supportedFeatureInfoFormats", new String[] { FEATURE_INFO_PNG_FORMAT,
+                FEATURE_INFO_XML_FORMAT });
+        context.put("supportedCrsCodes", SUPPORTED_CRS_CODES);
+        context.put("GISUtils", GISUtils.class);
+        context.put("TimeUtils", TimeUtils.class);
+        context.put("WmsUtils", WmsUtils.class);
+        context.put("verbose", params.getBoolean("verbose", false));
+        context.put("availablePalettes", ColourPalette.getPredefinedPalettes());
+
         try {
             template.merge(context, httpServletResponse.getWriter());
         } catch (ResourceNotFoundException e) {
@@ -441,9 +489,10 @@ public class WmsServlet extends HttpServlet {
 
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
-                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variableId).getTemporalDomain();
+                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variableId)
+                        .getTemporalDomain();
                 Chronology chronology = null;
-                if(temporalDomain != null) {
+                if (temporalDomain != null) {
                     chronology = temporalDomain.getChronology();
                 }
                 Number value;
@@ -553,7 +602,8 @@ public class WmsServlet extends HttpServlet {
         return menu.toString(4);
     }
 
-    private JSONArray addVariablesToArray(Set<VariableMetadata> variables, String datasetId) throws WmsLayerNotFoundException {
+    private JSONArray addVariablesToArray(Set<VariableMetadata> variables, String datasetId)
+            throws WmsLayerNotFoundException {
         JSONArray ret = new JSONArray();
         for (VariableMetadata variable : variables) {
             JSONObject child = new JSONObject();
@@ -588,7 +638,7 @@ public class WmsServlet extends HttpServlet {
          */
         String layerName = params.getString("layerName");
         if (layerName == null) {
-            log.error("Layer "+layerName+" doesn't exist - can't get layer details");
+            log.error("Layer " + layerName + " doesn't exist - can't get layer details");
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
         String requestedTime = params.getString("time");
@@ -601,7 +651,7 @@ public class WmsServlet extends HttpServlet {
          */
         Dataset dataset = catalogue.getDatasetFromId(layerName);
         String variableId = catalogue.getVariableFromId(layerName);
-        
+
         WmsLayerMetadata layerMetadata;
         try {
             layerMetadata = catalogue.getLayerMetadata(layerName);
@@ -609,7 +659,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Layer not found", e1);
         }
         if (dataset == null || variableId == null || layerMetadata == null) {
-            log.error("Layer "+layerName+" doesn't exist - can't get layer details");
+            log.error("Layer " + layerName + " doesn't exist - can't get layer details");
             throw new MetadataException("Must supply a valid LAYERNAME to get layer details");
         }
 
@@ -696,12 +746,12 @@ public class WmsServlet extends HttpServlet {
         scaleRangeJson.add(scaleRange.getLow());
         scaleRangeJson.add(scaleRange.getHigh());
         layerDetails.put("scaleRange", scaleRangeJson);
-        
+
         layerDetails.put("numColorBands", numColorBands);
 
         JSONArray supportedStylesJson = new JSONArray();
         for (StyleDef supportedStyle : supportedStyles) {
-            supportedStylesJson.add(supportedStyle.getStyleName() );
+            supportedStylesJson.add(supportedStyle.getStyleName());
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
 
@@ -782,8 +832,10 @@ public class WmsServlet extends HttpServlet {
                 }
                 layerDetails.put("datesWithData", datesWithDataJson);
             } else {
-                layerDetails.put("startTime", TimeUtils.dateTimeToISO8601(temporalDomain.getExtent().getLow()));
-                layerDetails.put("endTime", TimeUtils.dateTimeToISO8601(temporalDomain.getExtent().getHigh()));
+                layerDetails.put("startTime",
+                        TimeUtils.dateTimeToISO8601(temporalDomain.getExtent().getLow()));
+                layerDetails.put("endTime",
+                        TimeUtils.dateTimeToISO8601(temporalDomain.getExtent().getHigh()));
             }
             layerDetails.put("timeAxisUnits",
                     WmsUtils.getTimeAxisUnits(temporalDomain.getChronology()));
@@ -876,7 +928,7 @@ public class WmsServlet extends HttpServlet {
         }
         MapFeature mapFeature = featureAndMember.getMapFeature();
         Array2D<Number> values = mapFeature.getValues(featureAndMember.getMember());
-        if(values == null) {
+        if (values == null) {
             throw new MetadataException("Cannot find min/max - this is not a scalar layer");
         }
 
@@ -893,6 +945,10 @@ public class WmsServlet extends HttpServlet {
                     min = value.doubleValue();
                 }
             }
+        }
+
+        if (min == Double.MAX_VALUE || max == -Double.MAX_VALUE || min == max) {
+            throw new MetadataException("No data in this area - cannot calculate min/max");
         }
 
         JSONObject minmax = new JSONObject();
@@ -1049,18 +1105,20 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse) throws EdalException {
+    private void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse)
+            throws EdalException {
         String outputFormat = params.getMandatoryString("format");
         if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
                 && !"image/jpg".equals(outputFormat)) {
-            throw new InvalidFormatException(outputFormat + " is not a valid output format for a time series plot");
+            throw new InvalidFormatException(outputFormat
+                    + " is not a valid output format for a time series plot");
         }
-        
+
         String[] layers = params.getMandatoryString("layers").split(",");
 
         String[] lonLat = params.getMandatoryString("point").split(" +");
         HorizontalPosition hPos;
-        try{
+        try {
             double lon = Double.parseDouble(lonLat[0]);
             double lat = Double.parseDouble(lonLat[1]);
             hPos = new HorizontalPosition(lon, lat, DefaultGeographicCRS.WGS84);
@@ -1068,34 +1126,37 @@ public class WmsServlet extends HttpServlet {
             log.error("Badly formed co-ordinates for time series", nfe);
             throw new EdalException("POINT is not well-formed");
         }
-        
+
         String timeStr = params.getMandatoryString("time");
-        
+
         List<PointSeriesFeature> pointSeriesFeatures = new ArrayList<PointSeriesFeature>();
-        for(String layerName : layers) {
+        for (String layerName : layers) {
             Dataset dataset = catalogue.getDatasetFromId(layerName);
-            if(dataset instanceof GridDataset) {
+            if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
                 VariableMetadata variableMetadata = catalogue.getVariableMetadataFromId(layerName);
                 TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
                 VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
-                if(temporalDomain == null) {
-                    throw new IncorrectDomainException("Variable must have a temporal domain to plot a time series");
+                if (temporalDomain == null) {
+                    throw new IncorrectDomainException(
+                            "Variable must have a temporal domain to plot a time series");
                 }
-                Extent<DateTime> timeRange = TimeUtils.getTimeRangeForString(timeStr, temporalDomain.getChronology());
+                Extent<DateTime> timeRange = TimeUtils.getTimeRangeForString(timeStr,
+                        temporalDomain.getChronology());
 
                 VerticalPosition zPos = null;
                 String elevationStr = params.getString("elevation");
-                if(elevationStr != null && verticalDomain != null) {
-                    zPos = new VerticalPosition(Double.parseDouble(elevationStr), verticalDomain.getVerticalCrs());
+                if (elevationStr != null && verticalDomain != null) {
+                    zPos = new VerticalPosition(Double.parseDouble(elevationStr),
+                            verticalDomain.getVerticalCrs());
                 }
-                
+
                 List<DateTime> axisValues = new ArrayList<DateTime>();
-                if(temporalDomain instanceof TimeAxis) {
+                if (temporalDomain instanceof TimeAxis) {
                     TimeAxis varTimeAxis = (TimeAxis) temporalDomain;
                     for (DateTime time : varTimeAxis.getCoordinateValues()) {
-                        if ((time.isAfter(timeRange.getLow()) || time.isEqual(timeRange.getLow()) )
+                        if ((time.isAfter(timeRange.getLow()) || time.isEqual(timeRange.getLow()))
                                 && (time.isBefore(timeRange.getHigh()) || time.isEqual(timeRange
                                         .getHigh()))) {
                             axisValues.add(time);
@@ -1104,12 +1165,14 @@ public class WmsServlet extends HttpServlet {
                 } else {
                     long min = timeRange.getLow().getMillis();
                     long max = timeRange.getHigh().getMillis();
-                    for(int i=0; i < AXIS_RESOLUTION; i++) {
-                        axisValues.add(new DateTime(min + (max - min) * ((double) i) / AXIS_RESOLUTION));
+                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
+                        axisValues.add(new DateTime(min + (max - min) * ((double) i)
+                                / AXIS_RESOLUTION));
                     }
                 }
-                TimeAxis timeAxis = new TimeAxisImpl("Artifical time-axis", axisValues);    
-                PointSeriesFeature feature = gridDataset.readTimeSeriesData(CollectionUtils.setOf(varId), hPos, zPos, timeAxis);
+                TimeAxis timeAxis = new TimeAxisImpl("Artifical time-axis", axisValues);
+                PointSeriesFeature feature = gridDataset.readTimeSeriesData(
+                        CollectionUtils.setOf(varId), hPos, zPos, timeAxis);
                 pointSeriesFeatures.add(feature);
             } else {
                 throw new UnsupportedOperationException(
@@ -1126,10 +1189,12 @@ public class WmsServlet extends HttpServlet {
         httpServletResponse.setContentType(outputFormat);
         try {
             if ("image/png".equals(outputFormat)) {
-                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width, height);
+                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
+                        height);
             } else {
                 /* Must be a JPEG */
-                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart, width, height);
+                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
+                        width, height);
             }
         } catch (IOException e) {
             log.error("Cannot write to output stream", e);
@@ -1137,20 +1202,22 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getTransect(RequestParams params, HttpServletResponse httpServletResponse) throws EdalException {
+    private void getTransect(RequestParams params, HttpServletResponse httpServletResponse)
+            throws EdalException {
         String outputFormat = params.getMandatoryString("format");
         if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
                 && !"image/jpg".equals(outputFormat)) {
-            throw new InvalidFormatException(outputFormat + " is not a valid output format for a profile plot");
+            throw new InvalidFormatException(outputFormat
+                    + " is not a valid output format for a profile plot");
         }
         String[] layers = params.getMandatoryString("layers").split(",");
         CoordinateReferenceSystem crs = GISUtils.getCrs(params.getMandatoryString("CRS"));
         LineString lineString = new LineString(params.getMandatoryString("linestring"), crs);
         String timeStr = params.getString("time");
-        
+
         String elevationStr = params.getString("elevation");
         Double zValue = null;
-        if(elevationStr != null) {
+        if (elevationStr != null) {
             zValue = Double.parseDouble(elevationStr);
         }
         StringBuilder copyright = new StringBuilder();
@@ -1158,71 +1225,73 @@ public class WmsServlet extends HttpServlet {
         /* Do we also want to plot a vertical section plot? */
         boolean verticalSection = false;
         List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
-        for(String layerName : layers) {
+        for (String layerName : layers) {
             Dataset dataset = catalogue.getDatasetFromId(layerName);
-            if(dataset instanceof GridDataset) {
+            if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
                 String layerCopyright = catalogue.getLayerMetadata(layerName).getCopyright();
-                if(layerCopyright != null && !"".equals(layerCopyright)) {
+                if (layerCopyright != null && !"".equals(layerCopyright)) {
                     copyright.append(layerCopyright);
                     copyright.append('\n');
                 }
-                
+
                 VariableMetadata metadata = gridDataset.getVariableMetadata(varId);
                 VerticalDomain verticalDomain = metadata.getVerticalDomain();
                 final VerticalPosition zPos;
-                if(zValue != null && verticalDomain != null) {
+                if (zValue != null && verticalDomain != null) {
                     zPos = new VerticalPosition(zValue, verticalDomain.getVerticalCrs());
                 } else {
                     zPos = null;
                 }
-                if(verticalDomain != null && layers.length == 1) {
+                if (verticalDomain != null && layers.length == 1) {
                     verticalSection = true;
                 }
-                
+
                 final DateTime time;
                 TemporalDomain temporalDomain = metadata.getTemporalDomain();
-                if(timeStr != null) {
+                if (timeStr != null) {
                     time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
                 } else {
                     time = null;
                 }
                 HorizontalDomain hDomain = metadata.getHorizontalDomain();
                 final List<HorizontalPosition> transectPoints;
-                if(hDomain instanceof HorizontalGrid) {
-                    transectPoints = GISUtils.getOptimalTransectPoints(
-                            (HorizontalGrid) hDomain, lineString, zPos, time, AXIS_RESOLUTION/10);
+                if (hDomain instanceof HorizontalGrid) {
+                    transectPoints = GISUtils.getOptimalTransectPoints((HorizontalGrid) hDomain,
+                            lineString, zPos, time, AXIS_RESOLUTION / 10);
                 } else {
                     transectPoints = lineString.getPointsOnPath(AXIS_RESOLUTION);
                 }
-                if(verticalSection) {
+                if (verticalSection) {
                     verticalSectionHorizontalPositions = transectPoints;
                 }
-                TrajectoryDomain trajectoryDomain = new TrajectoryDomain(new AbstractList<GeoPosition>() {
-                    @Override
-                    public GeoPosition get(int index) {
-                        return new GeoPosition(transectPoints.get(index), zPos, time);
-                    }
+                TrajectoryDomain trajectoryDomain = new TrajectoryDomain(
+                        new AbstractList<GeoPosition>() {
+                            @Override
+                            public GeoPosition get(int index) {
+                                return new GeoPosition(transectPoints.get(index), zPos, time);
+                            }
 
-                    @Override
-                    public int size() {
-                        return transectPoints.size();
-                    }
-                });
-                
-                TrajectoryFeature feature = gridDataset.readTrajectoryData(CollectionUtils.setOf(varId), trajectoryDomain);
+                            @Override
+                            public int size() {
+                                return transectPoints.size();
+                            }
+                        });
+
+                TrajectoryFeature feature = gridDataset.readTrajectoryData(
+                        CollectionUtils.setOf(varId), trajectoryDomain);
                 trajectoryFeatures.add(feature);
             } else {
                 throw new UnsupportedOperationException(
                         "Currently only gridded datasets are supported for transect plots");
             }
         }
-        
-        copyright.deleteCharAt(copyright.length() - 1);
-        JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false, copyright.toString());
 
-        
+        copyright.deleteCharAt(copyright.length() - 1);
+        JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
+                copyright.toString());
+
         if (verticalSection) {
             /*
              * This can only be true if we have a GridSeriesFeature, so we can
@@ -1230,16 +1299,19 @@ public class WmsServlet extends HttpServlet {
              */
             Dataset dataset = catalogue.getDatasetFromId(layers[0]);
             String varId = catalogue.getVariableFromId(layers[0]);
-            if(dataset instanceof GridDataset) {
+            if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
-                
-                String paletteName = params.getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
-                int numColourBands = params.getPositiveInt("numcolorbands", ColourPalette.MAX_NUM_COLOURS);
+
+                String paletteName = params
+                        .getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
+                int numColourBands = params.getPositiveInt("numcolorbands",
+                        ColourPalette.MAX_NUM_COLOURS);
                 Extent<Float> scaleRange = GetMapStyleParams.getColorScaleRange(params);
-                if(scaleRange == null || scaleRange.isEmpty()) {
+                if (scaleRange == null || scaleRange.isEmpty()) {
                     scaleRange = Extents.newExtent(270f, 300f);
                 }
-                ColourScale colourScale = new ColourScale(scaleRange.getLow(), scaleRange.getHigh(), params.getBoolean("logscale", false));
+                ColourScale colourScale = new ColourScale(scaleRange.getLow(),
+                        scaleRange.getHigh(), params.getBoolean("logscale", false));
 
                 String bgColourStr = params.getString("bgcolor", "transparent");
                 String amColourStr = params.getString("abovemaxcolor", "0x000000");
@@ -1249,11 +1321,11 @@ public class WmsServlet extends HttpServlet {
                         GraphicsUtils.parseColour(bgColourStr), paletteName, numColourBands);
                 ColourScheme colourScheme = new PaletteColourScheme(colourScale, palette);
                 List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
-                
+
                 VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
                 VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
                 VerticalAxis vAxis;
-                if(verticalDomain instanceof VerticalAxis) {
+                if (verticalDomain instanceof VerticalAxis) {
                     vAxis = (VerticalAxis) verticalDomain;
                 } else {
                     /*
@@ -1262,24 +1334,25 @@ public class WmsServlet extends HttpServlet {
                     List<Double> values = new ArrayList<Double>();
                     double zMin = verticalDomain.getExtent().getLow();
                     double zMax = verticalDomain.getExtent().getHigh();
-                    for(int i=0; i<AXIS_RESOLUTION; i++) {
-                        values.add(zMin + (zMax - zMin)/AXIS_RESOLUTION);
+                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
+                        values.add(zMin + (zMax - zMin) / AXIS_RESOLUTION);
                     }
-                    vAxis = new VerticalAxisImpl("Vertical section axis", values, verticalDomain.getVerticalCrs());
+                    vAxis = new VerticalAxisImpl("Vertical section axis", values,
+                            verticalDomain.getVerticalCrs());
                 }
-                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId).getTemporalDomain();
+                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId)
+                        .getTemporalDomain();
                 DateTime time = null;
-                if(timeStr != null) {
+                if (timeStr != null) {
                     time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
                 }
                 for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
                     ProfileFeature profileFeature = gridDataset.readProfileData(
-                            CollectionUtils.setOf(varId), pos,
-                            vAxis, time);
+                            CollectionUtils.setOf(varId), pos, vAxis, time);
                     profileFeatures.add(profileFeature);
                 }
-                JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(profileFeatures,
-                        lineString, colourScheme, zValue);
+                JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(
+                        profileFeatures, lineString, colourScheme, zValue);
                 chart = Charting.addVerticalSectionChart(chart, verticalSectionChart);
             } else {
                 log.error("Vertical section charts not supported for non-grid datasets");
@@ -1287,14 +1360,16 @@ public class WmsServlet extends HttpServlet {
         }
         int width = params.getPositiveInt("width", 700);
         int height = params.getPositiveInt("height", verticalSection ? 1000 : 600);
-        
+
         httpServletResponse.setContentType(outputFormat);
         try {
             if ("image/png".equals(outputFormat)) {
-                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width, height);
+                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
+                        height);
             } else {
                 /* Must be a JPEG */
-                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart, width, height);
+                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
+                        width, height);
             }
         } catch (IOException e) {
             log.error("Cannot write to output stream", e);
@@ -1302,18 +1377,20 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse) throws EdalException {
+    private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse)
+            throws EdalException {
         String outputFormat = params.getMandatoryString("format");
         if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
                 && !"image/jpg".equals(outputFormat)) {
-            throw new InvalidFormatException(outputFormat + " is not a valid output format for a profile plot");
+            throw new InvalidFormatException(outputFormat
+                    + " is not a valid output format for a profile plot");
         }
-        
+
         String[] layers = params.getMandatoryString("layers").split(",");
 
         String[] lonLat = params.getMandatoryString("point").split(" +");
         HorizontalPosition hPos;
-        try{
+        try {
             double lon = Double.parseDouble(lonLat[0]);
             double lat = Double.parseDouble(lonLat[1]);
             hPos = new HorizontalPosition(lon, lat, DefaultGeographicCRS.WGS84);
@@ -1321,37 +1398,42 @@ public class WmsServlet extends HttpServlet {
             log.error("Badly formed co-ordinates for vertical profile", nfe);
             throw new EdalException("POINT is not well-formed");
         }
-        
+
         DateTime time = null;
         String timeStr = params.getString("time");
         List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
-        for(String layerName : layers) {
+        for (String layerName : layers) {
             Dataset dataset = catalogue.getDatasetFromId(layerName);
-            if(dataset instanceof GridDataset) {
+            if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
-                VerticalDomain verticalDomain = gridDataset.getVariableMetadata(varId).getVerticalDomain();
+                VerticalDomain verticalDomain = gridDataset.getVariableMetadata(varId)
+                        .getVerticalDomain();
                 VerticalAxis zAxis;
-                if(verticalDomain instanceof VerticalAxis) {
+                if (verticalDomain instanceof VerticalAxis) {
                     zAxis = (VerticalAxis) verticalDomain;
                 } else {
                     List<Double> values = new ArrayList<Double>();
                     Double min = verticalDomain.getExtent().getLow();
                     Double max = verticalDomain.getExtent().getHigh();
-                    if(min == null || max == null) {
-                        log.error("Cannot plot profile for "+layerName+" - vertical domain is not well-defined");
+                    if (min == null || max == null) {
+                        log.error("Cannot plot profile for " + layerName
+                                + " - vertical domain is not well-defined");
                         continue;
                     }
-                    for(int i=0; i < AXIS_RESOLUTION; i++) {
+                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
                         values.add(min + (max - min) * ((double) i) / AXIS_RESOLUTION);
                     }
-                    TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId).getTemporalDomain();
-                    if(timeStr != null) {
+                    TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId)
+                            .getTemporalDomain();
+                    if (timeStr != null) {
                         time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
                     }
-                    zAxis = new VerticalAxisImpl("Artificial z-axis", values, verticalDomain.getVerticalCrs());
+                    zAxis = new VerticalAxisImpl("Artificial z-axis", values,
+                            verticalDomain.getVerticalCrs());
                 }
-                ProfileFeature feature = gridDataset.readProfileData(CollectionUtils.setOf(varId), hPos, zAxis, time);
+                ProfileFeature feature = gridDataset.readProfileData(CollectionUtils.setOf(varId),
+                        hPos, zAxis, time);
                 profileFeatures.add(feature);
             } else {
                 throw new UnsupportedOperationException(
@@ -1368,28 +1450,30 @@ public class WmsServlet extends HttpServlet {
         httpServletResponse.setContentType(outputFormat);
         try {
             if ("image/png".equals(outputFormat)) {
-                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width, height);
+                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
+                        height);
             } else {
                 /* Must be a JPEG */
-                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart, width, height);
+                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
+                        width, height);
             }
         } catch (IOException e) {
             log.error("Cannot write to output stream", e);
             throw new EdalException("Problem writing data to output stream", e);
         }
     }
-    
-    private void handleWmsException(EdalException wmse, HttpServletResponse httpServletResponse, boolean v130)
-            throws IOException {
+
+    private void handleWmsException(EdalException wmse, HttpServletResponse httpServletResponse,
+            boolean v130) throws IOException {
         VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();
         ec.addEventHandler(new EscapeXmlReference());
         ec.attachToContext(context);
-        
+
         context.put("exception", wmse);
-        
+
         Template template;
-        if(v130) {
+        if (v130) {
             template = velocityEngine.getTemplate("templates/exception-1.3.0.vm");
         } else {
             template = velocityEngine.getTemplate("templates/exception-1.1.1.vm");
