@@ -51,7 +51,7 @@ import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
-import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
@@ -144,7 +144,7 @@ public class WmsUtils {
      *            Object representing a GetMap request
      * @return a RegularGrid representing the requested image
      */
-    public static RegularGrid getImageGrid(GlobalPlottingParams params) throws InvalidCrsException {
+    public static RegularGrid getImageGrid(PlottingDomainParams params) throws InvalidCrsException {
         BoundingBox bbox = params.getBbox();
         return new RegularGridImpl(bbox, params.getWidth(), params.getHeight());
     }

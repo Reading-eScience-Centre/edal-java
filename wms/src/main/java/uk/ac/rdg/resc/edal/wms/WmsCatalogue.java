@@ -61,7 +61,7 @@ import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
@@ -156,7 +156,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     }
 
     @Override
-    public MapFeatureAndMember getFeatureAndMemberName(String id, GlobalPlottingParams params)
+    public MapFeatureAndMember getFeatureAndMemberName(String id, PlottingDomainParams params)
             throws BadTimeFormatException {
         Dataset dataset = getDatasetFromId(id);
         String variable = getVariableFromId(id);

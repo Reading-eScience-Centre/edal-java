@@ -104,8 +104,8 @@ public class LegendDataGenerator {
         }
     }
 
-    public GlobalPlottingParams getGlobalParams() {
-        return new GlobalPlottingParams(xAxis.size(), yAxis.size(), domain.getBoundingBox(), null,
+    public PlottingDomainParams getGlobalParams() {
+        return new PlottingDomainParams(xAxis.size(), yAxis.size(), domain.getBoundingBox(), null,
                 null, null, null, null);
     }
 
@@ -114,7 +114,7 @@ public class LegendDataGenerator {
         return new FeatureCatalogue() {
             @Override
             public MapFeatureAndMember getFeatureAndMemberName(String id,
-                    GlobalPlottingParams params) {
+                    PlottingDomainParams params) {
                 return new MapFeatureAndMember(feature, id);
             }
         };

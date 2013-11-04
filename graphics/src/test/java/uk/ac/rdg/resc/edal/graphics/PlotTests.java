@@ -67,7 +67,7 @@ import uk.ac.rdg.resc.edal.graphics.style.SmoothedContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -96,7 +96,7 @@ public class PlotTests {
     private MapFeature testFeature;
     /* Dummy variables needed for plotting */
     private FeatureCatalogue catalogue;
-    private GlobalPlottingParams params;
+    private PlottingDomainParams params;
     /* ColourScale which can be used by any plotting layer which needs it */
     private ColourScale scale = new ColourScale(0f, 1f, false);
 
@@ -126,7 +126,7 @@ public class PlotTests {
         catalogue = new FeatureCatalogue() {
             @Override
             public MapFeatureAndMember getFeatureAndMemberName(String id,
-                    GlobalPlottingParams params) {
+                    PlottingDomainParams params) {
                 if (id.equals("test")) {
                     return new MapFeatureAndMember(testFeature, "testvar");
                 } else if (id.equals("xtest")) {
@@ -140,7 +140,7 @@ public class PlotTests {
                 }
             }
         };
-        params = new GlobalPlottingParams(WIDTH, HEIGHT, bbox, null, null, null, null, null);
+        params = new PlottingDomainParams(WIDTH, HEIGHT, bbox, null, null, null, null, null);
 
     }
 
