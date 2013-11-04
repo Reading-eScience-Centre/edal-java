@@ -367,6 +367,7 @@ public class GetMapStyleParams {
              */
             return StyleXMLParser.deserialise(xmlStringWriter.toString());
         } catch (JAXBException e) {
+            e.printStackTrace();
             /*
              * There is a problem parsing the XML
              */

@@ -37,6 +37,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,6 +65,7 @@ import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
+import uk.ac.rdg.resc.edal.wms.util.ContactInfo;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
@@ -170,6 +172,9 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                 MapFeature mapData = gridDataset.readMapData(CollectionUtils.setOf(variable),
                         WmsUtils.getImageGrid(params), params.getTargetZ(),
                         params.getTargetT(chronology));
+                /*
+                 * TODO Caching probably goes here
+                 */
                 return new MapFeatureAndMember(mapData, variable);
             } catch (InvalidCrsException e) {
                 /*
@@ -378,24 +383,9 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     public abstract List<String> getServerKeywords();
 
     /**
-     * @return The main contact name for this server
+     * @return The main contact information for this server
      */
-    public abstract String getServerContactName();
-
-    /**
-     * @return The main contact organisation for this server
-     */
-    public abstract String getServerContactOrganisation();
-
-    /**
-     * @return The main contact telephone number for this server
-     */
-    public abstract String getServerContactTelephone();
-
-    /**
-     * @return The main contact email address for this server
-     */
-    public abstract String getServerContactEmail();
+    public abstract ContactInfo getContactInfo();
 
     /**
      * @return The last time that data on this server was updated
@@ -405,7 +395,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     /**
      * @return All available {@link Dataset}s on this server
      */
-    public abstract List<Dataset> getAllDatasets();
+    public abstract Collection<Dataset> getAllDatasets();
 
     /**
      * @param datasetId
@@ -454,5 +444,6 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The full layer name
      * @return Default metadata values for the desired layer
      */
-    public abstract WmsLayerMetadata getLayerMetadata(String layerName);
+    public abstract WmsLayerMetadata getLayerMetadata(String layerName)
+            throws WmsLayerNotFoundException;
 }

@@ -18,11 +18,11 @@
         <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
         <ContactInformation>
             <ContactPersonPrimary>
-                <ContactPerson>$catalogue.serverContactName</ContactPerson>
-                <ContactOrganization>$catalogue.serverContactOrganisation</ContactOrganization>
+                <ContactPerson>$catalogue.server.contactInfo.name</ContactPerson>
+                <ContactOrganization>$catalogue.server.contactInfo.organisation</ContactOrganization>
             </ContactPersonPrimary>
-            <ContactVoiceTelephone>$catalogue.serverContactTelephone</ContactVoiceTelephone>
-            <ContactElectronicMailAddress>$catalogue.serverContactEmail</ContactElectronicMailAddress>
+            <ContactVoiceTelephone>$catalogue.server.contactInfo.telephone</ContactVoiceTelephone>
+            <ContactElectronicMailAddress>$catalogue.server.contactInfo.email</ContactElectronicMailAddress>
         </ContactInformation>
         <Fees>none</Fees>
         <AccessConstraints>none</AccessConstraints>

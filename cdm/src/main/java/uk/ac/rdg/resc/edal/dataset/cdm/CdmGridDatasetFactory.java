@@ -65,10 +65,10 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * {@link DatasetFactory} that creates {@link Dataset}s representing gridded
  * data read through the Unidata Common Data Model.
  * 
+ * @author Guy Griffiths
  * @author Jon
- * @author Guy
  */
-public final class CdmGridDatasetFactory implements DatasetFactory {
+public final class CdmGridDatasetFactory extends DatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
 
     @Override

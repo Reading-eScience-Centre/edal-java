@@ -56,7 +56,7 @@ public class ColourPalette {
      */
     public static final String DEFAULT_PALETTE_NAME = "rainbow";
 
-    public static final int MAX_NUM_COLOURS = 254;
+    public static final int MAX_NUM_COLOURS = 250;
 
     /**
      * This is the palette that will be used if no specific palette has been

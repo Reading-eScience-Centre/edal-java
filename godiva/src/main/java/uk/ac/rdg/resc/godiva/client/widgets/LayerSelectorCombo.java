@@ -92,6 +92,8 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
                                 + LayerSelectorCombo.this.getOffsetHeight());
                 if (!popup.isShowing()) {
                     popup.show();
+                } else {
+                    popup.hide();
                 }
                 if(firstUse) {
                     setText(firstTitle);
@@ -101,6 +103,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         });
 
         setText(firstText);
+        setTitle("Click here to select a layer");
         
         VerticalPanel vPanel = new VerticalPanel();
         tree = new Tree();
@@ -151,12 +154,14 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         final String id = item.getId();
         
         Label node = new Label(label);
+        String title;
         if(parentNode != null){
             final String parentName = parentNode.getText();
-            layerIdWmsUrlToTitle.put(id+item.getWmsUrl(), parentName + "<div class=\"subtitle\">  &nbsp>&nbsp" + label + "</div>");
+            title = parentName + "<div class=\"subtitle\">" + label + "</div>";
         } else {
-            layerIdWmsUrlToTitle.put(id+item.getWmsUrl(), label);
+            title = label;
         }
+        layerIdWmsUrlToTitle.put(id+item.getWmsUrl(), title);
         
         layerIdWmsUrlToMenuEntry.put(id+item.getWmsUrl(), item);
         
