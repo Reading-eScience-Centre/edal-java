@@ -175,7 +175,6 @@ public class WmsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) throws ServletException, IOException {
-
         /*
          * Create an object that allows request parameters to be retrieved in a
          * way that is not sensitive to the case of the parameter NAMES (but is
@@ -282,7 +281,7 @@ public class WmsServlet extends HttpServlet {
             throws EdalException {
         GetMapParameters getMapParams = new GetMapParameters(params);
 
-        PlottingDomainParams plottingParameters = getMapParams.getPlottingParameters();
+        PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
         if (!(getMapParams.getImageFormat() instanceof SimpleFormat)) {
             throw new EdalException("Currently KML is not supported.");
@@ -418,21 +417,7 @@ public class WmsServlet extends HttpServlet {
                         + "You must specify a dataset identifier with &amp;DATASET=");
             }
         } else {
-            /*
-             * Look for this dataset. The ID supplied will only contain the
-             * dataset name. We don't have a catalogue method for getting the
-             * Dataset from its own ID, so we loop through checking. This should
-             * be quick, and it's less confusing than having both a
-             * getDatasetFromLayerName and a getDatasetFromDatasetId method on
-             * the catalogue
-             */
-            Dataset ds = null;
-            for (Dataset dataset : catalogue.getAllDatasets()) {
-                if (datasetId.equals(dataset.getId())) {
-                    ds = dataset;
-                    break;
-                }
-            }
+            Dataset ds = catalogue.getDatasetFromId(datasetId);
             if (ds == null) {
                 throw new EdalException("There is no dataset with ID " + datasetId);
             }
@@ -473,7 +458,7 @@ public class WmsServlet extends HttpServlet {
     private void getFeatureInfo(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params);
-        PlottingDomainParams plottingParameters = featureInfoParameters.getPlottingParameters();
+        PlottingDomainParams plottingParameters = featureInfoParameters.getPlottingDomainParameters();
         RegularGrid imageGrid = WmsUtils.getImageGrid(plottingParameters);
         Double xVal = imageGrid.getXAxis().getCoordinateValue(featureInfoParameters.getI());
         Double yVal = imageGrid.getYAxis().getCoordinateValue(
@@ -484,7 +469,7 @@ public class WmsServlet extends HttpServlet {
         String[] layerNames = featureInfoParameters.getLayerNames();
         List<FeatureInfoPoint> featureInfos = new ArrayList<FeatureInfoPoint>();
         for (String layerName : layerNames) {
-            Dataset dataset = catalogue.getDatasetFromId(layerName);
+            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
 
             if (dataset instanceof GridDataset) {
@@ -649,7 +634,7 @@ public class WmsServlet extends HttpServlet {
          * 
          * Yes, but they're not in place yet...
          */
-        Dataset dataset = catalogue.getDatasetFromId(layerName);
+        Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
         String variableId = catalogue.getVariableFromId(layerName);
 
         WmsLayerMetadata layerMetadata;
@@ -865,7 +850,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset dataset = catalogue.getDatasetFromId(layerName);
+        Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
         String variableId = catalogue.getVariableFromId(layerName);
         VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
@@ -921,7 +906,7 @@ public class WmsServlet extends HttpServlet {
         MapFeatureAndMember featureAndMember;
         try {
             featureAndMember = catalogue.getFeatureAndMemberName(layerNames[0],
-                    getMapParams.getPlottingParameters());
+                    getMapParams.getPlottingDomainParameters());
         } catch (BadTimeFormatException e) {
             log.error("Bad time format", e);
             throw new MetadataException("Bad time format", e);
@@ -964,7 +949,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset dataset = catalogue.getDatasetFromId(layerName);
+        Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
         String variableId = catalogue.getVariableFromId(layerName);
         VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
@@ -1069,6 +1054,9 @@ public class WmsServlet extends HttpServlet {
         int numColourBands = params.getPositiveInt("numcolorbands", ColourPalette.MAX_NUM_COLOURS);
 
         String paletteName = params.getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
+        if("default".equals(paletteName)) {
+            paletteName = ColourPalette.DEFAULT_PALETTE_NAME;
+        }
 
         /* Find out if we just want the colour bar with no supporting text */
         String colorBarOnly = params.getString("colorbaronly", "false");
@@ -1131,7 +1119,7 @@ public class WmsServlet extends HttpServlet {
 
         List<PointSeriesFeature> pointSeriesFeatures = new ArrayList<PointSeriesFeature>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromId(layerName);
+            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
@@ -1226,7 +1214,7 @@ public class WmsServlet extends HttpServlet {
         boolean verticalSection = false;
         List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromId(layerName);
+            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
@@ -1297,7 +1285,7 @@ public class WmsServlet extends HttpServlet {
              * This can only be true if we have a GridSeriesFeature, so we can
              * cast
              */
-            Dataset dataset = catalogue.getDatasetFromId(layers[0]);
+            Dataset dataset = catalogue.getDatasetFromLayerName(layers[0]);
             String varId = catalogue.getVariableFromId(layers[0]);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
@@ -1403,7 +1391,7 @@ public class WmsServlet extends HttpServlet {
         String timeStr = params.getString("time");
         List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromId(layerName);
+            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);

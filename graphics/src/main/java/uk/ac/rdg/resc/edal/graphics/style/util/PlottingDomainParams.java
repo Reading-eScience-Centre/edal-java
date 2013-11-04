@@ -44,7 +44,7 @@ public class PlottingDomainParams {
     private BoundingBox bbox;
     private Extent<Double> zExtent;
     private Double targetZ;
-    
+
     private String endTime;
     private String startTime;
     private String targetT;
@@ -60,12 +60,12 @@ public class PlottingDomainParams {
         this.startTime = startTime;
         this.endTime = endTime;
         this.targetT = targetT;
-        
-        if(zExtent == null && targetZ != null) {
+
+        if (zExtent == null && targetZ != null) {
             zExtent = Extents.newExtent(targetZ, targetZ);
         }
-        
-        if(startTime == null && targetT != null) {
+
+        if (startTime == null && targetT != null) {
             startTime = targetT;
             endTime = targetT;
         }
@@ -88,7 +88,11 @@ public class PlottingDomainParams {
     }
 
     public Extent<DateTime> getTExtent(Chronology chronology) throws BadTimeFormatException {
-        return Extents.newExtent(TimeUtils.iso8601ToDateTime(startTime, chronology), TimeUtils.iso8601ToDateTime(endTime, chronology));
+        if (startTime == null || endTime == null) {
+            return Extents.emptyExtent(DateTime.class);
+        }
+        return Extents.newExtent(TimeUtils.iso8601ToDateTime(startTime, chronology),
+                TimeUtils.iso8601ToDateTime(endTime, chronology));
     }
 
     public Double getTargetZ() {
@@ -96,6 +100,9 @@ public class PlottingDomainParams {
     }
 
     public DateTime getTargetT(Chronology chronology) throws BadTimeFormatException {
+        if (targetT == null) {
+            return null;
+        }
         return TimeUtils.iso8601ToDateTime(targetT, chronology);
     }
 }

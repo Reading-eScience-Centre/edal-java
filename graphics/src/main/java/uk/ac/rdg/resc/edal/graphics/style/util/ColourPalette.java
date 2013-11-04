@@ -260,6 +260,9 @@ public class ColourPalette {
     }
 
     public static ColourPalette fromString(String paletteString, int nColourBands) {
+        if(paletteString == null || "".equals(paletteString)) {
+            paletteString = DEFAULT_PALETTE_NAME;
+        }
         if (loadedColourSets.containsKey(paletteString.toLowerCase())) {
             return new ColourPalette(loadedColourSets.get(paletteString), nColourBands);
         } else {
