@@ -54,7 +54,7 @@ public abstract class DatasetFactory {
         defaultDatasetFactoryName = clazz.getName();
     }
 
-    public static DatasetFactory forName(String clazz) throws InstantiationException,
+    public synchronized static DatasetFactory forName(String clazz) throws InstantiationException,
             IllegalAccessException, ClassNotFoundException {
         if ((clazz == null || clazz.trim().equals(""))) {
             if (defaultDatasetFactoryName == null) {
@@ -66,7 +66,6 @@ public abstract class DatasetFactory {
         }
         if (!readers.containsKey(clazz)) {
             /* Create the DatasetFactory object */
-            System.out.println("DatasetFactory creating class: "+clazz);
             Object dfObj = Class.forName(clazz).newInstance();
             /*
              * This will throw a ClassCastException if dfObj is not a
