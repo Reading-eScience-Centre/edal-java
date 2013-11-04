@@ -67,6 +67,7 @@ import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
+import org.joda.time.chrono.ISOChronology;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,8 +100,8 @@ import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -116,6 +117,8 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
+import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
+import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
@@ -365,7 +368,41 @@ public class WmsServlet extends HttpServlet {
         context.put("verbose", params.getBoolean("verbose", false));
         context.put("availablePalettes", ColourPalette.getPredefinedPalettes());
 
-        String wmsVersion = params.getMandatoryWmsVersion();
+        /*
+         * We only advertise text/xml as a GetCapabilities format. The spec says
+         * we can return text/xml for unknown formats, so we don't even need to
+         * bother retrieving the requested format
+         */
+        
+        /*
+         * Now handle the UPDATESEQUENCE param as per 7.2.3.5 of the WMS spec
+         */
+        String updateSeqStr = params.getString("updatesequence");
+        if(updateSeqStr != null) {
+            DateTime updateSequence;
+            try {
+                updateSequence = TimeUtils.iso8601ToDateTime(updateSeqStr, ISOChronology.getInstanceUTC());
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidUpdateSequence(updateSeqStr +
+                        " is not a valid ISO date-time");
+            }
+            /*
+             * We use isEqual(), which compares dates based on millisecond
+             * values only, because we know that the calendar system will be the
+             * same in each case (ISO). Comparisons using equals() may return
+             * false because updateSequence is read using UTC, whereas
+             * lastUpdate is created in the server's time zone, meaning that the
+             * Chronologies are different.
+             */
+            if (updateSequence.isEqual(catalogue.getServerLastUpdate())) {
+                throw new CurrentUpdateSequence(updateSeqStr);
+            } else if (updateSequence.isAfter(catalogue.getServerLastUpdate())) {
+                throw new InvalidUpdateSequence(updateSeqStr +
+                        " is later than the current server updatesequence value");
+            }
+        }
+        
+        String wmsVersion = params.getString("version", "1.3.0");
         Template template;
         if("1.1.1".equals(wmsVersion)) {
             template = velocityEngine.getTemplate("templates/capabilities-1.1.1.vm");
