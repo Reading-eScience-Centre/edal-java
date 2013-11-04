@@ -52,7 +52,7 @@ public class GetMapParameters {
     private String imageFormatString;
     private boolean animation;
     
-    private PlottingDomainParams globalPlottingParams;
+    private PlottingDomainParams plottingDomainParams;
     private GetMapStyleParams styleParameters;
 
     /**
@@ -69,12 +69,12 @@ public class GetMapParameters {
         }
         imageFormatString = params.getString("format");
         animation = params.getBoolean("animation", false);
-        globalPlottingParams = parsePlottingParams(params);
+        plottingDomainParams = parsePlottingParams(params);
         styleParameters = new GetMapStyleParams(params);
     }
 
-    public PlottingDomainParams getPlottingParameters() {
-        return globalPlottingParams;
+    public PlottingDomainParams getPlottingDomainParameters() {
+        return plottingDomainParams;
     }
 
     public GetMapStyleParams getStyleParameters() {

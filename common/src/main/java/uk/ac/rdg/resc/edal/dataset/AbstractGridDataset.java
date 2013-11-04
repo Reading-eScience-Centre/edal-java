@@ -63,6 +63,7 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
@@ -243,23 +244,9 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         /*
          * Use these objects to convert natural coordinates to grid indices
          */
-        int tIndex = 0;
-        if (tAxis != null) {
-            tIndex = tAxis.findIndexOf(time);
-        }
-        if (tIndex < 0) {
-            throw new IllegalArgumentException(time
-                    + " is not part of the temporal domain for the variable " + varId);
-        }
-        int zIndex = 0;
-        if (zAxis != null) {
-            zIndex = zAxis.findIndexOf(zPos);
-        }
-        if (zIndex < 0) {
-            throw new IllegalArgumentException(zPos
-                    + " is not part of the vertical domain for the variable " + varId);
-        }
-
+        int tIndex = getTimeIndex(time, tAxis, varId);
+        int zIndex = getVerticalIndex(zPos, zAxis, varId);
+        
         /*
          * Create a DomainMapper from the source and target grids
          */
@@ -271,6 +258,36 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         Array2D<Number> data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
                 domainMapper);
         return data;
+    }
+
+    private int getTimeIndex(DateTime time, TimeAxis tAxis, String varId) {
+        int tIndex = 0;
+        if (tAxis != null) {
+            if(time == null) {
+                time = GISUtils.getClosestToCurrentTime(tAxis.getCoordinateValues());
+            }
+            tIndex = tAxis.findIndexOf(time);
+        }
+        if (tIndex < 0) {
+            throw new IllegalArgumentException(time
+                    + " is not part of the temporal domain for the variable " + varId);
+        }
+        return tIndex;
+    }
+
+    private int getVerticalIndex(Double zPos, VerticalAxis zAxis, String varId) {
+        int zIndex = 0;
+        if (zAxis != null) {
+            if(zPos == null) {
+                zPos = GISUtils.getClosestElevationToSurface(zAxis);    
+            }
+            zIndex = zAxis.findIndexOf(zPos);
+        }
+        if (zIndex < 0) {
+            throw new IllegalArgumentException(zPos
+                    + " is not part of the vertical domain for the variable " + varId);
+        }
+        return zIndex;
     }
 
     @Override
@@ -430,14 +447,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         int xIndex = hIndices.getX();
         int yIndex = hIndices.getY();
 
-        int tIndex = 0;
-        if (tAxis != null) {
-            tIndex = tAxis.findIndexOf(time);
-        }
-        if (tIndex < 0) {
-            throw new IllegalArgumentException(time
-                    + " is not part of the temporal domain for the variable " + varId);
-        }
+        int tIndex = getTimeIndex(time, tAxis, varId);
 
         /*
          * Now read the z-limits
@@ -640,14 +650,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         int xIndex = hIndices.getX();
         int yIndex = hIndices.getY();
 
-        int zIndex = 0;
-        if (zAxis != null) {
-            zIndex = zAxis.findIndexOf(zPos.getZ());
-        }
-        if (zIndex < 0) {
-            throw new IllegalArgumentException(zPos
-                    + " is not part of the vertical domain for the variable " + varId);
-        }
+        int zIndex = getVerticalIndex(zPos.getZ(), zAxis, varId);
 
         /*
          * Now read the z-limits
@@ -886,17 +889,12 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                 GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(variableId);
                 GridCoordinates2D xy = variableMetadata.getHorizontalDomain().findIndexOf(position);
 
-                int z = 0;
                 VerticalAxis verticalDomain = variableMetadata.getVerticalDomain();
-                if (verticalDomain != null) {
-                    z = verticalDomain.findIndexOf(zVal);
-                }
+                int z = getVerticalIndex(zVal, verticalDomain, variableId);
 
-                int t = 0;
                 TimeAxis temporalDomain = variableMetadata.getTemporalDomain();
-                if (temporalDomain != null) {
-                    t = temporalDomain.findIndexOf(time);
-                }
+                int t = getTimeIndex(time, temporalDomain, variableId);
+
                 Array4D<Number> readData = gridDataSource.read(variableId, t, t, z, z, xy.getY(), xy.getY(), xy.getX(),
                         xy.getX());
                 return readData.get(0, 0, 0, 0);

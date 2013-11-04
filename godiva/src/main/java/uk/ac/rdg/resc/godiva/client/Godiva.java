@@ -605,6 +605,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             String currentPalette = permalinkParamsMap.get("palette");
             if (currentPalette != null) {
                 widgetCollection.getPaletteSelector().selectPalette(currentPalette);
+            } else {
+                widgetCollection.getPaletteSelector().selectPalette("default");
             }
 
             String currentStyle = permalinkParamsMap.get("style");
@@ -778,9 +780,14 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         if (permalinking) {
             String currentLayer = permalinkParamsMap.get("layer");
-            String currentWms = URL.decode(permalinkParamsMap.get("dataset"));
             if (currentLayer != null) {
-                layerSelector.selectLayer(currentLayer, currentWms, false);
+                String datasetUrl = permalinkParamsMap.get("dataset");
+                if(datasetUrl == null || "".equals(datasetUrl)) {
+                    layerSelector.selectLayer(currentLayer, "wms", false);
+                } else {
+                    String currentWms = URL.decode(datasetUrl);
+                    layerSelector.selectLayer(currentLayer, currentWms, false);
+                }
             }
         }
     }

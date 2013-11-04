@@ -82,7 +82,7 @@
 #end        
         </Layer>
     </Capability>
-</WMS_Capabilities>
+</WMT_MS_Capabilities>
 ##
 ##
 ## End of actual capabilities document.  Layer macro follows.

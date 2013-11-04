@@ -158,7 +158,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     @Override
     public MapFeatureAndMember getFeatureAndMemberName(String id, PlottingDomainParams params)
             throws BadTimeFormatException {
-        Dataset dataset = getDatasetFromId(id);
+        Dataset dataset = getDatasetFromLayerName(id);
         String variable = getVariableFromId(id);
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
@@ -206,7 +206,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      */
     public VariableMetadata getVariableMetadataFromId(String layerName)
             throws WmsLayerNotFoundException {
-        Dataset dataset = getDatasetFromId(layerName);
+        Dataset dataset = getDatasetFromLayerName(layerName);
         String variableFromId = getVariableFromId(layerName);
         if (dataset != null && variableFromId != null) {
             return dataset.getVariableMetadata(variableFromId);
@@ -415,13 +415,22 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      */
 
     /**
+     * Returns a {@link Dataset} from its ID
+     * 
+     * @param datasetId
+     *            The ID of the dataset
+     * @return The desired dataset
+     */
+    public abstract Dataset getDatasetFromId(String datasetId);
+    
+    /**
      * Returns a {@link Dataset} based on a given layer name
      * 
      * @param layerName
      *            The full layer name
      * @return The desired dataset
      */
-    public abstract Dataset getDatasetFromId(String layerName);
+    public abstract Dataset getDatasetFromLayerName(String layerName);
 
     /**
      * Returns a variable ID based on a given layer name
