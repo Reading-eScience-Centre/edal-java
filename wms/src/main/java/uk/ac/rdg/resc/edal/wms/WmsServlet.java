@@ -99,7 +99,7 @@ import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
-import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
@@ -277,7 +277,7 @@ public class WmsServlet extends HttpServlet {
             throws EdalException {
         GetMapParameters getMapParams = new GetMapParameters(params);
 
-        GlobalPlottingParams plottingParameters = getMapParams.getPlottingParameters();
+        PlottingDomainParams plottingParameters = getMapParams.getPlottingParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
         if (!(getMapParams.getImageFormat() instanceof SimpleFormat)) {
             throw new EdalException("Currently KML is not supported.");
@@ -388,7 +388,7 @@ public class WmsServlet extends HttpServlet {
     private void getFeatureInfo(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params);
-        GlobalPlottingParams plottingParameters = featureInfoParameters.getPlottingParameters();
+        PlottingDomainParams plottingParameters = featureInfoParameters.getPlottingParameters();
         RegularGrid imageGrid = WmsUtils.getImageGrid(plottingParameters);
         Double xVal = imageGrid.getXAxis().getCoordinateValue(featureInfoParameters.getI());
         Double yVal = imageGrid.getYAxis().getCoordinateValue(

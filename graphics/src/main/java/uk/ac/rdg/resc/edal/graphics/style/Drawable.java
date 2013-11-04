@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlType;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 
 @XmlType(namespace=MapImage.NAMESPACE, name="Drawable")
 public abstract class Drawable {
@@ -78,7 +78,7 @@ public abstract class Drawable {
         this.opacityTransform = opacityTransform;
     }
 
-    public abstract BufferedImage drawImage(GlobalPlottingParams params,
+    public abstract BufferedImage drawImage(PlottingDomainParams params,
             FeatureCatalogue featureCatalogue) throws EdalException;
     
     /**

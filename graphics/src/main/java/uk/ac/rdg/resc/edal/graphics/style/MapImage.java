@@ -50,7 +50,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.graphics.style.util.LegendDataGenerator;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "ImageType")
@@ -81,7 +81,7 @@ public class MapImage extends Drawable {
     }
 
     @Override
-    public BufferedImage drawImage(GlobalPlottingParams params, FeatureCatalogue catalogue) throws EdalException {
+    public BufferedImage drawImage(PlottingDomainParams params, FeatureCatalogue catalogue) throws EdalException {
         BufferedImage finalImage = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = finalImage.createGraphics();

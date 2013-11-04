@@ -51,6 +51,6 @@ public interface FeatureCatalogue {
         }
     }
 
-    public MapFeatureAndMember getFeatureAndMemberName(String id, GlobalPlottingParams params)
+    public MapFeatureAndMember getFeatureAndMemberName(String id, PlottingDomainParams params)
             throws BadTimeFormatException;
 }

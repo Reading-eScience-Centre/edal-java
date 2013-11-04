@@ -38,7 +38,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
-import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "ImageLayerType")
@@ -59,7 +59,7 @@ public abstract class ImageLayer extends Drawable {
     }
 
     @Override
-    public BufferedImage drawImage(final GlobalPlottingParams params,
+    public BufferedImage drawImage(final PlottingDomainParams params,
             final FeatureCatalogue catalogue) throws EdalException {
         BufferedImage image = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
@@ -67,7 +67,7 @@ public abstract class ImageLayer extends Drawable {
         return image;
     }
 
-    protected void drawIntoImage(BufferedImage image, final GlobalPlottingParams params,
+    protected void drawIntoImage(BufferedImage image, final PlottingDomainParams params,
             final FeatureCatalogue catalogue) throws EdalException {
         drawIntoImage(image, new DataReader() {
             @Override

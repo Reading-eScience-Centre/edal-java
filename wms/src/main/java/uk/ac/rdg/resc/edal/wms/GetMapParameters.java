@@ -35,7 +35,7 @@ import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
-import uk.ac.rdg.resc.edal.graphics.style.util.GlobalPlottingParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
@@ -52,7 +52,7 @@ public class GetMapParameters {
     private String imageFormatString;
     private boolean animation;
     
-    private GlobalPlottingParams globalPlottingParams;
+    private PlottingDomainParams globalPlottingParams;
     private GetMapStyleParams styleParameters;
 
     /**
@@ -73,7 +73,7 @@ public class GetMapParameters {
         styleParameters = new GetMapStyleParams(params);
     }
 
-    public GlobalPlottingParams getPlottingParameters() {
+    public PlottingDomainParams getPlottingParameters() {
         return globalPlottingParams;
     }
 
@@ -101,7 +101,7 @@ public class GetMapParameters {
         }
     }
     
-    private GlobalPlottingParams parsePlottingParams(RequestParams params) throws EdalException {
+    private PlottingDomainParams parsePlottingParams(RequestParams params) throws EdalException {
         String startTime = null;
         String endTime = null;
         String timeString = params.getString("time");
@@ -179,7 +179,7 @@ public class GetMapParameters {
         }
         
         try {
-            return new GlobalPlottingParams(
+            return new PlottingDomainParams(
                     params.getMandatoryPositiveInt("width"),
                     params.getMandatoryPositiveInt("height"),
                     bbox, zExtent, startTime, endTime, targetDepth, targetTime);

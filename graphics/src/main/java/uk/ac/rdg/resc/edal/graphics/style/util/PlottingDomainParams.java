@@ -37,7 +37,7 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 
-public class GlobalPlottingParams {
+public class PlottingDomainParams {
     private int width = 256;
     private int height = 256;
 
@@ -49,7 +49,7 @@ public class GlobalPlottingParams {
     private String startTime;
     private String targetT;
 
-    public GlobalPlottingParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
+    public PlottingDomainParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
             String startTime, String endTime, Double targetZ, String targetT) {
         super();
         this.width = width;
