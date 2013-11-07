@@ -148,6 +148,9 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                  * Do the actual data reading
                  */
                 Array2D<Number> data = readHorizontalData(varId, targetGrid, zPos, time, dataSource);
+                if(data == null) {
+                    System.out.println("AbGD "+varId+","+getId());
+                }
 
                 values.put(varId, data);
                 /*

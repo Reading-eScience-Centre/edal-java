@@ -53,6 +53,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -240,13 +241,12 @@ public class WmsServlet extends HttpServlet {
         } else if (request.equals("GetFeatureInfo")) {
             /* Look to see if we're requesting data from a remote server */
             String url = params.getString("url");
-            if (url != null && !url.trim().equals("")) {
+            if (!StringUtils.isBlank(url)) {
                 /*
-                 * TODO We need to proxy the request if it is on a different
-                 * server
+                 * We need to proxy the request if it is on a different server
                  */
-//                NcwmsMetadataController.proxyRequest(url, httpServletRequest, httpServletResponse);
-//                return;
+                WmsUtils.proxyRequest(url, httpServletRequest, httpServletResponse);
+                return;
             }
             getFeatureInfo(params, httpServletResponse);
         }
@@ -296,8 +296,6 @@ public class WmsServlet extends HttpServlet {
          * 
          * These only apply to non-XML styles. XML ones are more complex to
          * handle.
-         * 
-         * TODO sort out some checks on XML styles.
          */
         if (!styleParameters.isXmlDefined()) {
             if (styleParameters.isTransparent()
@@ -312,8 +310,10 @@ public class WmsServlet extends HttpServlet {
                         + getMapParams.getImageFormat().getMimeType()
                         + " does not support partially-transparent pixels");
             }
-            if (styleParameters.getNumLayers() > catalogue.getMaxSimultaneousLayers()) {
-                throw new EdalException("Only " + catalogue.getMaxSimultaneousLayers()
+            if (styleParameters.getNumLayers() > catalogue.getServerInfo()
+                    .getMaxSimultaneousLayers()) {
+                throw new EdalException("Only "
+                        + catalogue.getServerInfo().getMaxSimultaneousLayers()
                         + " layer(s) can be plotted at once");
             }
         }
@@ -321,10 +321,11 @@ public class WmsServlet extends HttpServlet {
         /*
          * Check the dimensions of the image
          */
-        if (plottingParameters.getHeight() > catalogue.getMaxImageHeight()
-                || plottingParameters.getWidth() > catalogue.getMaxImageWidth()) {
+        if (plottingParameters.getHeight() > catalogue.getServerInfo().getMaxImageHeight()
+                || plottingParameters.getWidth() > catalogue.getServerInfo().getMaxImageWidth()) {
             throw new EdalException("Requested image size exceeds the maximum of "
-                    + catalogue.getMaxImageWidth() + "x" + catalogue.getMaxImageHeight());
+                    + catalogue.getServerInfo().getMaxImageWidth() + "x"
+                    + catalogue.getServerInfo().getMaxImageHeight());
         }
 
         MapImage imageGenerator = styleParameters.getImageGenerator(catalogue);
@@ -458,7 +459,8 @@ public class WmsServlet extends HttpServlet {
     private void getFeatureInfo(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params);
-        PlottingDomainParams plottingParameters = featureInfoParameters.getPlottingDomainParameters();
+        PlottingDomainParams plottingParameters = featureInfoParameters
+                .getPlottingDomainParameters();
         RegularGrid imageGrid = WmsUtils.getImageGrid(plottingParameters);
         Double xVal = imageGrid.getXAxis().getCoordinateValue(featureInfoParameters.getI());
         Double yVal = imageGrid.getYAxis().getCoordinateValue(
@@ -496,18 +498,8 @@ public class WmsServlet extends HttpServlet {
         context.put("featureInfo", featureInfos);
         try {
             template.merge(context, httpServletResponse.getWriter());
-        } catch (ResourceNotFoundException e) {
-            // TODO Add logging
-            e.printStackTrace();
-        } catch (ParseErrorException e) {
-            // TODO Add logging
-            e.printStackTrace();
-        } catch (MethodInvocationException e) {
-            // TODO Add logging
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Add logging
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("Problem writing FeatureInfo XML", e);
         }
     }
 
@@ -543,11 +535,8 @@ public class WmsServlet extends HttpServlet {
             try {
                 httpServletResponse.getWriter().write(json);
             } catch (IOException e) {
-                /*
-                 * TODO needs a log message, since this might not get back to
-                 * the user
-                 */
-                throw new MetadataException("Problem writing JSON to output stream");
+                log.error("Problem writing metadata to output stream", e);
+                throw new MetadataException("Problem writing JSON to output stream", e);
             }
         } else {
             throw new MetadataException("Invalid value for ITEM parameter");
@@ -556,7 +545,7 @@ public class WmsServlet extends HttpServlet {
 
     private String showMenu(RequestParams params) {
         JSONObject menu = new JSONObject();
-        menu.put("label", catalogue.getServerName());
+        menu.put("label", catalogue.getServerInfo().getName());
         JSONArray children = new JSONArray();
         for (Dataset dataset : catalogue.getAllDatasets()) {
             String datasetId = dataset.getId();
@@ -628,14 +617,14 @@ public class WmsServlet extends HttpServlet {
         }
         String requestedTime = params.getString("time");
 
-        /*
-         * TODO Check that this is safe enough - do we need to catch any other
-         * exceptions?
-         * 
-         * Yes, but they're not in place yet...
-         */
-        Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
-        String variableId = catalogue.getVariableFromId(layerName);
+        Dataset dataset;
+        String variableId;
+        try {
+            dataset = catalogue.getDatasetFromLayerName(layerName);
+            variableId = catalogue.getVariableFromId(layerName);
+        } catch (WmsLayerNotFoundException e) {
+            throw new MetadataException("The layer " + layerName + " does not exist", e);
+        }
 
         WmsLayerMetadata layerMetadata;
         try {
@@ -850,8 +839,14 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
-        String variableId = catalogue.getVariableFromId(layerName);
+        Dataset dataset;
+        String variableId;
+        try {
+            dataset = catalogue.getDatasetFromLayerName(layerName);
+            variableId = catalogue.getVariableFromId(layerName);
+        } catch (WmsLayerNotFoundException e) {
+            throw new MetadataException("The layer " + layerName + " does not exist", e);
+        }
         VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
 
@@ -910,6 +905,9 @@ public class WmsServlet extends HttpServlet {
         } catch (BadTimeFormatException e) {
             log.error("Bad time format", e);
             throw new MetadataException("Bad time format", e);
+        } catch (EdalException e) {
+            log.error("Bad layer name", e);
+            throw new MetadataException("Problem reading data", e);
         }
         MapFeature mapFeature = featureAndMember.getMapFeature();
         Array2D<Number> values = mapFeature.getValues(featureAndMember.getMember());
@@ -949,8 +947,14 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
-        String variableId = catalogue.getVariableFromId(layerName);
+        Dataset dataset;
+        String variableId;
+        try {
+            dataset = catalogue.getDatasetFromLayerName(layerName);
+            variableId = catalogue.getVariableFromId(layerName);
+        } catch (WmsLayerNotFoundException e) {
+            throw new MetadataException("The layer " + layerName + " does not exist", e);
+        }
         VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
 
@@ -1054,7 +1058,7 @@ public class WmsServlet extends HttpServlet {
         int numColourBands = params.getPositiveInt("numcolorbands", ColourPalette.MAX_NUM_COLOURS);
 
         String paletteName = params.getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
-        if("default".equals(paletteName)) {
+        if ("default".equals(paletteName)) {
             paletteName = ColourPalette.DEFAULT_PALETTE_NAME;
         }
 
@@ -1086,9 +1090,7 @@ public class WmsServlet extends HttpServlet {
         try {
             ImageIO.write(legend, "png", httpServletResponse.getOutputStream());
         } catch (IOException e) {
-            /*
-             * TODO log message here
-             */
+            log.error("Problem writing legend graphic to output stream", e);
             throw new EdalException("Unable to write legend graphic to output stream", e);
         }
     }

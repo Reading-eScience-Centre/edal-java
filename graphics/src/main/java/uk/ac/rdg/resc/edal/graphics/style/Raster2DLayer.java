@@ -50,6 +50,7 @@ public class Raster2DLayer extends ImageLayer {
     @XmlElement(name = "ThresholdColourScheme2D", type = ThresholdColourScheme2D.class)
     private ColourScheme2D colourScheme = new ThresholdColourScheme2D();
 
+    @SuppressWarnings("unused")
     private Raster2DLayer() {
     }
     

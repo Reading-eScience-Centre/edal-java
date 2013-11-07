@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class BilinearInterpolator {

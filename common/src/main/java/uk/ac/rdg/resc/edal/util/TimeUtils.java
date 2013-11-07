@@ -180,7 +180,7 @@ public class TimeUtils {
     /**
      * Formats a DateTime in a nice human-readable manner.
      */
-    public static String formatUTCHumanReadableDateTime(DateTime dateTime) {
+    public static String formatUtcHumanReadableDateTime(DateTime dateTime) {
         return NICE_DATE_TIME_FORMATTER.print(dateTime);
     }
 
@@ -188,7 +188,7 @@ public class TimeUtils {
      * Formats a DateTime as the time only in the format "HH:mm:ss", e.g.
      * "14:53:03". Time zone offset is zero (UTC).
      */
-    public static String formatUTCDateOnly(DateTime dateTime) {
+    public static String formatUtcDateOnly(DateTime dateTime) {
         return ISO_DATE_FORMATTER.print(dateTime);
     }
 

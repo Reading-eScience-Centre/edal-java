@@ -26,44 +26,44 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.ncwms;
+package uk.ac.rdg.resc.edal.wms.util;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-
-import uk.ac.rdg.resc.edal.ncwms.config.NcwmsConfig;
-import uk.ac.rdg.resc.edal.wms.WmsServlet;
+import java.util.List;
 
 /**
- * Servlet implementation class NcWmsServlet
+ * Encapsulates some server metadata for a WMS server
+ *
+ * @author Guy Griffiths
  */
-public class NcwmsServlet extends WmsServlet implements Servlet {
-    private static final long serialVersionUID = 1L;
+public interface ServerInfo {
+    /**
+     * @return The name of this server
+     */
+    public String getName();
+    
+    /**
+     * @return Short descriptive text about this server
+     */
+    public String getAbstract();
+    
+    /**
+     * @return A list of keywords which apply to this server
+     */
+    public List<String> getKeywords();
+    
+    /**
+     * @return The maximum number of layers which can be requested in the same
+     *         image.
+     */
+    public int getMaxSimultaneousLayers();
 
     /**
-     * @see WmsServlet#WmsServlet()
+     * @return The maximum image width this server supports
      */
-    public NcwmsServlet() {
-        super();
-    }
+    public int getMaxImageWidth();
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        NcwmsConfig.shutdown();
-    }
-
-    @Override
-    public void init(ServletConfig servletConfig) throws ServletException {
-        super.init(servletConfig);
-        Object config = servletConfig.getServletContext().getAttribute("NcwmsCatalogue");
-        if (config instanceof NcwmsCatalogue) {
-            NcwmsCatalogue ncwmsCatalogue = (NcwmsCatalogue) config;
-            setCatalogue(ncwmsCatalogue);
-        } else {
-            throw new ServletException(
-                    "ncWMS configuration object is incorrect type.  The \"NcwmsConfig\" attribute of the ServletContext has been incorrectly set.");
-        }
-    }
+    /**
+     * @return The maximum image height this server supports
+     */
+    public int getMaxImageHeight();
 }

@@ -136,6 +136,7 @@ public class ContourLayer extends ImageLayer {
     @XmlElement(name = "LabelEnabled")
     private Boolean labelEnabled = true;
     
+    @SuppressWarnings("unused")
     private ContourLayer() {
     }
     

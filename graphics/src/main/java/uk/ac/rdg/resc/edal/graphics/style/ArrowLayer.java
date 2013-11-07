@@ -55,6 +55,7 @@ public class ArrowLayer extends ImageLayer {
 
     private Integer arrowSize = 8;
 
+    @SuppressWarnings("unused")
     private ArrowLayer() {
     }
     

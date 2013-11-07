@@ -171,7 +171,7 @@ public enum DataReadingStrategy {
                             targetPoint[0] });
                 }
             }
-            return null;
+            return ret;
         }
     },
 

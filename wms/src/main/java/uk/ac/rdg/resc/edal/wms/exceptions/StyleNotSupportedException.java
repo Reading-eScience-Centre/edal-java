@@ -26,44 +26,22 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.ncwms;
+package uk.ac.rdg.resc.edal.wms.exceptions;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
-import uk.ac.rdg.resc.edal.ncwms.config.NcwmsConfig;
-import uk.ac.rdg.resc.edal.wms.WmsServlet;
-
-/**
- * Servlet implementation class NcWmsServlet
- */
-public class NcwmsServlet extends WmsServlet implements Servlet {
+public class StyleNotSupportedException extends EdalException {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * @see WmsServlet#WmsServlet()
-     */
-    public NcwmsServlet() {
-        super();
+    public StyleNotSupportedException(String message) {
+        super(message);
     }
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        NcwmsConfig.shutdown();
+    public StyleNotSupportedException(String message, String code) {
+        super(message, code);
     }
 
-    @Override
-    public void init(ServletConfig servletConfig) throws ServletException {
-        super.init(servletConfig);
-        Object config = servletConfig.getServletContext().getAttribute("NcwmsCatalogue");
-        if (config instanceof NcwmsCatalogue) {
-            NcwmsCatalogue ncwmsCatalogue = (NcwmsCatalogue) config;
-            setCatalogue(ncwmsCatalogue);
-        } else {
-            throw new ServletException(
-                    "ncWMS configuration object is incorrect type.  The \"NcwmsConfig\" attribute of the ServletContext has been incorrectly set.");
-        }
+    public StyleNotSupportedException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
