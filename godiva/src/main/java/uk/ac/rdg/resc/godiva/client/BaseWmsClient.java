@@ -1,3 +1,31 @@
+/*******************************************************************************
+ * Copyright (c) 2013 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.godiva.client;
 
 import java.util.ArrayList;
@@ -200,7 +228,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     private void initBaseWms() {
         loadingCount = 0;
-        mapArea = new MapArea(mapWidth, mapHeight, this, proxyUrl);
+        mapArea = getMapArea();
 
         /*
          * Call the subclass initialisation
@@ -217,6 +245,15 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * Now request the menu from the ncWMS server
          */
         requestAndPopulateMenu();
+    }
+    
+    /**
+     * @return A new {@link MapArea}. This will be called once. Subclasses can
+     *         override this method to use specialised subclasses of
+     *         {@link MapArea}
+     */
+    protected MapArea getMapArea() {
+        return new MapArea(mapWidth, mapHeight, this, proxyUrl);
     }
 
     /**
@@ -299,7 +336,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         layerDetailsLoaded = false;
         dateTimeDetailsLoaded = false;
         minMaxDetailsLoaded = false;
-
+        
         final LayerRequestBuilder getLayerDetailsRequest = new LayerRequestBuilder(layerId,
                 proxyUrl + wmsUrl, currentTime);
 
@@ -344,7 +381,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                      */
                     updateMapBase(layerId);
                 } catch (Exception e) {
-                    invalidJson(e, getLayerDetailsRequest.getUrl());
+                    invalidJson(e, response.getText(), getLayerDetailsRequest.getUrl());
                 } finally {
                     /*
                      * Indicate that we have finished this loading operation
@@ -445,10 +482,10 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         if (widgetCollection.getTimeSelector().isContinuous()) {
             /*
              * Continuous time ranges need both a "time" (a range) and a
-             * "colorby/time" (single value) from the time selector
+             * "targettime" (single value) from the time selector
              */
             if (widgetCollection.getTimeSelector().getSelectedDateTime() != null) {
-                parameters.put("colorby/time", widgetCollection.getTimeSelector()
+                parameters.put("TARGETTIME", widgetCollection.getTimeSelector()
                         .getSelectedDateTime());
             }
             if (widgetCollection.getTimeSelector().getSelectedDateTimeRange() != null) {
@@ -470,7 +507,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
              * "colorby/depth" (single value) from the elevation selector
              */
             if (widgetCollection.getElevationSelector().getSelectedElevation() != null) {
-                parameters.put("colorby/depth", widgetCollection.getElevationSelector()
+                parameters.put("TARGETELEVATION", widgetCollection.getElevationSelector()
                         .getSelectedElevation());
             }
             if (widgetCollection.getElevationSelector().getSelectedElevationRange() != null) {
@@ -517,11 +554,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     if (response.getText() != null && !response.getText().isEmpty()) {
                         JSONValue jsonMap = JSONParser.parseLenient(response.getText());
                         JSONObject parentObj = jsonMap.isObject();
-                        JSONNumber minJsonNumber = parentObj.get("min").isNumber();
-                        JSONNumber maxJsonNumber = parentObj.get("max").isNumber();
-
-                        double min = minJsonNumber == null ? -50 : minJsonNumber.doubleValue();
-                        double max = maxJsonNumber == null ? 50 : maxJsonNumber.doubleValue();
+                        JSONNumber minNum = parentObj.get("min").isNumber();
+                        JSONNumber maxNum = parentObj.get("max").isNumber();
+                        
+                        double min = minNum == null ? -50 : minNum.doubleValue();
+                        double max = maxNum == null ? 50 : maxNum.doubleValue();
                         /*
                          * Call the rangeLoaded method. All this does it set the
                          * range on the appropriate widget, but subclasses may
@@ -531,7 +568,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         rangeLoaded(layerId, min, max);
                     }
                 } catch (Exception e) {
-                    invalidJson(e, getMinMaxRequest.getUrl());
+                    invalidJson(e, response.getText(), getMinMaxRequest.getUrl());
                 } finally {
                     /*
                      * Set the state correctly and update the map, regardless of
@@ -658,30 +695,32 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * features. This usually corresponds to in-situ data, but not
          * necessarily)
          */
-        widgetCollection.getTimeSelector().setContinuous(layerDetails.isMultiFeature());
-        widgetCollection.getElevationSelector().setContinuous(layerDetails.isMultiFeature());
-        mapArea.setMultiFeature(layerDetails.isMultiFeature());
+        widgetCollection.getTimeSelector().setContinuous(layerDetails.isContinuousT());
+        widgetCollection.getElevationSelector().setContinuous(layerDetails.isContinuousZ());
+        mapArea.setMultiFeature(layerDetails.isContinuousT() || layerDetails.isContinuousZ());
 
-        if (layerDetails.isMultiFeature()) {
+        if (layerDetails.isContinuousT()) {
             /*
-             * Set all options which depend on this being a multi-feature layer
+             * Set all options which depend on this being a layer with a continuous t-axis
              */
             if (layerDetails.getStartTime().equals(layerDetails.getEndTime())) {
-                widgetCollection.getTimeSelector().populateDates(null);
+                /*
+                 * We have a continuous axis with one value.  We can treat it as non-continuous...
+                 */
+                widgetCollection.getTimeSelector().setContinuous(false);
+                String[] split = layerDetails.getStartTime().split("T");
+                List<String> date = new ArrayList<String>();
+                date.add(split[0]);
+                widgetCollection.getTimeSelector().populateDates(date);
+                List<String> time = new ArrayList<String>();
+                time.add(split[1]);
+                widgetCollection.getTimeSelector().populateTimes(time);
+                dateTimeDetailsLoaded = true;
             } else {
                 List<String> startEndDates = new ArrayList<String>();
                 startEndDates.add(layerDetails.getStartTime());
                 startEndDates.add(layerDetails.getEndTime());
                 widgetCollection.getTimeSelector().populateDates(startEndDates);
-            }
-
-            if (layerDetails.getStartZ().equals(layerDetails.getEndZ())) {
-                widgetCollection.getElevationSelector().populateElevations(null);
-            } else {
-                List<String> startEndZs = new ArrayList<String>();
-                startEndZs.add(layerDetails.getStartZ());
-                startEndZs.add(layerDetails.getEndZ());
-                widgetCollection.getElevationSelector().populateElevations(startEndZs);
             }
             if (layerDetails.getNearestDateTime() != null) {
                 widgetCollection.getTimeSelector()
@@ -691,17 +730,35 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             }
         } else {
             /*
-             * Set all options which depend on this being a single-feature layer
+             * Set all options which depend on this having a discrete t-axis
              */
             widgetCollection.getTimeSelector().populateDates(layerDetails.getAvailableDates());
-            widgetCollection.getElevationSelector().populateElevations(
-                    layerDetails.getAvailableZs());
             if (layerDetails.getNearestDateTime() != null) {
                 nearestTime = layerDetails.getNearestDateTime();
                 widgetCollection.getTimeSelector().selectDate(layerDetails.getNearestDate());
             } else {
                 dateTimeDetailsLoaded = true;
             }
+        }
+        if (layerDetails.isContinuousZ()) {
+            /*
+             * Set all options which depend on this being a layer with a continuous z-axis
+             */
+            
+            if (layerDetails.getStartZ().equals(layerDetails.getEndZ())) {
+                widgetCollection.getElevationSelector().populateElevations(null);
+            } else {
+                List<String> startEndZs = new ArrayList<String>();
+                startEndZs.add(layerDetails.getStartZ());
+                startEndZs.add(layerDetails.getEndZ());
+                widgetCollection.getElevationSelector().populateElevations(startEndZs);
+            }
+        } else {
+            /*
+             * Set all options which depend on this having a discrete z-axis
+             */
+            widgetCollection.getElevationSelector().populateElevations(
+                    layerDetails.getAvailableZs());
         }
     }
 
@@ -711,6 +768,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     private void updateMapBase(String layerUpdated) {
         if (layerDetailsLoaded && dateTimeDetailsLoaded && minMaxDetailsLoaded) {
+            mapArea.updatePos();
             updateMap(mapArea, layerUpdated);
         }
     }
@@ -725,8 +783,9 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            The exception which was caught
      * @param url
      *            The URL which caused the exception
+     * @param string 
      */
-    protected void invalidJson(Exception e, String url) {
+    protected void invalidJson(Exception e, String response, String url) {
         e.printStackTrace();
         final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(mapArea);
         VerticalPanel v = new VerticalPanel();
@@ -737,6 +796,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             v.add(new Label("Please try again in a short while"));
             v.add(new Label("The URL which behaved unexpectedly was:"));
             v.add(new Label(url));
+            v.add(new Label("The response from the server was:"));
+            v.add(new Label(response));
         }
         popup.setHTML("Server Error");
         popup.setWidget(v);
@@ -754,7 +815,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     @Override
     public void layerSelected(String wmsUrl, String layerId, boolean autoZoomAndPalette) {
         requestLayerDetails(wmsUrl, layerId, getCurrentTime(), autoZoomAndPalette);
-        updateMapBase(layerId);
     }
 
     @Override
@@ -826,10 +886,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     availableTimesLoaded(layerId, getAvailableTimesteps(), nearestTime);
                     datetimeSelected(layerId, getWidgetCollection(layerId).getTimeSelector()
                             .getSelectedDateTime());
-                    dateTimeDetailsLoaded = true;
-                    updateMapBase(layerId);
                 } catch (Exception e) {
-                    invalidJson(e, getTimeRequest.getUrl());
+                    invalidJson(e, response.getText(), getTimeRequest.getUrl());
                 } finally {
                     setLoading(false);
                 }

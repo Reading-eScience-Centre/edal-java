@@ -1,0 +1,74 @@
+/*******************************************************************************
+ * Copyright (c) 2013 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
+package uk.ac.rdg.resc.edal.metadata;
+
+import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+
+/**
+ * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
+ * This is used to ensure that {@link VariableMetadata} supplied to
+ * {@link GridDataset}s have gridded domains, but it will not be used to
+ * constrain any return types (which are all just {@link VariableMetadata})
+ * 
+ * @author Guy
+ */
+public class GridVariableMetadata extends VariableMetadata {
+
+    public GridVariableMetadata(String id, Parameter parameter, HorizontalGrid hDomain,
+            VerticalAxis zDomain, TimeAxis tDomain) {
+        super(id, parameter, hDomain, zDomain, tDomain);
+    }
+
+    /**
+     * Returns the {@link HorizontalGrid} of the variable.
+     */
+    @Override
+    public HorizontalGrid getHorizontalDomain() {
+        return (HorizontalGrid) super.getHorizontalDomain();
+    }
+
+    /**
+     * Returns the {@link VerticalAxis} of the variable
+     */
+    @Override
+    public VerticalAxis getVerticalDomain() {
+        return (VerticalAxis) super.getVerticalDomain();
+    }
+
+    /**
+     * Returns the {@link TimeAxis} of the variable
+     */
+    @Override
+    public TimeAxis getTemporalDomain() {
+        return (TimeAxis) super.getTemporalDomain();
+    }
+}

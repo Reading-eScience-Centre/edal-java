@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WMS_Capabilities
+        version="1.3.0"
+        updateSequence="$catalogue.serverLastUpdate"
+        xmlns="http://www.opengis.net/wms"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
+    <Service>
+        <Name>WMS</Name>
+        <Title>$catalogue.serverInfo.name</Title>
+        <Abstract>$catalogue.serverInfo.abstract</Abstract>
+        <KeywordList>
+#foreach($keyword in $catalogue.serverInfo.keywords)        
+            <Keyword>$keyword</Keyword>
+#end            
+        </KeywordList>
+        <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
+        <ContactInformation>
+            <ContactPersonPrimary>
+                <ContactPerson>$catalogue.server.contactInfo.name</ContactPerson>
+                <ContactOrganization>$catalogue.server.contactInfo.organisation</ContactOrganization>
+            </ContactPersonPrimary>
+            <ContactVoiceTelephone>$catalogue.server.contactInfo.telephone</ContactVoiceTelephone>
+            <ContactElectronicMailAddress>$catalogue.server.contactInfo.email</ContactElectronicMailAddress>
+        </ContactInformation>
+        <Fees>none</Fees>
+        <AccessConstraints>none</AccessConstraints>
+        <LayerLimit>$catalogue.serverInfo.maxSimultaneousLayers</LayerLimit>
+        <MaxWidth>$catalogue.serverInfo.maxImageWidth</MaxWidth>
+        <MaxHeight>$catalogue.serverInfo.maxImageHeight</MaxHeight>
+    </Service>
+    <Capability>
+        <Request>
+            <GetCapabilities>
+                <Format>text/xml</Format>
+                <DCPType>
+                    <HTTP>
+                        <Get>
+                            <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
+                        </Get>
+                    </HTTP>
+                </DCPType>
+            </GetCapabilities>
+            <GetMap>
+#foreach($imageFormat in $supportedImageFormats) 
+                <Format>$imageFormat</Format>
+#end                
+                <DCPType>
+                    <HTTP>
+                        <Get>
+                            <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
+                        </Get>
+                    </HTTP>
+                </DCPType>
+            </GetMap>
+            <GetFeatureInfo>
+#foreach($featureInfoFormat in $supportedFeatureInfoFormats) 
+                <Format>$featureInfoFormat</Format>
+#end                
+                <DCPType>
+                    <HTTP>
+                        <Get>
+                            <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
+                        </Get>
+                    </HTTP>
+                </DCPType>
+            </GetFeatureInfo>
+        </Request>
+        <Exception>
+            <Format>XML</Format>
+        </Exception>
+        <Layer>
+            <Title>$catalogue.serverName</Title>
+#foreach($supportedCrs in $supportedCrsCodes)
+            <CRS>$supportedCrs</CRS>
+#end            
+#foreach($dataset in $datasets)            
+            <Layer>
+                <Title>$catalogue.getDatasetTitle($dataset.id)</Title>
+#foreach($variable in $dataset.topLevelVariables)
+## Recursively(?) insert layers here.  Depends how we want to implement layer structure in Capabilities doc...
+#layer($dataset $variable $verbose $variable.children)
+#end                
+            </Layer>
+#end        
+        </Layer>
+    </Capability>
+</WMS_Capabilities>
+##
+##
+## End of actual capabilities document.  Layer macro follows.
+##
+##
+#macro(layer $dataset $variableMetadata $verboseTimes $children)
+#set($parent = $children.size() > 0)
+#set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
+#set($layerMetadata = $catalogue.getLayerMetadata($layerName))
+#set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
+    <Layer #if(!$parent && $layerMetadata.queryable)queryable="1"#end>
+#if($variableMetadata.plottable && $layerName && !$parent)
+        <Name>$layerName</Name>
+#end
+#if($layerMetadata.title)
+        <Title>$layerMetadata.title</Title>
+#end
+#if($layerMetadata.description)
+        <Abstract>$layerMetadata.description</Abstract>
+#end
+#if($parent)
+#if($supportedStyles.size() > 0)
+#layer($dataset $variableMetadata $verbose false)
+#end
+#foreach($child in $variableMetadata.children)
+#layer($dataset $child $verbose $child.children)
+#end
+#else
+#if($variableMetadata.horizontalDomain.geographicBoundingBox)
+#set($bbox = $variableMetadata.horizontalDomain.geographicBoundingBox)
+        <EX_GeographicBoundingBox>
+            <westBoundLongitude>$bbox.westBoundLongitude</westBoundLongitude>
+            <eastBoundLongitude>$bbox.westBoundLongitude</eastBoundLongitude>
+            <southBoundLatitude>$bbox.southBoundLatitude</southBoundLatitude>
+            <northBoundLatitude>$bbox.northBoundLatitude</northBoundLatitude>
+        </EX_GeographicBoundingBox>
+        <BoundingBox CRS="CRS:84" minx="$bbox.westBoundLongitude" maxx="$bbox.eastBoundLongitude" miny="$bbox.southBoundLatitude" maxy="$bbox.northBoundLatitude"/>
+#end
+#if($variableMetadata.temporalDomain)
+## We have a non-null temporal domain
+#set($tDomain = $variableMetadata.temporalDomain)
+#if($GISUtils.isTemporalDomainTimeAxis($tDomain))
+## Discrete temporal domain
+        <Dimension name="time" units="$WmsUtils.getTimeAxisUnits($tDomain.chronology)" multipleValues="true" current="true" default="$TimeUtils.dateTimeToISO8601($GISUtils.getClosestToCurrentTime($tDomain.coordinateValues))">
+#if($verboseTimes)
+#foreach($tval in $tDomain.coordinateValues)
+            $TimeUtils.dateTimeToISO8601($tval)#if($foreach.hasNext),#end
+#end            
+#else
+            $TimeUtils.getTimeStringForCapabilities($tDomain.coordinateValues)
+#end
+        </Dimension>
+#else
+## Continuous temporal domain
+        <Dimension name="time" units="$WmsUtils.getTimeAxisUnits($tDomain.chronology)}" multipleValues="true" current="true" default="$TimeUtils.dateTimeToISO8601($tDomain.extent.high)}">
+            $TimeUtils.dateTimeToISO8601($tDomain.extent.low)/$TimeUtils.dateTimeToISO8601($tDomain.extent.high)/0
+        </Dimension>
+#end                    
+#end
+##
+#if($variableMetadata.verticalDomain)
+## We have a non-null vertical domain
+#set($zDomain = $variableMetadata.verticalDomain)
+#if($GISUtils.isVerticalDomainVerticalAxis($zDomain))
+## Discrete vertical domain
+## Domain is a VerticalAxis
+        <Dimension name="elevation" units="$zDomain.verticalCrs.units" default="$GISUtils.getClosestElevationToSurface($zDomain)">
+#foreach($zval in $vDomain.coordinateValues)
+            $zval#if($foreach.hasNext),#end
+#end            
+        </Dimension>
+#else
+## Continuous vertical domain
+        <Dimension name="elevation" units="$zDomain.verticalCrs.units" default="$zDomain.extent.low">
+            $vDomain.extent.low/$vDomain.extent.high/0
+        </Dimension>
+#end
+#end
+#foreach($style in $supportedStyles)
+#if($style.usesPalette())
+#foreach($paletteName in $availablePalettes)
+        <Style>
+            <Name>$style.styleName/$paletteName</Name>
+            <Title>$style.styleName/$paletteName</Title>
+            <Abstract>$style.styleName style, using the $paletteName palette</Abstract>
+            <LegendURL width="110" height="264">
+                <Format>image/png</Format>
+                <OnlineResource xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$paletteName&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>
+            </LegendURL>
+        </Style>
+#end
+#else
+        <Style>
+            <Name>$style.styleName</Name>
+            <Title>$style.styleName</Title>
+            <Abstract>$style.styleName style</Abstract>
+        </Style>
+#end
+#end
+#end
+</Layer>
+#end

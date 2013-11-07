@@ -1,3 +1,31 @@
+/*******************************************************************************
+ * Copyright (c) 2013 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.godiva.client.requests;
 
 import java.util.ArrayList;
@@ -61,10 +89,8 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 err.handleError(new IndexOutOfBoundsException(
                         "Wrong number of elements for bounding box: " + bboxArr.size()));
             } else {
-                layerDetails.setExtents(bboxArr.get(0).isString().stringValue() + ","
-                        + bboxArr.get(1).isString().stringValue() + ","
-                        + bboxArr.get(2).isString().stringValue() + ","
-                        + bboxArr.get(3).isString().stringValue());
+                layerDetails.setExtents(bboxArr.get(0) + "," + bboxArr.get(1) + ","
+                        + bboxArr.get(2) + "," + bboxArr.get(3));
             }
         }
 
@@ -75,8 +101,7 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 err.handleError(new IndexOutOfBoundsException(
                         "Wrong number of elements for scale range: " + scaleRangeArr.size()));
             } else {
-                layerDetails.setScaleRange(scaleRangeArr.get(0).isString().stringValue() + ","
-                        + scaleRangeArr.get(1).isString().stringValue());
+                layerDetails.setScaleRange(scaleRangeArr.get(0) + "," + scaleRangeArr.get(1));
             }
         }
 
@@ -128,8 +153,10 @@ public abstract class LayerRequestCallback implements RequestCallback {
             }
         }
 
-        // If we have different times, we may (will?) have a nearest
-        // time string.
+        /*
+         * If we have different times, we may (will?) have a nearest time
+         * string.
+         */
         JSONValue nearestTimeJson = parentObj.get("nearestTimeIso");
         if (nearestTimeJson != null) {
             String nearestTime = nearestTimeJson.isString().stringValue();
@@ -139,14 +166,21 @@ public abstract class LayerRequestCallback implements RequestCallback {
             }
         }
 
-        boolean multiFeature = false;
-        JSONValue multiFeatureJson = parentObj.get("multiFeature");
-        if (multiFeatureJson != null) {
-            multiFeature = multiFeatureJson.isBoolean().booleanValue();
+        boolean continuousT = false;
+        JSONValue continuousTJson = parentObj.get("continuousT");
+        if (continuousTJson != null) {
+            continuousT = continuousTJson.isBoolean().booleanValue();
         }
-        layerDetails.setMultiFeature(multiFeature);
+        layerDetails.setContinuousT(continuousT);
+        
+        boolean continuousZ = false;
+        JSONValue continuousZJson = parentObj.get("continuousZ");
+        if (continuousZJson != null) {
+            continuousZ = continuousZJson.isBoolean().booleanValue();
+        }
+        layerDetails.setContinuousZ(continuousZ);
 
-        if (multiFeature) {
+        if (continuousT) {
             JSONValue startTimeJson = parentObj.get("startTime");
             if (startTimeJson != null) {
                 layerDetails.setStartTime(startTimeJson.isString().stringValue());
@@ -154,23 +188,6 @@ public abstract class LayerRequestCallback implements RequestCallback {
             JSONValue endTimeJson = parentObj.get("endTime");
             if (endTimeJson != null) {
                 layerDetails.setEndTime(endTimeJson.isString().stringValue());
-            }
-
-            JSONValue startZJson = parentObj.get("startZ");
-            if (startZJson != null) {
-                layerDetails.setStartZ(startZJson.isString().stringValue());
-            }
-            JSONValue endZJson = parentObj.get("endZ");
-            if (endZJson != null) {
-                layerDetails.setEndZ(endZJson.isString().stringValue());
-            }
-            JSONValue zUnitsJson = parentObj.get("zUnits");
-            if (zUnitsJson != null) {
-                layerDetails.setZUnits(zUnitsJson.isString().stringValue());
-            }
-            JSONValue zPositiveJson = parentObj.get("zPositive");
-            if (zPositiveJson != null) {
-                layerDetails.setZPositive(zPositiveJson.isBoolean().booleanValue());
             }
         } else {
             JSONValue datesJson = parentObj.get("datesWithData");
@@ -194,7 +211,23 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 }
                 layerDetails.setAvailableDates(availableDates);
             }
-
+        }
+        if (continuousZ) {
+            JSONValue zvalsJson = parentObj.get("zaxis");
+            if (zvalsJson != null) {
+                JSONObject zvalsObj = zvalsJson.isObject();
+                layerDetails.setZUnits(zvalsObj.get("units").isString().stringValue());
+                layerDetails.setZPositive(zvalsObj.get("positive").isBoolean().booleanValue());
+                JSONValue startZJson = zvalsObj.get("startZ");
+                if (startZJson != null) {
+                    layerDetails.setStartZ(startZJson.isNumber().toString());
+                }
+                JSONValue endZJson = zvalsObj.get("endZ");
+                if (endZJson != null) {
+                    layerDetails.setEndZ(endZJson.isNumber().toString());
+                }
+            }
+        } else {
             JSONValue zvalsJson = parentObj.get("zaxis");
             if (zvalsJson != null) {
                 JSONObject zvalsObj = zvalsJson.isObject();

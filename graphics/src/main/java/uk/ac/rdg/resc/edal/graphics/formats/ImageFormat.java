@@ -37,9 +37,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import uk.ac.rdg.resc.edal.feature.FeatureCollection;
-import uk.ac.rdg.resc.edal.graphics.exceptions.InvalidFormatException;
-
 /**
  * Abstract superclass for all image formats. Only one instance of each subclass
  * will be created so subclasses must be thread safe. Subclasses should provide
