@@ -1,3 +1,31 @@
+/*******************************************************************************
+ * Copyright (c) 2013 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.godiva.client;
 
 import java.util.List;
@@ -18,6 +46,7 @@ import uk.ac.rdg.resc.godiva.client.state.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.UnitsInfoIF;
+import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF.OutOfRangeState;
 import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
@@ -255,7 +284,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
                     menuLoaded(menuTree);
                 } catch (Exception e) {
-                    invalidJson(e, getMenuRequest.getUrl());
+                    invalidJson(e, response.getText(), getMenuRequest.getUrl());
                 } finally {
                     setLoading(false);
                 }
@@ -331,24 +360,26 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * Get all of the relevant information to update the map
          */
         String currentTime = null;
-        String colorbyTime = null;
+        String targetTime = null;
         if (widgetCollection.getTimeSelector().isContinuous()) {
             currentTime = widgetCollection.getTimeSelector().getSelectedDateTimeRange();
-            colorbyTime = widgetCollection.getTimeSelector().getSelectedDateTime();
+            targetTime = widgetCollection.getTimeSelector().getSelectedDateTime();
         } else {
             currentTime = widgetCollection.getTimeSelector().getSelectedDateTime();
         }
 
         String currentElevation = null;
-        String colorbyElevation = null;
+        String targetElevation = null;
         if (widgetCollection.getElevationSelector().isContinuous()) {
             currentElevation = widgetCollection.getElevationSelector().getSelectedElevationRange();
-            colorbyElevation = widgetCollection.getElevationSelector().getSelectedElevation();
+            targetElevation = widgetCollection.getElevationSelector().getSelectedElevation();
         } else {
             currentElevation = widgetCollection.getElevationSelector().getSelectedElevation();
         }
 
         String currentPalette = widgetCollection.getPaletteSelector().getSelectedPalette();
+        String aboveMaxString = widgetCollection.getPaletteSelector().getAboveMaxString();
+        String belowMinString = widgetCollection.getPaletteSelector().getBelowMinString();
         String currentStyle = widgetCollection.getPaletteSelector().getSelectedStyle();
         String currentScaleRange = widgetCollection.getPaletteSelector().getScaleRange();
         int nColourBands = widgetCollection.getPaletteSelector().getNumColorBands();
@@ -359,10 +390,11 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * WMS layer because we only have a single layer ID (WMS_LAYER_ID)
          */
         mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID,
-                layerSelector.getSelectedId(), currentTime, colorbyTime, currentElevation,
-                colorbyElevation, currentStyle, currentPalette, currentScaleRange, nColourBands,
-                logScale, widgetCollection.getElevationSelector().getNElevations() > 1,
-                widgetCollection.getTimeSelector().hasMultipleTimes());
+                layerSelector.getSelectedId(), currentTime, targetTime, currentElevation,
+                targetElevation, currentStyle, currentPalette, aboveMaxString, belowMinString,
+                currentScaleRange, nColourBands, logScale, widgetCollection.getElevationSelector()
+                        .getNElevations() > 1, widgetCollection.getTimeSelector()
+                        .hasMultipleTimes());
 
         /*
          * Set the opacity after updating the map, otherwise it doesn't work
@@ -542,6 +574,28 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 widgetCollection.getPaletteSelector().setNumColorBands(
                         Integer.parseInt(numColorBands));
             }
+            
+            String aboveMaxString = permalinkParamsMap.get("aboveMaxColor");
+            if(aboveMaxString != null) {
+                if("extend".equalsIgnoreCase(aboveMaxString)) {
+                    widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.EXTEND);
+                } else if("transparent".equalsIgnoreCase(aboveMaxString)) {
+                    widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.TRANSPARENT);
+                } else if("0x000000".equalsIgnoreCase(aboveMaxString)) {
+                    widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.BLACK);
+                }
+            }
+            
+            String belowMinString = permalinkParamsMap.get("belowMinColor");
+            if(belowMinString != null) {
+                if("extend".equalsIgnoreCase(belowMinString)) {
+                    widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.EXTEND);
+                } else if("transparent".equalsIgnoreCase(belowMinString)) {
+                    widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.TRANSPARENT);
+                } else if("0x000000".equalsIgnoreCase(belowMinString)) {
+                    widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.BLACK);
+                }
+            }
 
             String currentElevation = permalinkParamsMap.get("elevation");
             if (currentElevation != null) {
@@ -551,6 +605,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             String currentPalette = permalinkParamsMap.get("palette");
             if (currentPalette != null) {
                 widgetCollection.getPaletteSelector().selectPalette(currentPalette);
+            } else {
+                widgetCollection.getPaletteSelector().selectPalette("default");
             }
 
             String currentStyle = permalinkParamsMap.get("style");
@@ -607,7 +663,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String urlParams = "dataset=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
                 + "&numColorBands=" + paletteSelector.getNumColorBands() + "&logScale="
                 + paletteSelector.isLogScale() + "&zoom=" + zoom + "&centre=" + centre.lon() + ","
-                + centre.lat();
+                + centre.lat() + "&abovemaxcolor=" + paletteSelector.getAboveMaxString()
+                + "&belowmincolor=" + paletteSelector.getBelowMinString();
 
         TimeSelectorIF timeSelector = widgetCollection.getTimeSelector();
         ElevationSelectorIF elevationSelector = widgetCollection.getElevationSelector();
@@ -633,7 +690,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 urlParams += "&time=" + timeSelector.getSelectedDateTimeRange();
             }
             if (timeSelector.getSelectedDateTime() != null) {
-                urlParams += "&colorby/time=" + timeSelector.getSelectedDateTime();
+                urlParams += "&targettime=" + timeSelector.getSelectedDateTime();
             }
             if (timeSelector.getRange() != null) {
                 urlParams += "&range=" + timeSelector.getRange();
@@ -646,7 +703,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         if(elevationSelector.isContinuous()){
             if (elevationSelector.getSelectedElevationRange() != null) {
                 currentElevation = elevationSelector.getSelectedElevation();
-                urlParams += "&colorby/depth=" + currentElevation;
+                urlParams += "&targetelevation=" + currentElevation;
             }
             if (elevationSelector.getSelectedElevationRange() != null) {
                 currentElevation = elevationSelector.getSelectedElevationRange();
@@ -714,7 +771,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
     protected void menuLoaded(LayerMenuItem menuTree) {
         if (menuTree.isLeaf()) {
-            menuTree.addChildItem(new LayerMenuItem("No georeferencing data found!", null, null,
+            menuTree.addChildItem(new LayerMenuItem("No datasets found!", null, null,
                     false, null));
         }
         layerSelector.populateLayers(menuTree);
@@ -723,9 +780,14 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         if (permalinking) {
             String currentLayer = permalinkParamsMap.get("layer");
-            String currentWms = URL.decode(permalinkParamsMap.get("dataset"));
             if (currentLayer != null) {
-                layerSelector.selectLayer(currentLayer, currentWms, false);
+                String datasetUrl = permalinkParamsMap.get("dataset");
+                if(datasetUrl == null || "".equals(datasetUrl)) {
+                    layerSelector.selectLayer(currentLayer, "wms", false);
+                } else {
+                    String currentWms = URL.decode(datasetUrl);
+                    layerSelector.selectLayer(currentLayer, currentWms, false);
+                }
             }
         }
     }

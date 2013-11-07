@@ -32,8 +32,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
-import uk.ac.rdg.resc.edal.feature.FeatureCollection;
-
 /**
  * Abstract superclass for simple image formats that do not require information
  * about the layer, time values, bounding box etc to render an image.

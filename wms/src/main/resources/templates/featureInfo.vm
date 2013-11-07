@@ -1,0 +1,16 @@
+<FeatureInfoResponse>
+    <longitude>$position.x</longitude>
+    <latitude>$position.y</latitude>
+#foreach( $info in $featureInfo )
+    <Feature>
+        <layer>$info.layerName</layer>
+        <FeatureInfo>
+#if( !$info.value )
+            <value>none</value>
+#else
+            <value>$info.value</value>
+#end
+        </FeatureInfo>
+    </Feature>
+#end
+</FeatureInfoResponse>
