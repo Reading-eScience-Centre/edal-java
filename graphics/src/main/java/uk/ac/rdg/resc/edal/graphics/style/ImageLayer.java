@@ -33,7 +33,6 @@ import java.awt.image.BufferedImage;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
-import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
@@ -71,7 +70,7 @@ public abstract class ImageLayer extends Drawable {
             final FeatureCatalogue catalogue) throws EdalException {
         drawIntoImage(image, new DataReader() {
             @Override
-            public Array2D<Number> getDataForLayerName(String layerId) throws BadTimeFormatException {
+            public Array2D<Number> getDataForLayerName(String layerId) throws EdalException {
                 MapFeatureAndMember featureAndMemberName = catalogue.getFeatureAndMemberName(
                         layerId, params);
                 final Array2D<Number> values = featureAndMemberName.getMapFeature().getValues(

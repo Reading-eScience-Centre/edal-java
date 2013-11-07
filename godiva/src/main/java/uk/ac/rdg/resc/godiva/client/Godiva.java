@@ -771,7 +771,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
     protected void menuLoaded(LayerMenuItem menuTree) {
         if (menuTree.isLeaf()) {
-            menuTree.addChildItem(new LayerMenuItem("No georeferencing data found!", null, null,
+            menuTree.addChildItem(new LayerMenuItem("No datasets found!", null, null,
                     false, null));
         }
         layerSelector.populateLayers(menuTree);

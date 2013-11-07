@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.wms;
 
 import java.awt.Color;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -50,6 +51,8 @@ import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleJSONParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
+import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 
 public class GetMapStyleParams {
 
@@ -242,6 +245,43 @@ public class GetMapStyleParams {
 
         String plotStyleName = styleParts[0];
 
+        List<StyleDef> supportedStyles = catalogue.getSupportedStyles(catalogue
+                .getVariableMetadataFromId(layerName));
+        if (supportedStyles.size() == 0) {
+            /*
+             * We have no supported styles for this layer
+             */
+            throw new StyleNotSupportedException("The layer " + layerName
+                    + " cannot be plotted - no styles support it.");
+        }
+        if ("default".equals(plotStyleName)) {
+            /*
+             * We want the default style. However, since different layer types
+             * support different defaults, there is not a single style name
+             * which will fulfil this. To get around this, we add styles of the
+             * form default-xxxxx.xml to the styles directory. Then we check
+             * here if any of the supported styles for this layer start with
+             * "default". If not, then no default style is supported, and we
+             * throw an exception.
+             */
+
+            boolean supported = false;
+            for (StyleDef supportedStyle : supportedStyles) {
+                if (supportedStyle.getStyleName().startsWith("default")) {
+                    plotStyleName = supportedStyle.getStyleName();
+                    supported = true;
+                    break;
+                }
+            }
+            if (!supported) {
+                /*
+                 * This type of layer doesn't have a default style.
+                 */
+                throw new StyleNotSupportedException(
+                        "This type of layer has no supported default styles.  Please supply a named style");
+            }
+        }
+
         /*-
          * Choose the palette name:
          * a) from URL parameter, or failing that
@@ -330,7 +370,6 @@ public class GetMapStyleParams {
         Template template = velocityEngine.getTemplate("styles/" + plotStyleName.toLowerCase()
                 + ".xml");
 
-        
         /*
          * Set all of the variables for replacing in the template
          */
@@ -345,12 +384,13 @@ public class GetMapStyleParams {
         context.put("aboveMaxColor", GraphicsUtils.colourToString(aboveMaxColour));
 
         /*
-         * Now deal with the layer names 
+         * Now deal with the layer names
          * 
          * TODO: handle multiple/derived layers
          */
-        Map<String, String> layerKeysToLayerNames = catalogue.getStyleTemplateLayerNames(layerName, plotStyleName);
-        for(Entry<String, String> keyToLayerName : layerKeysToLayerNames.entrySet()) {
+        Map<String, String> layerKeysToLayerNames = catalogue.getStyleTemplateLayerNames(layerName,
+                plotStyleName);
+        for (Entry<String, String> keyToLayerName : layerKeysToLayerNames.entrySet()) {
             context.put(keyToLayerName.getKey(), keyToLayerName.getValue());
         }
 
@@ -371,7 +411,7 @@ public class GetMapStyleParams {
             /*
              * There is a problem parsing the XML
              */
-            throw new EdalException("Problem parsing XML template for style "+plotStyleName);
+            throw new EdalException("Problem parsing XML template for style " + plotStyleName);
         }
     }
 

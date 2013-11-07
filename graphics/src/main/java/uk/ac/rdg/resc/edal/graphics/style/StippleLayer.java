@@ -49,6 +49,7 @@ public class StippleLayer extends ImageLayer {
     @XmlElement(name = "Scale", required = true)
     private PatternScale scale;
 
+    @SuppressWarnings("unused")
     private StippleLayer() {
     }
     

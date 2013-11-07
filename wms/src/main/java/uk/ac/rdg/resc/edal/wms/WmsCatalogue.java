@@ -56,9 +56,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
-import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
-import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
-import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
@@ -66,6 +64,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.util.ContactInfo;
+import uk.ac.rdg.resc.edal.wms.util.ServerInfo;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
@@ -73,21 +72,17 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  * This class encapsulates the elements needed to implement a specific WMS.
  * Subclasses should extend this to implement their own configuration system.
  * 
- * This includes things like:
+ * This includes:
  * 
- * Global server settings
+ * <li>Global server settings
  * 
- * Overriding default WMS layer values (scale range, palette etc)
+ * <li>Contact information for the server
  * 
- * Whatever else I come across whilst coding WmsServlet
+ * <li>Retrieval/generation of layer names from dataset/variable IDs
  * 
- * TODO This Javadoc is a bit crap...
+ * <li>Defining default plotting parameters for WMS layers
  * 
- * TODO Make WmsCatalogue an interface, and rename this AbstractWmsCatalogue?
- * TODO Actually, perhaps this should be a combination of several different
- * interfaces?
- * 
- * @author Guy
+ * @author Guy Griffiths
  */
 public abstract class WmsCatalogue implements FeatureCatalogue {
     private static final Logger log = LoggerFactory.getLogger(WmsCatalogue.class);
@@ -157,35 +152,24 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
 
     @Override
     public MapFeatureAndMember getFeatureAndMemberName(String id, PlottingDomainParams params)
-            throws BadTimeFormatException {
+            throws EdalException {
         Dataset dataset = getDatasetFromLayerName(id);
         String variable = getVariableFromId(id);
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
-            try {
-                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variable)
-                        .getTemporalDomain();
-                Chronology chronology = null;
-                if (temporalDomain != null) {
-                    chronology = temporalDomain.getChronology();
-                }
-                MapFeature mapData = gridDataset.readMapData(CollectionUtils.setOf(variable),
-                        WmsUtils.getImageGrid(params), params.getTargetZ(),
-                        params.getTargetT(chronology));
-                /*
-                 * TODO Caching probably goes here
-                 */
-                return new MapFeatureAndMember(mapData, variable);
-            } catch (InvalidCrsException e) {
-                /*
-                 * TODO Make this method throw an appropriate exception
-                 */
-                e.printStackTrace();
-                return null;
-            } catch (DataReadingException e) {
-                e.printStackTrace();
-                return null;
+            TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variable)
+                    .getTemporalDomain();
+            Chronology chronology = null;
+            if (temporalDomain != null) {
+                chronology = temporalDomain.getChronology();
             }
+            MapFeature mapData = gridDataset.readMapData(CollectionUtils.setOf(variable),
+                    WmsUtils.getImageGrid(params), params.getTargetZ(),
+                    params.getTargetT(chronology));
+            /*
+             * TODO Caching probably goes here
+             */
+            return new MapFeatureAndMember(mapData, variable);
         } else {
             throw new UnsupportedOperationException("Currently only gridded data is supported");
         }
@@ -346,41 +330,10 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
         return new StyleDef(name, requiredChildren, usesPalette, needsNamedLayer);
     }
 
-    /*
-     * TODO These things are global server settings. Perhaps we should have a
-     * getServerSettings() method which holds these properties?
-     */
-
     /**
-     * @return The maximum number of layers which can be requested in the same
-     *         image.
+     * @return The main server metadata for this server
      */
-    public abstract int getMaxSimultaneousLayers();
-
-    /**
-     * @return The maximum image width this server supports
-     */
-    public abstract int getMaxImageWidth();
-
-    /**
-     * @return The maximum image height this server supports
-     */
-    public abstract int getMaxImageHeight();
-
-    /**
-     * @return The name of this server
-     */
-    public abstract String getServerName();
-
-    /**
-     * @return Short descriptive text about this server
-     */
-    public abstract String getServerAbstract();
-
-    /**
-     * @return A list of keywords which apply to this server
-     */
-    public abstract List<String> getServerKeywords();
+    public abstract ServerInfo getServerInfo();
 
     /**
      * @return The main contact information for this server
@@ -392,7 +345,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *         be generated for all datasets
      */
     public abstract boolean allowsGlobalCapabilities();
-    
+
     /**
      * @return The last time that data on this server was updated
      */
@@ -422,7 +375,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * @return The desired dataset
      */
     public abstract Dataset getDatasetFromId(String datasetId);
-    
+
     /**
      * Returns a {@link Dataset} based on a given layer name
      * 
@@ -430,7 +383,8 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The full layer name
      * @return The desired dataset
      */
-    public abstract Dataset getDatasetFromLayerName(String layerName);
+    public abstract Dataset getDatasetFromLayerName(String layerName)
+            throws WmsLayerNotFoundException;
 
     /**
      * Returns a variable ID based on a given layer name
@@ -439,7 +393,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The full layer name
      * @return The ID of the variable (within its {@link Dataset})
      */
-    public abstract String getVariableFromId(String layerName);
+    public abstract String getVariableFromId(String layerName) throws WmsLayerNotFoundException;
 
     /**
      * Returns the layer name based on the dataset and variable ID

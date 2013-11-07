@@ -29,18 +29,28 @@
 package uk.ac.rdg.resc.edal.wms.util;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.channels.FileChannel;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.jfree.util.Log;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.chrono.JulianChronology;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
@@ -50,7 +60,6 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
@@ -82,6 +91,7 @@ import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
  * @author Guy Griffiths
  */
 public class WmsUtils {
+    private static final Logger log = LoggerFactory.getLogger(WmsUtils.class);
     /**
      * The versions of the WMS standard that this server supports
      */
@@ -228,26 +238,6 @@ public class WmsUtils {
         return "unknown";
     }
 
-    /**
-     * Gets a list of styles supported by a specific layer.
-     * 
-     * @param metadata
-     * @return
-     */
-    public static List<StyleInfo> getSupportedStyles(VariableMetadata metadata) {
-        /*
-         * TODO Make this work. This will probably involve adding a type
-         * variable to VariableMetadata and selecting based on that.
-         * 
-         * We need a method of supplying custom styles first though, I think
-         */
-        List<StyleInfo> styles = new ArrayList<StyleInfo>();
-        for (String palette : ColourPalette.getPredefinedPalettes()) {
-            styles.add(new StyleInfo("boxfill", palette));
-        }
-        return styles;
-    }
-
     public static HorizontalPosition getPositionFromUrlArgs(String crsCode, String firstCoord,
             String secondCoord, String wmsVersion) throws EdalException {
         final CoordinateReferenceSystem crs = GISUtils.getCrs(crsCode);
@@ -286,7 +276,7 @@ public class WmsUtils {
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
             VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
-            if(!variableMetadata.isScalar()) {
+            if (!variableMetadata.isScalar()) {
                 /*
                  * We have a non-scalar variable. We will attempt to use the
                  * first child member to estimate the value range. This may not
@@ -294,12 +284,13 @@ public class WmsUtils {
                  * we end up with a bad scale range set - administrators can
                  * just override it.
                  */
-                try{
+                try {
                     variableMetadata = variableMetadata.getChildren().iterator().next();
                     varId = variableMetadata.getId();
                 } catch (Exception e) {
                     /*
-                     * Ignore this error and just generate a (probably) inaccurate range
+                     * Ignore this error and just generate a (probably)
+                     * inaccurate range
                      */
                 }
             }
@@ -316,10 +307,10 @@ public class WmsUtils {
             float min = Float.MAX_VALUE;
             float max = -Float.MAX_VALUE;
             try {
-                MapFeature sampleData = gridDataset.readMapData(CollectionUtils.setOf(varId), hGrid,
-                        zPos, time);
+                MapFeature sampleData = gridDataset.readMapData(CollectionUtils.setOf(varId),
+                        hGrid, zPos, time);
                 Array2D<Number> values = sampleData.getValues(varId);
-                if(values != null) {
+                if (values != null) {
                     for (Number value : values) {
                         if (value != null) {
                             min = (float) Math.min(value.doubleValue(), min);
@@ -328,13 +319,12 @@ public class WmsUtils {
                     }
                 }
             } catch (DataReadingException e) {
-                /*
-                 * TODO we are ignoring this, but we should log it too
-                 */
-                e.printStackTrace();
+                log.error(
+                        "Problem reading data whilst estimating scale range.  A default value will be used.",
+                        e);
             }
-            
-            if(max == -Float.MAX_VALUE || min == Float.MAX_VALUE) {
+
+            if (max == -Float.MAX_VALUE || min == Float.MAX_VALUE) {
                 /*
                  * Defensive - either they are both equal to their start values,
                  * or neither is.
@@ -344,9 +334,9 @@ public class WmsUtils {
                  */
                 min = 0;
                 max = 100;
-            } else if(min == max) {
+            } else if (min == max) {
                 /*
-                 * We've hit an area of uniform data.  Make sure that max > min
+                 * We've hit an area of uniform data. Make sure that max > min
                  */
                 max += 1.0f;
             } else {
@@ -354,310 +344,96 @@ public class WmsUtils {
                 min -= 0.05 * diff;
                 max += 0.05 * diff;
             }
-            
+
             return Extents.newExtent(min, max);
         } else {
             throw new UnsupportedOperationException("Currently only gridded datasets are supported");
         }
     }
-//    /**
-//     * Gets the styles available for a particular layer
-//     * 
-//     * @param feature
-//     *            the feature containing the layer
-//     * @param memberName
-//     *            the member of the coverage
-//     * @param palettes
-//     *            the available palettes to generate styles for
-//     * @return A list of styles
-//     */
-//    public static List<StyleInfo> getStylesWithPalettes(Feature feature, String memberName, Set<String> palettes) {
-//        Set<PlotStyle> baseStyles = getBaseStyles(feature, memberName);
-//
-//        List<StyleInfo> ret = new ArrayList<StyleInfo>();
-//        for (PlotStyle style : baseStyles) {
-//            boolean usesPalette = false;
-//            if(style == PlotStyle.DEFAULT){
-//                ScalarMetadata scalarMetadata = MetadataUtils.getScalarMetadata(feature, memberName);
-//                if(scalarMetadata != null){
-//                    usesPalette = PlotStyle.getDefaultPlotStyle(feature, scalarMetadata).usesPalette();
-//                }
-//            } else {
-//                usesPalette = style.usesPalette();
-//            }
-//            if (usesPalette) {
-//                for (String palette : palettes) {
-//                    ret.add(new StyleInfo(style.name(), palette));
-//                }
-//            } else {
-//                ret.add(new StyleInfo(style.name(), ""));
-//            }
-//        }
-//        return ret;
-//    }
-//
-//    /**
-//     * Gets the base styles (i.e. without palette names) available for a particular layer
-//     * 
-//     * @param feature
-//     *            the feature containing the layer
-//     * @param memberName
-//     *            the member of the coverage
-//     * @return A list of styles
-//     */
-//    public static Set<PlotStyle> getBaseStyles(Feature feature, String memberName) {
-//        Set<PlotStyle> styles = new LinkedHashSet<PlotStyle>();
-//        styles.add(PlotStyle.DEFAULT);
-//        RangeMetadata metadata = MetadataUtils.getMetadataForFeatureMember(feature, memberName);
-//        if(metadata instanceof ScalarMetadata){
-//            ScalarMetadata scalarMetadata = (ScalarMetadata) metadata;
-//            for(PlotStyle style : PlotStyle.getAllowedPlotStyles(feature, scalarMetadata)){
-//                styles.add(style);
-//            }
-//        }
-//        if(metadata instanceof StatisticsCollection) {
-//            styles.add(PlotStyle.DEFAULT_CONFIDENCE);
-//            styles.add(PlotStyle.DEFAULT_CONTOUR);
-//            styles.add(PlotStyle.DEFAULT_CONTOUR_SMOOTH);
-//            styles.add(PlotStyle.DEFAULT_STIPPLE);
-//            styles.add(PlotStyle.DEFAULT_FADE_BLACK);
-//            styles.add(PlotStyle.DEFAULT_FADE_WHITE);
-//        }
-//        return styles;
-//    }
-//
-//    /**
-//     * Returns the RuntimeException name. This used in
-//     * 'displayDefaultException.jsp' to show the exception name, to go around
-//     * the use of '${exception.class.name}' where the word 'class' is deemed as
-//     * Java keyword by Tomcat 7.0
-//     * 
-//     */
-//    public static String getExceptionName(Exception e) {
-//        return e.getClass().getName();
-//    }
-//
-//    /**
-//     * Utility method to check if a particular child member of a metadata is
-//     * scalar
-//     * 
-//     * @param metadata
-//     *            the parent metadata object
-//     * @param memberName
-//     *            the member to check
-//     * @return true if the child member is an instance of {@link ScalarMetadata}
-//     */
-//    public static boolean memberIsScalar(RangeMetadata metadata, String memberName) {
-//        return metadata.getMemberMetadata(memberName) instanceof ScalarMetadata;
-//    }
-//
-//    /**
-//     * Utility method to return the child metadata of a {@link RangeMetadata}
-//     * object
-//     * 
-//     * @param metadata
-//     *            the parent metadata object
-//     * @param memberName
-//     *            the desired child member id
-//     * @return the child {@link RangeMetadata}
-//     */
-//    public static RangeMetadata getChildMetadata(RangeMetadata metadata, String memberName) {
-//        return metadata.getMemberMetadata(memberName);
-//    }
-//
-//    /*
-//     * End of methods only present for the taglib
-//     */
-//
-//    /*
-//     * The following methods all depend on the class type of the feature. If new
-//     * feature types are added, these methods should be looked at, since they
-//     * are likely to need to change
-//     */
-//
-//    public static Object getFeatureValue(Feature feature, HorizontalPosition pos,
-//            VerticalPosition zPos, TimePosition time, String memberName) {
-//        /*
-//         * TODO check for position threshold. We don't necessarily want to
-//         * return a value...
-//         */
-//        if (feature instanceof GridSeriesFeature) {
-//            return ((GridSeriesFeature) feature).getCoverage().evaluate(
-//                    new GeoPositionImpl(pos, zPos, time), memberName);
-//        } else if (feature instanceof PointSeriesFeature) {
-//            return ((PointSeriesFeature) feature).getCoverage().evaluate(time, memberName);
-//        } else if (feature instanceof ProfileFeature) {
-//            return ((ProfileFeature) feature).getCoverage().evaluate(zPos, memberName);
-//        } else if (feature instanceof GridFeature) {
-//            return ((GridFeature) feature).getCoverage().evaluate(pos, memberName);
-//        } else if (feature instanceof TrajectoryFeature) {
-//            return ((TrajectoryFeature) feature).getCoverage().evaluate(
-//                    new GeoPositionImpl(pos, zPos, time), memberName);
-//        }
-//        return null;
-//    }
-//
-//    public static BoundingBox getWmsBoundingBox(Feature feature) {
-//        BoundingBox inBbox;
-//        if (feature instanceof GridSeriesFeature) {
-//            inBbox = ((GridSeriesFeature) feature).getCoverage().getDomain().getHorizontalGrid()
-//                    .getCoordinateExtent();
-//        } else if (feature instanceof GridFeature) {
-//            inBbox = ((GridFeature) feature).getCoverage().getDomain().getCoordinateExtent();
-//        } else if (feature instanceof PointSeriesFeature) {
-//            HorizontalPosition pos = ((PointSeriesFeature) feature).getHorizontalPosition();
-//            return getBoundingBoxForSinglePosition(pos);
-//        } else if (feature instanceof ProfileFeature) {
-//            HorizontalPosition pos = ((ProfileFeature) feature).getHorizontalPosition();
-//            return getBoundingBoxForSinglePosition(pos);
-//        } else if (feature instanceof TrajectoryFeature) {
-//            TrajectoryFeature trajectoryFeature = (TrajectoryFeature) feature;
-//            trajectoryFeature.getCoverage().getDomain().getDomainObjects();
-//            return ((TrajectoryFeature) feature).getCoverage().getDomain().getCoordinateBounds();
-//        } else {
-//            throw new IllegalArgumentException("Unknown feature type");
-//        }
-//        // TODO: should take into account the cell bounds
-//        double minLon = inBbox.getMinX() % 360;
-//        double maxLon = inBbox.getMaxX() % 360;
-//        double minLat = inBbox.getMinY();
-//        double maxLat = inBbox.getMaxY();
-//        // Correct the bounding box in case of mistakes or in case it
-//        // crosses the date line
-//        if ((minLon < 180 && maxLon > 180) || (minLon < -180 && maxLon > -180) || minLon >= maxLon) {
-//            minLon = -180.0;
-//            maxLon = 180.0;
-//        }
-//        if (minLat >= maxLat) {
-//            minLat = -90.0;
-//            maxLat = 90.0;
-//        }
-//        // Sometimes the bounding boxes can be NaN, e.g. for a
-//        // VerticalPerspectiveView
-//        // that encompasses more than the Earth's disc
-//        minLon = Double.isNaN(minLon) ? -180.0 : minLon;
-//        minLat = Double.isNaN(minLat) ? -90.0 : minLat;
-//        maxLon = Double.isNaN(maxLon) ? 180.0 : maxLon;
-//        maxLat = Double.isNaN(maxLat) ? 90.0 : maxLat;
-//        double[] bbox = { minLon, minLat, maxLon, maxLat };
-//        return new BoundingBoxImpl(bbox, inBbox.getCoordinateReferenceSystem());
-//    }
-//
-//    private static BoundingBox getBoundingBoxForSinglePosition(HorizontalPosition pos) {
-//        return new BoundingBoxImpl(new double[] { pos.getX() - 1.0, pos.getY() - 1.0,
-//                pos.getX() + 1.0, pos.getY() + 1.0 }, pos.getCoordinateReferenceSystem());
-//    }
-//
-//    public static Extent<Double> getElevationRangeForString(String elevationString) {
-//        if(elevationString == null || elevationString.equals("")){
-//            return null;
-//        }
-//        String[] parts = elevationString.split("/");
-//        if (parts.length < 1 || parts.length > 2) {
-//            throw new IllegalArgumentException("Cannot determine depths from string: "
-//                    + elevationString);
-//        } else if (parts.length == 1) {
-//            return Extents.newExtent(Double.parseDouble(parts[0]), Double.parseDouble(parts[0]));
-//        } else {
-//            double firstVal = Double.parseDouble(parts[0]);
-//            double secondVal = Double.parseDouble(parts[1]);
-//            if(firstVal < secondVal)
-//                return Extents.newExtent(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]));
-//            else
-//                return Extents.newExtent(Double.parseDouble(parts[1]), Double.parseDouble(parts[0]));
-//        }
-//    }
-//
-//    public static List<TimePosition> getTimePositionsForString(String timeString, Feature feature)
-//            throws InvalidDimensionValueException {
-//        List<TimePosition> tValues = new ArrayList<TimePosition>();
-//        if (feature == null) {
-//            return tValues;
-//        }
-//        List<TimePosition> tAxis = GISUtils.getTimes(feature, false);
-//        if (tAxis == null || tAxis.size() == 0) {
-//            return tValues;
-//        }
-//        if(timeString == null || timeString.equals("")) {
-//            return tAxis.subList(0, 1);
-//        }
-//        for (String t : timeString.split(",")) {
-//            String[] startStop = t.split("/");
-//            if (startStop.length == 1) {
-//                // This is a single time value
-//                TimePosition time = findTValue(startStop[0], tAxis);
-//                tValues.add(time);
-//            } else if (startStop.length == 2) {
-//                // Use all time values from start to stop inclusive
-//                tValues.addAll(findTValues(startStop[0], startStop[1], tAxis));
-//            } else {
-//                throw new InvalidDimensionValueException("time", t);
-//            }
-//        }
-//        return tValues;
-//    }
-//
-//    private static TimePosition findTValue(String isoDateTime, List<TimePosition> tValues)
-//            throws InvalidDimensionValueException {
-//        if (tValues == null) {
-//            return null;
-//        }
-//        int tIndex = findTIndex(isoDateTime, tValues);
-//        if(tIndex < 0) {
-//            throw new InvalidDimensionValueException("time", isoDateTime);
-//        }
-//        return tValues.get(tIndex);
-//    }
-//    
-//    private static List<TimePosition> findTValues(String isoDateTimeStart, String isoDateTimeEnd,
-//            List<TimePosition> tValues) throws InvalidDimensionValueException {
-//        if (tValues == null) {
-//            throw new InvalidDimensionValueException("time", isoDateTimeStart + "/"
-//                    + isoDateTimeEnd);
-//        }
-//        int startIndex = findTIndex(isoDateTimeStart, tValues);
-//        int endIndex = findTIndex(isoDateTimeEnd, tValues);
-//        if (startIndex > endIndex) {
-//            throw new InvalidDimensionValueException("time", isoDateTimeStart + "/"
-//                    + isoDateTimeEnd);
-//        }
-//        List<TimePosition> returnTValues = new ArrayList<TimePosition>();
-//        for (int i = startIndex; i <= endIndex; i++) {
-//            returnTValues.add(tValues.get(i));
-//        }
-//        return returnTValues;
-//    }
-//    
-//    public static int findTIndex(String isoDateTime, List<TimePosition> tValues)
-//            throws InvalidDimensionValueException {
-//        TimePosition target;
-//        if (isoDateTime.equalsIgnoreCase("current")) {
-//            target = GISUtils.getClosestToCurrentTime(tValues);
-//        } else {
-//            if(tValues == null || tValues.size() == 0) {
-//                return -1;
-//            }
-//            try {
-//                /*
-//                 * ISO date strings do not have spaces. However, spaces can be
-//                 * generated by decoding + symbols from URLs. If the date string
-//                 * has a space in it, something's going wrong anyway. Chances
-//                 * are it's this.
-//                 */
-//                isoDateTime = isoDateTime.replaceAll(" ", "+");
-//                target = TimeUtils.iso8601ToDateTime(isoDateTime, tValues.get(0).getCalendarSystem());
-//            } catch (ParseException e) {
-//                throw new InvalidDimensionValueException("time", isoDateTime);
-//            }
-//        }
-//
-//        long targetMillis = target.getValue();
-//        for(int i = 0; i < tValues.size(); i++) {
-//            if(targetMillis == tValues.get(i).getValue()) {
-//                return i;
-//            }
-//        }
-//        return -1;
-//    }
 
+    /** Copies a file */
+    public static void copyFile(File sourceFile, File destFile) throws IOException {
+        FileChannel source = null;
+        FileChannel destination = null;
+        try {
+            source = new FileInputStream(sourceFile).getChannel();
+            destination = new FileOutputStream(destFile).getChannel();
+            destination.transferFrom(source, 0, source.size());
+        } finally {
+            if (source != null) {
+                source.close();
+            }
+            if (destination != null) {
+                destination.close();
+            }
+        }
+    }
+
+    /**
+     * Forwards the request to a third party. In this case this server is acting
+     * as a proxy.
+     * 
+     * @param url
+     *            The URL to the third party server (e.g.
+     *            "http://myhost.com/ncWMS/wms")
+     * @param request
+     *            Http request object. All query string parameters (except
+     *            "&url=") will be copied from this request object to the
+     *            request to the third party server.
+     * @param response
+     *            Http response object
+     */
+    public static void proxyRequest(String url, HttpServletRequest request,
+            HttpServletResponse response) {
+        /* Download the data from the remote URL */
+        StringBuffer fullURL = new StringBuffer(url);
+        boolean firstTime = true;
+        for (Object urlParamNameObj : request.getParameterMap().keySet()) {
+            fullURL.append(firstTime ? "?" : "&");
+            firstTime = false;
+            String urlParamName = (String) urlParamNameObj;
+            if (!urlParamName.equalsIgnoreCase("url")) {
+                fullURL.append(urlParamName + "=" + request.getParameter(urlParamName));
+            }
+        }
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            /* TODO: better error handling */
+            URLConnection conn = new URL(fullURL.toString()).openConnection();
+            /* Set header information */
+            for (int i = 0; i < conn.getHeaderFields().size(); i++) {
+                response.setHeader(conn.getHeaderFieldKey(i), conn.getHeaderField(i));
+            }
+            in = conn.getInputStream();
+            out = response.getOutputStream();
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = in.read(buf)) >= 0) {
+                out.write(buf, 0, len);
+            }
+        } catch (MalformedURLException e) {
+            log.error("Problem proxying request to: " + url, e);
+        } catch (IOException e) {
+            log.error("Problem proxying request to: " + url, e);
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    log.error(
+                            "Problem with closing input stream while proxying request to: " + url,
+                            e);
+                }
+            }
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    log.error("Problem with closing output stream while proxying request to: "
+                            + url, e);
+                }
+            }
+        }
+    }
 }
