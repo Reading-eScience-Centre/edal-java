@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>uk.ac.rdg.resc</groupId>
-    <version>0.9.0</version>
+    <version>1.0-SNAPSHOT</version>
     <artifactId>edal</artifactId>
     <name>Environmental Data Abstraction Library</name>
 
