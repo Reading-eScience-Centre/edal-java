@@ -21,6 +21,7 @@ ncwms/src/main/webapp/WEB-INF/classes/
 ncwms/src/main/webapp/WEB-INF/lib/
 ncwms/src/main/webapp/WEB-INF/deploy/
 ncwms/src/main/webapp/META-INF/maven/
+graphics/dependency-reduced-pom.xml
 
 syntax: regexp
 \.springBeans$
