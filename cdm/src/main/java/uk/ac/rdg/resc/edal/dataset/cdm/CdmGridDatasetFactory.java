@@ -52,6 +52,7 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
@@ -79,6 +80,28 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
              * Open the dataset, using the cache for NcML aggregations
              */
             nc = openDataset(location);
+
+            /*
+             * We look for NetCDF-U variables to group mean/standard-deviation.
+             * 
+             * We need to do this here because we want to subsequently ignore
+             * parent variables
+             */
+            Map<String, String[]> varId2AncillaryVars = new HashMap<String, String[]>();
+            for (Variable variable : nc.getVariables()) {
+                /*
+                 * Just look for parent variables, since these may not have a
+                 * grid directly associated with them
+                 */
+                for (Attribute attr : variable.getAttributes()) {
+                    if (attr.getName().equalsIgnoreCase("ancillary_variables")) {
+                        varId2AncillaryVars.put(variable.getName(), attr.getStringValue()
+                                .split(" "));
+                        continue;
+                    }
+                }
+            }
+
             ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
             List<GridVariableMetadata> vars = new ArrayList<GridVariableMetadata>();
             /*
@@ -86,11 +109,24 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
              * is a 2-element String array with x, y component IDs
              */
             Map<String, String[]> xyComponentPairs = new HashMap<String, String[]>();
+            /*
+             * Store a map of variable IDs to UncertML URLs. This will be used
+             * to determine which components are mean/std/etc.
+             * 
+             * TODO implement more than just Mean/SD
+             */
+            Map<String, String> varId2UncertMLRefs = new HashMap<String, String>();
+            /*
+             * Here we store the parent variable IDs and their corresponding
+             * title.
+             */
+            Map<String, String> parentVarId2Title = new HashMap<String, String>();
             for (Gridset gridset : gridDataset.getGridsets()) {
                 GridCoordSystem coordSys = gridset.getGeoCoordSystem();
                 HorizontalGrid hDomain = CdmUtils.createHorizontalGrid(coordSys);
                 VerticalAxis zDomain = CdmUtils.createVerticalAxis(coordSys);
                 TimeAxis tDomain = CdmUtils.createTimeAxis(coordSys);
+
                 /*
                  * Create a VariableMetadata object for each GridDatatype
                  */
@@ -98,8 +134,28 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                     VariableDS variable = grid.getVariable();
                     String varId = variable.getName();
                     String name = getVariableName(variable);
-                    Parameter parameter = new Parameter(varId, name,
-                            variable.getDescription(), variable.getUnitsString());
+
+                    /*
+                     * If this is a parent variable for a stats collection, we
+                     * don't want it to be a normal variable as well.
+                     */
+                    if (varId2AncillaryVars.containsKey(varId)) {
+                        parentVarId2Title.put(varId, name);
+                        continue;
+                    }
+
+                    /*
+                     * If it is a child variable is (potentially) referenced by
+                     * UncertML, store its ID and the (possible) UncertML URI
+                     */
+                    for (Attribute attr : variable.getAttributes()) {
+                        if (attr.getName().equalsIgnoreCase("ref")) {
+                            varId2UncertMLRefs.put(varId, attr.getStringValue());
+                        }
+                    }
+
+                    Parameter parameter = new Parameter(varId, name, variable.getDescription(),
+                            variable.getUnitsString());
                     GridVariableMetadata metadata = new GridVariableMetadata(variable.getName(),
                             parameter, hDomain, zDomain, tDomain);
                     vars.add(metadata);
@@ -174,6 +230,31 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                     cdmGridDataset.addVariablePlugin(new VectorPlugin(comps[0], comps[1], title));
                 }
             }
+
+            for (String statsCollectionId : varId2AncillaryVars.keySet()) {
+                String[] ids = varId2AncillaryVars.get(statsCollectionId);
+                String meanId = null;
+                String stddevId = null;
+                for (String statsVarIds : ids) {
+                    String uncertRef = varId2UncertMLRefs.get(statsVarIds);
+                    if (uncertRef != null
+                            && uncertRef
+                                    .equalsIgnoreCase("http://www.uncertml.org/statistics/mean")) {
+                        meanId = statsVarIds;
+                    }
+                    if (uncertRef != null
+                            && uncertRef
+                                    .equalsIgnoreCase("http://www.uncertml.org/statistics/standard-deviation")) {
+                        stddevId = statsVarIds;
+                    }
+                }
+                if (meanId != null && stddevId != null) {
+                    MeanSDPlugin meanSDPlugin = new MeanSDPlugin(meanId, stddevId,
+                            parentVarId2Title.get(statsCollectionId));
+                    cdmGridDataset.addVariablePlugin(meanSDPlugin);
+                }
+            }
+
             return cdmGridDataset;
         } finally {
             closeDataset(nc);
