@@ -70,6 +70,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.chrono.ISOChronology;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,6 +95,7 @@ import uk.ac.rdg.resc.edal.geometry.LineString;
 import uk.ac.rdg.resc.edal.graphics.Charting;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
+import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
 import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
@@ -283,14 +285,13 @@ public class WmsServlet extends HttpServlet {
 
         PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
-        if (!(getMapParams.getImageFormat() instanceof SimpleFormat)) {
-            throw new EdalException("Currently KML is not supported.");
-            /*
-             * TODO Support KML
-             */
-        }
-        SimpleFormat simpleFormat = (SimpleFormat) getMapParams.getImageFormat();
 
+        if(getMapParams.getImageFormat() instanceof KmzFormat) {
+            if(!GISUtils.isWgs84LonLat(plottingParameters.getBbox().getCoordinateReferenceSystem())) {
+                throw new EdalException("KMZ files can only be generated from WGS84 projections");
+            }
+        }
+        
         /*
          * Do some checks on the style parameters.
          * 
@@ -337,9 +338,41 @@ public class WmsServlet extends HttpServlet {
             throw new UnsupportedOperationException("Animations are not yet supported");
         }
 
+        ImageFormat imageFormat = getMapParams.getImageFormat();
         try {
             ServletOutputStream outputStream = httpServletResponse.getOutputStream();
-            simpleFormat.writeImage(frames, outputStream, null);
+            if(imageFormat instanceof SimpleFormat) {
+                /*
+                 * We have a normal image format
+                 */
+                SimpleFormat simpleFormat = (SimpleFormat) getMapParams.getImageFormat();
+                simpleFormat.writeImage(frames, outputStream, null);
+            } else {
+                /*
+                 * We have KML (or another image format which needs additional information)
+                 */
+                String[] layerNames = styleParameters.getLayerNames();
+                if(layerNames.length > 1) {
+                    throw new EdalException("Exactly 1 layer must be requested for KML ("
+                            + layerNames.length + " have been supplied)");
+                }
+                String layerName = layerNames[0];
+                if (imageFormat instanceof KmzFormat) {
+                    /*
+                     * If this is a KMZ file, give it a sensible filename
+                     */
+                    httpServletResponse.setHeader("Content-Disposition", "inline; filename=" +
+                            layerName.replaceAll("/", "-") + ".kmz");
+                }
+                WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+                String name = layerMetadata.getTitle();
+                String description = layerMetadata.getDescription();
+                String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters.getTargetZ().toString();
+                List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT(ISOChronology.getInstance()));
+                BufferedImage legend = imageGenerator.getLegend(200);
+                GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters.getBbox());
+                imageFormat.writeImage(frames, outputStream, name, description, gbbox, tValues, zValue, legend, 24);
+            }
             outputStream.close();
         } catch (IOException e) {
             /*

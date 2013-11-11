@@ -55,4 +55,10 @@ public interface GodivaActionsHandler extends MapMoveListener, MapZoomListener {
      * available when e.g. animation is happening
      */
     public void disableWidgets();
+
+    /**
+     * Called when something has changed which means that URLs (permalink,
+     * email, KML) must be updated
+     */
+    public void updateLinksEtc();
 }

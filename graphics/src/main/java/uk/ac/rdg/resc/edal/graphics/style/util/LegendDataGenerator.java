@@ -94,7 +94,7 @@ public class LegendDataGenerator {
             byte[] data = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
             for (int i = 0; i < width; i++) {
                 for (int j = 0; j < height; j++) {
-                    if (data[i + width * (height - 1 - j)] == 0) {
+                    if (data[i + width * j] == 0) {
                         missingBits[i][j] = true;
                     } else {
                         missingBits[i][j] = false;

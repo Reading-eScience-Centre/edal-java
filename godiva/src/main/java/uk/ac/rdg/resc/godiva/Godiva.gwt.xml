@@ -11,6 +11,7 @@
 	<inherits name="com.google.gwt.json.JSON" />
 	<inherits name='com.google.gwt.xml.XML' />
 
+	<script src="js/proj4js.js" />
 	<script src="js/OpenLayers-2.11.js" />
 	<stylesheet src="css/Godiva.css"/>
 
