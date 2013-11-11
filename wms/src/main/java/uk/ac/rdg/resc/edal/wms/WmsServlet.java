@@ -1278,7 +1278,9 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        copyright.deleteCharAt(copyright.length() - 1);
+        if(copyright.length() > 0) {
+            copyright.deleteCharAt(copyright.length() - 1);
+        }
         JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
                 copyright.toString());
 

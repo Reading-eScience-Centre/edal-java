@@ -89,7 +89,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
                 popup.setPopupPosition(
                         LayerSelectorCombo.this.getAbsoluteLeft(),
                         LayerSelectorCombo.this.getAbsoluteTop()
-                                + LayerSelectorCombo.this.getOffsetHeight());
+                        + LayerSelectorCombo.this.getOffsetHeight());
                 if (!popup.isShowing()) {
                     popup.show();
                 } else {
@@ -157,7 +157,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         String title;
         if(parentNode != null){
             final String parentName = parentNode.getText();
-            title = parentName + "<div class=\"subtitle\">" + label + "</div>";
+            title = parentName + "<div class=\"subtitle\">&nbsp;>&nbsp;" + label + "</div>";
         } else {
             title = label;
         }

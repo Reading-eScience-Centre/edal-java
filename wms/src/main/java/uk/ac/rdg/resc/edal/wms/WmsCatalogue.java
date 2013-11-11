@@ -146,7 +146,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                 }
             }
         } catch (Exception e) {
-            log.error("Problem processing styles on classpath");
+            log.error("Problem processing styles on classpath", e);
         }
     }
 
@@ -233,9 +233,11 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
             List<String> requiredChildren = styleDef.getRequiredChildren();
             if (requiredChildren != null && !requiredChildren.isEmpty()) {
                 for (String requiredChild : requiredChildren) {
-                    if (variableMetadata.getChildWithRole(requiredChild) == null) {
+                    VariableMetadata childMetadata = variableMetadata.getChildWithRole(requiredChild);
+                    if (childMetadata == null || !childMetadata.isScalar()) {
                         /*
-                         * We required a child layer which we don't have
+                         * We required a child layer which is either missing or
+                         * not scalar
                          */
                         currentStyleSupported = false;
                         continue;
