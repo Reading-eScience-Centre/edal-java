@@ -154,21 +154,25 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         kmzLink = new Anchor("Open in Google Earth");
         kmzLink.setStylePrimaryName("linkStyle");
         kmzLink.setTitle("Open the current view in Google Earth");
+        kmzLink.setEnabled(false);
 
         permalink = new Anchor("Permalink");
         permalink.setStylePrimaryName("linkStyle");
         permalink.setTarget("_blank");
         permalink.setTitle("Permanent link to the current view");
+        permalink.setEnabled(false);
 
         email = new Anchor("Email Link");
         email.setStylePrimaryName("linkStyle");
         email.setTitle("Email a link to the current view");
+        email.setEnabled(false);
 
         screenshot = new Anchor("Export to PNG");
         screenshot.setHref("/screenshots/getScreenshot?");
         screenshot.setStylePrimaryName("linkStyle");
         screenshot.setTarget("_blank");
         screenshot.setTitle("Open a downloadable image in a new window - may be slow to load");
+        screenshot.setEnabled(false);
 
         docLink = new Anchor("Documentation", docHref);
         docLink.setStylePrimaryName("linkStyle");
@@ -528,7 +532,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         updateLinksEtc();
         screenshot.setText("Export to PNG");
     }
-    
+
     /*
      * Overridden methods for custom additional behaviour
      */
@@ -574,25 +578,25 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 widgetCollection.getPaletteSelector().setNumColorBands(
                         Integer.parseInt(numColorBands));
             }
-            
+
             String aboveMaxString = permalinkParamsMap.get("aboveMaxColor");
-            if(aboveMaxString != null) {
-                if("extend".equalsIgnoreCase(aboveMaxString)) {
+            if (aboveMaxString != null) {
+                if ("extend".equalsIgnoreCase(aboveMaxString)) {
                     widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.EXTEND);
-                } else if("transparent".equalsIgnoreCase(aboveMaxString)) {
+                } else if ("transparent".equalsIgnoreCase(aboveMaxString)) {
                     widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.TRANSPARENT);
-                } else if("0x000000".equalsIgnoreCase(aboveMaxString)) {
+                } else if ("0x000000".equalsIgnoreCase(aboveMaxString)) {
                     widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.BLACK);
                 }
             }
-            
+
             String belowMinString = permalinkParamsMap.get("belowMinColor");
-            if(belowMinString != null) {
-                if("extend".equalsIgnoreCase(belowMinString)) {
+            if (belowMinString != null) {
+                if ("extend".equalsIgnoreCase(belowMinString)) {
                     widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.EXTEND);
-                } else if("transparent".equalsIgnoreCase(belowMinString)) {
+                } else if ("transparent".equalsIgnoreCase(belowMinString)) {
                     widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.TRANSPARENT);
-                } else if("0x000000".equalsIgnoreCase(belowMinString)) {
+                } else if ("0x000000".equalsIgnoreCase(belowMinString)) {
                     widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.BLACK);
                 }
             }
@@ -644,15 +648,26 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         super.requestLayerDetails(wmsUrl, layerId, currentTime, autoZoomAndPalette);
     }
 
-    
     /*
      * Godiva-specific methods
      */
-    
+
     /**
      * Updates the links (KMZ, screenshot, email, permalink...)
      */
-    protected void updateLinksEtc() {
+    @Override
+    public void updateLinksEtc() {
+        if (kmzLink == null || widgetCollection.getWmsUrlProvider().getWmsUrl() == null) {
+            /*
+             * This means that we've not yet finished initialising
+             */
+            return;
+        }
+        kmzLink.setEnabled(true);
+        permalink.setEnabled(true);
+        email.setEnabled(true);
+        screenshot.setEnabled(true);
+
         kmzLink.setHref(mapArea.getKMZUrl());
 
         String baseurl = "http://" + Window.Location.getHost() + Window.Location.getPath()
@@ -685,7 +700,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             urlParams += "&layer=" + currentLayer;
         }
 
-        if(timeSelector.isContinuous()){
+        if (timeSelector.isContinuous()) {
             if (timeSelector.getSelectedDateTimeRange() != null) {
                 urlParams += "&time=" + timeSelector.getSelectedDateTimeRange();
             }
@@ -700,7 +715,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 urlParams += "&time=" + timeSelector.getSelectedDateTime();
             }
         }
-        if(elevationSelector.isContinuous()){
+        if (elevationSelector.isContinuous()) {
             if (elevationSelector.getSelectedElevationRange() != null) {
                 currentElevation = elevationSelector.getSelectedElevation();
                 urlParams += "&targetelevation=" + currentElevation;
@@ -759,7 +774,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             urlParams += "&units=" + unitsInfo.getUnits();
         urlParams += "&baseUrl=" + mapArea.getBaseLayerUrl();
         urlParams += "&baseLayers=" + mapArea.getBaseLayerLayers();
-        screenshot.setHref("http://" + Window.Location.getHost() + Window.Location.getPath()+"/screenshots/createScreenshot?" + urlParams);
+        screenshot.setHref("http://" + Window.Location.getHost() + Window.Location.getPath()
+                + "/screenshots/createScreenshot?" + urlParams);
     }
 
     /*
@@ -771,8 +787,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
     protected void menuLoaded(LayerMenuItem menuTree) {
         if (menuTree.isLeaf()) {
-            menuTree.addChildItem(new LayerMenuItem("No datasets found!", null, null,
-                    false, null));
+            menuTree.addChildItem(new LayerMenuItem("No datasets found!", null, null, false, null));
         }
         layerSelector.populateLayers(menuTree);
 
@@ -782,7 +797,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             String currentLayer = permalinkParamsMap.get("layer");
             if (currentLayer != null) {
                 String datasetUrl = permalinkParamsMap.get("dataset");
-                if(datasetUrl == null || "".equals(datasetUrl)) {
+                if (datasetUrl == null || "".equals(datasetUrl)) {
                     layerSelector.selectLayer(currentLayer, "wms", false);
                 } else {
                     String currentWms = URL.decode(datasetUrl);
@@ -798,7 +813,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      * custom implementations, whilst still keeping the Godiva feature set (i.e.
      * one WMS layer at a time)
      */
-    
+
     /**
      * This is something that will almost certainly be changed for custom
      * clients, so put it in a method which can be overridden
@@ -816,7 +831,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      *            selected WMS URL
      * @return A new instance of a {@link PaletteSelectorIF}
      */
-    protected PaletteSelectorIF getPaletteSelector(LayerSelectorIF wmsUrlProvider, CentrePosIF localCentre) {
+    protected PaletteSelectorIF getPaletteSelector(LayerSelectorIF wmsUrlProvider,
+            CentrePosIF localCentre) {
         return new PaletteSelector("mainLayer", getMapHeight(), 30, this, wmsUrlProvider,
                 localCentre, true);
     }
@@ -850,7 +866,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     protected LayerSelectorIF getLayerSelector() {
         return new LayerSelectorCombo(this);
     }
-    
+
     /**
      * Gets the layout. This should return a top-level object which contains the
      * entire page, since this is what gets added to the main window as the

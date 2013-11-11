@@ -37,11 +37,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.geotoolkit.factory.Hints;
+import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.geotoolkit.referencing.factory.epsg.EpsgInstaller;
 import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.DateTime;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.util.FactoryException;
@@ -539,6 +541,65 @@ public final class GISUtils {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static GeographicBoundingBox toGeographicBoundingBox(BoundingBox bbox) {
+        if (isWgs84LonLat(bbox.getCoordinateReferenceSystem())) {
+            return new DefaultGeographicBoundingBox(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(),
+                    bbox.getMaxY());
+        } else {
+            double minx = Double.MAX_VALUE;
+            double maxx = -Double.MAX_VALUE;
+            double miny = Double.MAX_VALUE;
+            double maxy = -Double.MAX_VALUE;
+            /*
+             * There is no simple mapping from an arbitrary bounding box to a
+             * lat-lon one. We scan around the edge of the bounding box (10
+             * points per side) transforming each position and find the bounding
+             * box of these points
+             */
+            for (double x = bbox.getMinX(); x < bbox.getMaxX(); x += (bbox.getWidth() / 10.0)) {
+                /*
+                 * Top and bottom sides of bbox
+                 */
+                double y = bbox.getMinY();
+                HorizontalPosition transformPosition = transformPosition(new HorizontalPosition(x,
+                        y, bbox.getCoordinateReferenceSystem()), DefaultGeographicCRS.WGS84);
+                minx = Math.min(transformPosition.getX(), minx);
+                maxx = Math.max(transformPosition.getX(), maxx);
+                miny = Math.min(transformPosition.getY(), miny);
+                maxy = Math.max(transformPosition.getY(), maxy);
+                
+                y = bbox.getMaxY();
+                transformPosition = transformPosition(new HorizontalPosition(x,
+                        y, bbox.getCoordinateReferenceSystem()), DefaultGeographicCRS.WGS84);
+                minx = Math.min(transformPosition.getX(), minx);
+                maxx = Math.max(transformPosition.getX(), maxx);
+                miny = Math.min(transformPosition.getY(), miny);
+                maxy = Math.max(transformPosition.getY(), maxy);
+            }
+            for (double y = bbox.getMinY(); y < bbox.getMaxY(); y += (bbox.getHeight() / 10.0)) {
+                /*
+                 * Sides of bbox
+                 */
+                double x = bbox.getMinX();
+                HorizontalPosition transformPosition = transformPosition(new HorizontalPosition(x,
+                        y, bbox.getCoordinateReferenceSystem()), DefaultGeographicCRS.WGS84);
+                minx = Math.min(transformPosition.getX(), minx);
+                maxx = Math.max(transformPosition.getX(), maxx);
+                miny = Math.min(transformPosition.getY(), miny);
+                maxy = Math.max(transformPosition.getY(), maxy);
+                
+                x = bbox.getMaxX();
+                transformPosition = transformPosition(new HorizontalPosition(x,
+                        y, bbox.getCoordinateReferenceSystem()), DefaultGeographicCRS.WGS84);
+                minx = Math.min(transformPosition.getX(), minx);
+                maxx = Math.max(transformPosition.getX(), maxx);
+                miny = Math.min(transformPosition.getY(), miny);
+                maxy = Math.max(transformPosition.getY(), maxy);
+            }
+            return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
         }
     }
 }
