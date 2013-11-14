@@ -123,8 +123,8 @@ public class MapImage extends Drawable {
         BufferedImage finalImage;
         Set<NameAndRange> fieldsWithScales = getFieldsWithScales();
         int noOfIndependentFields = fieldsWithScales.size();
-        Color bgColour = Color.black;
-        Color fgColour = Color.white;
+        Color fgColour = Color.black;
+        Color bgColour = Color.white;
         /*
          * This is the fraction of the colourbar which *gets added* as
          * out-of-range data.
@@ -283,7 +283,6 @@ public class MapImage extends Drawable {
         Float lowVal = nameAndRange.getScaleRange().getLow();
         Float highVal = nameAndRange.getScaleRange().getHigh();
         String lowStr = formatter.format(lowVal);
-        ;
         String medLowStr = formatter.format(lowVal + (highVal - lowVal) / 3.0);
         String medHighStr = formatter.format(lowVal + 2.0 * (highVal - lowVal) / 3.0);
         String highStr = formatter.format(highVal);

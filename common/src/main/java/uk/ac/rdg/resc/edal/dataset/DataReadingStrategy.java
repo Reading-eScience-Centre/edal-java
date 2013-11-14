@@ -157,6 +157,9 @@ public enum DataReadingStrategy {
                 int zIndex, Domain2DMapper pixelMap) throws IOException {
             Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
+            if(pixelMap.isEmpty()) {
+                return ret;
+            }
             int imin = pixelMap.getMinIIndex();
             int imax = pixelMap.getMaxIIndex();
             int jmin = pixelMap.getMinJIndex();

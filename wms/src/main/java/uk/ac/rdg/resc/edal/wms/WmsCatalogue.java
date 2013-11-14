@@ -145,6 +145,14 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                     }
                 }
             }
+        } catch (IllegalArgumentException e) {
+            /*
+             * We ignore this exception since it just means that the styles
+             * directory is missing from the classpath
+             */
+            if(!e.getMessage().contains("URI is not hierarchical")) {
+                throw e;
+            }
         } catch (Exception e) {
             log.error("Problem processing styles on classpath", e);
         }
