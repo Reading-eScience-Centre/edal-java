@@ -59,19 +59,20 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     private PopupPanel popup;
     private Tree tree;
     private Map<String, String> layerIdWmsUrlToTitle;
-    private Map<String, LayerMenuItem> layerIdWmsUrlToMenuEntry; 
+    private Map<String, LayerMenuItem> layerIdWmsUrlToMenuEntry;
     private String selectedLayer;
     private boolean firstUse = true;
     public String firstTitle = null;
-    
+
     private LayerMenuItem selectedNode;
     private String wmsUrl;
 
     public LayerSelectorCombo(LayerSelectionHandler layerHandler) {
         this(layerHandler, "Click here to start", true);
     }
-    
-    public LayerSelectorCombo(LayerSelectionHandler layerHandler, String firstText, boolean showRefreshButton) {
+
+    public LayerSelectorCombo(LayerSelectionHandler layerHandler, String firstText,
+            boolean showRefreshButton) {
         super("Loading");
         this.layerSelectionHandler = layerHandler;
 
@@ -89,13 +90,13 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
                 popup.setPopupPosition(
                         LayerSelectorCombo.this.getAbsoluteLeft(),
                         LayerSelectorCombo.this.getAbsoluteTop()
-                        + LayerSelectorCombo.this.getOffsetHeight());
+                                + LayerSelectorCombo.this.getOffsetHeight());
                 if (!popup.isShowing()) {
                     popup.show();
                 } else {
                     popup.hide();
                 }
-                if(firstUse) {
+                if (firstUse) {
                     setText(firstTitle);
                     firstUse = false;
                 }
@@ -104,12 +105,12 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
 
         setText(firstText);
         setTitle("Click here to select a layer");
-        
+
         VerticalPanel vPanel = new VerticalPanel();
         tree = new Tree();
         vPanel.add(tree);
-        
-        if(showRefreshButton) {
+
+        if (showRefreshButton) {
             PushButton button = new PushButton("Refresh");
             button.addStyleDependentName("CentreAndMargin");
             button.setTitle("Click to refresh the layers list");
@@ -121,30 +122,29 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             });
             vPanel.add(button);
         }
-        
+
         popup.add(vPanel);
     }
 
-    
     @Override
-    public void populateLayers(LayerMenuItem topItem){
+    public void populateLayers(LayerMenuItem topItem) {
         tree.clear();
         String nodeLabel = topItem.getTitle();
-        if(firstUse){
+        if (firstUse) {
             firstTitle = nodeLabel;
         } else {
             setText(nodeLabel);
         }
         List<LayerMenuItem> children = topItem.getChildren();
-        if(children != null){
-            for(LayerMenuItem child : children){
+        if (children != null) {
+            for (LayerMenuItem child : children) {
                 addNode(child, null);
             }
         } else {
             tree.add(new Label("No data available"));
         }
     }
-    
+
     /*
      * This is called recursively to transfer the information in the
      * LayerMenuItem tree to the Tree widget
@@ -152,40 +152,41 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     private void addNode(final LayerMenuItem item, final TreeItem parentNode) {
         String label = item.getTitle();
         final String id = item.getId();
-        
+
         Label node = new Label(label);
         String title;
-        if(parentNode != null){
+        if (parentNode != null) {
             final String parentName = parentNode.getText();
             title = parentName + "<div class=\"subtitle\">&nbsp;>&nbsp;" + label + "</div>";
         } else {
             title = label;
         }
-        layerIdWmsUrlToTitle.put(id+item.getWmsUrl(), title);
-        
-        layerIdWmsUrlToMenuEntry.put(id+item.getWmsUrl(), item);
-        
+        layerIdWmsUrlToTitle.put(id + item.getWmsUrl(), title);
+
+        layerIdWmsUrlToMenuEntry.put(id + item.getWmsUrl(), item);
+
         /*
          * If the item is plottable, we need a click handler
          */
-        if(item.isPlottable()){
+        if (item.isPlottable()) {
             node.addClickHandler(new ClickHandler() {
                 @Override
                 public void onClick(ClickEvent event) {
+                    System.out.println(item.getWmsUrl());
                     selectLayer(id, item.getWmsUrl(), true);
                 }
             });
         }
-        
-        if(item.getDescription() != null){
+
+        if (item.getDescription() != null) {
             node.setTitle(item.getDescription());
         }
-        
-        if(item.isLeaf()){
+
+        if (item.isLeaf()) {
             /*
              * We have a leaf node
              */
-            if(parentNode != null)
+            if (parentNode != null)
                 parentNode.addItem(node);
             else
                 tree.addItem(node);
@@ -193,9 +194,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             /*
              * We have a branch node
              */
-            
-            TreeItem nextNode = new TreeItem(node);
-            
+            final TreeItem nextNode = new TreeItem(node);
             if (parentNode == null) {
                 tree.addItem(nextNode);
             } else {
@@ -203,6 +202,18 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             }
             for (LayerMenuItem child : item.getChildren()) {
                 addNode(child, nextNode);
+            }
+            if(!item.isPlottable()) {
+                /*
+                 * If this branch node represents a non-plottable quantity, let
+                 * clicking it expand/collapse it.
+                 */
+                node.addClickHandler(new ClickHandler() {
+                    @Override
+                    public void onClick(ClickEvent event) {
+                        nextNode.setState(!nextNode.getState());
+                    }
+                });
             }
         }
     }
@@ -215,32 +226,32 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
     @Override
     public void selectLayer(String id, String wmsUrl, boolean autoZoomAndPalette) {
         selectedLayer = id;
-        setHTML(layerIdWmsUrlToTitle.get(id+wmsUrl));
+        setHTML(layerIdWmsUrlToTitle.get(id + wmsUrl));
         if (popup.isShowing()) {
             popup.hide();
         }
-        LayerMenuItem item = layerIdWmsUrlToMenuEntry.get(id+wmsUrl);
+        LayerMenuItem item = layerIdWmsUrlToMenuEntry.get(id + wmsUrl);
         this.wmsUrl = wmsUrl;
         selectedNode = item;
         layerSelectionHandler.layerSelected(wmsUrl, id, autoZoomAndPalette);
     }
-    
+
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
-        if(enabled)
+        if (enabled)
             removeStyleDependentName("inactive");
         else
             addStyleDependentName("inactive");
     }
-    
+
     @Override
-    public List<String> getTitleElements(){
+    public List<String> getTitleElements() {
         List<String> title = new ArrayList<String>();
         LayerMenuItem currentNode = selectedNode;
         LayerMenuItem parentNode;
-        if(currentNode != null) {
-            while((parentNode = currentNode.getParent()) != null){
+        if (currentNode != null) {
+            while ((parentNode = currentNode.getParent()) != null) {
                 title.add(currentNode.getTitle());
                 currentNode = parentNode;
             }
@@ -248,10 +259,9 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         return title;
     }
 
-
     @Override
     public String getWmsUrl() {
         return wmsUrl;
     }
-    
+
 }

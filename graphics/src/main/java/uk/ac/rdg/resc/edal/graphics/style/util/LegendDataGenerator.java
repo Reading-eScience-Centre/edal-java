@@ -181,7 +181,7 @@ public class LegendDataGenerator {
                 return scaleRange.getLow() + coords[X_IND]
                         * (scaleRange.getHigh() - scaleRange.getLow()) / xAxis.size();
             case Y:
-                return scaleRange.getLow() + (yAxis.size() - coords[Y_IND] - 1)
+                return scaleRange.getLow() + coords[Y_IND]
                         * (scaleRange.getHigh() - scaleRange.getLow()) / yAxis.size();
             case NAN:
             default:
