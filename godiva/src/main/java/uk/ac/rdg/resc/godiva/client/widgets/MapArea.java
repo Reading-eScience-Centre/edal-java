@@ -471,7 +471,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 FeatureInfoMessageAndFeatureIds featureInfo = null;
                 final DialogBox pop = new DialogBoxWithCloseButton(MapArea.this);
                 pop.setPopupPosition(x, y);
-
                 try {
                     featureInfo = processFeatureInfo(eventObject.getText());
                 } catch (Exception e) {
@@ -582,7 +581,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     /**
-     * Used to display an image in a box. This is used for showing vertical
+     * Used to display an image in a new window. This is used for showing vertical
      * profiles or time series plots
      * 
      * @param url
@@ -591,8 +590,18 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      *            The title of the popup box
      */
     protected void displayImagePopup(String url, String title) {
-        Window.open(url, title, null);
-//        
+        /*
+         * Window.open seems to take the root URL as the actual root URL +
+         * /modulename/.
+         * 
+         * This is very much an empirical result. Also known as
+         * "not documented anywhere". Still, the below code works...
+         */
+        Window.open("../"+url, title, null);
+        
+        /*
+         * This is how we can display the image in a popup box.
+         */
 //        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(this);
 //        final com.google.gwt.user.client.ui.Image image = new com.google.gwt.user.client.ui.Image(url);
 //        image.addLoadHandler(new LoadHandler() {
@@ -602,7 +611,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 //            }
 //        });
 //        /*
-//         * TODO this doesn't seem to appear on Chromium...
+//         * NOTTODO this doesn't seem to appear on Chromium...
 //         */
 //        image.setAltText("Image loading...");
 //        if(title != null){
@@ -683,15 +692,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     Bounds extent = map.getExtent();
                     Point lowerLeft = new Point(extent.getLowerLeftX(), extent.getLowerLeftY());
                     Point upperRight = new Point(extent.getUpperRightX(), extent.getUpperRightY());
-                    
+
                     lowerLeft.transform(new Projection("EPSG:32761"), new Projection("CRS:84"));
                     upperRight.transform(new Projection("EPSG:32761"), new Projection("CRS:84"));
-                    
+
                     double highLat = lowerLeft.getY() > upperRight.getY() ? lowerLeft.getY()
                             : upperRight.getY();
-                    
-                    url = url + "&bbox=-180,-90,180,"+highLat;
-                    
+
+                    url = url + "&bbox=-180,-90,180," + highLat;
+
                     url = url.replaceAll("EPSG:32761", "CRS:84");
                     url = url.replaceAll("EPSG%3A32761", "CRS%3A84");
                 } else {
