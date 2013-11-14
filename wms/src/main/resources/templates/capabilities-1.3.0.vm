@@ -18,11 +18,11 @@
         <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
         <ContactInformation>
             <ContactPersonPrimary>
-                <ContactPerson>$catalogue.server.contactInfo.name</ContactPerson>
-                <ContactOrganization>$catalogue.server.contactInfo.organisation</ContactOrganization>
+                <ContactPerson>$catalogue.contactInfo.name</ContactPerson>
+                <ContactOrganization>$catalogue.contactInfo.organisation</ContactOrganization>
             </ContactPersonPrimary>
-            <ContactVoiceTelephone>$catalogue.server.contactInfo.telephone</ContactVoiceTelephone>
-            <ContactElectronicMailAddress>$catalogue.server.contactInfo.email</ContactElectronicMailAddress>
+            <ContactVoiceTelephone>$catalogue.contactInfo.telephone</ContactVoiceTelephone>
+            <ContactElectronicMailAddress>$catalogue.contactInfo.email</ContactElectronicMailAddress>
         </ContactInformation>
         <Fees>none</Fees>
         <AccessConstraints>none</AccessConstraints>
@@ -71,7 +71,7 @@
             <Format>XML</Format>
         </Exception>
         <Layer>
-            <Title>$catalogue.serverName</Title>
+            <Title>$catalogue.serverInfo.name</Title>
 #foreach($supportedCrs in $supportedCrsCodes)
             <CRS>$supportedCrs</CRS>
 #end            
@@ -93,7 +93,7 @@
 ##
 ##
 #macro(layer $dataset $variableMetadata $verboseTimes $children)
-#set($parent = $children.size() > 0)
+#set($parent = ($children && $children.size() > 0))
 #set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
 #set($layerMetadata = $catalogue.getLayerMetadata($layerName))
 #set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
