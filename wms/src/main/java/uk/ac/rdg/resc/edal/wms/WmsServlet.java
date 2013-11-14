@@ -62,6 +62,7 @@ import org.apache.velocity.app.event.implement.EscapeXmlReference;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.runtime.RuntimeConstants;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -128,7 +129,17 @@ import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
- * Servlet implementation class WmsServlet
+ * The main servlet for all WMS operations, including extended behaviour. This
+ * servlet can be used as-is by defining it in the usual way in a web.xml file,
+ * and injecting a {@link WmsCatalogue} object by calling the
+ * {@link WmsServlet#setCatalogue(WmsCatalogue)}.
+ * 
+ * If the {@link WmsCatalogue} is not set, behaviour is undefined. It'll fail in
+ * all sorts of ways - nothing will work properly.
+ * 
+ * The recommended usage is to either subclass this servlet and set a valid
+ * instance of a {@link WmsCatalogue} in the constructor/init method or to use
+ * Spring to do the wiring for you.
  */
 public class WmsServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(WmsServlet.class);
@@ -164,6 +175,9 @@ public class WmsServlet extends HttpServlet {
         props.put("class.resource.loader.class",
                 "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
         velocityEngine = new VelocityEngine();
+        velocityEngine.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS,
+                "org.apache.velocity.runtime.log.Log4JLogChute");
+        velocityEngine.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
         velocityEngine.init(props);
     }
 
@@ -286,12 +300,13 @@ public class WmsServlet extends HttpServlet {
         PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
 
-        if(getMapParams.getImageFormat() instanceof KmzFormat) {
-            if(!GISUtils.isWgs84LonLat(plottingParameters.getBbox().getCoordinateReferenceSystem())) {
+        if (getMapParams.getImageFormat() instanceof KmzFormat) {
+            if (!GISUtils
+                    .isWgs84LonLat(plottingParameters.getBbox().getCoordinateReferenceSystem())) {
                 throw new EdalException("KMZ files can only be generated from WGS84 projections");
             }
         }
-        
+
         /*
          * Do some checks on the style parameters.
          * 
@@ -341,7 +356,7 @@ public class WmsServlet extends HttpServlet {
         ImageFormat imageFormat = getMapParams.getImageFormat();
         try {
             ServletOutputStream outputStream = httpServletResponse.getOutputStream();
-            if(imageFormat instanceof SimpleFormat) {
+            if (imageFormat instanceof SimpleFormat) {
                 /*
                  * We have a normal image format
                  */
@@ -349,10 +364,11 @@ public class WmsServlet extends HttpServlet {
                 simpleFormat.writeImage(frames, outputStream, null);
             } else {
                 /*
-                 * We have KML (or another image format which needs additional information)
+                 * We have KML (or another image format which needs additional
+                 * information)
                  */
                 String[] layerNames = styleParameters.getLayerNames();
-                if(layerNames.length > 1) {
+                if (layerNames.length > 1) {
                     throw new EdalException("Exactly 1 layer must be requested for KML ("
                             + layerNames.length + " have been supplied)");
                 }
@@ -361,17 +377,21 @@ public class WmsServlet extends HttpServlet {
                     /*
                      * If this is a KMZ file, give it a sensible filename
                      */
-                    httpServletResponse.setHeader("Content-Disposition", "inline; filename=" +
-                            layerName.replaceAll("/", "-") + ".kmz");
+                    httpServletResponse.setHeader("Content-Disposition", "inline; filename="
+                            + layerName.replaceAll("/", "-") + ".kmz");
                 }
                 WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
                 String name = layerMetadata.getTitle();
                 String description = layerMetadata.getDescription();
-                String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters.getTargetZ().toString();
-                List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT(ISOChronology.getInstance()));
+                String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters
+                        .getTargetZ().toString();
+                List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT(ISOChronology
+                        .getInstance()));
                 BufferedImage legend = imageGenerator.getLegend(200);
-                GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters.getBbox());
-                imageFormat.writeImage(frames, outputStream, name, description, gbbox, tValues, zValue, legend, 24);
+                GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters
+                        .getBbox());
+                imageFormat.writeImage(frames, outputStream, name, description, gbbox, tValues,
+                        zValue, legend, 24);
             }
             outputStream.close();
         } catch (IOException e) {
@@ -1113,11 +1133,14 @@ public class WmsServlet extends HttpServlet {
              * We're creating a legend with supporting text so we need to know
              * the colour scale range and the layer in question
              */
-            /*
-             * TODO This is relatively straightforward if full GetMap request
-             * parameters have been sent...
-             */
-            throw new MetadataException("Can only produce colourbars at present - not full legends");
+            try {
+                GetMapParameters getMapParameters = new GetMapParameters(params);
+                legend = getMapParameters.getStyleParameters().getImageGenerator(catalogue)
+                        .getLegend(200);
+            } catch (Exception e) {
+                throw new MetadataException(
+                        "A full set of GetMap parameters must be provided to generate a full legend.  You can set COLORBARONLY=true to just generate a colour bar");
+            }
         }
         httpServletResponse.setContentType("image/png");
         try {
@@ -1311,7 +1334,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        if(copyright.length() > 0) {
+        if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
         JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
@@ -1488,14 +1511,26 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void handleWmsException(EdalException wmse, HttpServletResponse httpServletResponse,
+    /**
+     * Wraps {@link EdalException}s in an XML wrapper and returns them.
+     * 
+     * @param exception
+     *            The exception to handle
+     * @param httpServletResponse
+     *            The {@link HttpServletResponse} object to write to
+     * @param v130
+     *            Whether this should be handled as a WMS v1.3.0 exception
+     * @throws IOException
+     *             If there is a problem writing to the output stream
+     */
+    void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
         VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();
         ec.addEventHandler(new EscapeXmlReference());
         ec.attachToContext(context);
 
-        context.put("exception", wmse);
+        context.put("exception", exception);
 
         Template template;
         if (v130) {
