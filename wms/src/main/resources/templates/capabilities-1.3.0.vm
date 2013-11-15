@@ -79,7 +79,7 @@
             <Layer>
                 <Title>$catalogue.getDatasetTitle($dataset.id)</Title>
 #foreach($variable in $dataset.topLevelVariables)
-## Recursively(?) insert layers here.  Depends how we want to implement layer structure in Capabilities doc...
+## Recursively insert layers here.
 #layer($dataset $variable $verbose $variable.children)
 #end                
             </Layer>
@@ -96,11 +96,12 @@
 #set($parent = ($children && $children.size() > 0))
 #set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
 #set($layerMetadata = $catalogue.getLayerMetadata($layerName))
-#set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
+#if(!$layerMetadata.disabled)
     <Layer #if(!$parent && $layerMetadata.queryable)queryable="1"#end>
 #if($variableMetadata.plottable && $layerName && !$parent)
         <Name>$layerName</Name>
 #end
+#set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
 #if($layerMetadata.title)
         <Title>$layerMetadata.title</Title>
 #end
@@ -188,4 +189,5 @@
 #end
 #end
 </Layer>
+#end
 #end
