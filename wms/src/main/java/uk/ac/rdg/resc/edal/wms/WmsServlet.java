@@ -633,14 +633,17 @@ public class WmsServlet extends HttpServlet {
             throws WmsLayerNotFoundException {
         JSONArray ret = new JSONArray();
         for (VariableMetadata variable : variables) {
-            JSONObject child = new JSONObject();
-
             String id = variable.getId();
             String layerName = catalogue.getLayerName(datasetId, id);
+            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            if (layerMetadata.isDisabled()) {
+                continue;
+            }
+
+            JSONObject child = new JSONObject();
 
             child.put("id", layerName);
 
-            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
             String title = layerMetadata.getTitle();
             child.put("label", title);
 
