@@ -54,6 +54,7 @@ import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -73,7 +74,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
 
     @Override
-    public GridDataset createDataset(String id, String location) throws IOException {
+    public GridDataset createDataset(String id, String location) throws IOException, EdalException {
         NetcdfDataset nc = null;
         try {
             /*
@@ -107,8 +108,12 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
             /*
              * Store a map of component names. Key is the compound name, value
              * is a 2-element String array with x, y component IDs
+             * 
+             * Also store a map of whether these components are really
+             * eastward/northward, or whether they are locally u/v
              */
             Map<String, String[]> xyComponentPairs = new HashMap<String, String[]>();
+            Map<String, Boolean> xyNameToTrueEN = new HashMap<String, Boolean>();
             /*
              * Store a map of variable IDs to UncertML URLs. This will be used
              * to determine which components are mean/std/etc.
@@ -170,6 +175,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             if (!xyComponentPairs.containsKey(compoundName)) {
                                 cData = new String[2];
                                 xyComponentPairs.put(compoundName, cData);
+                                xyNameToTrueEN.put(compoundName, true);
                             }
                             cData = xyComponentPairs.get(compoundName);
                             /*
@@ -183,6 +189,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             if (!xyComponentPairs.containsKey(compoundName)) {
                                 cData = new String[2];
                                 xyComponentPairs.put(compoundName, cData);
+                                xyNameToTrueEN.put(compoundName, true);
                             }
                             cData = xyComponentPairs.get(compoundName);
                             /*
@@ -191,11 +198,12 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                              */
                             cData[1] = varId;
                         } else if (name.matches("u-.*component")) {
-                            String compoundName = name.replaceFirst("u-(.*) component", "$1");
+                            String compoundName = name.replaceFirst("u-(.*)component", "$1");
                             String[] cData;
                             if (!xyComponentPairs.containsKey(compoundName)) {
                                 cData = new String[2];
                                 xyComponentPairs.put(compoundName, cData);
+                                xyNameToTrueEN.put(compoundName, false);
                             }
                             cData = xyComponentPairs.get(compoundName);
                             /*
@@ -204,11 +212,12 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                              */
                             cData[0] = varId;
                         } else if (name.matches("v-.*component")) {
-                            String compoundName = name.replaceFirst("v-(.*) component", "$1");
+                            String compoundName = name.replaceFirst("v-(.*)component", "$1");
                             String[] cData;
                             if (!xyComponentPairs.containsKey(compoundName)) {
                                 cData = new String[2];
                                 xyComponentPairs.put(compoundName, cData);
+                                xyNameToTrueEN.put(compoundName, false);
                             }
                             cData = xyComponentPairs.get(compoundName);
                             /*
@@ -217,6 +226,9 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                              */
                             cData[1] = varId;
                         }
+                        /*
+                         * TODO Add zonal/meriodional check
+                         */
                     }
                 }
             }
@@ -227,7 +239,8 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                 String title = componentData.getKey();
                 String[] comps = componentData.getValue();
                 if (comps[0] != null && comps[1] != null) {
-                    cdmGridDataset.addVariablePlugin(new VectorPlugin(comps[0], comps[1], title));
+                    cdmGridDataset.addVariablePlugin(new VectorPlugin(comps[0], comps[1], title,
+                            xyNameToTrueEN.get(title)));
                 }
             }
 

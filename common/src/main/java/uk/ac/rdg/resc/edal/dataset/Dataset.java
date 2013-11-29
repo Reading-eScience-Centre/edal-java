@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
@@ -43,7 +44,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
  * @author Guy
  */
 public interface Dataset {
-    
+
     /**
      * @return The ID which identifies this dataset.
      */
@@ -86,6 +87,8 @@ public interface Dataset {
      * 
      * @param plugin
      *            The {@link VariablePlugin} to add
+     * @throws EdalException
+     *             If there is a problem adding the plugin
      */
-    public void addVariablePlugin(VariablePlugin plugin);
+    public void addVariablePlugin(VariablePlugin plugin) throws EdalException;
 }

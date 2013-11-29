@@ -72,7 +72,6 @@ public class MapImage extends Drawable {
 //            @XmlElement(name = "BasicGlyphLayer", type = BasicGlyphLayer.class),
 //            @XmlElement(name = "SubsampledGlyphLayer", type = SubsampledGlyphLayer.class),
 //            @XmlElement(name = "ConfidenceIntervalLayer", type = ConfidenceIntervalLayer.class),
-            @XmlElement(name = "SmoothedContourLayer", type = SmoothedContourLayer.class),
             @XmlElement(name = "ContourLayer", type = ContourLayer.class) })
     private List<Drawable> layers = new ArrayList<Drawable>();
 

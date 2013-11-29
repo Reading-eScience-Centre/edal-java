@@ -42,17 +42,17 @@ import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "RasterLayerType")
 public class RasterLayer extends ImageLayer {
-    
+
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
-    @XmlElements({@XmlElement(name = "PaletteColourScheme", type = PaletteColourScheme.class),
-        @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class)})
+    @XmlElements({ @XmlElement(name = "PaletteColourScheme", type = PaletteColourScheme.class),
+            @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class) })
     private ColourScheme colourScheme;
-    
+
     @SuppressWarnings("unused")
     private RasterLayer() {
     }
-    
+
     public RasterLayer(String dataFieldName, ColourScheme colourScheme) {
         this.dataFieldName = dataFieldName;
         this.colourScheme = colourScheme;
@@ -72,7 +72,7 @@ public class RasterLayer extends ImageLayer {
          * Initialise the array to store colour values
          */
         int[] pixels = new int[image.getWidth() * image.getHeight()];
-        
+
         /*
          * Extract the data from the catalogue
          */
@@ -84,7 +84,7 @@ public class RasterLayer extends ImageLayer {
          * below
          */
         int index = 0;
-        for(Number value : values) {
+        for (Number value : values) {
             pixels[index++] = colourScheme.getColor(value).getRGB();
         }
         image.setRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
@@ -93,8 +93,8 @@ public class RasterLayer extends ImageLayer {
     @Override
     protected Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
-        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(
-                colourScheme.getScaleMin(), colourScheme.getScaleMax())));
+        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(colourScheme.getScaleMin(),
+                colourScheme.getScaleMax())));
         return ret;
     }
 }

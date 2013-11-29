@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+
 /**
  * A factory for {@link Dataset} objects. The intention is that one factory
  * object will be created for each type of data source (e.g. one factory object
@@ -85,6 +87,9 @@ public abstract class DatasetFactory {
      * @param location
      *            The location of the source data: this may be a file, database
      *            connection string or a remote server address.
+     * @throws EdalException
+     *             If there is a problem creating the dataset
      */
-    public abstract Dataset createDataset(String id, String location) throws IOException;
+    public abstract Dataset createDataset(String id, String location) throws IOException,
+            EdalException;
 }

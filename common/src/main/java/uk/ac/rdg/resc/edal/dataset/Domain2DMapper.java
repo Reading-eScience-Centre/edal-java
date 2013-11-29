@@ -70,8 +70,7 @@ public class Domain2DMapper extends DomainMapper<int[]> {
          * We're mapping a single int to a pair of co-ordinates, based on the
          * target grid size.
          */
-        int[] ret = new int[] { (index % targetXSize), (index / targetXSize) };
-        return ret;
+        return new int[] { (index % targetXSize), (index / targetXSize) };
     }
 
     private int convertCoordsToIndex(int i, int j) {
