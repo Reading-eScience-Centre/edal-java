@@ -986,8 +986,18 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        if (min == Double.MAX_VALUE || max == -Double.MAX_VALUE || min == max) {
+        if (min == Double.MAX_VALUE || max == -Double.MAX_VALUE) {
             throw new MetadataException("No data in this area - cannot calculate min/max");
+        }
+        
+        if(min == max) {
+            if(min == 0.0) {
+                min = -0.5;
+                max = 0.5;
+            } else {
+                min *= 0.95;
+                max *= 1.05;
+            }
         }
 
         JSONObject minmax = new JSONObject();
