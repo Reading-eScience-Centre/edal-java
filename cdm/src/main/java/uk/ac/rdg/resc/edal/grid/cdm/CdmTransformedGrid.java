@@ -69,7 +69,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Jon Blower
  * @author Guy Griffiths
  */
-public class ProjectedGrid extends AbstractTransformedGrid {
+public class CdmTransformedGrid extends AbstractTransformedGrid {
     private final ProjectionImpl proj;
     private final ReferenceableAxis<Double> xAxis;
     private final ReferenceableAxis<Double> yAxis;
@@ -82,7 +82,7 @@ public class ProjectedGrid extends AbstractTransformedGrid {
      * 
      * @param coordSys
      */
-    public ProjectedGrid(GridCoordSystem coordSys) {
+    public CdmTransformedGrid(GridCoordSystem coordSys) {
         proj = coordSys.getProjection();
         /*
          * If this is a rotated-pole projection then the x axis is longitude and
@@ -154,7 +154,7 @@ public class ProjectedGrid extends AbstractTransformedGrid {
                     Polygon footprint = new AbstractPolygon() {
                         @Override
                         public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-                            return ProjectedGrid.this.getCoordinateReferenceSystem();
+                            return CdmTransformedGrid.this.getCoordinateReferenceSystem();
                         }
 
                         @Override
@@ -168,7 +168,7 @@ public class ProjectedGrid extends AbstractTransformedGrid {
                              * The x,y coordinates are in the external CRS of
                              * this grid
                              */
-                            GridCoordinates2D posCoords = ProjectedGrid.this
+                            GridCoordinates2D posCoords = CdmTransformedGrid.this
                                     .findIndexOf(new HorizontalPosition(x, y,
                                             DefaultGeographicCRS.WGS84));
                             if (posCoords == null)
@@ -177,7 +177,7 @@ public class ProjectedGrid extends AbstractTransformedGrid {
                         }
                     };
 
-                    return new GridCell2DImpl(coords, centre, footprint, ProjectedGrid.this);
+                    return new GridCell2DImpl(coords, centre, footprint, CdmTransformedGrid.this);
                 }
             };
         }
