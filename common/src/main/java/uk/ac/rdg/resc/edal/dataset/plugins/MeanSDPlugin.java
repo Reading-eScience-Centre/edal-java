@@ -33,6 +33,7 @@ import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
  * A plugin to group mean and standard deviation of a single variable
@@ -79,8 +80,8 @@ public class MeanSDPlugin extends VariablePlugin {
                 sdMetadata.getTemporalDomain());
 
         /*
-         * Find the original parent which the mean component belongs to (and almost
-         * certainly the sd component)
+         * Find the original parent which the mean component belongs to (and
+         * almost certainly the sd component)
          */
         VariableMetadata parentMetadata = meanMetadata.getParent();
 
@@ -109,7 +110,7 @@ public class MeanSDPlugin extends VariablePlugin {
     }
 
     @Override
-    protected Number generateValue(String varSuffix, Number... sourceValues) {
+    protected Number generateValue(String varSuffix, HorizontalPosition pos, Number... sourceValues) {
         /*
          * We are not generating new values with this plugin - it is just there
          * to group the mean and SD together. We have introduced a new grouping

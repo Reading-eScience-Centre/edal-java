@@ -39,8 +39,10 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import ucar.nc2.dataset.CoordinateAxis1D;
 import ucar.nc2.dt.GridCoordSystem;
 import ucar.unidata.geoloc.LatLonPoint;
+import ucar.unidata.geoloc.LatLonPointImpl;
 import ucar.unidata.geoloc.Projection;
 import ucar.unidata.geoloc.ProjectionImpl;
+import ucar.unidata.geoloc.ProjectionPointImpl;
 import ucar.unidata.geoloc.projection.RotatedPole;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.geometry.AbstractPolygon;
@@ -50,6 +52,7 @@ import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.GridCell2DImpl;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.AbstractTransformedGrid;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
@@ -66,7 +69,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Jon Blower
  * @author Guy Griffiths
  */
-public class ProjectedGrid implements HorizontalGrid {
+public class ProjectedGrid extends AbstractTransformedGrid {
     private final ProjectionImpl proj;
     private final ReferenceableAxis<Double> xAxis;
     private final ReferenceableAxis<Double> yAxis;
@@ -106,14 +109,6 @@ public class ProjectedGrid implements HorizontalGrid {
             return xAxis.getCoordinateExtent().contains(transformedPosition.getX())
                     && yAxis.getCoordinateExtent().contains(transformedPosition.getY());
         }
-    }
-
-    /**
-     * Always returns {@link DefaultGeographicCRS#WGS84}.
-     */
-    @Override
-    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return DefaultGeographicCRS.WGS84;
     }
 
     @Override
@@ -191,16 +186,53 @@ public class ProjectedGrid implements HorizontalGrid {
 
     @Override
     public GridCoordinates2D findIndexOf(HorizontalPosition position) {
-        if (GISUtils.crsMatch(getCoordinateReferenceSystem(),
+        /*
+         * Ensure position is in CRS84, so that we can use our cached projection
+         * to transform it
+         */
+        if (!GISUtils.crsMatch(getCoordinateReferenceSystem(),
                 position.getCoordinateReferenceSystem())) {
-            return new GridCoordinates2D(xAxis.findIndexOf(position.getX()),
-                    yAxis.findIndexOf(position.getY()));
-        } else {
-            HorizontalPosition transformedPosition = GISUtils.transformPosition(position,
-                    getCoordinateReferenceSystem());
-            return new GridCoordinates2D(xAxis.findIndexOf(transformedPosition.getX()),
-                    yAxis.findIndexOf(transformedPosition.getY()));
+            position = GISUtils.transformPosition(position, getCoordinateReferenceSystem());
         }
+        /*
+         * Now transform from CRS84 to the local CRS
+         */
+        ProjectionPointImpl transformed = proj.latLonToProj(position.getY(), position.getX());
+        /*
+         * and find the indices along both axes
+         */
+        return new GridCoordinates2D(xAxis.findIndexOf(transformed.x),
+                yAxis.findIndexOf(transformed.y));
+    }
+
+    @Override
+    public double transformNativeHeadingToWgs84(double xComp, double yComp, double lon, double lat) {
+        double dxy = 1e-8;
+        ProjectionPointImpl centre = proj.latLonToProj(lat, lon);
+        LatLonPointImpl xPlus = proj.projToLatLon(centre.x + dxy, centre.y);
+        LatLonPointImpl yPlus = proj.projToLatLon(centre.x, centre.y + dxy);
+
+        /*
+         * Java naming convention ignored for clarity that these are partial
+         * derivatives
+         */
+        double dXlatlon_dXnative;
+        double dYlatlon_dXnative;
+        double dXlatlon_dYnative;
+        double dYlatlon_dYnative;
+        dXlatlon_dXnative = (xPlus.getLongitude() - lon);
+        dYlatlon_dXnative = (xPlus.getLatitude() - lat);
+
+        dXlatlon_dYnative = (yPlus.getLongitude() - lon);
+        dYlatlon_dYnative = (yPlus.getLatitude() - lat);
+
+        /*
+         * Get the new components
+         */
+        float newX = (float) (dXlatlon_dXnative * xComp + dXlatlon_dYnative * yComp);
+        float newY = (float) (dYlatlon_dXnative * xComp + dYlatlon_dYnative * yComp);
+
+        return GISUtils.RAD2DEG * Math.atan2(newX, newY);
     }
 
     @Override

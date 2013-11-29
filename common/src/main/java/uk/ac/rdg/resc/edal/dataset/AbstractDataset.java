@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 public abstract class AbstractDataset implements Dataset {
@@ -113,7 +114,7 @@ public abstract class AbstractDataset implements Dataset {
     }
 
     @Override
-    public void addVariablePlugin(VariablePlugin plugin) {
+    public void addVariablePlugin(VariablePlugin plugin) throws EdalException {
         /*-
          * First check that the supplied plugin doesn't provide any variables
          * which either:

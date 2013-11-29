@@ -46,12 +46,14 @@ import uk.ac.rdg.resc.edal.domain.SimpleTemporalDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleVerticalDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -119,12 +121,12 @@ public abstract class VariablePlugin {
      * Convenience method for generating an {@link Array1D} from source
      */
     public Array1D<Number> generateArray1D(final String varId,
-            final Array1D<Number>... sourceArrays) {
+            final Array1D<HorizontalPosition> positions, final Array1D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
         }
-        return new Array1D<Number>(sourceArrays[0].getShape().length) {
+        return new Array1D<Number>(sourceArrays[0].getShape()[0]) {
             @Override
             public void set(Number value, int... coords) {
                 throw new IllegalArgumentException("This Array is immutable");
@@ -139,7 +141,8 @@ public abstract class VariablePlugin {
                         return null;
                     }
                 }
-                return generateValue(varId.substring(prefixLength), sourceValues);
+                return generateValue(varId.substring(prefixLength), positions.get(coords),
+                        sourceValues);
             }
 
             @Override
@@ -153,7 +156,7 @@ public abstract class VariablePlugin {
      * Convenience method for generating an {@link Array2D} from source
      */
     public Array2D<Number> generateArray2D(final String varId,
-            final Array2D<Number>... sourceArrays) {
+            final Array2D<HorizontalPosition> positions, final Array2D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
@@ -173,7 +176,8 @@ public abstract class VariablePlugin {
                         return null;
                     }
                 }
-                return generateValue(varId.substring(prefixLength), sourceValues);
+                return generateValue(varId.substring(prefixLength), positions.get(coords),
+                        sourceValues);
             }
 
             @Override
@@ -193,8 +197,11 @@ public abstract class VariablePlugin {
      *            An array of {@link VariableMetadata} of the source variables
      * @return An array of any new {@link VariableMetadata} objects inserted
      *         into the tree
+     * @throws EdalException
+     *             If there is a problem processing the metadata
      */
-    public VariableMetadata[] processVariableMetadata(VariableMetadata... metadata) {
+    public VariableMetadata[] processVariableMetadata(VariableMetadata... metadata)
+            throws EdalException {
         if (metadataProcessed) {
             throw new IllegalStateException("Metadata has already been processed for this plugin");
         }
@@ -210,11 +217,15 @@ public abstract class VariablePlugin {
      * 
      * @param varId
      *            The ID of the variable to generate a value for
+     * @param pos
+     *            The {@link HorizontalPosition} at which the data is being
+     *            generated. This may be relevant to how the plugin processes
+     *            the values
      * @param values
      *            An array of {@link Number}s representing the source values
      * @return The derived value
      */
-    public Number getValue(String varId, Number... values) {
+    public Number getValue(String varId, HorizontalPosition pos, Number... values) {
         if (!Arrays.asList(provides).contains(varId)) {
             throw new IllegalArgumentException("This plugin does not provide the variable " + varId);
         }
@@ -225,7 +236,7 @@ public abstract class VariablePlugin {
         if (values[0] == null || values[1] == null) {
             return null;
         }
-        return generateValue(varId.substring(prefixLength), values);
+        return generateValue(varId.substring(prefixLength), pos, values);
     }
 
     /**
@@ -248,8 +259,11 @@ public abstract class VariablePlugin {
      *            An array of {@link VariableMetadata} of the source variables
      *            in the order they were supplied to the constructor
      * @return The derived {@link VariableMetadata}
+     * @throws EdalException
+     *             If there is a problem generating new metadata
      */
-    protected abstract VariableMetadata[] doProcessVariableMetadata(VariableMetadata... metadata);
+    protected abstract VariableMetadata[] doProcessVariableMetadata(VariableMetadata... metadata)
+            throws EdalException;
 
     /**
      * Subclasses should override this method to generate values based on source
@@ -260,12 +274,16 @@ public abstract class VariablePlugin {
      *            {@link VariableMetadata} for. This will be one of the provided
      *            suffixes in the constructor, but not the actual variable ID
      *            (which subclasses do not need to worry about)
+     * @param pos
+     *            The {@link HorizontalPosition} at which the value is
+     *            generated. This may affect the returned value
      * @param values
      *            An array of {@link Number}s representing the source values in
      *            the order they were supplied to the constructor
      * @return The derived value
      */
-    protected abstract Number generateValue(String varSuffix, Number... sourceValues);
+    protected abstract Number generateValue(String varSuffix, HorizontalPosition pos,
+            Number... sourceValues);
 
     private String combinedName = null;
 

@@ -61,26 +61,30 @@ final class DataChunk {
         final Array arr;
         Variable origVar = var.getOriginalVariable();
         if (origVar == null) {
-            // We read from the enhanced variable
+            /* We read from the enhanced variable */
             arr = readVariable(var, ranges);
         } else {
-            // We read from the original variable to avoid enhancing data
-            // values that we won't use
+            /*
+             * We read from the original variable to avoid enhancing data values
+             * that we won't use
+             */
             arr = readVariable(origVar, ranges);
         }
 
-        // Decide whether or not we need to enhance any data values we
-        // read from this array
+        /*
+         * Decide whether or not we need to enhance any data values we read from
+         * this array
+         */
         final boolean needsEnhance;
         Set<Enhance> enhanceMode = var.getEnhanceMode();
         if (enhanceMode.contains(Enhance.ScaleMissingDefer)) {
-            // Values read from the array are not enhanced, but need to be
+            /* Values read from the array are not enhanced, but need to be */
             needsEnhance = true;
         } else if (enhanceMode.contains(Enhance.ScaleMissing)) {
-            // We only need to enhance if we read data from the plain Variable
+            /* We only need to enhance if we read data from the plain Variable */
             needsEnhance = origVar != null;
         } else {
-            // Values read from the array will not be enhanced
+            /* Values read from the array will not be enhanced */
             needsEnhance = false;
         }
 
@@ -103,11 +107,11 @@ final class DataChunk {
 
     /** Gets an Index for the underlying Array */
     public Index getIndex() {
-        return this.arr.getIndex();
+        return arr.getIndex();
     }
 
     public long size() {
-        return this.arr.getSize();
+        return arr.getSize();
     }
 
     /**
@@ -117,10 +121,10 @@ final class DataChunk {
      */
     public float readFloatValue(Index index) {
         double val = arr.getFloat(index);
-        if (this.needsEnhance) {
-            val = this.var.convertScaleOffsetMissing(val);
+        if (needsEnhance) {
+            val = var.convertScaleOffsetMissing(val);
         }
-        if (this.var.isMissing(val))
+        if (var.isMissing(val))
             return Float.NaN;
         else
             return (float) val;

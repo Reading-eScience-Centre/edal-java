@@ -29,22 +29,94 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.grid.GridCell2D;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "ImageLayerType")
 public abstract class ImageLayer extends Drawable {
 
-    protected interface DataReader {
-        public Array2D<Number> getDataForLayerName(String layerId) throws EdalException;
+    protected class DataReader {
+        private PlottingDomainParams params;
+        private FeatureCatalogue catalogue;
+        private Map<String, MapFeatureAndMember> extractedFeatures = new HashMap<String, MapFeatureAndMember>();
+
+        public DataReader(PlottingDomainParams params, FeatureCatalogue catalogue) {
+            this.params = params;
+            this.catalogue = catalogue;
+        }
+
+        private MapFeatureAndMember getFeature(String layerId) throws EdalException {
+            if (!extractedFeatures.containsKey(layerId)) {
+                MapFeatureAndMember featureAndMemberName = catalogue.getFeatureAndMemberName(
+                        layerId, params);
+                extractedFeatures.put(layerId, featureAndMemberName);
+            }
+            return extractedFeatures.get(layerId);
+        }
+
+        public Array2D<Number> getDataForLayerName(String layerId) throws EdalException {
+            MapFeatureAndMember mapFeatureAndMember = getFeature(layerId);
+            final Array2D<Number> values = mapFeatureAndMember.getMapFeature().getValues(
+                    mapFeatureAndMember.getMember());
+            /*
+             * Since BufferedImages have the y-axis increasing downwards, wrap
+             * the returned values in an Array2D with a flipped y-axis
+             */
+            return new Array2D<Number>(values.getYSize(), values.getXSize()) {
+                @Override
+                public void set(Number value, int... coords) {
+                    throw new UnsupportedOperationException("This is an immutable Array2D");
+                }
+
+                @Override
+                public Number get(int... coords) {
+                    return values.get(params.getHeight() - coords[0] - 1, coords[1]);
+                }
+
+                @Override
+                public Class<Number> getValueClass() {
+                    return Number.class;
+                }
+            };
+        };
+
+        public Array2D<HorizontalPosition> getMapDomainObjects(String layerId) throws EdalException {
+            final Array<GridCell2D> domainObjects = getFeature(layerId).getMapFeature().getDomain().getDomainObjects();
+            /*
+             * Since BufferedImages have the y-axis increasing downwards, wrap
+             * the returned values in an Array2D with a flipped y-axis
+             */
+            return new Array2D<HorizontalPosition>(domainObjects.getShape()[0], domainObjects.getShape()[1]) {
+                @Override
+                public HorizontalPosition get(int... coords) {
+                    return domainObjects.get(params.getHeight() - coords[0] - 1, coords[1]).getCentre();
+                }
+
+                @Override
+                public void set(HorizontalPosition value, int... coords) {
+                    throw new UnsupportedOperationException("This is an immutable Array2D");
+                }
+                
+                @Override
+                public Class<HorizontalPosition> getValueClass() {
+                    return HorizontalPosition.class;
+                }
+            };
+        }
     }
 
     /*
@@ -68,37 +140,26 @@ public abstract class ImageLayer extends Drawable {
 
     protected void drawIntoImage(BufferedImage image, final PlottingDomainParams params,
             final FeatureCatalogue catalogue) throws EdalException {
-        drawIntoImage(image, new DataReader() {
-            @Override
-            public Array2D<Number> getDataForLayerName(String layerId) throws EdalException {
-                MapFeatureAndMember featureAndMemberName = catalogue.getFeatureAndMemberName(
-                        layerId, params);
-                final Array2D<Number> values = featureAndMemberName.getMapFeature().getValues(
-                        featureAndMemberName.getMember());
-                /*
-                 * Since BufferedImages have the y-axis increasing downwards,
-                 * wrap the returned values in an Array2D with a flipped y-axis
-                 */
-                return new Array2D<Number>(values.getYSize(), values.getXSize()) {
-                    @Override
-                    public void set(Number value, int... coords) {
-                        throw new UnsupportedOperationException("This is an immutable Array2D");
-                    }
-                    
-                    @Override
-                    public Number get(int... coords) {
-                        return values.get(params.getHeight() - coords[0] - 1, coords[1]);
-                    }
-
-                    @Override
-                    public Class<Number> getValueClass() {
-                        return Number.class;
-                    }
-                };
-            }
-        });
+        drawIntoImage(image, new DataReader(params, catalogue));
     }
 
+    /**
+     * Draws the data into the supplied image.
+     * 
+     * @param image
+     *            A {@link BufferedImage} to draw into
+     * @param dataReader
+     *            A {@link DataReader} which is used to obtain the actual data
+     *            values and domain. The {@link MapDomain} returned will match
+     *            the size of the image, and pixels are georeferenced to the
+     *            GridCell2Ds which comprise the domain
+     * @param targetCrs
+     *            The CoordinateReferenceSystem of the target image. This is
+     *            important when plotting directional fields.
+     * @throws EdalException
+     *             If there is a problem reading the data or drawing into the
+     *             image
+     */
     protected abstract void drawIntoImage(BufferedImage image, DataReader dataReader)
             throws EdalException;
 
