@@ -54,6 +54,7 @@ import org.gwtopenmaps.openlayers.client.geometry.LineString;
 import org.gwtopenmaps.openlayers.client.geometry.Point;
 import org.gwtopenmaps.openlayers.client.layer.Image;
 import org.gwtopenmaps.openlayers.client.layer.ImageOptions;
+import org.gwtopenmaps.openlayers.client.layer.Layer;
 import org.gwtopenmaps.openlayers.client.layer.TransitionEffect;
 import org.gwtopenmaps.openlayers.client.layer.Vector;
 import org.gwtopenmaps.openlayers.client.layer.WMS;
@@ -769,6 +770,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     public String getBaseLayerLayers() {
         return layersForExport;
+    }
+    
+    public String getBackgroundMapName() {
+        return map.getBaseLayer().getName();
+    }
+    
+    public void setBackgroundMap(String layerName) {
+        Layer layer = map.getLayerByName(layerName);
+        map.setBaseLayer(layer);
     }
 
     protected void addBaseLayers() {
