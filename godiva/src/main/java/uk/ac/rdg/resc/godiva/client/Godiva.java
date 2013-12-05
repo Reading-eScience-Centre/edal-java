@@ -671,7 +671,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         kmzLink.setHref(mapArea.getKMZUrl());
 
         String baseurl = "http://" + Window.Location.getHost() + Window.Location.getPath()
-                + "?permalinking=true&";
+                + "?permalinking=true&bgmap="+mapArea.getBackgroundMapName()+"&";
 
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
@@ -807,6 +807,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                     layerSelector.selectLayer(currentLayer, currentWms, false);
                 }
             }
+            mapArea.setBackgroundMap(permalinkParamsMap.get("bgmap"));
         }
     }
 
