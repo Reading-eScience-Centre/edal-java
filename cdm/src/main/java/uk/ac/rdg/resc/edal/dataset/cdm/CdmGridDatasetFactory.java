@@ -54,6 +54,7 @@ import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
@@ -162,7 +163,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                     Parameter parameter = new Parameter(varId, name, variable.getDescription(),
                             variable.getUnitsString());
                     GridVariableMetadata metadata = new GridVariableMetadata(variable.getName(),
-                            parameter, hDomain, zDomain, tDomain);
+                            parameter, hDomain, zDomain, tDomain, true);
                     vars.add(metadata);
 
                     if (name != null) {
@@ -286,7 +287,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         }
 
         @Override
-        public GridFeature readFeature(String featureId) throws IOException {
+        public GridFeature readFeature(String featureId) throws DataReadingException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 

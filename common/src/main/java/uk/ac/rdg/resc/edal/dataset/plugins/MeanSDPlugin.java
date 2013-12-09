@@ -28,9 +28,6 @@
 
 package uk.ac.rdg.resc.edal.dataset.plugins;
 
-import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
-import uk.ac.rdg.resc.edal.domain.TemporalDomain;
-import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -70,16 +67,6 @@ public class MeanSDPlugin extends VariablePlugin {
         VariableMetadata sdMetadata = metadata[1];
 
         /*
-         * Get domains where both components are valid
-         */
-        HorizontalDomain hDomain = getIntersectionOfHorizontalDomains(
-                meanMetadata.getHorizontalDomain(), sdMetadata.getHorizontalDomain());
-        VerticalDomain vDomain = getIntersectionOfVerticalDomains(meanMetadata.getVerticalDomain(),
-                sdMetadata.getVerticalDomain());
-        TemporalDomain tDomain = getIntersectionOfTemporalDomains(meanMetadata.getTemporalDomain(),
-                sdMetadata.getTemporalDomain());
-
-        /*
          * Find the original parent which the mean component belongs to (and
          * almost certainly the sd component)
          */
@@ -88,9 +75,9 @@ public class MeanSDPlugin extends VariablePlugin {
         /*
          * Create a new container metadata object
          */
-        VariableMetadata containerMetadata = new VariableMetadata(getFullId(GROUP), new Parameter(
-                getFullId(GROUP), title, "Statistics for " + title, null), hDomain, vDomain,
-                tDomain, false);
+        VariableMetadata containerMetadata = newVariableMetadataFromMetadata(getFullId(GROUP),
+                new Parameter(getFullId(GROUP), title, "Statistics for " + title, null), false,
+                meanMetadata, sdMetadata);
 
         /*
          * Set all components to have a new parent

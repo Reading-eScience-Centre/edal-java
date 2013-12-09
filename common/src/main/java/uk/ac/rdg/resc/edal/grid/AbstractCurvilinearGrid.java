@@ -179,4 +179,42 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
     public long size() {
         return curvCoords.size();
     }
+    
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((curvCoords == null) ? 0 : curvCoords.hashCode());
+        result = prime * result + ((domainObjects == null) ? 0 : domainObjects.hashCode());
+        result = prime * result + ((latLonBbox == null) ? 0 : latLonBbox.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AbstractCurvilinearGrid other = (AbstractCurvilinearGrid) obj;
+        if (curvCoords == null) {
+            if (other.curvCoords != null)
+                return false;
+        } else if (!curvCoords.equals(other.curvCoords))
+            return false;
+        if (domainObjects == null) {
+            if (other.domainObjects != null)
+                return false;
+        } else if (!domainObjects.equals(other.domainObjects))
+            return false;
+        if (latLonBbox == null) {
+            if (other.latLonBbox != null)
+                return false;
+        } else if (!latLonBbox.equals(other.latLonBbox))
+            return false;
+        return true;
+    }
 }

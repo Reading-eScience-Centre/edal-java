@@ -44,7 +44,7 @@ public class SimpleVerticalDomain implements VerticalDomain {
 
     public SimpleVerticalDomain(Double min, Double max, VerticalCrs crs) {
         this.crs = crs;
-        if(min == null || max == null) {
+        if (min == null || max == null) {
             extent = Extents.emptyExtent(Double.class);
         } else {
             extent = Extents.newExtent(min, max);
@@ -64,5 +64,37 @@ public class SimpleVerticalDomain implements VerticalDomain {
     @Override
     public VerticalCrs getVerticalCrs() {
         return crs;
+    }
+
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((crs == null) ? 0 : crs.hashCode());
+        result = prime * result + ((extent == null) ? 0 : extent.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SimpleVerticalDomain other = (SimpleVerticalDomain) obj;
+        if (crs == null) {
+            if (other.crs != null)
+                return false;
+        } else if (!crs.equals(other.crs))
+            return false;
+        if (extent == null) {
+            if (other.extent != null)
+                return false;
+        } else if (!extent.equals(other.extent))
+            return false;
+        return true;
     }
 }

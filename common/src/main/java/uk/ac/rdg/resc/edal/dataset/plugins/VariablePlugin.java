@@ -48,10 +48,13 @@ import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
+import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
@@ -93,6 +96,10 @@ public abstract class VariablePlugin {
      *            the actual variable IDs.
      */
     public VariablePlugin(String[] usesVariables, String[] providesSuffixes) {
+        if (usesVariables.length == 0) {
+            throw new IllegalArgumentException(
+                    "A plugin must use at least 1 variable.  This is a practical issue, rather than an ideological one - you are quite free to ignore it when generating values.");
+        }
         uses = usesVariables;
         provides = new String[providesSuffixes.length];
         combineIds(usesVariables);
@@ -332,6 +339,85 @@ public abstract class VariablePlugin {
     }
 
     /**
+     * Generates {@link VariableMetadata} from the given arguments and metadata.
+     * This method will find the most appropriate domains to use and will return
+     * a {@link GridVariableMetadata} if possible.
+     * 
+     * This should be used by subclasses when generating
+     * {@link VariableMetadata} from several other {@link VariableMetadata}
+     * objects.
+     * 
+     * @param id
+     *            The ID of the variable
+     * @param parameter
+     *            The {@link Parameter} describing the variable
+     * @param scalar
+     *            Whether the resulting variable is a scalar (if not, it is a
+     *            grouping variable)
+     * @param metadata
+     *            An array of {@link VariableMetadata} objects for the source
+     *            data
+     * @return A {@link VariableMetadata} object with the specified parameters,
+     *         and domains which encompass the intersection of all of the
+     *         supplied domains. If appropriate, this will be a
+     *         {@link GridVariableMetadata} object.
+     */
+    protected VariableMetadata newVariableMetadataFromMetadata(String id, Parameter parameter,
+            boolean scalar, VariableMetadata... metadata) {
+        HorizontalDomain[] hDomains = new HorizontalDomain[metadata.length];
+        VerticalDomain[] vDomains = new VerticalDomain[metadata.length];
+        TemporalDomain[] tDomains = new TemporalDomain[metadata.length];
+        for (int i = 0; i < metadata.length; i++) {
+            hDomains[i] = metadata[i].getHorizontalDomain();
+            vDomains[i] = metadata[i].getVerticalDomain();
+            tDomains[i] = metadata[i].getTemporalDomain();
+        }
+        return newVariableMetadataFromDomains(id, parameter, scalar, hDomains, vDomains, tDomains);
+    }
+
+    /**
+     * Generates {@link VariableMetadata} from the given arguments and domains.
+     * This method will find the most appropriate domains to use and will return
+     * a {@link GridVariableMetadata} if possible.
+     * 
+     * This should be used by subclasses when generating
+     * {@link VariableMetadata} from several other {@link VariableMetadata}
+     * objects.
+     * 
+     * @param id
+     *            The ID of the variable
+     * @param parameter
+     *            The {@link Parameter} describing the variable
+     * @param scalar
+     *            Whether the resulting variable is a scalar (if not, it is a
+     *            grouping variable)
+     * @param hDomains
+     *            An array of {@link HorizontalDomain}s for the source data
+     * @param zDomains
+     *            An array of {@link VerticalDomain}s for the source data
+     * @param tDomains
+     *            An array of {@link TemporalDomain}s for the source data
+     * @return A {@link VariableMetadata} object with the specified parameters,
+     *         and domains which encompass the intersection of all of the
+     *         supplied domains. If appropriate, this will be a
+     *         {@link GridVariableMetadata} object.
+     */
+    protected VariableMetadata newVariableMetadataFromDomains(String id, Parameter parameter,
+            boolean scalar, HorizontalDomain[] hDomains, VerticalDomain[] zDomains,
+            TemporalDomain[] tDomains) {
+        HorizontalDomain hDomain = getIntersectionOfHorizontalDomains(hDomains);
+        VerticalDomain vDomain = getIntersectionOfVerticalDomains(zDomains);
+        TemporalDomain tDomain = getIntersectionOfTemporalDomains(tDomains);
+        if (hDomain instanceof HorizontalGrid && vDomain instanceof VerticalAxis
+                && tDomain instanceof TimeAxis) {
+            return new GridVariableMetadata(id, parameter, (HorizontalGrid) hDomain,
+                    (VerticalAxis) vDomain, (TimeAxis) tDomain, scalar);
+        } else {
+            return new VariableMetadata(id, parameter, hDomain, vDomain, tDomain, scalar);
+        }
+    }
+
+    /**
      * Gets the union of a number of {@link HorizontalDomain}s
      * 
      * @param domains
@@ -342,7 +428,7 @@ public abstract class VariablePlugin {
      *         {@link CoordinateReferenceSystem} of the returned
      *         {@link HorizontalDomain} will be WGS84
      */
-    protected HorizontalDomain getIntersectionOfHorizontalDomains(HorizontalDomain... domains) {
+    private HorizontalDomain getIntersectionOfHorizontalDomains(HorizontalDomain... domains) {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
@@ -350,12 +436,18 @@ public abstract class VariablePlugin {
         double maxLat = -Double.MAX_VALUE;
         double minLon = Double.MAX_VALUE;
         double maxLon = -Double.MAX_VALUE;
+
+        boolean allEqual = true;
+        HorizontalDomain comparison = domains[0];
         for (HorizontalDomain domain : domains) {
             /*
              * If one of the domains is null, their intersection is null
              */
             if (domain == null) {
                 return null;
+            }
+            if (!domain.equals(comparison)) {
+                allEqual = false;
             }
             GeographicBoundingBox gbbox = domain.getGeographicBoundingBox();
             if (gbbox.getEastBoundLongitude() > maxLon) {
@@ -371,6 +463,9 @@ public abstract class VariablePlugin {
                 minLat = gbbox.getSouthBoundLatitude();
             }
         }
+        if (allEqual) {
+            return comparison;
+        }
         return new SimpleHorizontalDomain(minLon, minLat, maxLon, maxLat);
     }
 
@@ -384,7 +479,7 @@ public abstract class VariablePlugin {
      *         where valid values can be found in all the supplied
      *         {@link VerticalDomain}s
      */
-    protected VerticalDomain getIntersectionOfVerticalDomains(VerticalDomain... domains) {
+    private VerticalDomain getIntersectionOfVerticalDomains(VerticalDomain... domains) {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
@@ -396,6 +491,9 @@ public abstract class VariablePlugin {
         Double max = Double.MAX_VALUE;
         boolean allVerticalAxes = true;
         Set<Double> axisVals = new HashSet<Double>();
+
+        boolean allEqual = true;
+        VerticalDomain comparison = domains[0];
         for (VerticalDomain domain : domains) {
             /*
              * If one of the domains is null, their intersection is null
@@ -408,6 +506,11 @@ public abstract class VariablePlugin {
                 throw new IllegalArgumentException(
                         "Vertical domain CRSs must match to calculate their union");
             }
+
+            if (!domain.equals(comparison)) {
+                allEqual = false;
+            }
+
             if (!(domain instanceof VerticalAxis)) {
                 /*
                  * Not all of our domains are vertical axes
@@ -428,6 +531,10 @@ public abstract class VariablePlugin {
             if (domain.getExtent().getHigh() < max) {
                 max = domain.getExtent().getHigh();
             }
+        }
+
+        if (allEqual) {
+            return comparison;
         }
 
         if (allVerticalAxes) {
@@ -453,7 +560,7 @@ public abstract class VariablePlugin {
      *         where valid values can be found in all the supplied
      *         {@link TemporalDomain}s
      */
-    protected TemporalDomain getIntersectionOfTemporalDomains(TemporalDomain... domains) {
+    private TemporalDomain getIntersectionOfTemporalDomains(TemporalDomain... domains) {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
@@ -465,12 +572,19 @@ public abstract class VariablePlugin {
         DateTime max = new DateTime(Long.MAX_VALUE, chronology);
         boolean allTimeAxes = true;
         Set<DateTime> axisVals = new HashSet<DateTime>();
+
+        boolean allEqual = true;
+        TemporalDomain comparison = domains[0];
         for (TemporalDomain domain : domains) {
             /*
              * If one of the domains is null, their intersection is null
              */
             if (domain == null) {
                 return null;
+            }
+
+            if (!domain.equals(comparison)) {
+                allEqual = false;
             }
             if (!(domain instanceof TimeAxis)) {
                 /*
@@ -495,6 +609,9 @@ public abstract class VariablePlugin {
             }
         }
 
+        if (allEqual) {
+            return comparison;
+        }
         if (allTimeAxes) {
             /*
              * All of our domains were vertical axes, so we create a new axis

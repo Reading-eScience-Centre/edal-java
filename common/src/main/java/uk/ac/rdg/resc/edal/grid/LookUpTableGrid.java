@@ -185,4 +185,29 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     public int getYSize() {
         return lut.getNumLatPoints();
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((lut == null) ? 0 : lut.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        LookUpTableGrid other = (LookUpTableGrid) obj;
+        if (lut == null) {
+            if (other.lut != null)
+                return false;
+        } else if (!lut.equals(other.lut))
+            return false;
+        return true;
+    }
 }
