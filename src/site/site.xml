@@ -3,6 +3,7 @@
 <project name="EDAL" xmlns="http://maven.apache.org/DECORATION/1.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd">
+
     <bannerLeft>
         <name>EDAL</name>
         <src>http://www.resc.reading.ac.uk/images/new_logo_72dpi_web.png</src>
@@ -10,7 +11,9 @@
     </bannerLeft>
 
     <body>
-        <menu ref="modules"/>
+        <links>
+            <item href="apidocs/index.html" name="Javadoc"/>
+        </links>
     </body>
     <skin>
         <groupId>org.apache.maven.skins</groupId>
@@ -19,7 +22,7 @@
     </skin>
     <custom>
         <fluidoSkin>
-            <sideBarEnabled>true</sideBarEnabled>
+            <sideBarEnabled>false</sideBarEnabled>
         </fluidoSkin>
     </custom>
 </project>
