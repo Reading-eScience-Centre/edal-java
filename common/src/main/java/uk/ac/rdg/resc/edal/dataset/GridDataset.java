@@ -53,12 +53,8 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  * @author Guy
  */
 public interface GridDataset extends Dataset {
-    /*
-     * TODO perhaps this should be the signature for readFeature in
-     * GridDatasets?
-     */
-    // public Feature<GeoPosition> readFeature(String featureId) throws
-    // IOException;
+    @Override
+    public GridFeature readFeature(String featureId) throws DataReadingException;
 
     /**
      * Extracts a {@link MapFeature} from this {@link GridDataset}.

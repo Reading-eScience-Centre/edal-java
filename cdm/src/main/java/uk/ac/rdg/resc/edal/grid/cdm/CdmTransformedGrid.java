@@ -72,6 +72,53 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 public class CdmTransformedGrid extends AbstractTransformedGrid {
     private final ProjectionImpl proj;
     private final ReferenceableAxis<Double> xAxis;
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((bbox == null) ? 0 : bbox.hashCode());
+        result = prime * result + ((proj == null) ? 0 : proj.hashCode());
+        result = prime * result + ((xAxis == null) ? 0 : xAxis.hashCode());
+        result = prime * result + ((yAxis == null) ? 0 : yAxis.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CdmTransformedGrid other = (CdmTransformedGrid) obj;
+        if (bbox == null) {
+            if (other.bbox != null)
+                return false;
+        } else if (!bbox.equals(other.bbox))
+            return false;
+        if (proj == null) {
+            if (other.proj != null)
+                return false;
+        } else if (!proj.getName().equals(other.proj.getName())) {
+            return false;
+        } else if (!proj.getProjectionParameters().equals(other.proj.getProjectionParameters())) {
+            return false;
+        }
+        if (xAxis == null) {
+            if (other.xAxis != null)
+                return false;
+        } else if (!xAxis.equals(other.xAxis))
+            return false;
+        if (yAxis == null) {
+            if (other.yAxis != null)
+                return false;
+        } else if (!yAxis.equals(other.yAxis))
+            return false;
+        return true;
+    }
+
     private final ReferenceableAxis<Double> yAxis;
     private final BoundingBox bbox;
 
@@ -244,4 +291,5 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     public int getYSize() {
         return yAxis.size();
     }
+
 }

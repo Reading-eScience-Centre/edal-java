@@ -41,8 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
-import uk.ac.rdg.resc.edal.domain.TemporalDomain;
-import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.grid.AbstractTransformedGrid;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
@@ -113,28 +111,18 @@ public class VectorPlugin extends VariablePlugin {
         VariableMetadata yMetadata = metadata[1];
 
         /*
-         * Get domains where both components are valid
-         */
-        HorizontalDomain hDomain = getIntersectionOfHorizontalDomains(
-                xMetadata.getHorizontalDomain(), yMetadata.getHorizontalDomain());
-        VerticalDomain vDomain = getIntersectionOfVerticalDomains(xMetadata.getVerticalDomain(),
-                yMetadata.getVerticalDomain());
-        TemporalDomain tDomain = getIntersectionOfTemporalDomains(xMetadata.getTemporalDomain(),
-                yMetadata.getTemporalDomain());
-
-        /*
          * Generate metadata for new components
          */
-        VariableMetadata magMetadata = new VariableMetadata(getFullId(MAG), new Parameter(
-                getFullId(MAG), "Magnitude of " + title, "Magnitude of components:\n"
+        VariableMetadata magMetadata = newVariableMetadataFromMetadata(getFullId(MAG),
+                new Parameter(getFullId(MAG), "Magnitude of " + title, "Magnitude of components:\n"
                         + xMetadata.getParameter().getDescription() + " and\n"
                         + yMetadata.getParameter().getDescription(), xMetadata.getParameter()
-                        .getUnits()), hDomain, vDomain, tDomain);
-        VariableMetadata dirMetadata = new VariableMetadata(getFullId(DIR), new Parameter(
-                getFullId(DIR), "Direction of " + title, "Direction of components:\n"
+                        .getUnits()), true, xMetadata, yMetadata);
+        VariableMetadata dirMetadata = newVariableMetadataFromMetadata(getFullId(DIR),
+                new Parameter(getFullId(DIR), "Direction of " + title, "Direction of components:\n"
                         + xMetadata.getParameter().getDescription() + " and\n"
-                        + yMetadata.getParameter().getDescription(), "degrees"), hDomain, vDomain,
-                tDomain);
+                        + yMetadata.getParameter().getDescription(), "degrees"), true, xMetadata,
+                yMetadata);
 
         /*
          * Find the original parent which the x-component belongs to (and almost
@@ -145,9 +133,9 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Create a new container metadata object
          */
-        VariableMetadata containerMetadata = new VariableMetadata(getFullId(GROUP), new Parameter(
-                getFullId(GROUP), title, "Vector fields for " + title, null), hDomain, vDomain,
-                tDomain, false);
+        VariableMetadata containerMetadata = newVariableMetadataFromMetadata(getFullId(GROUP),
+                new Parameter(getFullId(GROUP), title, "Vector fields for " + title, null), false,
+                xMetadata, yMetadata);
 
         /*
          * Set all components to have a new parent

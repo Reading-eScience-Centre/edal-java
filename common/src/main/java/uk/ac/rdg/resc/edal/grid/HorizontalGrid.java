@@ -69,4 +69,10 @@ public interface HorizontalGrid extends DiscreteHorizontalDomain<GridCell2D> {
      *         is outside the domain.
      */
     public GridCoordinates2D findIndexOf(HorizontalPosition position);
+
+    @Override
+    public boolean equals(Object obj);
+    
+    @Override
+    public int hashCode();
 }

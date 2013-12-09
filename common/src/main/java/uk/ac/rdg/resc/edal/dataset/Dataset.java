@@ -28,10 +28,10 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
-import java.io.IOException;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
@@ -58,7 +58,7 @@ public interface Dataset {
     /**
      * Reads an entire feature from underlying storage
      */
-    public Feature<?> readFeature(String featureId) throws IOException;
+    public Feature<?> readFeature(String featureId) throws DataReadingException;
 
     /**
      * Returns the IDs of variables in this {@link Dataset}. Generally the term

@@ -42,7 +42,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * Implementation of a {@link MapDomain}
- *
+ * 
  * @author Guy
  */
 public class MapDomainImpl implements MapDomain {
@@ -50,7 +50,7 @@ public class MapDomainImpl implements MapDomain {
     private Double z;
     private VerticalCrs vCrs;
     private DateTime time;
-    
+
     public MapDomainImpl(HorizontalGrid hGrid, Double z, VerticalCrs vCrs, DateTime time) {
         this.hGrid = hGrid;
         this.z = z;
@@ -116,5 +116,48 @@ public class MapDomainImpl implements MapDomain {
     @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return hGrid.getCoordinateReferenceSystem();
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((hGrid == null) ? 0 : hGrid.hashCode());
+        result = prime * result + ((time == null) ? 0 : time.hashCode());
+        result = prime * result + ((vCrs == null) ? 0 : vCrs.hashCode());
+        result = prime * result + ((z == null) ? 0 : z.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        MapDomainImpl other = (MapDomainImpl) obj;
+        if (hGrid == null) {
+            if (other.hGrid != null)
+                return false;
+        } else if (!hGrid.equals(other.hGrid))
+            return false;
+        if (time == null) {
+            if (other.time != null)
+                return false;
+        } else if (!time.equals(other.time))
+            return false;
+        if (vCrs == null) {
+            if (other.vCrs != null)
+                return false;
+        } else if (!vCrs.equals(other.vCrs))
+            return false;
+        if (z == null) {
+            if (other.z != null)
+                return false;
+        } else if (!z.equals(other.z))
+            return false;
+        return true;
     }
 }
