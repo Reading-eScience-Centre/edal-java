@@ -45,6 +45,7 @@ public class StyleDef {
     private List<String> requiredChildren;
     private boolean usesPalette;
     private boolean needsNamedLayer;
+    private String scaledLayerRole;
 
     /**
      * Instantiate a new {@link StyleDef}
@@ -62,30 +63,55 @@ public class StyleDef {
      *            plot, so this would be <code>false</code>
      */
     public StyleDef(String styleName, Collection<String> requiredChildren, boolean usesPalette,
-            boolean needsNamedLayer) {
+            boolean needsNamedLayer, String scaledLayerRole) {
         super();
         this.styleName = styleName;
         this.requiredChildren = new ArrayList<String>(requiredChildren);
         this.usesPalette = usesPalette;
         this.needsNamedLayer = needsNamedLayer;
+        this.scaledLayerRole = scaledLayerRole;
     }
 
+    /**
+     * @return The name of this style
+     */
     public String getStyleName() {
         return styleName;
     }
 
+    /**
+     * @return A {@link List} of the roles which the named layer needs its
+     *         children to have.
+     */
     public List<String> getRequiredChildren() {
         return requiredChildren;
     }
 
+    /**
+     * @return Whether this style uses a palette
+     */
     public boolean usesPalette() {
         return usesPalette;
     }
 
+    /**
+     * @return Whether this style needs the named layer to be scalar (if not it
+     *         just uses children of the named layer)
+     */
     public boolean needsNamedLayer() {
         return needsNamedLayer;
     }
-    
+
+    /**
+     * @return The role of the layer which has $scaleMin and $scaleMax applied
+     *         to it. This will return an empty string if the parent layer is
+     *         the scaled one, and <code>null</code> if no layers use the scale
+     *         information.
+     */
+    public String getScaledLayerRole() {
+        return scaledLayerRole;
+    }
+
     @Override
     public String toString() {
         return styleName;

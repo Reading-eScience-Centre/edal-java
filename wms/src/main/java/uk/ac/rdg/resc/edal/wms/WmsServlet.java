@@ -937,6 +937,7 @@ public class WmsServlet extends HttpServlet {
     }
 
     private String showMinMax(RequestParams params) throws MetadataException {
+        JSONObject minmax = new JSONObject();
         GetMapParameters getMapParams;
         try {
             getMapParams = new GetMapParameters(params);
@@ -946,7 +947,8 @@ public class WmsServlet extends HttpServlet {
         }
 
         String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
-        if (layerNames.length != 1) {
+        String[] styleNames = getMapParams.getStyleParameters().getStyleNames();
+        if (layerNames.length != 1 || styleNames.length > 1) {
             /*
              * TODO Perhaps relax this restriction and return min/max with layer
              * IDs?
@@ -954,9 +956,77 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Can only find min/max for exactly one layer at a time");
         }
 
+        VariableMetadata variableMetadata;
+        String datasetId;
+        try {
+            variableMetadata = catalogue.getVariableMetadataFromId(layerNames[0]);
+            datasetId = catalogue.getDatasetFromLayerName(layerNames[0]).getId();
+        } catch (WmsLayerNotFoundException e) {
+            throw new MetadataException("Layer " + layerNames[0] + " not found on this server", e);
+        }
+
+        String layerName;
+        /*
+         * Find out which layer the scaling is being applied to
+         */
+
+        /*
+         * First get the style which is applied to this layer
+         */
+        StyleDef style = null;
+        if (styleNames != null && styleNames.length > 0) {
+            /*
+             * Specified as a URL parameter
+             */
+            String styleName = styleNames[0];
+            style = catalogue.getStyleDefinitionByName(styleName);
+            if (style == null) {
+                throw new MetadataException("Cannot find min-max for this layer.  The style "
+                        + styleName + " is not supported.");
+            }
+        } else {
+            /*
+             * The default style
+             */
+            List<StyleDef> supportedStyles = catalogue.getSupportedStyles(variableMetadata);
+            for (StyleDef supportedStyle : supportedStyles) {
+                if (supportedStyle.getStyleName().startsWith("default")) {
+                    style = supportedStyle;
+                }
+            }
+            if (style == null) {
+                throw new MetadataException(
+                        "Cannot find min-max for this layer.  No default styles are supported.");
+            }
+        }
+
+        /*
+         * Now find which layer the scale is being applied to
+         */
+        if (style.getScaledLayerRole() == null) {
+            /*
+             * No layer has scaling - we can return anything
+             */
+            minmax.put("min", 0);
+            minmax.put("max", 100);
+            return minmax.toString();
+        } else if ("".equals(style.getScaledLayerRole())) {
+            /*
+             * The named (possibly parent) layer is scaled.
+             */
+            layerName = layerNames[0];
+        } else {
+            /*
+             * A child layer is being scaled. This
+             */
+            String variableId = variableMetadata.getChildWithRole(style.getScaledLayerRole())
+                    .getId();
+            layerName = catalogue.getLayerName(datasetId, variableId);
+        }
+
         MapFeatureAndMember featureAndMember;
         try {
-            featureAndMember = catalogue.getFeatureAndMemberName(layerNames[0],
+            featureAndMember = catalogue.getFeatureAndMemberName(layerName,
                     getMapParams.getPlottingDomainParameters());
         } catch (BadTimeFormatException e) {
             log.error("Bad time format", e);
@@ -989,9 +1059,9 @@ public class WmsServlet extends HttpServlet {
         if (min == Double.MAX_VALUE || max == -Double.MAX_VALUE) {
             throw new MetadataException("No data in this area - cannot calculate min/max");
         }
-        
-        if(min == max) {
-            if(min == 0.0) {
+
+        if (min == max) {
+            if (min == 0.0) {
                 min = -0.5;
                 max = 0.5;
             } else {
@@ -1000,7 +1070,6 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        JSONObject minmax = new JSONObject();
         minmax.put("min", min);
         minmax.put("max", max);
 

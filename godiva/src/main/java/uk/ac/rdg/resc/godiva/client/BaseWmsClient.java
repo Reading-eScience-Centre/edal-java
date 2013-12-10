@@ -465,6 +465,9 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          */
         parameters.put("item", "minmax");
         parameters.put("layers", layerId);
+        
+        parameters.put("styles", widgetCollection.getPaletteSelector().getSelectedStyle());
+        
         /*
          * We use 1.1.1 here, because if getMap().getProjection() returns
          * EPSG:4326, getMap().getExtent().toBBox(4) will still return in
