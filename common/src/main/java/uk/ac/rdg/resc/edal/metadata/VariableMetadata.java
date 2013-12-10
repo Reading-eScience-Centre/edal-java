@@ -261,7 +261,7 @@ public class VariableMetadata {
              * We only add this as a child if it is not the tree root
              */
             this.parent.children.add(this);
-            this.parent.childrenWithRoles.put(relationshipToParent, this);
+            this.parent.childrenWithRoles.put(relationshipToParent.trim(), this);
             dataset = parent.getDataset();
         }
     }
@@ -275,7 +275,7 @@ public class VariableMetadata {
      *         <code>null</code> if there are none
      */
     public VariableMetadata getChildWithRole(String role) {
-        return childrenWithRoles.get(role);
+        return childrenWithRoles.get(role.trim());
     }
 
     /**
