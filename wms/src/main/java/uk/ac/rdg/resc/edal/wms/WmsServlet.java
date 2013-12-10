@@ -526,19 +526,51 @@ public class WmsServlet extends HttpServlet {
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
+            VariableMetadata metadata = catalogue.getVariableMetadataFromId(layerName);
 
             if (dataset instanceof GridDataset) {
+                /*
+                 * This has to be a GridDataset because that's where the
+                 * readSinglePoint method is defined.
+                 * 
+                 * Once we implement in-situ data, we will probably move some
+                 * methods up the hierarchy and this will no longer be the case
+                 */
                 GridDataset gridDataset = (GridDataset) dataset;
-                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variableId)
-                        .getTemporalDomain();
-                Chronology chronology = null;
-                if (temporalDomain != null) {
-                    chronology = temporalDomain.getChronology();
+
+                Set<VariableMetadata> children = metadata.getChildren();
+                
+                if (metadata.isScalar()) {
+                    /*
+                     * If we have a scalar layer, add the value for it first 
+                     */
+                    TemporalDomain temporalDomain = metadata.getTemporalDomain();
+                    Chronology chronology = null;
+                    if (temporalDomain != null) {
+                        chronology = temporalDomain.getChronology();
+                    }
+                    Number value;
+                    value = gridDataset.readSinglePoint(variableId, position,
+                            plottingParameters.getTargetZ(),
+                            plottingParameters.getTargetT(chronology));
+                    featureInfos.add(new FeatureInfoPoint(layerName, position, value));
                 }
-                Number value;
-                value = gridDataset.readSinglePoint(variableId, position,
-                        plottingParameters.getTargetZ(), plottingParameters.getTargetT(chronology));
-                featureInfos.add(new FeatureInfoPoint(layerName, position, value));
+                for (VariableMetadata child : children) {
+                    /*
+                     * Now add the values for every child layer.
+                     */
+                    TemporalDomain temporalDomain = child.getTemporalDomain();
+                    Chronology chronology = null;
+                    if (temporalDomain != null) {
+                        chronology = temporalDomain.getChronology();
+                    }
+                    Number value;
+                    value = gridDataset.readSinglePoint(child.getId(), position,
+                            plottingParameters.getTargetZ(),
+                            plottingParameters.getTargetT(chronology));
+                    featureInfos.add(new FeatureInfoPoint(catalogue.getLayerName(dataset.getId(),
+                            child.getId()), position, value));
+                }
             } else {
                 throw new UnsupportedOperationException(
                         "GetFeatureInfo not supported for non-gridded features yet");
