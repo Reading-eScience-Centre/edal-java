@@ -142,19 +142,15 @@ final class CdmGridDataSource implements GridDataSource {
              */
             Index index = dataChunk.getIndex();
             /*
-             * Initialize the index (this may be unnecessary)
+             * Set the index values
              */
-            index.set(new int[index.getRank()]);
-            /*
-             * Set the x and y index values
-             */
-            if (tAxisIndex > 0)
+            if (tAxisIndex >= 0)
                 index.setDim(tAxisIndex, t);
-            if (zAxisIndex > 0)
+            if (zAxisIndex >= 0)
                 index.setDim(zAxisIndex, z);
-            if (yAxisIndex > 0)
+            if (yAxisIndex >= 0)
                 index.setDim(yAxisIndex, y);
-            if (xAxisIndex > 0)
+            if (xAxisIndex >= 0)
                 index.setDim(xAxisIndex, x);
 
             /*
