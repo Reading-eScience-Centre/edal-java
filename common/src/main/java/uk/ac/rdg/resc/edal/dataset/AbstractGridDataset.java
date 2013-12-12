@@ -378,6 +378,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
 
             return mapFeature;
         } catch (IOException e) {
+            log.error("Problem reading data", e);
             throw new DataReadingException("Problem reading map feature", e);
         } finally {
             if (dataSource != null) {

@@ -28,24 +28,33 @@
 
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.oro.io.GlobFilenameFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ucar.nc2.Attribute;
+import ucar.nc2.Dimension;
+import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset.Gridset;
 import ucar.nc2.dt.GridDatatype;
+import ucar.nc2.ncml.NcMLReader;
 import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
@@ -54,9 +63,7 @@ import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
-import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -82,7 +89,6 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
              * Open the dataset, using the cache for NcML aggregations
              */
             nc = openDataset(location);
-
             /*
              * We look for NetCDF-U variables to group mean/standard-deviation.
              * 
@@ -287,13 +293,13 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         }
 
         @Override
-        public GridFeature readFeature(String featureId) throws DataReadingException {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
         protected GridDataSource openGridDataSource() throws IOException {
-            NetcdfDataset nc = openDataset(location);
+            NetcdfDataset nc;
+            try {
+                nc = openDataset(location);
+            } catch (EdalException e) {
+                throw new IOException("Problem aggregating datasets", e);
+            }
             return new CdmGridDataSource(CdmUtils.getGridDataset(nc));
         }
 
@@ -326,33 +332,139 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
      * @throws IOException
      *             if there was an error reading from the data source.
      */
-    private static NetcdfDataset openDataset(String location) throws IOException {
-        boolean usedCache = false;
+    private static NetcdfDataset openDataset(String location) throws IOException, EdalException {
+        List<File> files = expandGlobExpression(location);
         NetcdfDataset nc;
-        long start = System.nanoTime();
-        if (CdmUtils.isNcmlAggregation(location)) {
-            /*
-             * We use the cache of NetcdfDatasets to read NcML aggregations as
-             * they can be time-consuming to put together. If the underlying
-             * data can change we rely on the server admin setting the
-             * "recheckEvery" parameter in the aggregation file.
-             */
-            nc = NetcdfDataset.acquireDataset(location, null);
-            usedCache = true;
+        if (files.size() == 0) {
+            throw new EdalException("The location " + location
+                    + " doesn't refer to any existing files.");
+        }
+        if (files.size() == 1) {
+            location = files.get(0).getAbsolutePath();
+            if (CdmUtils.isNcmlAggregation(location)) {
+                /*
+                 * We use the cache of NetcdfDatasets to read NcML aggregations
+                 * as they can be time-consuming to put together. If the
+                 * underlying data can change we rely on the server admin
+                 * setting the "recheckEvery" parameter in the aggregation file.
+                 */
+                nc = NetcdfDataset.acquireDataset(location, null);
+            } else {
+                /*
+                 * For local single files and OPeNDAP datasets we don't use the
+                 * cache, to ensure that we are always reading the most
+                 * up-to-date data. There is a small possibility that the
+                 * dataset cache will have swallowed up all available file
+                 * handles, in which case the server admin will need to increase
+                 * the number of available handles on the server.
+                 */
+                nc = NetcdfDataset.openDataset(location);
+            }
         } else {
             /*
-             * For local single files and OPeNDAP datasets we don't use the
-             * cache, to ensure that we are always reading the most up-to-date
-             * data. There is a small possibility that the dataset cache will
-             * have swallowed up all available file handles, in which case the
-             * server admin will need to increase the number of available
-             * handles on the server.
+             * We have multiple files in a glob expression. We write some NcML
+             * and use the NetCDF aggregation libs to parse this into an
+             * aggregated dataset.
              */
-            nc = NetcdfDataset.openDataset(location);
+
+            /*
+             * Find the name of the time dimension
+             */
+            NetcdfDataset first = openDataset(files.get(0).getAbsolutePath());
+            String timeDimName = null;
+            for (Variable var : first.getVariables()) {
+                if (var.isCoordinateVariable()) {
+                    for (Attribute attr : var.getAttributes()) {
+                        if (attr.getName().equalsIgnoreCase("units")
+                                && attr.getStringValue().contains(" since ")) {
+                            /*
+                             * This is the time dimension. Since this is a
+                             * co-ordinate variable, there is only 1 dimension
+                             */
+                            Dimension timeDimension = var.getDimension(0);
+                            timeDimName = timeDimension.getName();
+                        }
+                    }
+                }
+            }
+            first.close();
+            if (timeDimName == null) {
+                throw new EdalException("Cannot join multiple files without time dimensions");
+            }
+            /*
+             * We can't assume that the glob expression will have returned the
+             * files in time order.
+             * 
+             * We could assume that alphabetical == time ordered (and for
+             * properly named files it will - but let's not rely on our users
+             * having sensible naming conventions...
+             * 
+             * Sort the list using a comparator which opens the file and gets
+             * the first value of the time dimension
+             */
+            final String aggDimName = timeDimName;
+            Collections.sort(files, new Comparator<File>() {
+                @Override
+                public int compare(File ncFile1, File ncFile2) {
+                    NetcdfFile nc1 = null;
+                    NetcdfFile nc2 = null;
+                    try {
+                        nc1 = NetcdfFile.open(ncFile1.getAbsolutePath());
+                        nc2 = NetcdfFile.open(ncFile2.getAbsolutePath());
+                        Variable timeVar1 = nc1.findVariable(aggDimName);
+                        Variable timeVar2 = nc2.findVariable(aggDimName);
+                        long time1 = timeVar1.read().getLong(0);
+                        long time2 = timeVar2.read().getLong(0);
+                        return Long.compare(time1, time2);
+                    } catch (Exception e) {
+                        /*
+                         * There was a problem reading the data. Sort
+                         * alphanumerically by filename and hope for the best...
+                         * 
+                         * This catches all exceptions because however it fails
+                         * this is still our best option.
+                         * 
+                         * If the error is a genuine problem, it'll show up as
+                         * soon as we try and aggregate.
+                         */
+                        return ncFile1.getAbsolutePath().compareTo(ncFile2.getAbsolutePath());
+                    } finally {
+                        if (nc1 != null) {
+                            try {
+                                nc1.close();
+                            } catch (IOException e) {
+                                log.error("Problem closing netcdf file", e);
+                            }
+                        }
+                        if (nc2 != null) {
+                            try {
+                                nc2.close();
+                            } catch (IOException e) {
+                                log.error("Problem closing netcdf file", e);
+                            }
+                        }
+                    }
+                }
+            });
+
+            /*
+             * Now create the NcML string and use it to create an aggregated
+             * dataset
+             */
+            StringBuffer ncmlString = new StringBuffer();
+            ncmlString
+                    .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
+            ncmlString
+                    .append("<aggregation dimName=\"" + timeDimName + "\" type=\"joinExisting\">");
+            for (File file : files) {
+                ncmlString.append("<netcdf location=\"" + file.getAbsolutePath() + "\"/>");
+            }
+            ncmlString.append("</aggregation>");
+            ncmlString.append("</netcdf>");
+
+            nc = NcMLReader.readNcML(new StringReader(ncmlString.toString()), null);
         }
-        long openedDS = System.nanoTime();
-        String verb = usedCache ? "Acquired" : "Opened";
-        log.debug(verb + " NetcdfDataset in {} milliseconds", (openedDS - start) / 1.e6);
+
         return nc;
     }
 
@@ -393,5 +505,99 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         } else {
             return stdNameAtt.getStringValue();
         }
+    }
+
+    /**
+     * Expands a glob expression to give a List of absolute paths to files. This
+     * method recursively searches directories, allowing for glob expressions
+     * like {@code "c:\\data\\200[6-7]\\*\\1*\\A*.nc"}.
+     * 
+     * @return a a List of absolute paths to files matching the given glob
+     *         expression
+     * @throws IllegalArgumentException
+     *             if the glob expression does not represent an absolute path
+     *             (according to {@code new File(globExpression).isAbsolute()}).
+     * @author Mike Grant, Plymouth Marine Labs
+     * @author Jon Blower
+     */
+    private static List<File> expandGlobExpression(String globExpression) {
+        /*
+         * Check that the glob expression represents an absolute path. Relative
+         * paths would cause unpredictable and platform-dependent behaviour so
+         * we disallow them.
+         */
+        File globFile = new File(globExpression);
+        if (!globFile.isAbsolute()) {
+            throw new IllegalArgumentException("Location must be an absolute path");
+        }
+
+        /*
+         * Break glob pattern into path components. To do this in a reliable and
+         * platform-independent way we use methods of the File class, rather
+         * than String.split().
+         */
+        List<String> pathComponents = new ArrayList<String>();
+        while (globFile != null) {
+            /*
+             * We "pop off" the last component of the glob pattern and place it
+             * in the first component of the pathComponents List. We therefore
+             * ensure that the pathComponents end up in the right order.
+             */
+            File parent = globFile.getParentFile();
+            /*
+             * For a top-level directory, getName() returns an empty string,
+             * hence we use getPath() in this case
+             */
+            String pathComponent = parent == null ? globFile.getPath() : globFile.getName();
+            pathComponents.add(0, pathComponent);
+            globFile = parent;
+        }
+
+        /*
+         * We must have at least two path components: one directory and one
+         * filename or glob expression
+         */
+        List<File> searchPaths = new ArrayList<File>();
+        searchPaths.add(new File(pathComponents.get(0)));
+        /* Index of the glob path component */
+        int i = 1;
+
+        while (i < pathComponents.size()) {
+            FilenameFilter globFilter = new GlobFilenameFilter(pathComponents.get(i));
+            List<File> newSearchPaths = new ArrayList<File>();
+            /* Look for matches in all the current search paths */
+            for (File dir : searchPaths) {
+                if (dir.isDirectory()) {
+                    /*
+                     * Workaround for automounters that don't make filesystems
+                     * appear unless they're poked do a listing on
+                     * searchpath/pathcomponent whether or not it exists, then
+                     * discard the results
+                     */
+                    new File(dir, pathComponents.get(i)).list();
+
+                    for (File match : dir.listFiles(globFilter)) {
+                        newSearchPaths.add(match);
+                    }
+                }
+            }
+            /*
+             * Next time we'll search based on these new matches and will use
+             * the next globComponent
+             */
+            searchPaths = newSearchPaths;
+            i++;
+        }
+
+        /*
+         * Now we've done all our searching, we'll only retain the files from
+         * the list of search paths
+         */
+        List<File> files = new ArrayList<File>();
+        for (File path : searchPaths) {
+            if (path.isFile())
+                files.add(path);
+        }
+        return files;
     }
 }
