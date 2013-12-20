@@ -39,6 +39,9 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  */
 public class MeanSDPlugin extends VariablePlugin {
 
+    public final static String MEAN_ROLE = "mean";
+    public final static String STDDEV_ROLE = "stddev";
+
     public final static String GROUP = "stats_group";
     private String title;
 
@@ -82,8 +85,8 @@ public class MeanSDPlugin extends VariablePlugin {
         /*
          * Set all components to have a new parent
          */
-        meanMetadata.setParent(containerMetadata, "mean");
-        sdMetadata.setParent(containerMetadata, "stddev");
+        meanMetadata.setParent(containerMetadata, MEAN_ROLE);
+        sdMetadata.setParent(containerMetadata, STDDEV_ROLE);
 
         /*
          * Add the container to the original parent
