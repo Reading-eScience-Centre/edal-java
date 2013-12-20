@@ -43,6 +43,7 @@ public class Parameter {
     private String description;
     /* TODO: This will probably end up as something more complex than a string */
     private String units;
+    private String standardName;
 
     /**
      * @param id
@@ -54,16 +55,17 @@ public class Parameter {
      * @param units
      *            The units of the measured quantity
      */
-    public Parameter(String id, String title, String description, String units) {
+    public Parameter(String id, String title, String description, String units, String standardName) {
         super();
         this.id = id;
         this.title = title;
         this.description = description;
         this.units = units == null ? "" : units;
+        this.standardName = standardName;
     }
 
     /**
-     * An identifier that is unique within the context ({@literal e.g.} within
+     * @return An identifier that is unique within the context ({@literal e.g.} within
      * the Feature or Dataset).
      */
     public String getId() {
@@ -71,24 +73,33 @@ public class Parameter {
     }
 
     /**
-     * Human-readable, fairly short title for the parameter.
+     * @return Human-readable, fairly short title for the parameter.
      */
     public String getTitle() {
         return title;
     }
 
     /**
-     * Human-readable, perhaps-lengthy description of the parameter.
+     * @return Human-readable, perhaps-lengthy description of the parameter.
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * The units of this parameter
+     * @return The units of this parameter
      */
     public String getUnits() {
         return units;
+    }
+
+    /**
+     * @return The standard name of the phenomena which this represents
+     * 
+     * TODO This should allow multiple standard names and have scope for different vocabularies
+     */
+    public String getStandardName() {
+        return standardName;
     }
 
     @Override

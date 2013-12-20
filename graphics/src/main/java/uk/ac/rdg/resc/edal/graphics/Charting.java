@@ -225,9 +225,8 @@ final public class Charting {
             HorizontalPosition hPos) throws MismatchedCrsException {
 
         StringBuilder varList = new StringBuilder();
-        String yAxisLabel = "";
         Chronology chronology = null;
-        Map<String, TimeSeriesCollection> units2timeseries = new HashMap<String, TimeSeriesCollection>();
+        Map<String, TimeSeriesCollection> phenomena2timeseries = new HashMap<String, TimeSeriesCollection>();
         for (PointSeriesFeature feature : features) {
             if (chronology == null) {
                 chronology = feature.getDomain().getChronology();
@@ -240,12 +239,12 @@ final public class Charting {
             for (String varId : feature.getParameterIds()) {
                 Parameter parameter = feature.getParameter(varId);
                 TimeSeriesCollection collection;
-                String units = parameter.getTitle();
-                if(units2timeseries.containsKey(units)) {
-                    collection = units2timeseries.get(units);
+                String phenomena = parameter.getStandardName() + " ("+parameter.getUnits()+")";
+                if(phenomena2timeseries.containsKey(phenomena)) {
+                    collection = phenomena2timeseries.get(phenomena);
                 } else {
                     collection = new TimeSeriesCollection();
-                    units2timeseries.put(units, collection);
+                    phenomena2timeseries.put(phenomena, collection);
                 }
                 varList.append(varId);
                 varList.append(", ");
@@ -267,8 +266,6 @@ final public class Charting {
                     series.addOrUpdate(new Millisecond(new Date(timeValues.get(i).getMillis())),
                             val);
                 }
-
-                yAxisLabel = getAxisLabel(feature, varId);
 
                 collection.addSeries(series);
             }
@@ -296,9 +293,13 @@ final public class Charting {
         
         
         int i=0;
-        for(Entry<String, TimeSeriesCollection> entry : units2timeseries.entrySet()) {
+        boolean legendNeeded = false;
+        for(Entry<String, TimeSeriesCollection> entry : phenomena2timeseries.entrySet()) {
+            if(i > 0) {
+                legendNeeded = true;
+            }
             TimeSeriesCollection coll = entry.getValue();
-            NumberAxis valueAxis = new NumberAxis(yAxisLabel);
+            NumberAxis valueAxis = new NumberAxis();
             valueAxis.setAutoRangeIncludesZero(false);
             valueAxis.setAutoRange(true);
             valueAxis.setNumberFormatOverride(NUMBER_FORMAT);
@@ -309,10 +310,12 @@ final public class Charting {
             for (int j = 0; j < coll.getSeriesCount(); j++) {
                 renderer.setSeriesShape(j, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
                 renderer.setSeriesShapesVisible(j, true);
+                if(j > 0) {
+                    legendNeeded = true;
+                }
             }
             plot.setRenderer(i, renderer);
             plot.mapDatasetToRangeAxis(i, i);
-            System.out.println("Dataset number "+i);
             i++;
         }
 
@@ -326,8 +329,7 @@ final public class Charting {
         /*
          * Use default font and create a legend if there are multiple lines
          */
-//        return new JFreeChart(title.toString(), null, plot, timeSeriesColl.getSeriesCount() > 1);
-        return new JFreeChart(title.toString(), null, plot, true);
+        return new JFreeChart(title.toString(), null, plot, legendNeeded);
     }
 
     /**
