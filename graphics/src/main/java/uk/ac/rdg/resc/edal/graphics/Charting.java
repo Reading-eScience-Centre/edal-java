@@ -35,8 +35,11 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -220,21 +223,30 @@ final public class Charting {
 
     public static JFreeChart createTimeSeriesPlot(List<PointSeriesFeature> features,
             HorizontalPosition hPos) throws MismatchedCrsException {
-        TimeSeriesCollection timeSeriesColl = new TimeSeriesCollection();
 
         StringBuilder varList = new StringBuilder();
         String yAxisLabel = "";
         Chronology chronology = null;
+        Map<String, TimeSeriesCollection> units2timeseries = new HashMap<String, TimeSeriesCollection>();
         for (PointSeriesFeature feature : features) {
             if (chronology == null) {
                 chronology = feature.getDomain().getChronology();
             } else {
-                if (chronology.equals(feature.getDomain().getChronology())) {
+                if (!chronology.equals(feature.getDomain().getChronology())) {
                     throw new MismatchedCrsException(
                             "All chronologies must match to plot multiple time series plots");
                 }
             }
             for (String varId : feature.getParameterIds()) {
+                Parameter parameter = feature.getParameter(varId);
+                TimeSeriesCollection collection;
+                String units = parameter.getTitle();
+                if(units2timeseries.containsKey(units)) {
+                    collection = units2timeseries.get(units);
+                } else {
+                    collection = new TimeSeriesCollection();
+                    units2timeseries.put(units, collection);
+                }
                 varList.append(varId);
                 varList.append(", ");
                 List<DateTime> timeValues = feature.getDomain().getCoordinateValues();
@@ -242,8 +254,7 @@ final public class Charting {
                 /*
                  * This is the label used for the legend.
                  */
-                String location = feature.getHorizontalPosition().toString();
-                TimeSeries series = new TimeSeries(location);
+                TimeSeries series = new TimeSeries(parameter.getTitle());
                 series.setDescription(feature.getParameter(varId).getDescription());
                 for (int i = 0; i < timeValues.size(); i++) {
                     Number val = feature.getValues(varId).get(i);
@@ -259,17 +270,9 @@ final public class Charting {
 
                 yAxisLabel = getAxisLabel(feature, varId);
 
-                timeSeriesColl.addSeries(series);
+                collection.addSeries(series);
             }
         }
-
-        NumberAxis timeAxis = new NumberAxis("Time");
-        timeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-        timeAxis.setAutoRangeIncludesZero(false);
-
-        NumberAxis valueAxis = new NumberAxis(yAxisLabel);
-        valueAxis.setAutoRangeIncludesZero(false);
-        valueAxis.setNumberFormatOverride(NUMBER_FORMAT);
 
         StringBuilder title = new StringBuilder();
         if (varList.length() > 0) {
@@ -283,16 +286,36 @@ final public class Charting {
         title.append(hPos.toString());
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(title.toString(), "Date / time",
-                yAxisLabel, timeSeriesColl, true, false, false);
+                null, null, true, false, false);
 
-        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        for (int i = 0; i < timeSeriesColl.getSeriesCount(); i++) {
-            renderer.setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
-            renderer.setSeriesShapesVisible(i, true);
-        }
         XYPlot plot = chart.getXYPlot();
+        
+        NumberAxis timeAxis = new NumberAxis("Time");
+        timeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        timeAxis.setAutoRangeIncludesZero(false);
+        
+        
+        int i=0;
+        for(Entry<String, TimeSeriesCollection> entry : units2timeseries.entrySet()) {
+            TimeSeriesCollection coll = entry.getValue();
+            NumberAxis valueAxis = new NumberAxis(yAxisLabel);
+            valueAxis.setAutoRangeIncludesZero(false);
+            valueAxis.setAutoRange(true);
+            valueAxis.setNumberFormatOverride(NUMBER_FORMAT);
+            valueAxis.setLabel(entry.getKey());
+            plot.setDataset(i, coll);
+            plot.setRangeAxis(i, valueAxis);
+            XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+            for (int j = 0; j < coll.getSeriesCount(); j++) {
+                renderer.setSeriesShape(j, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
+                renderer.setSeriesShapesVisible(j, true);
+            }
+            plot.setRenderer(i, renderer);
+            plot.mapDatasetToRangeAxis(i, i);
+            System.out.println("Dataset number "+i);
+            i++;
+        }
 
-        plot.setRenderer(renderer);
         plot.setNoDataMessage("There is no data for your choice");
         plot.setNoDataMessageFont(new Font("sansserif", Font.BOLD, 20));
         plot.setBackgroundPaint(Color.lightGray);
@@ -303,7 +326,8 @@ final public class Charting {
         /*
          * Use default font and create a legend if there are multiple lines
          */
-        return new JFreeChart(title.toString(), null, plot, timeSeriesColl.getSeriesCount() > 1);
+//        return new JFreeChart(title.toString(), null, plot, timeSeriesColl.getSeriesCount() > 1);
+        return new JFreeChart(title.toString(), null, plot, true);
     }
 
     /**

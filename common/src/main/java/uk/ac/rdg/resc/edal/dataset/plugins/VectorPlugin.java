@@ -60,8 +60,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 public class VectorPlugin extends VariablePlugin {
     private static final Logger log = LoggerFactory.getLogger(VectorPlugin.class);
 
-    public final static String MAG = "mag";
-    public final static String DIR = "dir";
+    public final static String MAG_ROLE = "mag";
+    public final static String DIR_ROLE = "dir";
     public final static String GROUP = "group";
     private String title;
     /*
@@ -95,7 +95,7 @@ public class VectorPlugin extends VariablePlugin {
      */
     public VectorPlugin(String xComponentId, String yComponentId, String title,
             boolean eastNorthComps) {
-        super(new String[] { xComponentId, yComponentId }, new String[] { MAG, DIR, GROUP });
+        super(new String[] { xComponentId, yComponentId }, new String[] { MAG_ROLE, DIR_ROLE, GROUP });
         this.title = title;
         this.eastNorthComps = eastNorthComps;
     }
@@ -113,13 +113,13 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Generate metadata for new components
          */
-        VariableMetadata magMetadata = newVariableMetadataFromMetadata(getFullId(MAG),
-                new Parameter(getFullId(MAG), "Magnitude of " + title, "Magnitude of components:\n"
+        VariableMetadata magMetadata = newVariableMetadataFromMetadata(getFullId(MAG_ROLE),
+                new Parameter(getFullId(MAG_ROLE), "Magnitude of " + title, "Magnitude of components:\n"
                         + xMetadata.getParameter().getDescription() + " and\n"
                         + yMetadata.getParameter().getDescription(), xMetadata.getParameter()
                         .getUnits()), true, xMetadata, yMetadata);
-        VariableMetadata dirMetadata = newVariableMetadataFromMetadata(getFullId(DIR),
-                new Parameter(getFullId(DIR), "Direction of " + title, "Direction of components:\n"
+        VariableMetadata dirMetadata = newVariableMetadataFromMetadata(getFullId(DIR_ROLE),
+                new Parameter(getFullId(DIR_ROLE), "Direction of " + title, "Direction of components:\n"
                         + xMetadata.getParameter().getDescription() + " and\n"
                         + yMetadata.getParameter().getDescription(), "degrees"), true, xMetadata,
                 yMetadata);
@@ -140,8 +140,8 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Set all components to have a new parent
          */
-        magMetadata.setParent(containerMetadata, MAG);
-        dirMetadata.setParent(containerMetadata, DIR);
+        magMetadata.setParent(containerMetadata, MAG_ROLE);
+        dirMetadata.setParent(containerMetadata, DIR_ROLE);
         xMetadata.setParent(containerMetadata, "x");
         yMetadata.setParent(containerMetadata, "y");
 
@@ -237,9 +237,9 @@ public class VectorPlugin extends VariablePlugin {
         }
         double xVal = sourceValues[0].doubleValue();
         double yVal = sourceValues[1].doubleValue();
-        if (MAG.equals(varSuffix)) {
+        if (MAG_ROLE.equals(varSuffix)) {
             return Math.sqrt(xVal * xVal + yVal * yVal);
-        } else if (DIR.equals(varSuffix)) {
+        } else if (DIR_ROLE.equals(varSuffix)) {
             if (eastNorthComps) {
                 /*
                  * We have components which are lon/lat, so this is simple

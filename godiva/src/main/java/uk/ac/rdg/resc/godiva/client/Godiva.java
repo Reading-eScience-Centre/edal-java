@@ -101,8 +101,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      * GodivaStateInfo, because it handles layer selection, which may behave in
      * different ways for different clients
      */
-    private LayerSelectorIF layerSelector;
-    private GodivaStateInfo widgetCollection;
+    protected LayerSelectorIF layerSelector;
+    protected GodivaStateInfo widgetCollection;
     // Button to show further information about the currently selected layer
     protected PushButton infoButton;
 
@@ -110,7 +110,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      * Images
      */
     protected Image logo;
-    private Image loadingImage;
+    protected Image loadingImage;
 
     /*
      * These are used for storing and restoring the state so that people can

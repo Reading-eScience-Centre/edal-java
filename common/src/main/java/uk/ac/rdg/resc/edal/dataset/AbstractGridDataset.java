@@ -853,7 +853,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         int xIndex = hIndices.getX();
         int yIndex = hIndices.getY();
 
-        int zIndex = getVerticalIndex(zPos.getZ(), zAxis, varId);
+        int zIndex = getVerticalIndex(zPos == null ? null : zPos.getZ(), zAxis, varId);
 
         /*
          * Now read the z-limits
@@ -874,6 +874,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
          */
         Array4D<Number> data4d = dataSource.read(varId, tMin, tMax, zIndex, zIndex, yIndex, yIndex,
                 xIndex, xIndex);
+        
         int tSize = tAxis.size();
         Array1D<Number> data = new ValuesArray1D(tSize);
 
@@ -884,7 +885,12 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                 throw new IllegalArgumentException("The time-axis for the variable " + varId
                         + " does not contain the time " + time + " which was requested.");
             }
-            data.set(data4d.get(new int[] { tIndex - tMin, 0, 0, 0 }), new int[] { i });
+            Number value = data4d.get(new int[] { tIndex - tMin, 0, 0, 0 });
+            data.set(value, new int[] { i });
+            
+            
+//            System.out.println(time+","+tIndex+","+value+","+data.get(i));
+//            data.set(data4d.get(new int[] { tIndex - tMin, 0, 0, 0 }), new int[] { i });
             /*
              * TODO we need to test this
              */

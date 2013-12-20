@@ -90,4 +90,9 @@ public class Parameter {
     public String getUnits() {
         return units;
     }
+
+    @Override
+    public String toString() {
+        return id + ": " + title + " (" + description + ")" + " Units: " + units;
+    }
 }
