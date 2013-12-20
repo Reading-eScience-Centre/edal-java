@@ -53,13 +53,13 @@ public class VariableMetadataTest {
          * any real values. Parameters of a VariableMetadata object cannot be
          * null though (tested below)
          */
-        metadata1 = new VariableMetadata("metadata1", new Parameter(null, null, null, null), null,
+        metadata1 = new VariableMetadata("metadata1", new Parameter(null, null, null, null, null), null,
                 null, null);
-        metadata2 = new VariableMetadata("metadata2", new Parameter(null, null, null, null), null,
+        metadata2 = new VariableMetadata("metadata2", new Parameter(null, null, null, null, null), null,
                 null, null);
-        metadata3 = new VariableMetadata("metadata3", new Parameter(null, null, null, null), null,
+        metadata3 = new VariableMetadata("metadata3", new Parameter(null, null, null, null, null), null,
                 null, null);
-        metadata4 = new VariableMetadata("metadata4", new Parameter(null, null, null, null), null,
+        metadata4 = new VariableMetadata("metadata4", new Parameter(null, null, null, null, null), null,
                 null, null);
     }
 
