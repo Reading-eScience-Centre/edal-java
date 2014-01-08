@@ -41,7 +41,7 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "Raster2DLayerType")
-public class Raster2DLayer extends ImageLayer {
+public class Raster2DLayer extends GriddedImageLayer {
 
     @XmlElement(name = "XDataFieldName", required = true)
     private String xDataFieldName;
@@ -61,7 +61,7 @@ public class Raster2DLayer extends ImageLayer {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         /*
          * Read fields into arrays
          */

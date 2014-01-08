@@ -87,7 +87,7 @@ import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
-import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
@@ -104,7 +104,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
+import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
@@ -117,7 +117,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
@@ -455,7 +455,7 @@ public class WmsServlet extends HttpServlet {
          */
         String datasetId = params.getString("dataset");
 
-        Collection<Dataset> datasets;
+        Collection<Dataset<?>> datasets;
         if (datasetId == null || "".equals(datasetId.trim())) {
             /*
              * No specific dataset has been chosen so we create a Capabilities
@@ -471,11 +471,11 @@ public class WmsServlet extends HttpServlet {
                         + "You must specify a dataset identifier with &amp;DATASET=");
             }
         } else {
-            Dataset ds = catalogue.getDatasetFromId(datasetId);
+            Dataset<?> ds = catalogue.getDatasetFromId(datasetId);
             if (ds == null) {
                 throw new EdalException("There is no dataset with ID " + datasetId);
             }
-            datasets = new ArrayList<Dataset>();
+            datasets = new ArrayList<Dataset<?>>();
             datasets.add(ds);
         }
 
@@ -524,7 +524,7 @@ public class WmsServlet extends HttpServlet {
         String[] layerNames = featureInfoParameters.getLayerNames();
         List<FeatureInfoPoint> featureInfos = new ArrayList<FeatureInfoPoint>();
         for (String layerName : layerNames) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
             VariableMetadata metadata = catalogue.getVariableMetadataFromId(layerName);
 
@@ -539,10 +539,10 @@ public class WmsServlet extends HttpServlet {
                 GridDataset gridDataset = (GridDataset) dataset;
 
                 Set<VariableMetadata> children = metadata.getChildren();
-                
+
                 if (metadata.isScalar()) {
                     /*
-                     * If we have a scalar layer, add the value for it first 
+                     * If we have a scalar layer, add the value for it first
                      */
                     TemporalDomain temporalDomain = metadata.getTemporalDomain();
                     Chronology chronology = null;
@@ -632,7 +632,7 @@ public class WmsServlet extends HttpServlet {
         JSONObject menu = new JSONObject();
         menu.put("label", catalogue.getServerInfo().getName());
         JSONArray children = new JSONArray();
-        for (Dataset dataset : catalogue.getAllDatasets()) {
+        for (Dataset<?> dataset : catalogue.getAllDatasets()) {
             String datasetId = dataset.getId();
 
             Set<VariableMetadata> topLevelVariables = dataset.getTopLevelVariables();
@@ -705,7 +705,7 @@ public class WmsServlet extends HttpServlet {
         }
         String requestedTime = params.getString("time");
 
-        Dataset dataset;
+        Dataset<?> dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -927,7 +927,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset dataset;
+        Dataset<?> dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -1056,9 +1056,9 @@ public class WmsServlet extends HttpServlet {
             layerName = catalogue.getLayerName(datasetId, variableId);
         }
 
-        MapFeatureAndMember featureAndMember;
+        FeaturesAndMemberName featuresAndMember;
         try {
-            featureAndMember = catalogue.getFeatureAndMemberName(layerName,
+            featuresAndMember = catalogue.getFeaturesForLayer(layerName,
                     getMapParams.getPlottingDomainParameters());
         } catch (BadTimeFormatException e) {
             log.error("Bad time format", e);
@@ -1067,23 +1067,25 @@ public class WmsServlet extends HttpServlet {
             log.error("Bad layer name", e);
             throw new MetadataException("Problem reading data", e);
         }
-        MapFeature mapFeature = featureAndMember.getMapFeature();
-        Array2D<Number> values = mapFeature.getValues(featureAndMember.getMember());
-        if (values == null) {
-            throw new MetadataException("Cannot find min/max - this is not a scalar layer");
-        }
-
+        
         double min = Double.MAX_VALUE;
         double max = -Double.MAX_VALUE;
-        Iterator<Number> iterator = values.iterator();
-        while (iterator.hasNext()) {
-            Number value = iterator.next();
-            if (value != null) {
-                if (value.doubleValue() > max) {
-                    max = value.doubleValue();
-                }
-                if (value.doubleValue() < min) {
-                    min = value.doubleValue();
+        Collection<? extends DiscreteFeature<?,?>> features = featuresAndMember.getFeatures();
+        for(DiscreteFeature<?,?> f : features) {
+            Array<Number> values = f.getValues(featuresAndMember.getMember());
+            if (values == null) {
+                continue;
+            }
+            Iterator<Number> iterator = values.iterator();
+            while (iterator.hasNext()) {
+                Number value = iterator.next();
+                if (value != null) {
+                    if (value.doubleValue() > max) {
+                        max = value.doubleValue();
+                    }
+                    if (value.doubleValue() < min) {
+                        min = value.doubleValue();
+                    }
                 }
             }
         }
@@ -1114,7 +1116,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset dataset;
+        Dataset<?> dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -1291,7 +1293,7 @@ public class WmsServlet extends HttpServlet {
 
         List<PointSeriesFeature> pointSeriesFeatures = new ArrayList<PointSeriesFeature>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
@@ -1386,7 +1388,7 @@ public class WmsServlet extends HttpServlet {
         boolean verticalSection = false;
         List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
@@ -1459,7 +1461,7 @@ public class WmsServlet extends HttpServlet {
              * This can only be true if we have a GridSeriesFeature, so we can
              * cast
              */
-            Dataset dataset = catalogue.getDatasetFromLayerName(layers[0]);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layers[0]);
             String varId = catalogue.getVariableFromId(layers[0]);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
@@ -1565,7 +1567,7 @@ public class WmsServlet extends HttpServlet {
         String timeStr = params.getString("time");
         List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);

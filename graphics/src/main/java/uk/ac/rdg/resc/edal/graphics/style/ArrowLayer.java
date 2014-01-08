@@ -49,7 +49,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 
 @XmlType(namespace = MapImage.NAMESPACE, propOrder = { "directionFieldName", "arrowSize",
         "arrowColour" }, name = "ArrowLayerType")
-public class ArrowLayer extends ImageLayer {
+public class ArrowLayer extends GriddedImageLayer {
     @XmlElement(name = "DirectionFieldName", required = true)
     private String directionFieldName;
     @XmlElement(name = "ArrowColour")
@@ -95,7 +95,7 @@ public class ArrowLayer extends ImageLayer {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         Array2D<Number> values = dataReader.getDataForLayerName(directionFieldName);
 
         Graphics2D g = image.createGraphics();

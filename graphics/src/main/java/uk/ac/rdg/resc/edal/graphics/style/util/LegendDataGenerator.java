@@ -47,6 +47,7 @@ import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
@@ -113,9 +114,9 @@ public class LegendDataGenerator {
         final MapFeature feature = getFeature(xFieldName, yFieldName);
         return new FeatureCatalogue() {
             @Override
-            public MapFeatureAndMember getFeatureAndMemberName(String id,
+            public FeaturesAndMemberName getFeaturesForLayer(String id,
                     PlottingDomainParams params) {
-                return new MapFeatureAndMember(feature, id);
+                return new FeaturesAndMemberName(CollectionUtils.setOf(feature), id);
             }
         };
     }

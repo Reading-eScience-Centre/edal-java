@@ -41,7 +41,7 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "PatternLayerType")
-public class StippleLayer extends ImageLayer {
+public class StippleLayer extends GriddedImageLayer {
     
     @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
@@ -59,7 +59,7 @@ public class StippleLayer extends ImageLayer {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         int[][] alphas = new int[image.getWidth()][image.getHeight()];
         Array2D<Number> values = dataReader.getDataForLayerName(dataFieldName);
         

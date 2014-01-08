@@ -77,7 +77,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  * @author Jon
  * @author Guy
  */
-public abstract class AbstractGridDataset extends AbstractDataset implements GridDataset {
+public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> implements GridDataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
 
     public AbstractGridDataset(String id, Collection<GridVariableMetadata> vars) {
@@ -1128,6 +1128,11 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                 throw new DataReadingException("Problem reading data", e);
             }
         }
+    }
+    
+    @Override
+    public Class<GridFeature> getFeatureType() {
+        return GridFeature.class;
     }
 
     protected abstract GridDataSource openGridDataSource() throws IOException;

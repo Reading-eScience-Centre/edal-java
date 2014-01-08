@@ -60,7 +60,7 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "ContourLayerType")
-public class ContourLayer extends ImageLayer {
+public class ContourLayer extends GriddedImageLayer {
     
     @XmlType(namespace = MapImage.NAMESPACE, name = "ContourLineStyleType")
     public enum ContourLineStyle {
@@ -185,7 +185,7 @@ public class ContourLayer extends ImageLayer {
 	}
 
 	@Override
-	protected void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException  {
+	protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException  {
 		int width = image.getWidth();
 		int height = image.getHeight();
 		double[] values = new double[width * height];

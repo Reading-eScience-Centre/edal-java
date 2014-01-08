@@ -28,22 +28,33 @@
 
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
+import java.util.Collection;
+
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 public interface FeatureCatalogue {
-    public class MapFeatureAndMember {
-        private MapFeature feature;
+    public class FeaturesAndMemberName {
+        private Collection<? extends DiscreteFeature<?, ?>> features;
         private String member;
 
-        public MapFeatureAndMember(MapFeature feature, String member) {
+        @SuppressWarnings("unchecked")
+        public FeaturesAndMemberName(DiscreteFeature<?, ?> feature, String member) {
             super();
-            this.feature = feature;
+            this.features = CollectionUtils.setOf(feature);
             this.member = member;
         }
 
-        public MapFeature getMapFeature() {
-            return feature;
+        public FeaturesAndMemberName(Collection<? extends DiscreteFeature<?, ?>> features,
+                String member) {
+            super();
+            this.features = features;
+            this.member = member;
+        }
+
+        public Collection<? extends DiscreteFeature<?, ?>> getFeatures() {
+            return features;
         }
 
         public String getMember() {
@@ -51,6 +62,6 @@ public interface FeatureCatalogue {
         }
     }
 
-    public MapFeatureAndMember getFeatureAndMemberName(String id, PlottingDomainParams params)
+    public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params)
             throws EdalException;
 }
