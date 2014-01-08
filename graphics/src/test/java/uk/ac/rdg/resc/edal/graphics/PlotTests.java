@@ -124,16 +124,16 @@ public class PlotTests {
 
         catalogue = new FeatureCatalogue() {
             @Override
-            public MapFeatureAndMember getFeatureAndMemberName(String id,
+            public FeaturesAndMemberName getFeaturesForLayer(String id,
                     PlottingDomainParams params) {
                 if (id.equals("test")) {
-                    return new MapFeatureAndMember(testFeature, "testvar");
+                    return new FeaturesAndMemberName(testFeature, "testvar");
                 } else if (id.equals("xtest")) {
-                    return new MapFeatureAndMember(testFeature, "testvarx");
+                    return new FeaturesAndMemberName(testFeature, "testvarx");
                 } else if (id.equals("ytest")) {
-                    return new MapFeatureAndMember(testFeature, "testvary");
+                    return new FeaturesAndMemberName(testFeature, "testvary");
                 } else if (id.equals("thetatest")) {
-                    return new MapFeatureAndMember(testFeature, "testvarth");
+                    return new FeaturesAndMemberName(testFeature, "testvarth");
                 } else {
                     return null;
                 }

@@ -272,7 +272,7 @@ public class WmsUtils {
      * @throws IOException
      *             if there was an error reading from the source data
      */
-    public static Extent<Float> estimateValueRange(Dataset dataset, String varId) {
+    public static Extent<Float> estimateValueRange(Dataset<?> dataset, String varId) {
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
             VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);

@@ -43,7 +43,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
  * @author Jon
  * @author Guy
  */
-public interface Dataset {
+public interface Dataset<F extends Feature<?>> {
 
     /**
      * @return The ID which identifies this dataset.
@@ -58,7 +58,7 @@ public interface Dataset {
     /**
      * Reads an entire feature from underlying storage
      */
-    public Feature<?> readFeature(String featureId) throws DataReadingException;
+    public F readFeature(String featureId) throws DataReadingException;
 
     /**
      * Returns the IDs of variables in this {@link Dataset}. Generally the term
@@ -91,4 +91,9 @@ public interface Dataset {
      *             If there is a problem adding the plugin
      */
     public void addVariablePlugin(VariablePlugin plugin) throws EdalException;
+    
+    /**
+     * @return The class of the {@link Feature}s contained within this {@link Dataset}
+     */
+    public Class<F> getFeatureType();
 }

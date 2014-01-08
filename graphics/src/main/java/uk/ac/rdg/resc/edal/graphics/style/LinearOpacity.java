@@ -91,7 +91,7 @@ public class LinearOpacity extends OpacityTransform {
     }
 
     @Override
-    protected void applyOpacityToImage(BufferedImage image, DataReader dataReader) throws EdalException {
+    protected void applyOpacityToImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         int width = image.getWidth();
         int height = image.getHeight();
 

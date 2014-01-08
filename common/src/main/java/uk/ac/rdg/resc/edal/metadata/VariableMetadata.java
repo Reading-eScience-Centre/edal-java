@@ -49,7 +49,7 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 public class VariableMetadata {
 
     private String id;
-    private Dataset dataset;
+    private Dataset<?> dataset;
     private Parameter parameter;
     private HorizontalDomain hDomain;
     private VerticalDomain zDomain;
@@ -139,7 +139,7 @@ public class VariableMetadata {
      * 
      * @param dataset
      */
-    public void setDataset(Dataset dataset) {
+    public void setDataset(Dataset<?> dataset) {
         this.dataset = dataset;
         for (VariableMetadata child : children) {
             child.setDataset(dataset);
@@ -156,7 +156,7 @@ public class VariableMetadata {
     /**
      * The dataset to which this variable belongs
      */
-    public Dataset getDataset() {
+    public Dataset<?> getDataset() {
         return dataset;
     }
 

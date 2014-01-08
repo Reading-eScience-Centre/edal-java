@@ -53,7 +53,7 @@ public class FlatOpacity extends OpacityTransform {
     }
 
     @Override
-    protected void applyOpacityToImage(BufferedImage image, DataReader dataReader) {
+    protected void applyOpacityToImage(BufferedImage image, MapFeatureDataReader dataReader) {
         int width = image.getWidth();
         int height = image.getHeight();
 

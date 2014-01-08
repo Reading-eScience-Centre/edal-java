@@ -179,9 +179,9 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     }
 
     @Override
-    public MapFeatureAndMember getFeatureAndMemberName(String id, PlottingDomainParams params)
+    public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params)
             throws EdalException {
-        Dataset dataset = getDatasetFromLayerName(id);
+        Dataset<?> dataset = getDatasetFromLayerName(id);
         String variable = getVariableFromId(id);
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
@@ -197,7 +197,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
             /*
              * TODO Caching probably goes here
              */
-            return new MapFeatureAndMember(mapData, variable);
+            return new FeaturesAndMemberName(CollectionUtils.setOf(mapData), variable);
         } else {
             throw new UnsupportedOperationException("Currently only gridded data is supported");
         }
@@ -218,7 +218,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      */
     public VariableMetadata getVariableMetadataFromId(String layerName)
             throws WmsLayerNotFoundException {
-        Dataset dataset = getDatasetFromLayerName(layerName);
+        Dataset<?> dataset = getDatasetFromLayerName(layerName);
         String variableFromId = getVariableFromId(layerName);
         if (dataset != null && variableFromId != null) {
             return dataset.getVariableMetadata(variableFromId);
@@ -239,6 +239,11 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *         the supplied variable.
      */
     public List<StyleDef> getSupportedStyles(VariableMetadata variableMetadata) {
+        /*
+         * TODO If StyleDef were moved to edal-common, we could put this method
+         * in a utility class in edal-common (adding Collection<StyleDef> as an
+         * argument).  It's a useful method.
+         */
         List<StyleDef> supportedStyles = new ArrayList<StyleDef>();
         /*
          * Loop through all loaded style definitions
@@ -576,7 +581,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     /**
      * @return All available {@link Dataset}s on this server
      */
-    public abstract Collection<Dataset> getAllDatasets();
+    public abstract Collection<Dataset<?>> getAllDatasets();
 
     /**
      * @param datasetId
@@ -596,7 +601,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The ID of the dataset
      * @return The desired dataset
      */
-    public abstract Dataset getDatasetFromId(String datasetId);
+    public abstract Dataset<?> getDatasetFromId(String datasetId);
 
     /**
      * Returns a {@link Dataset} based on a given layer name
@@ -605,7 +610,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The full layer name
      * @return The desired dataset
      */
-    public abstract Dataset getDatasetFromLayerName(String layerName)
+    public abstract Dataset<?> getDatasetFromLayerName(String layerName)
             throws WmsLayerNotFoundException;
 
     /**

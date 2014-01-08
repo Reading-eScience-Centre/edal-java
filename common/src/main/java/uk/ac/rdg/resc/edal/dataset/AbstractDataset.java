@@ -42,9 +42,10 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
-public abstract class AbstractDataset implements Dataset {
+public abstract class AbstractDataset<F extends Feature<?>> implements Dataset<F> {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
     private String id;
     private Map<String, VariableMetadata> vars;
