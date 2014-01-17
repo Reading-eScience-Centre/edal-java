@@ -151,11 +151,6 @@ public abstract class VariablePlugin {
                 return generateValue(varId.substring(prefixLength), positions.get(coords),
                         sourceValues);
             }
-
-            @Override
-            public Class<Number> getValueClass() {
-                return Number.class;
-            }
         };
     }
 
@@ -185,11 +180,6 @@ public abstract class VariablePlugin {
                 }
                 return generateValue(varId.substring(prefixLength), positions.get(coords),
                         sourceValues);
-            }
-
-            @Override
-            public Class<Number> getValueClass() {
-                return Number.class;
             }
         };
     }

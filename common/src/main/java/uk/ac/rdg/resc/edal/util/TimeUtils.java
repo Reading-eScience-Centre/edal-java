@@ -118,20 +118,23 @@ public class TimeUtils {
     /**
      * Converts an ISO8601-formatted String into a {@link DateTime} object
      * 
-     * @throws BadTimeFormatException 
+     * @throws BadTimeFormatException
      *             if the string is not a valid ISO date-time, or if it is not
      *             valid within the Chronology (e.g. 31st July in a 360-day
      *             calendar).
      */
-    public static DateTime iso8601ToDateTime(String isoDateTime, Chronology chronology) throws BadTimeFormatException {
-        try{
+    public static DateTime iso8601ToDateTime(String isoDateTime, Chronology chronology)
+            throws BadTimeFormatException {
+        try {
             return ISO_DATE_TIME_FORMATTER.withChronology(chronology).parseDateTime(isoDateTime);
         } catch (IllegalArgumentException e) {
-            throw new BadTimeFormatException("The string "+isoDateTime+" does not represent an ISO8601 datetime", e);
+            throw new BadTimeFormatException("The string " + isoDateTime
+                    + " does not represent an ISO8601 datetime", e);
         }
     }
 
-    public static DateTime iso8601ToDate(String isoDate, Chronology chronology) throws BadTimeFormatException {
+    public static DateTime iso8601ToDate(String isoDate, Chronology chronology)
+            throws BadTimeFormatException {
         try {
             return ISO_DATE_FORMATTER.withChronology(chronology).parseDateTime(isoDate);
         } catch (IllegalArgumentException e) {
@@ -494,5 +497,27 @@ public class TimeUtils {
                 && dt1.getMonthOfYear() == dt2.getMonthOfYear()
                 && dt1.getDayOfMonth() == dt2.getDayOfMonth();
         return onSameDay;
+    }
+
+    /**
+     * Gets the length of the given unit in milliseconds. This accepts seconds,
+     * minutes, hours and days, and should be constant across calendar systems.
+     */
+    public static int getUnitLengthSeconds(String unit) {
+        unit = unit.trim();
+        if (unit.equals("seconds") || unit.equals("second") || unit.equals("secs")
+                || unit.equals("sec") || unit.equals("s")) {
+            return 1;
+        } else if (unit.equals("minutes") || unit.equals("minute") || unit.equals("mins")
+                || unit.equals("min")) {
+            return 60;
+        } else if (unit.equals("hours") || unit.equals("hour") || unit.equals("hrs")
+                || unit.equals("hr") || unit.equals("h")) {
+            return 60 * 60;
+        } else if (unit.equals("days") || unit.equals("day") || unit.equals("d")) {
+            return 60 * 60 * 24;
+        } else {
+            throw new IllegalArgumentException("Unrecognized unit for time axis: " + unit);
+        }
     }
 }

@@ -32,7 +32,6 @@ import uk.ac.rdg.resc.edal.exceptions.ArrayAccessException;
 
 public class ImmutableArray1D<T> extends Array1D<T> {
     private final T[] data;
-    private final Class<T> clazz;
 
     /**
      * Create a new in-memory array.
@@ -44,9 +43,8 @@ public class ImmutableArray1D<T> extends Array1D<T> {
      * @param values
      *            An array containing the data.
      */
-    public ImmutableArray1D(Class<T> clazz, int size, T[] values) {
+    public ImmutableArray1D(int size, T[] values) {
         super(size);
-        this.clazz = clazz;
         this.data = values;
     }
 
@@ -71,11 +69,6 @@ public class ImmutableArray1D<T> extends Array1D<T> {
 //        }
 //
 //        return data[index];
-    }
-
-    @Override
-    public Class<T> getValueClass() {
-        return clazz;
     }
 
     @Override

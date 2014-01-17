@@ -174,10 +174,5 @@ final class CdmGridDataSource implements GridDataSource {
         public long size() {
             return shape[0] * shape[1] * shape[2] * shape[3];
         }
-
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
-        }
     }
 }

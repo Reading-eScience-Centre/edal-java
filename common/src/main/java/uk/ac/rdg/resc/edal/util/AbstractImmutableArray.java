@@ -32,25 +32,17 @@ import java.util.Iterator;
 
 public abstract class AbstractImmutableArray<T> implements Array<T> {
 
-    private Class<T> clazz;
     protected int[] shape;
 
     /**
      * Instantiate a new {@link AbstractImmutableArray}
      * 
-     * @param clazz
-     *            The class of the objects in this {@link Array}. Because of
-     *            type erasure we need to supply it to the constructor. The
-     *            other ways to do it are to either allow every subclass to
-     *            implement {@link Array#getValueClass()} itself (more code), or
-     *            use some rather complicated reflection (overkill)
      * @param shape
      *            The shape of the {@link Array}. The final dimension varies
      *            fastest. In GIS applications, the standard order for
      *            co-ordinates is T, Z, Y, X
      */
-    public AbstractImmutableArray(Class<T> clazz, int... shape) {
-        this.clazz = clazz;
+    public AbstractImmutableArray(int... shape) {
         this.shape = shape;
     }
 
@@ -112,10 +104,5 @@ public abstract class AbstractImmutableArray<T> implements Array<T> {
             size *= shape[dim];
         }
         return size;
-    }
-
-    @Override
-    public Class<T> getValueClass() {
-        return clazz;
     }
 }

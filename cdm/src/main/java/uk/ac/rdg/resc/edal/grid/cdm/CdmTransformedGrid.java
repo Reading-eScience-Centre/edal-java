@@ -177,8 +177,7 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     @Override
     public Array<GridCell2D> getDomainObjects() {
         if (domainObjs == null) {
-            domainObjs = new AbstractImmutableArray<GridCell2D>(GridCell2D.class, getYSize(),
-                    getXSize()) {
+            domainObjs = new AbstractImmutableArray<GridCell2D>(getYSize(), getXSize()) {
                 @Override
                 public GridCell2D get(final int... coords) {
                     double x = xAxis.getCoordinateValue(coords[1]);

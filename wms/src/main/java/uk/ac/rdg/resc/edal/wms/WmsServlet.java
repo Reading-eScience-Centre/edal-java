@@ -514,7 +514,7 @@ public class WmsServlet extends HttpServlet {
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params);
         PlottingDomainParams plottingParameters = featureInfoParameters
                 .getPlottingDomainParameters();
-        RegularGrid imageGrid = WmsUtils.getImageGrid(plottingParameters);
+        RegularGrid imageGrid = plottingParameters.getImageGrid();
         Double xVal = imageGrid.getXAxis().getCoordinateValue(featureInfoParameters.getI());
         Double yVal = imageGrid.getYAxis().getCoordinateValue(
                 imageGrid.getYAxis().size() - 1 - featureInfoParameters.getJ());

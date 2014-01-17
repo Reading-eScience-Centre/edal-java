@@ -194,10 +194,5 @@ public class LegendDataGenerator {
         public void set(Number value, int... coords) {
             throw new UnsupportedOperationException("This Array2D is immutable");
         }
-
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
-        }
     }
 }

@@ -138,13 +138,8 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
     @Override
     public Array<GridCell2D> getDomainObjects() {
         if (domainObjects == null) {
-            domainObjects = new AbstractImmutableArray<GridCell2D>(GridCell2D.class, new int[] {
+            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] {
                     curvCoords.getNj(), curvCoords.getNi() }) {
-                @Override
-                public Class<GridCell2D> getValueClass() {
-                    return GridCell2D.class;
-                }
-
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];

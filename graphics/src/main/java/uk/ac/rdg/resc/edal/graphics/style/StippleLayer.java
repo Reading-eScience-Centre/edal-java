@@ -123,7 +123,7 @@ public class StippleLayer extends GriddedImageLayer {
     }
     
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         if (scale.getOpaqueValue() > scale.getTransparentValue()) {
             ret.add(new NameAndRange(dataFieldName, Extents.newExtent(scale.getTransparentValue(),

@@ -57,7 +57,7 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         this.isLongitude = isLongitude;
         init(firstValue, spacing, size);
     }
-    
+
     private void init(double firstValue, double spacing, int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("Axis length must not be negative or zero");
@@ -107,8 +107,8 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     @Override
     public int findIndexOf(Double position) {
         if (isLongitude) {
-            position = GISUtils.getNextEquivalentLongitude(getCoordinateExtent().getLow(),
-                    position);
+            position = GISUtils
+                    .getNextEquivalentLongitude(getCoordinateExtent().getLow(), position);
         }
         /*
          * This method will generally be faster than an exhaustive search, or
@@ -119,8 +119,35 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         Double indexDbl = getIndex(position);
         /* We round to the nearest integer */
         int index = (int) Math.round(indexDbl);
-        if (index < 0 || index >= size)
+        if (index < 0 || index >= size) {
             return -1;
+        }
+        return index;
+    }
+
+    @Override
+    public int findIndexOfUnconstrained(Double position) {
+        /*
+         * The purpose of this method is to find the index of a position even if
+         * it is outside the axis bounds.
+         * 
+         * findIndexOf uses the getNextEquivalentLongitude using the lower
+         * extent of this axis because it is reasonably quick and anything lower
+         * than that will be outside the axis bounds.
+         * 
+         * Here we need to get the nearest equivalent longitude to the centre of
+         * the axis, because we don't want to exclude positions which are
+         * outside the axis.
+         */
+        if (isLongitude) {
+            position = GISUtils.getNearestEquivalentLongitude(
+                    (getCoordinateExtent().getHigh() + getCoordinateExtent().getLow()) / 2.0,
+                    position);
+        }
+        /* We find the (non-integer) index of the given value */
+        Double indexDbl = getIndex(position);
+        /* We round to the nearest integer */
+        int index = (int) Math.round(indexDbl);
         return index;
     }
 
