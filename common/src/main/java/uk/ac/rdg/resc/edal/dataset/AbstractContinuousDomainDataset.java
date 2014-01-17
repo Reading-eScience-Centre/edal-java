@@ -128,8 +128,8 @@ public abstract class AbstractContinuousDomainDataset<F extends DiscreteFeature<
         /*
          * Divide by 200 because we these values get used twice (once on each side)
          */
-        double xExtra = bbox.getWidth() * (1.0 + percentageIncrease / 200.0);
-        double yExtra = bbox.getHeight() * (1.0 + percentageIncrease / 200.0);
+        double xExtra = bbox.getWidth() * (percentageIncrease / 200.0);
+        double yExtra = bbox.getHeight() * (percentageIncrease / 200.0);
         BoundingBox bboxBordered = new BoundingBoxImpl(bbox.getMinX() - xExtra, bbox.getMinY()
                 - yExtra, bbox.getMaxX() + xExtra, bbox.getMaxY() + yExtra,
                 bbox.getCoordinateReferenceSystem());
