@@ -156,7 +156,7 @@ public class ArrowLayer extends GriddedImageLayer {
     }
 
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         ret.add(new NameAndRange(directionFieldName, Extents.newExtent(0f, new Float(2 * Math.PI))));
         return ret;

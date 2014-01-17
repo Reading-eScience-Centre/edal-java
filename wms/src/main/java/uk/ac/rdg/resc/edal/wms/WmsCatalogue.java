@@ -46,10 +46,12 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.io.IOUtils;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -59,20 +61,27 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import uk.ac.rdg.resc.edal.dataset.ContinuousDomainDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.graphics.style.Drawable;
+import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
+import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
+import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.util.ContactInfo;
 import uk.ac.rdg.resc.edal.wms.util.ServerInfo;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
-import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
  * This class encapsulates the elements needed to implement a specific WMS.
@@ -124,7 +133,8 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                     String name = e.getName();
                     Matcher matcher = styleXmlPath.matcher(name);
                     if (matcher.matches()) {
-                        StyleDef style = processStyle(matcher.group(1), zip);
+                        String xmlString = IOUtils.toString(zip);
+                        StyleDef style = processStyle(matcher.group(1), xmlString);
                         if (style != null) {
                             styleDefs.put(style.getStyleName(), style);
                         }
@@ -157,8 +167,8 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                 for (File styleFile : stylesDir.listFiles()) {
                     Matcher matcher = styleXmlPath.matcher(styleFile.getName());
                     if (matcher.matches()) {
-                        StyleDef style = processStyle(matcher.group(1), new FileInputStream(
-                                styleFile));
+                        StyleDef style = processStyle(matcher.group(1),
+                                IOUtils.toString(new FileInputStream(styleFile)));
                         if (style != null) {
                             styleDefs.put(style.getStyleName(), style);
                         }
@@ -183,28 +193,29 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
             throws EdalException {
         Dataset<?> dataset = getDatasetFromLayerName(id);
         String variable = getVariableFromId(id);
+        TemporalDomain temporalDomain = dataset.getVariableMetadata(variable).getTemporalDomain();
+        Chronology chronology = null;
+        if (temporalDomain != null) {
+            chronology = temporalDomain.getChronology();
+        }
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
-            TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variable)
-                    .getTemporalDomain();
-            Chronology chronology = null;
-            if (temporalDomain != null) {
-                chronology = temporalDomain.getChronology();
-            }
             MapFeature mapData = gridDataset.readMapData(CollectionUtils.setOf(variable),
-                    WmsUtils.getImageGrid(params), params.getTargetZ(),
-                    params.getTargetT(chronology));
+                    params.getImageGrid(), params.getTargetZ(), params.getTargetT(chronology));
             /*
              * TODO Caching probably goes here
              */
             return new FeaturesAndMemberName(CollectionUtils.setOf(mapData), variable);
+        } else if (dataset instanceof ContinuousDomainDataset) {
+            ContinuousDomainDataset<?> continuousDomainDataset = (ContinuousDomainDataset<?>) dataset;
+            Collection<? extends DiscreteFeature<?, ?>> features = continuousDomainDataset
+                    .extractFeatures(CollectionUtils.setOf(variable), params.getBbox(),
+                            params.getZExtent(), params.getTExtent(chronology));
+            return new FeaturesAndMemberName(features, variable);
         } else {
-            throw new UnsupportedOperationException("Currently only gridded data is supported");
+            throw new UnsupportedOperationException(
+                    "The Dataset you are trying to extract data from is currently unsupported");
         }
-        /*
-         * TODO process other types of Dataset here (i.e. InSituDataset which
-         * doesn't yet exist)
-         */
     }
 
     /**
@@ -239,46 +250,12 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *         the supplied variable.
      */
     public List<StyleDef> getSupportedStyles(VariableMetadata variableMetadata) {
-        /*
-         * TODO If StyleDef were moved to edal-common, we could put this method
-         * in a utility class in edal-common (adding Collection<StyleDef> as an
-         * argument).  It's a useful method.
-         */
         List<StyleDef> supportedStyles = new ArrayList<StyleDef>();
         /*
          * Loop through all loaded style definitions
          */
         for (StyleDef styleDef : styleDefs.values()) {
-            /*
-             * Assume the style is supported
-             */
-            boolean currentStyleSupported = true;
-            /*
-             * If this style needs the named layer, but it is not scalar (i.e.
-             * has no scalar data field which can be read) then it cannot be
-             * supported
-             */
-            if (styleDef.needsNamedLayer() && !variableMetadata.isScalar()) {
-                currentStyleSupported = false;
-                continue;
-            }
-
-            List<String> requiredChildren = styleDef.getRequiredChildren();
-            if (requiredChildren != null && !requiredChildren.isEmpty()) {
-                for (String requiredChild : requiredChildren) {
-                    VariableMetadata childMetadata = variableMetadata
-                            .getChildWithRole(requiredChild);
-                    if (childMetadata == null || !childMetadata.isScalar()) {
-                        /*
-                         * We required a child layer which is either missing or
-                         * not scalar
-                         */
-                        currentStyleSupported = false;
-                        continue;
-                    }
-                }
-            }
-            if (currentStyleSupported) {
+            if(styleDef.supportedBy(variableMetadata)) {
                 supportedStyles.add(styleDef);
             }
         }
@@ -307,7 +284,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
             layerKeyToLayerName.put("layerName", layerName);
         }
         VariableMetadata layerMetadata = getVariableMetadataFromId(layerName);
-        for (String childPurpose : styleDef.getRequiredChildren()) {
+        for (String childPurpose : styleDef.getRequiredChildRoles()) {
             layerKeyToLayerName.put(
                     "layerName-" + childPurpose,
                     getLayerName(layerMetadata.getDataset().getId(), layerMetadata
@@ -317,11 +294,11 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     }
 
     /**
-     * Processes an XML stream representing a style template.
+     * Processes an XML string representing a style template.
      * 
      * @param name
      *            The name of the style
-     * @param inputStream
+     * @param xmlString
      *            The input stream containing the XML
      * @return A {@link StyleDef} representing the properties of the style
      * @throws IOException
@@ -331,14 +308,14 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * @throws SAXException
      *             If there is a problem parsing the XML
      */
-    private StyleDef processStyle(String name, InputStream inputStream) throws IOException,
+    private StyleDef processStyle(String name, String xmlString) throws IOException,
             ParserConfigurationException, SAXException {
         /*
          * Get the XML style definition into a NodeList
          */
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(inputStream);
+        Document doc = builder.parse(IOUtils.toInputStream(xmlString));
         NodeList xmlNodes = doc.getChildNodes();
 
         String scaledLayer = null;
@@ -367,7 +344,84 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
          */
         populateStyleChildRoles(xmlNodes, requiredChildren);
 
-        return new StyleDef(name, requiredChildren, usesPalette, needsNamedLayer, scaledLayer);
+        /*
+         * This was the simpler bit. We now need to know what types of feature
+         * are supported by the XML template.
+         * 
+         * This essentially means that we need to parse the XML into the
+         * MapImage object, loop through the layers in the MapImage, and call
+         * the acceptsFeatureTypes() method on each.
+         * 
+         * To parse the XML successfully, we need to replace all of the valid
+         * identifiers which may be constrained (i.e. those which don't allow
+         * arbitrary text) with real values (for example, if we try to parse the
+         * XML fragment <scaleMin>$scaleMin</scaleMin> we should get an error,
+         * since the <scaleMin> tag needs a numerical value.
+         */
+
+        xmlString = xmlString.replaceAll("\\$scaleMin", "0");
+        xmlString = xmlString.replaceAll("\\$scaleMax", "10");
+        xmlString = xmlString.replaceAll("\\$logarithmic", "false");
+        xmlString = xmlString.replaceAll("\\$numColorBands", "10");
+        xmlString = xmlString.replaceAll("\\$bgColor", "#000000");
+        xmlString = xmlString.replaceAll("\\$belowMinColor", "#000000");
+        xmlString = xmlString.replaceAll("\\$aboveMaxColor", "#000000");
+
+        /*
+         * Java generics at its finest ;-)
+         * 
+         * To test if a style is supported by a particular variable, we need to
+         * know:
+         * 
+         * For EVERY layer in the image (e.g. RasterLayer, GlyphLayer, etc) what
+         * roles are supported, and whether they the variables having these
+         * roles are one of the (possibly multiple) feature types supported by
+         * this layer.
+         * 
+         * So the first Collection separates the layers.
+         * 
+         * The Map maps role names to the (2nd) Collection of Feature types, one
+         * of which the variable with that role must be a type of.
+         */
+        Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType = new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>();
+        try {
+            MapImage mapImage = StyleXMLParser.deserialise(xmlString);
+            for (Drawable layer : mapImage.getLayers()) {
+                Map<String, Collection<Class<? extends Feature<?>>>> role2FeatureType = new HashMap<String, Collection<Class<? extends Feature<?>>>>();
+                if (layer instanceof ImageLayer) {
+                    ImageLayer imageLayer = (ImageLayer) layer;
+                    Collection<Class<? extends Feature<?>>> supportedFeatureTypes = imageLayer
+                            .supportedFeatureTypes();
+                    /*
+                     * Add the supported feature types to a Map of Collections
+                     * of Features, using the getFieldsWithScales to determine
+                     * the roles to use as a key
+                     */
+                    Set<NameAndRange> fieldsWithScales = imageLayer.getFieldsWithScales();
+                    for (NameAndRange field : fieldsWithScales) {
+                        String layerName = field.getFieldLabel();
+                        if (layerName.startsWith("$layerName")) {
+                            /*
+                             * This should always be the case
+                             */
+                            String role;
+                            if (layerName.equals("$layerName")) {
+                                role = "";
+                            } else {
+                                role = layerName.substring(layerName.indexOf("-"));
+                            }
+                            role2FeatureType.put(role, supportedFeatureTypes);
+                        }
+                    }
+                }
+                roles2FeatureType.add(role2FeatureType);
+            }
+        } catch (JAXBException e) {
+            log.error("Problem parsing style XML", e);
+        }
+
+        return new StyleDef(name, requiredChildren, usesPalette, needsNamedLayer, scaledLayer,
+                roles2FeatureType);
     }
 
     /**

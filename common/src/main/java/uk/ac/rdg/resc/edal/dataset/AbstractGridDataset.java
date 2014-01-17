@@ -126,6 +126,14 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
             throw new DataReadingException("Problem reading the data from underlying storage");
         }
     }
+    
+    @Override
+    public Set<String> getFeatureIds() {
+        /*
+         * For a GridDataset, there is one feature per variable
+         */
+        return getVariableIds();
+    }
 
     /**
      * Reads entire 4D data from a variable.
@@ -217,11 +225,6 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
                      * Generate the value
                      */
                     return plugin.getValue(varId, pos, sourceValues);
-                }
-
-                @Override
-                public Class<Number> getValueClass() {
-                    return Number.class;
                 }
 
                 @Override
@@ -336,12 +339,6 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
                         derivedVarId,
                         new Array2D<HorizontalPosition>(targetGrid.getYSize(), targetGrid
                                 .getXSize()) {
-
-                            @Override
-                            public Class<HorizontalPosition> getValueClass() {
-                                return HorizontalPosition.class;
-                            }
-
                             @Override
                             public HorizontalPosition get(int... coords) {
                                 return targetGrid.getDomainObjects().get(coords).getCentre();
@@ -559,11 +556,6 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
                 values.put(derivedVarId, plugin.generateArray1D(derivedVarId,
                         new Array1D<HorizontalPosition>(pluginSourceData.length) {
                             @Override
-                            public Class<HorizontalPosition> getValueClass() {
-                                return HorizontalPosition.class;
-                            }
-
-                            @Override
                             public HorizontalPosition get(int... coords) {
                                 return hPos;
                             }
@@ -771,11 +763,6 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
 
                 values.put(derivedVarId, plugin.generateArray1D(derivedVarId,
                         new Array1D<HorizontalPosition>(pluginSourceData.length) {
-                            @Override
-                            public Class<HorizontalPosition> getValueClass() {
-                                return HorizontalPosition.class;
-                            }
-
                             @Override
                             public HorizontalPosition get(int... coords) {
                                 return hPos;
@@ -998,11 +985,6 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
                         derivedVarId,
                         plugin.generateArray1D(derivedVarId,
                                 new Array1D<HorizontalPosition>(domain.size()) {
-                                    @Override
-                                    public Class<HorizontalPosition> getValueClass() {
-                                        return HorizontalPosition.class;
-                                    }
-
                                     @Override
                                     public HorizontalPosition get(int... coords) {
                                         return domain.getDomainObjects().get(coords)

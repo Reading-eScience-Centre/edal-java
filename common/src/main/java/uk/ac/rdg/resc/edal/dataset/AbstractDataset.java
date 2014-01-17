@@ -42,10 +42,10 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
-public abstract class AbstractDataset<F extends Feature<?>> implements Dataset<F> {
+public abstract class AbstractDataset<F extends DiscreteFeature<?, ?>> implements Dataset<F> {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
     private String id;
     private Map<String, VariableMetadata> vars;
@@ -86,14 +86,6 @@ public abstract class AbstractDataset<F extends Feature<?>> implements Dataset<F
             }
         }
         return ret;
-    }
-
-    @Override
-    public Set<String> getFeatureIds() {
-        /*
-         * There is one feature per variable
-         */
-        return vars.keySet();
     }
 
     @Override

@@ -159,10 +159,19 @@ public final class Extents {
         public T getLow() {
             return min;
         }
-        
+
         @Override
         public boolean isEmpty() {
             return (max == null && min == null);
+        }
+
+        @Override
+        public boolean intersects(Extent<T> otherExtent) {
+            /*
+             * The last test will never get run, but included for clarity
+             */
+            return contains(otherExtent.getLow()) || contains(otherExtent.getHigh())
+                    || otherExtent.contains(getLow()) || otherExtent.contains(getHigh());
         }
     }
 

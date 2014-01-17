@@ -81,11 +81,6 @@ public class SimpleGridDomain implements GridDomain {
             public void set(GridCell4D value, int... coords) {
                 throw new UnsupportedOperationException("This Array4D is immutable");
             }
-
-            @Override
-            public Class<GridCell4D> getValueClass() {
-                return GridCell4D.class;
-            }
         };
     }
 

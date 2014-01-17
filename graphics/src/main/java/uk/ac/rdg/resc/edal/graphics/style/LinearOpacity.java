@@ -110,7 +110,7 @@ public class LinearOpacity extends OpacityTransform {
     }
 
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         if(opaqueValue > transparentValue) {
             ret.add(new NameAndRange(dataFieldName, Extents.newExtent(transparentValue, opaqueValue)));

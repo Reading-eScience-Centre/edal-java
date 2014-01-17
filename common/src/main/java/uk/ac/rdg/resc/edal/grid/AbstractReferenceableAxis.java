@@ -133,10 +133,9 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
     }
     
 
-    @SuppressWarnings("unchecked")
     @Override
     public Array<Extent<T>> getDomainObjects() {
-        return new AbstractImmutableArray<Extent<T>>((Class<Extent<T>>) (Class<?>) Extent.class, new int[] { size() }) {
+        return new AbstractImmutableArray<Extent<T>>(new int[] { size() }) {
             @Override
             public Extent<T> get(int... coords) {
                 /*

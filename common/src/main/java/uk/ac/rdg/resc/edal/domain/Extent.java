@@ -52,17 +52,27 @@ public interface Extent<P> extends Domain<P> {
      * @return The high bound of this {@link Extent}
      */
     public P getHigh();
-    
+
     /**
      * @return Whether or not this is an empty {@link Extent} - empty
      *         {@link Extent}s are defined as containing <code>null</code> for
      *         both {@link Extent#getHigh()} and {@link Extent#getLow()}
      */
     public boolean isEmpty();
-    
+
+    /**
+     * Tests whether this extent overlaps with another
+     * 
+     * @param otherExtent
+     *            The other {@link Extent} to test
+     * @return <code>true</code> if the supplied {@link Extent} is wholly or
+     *         partially contained within this one
+     */
+    public boolean intersects(Extent<P> otherExtent);
+
     @Override
     public boolean equals(Object obj);
-    
+
     @Override
     public int hashCode();
 }

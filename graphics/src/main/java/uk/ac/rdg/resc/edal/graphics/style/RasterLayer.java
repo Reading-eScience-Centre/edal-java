@@ -91,7 +91,7 @@ public class RasterLayer extends GriddedImageLayer {
     }
 
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         ret.add(new NameAndRange(dataFieldName, Extents.newExtent(colourScheme.getScaleMin(),
                 colourScheme.getScaleMax())));

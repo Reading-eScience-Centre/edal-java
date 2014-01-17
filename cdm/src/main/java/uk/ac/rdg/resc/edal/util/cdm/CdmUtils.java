@@ -28,12 +28,15 @@
 
 package uk.ac.rdg.resc.edal.util.cdm;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.oro.io.GlobFilenameFilter;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
@@ -54,6 +57,7 @@ import ucar.nc2.dt.GridDataset;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
@@ -196,11 +200,6 @@ public final class CdmUtils {
                 public Number get(int... coords) {
                     return lonAxis.getCoordValue(coords[0], coords[1]);
                 }
-
-                @Override
-                public Class<Number> getValueClass() {
-                    return Number.class;
-                }
             };
             Array2D<Number> latVals = new Array2D<Number>(latAxis.getShape(0), latAxis.getShape(1)) {
                 @Override
@@ -211,11 +210,6 @@ public final class CdmUtils {
                 @Override
                 public Number get(int... coords) {
                     return latAxis.getCoordValue(coords[0], coords[1]);
-                }
-
-                @Override
-                public Class<Number> getValueClass() {
-                    return Number.class;
                 }
             };
 
@@ -342,5 +336,158 @@ public final class CdmUtils {
             List<Double> valsList = CollectionUtils.listFromDoubleArray(primVals);
             return new ReferenceableAxisImpl(name, valsList, isLongitude);
         }
+    }
+
+    /**
+     * Opens the NetCDF dataset at the given location, using the dataset cache
+     * if {@code location} represents an NcML aggregation. We cannot use the
+     * cache for OPeNDAP or single NetCDF files because the underlying data may
+     * have changed and the NetcdfDataset cache may cache a dataset forever. In
+     * the case of NcML we rely on the fact that server administrators ought to
+     * have set a "recheckEvery" parameter for NcML aggregations that may change
+     * with time. It is desirable to use the dataset cache for NcML aggregations
+     * because they can be time-consuming to assemble and we don't want to do
+     * this every time a map is drawn.
+     * 
+     * @param location
+     *            The location of the data: a local NetCDF file, an NcML
+     *            aggregation file or an OPeNDAP location, {@literal i.e.}
+     *            anything that can be passed to
+     *            NetcdfDataset.openDataset(location).
+     * 
+     * @return a {@link NetcdfDataset} object for accessing the data at the
+     *         given location.
+     * 
+     * @throws IOException
+     *             if there was an error reading from the data source.
+     */
+    public static NetcdfDataset openDataset(String location) throws IOException, EdalException {
+        NetcdfDataset nc;
+        if (isNcmlAggregation(location)) {
+            /*
+             * We use the cache of NetcdfDatasets to read NcML aggregations as
+             * they can be time-consuming to put together. If the underlying
+             * data can change we rely on the server admin setting the
+             * "recheckEvery" parameter in the aggregation file.
+             */
+            nc = NetcdfDataset.acquireDataset(location, null);
+        } else {
+            /*
+             * For local single files and OPeNDAP datasets we don't use the
+             * cache, to ensure that we are always reading the most up-to-date
+             * data. There is a small possibility that the dataset cache will
+             * have swallowed up all available file handles, in which case the
+             * server admin will need to increase the number of available
+             * handles on the server.
+             */
+            nc = NetcdfDataset.openDataset(location);
+        }
+        return nc;
+    }
+
+    /**
+     * Closes the given dataset, logging any exceptions at debug level
+     * 
+     * @param nc
+     *            The {@link NetcdfDataset} to close
+     */
+    public static void closeDataset(NetcdfDataset nc) throws IOException {
+        if (nc == null)
+            return;
+        nc.close();
+    }
+
+    /**
+     * Expands a glob expression to give a List of absolute paths to files. This
+     * method recursively searches directories, allowing for glob expressions
+     * like {@code "c:\\data\\200[6-7]\\*\\1*\\A*.nc"}.
+     * 
+     * @return a a List of absolute paths to files matching the given glob
+     *         expression
+     * @throws IllegalArgumentException
+     *             if the glob expression does not represent an absolute path
+     *             (according to {@code new File(globExpression).isAbsolute()}).
+     * @author Mike Grant, Plymouth Marine Labs
+     * @author Jon Blower
+     */
+    public static List<File> expandGlobExpression(String globExpression) {
+        /*
+         * Check that the glob expression represents an absolute path. Relative
+         * paths would cause unpredictable and platform-dependent behaviour so
+         * we disallow them.
+         */
+        File globFile = new File(globExpression);
+        if (!globFile.isAbsolute()) {
+            throw new IllegalArgumentException("Location must be an absolute path");
+        }
+
+        /*
+         * Break glob pattern into path components. To do this in a reliable and
+         * platform-independent way we use methods of the File class, rather
+         * than String.split().
+         */
+        List<String> pathComponents = new ArrayList<String>();
+        while (globFile != null) {
+            /*
+             * We "pop off" the last component of the glob pattern and place it
+             * in the first component of the pathComponents List. We therefore
+             * ensure that the pathComponents end up in the right order.
+             */
+            File parent = globFile.getParentFile();
+            /*
+             * For a top-level directory, getName() returns an empty string,
+             * hence we use getPath() in this case
+             */
+            String pathComponent = parent == null ? globFile.getPath() : globFile.getName();
+            pathComponents.add(0, pathComponent);
+            globFile = parent;
+        }
+
+        /*
+         * We must have at least two path components: one directory and one
+         * filename or glob expression
+         */
+        List<File> searchPaths = new ArrayList<File>();
+        searchPaths.add(new File(pathComponents.get(0)));
+        /* Index of the glob path component */
+        int i = 1;
+
+        while (i < pathComponents.size()) {
+            FilenameFilter globFilter = new GlobFilenameFilter(pathComponents.get(i));
+            List<File> newSearchPaths = new ArrayList<File>();
+            /* Look for matches in all the current search paths */
+            for (File dir : searchPaths) {
+                if (dir.isDirectory()) {
+                    /*
+                     * Workaround for automounters that don't make filesystems
+                     * appear unless they're poked do a listing on
+                     * searchpath/pathcomponent whether or not it exists, then
+                     * discard the results
+                     */
+                    new File(dir, pathComponents.get(i)).list();
+
+                    for (File match : dir.listFiles(globFilter)) {
+                        newSearchPaths.add(match);
+                    }
+                }
+            }
+            /*
+             * Next time we'll search based on these new matches and will use
+             * the next globComponent
+             */
+            searchPaths = newSearchPaths;
+            i++;
+        }
+
+        /*
+         * Now we've done all our searching, we'll only retain the files from
+         * the list of search paths
+         */
+        List<File> files = new ArrayList<File>();
+        for (File path : searchPaths) {
+            if (path.isFile())
+                files.add(path);
+        }
+        return files;
     }
 }

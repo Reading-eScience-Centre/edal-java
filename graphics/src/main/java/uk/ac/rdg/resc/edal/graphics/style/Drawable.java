@@ -92,5 +92,5 @@ public abstract class Drawable {
      * 
      * @return
      */
-    protected abstract Set<NameAndRange> getFieldsWithScales();
+    public abstract Set<NameAndRange> getFieldsWithScales();
 }

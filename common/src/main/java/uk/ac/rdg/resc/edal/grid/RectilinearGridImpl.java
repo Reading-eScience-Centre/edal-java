@@ -78,13 +78,8 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     @Override
     public Array<GridCell2D> getDomainObjects() {
         if (domainObjects == null) {
-            domainObjects = new AbstractImmutableArray<GridCell2D>(GridCell2D.class, new int[] {
+            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] {
                     yAxis.size(), xAxis.size() }) {
-                @Override
-                public Class<GridCell2D> getValueClass() {
-                    return GridCell2D.class;
-                }
-
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];

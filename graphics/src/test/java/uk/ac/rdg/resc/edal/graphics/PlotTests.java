@@ -258,11 +258,6 @@ public class PlotTests {
             double yComp = ((double) y) / HEIGHT;
             return xComp * yComp;
         }
-
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
-        }
     };
 
     private final static Array2D<Number> xarr = new Array2D<Number>(HEIGHT, WIDTH) {
@@ -274,11 +269,6 @@ public class PlotTests {
         @Override
         public Number get(int... coords) {
             return ((double) coords[1]) / WIDTH;
-        }
-        
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
         }
     };
 
@@ -292,11 +282,6 @@ public class PlotTests {
         public Number get(int... coords) {
             return ((double) coords[0]) / HEIGHT;
         }
-        
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
-        }
     };
 
     private final static Array2D<Number> thetaarr = new Array2D<Number>(HEIGHT, WIDTH) {
@@ -308,11 +293,6 @@ public class PlotTests {
         @Override
         public Number get(int... coords) {
             return 2*Math.PI*((double) coords[1]) / WIDTH;
-        }
-        
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
         }
     };
 }

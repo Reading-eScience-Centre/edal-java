@@ -29,11 +29,13 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
+import java.util.Collection;
 
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
@@ -88,4 +90,6 @@ public abstract class ImageLayer extends Drawable {
     public SubsampleType getSubsampleType() {
         return subsampleType;
     }
+    
+    public abstract Collection<Class<? extends Feature<?>>> supportedFeatureTypes();
 }

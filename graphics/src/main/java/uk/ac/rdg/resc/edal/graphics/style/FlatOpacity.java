@@ -67,7 +67,7 @@ public class FlatOpacity extends OpacityTransform {
     }
 
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         return Collections.emptySet();
     }
     

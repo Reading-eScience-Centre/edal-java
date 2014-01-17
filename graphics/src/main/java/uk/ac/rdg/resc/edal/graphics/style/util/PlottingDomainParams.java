@@ -34,6 +34,8 @@ import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.grid.RegularGrid;
+import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 
@@ -81,6 +83,13 @@ public class PlottingDomainParams {
 
     public BoundingBox getBbox() {
         return bbox;
+    }
+    
+    /**
+     * Creates a {@link RegularGrid} based on the width, height and {@link BoundingBox} of these parameters
+     */
+    public RegularGrid getImageGrid() {
+        return new RegularGridImpl(bbox, width, height);
     }
 
     public Extent<Double> getZExtent() {

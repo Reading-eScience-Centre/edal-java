@@ -29,13 +29,16 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
@@ -115,11 +118,6 @@ public abstract class GriddedImageLayer extends ImageLayer {
                 public Number get(int... coords) {
                     return values.get(params.getHeight() - coords[0] - 1, coords[1]);
                 }
-
-                @Override
-                public Class<Number> getValueClass() {
-                    return Number.class;
-                }
             };
         };
 
@@ -142,11 +140,6 @@ public abstract class GriddedImageLayer extends ImageLayer {
                 public void set(HorizontalPosition value, int... coords) {
                     throw new UnsupportedOperationException("This is an immutable Array2D");
                 }
-
-                @Override
-                public Class<HorizontalPosition> getValueClass() {
-                    return HorizontalPosition.class;
-                }
             };
         }
     }
@@ -155,6 +148,13 @@ public abstract class GriddedImageLayer extends ImageLayer {
     protected void drawIntoImage(BufferedImage image, final PlottingDomainParams params,
             final FeatureCatalogue catalogue) throws EdalException {
         drawIntoImage(image, new MapFeatureDataReader(params, catalogue));
+    }
+
+    @Override
+    public Collection<Class<? extends Feature<?>>> supportedFeatureTypes() {
+        List<Class<? extends Feature<?>>> clazzes = new ArrayList<Class<? extends Feature<?>>>();
+        clazzes.add(GridFeature.class);
+        return clazzes;
     }
 
     /**

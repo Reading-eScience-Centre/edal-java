@@ -69,9 +69,7 @@ public class MapImage extends Drawable {
             @XmlElement(name = "RasterLayer", type = RasterLayer.class),
             @XmlElement(name = "Raster2DLayer", type = Raster2DLayer.class),
             @XmlElement(name = "StippleLayer", type = StippleLayer.class),
-//            @XmlElement(name = "BasicGlyphLayer", type = BasicGlyphLayer.class),
-//            @XmlElement(name = "SubsampledGlyphLayer", type = SubsampledGlyphLayer.class),
-//            @XmlElement(name = "ConfidenceIntervalLayer", type = ConfidenceIntervalLayer.class),
+            @XmlElement(name = "ColouredGlyphLayer", type = ColouredGlyphLayer.class),
             @XmlElement(name = "ContourLayer", type = ContourLayer.class) })
     private List<Drawable> layers = new ArrayList<Drawable>();
 
@@ -388,7 +386,7 @@ public class MapImage extends Drawable {
     }
 
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new LinkedHashSet<Drawable.NameAndRange>();
         for (Drawable drawable : layers) {
             if (drawable != null) {

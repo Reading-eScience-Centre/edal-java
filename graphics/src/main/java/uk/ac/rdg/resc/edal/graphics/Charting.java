@@ -34,6 +34,7 @@ import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -104,7 +105,7 @@ final public class Charting {
         NUMBER_FORMAT.setMaximumFractionDigits(4);
     }
 
-    public static JFreeChart createVerticalProfilePlot(List<ProfileFeature> features,
+    public static JFreeChart createVerticalProfilePlot(Collection<ProfileFeature> features,
             HorizontalPosition hPos) throws MismatchedCrsException {
         XYSeriesCollection xySeriesColl = new XYSeriesCollection();
 
