@@ -88,6 +88,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
@@ -1067,26 +1068,59 @@ public class WmsServlet extends HttpServlet {
             log.error("Bad layer name", e);
             throw new MetadataException("Problem reading data", e);
         }
-        
+
         double min = Double.MAX_VALUE;
         double max = -Double.MAX_VALUE;
-        Collection<? extends DiscreteFeature<?,?>> features = featuresAndMember.getFeatures();
-        for(DiscreteFeature<?,?> f : features) {
-            Array<Number> values = f.getValues(featuresAndMember.getMember());
-            if (values == null) {
-                continue;
-            }
-            Iterator<Number> iterator = values.iterator();
-            while (iterator.hasNext()) {
-                Number value = iterator.next();
-                if (value != null) {
-                    if (value.doubleValue() > max) {
-                        max = value.doubleValue();
-                    }
-                    if (value.doubleValue() < min) {
-                        min = value.doubleValue();
+        Collection<? extends DiscreteFeature<?, ?>> features = featuresAndMember.getFeatures();
+        for (DiscreteFeature<?, ?> f : features) {
+            if (f instanceof GridFeature) {
+                /*
+                 * We want to look at all values of the grid feature.
+                 */
+                Array<Number> values = f.getValues(featuresAndMember.getMember());
+                if (values == null) {
+                    continue;
+                }
+                Iterator<Number> iterator = values.iterator();
+                while (iterator.hasNext()) {
+                    Number value = iterator.next();
+                    if (value != null) {
+                        if (value.doubleValue() > max) {
+                            max = value.doubleValue();
+                        }
+                        if (value.doubleValue() < min) {
+                            min = value.doubleValue();
+                        }
                     }
                 }
+            } else if (f instanceof ProfileFeature) {
+                /*
+                 * For profile features, we do not want to read all values, only
+                 * those which are nearest the target depth
+                 */
+                ProfileFeature profileFeature = (ProfileFeature) f;
+                int zIndex = profileFeature.getDomain().findIndexOf(
+                        getMapParams.getPlottingDomainParameters().getTargetZ());
+                if (zIndex > 0) {
+                    Number value = profileFeature.getValues(featuresAndMember.getMember()).get(
+                            zIndex);
+                    if (value != null) {
+                        if (value.doubleValue() > max) {
+                            max = value.doubleValue();
+                        }
+                        if (value.doubleValue() < min) {
+                            min = value.doubleValue();
+                        }
+                    }
+                }
+            } else {
+                /*
+                 * Would handle other feature types here.
+                 * 
+                 * But perhaps we can refactor to make a few of the methods in
+                 * here independent of dataset type. Perhaps removing the need
+                 * for separate gridded/non-gridded dataset types altogether...
+                 */
             }
         }
 

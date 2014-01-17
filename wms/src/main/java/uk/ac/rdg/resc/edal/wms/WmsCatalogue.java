@@ -36,11 +36,14 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -102,7 +105,25 @@ import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 public abstract class WmsCatalogue implements FeatureCatalogue {
     private static final Logger log = LoggerFactory.getLogger(WmsCatalogue.class);
 
-    private Map<String, StyleDef> styleDefs = new HashMap<String, StyleDef>();
+    private SortedMap<String, StyleDef> styleDefs = new TreeMap<String, StyleDef>(
+            new Comparator<String>() {
+                /*
+                 * We want the styles to be sorted:
+                 * 
+                 * Names starting with "default" first (alphabetically ordered
+                 * if there are multiple) Then alphabetical order
+                 */
+                @Override
+                public int compare(String o1, String o2) {
+                    if (o1.startsWith("default") && !o2.startsWith("default")) {
+                        return -1;
+                    }
+                    if (!o1.startsWith("default") && o2.startsWith("default")) {
+                        return 1;
+                    }
+                    return o1.compareTo(o2);
+                }
+            });
 
     public WmsCatalogue() {
         /*
@@ -255,7 +276,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
          * Loop through all loaded style definitions
          */
         for (StyleDef styleDef : styleDefs.values()) {
-            if(styleDef.supportedBy(variableMetadata)) {
+            if (styleDef.supportedBy(variableMetadata)) {
                 supportedStyles.add(styleDef);
             }
         }
