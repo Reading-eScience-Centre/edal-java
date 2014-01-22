@@ -15,7 +15,7 @@ public class ValuesArray2DTest {
 		assertEquals(data.get(1,3), new Long(12));
 		data.set(5, 2,2);
 		assertEquals(data.get(2, 2), new Integer(5));
-		data.set(100, 1, 2);
+		data.set(100.0, 1, 2);
 		assertEquals(data.get(1, 2), new Double(100.0));
 	}
 	
