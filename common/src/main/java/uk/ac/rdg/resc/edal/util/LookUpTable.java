@@ -244,4 +244,58 @@ public final class LookUpTable {
     public int getNumLatPoints() {
         return nLat;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((iIndices == null) ? 0 : iIndices.hashCode());
+        result = prime * result + ((jIndices == null) ? 0 : jIndices.hashCode());
+        result = prime * result + nLat;
+        result = prime * result + nLon;
+        result = prime * result + ((transform == null) ? 0 : transform.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        LookUpTable other = (LookUpTable) obj;
+        if (iIndices == null) {
+            if (other.iIndices != null)
+                return false;
+        } else {
+            for (int i = 0; i < iIndices.getSize(); i++) {
+                if (iIndices.getElem(i) != other.iIndices.getElem(i)) {
+                    return false;
+                }
+            }
+        }
+        if (jIndices == null) {
+            if (other.jIndices != null)
+                return false;
+        } else {
+            for (int i = 0; i < jIndices.getSize(); i++) {
+                if (jIndices.getElem(i) != other.jIndices.getElem(i)) {
+                    return false;
+                }
+            }
+        }
+        if (nLat != other.nLat)
+            return false;
+        if (nLon != other.nLon)
+            return false;
+        if (transform == null) {
+            if (other.transform != null)
+                return false;
+        } else if (!transform.equals(other.transform))
+            return false;
+        return true;
+    }
+
 }

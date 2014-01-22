@@ -74,6 +74,9 @@ public class NcwmsVariable implements WmsLayerMetadata {
 
     @XmlAttribute(name = "metadataMimetype")
     private String metadataMimetype = "";
+    
+    @XmlAttribute(name = "disabled")
+    private boolean disabled = false;
 
     /* The dataset to which this variable belongs */
     @XmlTransient
@@ -119,6 +122,9 @@ public class NcwmsVariable implements WmsLayerMetadata {
 
     @Override
     public Boolean isLogScaling() {
+        if(scaling == null) {
+            return false;
+        }
         return scaling.equalsIgnoreCase("log");
     }
 
@@ -159,6 +165,11 @@ public class NcwmsVariable implements WmsLayerMetadata {
         return dataset.isQueryable();
     }
     
+    @Override
+    public boolean isDisabled() {
+        return disabled;
+    }
+    
     public void setId(String id) {
         this.id = id;
     }
@@ -193,6 +204,10 @@ public class NcwmsVariable implements WmsLayerMetadata {
 
     public void setMetadataMimetype(String metadataMimetype) {
         this.metadataMimetype = metadataMimetype;
+    }
+    
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
 
     private static class ScaleRangeAdapter extends XmlAdapter<String, Extent<Float>> {

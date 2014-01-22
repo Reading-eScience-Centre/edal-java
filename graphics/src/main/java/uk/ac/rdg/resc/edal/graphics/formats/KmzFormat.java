@@ -37,6 +37,11 @@ import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.joda.time.DateTime;
+import org.opengis.metadata.extent.GeographicBoundingBox;
+
+import uk.ac.rdg.resc.edal.util.TimeUtils;
+
 /**
  * Creates KMZ files for importing into Google Earth. Only one instance of this
  * class will ever be created, so this class contains no member variables to
@@ -51,41 +56,17 @@ public class KmzFormat extends ImageFormat {
     private static final String PICEXT = "png";
     private static final String COLOUR_SCALE_FILENAME = "legend.png";
 
-    /**
-     * Writes the given list of {@link java.awt.BufferedImage}s to the given
-     * OutputStream.
-     * 
-     * @param frames
-     *            List of BufferedImages to render into an image
-     * @param out
-     *            The OutputStream to which the image will be written
-     * @param layer
-     *            the Layer object representing the image(s)
-     * @param tValues
-     *            List of Strings representing the time values, one for each
-     *            frame
-     * @param zValue
-     *            The elevation value representing the image(s)
-     * @param bbox
-     *            The bounding box of the image(s)
-     * @param legend
-     *            A legend image (this will be null unless this.requiresLegend()
-     *            returns true.
-     * @throws IOException
-     *             if there was an error writing to the output stream
-     * @throws IllegalArgumentException
-     *             if this ImageFormat cannot render all of the given
-     *             BufferedImages.
-     */
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out,
-            String name, String description, double[] bbox, List<String> tValues, String zValue,
+    public void writeImage(List<BufferedImage> frames, OutputStream out, String name,
+            String description, GeographicBoundingBox bbox, List<DateTime> tValues, String zValue,
             BufferedImage legend, Integer frameRate) throws IOException {
         StringBuffer kml = new StringBuffer();
         for (int frameIndex = 0; frameIndex < frames.size(); frameIndex++) {
             if (frameIndex == 0) {
-                // This is the first frame. Add the KML header and folder
-                // metadata
+                /*
+                 * This is the first frame. Add the KML header and folder
+                 * metadata
+                 */
                 kml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
                 kml.append(System.getProperty("line.separator"));
                 kml.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">");
@@ -93,8 +74,11 @@ public class KmzFormat extends ImageFormat {
                 kml.append("<visibility>1</visibility>");
                 kml.append("<name>" + name + "</name>");
                 kml.append("<description>" + description + "</description>");
-
-                // Add the screen overlay containing the colour scale
+                double meanLon = (bbox.getEastBoundLongitude() + bbox.getWestBoundLongitude()) / 2.0;
+                double meanLat = (bbox.getNorthBoundLatitude() + bbox.getSouthBoundLatitude()) / 2.0;
+                kml.append("<LookAt><latitude>" + meanLat + "</latitude><longitude>" + meanLon
+                        + "</longitude><range>10000000</range></LookAt>");
+                /* Add the screen overlay containing the colour scale */
                 kml.append("<ScreenOverlay>");
                 kml.append("<name>Colour scale</name>");
                 kml.append("<Icon><href>" + COLOUR_SCALE_FILENAME + "</href></Icon>");
@@ -111,12 +95,7 @@ public class KmzFormat extends ImageFormat {
 
             if (tValues != null && tValues.get(frameIndex) != null
                     && !tValues.get(frameIndex).equals("")) {
-                /*
-                 * We must make sure the ISO8601 timestamp is full and includes
-                 * seconds, otherwise Google Earth gets confused. This is why we
-                 * convert to a DateTime and back again.
-                 */
-                timestamp = tValues.get(frameIndex);
+                timestamp = TimeUtils.dateTimeToISO8601(tValues.get(frameIndex));
                 kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
             }
 
@@ -143,28 +122,28 @@ public class KmzFormat extends ImageFormat {
             kml.append("<Icon><href>" + getPicFileName(frameIndex) + "</href></Icon>");
 
             kml.append("<LatLonBox id=\"" + frameIndex + "\">");
-            kml.append("<west>" + bbox[0] + "</west>");
-            kml.append("<south>" + bbox[1] + "</south>");
-            kml.append("<east>" + bbox[2] + "</east>");
-            kml.append("<north>" + bbox[3] + "</north>");
+            kml.append("<west>" + bbox.getWestBoundLongitude() + "</west>");
+            kml.append("<south>" + bbox.getSouthBoundLatitude() + "</south>");
+            kml.append("<east>" + bbox.getEastBoundLongitude() + "</east>");
+            kml.append("<north>" + bbox.getNorthBoundLatitude() + "</north>");
             kml.append("<rotation>0</rotation>");
             kml.append("</LatLonBox>");
             kml.append("</GroundOverlay>");
         }
 
-        // Write the footer of the KML file
+        /* Write the footer of the KML file */
         kml.append("</Folder>");
         kml.append("</kml>");
 
         ZipOutputStream zipOut = new ZipOutputStream(out);
 
-        // Write the KML file: todo get filename properly
+        /* Write the KML file: todo get filename properly */
         ZipEntry kmlEntry = new ZipEntry(name + ".kml");
         kmlEntry.setTime(System.currentTimeMillis());
         zipOut.putNextEntry(kmlEntry);
         zipOut.write(kml.toString().getBytes());
 
-        // Now write all the images
+        /* Now write all the images */
         int frameIndex = 0;
         for (BufferedImage frame : frames) {
             ZipEntry picEntry = new ZipEntry(getPicFileName(frameIndex));
@@ -173,10 +152,10 @@ public class KmzFormat extends ImageFormat {
             ImageIO.write(frame, PICEXT, zipOut);
         }
 
-        // Finally, write the colour scale
+        /* Finally, write the colour scale */
         ZipEntry scaleEntry = new ZipEntry(COLOUR_SCALE_FILENAME);
         zipOut.putNextEntry(scaleEntry);
-        // Write the colour scale bar to the KMZ file
+        /* Write the colour scale bar to the KMZ file */
         ImageIO.write(legend, PICEXT, zipOut);
 
         zipOut.close();

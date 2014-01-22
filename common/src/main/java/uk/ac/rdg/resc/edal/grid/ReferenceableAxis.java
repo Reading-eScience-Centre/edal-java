@@ -122,6 +122,12 @@ public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
      * might <i>decrease</i>, not increase).
      */
     public Extent<P> getCoordinateExtent();
-    
+
     public int size();
+
+    @Override
+    public boolean equals(Object obj);
+
+    @Override
+    public int hashCode();
 }

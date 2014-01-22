@@ -67,9 +67,14 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
 /**
- * An implementation of a {@link Feature} whose domain is a {@link DiscreteHorizontalDomain}.
- * This will be returned from any readMapData operations, and can be passed to
- * plotting routines
+ * An implementation of a {@link Feature} whose domain is a
+ * {@link DiscreteHorizontalDomain}. This will be returned from any readMapData
+ * operations, and can be passed to plotting routines.
+ * 
+ * Note that the purpose of this {@link Feature} is to read data onto a discrete
+ * grid regardless of the original domain of the data. The main use case is in
+ * extracting onto a grid which defines an image - i.e. each {@link GridCell2D}
+ * in the domain will map exactly onto a single pixel.
  * 
  * @author Guy
  */

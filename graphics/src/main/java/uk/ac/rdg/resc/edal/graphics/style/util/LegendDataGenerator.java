@@ -47,6 +47,7 @@ import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
@@ -94,7 +95,7 @@ public class LegendDataGenerator {
             byte[] data = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
             for (int i = 0; i < width; i++) {
                 for (int j = 0; j < height; j++) {
-                    if (data[i + width * (height - 1 - j)] == 0) {
+                    if (data[i + width * j] == 0) {
                         missingBits[i][j] = true;
                     } else {
                         missingBits[i][j] = false;
@@ -113,9 +114,9 @@ public class LegendDataGenerator {
         final MapFeature feature = getFeature(xFieldName, yFieldName);
         return new FeatureCatalogue() {
             @Override
-            public MapFeatureAndMember getFeatureAndMemberName(String id,
+            public FeaturesAndMemberName getFeaturesForLayer(String id,
                     PlottingDomainParams params) {
-                return new MapFeatureAndMember(feature, id);
+                return new FeaturesAndMemberName(CollectionUtils.setOf(feature), id);
             }
         };
     }
@@ -181,7 +182,7 @@ public class LegendDataGenerator {
                 return scaleRange.getLow() + coords[X_IND]
                         * (scaleRange.getHigh() - scaleRange.getLow()) / xAxis.size();
             case Y:
-                return scaleRange.getLow() + (yAxis.size() - coords[Y_IND] - 1)
+                return scaleRange.getLow() + coords[Y_IND]
                         * (scaleRange.getHigh() - scaleRange.getLow()) / yAxis.size();
             case NAN:
             default:
@@ -192,11 +193,6 @@ public class LegendDataGenerator {
         @Override
         public void set(Number value, int... coords) {
             throw new UnsupportedOperationException("This Array2D is immutable");
-        }
-
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
         }
     }
 }

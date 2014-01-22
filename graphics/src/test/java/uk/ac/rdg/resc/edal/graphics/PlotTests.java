@@ -63,7 +63,6 @@ import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.PatternScale;
 import uk.ac.rdg.resc.edal.graphics.style.Raster2DLayer;
 import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
-import uk.ac.rdg.resc.edal.graphics.style.SmoothedContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
@@ -125,16 +124,16 @@ public class PlotTests {
 
         catalogue = new FeatureCatalogue() {
             @Override
-            public MapFeatureAndMember getFeatureAndMemberName(String id,
+            public FeaturesAndMemberName getFeaturesForLayer(String id,
                     PlottingDomainParams params) {
                 if (id.equals("test")) {
-                    return new MapFeatureAndMember(testFeature, "testvar");
+                    return new FeaturesAndMemberName(testFeature, "testvar");
                 } else if (id.equals("xtest")) {
-                    return new MapFeatureAndMember(testFeature, "testvarx");
+                    return new FeaturesAndMemberName(testFeature, "testvarx");
                 } else if (id.equals("ytest")) {
-                    return new MapFeatureAndMember(testFeature, "testvary");
+                    return new FeaturesAndMemberName(testFeature, "testvary");
                 } else if (id.equals("thetatest")) {
-                    return new MapFeatureAndMember(testFeature, "testvarth");
+                    return new FeaturesAndMemberName(testFeature, "testvarth");
                 } else {
                     return null;
                 }
@@ -190,17 +189,6 @@ public class PlotTests {
         mapImage.getLayers().add(contourLayer);
         BufferedImage image = mapImage.drawImage(params, catalogue);
         BufferedImage comparisonImage = getComparisonImage("contour");
-        compareImages(comparisonImage, image);
-    }
-
-    @Test
-    public void testSmoothedContour() throws EdalException {
-        SmoothedContourLayer smoothedContourLayer = new SmoothedContourLayer("test", scale, false,
-                5, Color.red, 1, ContourLineStyle.SOLID, true);
-        MapImage mapImage = new MapImage();
-        mapImage.getLayers().add(smoothedContourLayer);
-        BufferedImage image = mapImage.drawImage(params, catalogue);
-        BufferedImage comparisonImage = getComparisonImage("smoothed_contour");
         compareImages(comparisonImage, image);
     }
 
@@ -270,11 +258,6 @@ public class PlotTests {
             double yComp = ((double) y) / HEIGHT;
             return xComp * yComp;
         }
-
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
-        }
     };
 
     private final static Array2D<Number> xarr = new Array2D<Number>(HEIGHT, WIDTH) {
@@ -286,11 +269,6 @@ public class PlotTests {
         @Override
         public Number get(int... coords) {
             return ((double) coords[1]) / WIDTH;
-        }
-        
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
         }
     };
 
@@ -304,11 +282,6 @@ public class PlotTests {
         public Number get(int... coords) {
             return ((double) coords[0]) / HEIGHT;
         }
-        
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
-        }
     };
 
     private final static Array2D<Number> thetaarr = new Array2D<Number>(HEIGHT, WIDTH) {
@@ -320,11 +293,6 @@ public class PlotTests {
         @Override
         public Number get(int... coords) {
             return 2*Math.PI*((double) coords[1]) / WIDTH;
-        }
-        
-        @Override
-        public Class<Number> getValueClass() {
-            return Number.class;
         }
     };
 }

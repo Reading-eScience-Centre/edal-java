@@ -31,6 +31,8 @@ package uk.ac.rdg.resc.edal.grid;
 import java.util.Arrays;
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -195,7 +197,7 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
     /**
      * Returns the midpoint of the supplied values. This is so that certain
      * methods can be abstracted without worrying about non-trivial midpoint
-     * calculation (e.g. {@link TimePosition}s)
+     * calculation (e.g. {@link DateTime}s)
      * 
      * @param pos1
      *            the first value

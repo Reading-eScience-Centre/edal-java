@@ -28,10 +28,11 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
-import java.io.IOException;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
@@ -42,8 +43,8 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
  * @author Jon
  * @author Guy
  */
-public interface Dataset {
-    
+public interface Dataset<F extends Feature<?>> {
+
     /**
      * @return The ID which identifies this dataset.
      */
@@ -57,7 +58,7 @@ public interface Dataset {
     /**
      * Reads an entire feature from underlying storage
      */
-    public Feature<?> readFeature(String featureId) throws IOException;
+    public F readFeature(String featureId) throws DataReadingException;
 
     /**
      * Returns the IDs of variables in this {@link Dataset}. Generally the term
@@ -86,6 +87,13 @@ public interface Dataset {
      * 
      * @param plugin
      *            The {@link VariablePlugin} to add
+     * @throws EdalException
+     *             If there is a problem adding the plugin
      */
-    public void addVariablePlugin(VariablePlugin plugin);
+    public void addVariablePlugin(VariablePlugin plugin) throws EdalException;
+    
+    /**
+     * @return The class of the {@link Feature}s contained within this {@link Dataset}
+     */
+    public Class<F> getFeatureType();
 }

@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -50,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.ncwms.config.NcwmsConfig.DatasetStorage;
@@ -221,7 +223,7 @@ public class NcwmsDataset {
     }
 
     public void createDataset(DatasetStorage datasetStorage) throws InstantiationException,
-            IllegalAccessException, ClassNotFoundException, IOException {
+            IllegalAccessException, ClassNotFoundException, IOException, EdalException {
         loadingProgress.add("Starting loading");
 
         /*
@@ -235,15 +237,27 @@ public class NcwmsDataset {
          * TODO In the old version, we dealt with OPeNDAP credentials here...
          */
 
-        Dataset dataset = factory.createDataset(id, location);
+        Dataset<?> dataset = factory.createDataset(id, location);
 
         loadingProgress.add("Dataset created");
         /*
-         * These objects do not necessarily exist yet, depending on how the
-         * dataset was created (i.e. whether it was read from file or has just
-         * been added).
+         * Loop through existing variables and check that they are still there,
+         * removing them if not
          */
-        for (String varId : dataset.getVariableIds()) {
+        Set<String> variableIds = dataset.getVariableIds();
+        List<String> variablesToRemove = new ArrayList<String>();
+        for(String varId : variables.keySet()) {
+            if(!variableIds.contains(varId)) {
+                variablesToRemove.add(varId);
+            }
+        }
+        for(String varToRemove : variablesToRemove) {
+            variables.remove(varToRemove);
+        }
+        /*
+         * Now create any new variable objects which are needed.
+         */
+        for (String varId : variableIds) {
             if (!variables.containsKey(varId)) {
                 loadingProgress.add("Creating default metadata for variable: " + varId);
                 /*

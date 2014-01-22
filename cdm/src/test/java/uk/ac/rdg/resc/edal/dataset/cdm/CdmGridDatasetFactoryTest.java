@@ -46,11 +46,13 @@ import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * These tests perform various operations on a test dataset (originally
@@ -67,7 +69,7 @@ public class CdmGridDatasetFactoryTest {
     private HorizontalGrid hGrid;
 
     @Before
-    public void setup() throws IOException {
+    public void setup() throws IOException, EdalException {
         /*-
          * The test NetCDF dataset is 4D, and contains 4 variables:
          * 
@@ -91,7 +93,7 @@ public class CdmGridDatasetFactoryTest {
          * We also add a vector plugin, which will generate magnitudes and
          * directions
          */
-        dataset.addVariablePlugin(new VectorPlugin("vLon", "vLat", "Test Vector Field"));
+        dataset.addVariablePlugin(new VectorPlugin("vLon", "vLat", "Test Vector Field", true));
         xSize = 36;
         ySize = 19;
         /*
@@ -143,7 +145,7 @@ public class CdmGridDatasetFactoryTest {
 
                         double expectedMag = Math.sqrt(expectedLat * expectedLat + expectedLon
                                 * expectedLon);
-                        double expectedDir = Math.atan2(expectedLat, expectedLon);
+                        double expectedDir = GISUtils.RAD2DEG * Math.atan2(expectedLon, expectedLat);
                         /*
                          * NetCDF stores these as floats, so 1e-5 is about the
                          * right accuracy.

@@ -69,10 +69,7 @@ public class MapImage extends Drawable {
             @XmlElement(name = "RasterLayer", type = RasterLayer.class),
             @XmlElement(name = "Raster2DLayer", type = Raster2DLayer.class),
             @XmlElement(name = "StippleLayer", type = StippleLayer.class),
-//            @XmlElement(name = "BasicGlyphLayer", type = BasicGlyphLayer.class),
-//            @XmlElement(name = "SubsampledGlyphLayer", type = SubsampledGlyphLayer.class),
-//            @XmlElement(name = "ConfidenceIntervalLayer", type = ConfidenceIntervalLayer.class),
-            @XmlElement(name = "SmoothedContourLayer", type = SmoothedContourLayer.class),
+            @XmlElement(name = "ColouredGlyphLayer", type = ColouredGlyphLayer.class),
             @XmlElement(name = "ContourLayer", type = ContourLayer.class) })
     private List<Drawable> layers = new ArrayList<Drawable>();
 
@@ -123,8 +120,8 @@ public class MapImage extends Drawable {
         BufferedImage finalImage;
         Set<NameAndRange> fieldsWithScales = getFieldsWithScales();
         int noOfIndependentFields = fieldsWithScales.size();
-        Color bgColour = Color.black;
-        Color fgColour = Color.white;
+        Color fgColour = Color.black;
+        Color bgColour = Color.white;
         /*
          * This is the fraction of the colourbar which *gets added* as
          * out-of-range data.
@@ -283,7 +280,6 @@ public class MapImage extends Drawable {
         Float lowVal = nameAndRange.getScaleRange().getLow();
         Float highVal = nameAndRange.getScaleRange().getHigh();
         String lowStr = formatter.format(lowVal);
-        ;
         String medLowStr = formatter.format(lowVal + (highVal - lowVal) / 3.0);
         String medHighStr = formatter.format(lowVal + 2.0 * (highVal - lowVal) / 3.0);
         String highStr = formatter.format(highVal);
@@ -390,7 +386,7 @@ public class MapImage extends Drawable {
     }
 
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new LinkedHashSet<Drawable.NameAndRange>();
         for (Drawable drawable : layers) {
             if (drawable != null) {

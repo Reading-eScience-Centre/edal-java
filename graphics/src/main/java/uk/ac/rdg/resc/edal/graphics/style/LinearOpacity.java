@@ -91,7 +91,7 @@ public class LinearOpacity extends OpacityTransform {
     }
 
     @Override
-    protected void applyOpacityToImage(BufferedImage image, DataReader dataReader) throws EdalException {
+    protected void applyOpacityToImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         int width = image.getWidth();
         int height = image.getHeight();
 
@@ -110,7 +110,7 @@ public class LinearOpacity extends OpacityTransform {
     }
 
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         if(opaqueValue > transparentValue) {
             ret.add(new NameAndRange(dataFieldName, Extents.newExtent(transparentValue, opaqueValue)));

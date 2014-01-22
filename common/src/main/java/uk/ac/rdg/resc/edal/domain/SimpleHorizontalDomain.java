@@ -83,4 +83,29 @@ public class SimpleHorizontalDomain implements HorizontalDomain {
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return DefaultGeographicCRS.WGS84;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((bbox == null) ? 0 : bbox.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SimpleHorizontalDomain other = (SimpleHorizontalDomain) obj;
+        if (bbox == null) {
+            if (other.bbox != null)
+                return false;
+        } else if (!bbox.equals(other.bbox))
+            return false;
+        return true;
+    }
 }
