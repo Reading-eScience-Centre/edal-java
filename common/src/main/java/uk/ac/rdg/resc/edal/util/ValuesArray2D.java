@@ -36,12 +36,12 @@ package uk.ac.rdg.resc.edal.util;
  */
 public class ValuesArray2D extends Array2D<Number> {
 
-    private Double[][] data;
+    private Number[][] data;
 
     public ValuesArray2D(int ySize, int xSize) {
         super(ySize, xSize);
 
-        data = new Double[ySize][xSize];
+        data = new Number[ySize][xSize];
     }
 
     @Override
@@ -59,6 +59,6 @@ public class ValuesArray2D extends Array2D<Number> {
             throw new IllegalArgumentException("Wrong number of co-ordinates (" + coords.length
                     + ") for this Array (needs 2)");
         }
-        data[coords[Y_IND]][coords[X_IND]] = (value == null) ? null : value.doubleValue();
+        data[coords[Y_IND]][coords[X_IND]] = value;
     }
 }
