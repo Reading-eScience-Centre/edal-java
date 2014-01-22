@@ -12,50 +12,50 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 public class ColletionUtilsTest {
 	private static int SIZE =100;
-	private float[] f_array =new float[SIZE];
-	private Float[] F_array =new Float[SIZE];
-	private double [] d_array =new double [SIZE];
-	private Double [] D_array =new Double [SIZE];
-	private Set<Double> d_set =new HashSet<Double>();
-	private Set<Float> f_set =new HashSet<Float>();
+	private float [] floatData =new float[SIZE];
+	private Float[] floatDataAsObject =new Float[SIZE];
+	private double [] doubleData =new double [SIZE];
+	private Double [] doubleDataAsObject =new Double [SIZE];
+	private Set<Double> doubleDataSet =new HashSet<Double>();
+	private Set<Float> floatDataSet =new HashSet<Float>();
+	
 	@Before
 	public void setUp() throws Exception {
 		for (int i=0; i<SIZE; i++){
-			float f_value =1.0f *i;
-			double d_value =1.0 *i;
-			f_array [i] =f_value;
-			d_array [i] =d_value;
-			d_set.add(d_value);
-			f_set.add(f_value);
-			F_array[i] =f_value;
-			D_array[i] =d_value;
+			floatData [i] =1.0f *i;
+			doubleData [i] =1.0 *i;
+			floatDataAsObject [i] =1.0f *i;
+			doubleDataAsObject [i] =1.0 *i;			
+			floatDataSet.add(1.0f *i);
+			doubleDataSet.add(1.0 *i);
+			
 		}
 	}
 
 	@Test
 	public void testListFromFloatArray() {
-		List<Float> f_list =CollectionUtils.listFromFloatArray(f_array);		
-		assertEquals(f_array.length, f_list.size());		
-		for(int i=0; i<f_array.length; i++){
-			assertEquals(f_list.get(i), f_array[i], 1e-6);
+		List<Float> floatDataAsList =CollectionUtils.listFromFloatArray(floatData);		
+		assertEquals(floatData.length, floatDataAsList.size());		
+		for(int i=0; i<floatData.length; i++){
+			assertEquals(floatDataAsList.get(i), floatData[i], 1e-6);
 		}
 	}
 	
 	@Test
 	public void testListFromDoubleArray() {
-		List<Double> d_list =CollectionUtils.listFromDoubleArray(d_array);
-		assertEquals(d_array.length, d_list.size());
-		for(int i=0; i<f_array.length; i++){
-			assertEquals(d_list.get(i), d_array[i], 1e-6);
+		List<Double> doubleDataAsList =CollectionUtils.listFromDoubleArray(doubleData);
+		assertEquals(doubleData.length, doubleDataAsList.size());
+		for(int i=0; i<doubleData.length; i++){
+			assertEquals(doubleDataAsList.get(i), doubleData [i], 1e-6);
 		}
 	}
 	
 	@Test
 	public void testSetOf() {
-		Set<Float> expected_f_set =CollectionUtils.setOf(F_array);
-		Set<Double> expected_d_set =CollectionUtils.setOf(D_array);
-		assertEquals(expected_f_set, f_set);
-		assertEquals(expected_d_set, d_set);
+		Set<Float> expectedFloatSet =CollectionUtils.setOf(floatDataAsObject);
+		Set<Double> expectedDoubleSet =CollectionUtils.setOf(doubleDataAsObject);
+		assertEquals(expectedFloatSet, floatDataSet);
+		assertEquals(expectedDoubleSet, doubleDataSet);
 	}
 	
 	@Test(expected =NullPointerException.class)
