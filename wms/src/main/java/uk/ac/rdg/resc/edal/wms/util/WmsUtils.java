@@ -57,12 +57,8 @@ import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
-import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -144,19 +140,6 @@ public class WmsUtils {
      */
     public static boolean isNcmlAggregation(String location) {
         return location.endsWith(".xml") || location.endsWith(".ncml");
-    }
-
-    /**
-     * Gets a {@link RegularGrid} representing the image requested by a client
-     * in a GetMap operation
-     * 
-     * @param dr
-     *            Object representing a GetMap request
-     * @return a RegularGrid representing the requested image
-     */
-    public static RegularGrid getImageGrid(PlottingDomainParams params) throws InvalidCrsException {
-        BoundingBox bbox = params.getBbox();
-        return new RegularGridImpl(bbox, params.getWidth(), params.getHeight());
     }
 
     /**
@@ -272,7 +255,7 @@ public class WmsUtils {
      * @throws IOException
      *             if there was an error reading from the source data
      */
-    public static Extent<Float> estimateValueRange(Dataset dataset, String varId) {
+    public static Extent<Float> estimateValueRange(Dataset<?> dataset, String varId) {
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
             VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
@@ -347,7 +330,8 @@ public class WmsUtils {
 
             return Extents.newExtent(min, max);
         } else {
-            throw new UnsupportedOperationException("Currently only gridded datasets are supported");
+            return Extents.newExtent(0.0f, 100.0f);
+//            throw new UnsupportedOperationException("Currently only gridded datasets are supported");
         }
     }
 

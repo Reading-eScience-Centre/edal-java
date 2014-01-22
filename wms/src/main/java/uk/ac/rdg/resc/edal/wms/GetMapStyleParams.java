@@ -280,6 +280,21 @@ public class GetMapStyleParams {
                 throw new StyleNotSupportedException(
                         "This type of layer has no supported default styles.  Please supply a named style");
             }
+        } else {
+            /*
+             * Check that the requested style is actually supported 
+             */
+            boolean supported = false;
+            for (StyleDef supportedStyle : supportedStyles) {
+                if (supportedStyle.getStyleName().equals(plotStyleName)) {
+                    supported = true;
+                    break;
+                }
+            }
+            if(!supported) {
+                throw new StyleNotSupportedException(
+                        "The layer "+layerName+" does not support the style "+plotStyleName);
+            }
         }
 
         /*-
@@ -436,5 +451,9 @@ public class GetMapStyleParams {
 
     public String[] getLayerNames() {
         return layers;
+    }
+    
+    public String[] getStyleNames() {
+        return styles;
     }
 }

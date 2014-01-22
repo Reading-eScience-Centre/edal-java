@@ -61,9 +61,4 @@ public class ValuesArray2D extends Array2D<Number> {
         }
         data[coords[Y_IND]][coords[X_IND]] = (value == null) ? null : value.doubleValue();
     }
-
-    @Override
-    public Class<Number> getValueClass() {
-        return Number.class;
-    }
 }

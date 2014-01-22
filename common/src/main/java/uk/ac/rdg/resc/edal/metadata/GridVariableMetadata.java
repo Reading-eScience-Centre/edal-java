@@ -44,8 +44,8 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 public class GridVariableMetadata extends VariableMetadata {
 
     public GridVariableMetadata(String id, Parameter parameter, HorizontalGrid hDomain,
-            VerticalAxis zDomain, TimeAxis tDomain) {
-        super(id, parameter, hDomain, zDomain, tDomain);
+            VerticalAxis zDomain, TimeAxis tDomain, boolean scalar) {
+        super(id, parameter, hDomain, zDomain, tDomain, scalar);
     }
 
     /**

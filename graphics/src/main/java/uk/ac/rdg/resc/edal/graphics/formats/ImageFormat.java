@@ -37,6 +37,9 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import org.joda.time.DateTime;
+import org.opengis.metadata.extent.GeographicBoundingBox;
+
 /**
  * Abstract superclass for all image formats. Only one instance of each subclass
  * will be created so subclasses must be thread safe. Subclasses should provide
@@ -124,33 +127,34 @@ public abstract class ImageFormat {
     public abstract boolean requiresLegend();
 
     /**
-     * Writes the given list of {@link java.awt.BufferedImage}s to the given
-     * OutputStream. If this ImageFormat doesn't support animations then the
-     * given list of frames should only contain one entry, otherwise an
-     * IllegalArgumentException will be thrown.
+     * Writes the given list of frames to the supplied output stream. If there
+     * are multiple frames, the image format must support animations, otherwise
+     * an exception is thrown.
      * 
      * @param frames
-     *            List of BufferedImages to render into an image
+     *            A {@link List} of {@link BufferedImage}s to plot
      * @param out
-     *            The OutputStream to which the image will be written
+     *            The {@link OutputStream} to write the resulting image to
+     * @param name
+     *            The name of the feature being plotted (for KML)
+     * @param description
+     *            A description of what's being plotted (for KML)
      * @param bbox
-     * @param featureCollection
-     *            the {@link FeatureCollection} to which the feature belongs.
-     *            This is used for metadata and axes for {@link KmzFormat}
-     * @param featureId
-     *            The ID of the feature within its collection The bounding box
-     *            of the image(s)
+     *            The bounding box of the data being plotted
+     * @param tValues
+     *            The time values corresponding to the frames of data
+     * @param zValue
+     *            A string representing the elevation of the plotted data
      * @param legend
-     *            A legend image (this will be null unless this.requiresLegend()
-     *            returns true.
+     *            An image representing the legend
+     * @param frameRate
+     *            The frame rate to render an animation at
      * @throws IOException
-     *             if there was an error writing to the output stream
-     * @throws IllegalArgumentException
-     *             if this ImageFormat cannot render all of the given
-     *             BufferedImages.
+     *             If there is a problem writing the data to the
+     *             {@link OutputStream}
      */
     public abstract void writeImage(List<BufferedImage> frames, OutputStream out, String name,
-            String description, double[] bbox, List<String> tValues, String zValue,
+            String description, GeographicBoundingBox bbox, List<DateTime> tValues, String zValue,
             BufferedImage legend, Integer frameRate) throws IOException;
 
 }

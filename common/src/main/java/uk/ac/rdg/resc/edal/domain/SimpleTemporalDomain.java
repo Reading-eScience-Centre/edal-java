@@ -67,4 +67,38 @@ public class SimpleTemporalDomain implements TemporalDomain {
     public Chronology getChronology() {
         return chronology;
     }
+
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((chronology == null) ? 0 : chronology.hashCode());
+        result = prime * result + ((extent == null) ? 0 : extent.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SimpleTemporalDomain other = (SimpleTemporalDomain) obj;
+        if (chronology == null) {
+            if (other.chronology != null)
+                return false;
+        } else if (!chronology.toString().equals(other.chronology.toString()))
+            return false;
+        if (extent == null) {
+            if (other.extent != null)
+                return false;
+        } else if (!extent.equals(other.extent))
+            return false;
+        return true;
+    }
+
+
 }

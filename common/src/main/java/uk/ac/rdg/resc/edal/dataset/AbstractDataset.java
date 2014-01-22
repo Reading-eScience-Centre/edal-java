@@ -41,9 +41,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
-public abstract class AbstractDataset implements Dataset {
+public abstract class AbstractDataset<F extends DiscreteFeature<?, ?>> implements Dataset<F> {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
     private String id;
     private Map<String, VariableMetadata> vars;
@@ -87,14 +89,6 @@ public abstract class AbstractDataset implements Dataset {
     }
 
     @Override
-    public Set<String> getFeatureIds() {
-        /*
-         * There is one feature per variable
-         */
-        return vars.keySet();
-    }
-
-    @Override
     public Set<String> getVariableIds() {
         return vars.keySet();
     }
@@ -113,7 +107,7 @@ public abstract class AbstractDataset implements Dataset {
     }
 
     @Override
-    public void addVariablePlugin(VariablePlugin plugin) {
+    public void addVariablePlugin(VariablePlugin plugin) throws EdalException {
         /*-
          * First check that the supplied plugin doesn't provide any variables
          * which either:

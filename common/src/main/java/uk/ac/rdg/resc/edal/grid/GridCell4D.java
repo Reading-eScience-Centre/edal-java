@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.grid;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.domain.Domain;
 import uk.ac.rdg.resc.edal.domain.Extent;
@@ -44,19 +43,9 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
  * A cell in a {@link GridDomain}, which can have up to four dimensions.
  * 
  * @author Jon Blower
+ * @author Guy Griffiths
  */
 public interface GridCell4D extends Domain<GeoPosition> {
-
-    /**
-     * @return the time index of the grid cell in the parent grid
-     */
-    public int getTimeIndex();
-
-    /**
-     * @return the z index of the grid cell in the parent grid
-     */
-    public int getVerticalIndex();
-
     /**
      * @return the centre of the grid cell in horizontal space
      */
@@ -66,12 +55,6 @@ public interface GridCell4D extends Domain<GeoPosition> {
      * @return the footprint of this grid cell in horizontal space.
      */
     public Polygon getFootprint();
-
-    /**
-     * @return the {@link CoordinateReferenceSystem} of the horizontal component
-     *         of the grid cell
-     */
-    public CoordinateReferenceSystem getHorizontalCrs();
 
     /**
      * @return the range of valid times in the time axis of parent grid

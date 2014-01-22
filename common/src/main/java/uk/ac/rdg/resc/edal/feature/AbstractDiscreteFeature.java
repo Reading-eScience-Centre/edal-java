@@ -84,12 +84,12 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
             DiscreteDomain<P, DO> domain, Map<String, Parameter> parameters,
             Map<String, ? extends Array<Number>> values) {
         for (Array<Number> valuesArray : values.values()) {
-            if(valuesArray == null) {
-                System.out.println("Null in AbDF");
-            }
             if (!Arrays.equals(valuesArray.getShape(), domain.getDomainObjects().getShape())) {
                 throw new IllegalArgumentException(
-                        "All values arrays in a feature must have the same shape as the domain of the feature");
+                        "All values arrays in a feature must have the same shape as the domain of the feature.  Your values have shape: "
+                                + Arrays.toString(valuesArray.getShape())
+                                + ", but your domain has shape: "
+                                + Arrays.toString(domain.getDomainObjects().getShape()));
             }
         }
         this.id = id;

@@ -30,15 +30,15 @@ package uk.ac.rdg.resc.edal.grid;
 import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
-import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
+import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * Partial implementation of a {@link HorizontalGrid} that is based upon a
@@ -49,38 +49,108 @@ import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public abstract class AbstractCurvilinearGrid implements HorizontalGrid {
+public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
     protected final CurvilinearCoords curvCoords;
     private final BoundingBox latLonBbox;
+    private Array<GridCell2D> domainObjects = null;
 
     protected AbstractCurvilinearGrid(CurvilinearCoords curvCoords) {
         this.curvCoords = curvCoords;
         this.latLonBbox = curvCoords.getBoundingBox();
     }
 
+    /**
+     * Transforms a heading in native grid co-ordinates (degrees clockwise from
+     * positive y-direction) into a heading in WGS84 (degrees clockwise from
+     * north).
+     * 
+     * @param xComp
+     *            The x-component of the heading
+     * @param yComp
+     *            The y-component of the heading
+     * @param lon
+     *            The longitude of the given components
+     * @param lat
+     *            The latitude of the given components
+     * @return The transformed heading
+     */
     @Override
-    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return DefaultGeographicCRS.WGS84;
+    public double transformNativeHeadingToWgs84(double xComp, double yComp, double lon, double lat) {
+        /*
+         * We have a curvilinear grid. There is no analytical way of calculating
+         * derivatives, so we use adjacent grid points. This is not very
+         * accurate, but it is likely to be sufficient for plotting vector
+         * arrows
+         */
+        GridCoordinates2D posIndex = findIndexOf(new HorizontalPosition(lon, lat,
+                DefaultGeographicCRS.WGS84));
+        Array<GridCell2D> curvGridDomain = getDomainObjects();
+        int[] shape = curvGridDomain.getShape();
+        int gridX = posIndex.getX();
+        int gridY = posIndex.getY();
+
+        HorizontalPosition plusXPos;
+        HorizontalPosition plusYPos;
+        HorizontalPosition centrePos = curvGridDomain.get(gridY, gridX).getCentre();
+
+        /*
+         * Calculate the positions directly, or extend the grid if we're at the
+         * edge
+         */
+        if (gridX + 1 < shape[1]) {
+            plusXPos = curvGridDomain.get(gridY, gridX + 1).getCentre();
+        } else {
+            plusXPos = curvGridDomain.get(gridY, gridX - 1).getCentre();
+            plusXPos = new HorizontalPosition(2 * centrePos.getX() - plusXPos.getX(), 2
+                    * centrePos.getY() - plusXPos.getY(), plusXPos.getCoordinateReferenceSystem());
+        }
+
+        if (gridY + 1 < shape[0]) {
+            plusYPos = curvGridDomain.get(gridY + 1, gridX).getCentre();
+        } else {
+            plusYPos = curvGridDomain.get(gridY - 1, gridX).getCentre();
+            plusYPos = new HorizontalPosition(2 * centrePos.getX() - plusYPos.getX(), 2
+                    * centrePos.getY() - plusYPos.getY(), plusYPos.getCoordinateReferenceSystem());
+        }
+
+        /*
+         * Calculate the partial derivatives.
+         */
+        double dXddXs;
+        double dYddXs;
+        double dXddYs;
+        double dYddYs;
+        dXddXs = (plusXPos.getX() - centrePos.getX());
+        dYddXs = (plusXPos.getY() - centrePos.getY());
+
+        dXddYs = (plusYPos.getX() - centrePos.getX());
+        dYddYs = (plusYPos.getY() - centrePos.getY());
+
+        /*
+         * Get the new components
+         */
+        float newX = (float) (dXddXs * xComp + dXddYs * yComp);
+        float newY = (float) (dYddXs * xComp + dYddYs * yComp);
+
+        return GISUtils.RAD2DEG * Math.atan2(newX, newY);
     }
 
     @Override
     public Array<GridCell2D> getDomainObjects() {
-        return new AbstractImmutableArray<GridCell2D>(GridCell2D.class, new int[] {
-                curvCoords.getNj(), curvCoords.getNi() }) {
-            @Override
-            public Class<GridCell2D> getValueClass() {
-                return GridCell2D.class;
-            }
-
-            @Override
-            public GridCell2D get(int... coords) {
-                int xIndex = coords[1];
-                int yIndex = coords[0];
-                Cell cell = curvCoords.getCell(xIndex, yIndex);
-                return new GridCell2DImpl(coords, cell.getCentre(),
-                        cell.getMinimumBoundingRectangle(), AbstractCurvilinearGrid.this);
-            }
-        };
+        if (domainObjects == null) {
+            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] {
+                    curvCoords.getNj(), curvCoords.getNi() }) {
+                @Override
+                public GridCell2D get(int... coords) {
+                    int xIndex = coords[1];
+                    int yIndex = coords[0];
+                    Cell cell = curvCoords.getCell(xIndex, yIndex);
+                    return new GridCell2DImpl(coords, cell.getCentre(),
+                            cell.getMinimumBoundingRectangle(), AbstractCurvilinearGrid.this);
+                }
+            };
+        }
+        return domainObjects;
     }
 
     @Override
@@ -103,5 +173,43 @@ public abstract class AbstractCurvilinearGrid implements HorizontalGrid {
     @Override
     public long size() {
         return curvCoords.size();
+    }
+    
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((curvCoords == null) ? 0 : curvCoords.hashCode());
+        result = prime * result + ((domainObjects == null) ? 0 : domainObjects.hashCode());
+        result = prime * result + ((latLonBbox == null) ? 0 : latLonBbox.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AbstractCurvilinearGrid other = (AbstractCurvilinearGrid) obj;
+        if (curvCoords == null) {
+            if (other.curvCoords != null)
+                return false;
+        } else if (!curvCoords.equals(other.curvCoords))
+            return false;
+        if (domainObjects == null) {
+            if (other.domainObjects != null)
+                return false;
+        } else if (!domainObjects.equals(other.domainObjects))
+            return false;
+        if (latLonBbox == null) {
+            if (other.latLonBbox != null)
+                return false;
+        } else if (!latLonBbox.equals(other.latLonBbox))
+            return false;
+        return true;
     }
 }

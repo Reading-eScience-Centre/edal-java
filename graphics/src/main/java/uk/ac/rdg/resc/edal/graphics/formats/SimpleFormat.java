@@ -32,6 +32,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
+import org.joda.time.DateTime;
+import org.opengis.metadata.extent.GeographicBoundingBox;
+
 /**
  * Abstract superclass for simple image formats that do not require information
  * about the layer, time values, bounding box etc to render an image.
@@ -39,7 +42,7 @@ import java.util.List;
  * @author Jon Blower
  */
 public abstract class SimpleFormat extends ImageFormat {
-    
+
     /**
      * Returns false: simple formats do not require a legend.
      */
@@ -48,31 +51,12 @@ public abstract class SimpleFormat extends ImageFormat {
         return false;
     }
 
+    @Override
     /**
      * Delegates to writeImage(frames, out), ignoring most of the parameters.
-     * 
-     * @param frames
-     *            List of BufferedImages to render into an image
-     * @param out
-     *            The OutputStream to which the image will be written
-     * @param featureCollection
-     *            the {@link FeatureCollection} to which the feature belongs.
-     *            This is used for metadata and axes for {@link KmzFormat}
-     * @param featureId
-     *            The ID of the feature within its collection The bounding box
-     *            of the image(s)
-     * @param legend
-     *            A legend image (this will be null unless this.requiresLegend()
-     *            returns true.
-     * @throws IOException
-     *             if there was an error writing to the output stream
-     * @throws IllegalArgumentException
-     *             if this ImageFormat cannot render all of the given
-     *             BufferedImages.
      */
-    @Override
     public void writeImage(List<BufferedImage> frames, OutputStream out, String name,
-            String description, double[] bbox, List<String> tValues, String zValue,
+            String description, GeographicBoundingBox bbox, List<DateTime> tValues, String zValue,
             BufferedImage legend, Integer frameRate) throws IOException {
         this.writeImage(frames, out, frameRate);
     }
@@ -88,7 +72,7 @@ public abstract class SimpleFormat extends ImageFormat {
      * @param out
      *            The OutputStream to which the image will be written
      * @param frameRate
-     *            The frame rate to use if this is an animation.         
+     *            The frame rate to use if this is an animation.
      * @throws IOException
      *             if there was an error writing to the output stream
      * @throws IllegalArgumentException

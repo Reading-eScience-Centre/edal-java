@@ -7,8 +7,8 @@
         xmlns:xlink="http://www.w3.org/1999/xlink">
     <Service>
         <Name>OGC:WMS</Name>
-        <Title>$catalogue.serverName</Title>
-        <Abstract>$catalogue.serverAbstract</Abstract>
+        <Title>$catalogue.serverInfo.name</Title>
+        <Abstract>$catalogue.serverInfo.abstract</Abstract>
         <KeywordList>
 #foreach($keyword in $catalogue.serverKeywords)        
             <Keyword>$keyword</Keyword>
@@ -17,11 +17,11 @@
         <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
         <ContactInformation>
             <ContactPersonPrimary>
-                <ContactPerson>$catalogue.server.contactInfo.name</ContactPerson>
-                <ContactOrganization>$catalogue.server.contactInfo.organisation</ContactOrganization>
+                <ContactPerson>$catalogue.contactInfo.name</ContactPerson>
+                <ContactOrganization>$catalogue.contactInfo.organisation</ContactOrganization>
             </ContactPersonPrimary>
-            <ContactVoiceTelephone>$catalogue.server.contactInfo.telephone</ContactVoiceTelephone>
-            <ContactElectronicMailAddress>$catalogue.server.contactInfo.email</ContactElectronicMailAddress>
+            <ContactVoiceTelephone>$catalogue.contactInfo.telephone</ContactVoiceTelephone>
+            <ContactElectronicMailAddress>$catalogue.contactInfo.email</ContactElectronicMailAddress>
         </ContactInformation>
         <Fees>none</Fees>
         <AccessConstraints>none</AccessConstraints>
@@ -67,7 +67,7 @@
             <Format>application/vnd.ogc.wms_xml</Format>
         </Exception>
         <Layer>
-            <Title>$catalogue.serverName</Title>
+            <Title>$catalogue.serverInfo.name</Title>
 #foreach($supportedCrs in $supportedCrsCodes)
             <SRS>$supportedCrs</SRS>
 #end            
@@ -92,6 +92,7 @@
 #set($parent = $children.size() > 0)
 #set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
 #set($layerMetadata = $catalogue.getLayerMetadata($layerName))
+#if(!$layerMetadata.disabled)
     <Layer #if(!$parent && $layerMetadata.queryable)queryable="1"#end>
 #if($variableMetadata.plottable && $layerName && !$parent)
         <Name>$layerName</Name>
@@ -181,4 +182,5 @@
 #end
 #end
 </Layer>
+#end
 #end

@@ -55,22 +55,25 @@ public class LayerTreeJSONParser {
 
     private static void addNode(JSONObject json, LayerMenuItem parentItem) {
         JSONValue jsonLabel = json.get("label");
-        if(jsonLabel == null) {
+        if (jsonLabel == null) {
             return;
         }
         final String label = jsonLabel.isString().stringValue();
         JSONValue idJson = json.get("id");
         final String id;
-        if (idJson != null && !idJson.toString().equals(""))
-            id = idJson.isString().stringValue();
-        else
-            id = "branchNode";
-        JSONValue plottableJson = json.get("plottable");
         final Boolean plottable;
-        if (plottableJson != null && (plottableJson.isBoolean() != null))
-            plottable = plottableJson.isBoolean().booleanValue();
-        else
-            plottable = true;
+        if (idJson != null && !idJson.toString().equals("")) {
+            id = idJson.isString().stringValue();
+            JSONValue plottableJson = json.get("plottable");
+            if (plottableJson != null && (plottableJson.isBoolean() != null)) {
+                plottable = plottableJson.isBoolean().booleanValue();
+            } else {
+                plottable = true;
+            }
+        } else {
+            id = "branchNode";
+            plottable = false;
+        }
         LayerMenuItem newChild = new LayerMenuItem(label, id, plottable);
         parentItem.addChildItem(newChild);
 

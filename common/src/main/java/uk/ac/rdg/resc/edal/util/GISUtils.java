@@ -37,13 +37,17 @@ import java.util.List;
 import java.util.Set;
 
 import org.geotoolkit.factory.Hints;
+import org.geotoolkit.geometry.DirectPosition2D;
+import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.geotoolkit.referencing.factory.epsg.EpsgInstaller;
 import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.DateTime;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.Matrix;
 import org.opengis.util.FactoryException;
 
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
@@ -66,6 +70,9 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  * 
  */
 public final class GISUtils {
+
+    public final static double RAD2DEG = 180.0 / Math.PI;
+    public final static double DEG2RAD = Math.PI / 180.0;
 
     private GISUtils() {
     }
@@ -219,6 +226,67 @@ public final class GISUtils {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Transforms the given lat-lon heading to a different
+     * {@link CoordinateReferenceSystem}
+     * 
+     * @param heading
+     *            The heading in degrees
+     * @param position
+     *            The {@link HorizontalPosition} at which to transform the
+     *            heading. The {@link CoordinateReferenceSystem} returned by
+     *            {@link HorizontalPosition#getCoordinateReferenceSystem()} will
+     *            be the {@link CoordinateReferenceSystem} in which the heading
+     *            is valid.
+     * 
+     * @return The heading, in degrees clockwise from "upwards" (i.e. y-positive
+     *         in the target CRS)
+     */
+    public static Double transformWgs84Heading(Number heading, HorizontalPosition position) {
+        if (position.getCoordinateReferenceSystem() == null) {
+            throw new NullPointerException("Target CRS cannot be null");
+        }
+        if (heading == null || Double.isNaN(heading.doubleValue())) {
+            return null;
+        }
+        /*
+         * CRS.findMathTransform() caches recently-used transform objects so we
+         * should incur no large penalty for multiple invocations
+         */
+        try {
+            MathTransform wgs2crs = CRS.findMathTransform(DefaultGeographicCRS.WGS84,
+                    position.getCoordinateReferenceSystem());
+            if (wgs2crs.isIdentity())
+                return heading.doubleValue();
+            heading = heading.doubleValue() * DEG2RAD;
+
+            /*
+             * Find the position in WGS84
+             */
+            double[] point = new double[] { position.getX(), position.getY() };
+            wgs2crs.inverse().transform(point, 0, point, 0, 1);
+
+            /*
+             * Now find the derivative at that position.
+             */
+            Matrix derivative = wgs2crs.derivative(new DirectPosition2D(point[0], point[1]));
+
+            /*
+             * Use the derivative to find the new heading
+             */
+            double x = Math.sin(heading.doubleValue());
+            double y = Math.cos(heading.doubleValue());
+
+            double newX = derivative.getElement(0, 0) * x + derivative.getElement(0, 1) * y;
+            double newY = derivative.getElement(1, 0) * x + derivative.getElement(1, 1) * y;
+
+            return RAD2DEG * Math.atan2(newX, newY);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     /**
@@ -491,31 +559,79 @@ public final class GISUtils {
         }
     }
 
-//    /**
-//     * Finds the distance between 2 positions in units of the CRS.
-//     * 
-//     * @param pos1
-//     *            The first position
-//     * @param pos2
-//     *            The second position
-//     * @return The distance between the 2 positions in units of the CRS.
-//     */
-//    public static double getDistance(HorizontalPosition pos1, HorizontalPosition pos2) {
-//        if (pos1 == null || pos2 == null) {
-//            return Double.NaN;
-//        }
-//        if (!crsMatch(pos1.getCoordinateReferenceSystem(), pos2.getCoordinateReferenceSystem())) {
-//            pos2 = transformPosition(pos2, pos1.getCoordinateReferenceSystem());
-//        }
-//        double x1 = pos1.getX();
-//        double x2 = pos2.getX();
-//        double y1 = pos1.getY();
-//        double y2 = pos2.getY();
-//        if (isWgs84LonLat(pos1.getCoordinateReferenceSystem())) {
-//            x2 = getNearestEquivalentLongitude(x1, x2);
-//        }
-//        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-//    }
+    /**
+     * Converts a {@link BoundingBox} into a {@link GeographicBoundingBox} (i.e.
+     * one which is in lat/lon WGS84).
+     * 
+     * This method is not guaranteed to be exact. Its aim is to choose bounding
+     * boxes which contain all of the data - there is no requirement that the
+     * bounding box is a tight fit.
+     * 
+     * @param bbox
+     *            The bounding box
+     * @return A {@link GeographicBoundingBox} which contains the supplied
+     *         {@link BoundingBox}
+     */
+    public static GeographicBoundingBox toGeographicBoundingBox(BoundingBox bbox) {
+        if (isWgs84LonLat(bbox.getCoordinateReferenceSystem())) {
+            return new DefaultGeographicBoundingBox(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(),
+                    bbox.getMaxY());
+        } else {
+            double minx = Double.MAX_VALUE;
+            double maxx = -Double.MAX_VALUE;
+            double miny = Double.MAX_VALUE;
+            double maxy = -Double.MAX_VALUE;
+            /*
+             * There is no simple mapping from an arbitrary bounding box to a
+             * lat-lon one. We scan around the edge of the bounding box (10
+             * points per side) transforming each position and find the bounding
+             * box of these points
+             */
+            for (double x = bbox.getMinX(); x < bbox.getMaxX(); x += (bbox.getWidth() / 10.0)) {
+                /*
+                 * Top and bottom sides of bbox
+                 */
+                double y = bbox.getMinY();
+                HorizontalPosition transformPosition = transformPosition(new HorizontalPosition(x,
+                        y, bbox.getCoordinateReferenceSystem()), DefaultGeographicCRS.WGS84);
+                minx = Math.min(transformPosition.getX(), minx);
+                maxx = Math.max(transformPosition.getX(), maxx);
+                miny = Math.min(transformPosition.getY(), miny);
+                maxy = Math.max(transformPosition.getY(), maxy);
+
+                y = bbox.getMaxY();
+                transformPosition = transformPosition(
+                        new HorizontalPosition(x, y, bbox.getCoordinateReferenceSystem()),
+                        DefaultGeographicCRS.WGS84);
+                minx = Math.min(transformPosition.getX(), minx);
+                maxx = Math.max(transformPosition.getX(), maxx);
+                miny = Math.min(transformPosition.getY(), miny);
+                maxy = Math.max(transformPosition.getY(), maxy);
+            }
+            for (double y = bbox.getMinY(); y < bbox.getMaxY(); y += (bbox.getHeight() / 10.0)) {
+                /*
+                 * Sides of bbox
+                 */
+                double x = bbox.getMinX();
+                HorizontalPosition transformPosition = transformPosition(new HorizontalPosition(x,
+                        y, bbox.getCoordinateReferenceSystem()), DefaultGeographicCRS.WGS84);
+                minx = Math.min(transformPosition.getX(), minx);
+                maxx = Math.max(transformPosition.getX(), maxx);
+                miny = Math.min(transformPosition.getY(), miny);
+                maxy = Math.max(transformPosition.getY(), maxy);
+
+                x = bbox.getMaxX();
+                transformPosition = transformPosition(
+                        new HorizontalPosition(x, y, bbox.getCoordinateReferenceSystem()),
+                        DefaultGeographicCRS.WGS84);
+                minx = Math.min(transformPosition.getX(), minx);
+                maxx = Math.max(transformPosition.getX(), maxx);
+                miny = Math.min(transformPosition.getY(), miny);
+                maxy = Math.max(transformPosition.getY(), maxy);
+            }
+            return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
+        }
+    }
 
     static {
         /*

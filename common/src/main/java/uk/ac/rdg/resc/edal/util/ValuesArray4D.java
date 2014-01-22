@@ -62,9 +62,4 @@ public class ValuesArray4D extends Array4D<Number> {
         data[coords[T_IND]][coords[Z_IND]][coords[Y_IND]][coords[X_IND]] = (value == null) ? null
                 : value.doubleValue();
     }
-
-    @Override
-    public Class<Number> getValueClass() {
-        return Number.class;
-    }
 }

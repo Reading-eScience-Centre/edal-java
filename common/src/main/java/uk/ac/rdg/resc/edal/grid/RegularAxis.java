@@ -41,4 +41,15 @@ public interface RegularAxis extends ReferenceableAxis<Double> {
      * Gets the spacing between coordinate values, might be negative.
      */
     public double getCoordinateSpacing();
+
+    /**
+     * Finds the apparent index of a given position, even if this is beyond the
+     * bounds of the axis.
+     * 
+     * @param position
+     *            The position to test
+     * @return The index where the position would appear, even if outside the
+     *         bounds of this axis
+     */
+    public int findIndexOfUnconstrained(Double position);
 }

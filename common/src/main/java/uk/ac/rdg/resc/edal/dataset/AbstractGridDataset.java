@@ -40,15 +40,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
+import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -74,7 +77,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  * @author Jon
  * @author Guy
  */
-public abstract class AbstractGridDataset extends AbstractDataset implements GridDataset {
+public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> implements GridDataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
 
     public AbstractGridDataset(String id, Collection<GridVariableMetadata> vars) {
@@ -82,8 +85,159 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
     }
 
     @Override
-    public final MapFeature readMapData(Set<String> varIds, HorizontalGrid targetGrid, Double zPos,
-            DateTime time) throws DataReadingException {
+    public GridFeature readFeature(String featureId) throws DataReadingException {
+        VariableMetadata variableMetadata = getVariableMetadata(featureId);
+        if (!(variableMetadata instanceof GridVariableMetadata)) {
+            /*
+             * We have a variable which does not have a native grid which we can
+             * read onto.
+             */
+            throw new DataReadingException(
+                    "The feature "
+                            + featureId
+                            + " is not gridded.  It is probably a derived variable which is derived from variables with different grids");
+        }
+        GridVariableMetadata gridVariableMetadata = (GridVariableMetadata) variableMetadata;
+
+        try {
+            GridDataSource gridDataSource = openGridDataSource();
+
+            /*
+             * Read the actual data. This method will recursively read any data
+             * required for derived variables.
+             */
+            Array4D<Number> data = read4dData(featureId, gridDataSource, gridVariableMetadata);
+
+            /*
+             * Create a GridDomain from the GridVariableMetadata
+             */
+            GridDomain domain = null;
+
+            Map<String, Parameter> parameters = new HashMap<String, Parameter>();
+            parameters.put(featureId, getVariableMetadata(featureId).getParameter());
+
+            Map<String, Array4D<Number>> values = new HashMap<String, Array4D<Number>>();
+            values.put(featureId, data);
+
+            return new GridFeature(featureId, featureId + " data",
+                    "The entire range of data for the variable: " + featureId, domain, parameters,
+                    values);
+        } catch (IOException e) {
+            throw new DataReadingException("Problem reading the data from underlying storage");
+        }
+    }
+    
+    @Override
+    public Set<String> getFeatureIds() {
+        /*
+         * For a GridDataset, there is one feature per variable
+         */
+        return getVariableIds();
+    }
+
+    /**
+     * Reads entire 4D data from a variable.
+     * 
+     * @param varId
+     *            The ID of the variable to read
+     * @param gridDataSource
+     *            A {@link GridDataSource} which can be used to access the data
+     * @param metadata
+     *            The {@link GridVariableMetadata} of the variable we are aiming
+     *            to read. This will only be used if we are reading a derived
+     *            variable, and it is used to check that all required variables
+     *            share the same {@link GridDomain}.
+     * @return An {@link Array4D} containing the read data.
+     * @throws IOException
+     *             If there is a problem reading the underlying data
+     * @throws DataReadingException
+     *             If the source variables' domains do not match the domain for
+     *             a derived variable
+     */
+    private Array4D<Number> read4dData(final String varId, GridDataSource gridDataSource,
+            final GridVariableMetadata metadata) throws IOException, DataReadingException {
+        final VariablePlugin plugin = isDerivedVariable(varId);
+        if (plugin == null) {
+            /*
+             * We have a non-derived variable - this means that
+             * getVariableMetadata will return GridVariableMetadata
+             */
+            GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(varId);
+
+            /*
+             * Find the grid size and read the data
+             */
+            int xSize = variableMetadata.getHorizontalDomain().getXSize();
+            int ySize = variableMetadata.getHorizontalDomain().getYSize();
+            int zSize = variableMetadata.getVerticalDomain().size();
+            int tSize = variableMetadata.getTemporalDomain().size();
+
+            return gridDataSource.read(varId, 0, tSize, 0, zSize, 0, ySize, 0, xSize);
+        } else {
+            String[] requiredVariables = plugin.usesVariables();
+            /*
+             * Java generics type-erasure warning suppressor.
+             */
+            @SuppressWarnings("unchecked")
+            final Array4D<Number>[] requiredData = new Array4D[requiredVariables.length];
+            for (int i = 0; i < requiredVariables.length; i++) {
+                VariableMetadata sourceMetadata = getVariableMetadata(requiredVariables[i]);
+                if (sourceMetadata instanceof GridVariableMetadata) {
+                    /*
+                     * Compare domains to metadata
+                     */
+                } else {
+                    throw new DataReadingException("The derived variable " + varId
+                            + " has a different domain to one of its source variables: "
+                            + requiredVariables[i]
+                            + ".  This means that a GridFeature cannot be read.");
+                }
+                requiredData[i] = read4dData(requiredVariables[i], gridDataSource, metadata);
+            }
+
+            int tSize = requiredData[0].getTSize();
+            int zSize = requiredData[0].getZSize();
+            int ySize = requiredData[0].getYSize();
+            int xSize = requiredData[0].getXSize();
+            /*
+             * Wrap the data in an anonymous Array4D.
+             */
+            return new Array4D<Number>(tSize, zSize, ySize, xSize) {
+                @Override
+                public Number get(int... coords) {
+                    /*
+                     * Use the metadata to get the horizontal position.
+                     */
+                    int xIndex = coords[3];
+                    int yIndex = coords[2];
+                    GridCell2D gridCell2D = metadata.getHorizontalDomain().getDomainObjects()
+                            .get(yIndex, xIndex);
+                    HorizontalPosition pos = gridCell2D == null ? null : gridCell2D.getCentre();
+
+                    /*
+                     * Set the source values
+                     */
+                    Number[] sourceValues = new Number[requiredData.length];
+                    for (int i = 0; i < requiredData.length; i++) {
+                        sourceValues[i] = requiredData[i].get(coords);
+                    }
+                    /*
+                     * Generate the value
+                     */
+                    return plugin.getValue(varId, pos, sourceValues);
+                }
+
+                @Override
+                public void set(Number value, int... coords) {
+                    throw new UnsupportedOperationException("This Array4D is immutable");
+                }
+            };
+        }
+    }
+
+    @Override
+    public final MapFeature readMapData(Set<String> varIds, final HorizontalGrid targetGrid,
+            Double zPos, DateTime time) throws DataReadingException {
         GridDataSource dataSource = null;
         try {
             /*
@@ -148,9 +302,6 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                  * Do the actual data reading
                  */
                 Array2D<Number> data = readHorizontalData(varId, targetGrid, zPos, time, dataSource);
-                if(data == null) {
-                    System.out.println("AbGD "+varId+","+getId());
-                }
 
                 values.put(varId, data);
                 /*
@@ -184,7 +335,20 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                     pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
                 }
 
-                values.put(derivedVarId, plugin.generateArray2D(derivedVarId, pluginSourceData));
+                values.put(derivedVarId, plugin.generateArray2D(
+                        derivedVarId,
+                        new Array2D<HorizontalPosition>(targetGrid.getYSize(), targetGrid
+                                .getXSize()) {
+                            @Override
+                            public HorizontalPosition get(int... coords) {
+                                return targetGrid.getDomainObjects().get(coords).getCentre();
+                            }
+
+                            @Override
+                            public void set(HorizontalPosition value, int... coords) {
+                                throw new UnsupportedOperationException("This array is immutable");
+                            }
+                        }, pluginSourceData));
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
             }
 
@@ -211,6 +375,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
 
             return mapFeature;
         } catch (IOException e) {
+            log.error("Problem reading data", e);
             throw new DataReadingException("Problem reading map feature", e);
         } finally {
             if (dataSource != null) {
@@ -223,8 +388,8 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         }
     }
 
-    private Array2D<Number> readHorizontalData(String varId, HorizontalGrid targetGrid, Double zPos,
-            DateTime time, GridDataSource dataSource) throws IOException {
+    private Array2D<Number> readHorizontalData(String varId, HorizontalGrid targetGrid,
+            Double zPos, DateTime time, GridDataSource dataSource) throws IOException {
         /*
          * This cast will always work, because we only ever call this method for
          * non-derived variables - i.e. those whose metadata was provided in the
@@ -249,7 +414,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
          */
         int tIndex = getTimeIndex(time, tAxis, varId);
         int zIndex = getVerticalIndex(zPos, zAxis, varId);
-        
+
         /*
          * Create a DomainMapper from the source and target grids
          */
@@ -258,15 +423,15 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         /*
          * Now use the appropriate DataReadingStrategy to read data
          */
-        Array2D<Number> data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex, zIndex,
-                domainMapper);
+        Array2D<Number> data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex,
+                zIndex, domainMapper);
         return data;
     }
 
     private int getTimeIndex(DateTime time, TimeAxis tAxis, String varId) {
         int tIndex = 0;
         if (tAxis != null) {
-            if(time == null) {
+            if (time == null) {
                 time = GISUtils.getClosestToCurrentTime(tAxis.getCoordinateValues());
             }
             tIndex = tAxis.findIndexOf(time);
@@ -281,8 +446,8 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
     private int getVerticalIndex(Double zPos, VerticalAxis zAxis, String varId) {
         int zIndex = 0;
         if (zAxis != null) {
-            if(zPos == null) {
-                zPos = GISUtils.getClosestElevationToSurface(zAxis);    
+            if (zPos == null) {
+                zPos = GISUtils.getClosestElevationToSurface(zAxis);
             }
             zIndex = zAxis.findIndexOf(zPos);
         }
@@ -294,7 +459,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
     }
 
     @Override
-    public final ProfileFeature readProfileData(Set<String> varIds, HorizontalPosition hPos,
+    public final ProfileFeature readProfileData(Set<String> varIds, final HorizontalPosition hPos,
             VerticalAxis zAxis, DateTime time) throws DataReadingException {
         GridDataSource dataSource = null;
         try {
@@ -388,7 +553,18 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                     pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
                 }
 
-                values.put(derivedVarId, plugin.generateArray1D(derivedVarId, pluginSourceData));
+                values.put(derivedVarId, plugin.generateArray1D(derivedVarId,
+                        new Array1D<HorizontalPosition>(pluginSourceData.length) {
+                            @Override
+                            public HorizontalPosition get(int... coords) {
+                                return hPos;
+                            }
+
+                            @Override
+                            public void set(HorizontalPosition value, int... coords) {
+                                throw new UnsupportedOperationException("This array is immutable");
+                            }
+                        }, pluginSourceData));
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
                 /*
                  * TODO This needs testing!
@@ -427,8 +603,8 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         }
     }
 
-    private Array1D<Number> readVerticalData(String varId, VerticalAxis zAxis, HorizontalPosition hPos,
-            DateTime time, GridDataSource dataSource) throws IOException {
+    private Array1D<Number> readVerticalData(String varId, VerticalAxis zAxis,
+            HorizontalPosition hPos, DateTime time, GridDataSource dataSource) throws IOException {
         /*
          * This conversion is safe, because we are not dealing with derived
          * variables, and all non-derived must have GridVariableMetadata
@@ -469,8 +645,8 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         /*
          * Read the data and move it to a 1D Array
          */
-        Array4D<Number> data4d = dataSource.read(varId, tIndex, tIndex, zMin, zMax, yIndex, yIndex, xIndex,
-                xIndex);
+        Array4D<Number> data4d = dataSource.read(varId, tIndex, tIndex, zMin, zMax, yIndex, yIndex,
+                xIndex, xIndex);
         int zSize = zAxis.size();
         Array1D<Number> data = new ValuesArray1D(zSize);
 
@@ -491,7 +667,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
     }
 
     @Override
-    public PointSeriesFeature readTimeSeriesData(Set<String> varIds, HorizontalPosition hPos,
+    public PointSeriesFeature readTimeSeriesData(Set<String> varIds, final HorizontalPosition hPos,
             VerticalPosition zPos, TimeAxis tAxis) throws DataReadingException {
         GridDataSource dataSource = null;
         try {
@@ -585,7 +761,18 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                     pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
                 }
 
-                values.put(derivedVarId, plugin.generateArray1D(derivedVarId, pluginSourceData));
+                values.put(derivedVarId, plugin.generateArray1D(derivedVarId,
+                        new Array1D<HorizontalPosition>(pluginSourceData.length) {
+                            @Override
+                            public HorizontalPosition get(int... coords) {
+                                return hPos;
+                            }
+
+                            @Override
+                            public void set(HorizontalPosition value, int... coords) {
+                                throw new UnsupportedOperationException("This array is immutable");
+                            }
+                        }, pluginSourceData));
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
                 /*
                  * TODO This needs testing!
@@ -653,7 +840,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         int xIndex = hIndices.getX();
         int yIndex = hIndices.getY();
 
-        int zIndex = getVerticalIndex(zPos.getZ(), zAxis, varId);
+        int zIndex = getVerticalIndex(zPos == null ? null : zPos.getZ(), zAxis, varId);
 
         /*
          * Now read the z-limits
@@ -672,8 +859,9 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         /*
          * Read the data and move it to a 1D Array
          */
-        Array4D<Number> data4d = dataSource.read(varId, tMin, tMax, zIndex, zIndex, yIndex, yIndex, xIndex,
-                xIndex);
+        Array4D<Number> data4d = dataSource.read(varId, tMin, tMax, zIndex, zIndex, yIndex, yIndex,
+                xIndex, xIndex);
+        
         int tSize = tAxis.size();
         Array1D<Number> data = new ValuesArray1D(tSize);
 
@@ -684,7 +872,12 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                 throw new IllegalArgumentException("The time-axis for the variable " + varId
                         + " does not contain the time " + time + " which was requested.");
             }
-            data.set(data4d.get(new int[] { tIndex - tMin, 0, 0, 0 }), new int[] { i });
+            Number value = data4d.get(new int[] { tIndex - tMin, 0, 0, 0 });
+            data.set(value, new int[] { i });
+            
+            
+//            System.out.println(time+","+tIndex+","+value+","+data.get(i));
+//            data.set(data4d.get(new int[] { tIndex - tMin, 0, 0, 0 }), new int[] { i });
             /*
              * TODO we need to test this
              */
@@ -694,7 +887,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
     }
 
     @Override
-    public TrajectoryFeature readTrajectoryData(Set<String> varIds, TrajectoryDomain domain)
+    public TrajectoryFeature readTrajectoryData(Set<String> varIds, final TrajectoryDomain domain)
             throws DataReadingException {
         GridDataSource dataSource = null;
         try {
@@ -788,11 +981,23 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                     pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
                 }
 
-                values.put(derivedVarId, plugin.generateArray1D(derivedVarId, pluginSourceData));
+                values.put(
+                        derivedVarId,
+                        plugin.generateArray1D(derivedVarId,
+                                new Array1D<HorizontalPosition>(domain.size()) {
+                                    @Override
+                                    public HorizontalPosition get(int... coords) {
+                                        return domain.getDomainObjects().get(coords)
+                                                .getHorizontalPosition();
+                                    }
+
+                                    @Override
+                                    public void set(HorizontalPosition value, int... coords) {
+                                        throw new UnsupportedOperationException(
+                                                "This array is immutable");
+                                    }
+                                }, pluginSourceData));
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
-                /*
-                 * TODO This needs testing!
-                 */
             }
 
             /*
@@ -801,8 +1006,8 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
             dataSource.close();
 
             /*
-             * Construct the TrajectoryFeature from the t and z values, the horizontal
-             * grid and the VariableMetadata objects
+             * Construct the TrajectoryFeature from the t and z values, the
+             * horizontal grid and the VariableMetadata objects
              */
             TrajectoryFeature trajectoryFeature = new TrajectoryFeature(UUID.nameUUIDFromBytes(
                     id.toString().getBytes()).toString(), "Extracted Trajectory Feature",
@@ -849,7 +1054,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
         for (int i = 0; i < domain.size(); i++) {
             GeoPosition position = domainObjects.get(i);
             Double z = null;
-            if(position.getVerticalPosition() != null) {
+            if (position.getVerticalPosition() != null) {
                 z = position.getVerticalPosition().getZ();
             }
             Number value = readPointData(variableId, position.getHorizontalPosition(), z,
@@ -879,7 +1084,7 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                 baseValues[i] = readSinglePoint(baseVariables[i], position, zVal, time);
             }
 
-            return plugin.getValue(variableId, baseValues);
+            return plugin.getValue(variableId, position, baseValues);
         } else {
             try {
                 /*
@@ -898,13 +1103,18 @@ public abstract class AbstractGridDataset extends AbstractDataset implements Gri
                 TimeAxis temporalDomain = variableMetadata.getTemporalDomain();
                 int t = getTimeIndex(time, temporalDomain, variableId);
 
-                Array4D<Number> readData = gridDataSource.read(variableId, t, t, z, z, xy.getY(), xy.getY(), xy.getX(),
-                        xy.getX());
+                Array4D<Number> readData = gridDataSource.read(variableId, t, t, z, z, xy.getY(),
+                        xy.getY(), xy.getX(), xy.getX());
                 return readData.get(0, 0, 0, 0);
             } catch (IOException e) {
                 throw new DataReadingException("Problem reading data", e);
             }
         }
+    }
+    
+    @Override
+    public Class<GridFeature> getFeatureType() {
+        return GridFeature.class;
     }
 
     protected abstract GridDataSource openGridDataSource() throws IOException;

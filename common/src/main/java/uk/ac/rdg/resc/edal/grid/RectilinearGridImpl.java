@@ -28,8 +28,6 @@
 
 package uk.ac.rdg.resc.edal.grid;
 
-import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -49,6 +47,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 public class RectilinearGridImpl extends AbstractHorizontalGrid implements RectilinearGrid {
     protected ReferenceableAxis<Double> xAxis;
     protected ReferenceableAxis<Double> yAxis;
+    private Array<GridCell2D> domainObjects = null;
 
     /**
      * Single-argument constructor for subclasses who would rather create their
@@ -78,23 +77,23 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
 
     @Override
     public Array<GridCell2D> getDomainObjects() {
-        return new AbstractImmutableArray<GridCell2D>(GridCell2D.class, new int[] { yAxis.size(),
-                xAxis.size() }) {
-            @Override
-            public Class<GridCell2D> getValueClass() {
-                return GridCell2D.class;
-            }
-
-            @Override
-            public GridCell2D get(int... coords) {
-                int xIndex = coords[1];
-                int yIndex = coords[0];
-                return new GridCell2DImpl(coords, new HorizontalPosition(
-                        xAxis.getCoordinateValue(xIndex), yAxis.getCoordinateValue(yIndex), crs),
-                        new BoundingBoxImpl(xAxis.getCoordinateBounds(xIndex), yAxis
-                                .getCoordinateBounds(yIndex), crs), RectilinearGridImpl.this);
-            }
-        };
+        if (domainObjects == null) {
+            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] {
+                    yAxis.size(), xAxis.size() }) {
+                @Override
+                public GridCell2D get(int... coords) {
+                    int xIndex = coords[1];
+                    int yIndex = coords[0];
+                    return new GridCell2DImpl(coords,
+                            new HorizontalPosition(xAxis.getCoordinateValue(xIndex), yAxis
+                                    .getCoordinateValue(yIndex), crs), new BoundingBoxImpl(
+                                    xAxis.getCoordinateBounds(xIndex),
+                                    yAxis.getCoordinateBounds(yIndex), crs),
+                            RectilinearGridImpl.this);
+                }
+            };
+        }
+        return domainObjects;
     }
 
     @Override
@@ -116,19 +115,7 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
 
     @Override
     public GeographicBoundingBox getGeographicBoundingBox() {
-        if (GISUtils.crsMatch(crs, DefaultGeographicCRS.WGS84)) {
-            return new DefaultGeographicBoundingBox(xAxis.getCoordinateExtent().getLow(), xAxis
-                    .getCoordinateExtent().getHigh(), yAxis.getCoordinateExtent().getLow(), yAxis
-                    .getCoordinateExtent().getHigh());
-        } else {
-            /*
-             * There is no easy transformation here, so we just return a global
-             * bounding box
-             * 
-             * TODO This should be overridden for specific examples
-             */
-            return new DefaultGeographicBoundingBox(-180, 180, -90, 90);
-        }
+        return GISUtils.toGeographicBoundingBox(getBoundingBox());
     }
 
     @Override
@@ -155,7 +142,7 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     public GridCoordinates2D findIndexOf(HorizontalPosition position) {
         int x = xAxis.findIndexOf(position.getX());
         int y = yAxis.findIndexOf(position.getY());
-        if(x > 0 && y > 0) {
+        if (x > 0 && y > 0) {
             return new GridCoordinates2D(x, y);
         } else {
             return null;

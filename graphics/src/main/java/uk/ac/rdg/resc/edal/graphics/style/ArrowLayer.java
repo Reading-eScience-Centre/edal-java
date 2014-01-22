@@ -41,12 +41,15 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 @XmlType(namespace = MapImage.NAMESPACE, propOrder = { "directionFieldName", "arrowSize",
         "arrowColour" }, name = "ArrowLayerType")
-public class ArrowLayer extends ImageLayer {
+public class ArrowLayer extends GriddedImageLayer {
     @XmlElement(name = "DirectionFieldName", required = true)
     private String directionFieldName;
     @XmlElement(name = "ArrowColour")
@@ -58,7 +61,7 @@ public class ArrowLayer extends ImageLayer {
     @SuppressWarnings("unused")
     private ArrowLayer() {
     }
-    
+
     @XmlElement(name = "ArrowSize")
     public void setArrowSize(Integer arrowSize) {
         this.arrowSize = arrowSize;
@@ -92,7 +95,7 @@ public class ArrowLayer extends ImageLayer {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         Array2D<Number> values = dataReader.getDataForLayerName(directionFieldName);
 
         Graphics2D g = image.createGraphics();
@@ -111,8 +114,11 @@ public class ArrowLayer extends ImageLayer {
          */
         double xPixelsPerArrow = ((double) width) / (width / (arrowSize * 2));
         double yPixelsPerArrow = ((double) height) / (height / (arrowSize * 2));
-        double xLoc = xPixelsPerArrow/2;
-        double yLoc = yPixelsPerArrow/2;
+        double xLoc = xPixelsPerArrow / 2;
+        double yLoc = yPixelsPerArrow / 2;
+
+        Array<HorizontalPosition> domainObjects = dataReader
+                .getMapDomainObjects(directionFieldName);
 
         for (int j = 0; j < height; j++) {
             if (yLoc > yPixelsPerArrow) {
@@ -123,15 +129,18 @@ public class ArrowLayer extends ImageLayer {
                         /*
                          * We are at a point where we need to draw an arrow
                          */
-                        Number angle = values.get(j, i);
+                        Double angle = GISUtils.transformWgs84Heading(values.get(j, i),
+                                domainObjects.get(j, i));
                         if (angle != null && !Float.isNaN(angle.floatValue())) {
+                            /* Convert from degrees to radians */
+                            angle = angle * GISUtils.DEG2RAD;
                             /* Calculate the end point of the arrow */
-                            double iEnd = i + arrowSize * Math.cos(angle.doubleValue());
+                            double iEnd = i + arrowSize * Math.sin(angle);
                             /*
                              * Screen coordinates go down, but north is up,
                              * hence the minus sign
                              */
-                            double jEnd = j - arrowSize * Math.sin(angle.doubleValue());
+                            double jEnd = j - arrowSize * Math.cos(angle);
                             /* Draw a dot representing the data location */
                             g.fillOval(i - 2, j - 2, 4, 4);
                             /* Draw a line representing the vector direction */
@@ -147,7 +156,7 @@ public class ArrowLayer extends ImageLayer {
     }
 
     @Override
-    protected Set<NameAndRange> getFieldsWithScales() {
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         ret.add(new NameAndRange(directionFieldName, Extents.newExtent(0f, new Float(2 * Math.PI))));
         return ret;

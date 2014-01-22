@@ -36,12 +36,12 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
 
 @XmlType(namespace=MapImage.NAMESPACE, name="OpacityTransformType")
-public abstract class OpacityTransform extends ImageLayer {
+public abstract class OpacityTransform extends GriddedImageLayer {
 
-    protected abstract void applyOpacityToImage(BufferedImage image, DataReader dataReader) throws EdalException;
+    protected abstract void applyOpacityToImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException;
 
     @Override
-    protected final void drawIntoImage(BufferedImage image, DataReader dataReader) throws EdalException {
+    protected final void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         applyOpacityToImage(image, dataReader);
     }
     

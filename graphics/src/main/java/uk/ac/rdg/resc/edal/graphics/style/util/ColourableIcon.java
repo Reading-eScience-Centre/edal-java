@@ -38,33 +38,50 @@ public class ColourableIcon {
     private BufferedImage icon;
     private int height;
     private int width;
-    
+
     public ColourableIcon(BufferedImage icon) {
         this.icon = icon;
         height = icon.getHeight();
         width = icon.getWidth();
     }
-    
-    public void drawOntoCanvas(int x, int y, Graphics graphics, Color col){
-        graphics.drawImage(getColouredIcon(col), x-width/2, y-height/2, null);
+
+    public void drawOntoCanvas(int x, int y, Graphics graphics, Color col) {
+        graphics.drawImage(getColouredIcon(col), x - width / 2, y - height / 2, null);
     }
-    
-    public BufferedImage getColouredIcon(Color colour){
-        return getColouredIcon(colour.getRed(), colour.getGreen(), colour.getBlue());
+
+    public BufferedImage getColouredIcon(Color colour) {
+        /*
+         * We don't want completely transparent icons, so we limit to at least
+         * 25% opaque
+         */
+        int alpha = colour.getAlpha();
+        if (alpha < 64) {
+            alpha = 64;
+        }
+        return getColouredIcon(colour.getRed(), colour.getGreen(), colour.getBlue(), alpha);
     }
-    
-    private BufferedImage getColouredIcon(int red, int green, int blue) {
+
+    private BufferedImage getColouredIcon(int red, int green, int blue, int desiredAlpha) {
         BufferedImage colouredIcon = cloneImage();
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                int argb = icon.getRGB(i,j);
+                int argb = icon.getRGB(i, j);
                 int alpha = (argb >>> 24);
+                if (alpha > desiredAlpha) {
+                    /*
+                     * We want transparent parts of the image to remain so, but
+                     * to make non-transparent parts match the requested alpha
+                     * value
+                     */
+                    alpha = desiredAlpha;
+                }
                 Color currentColour = new Color(argb);
                 int r = currentColour.getRed();
                 int g = currentColour.getGreen();
                 int b = currentColour.getBlue();
-                float y = 0.3f*r + 0.59f*g + 0.11f*b;
-                Color final_color = new Color((int)(3*red+y)/4,(int)(3*green+y)/4,(int)(3*blue+y)/4, alpha);
+                float y = 0.3f * r + 0.59f * g + 0.11f * b;
+                Color final_color = new Color((int) (3 * red + y) / 4, (int) (3 * green + y) / 4,
+                        (int) (3 * blue + y) / 4, alpha);
                 colouredIcon.setRGB(i, j, final_color.getRGB());
             }
         }
@@ -79,7 +96,7 @@ public class ColourableIcon {
         return width;
     }
 
-    private BufferedImage cloneImage(){
+    private BufferedImage cloneImage() {
         ColorModel cm = icon.getColorModel();
         boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
         WritableRaster raster = icon.copyData(null);

@@ -28,45 +28,63 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.io.IOUtils;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import uk.ac.rdg.resc.edal.dataset.ContinuousDomainDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.graphics.style.Drawable;
+import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
+import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
+import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.util.ContactInfo;
 import uk.ac.rdg.resc.edal.wms.util.ServerInfo;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
-import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
  * This class encapsulates the elements needed to implement a specific WMS.
@@ -87,7 +105,25 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 public abstract class WmsCatalogue implements FeatureCatalogue {
     private static final Logger log = LoggerFactory.getLogger(WmsCatalogue.class);
 
-    private Map<String, StyleDef> styleDefs = new HashMap<String, StyleDef>();
+    private SortedMap<String, StyleDef> styleDefs = new TreeMap<String, StyleDef>(
+            new Comparator<String>() {
+                /*
+                 * We want the styles to be sorted:
+                 * 
+                 * Names starting with "default" first (alphabetically ordered
+                 * if there are multiple) Then alphabetical order
+                 */
+                @Override
+                public int compare(String o1, String o2) {
+                    if (o1.startsWith("default") && !o2.startsWith("default")) {
+                        return -1;
+                    }
+                    if (!o1.startsWith("default") && o2.startsWith("default")) {
+                        return 1;
+                    }
+                    return o1.compareTo(o2);
+                }
+            });
 
     public WmsCatalogue() {
         /*
@@ -95,9 +131,12 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
          * supported styles. This includes 2 parts:
          * 
          * 1. Reading the styles which are packaged with the edal-wms module
-         * (i.e. from the JAR file) 2. Reading any additional styles defined by
-         * a user (i.e. from the classpath)
+         * (i.e. from the JAR file)
+         * 
+         * 2. Reading any additional styles defined by a user (i.e. from the
+         * classpath)
          */
+        NoAutoCloseZipInputStream zip = null;
         try {
             /*
              * This reads all styles from the JAR file
@@ -106,7 +145,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
             CodeSource src = WmsCatalogue.class.getProtectionDomain().getCodeSource();
             if (src != null) {
                 URL jar = src.getLocation();
-                ZipInputStream zip = new ZipInputStream(jar.openStream());
+                zip = new NoAutoCloseZipInputStream(jar.openStream());
                 while (true) {
                     ZipEntry e = zip.getNextEntry();
                     if (e == null) {
@@ -115,7 +154,8 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                     String name = e.getName();
                     Matcher matcher = styleXmlPath.matcher(name);
                     if (matcher.matches()) {
-                        StyleDef style = processStyle(matcher.group(1), zip);
+                        String xmlString = IOUtils.toString(zip);
+                        StyleDef style = processStyle(matcher.group(1), xmlString);
                         if (style != null) {
                             styleDefs.put(style.getStyleName(), style);
                         }
@@ -125,7 +165,18 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                 /* Fail... */
             }
         } catch (Exception e) {
-            log.error("Problem processing styles in edal-wms module");
+            log.error("Problem processing styles in edal-wms module", e);
+        } finally {
+            if (zip != null) {
+                zip.allowToBeClosed();
+                try {
+                    zip.close();
+                } catch (IOException e) {
+                    /*
+                     * Ignore this error, we can't do anything about it
+                     */
+                }
+            }
         }
         try {
             /*
@@ -137,46 +188,55 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                 for (File styleFile : stylesDir.listFiles()) {
                     Matcher matcher = styleXmlPath.matcher(styleFile.getName());
                     if (matcher.matches()) {
-                        StyleDef style = processStyle(matcher.group(1), new FileInputStream(
-                                styleFile));
+                        StyleDef style = processStyle(matcher.group(1),
+                                IOUtils.toString(new FileInputStream(styleFile)));
                         if (style != null) {
                             styleDefs.put(style.getStyleName(), style);
                         }
                     }
                 }
             }
+        } catch (IllegalArgumentException e) {
+            /*
+             * We ignore this exception since it just means that the styles
+             * directory is missing from the classpath
+             */
+            if (!e.getMessage().contains("URI is not hierarchical")) {
+                throw e;
+            }
         } catch (Exception e) {
-            log.error("Problem processing styles on classpath");
+            log.error("Problem processing styles on classpath", e);
         }
     }
 
     @Override
-    public MapFeatureAndMember getFeatureAndMemberName(String id, PlottingDomainParams params)
+    public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params)
             throws EdalException {
-        Dataset dataset = getDatasetFromLayerName(id);
+        Dataset<?> dataset = getDatasetFromLayerName(id);
         String variable = getVariableFromId(id);
+        TemporalDomain temporalDomain = dataset.getVariableMetadata(variable).getTemporalDomain();
+        Chronology chronology = null;
+        if (temporalDomain != null) {
+            chronology = temporalDomain.getChronology();
+        }
         if (dataset instanceof GridDataset) {
             GridDataset gridDataset = (GridDataset) dataset;
-            TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variable)
-                    .getTemporalDomain();
-            Chronology chronology = null;
-            if (temporalDomain != null) {
-                chronology = temporalDomain.getChronology();
-            }
             MapFeature mapData = gridDataset.readMapData(CollectionUtils.setOf(variable),
-                    WmsUtils.getImageGrid(params), params.getTargetZ(),
-                    params.getTargetT(chronology));
+                    params.getImageGrid(), params.getTargetZ(), params.getTargetT(chronology));
             /*
              * TODO Caching probably goes here
              */
-            return new MapFeatureAndMember(mapData, variable);
+            return new FeaturesAndMemberName(CollectionUtils.setOf(mapData), variable);
+        } else if (dataset instanceof ContinuousDomainDataset) {
+            ContinuousDomainDataset<?> continuousDomainDataset = (ContinuousDomainDataset<?>) dataset;
+            Collection<? extends DiscreteFeature<?, ?>> features = continuousDomainDataset
+                    .extractFeatures(CollectionUtils.setOf(variable), params.getBbox(),
+                            params.getZExtent(), params.getTExtent(chronology));
+            return new FeaturesAndMemberName(features, variable);
         } else {
-            throw new UnsupportedOperationException("Currently only gridded data is supported");
+            throw new UnsupportedOperationException(
+                    "The Dataset you are trying to extract data from is currently unsupported");
         }
-        /*
-         * TODO process other types of Dataset here (i.e. InSituDataset which
-         * doesn't yet exist)
-         */
     }
 
     /**
@@ -190,7 +250,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      */
     public VariableMetadata getVariableMetadataFromId(String layerName)
             throws WmsLayerNotFoundException {
-        Dataset dataset = getDatasetFromLayerName(layerName);
+        Dataset<?> dataset = getDatasetFromLayerName(layerName);
         String variableFromId = getVariableFromId(layerName);
         if (dataset != null && variableFromId != null) {
             return dataset.getVariableMetadata(variableFromId);
@@ -216,36 +276,11 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
          * Loop through all loaded style definitions
          */
         for (StyleDef styleDef : styleDefs.values()) {
-            /*
-             * Assume the style is supported
-             */
-            boolean currentStyleSupported = true;
-            /*
-             * If this style needs the named layer, but it is not scalar (i.e.
-             * has no scalar data field which can be read) then it cannot be
-             * supported
-             */
-            if (styleDef.needsNamedLayer() && !variableMetadata.isScalar()) {
-                currentStyleSupported = false;
-                continue;
-            }
-
-            List<String> requiredChildren = styleDef.getRequiredChildren();
-            if (requiredChildren != null && !requiredChildren.isEmpty()) {
-                for (String requiredChild : requiredChildren) {
-                    if (variableMetadata.getChildWithRole(requiredChild) == null) {
-                        /*
-                         * We required a child layer which we don't have
-                         */
-                        currentStyleSupported = false;
-                        continue;
-                    }
-                }
-            }
-            if (currentStyleSupported) {
+            if (styleDef.supportedBy(variableMetadata)) {
                 supportedStyles.add(styleDef);
             }
         }
+
         return supportedStyles;
     }
 
@@ -270,7 +305,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
             layerKeyToLayerName.put("layerName", layerName);
         }
         VariableMetadata layerMetadata = getVariableMetadataFromId(layerName);
-        for (String childPurpose : styleDef.getRequiredChildren()) {
+        for (String childPurpose : styleDef.getRequiredChildRoles()) {
             layerKeyToLayerName.put(
                     "layerName-" + childPurpose,
                     getLayerName(layerMetadata.getDataset().getId(), layerMetadata
@@ -280,54 +315,321 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     }
 
     /**
-     * Processes an XML stream representing a style template.
+     * Processes an XML string representing a style template.
      * 
      * @param name
      *            The name of the style
-     * @param inputStream
+     * @param xmlString
      *            The input stream containing the XML
      * @return A {@link StyleDef} representing the properties of the style
      * @throws IOException
+     *             If there is a problem reading the style file
+     * @throws ParserConfigurationException
+     *             If there is a problem parsing the XML
+     * @throws SAXException
+     *             If there is a problem parsing the XML
      */
-    private StyleDef processStyle(String name, InputStream inputStream) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    private StyleDef processStyle(String name, String xmlString) throws IOException,
+            ParserConfigurationException, SAXException {
+        /*
+         * Get the XML style definition into a NodeList
+         */
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(IOUtils.toInputStream(xmlString));
+        NodeList xmlNodes = doc.getChildNodes();
 
+        String scaledLayer = null;
         boolean usesPalette = false;
         boolean needsNamedLayer = false;
         Set<String> requiredChildren = new HashSet<String>();
 
-        String line = null;
         /*
-         * Checks for the string "$layerName:xxx" and stores the "xxx" part
+         * Find the layer name which uses the scaling URL arguments (if any)
          */
-        Pattern pattern = Pattern.compile(".*\\$layerName-?(\\w*)\\W?+.*");
-        while ((line = reader.readLine()) != null) {
-            /*
-             * Checks for the string "$paletteName"
-             */
-            if (line.matches(".*\\$paletteName\\W.*")) {
-                usesPalette = true;
+        Node scaleMinNode = findScaleMinNode(xmlNodes);
+        if (scaleMinNode != null) {
+            scaledLayer = getScaledLayerName(scaleMinNode);
+        }
+        /*
+         * Find out whether this style uses a palette
+         */
+        usesPalette = styleContainsTag(xmlNodes, "^\\$paletteName$");
+        /*
+         * Find out whether this style uses the named layer (if not it will use
+         * child layers of the named layer)
+         */
+        needsNamedLayer = styleContainsTag(xmlNodes, "^\\$layerName$");
+        /*
+         * Find which child layers are used by this style
+         */
+        populateStyleChildRoles(xmlNodes, requiredChildren);
+
+        /*
+         * This was the simpler bit. We now need to know what types of feature
+         * are supported by the XML template.
+         * 
+         * This essentially means that we need to parse the XML into the
+         * MapImage object, loop through the layers in the MapImage, and call
+         * the acceptsFeatureTypes() method on each.
+         * 
+         * To parse the XML successfully, we need to replace all of the valid
+         * identifiers which may be constrained (i.e. those which don't allow
+         * arbitrary text) with real values (for example, if we try to parse the
+         * XML fragment <scaleMin>$scaleMin</scaleMin> we should get an error,
+         * since the <scaleMin> tag needs a numerical value.
+         */
+
+        xmlString = xmlString.replaceAll("\\$scaleMin", "0");
+        xmlString = xmlString.replaceAll("\\$scaleMax", "10");
+        xmlString = xmlString.replaceAll("\\$logarithmic", "false");
+        xmlString = xmlString.replaceAll("\\$numColorBands", "10");
+        xmlString = xmlString.replaceAll("\\$bgColor", "#000000");
+        xmlString = xmlString.replaceAll("\\$belowMinColor", "#000000");
+        xmlString = xmlString.replaceAll("\\$aboveMaxColor", "#000000");
+
+        /*
+         * Java generics at its finest ;-)
+         * 
+         * To test if a style is supported by a particular variable, we need to
+         * know:
+         * 
+         * For EVERY layer in the image (e.g. RasterLayer, GlyphLayer, etc) what
+         * roles are supported, and whether they the variables having these
+         * roles are one of the (possibly multiple) feature types supported by
+         * this layer.
+         * 
+         * So the first Collection separates the layers.
+         * 
+         * The Map maps role names to the (2nd) Collection of Feature types, one
+         * of which the variable with that role must be a type of.
+         */
+        Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType = new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>();
+        try {
+            MapImage mapImage = StyleXMLParser.deserialise(xmlString);
+            for (Drawable layer : mapImage.getLayers()) {
+                Map<String, Collection<Class<? extends Feature<?>>>> role2FeatureType = new HashMap<String, Collection<Class<? extends Feature<?>>>>();
+                if (layer instanceof ImageLayer) {
+                    ImageLayer imageLayer = (ImageLayer) layer;
+                    Collection<Class<? extends Feature<?>>> supportedFeatureTypes = imageLayer
+                            .supportedFeatureTypes();
+                    /*
+                     * Add the supported feature types to a Map of Collections
+                     * of Features, using the getFieldsWithScales to determine
+                     * the roles to use as a key
+                     */
+                    Set<NameAndRange> fieldsWithScales = imageLayer.getFieldsWithScales();
+                    for (NameAndRange field : fieldsWithScales) {
+                        String layerName = field.getFieldLabel();
+                        if (layerName.startsWith("$layerName")) {
+                            /*
+                             * This should always be the case
+                             */
+                            String role;
+                            if (layerName.equals("$layerName")) {
+                                role = "";
+                            } else {
+                                role = layerName.substring(layerName.indexOf("-"));
+                            }
+                            role2FeatureType.put(role, supportedFeatureTypes);
+                        }
+                    }
+                }
+                roles2FeatureType.add(role2FeatureType);
             }
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.matches()) {
-                String childSuffix = matcher.group(1);
-                if ("".equals(childSuffix)) {
-                    /*
-                     * We have the string "$layerName", so we need the named
-                     * layer
-                     */
-                    needsNamedLayer = true;
-                } else {
-                    /*
-                     * We have the string "$layerName-xxx", so we need the child
-                     * layer "xxx"
-                     */
-                    requiredChildren.add(childSuffix);
+        } catch (JAXBException e) {
+            log.error("Problem parsing style XML", e);
+        }
+
+        return new StyleDef(name, requiredChildren, usesPalette, needsNamedLayer, scaledLayer,
+                roles2FeatureType);
+    }
+
+    /**
+     * Recursively searches a {@link NodeList} until it finds one with the text
+     * content "$scaleMin".
+     * 
+     * @param nodes
+     *            The {@link NodeList} to search
+     * @return The {@link Node} containing "$scaleMin", or <code>null</code> if
+     *         none exists
+     */
+    private Node findScaleMinNode(NodeList nodes) {
+        /*
+         * Recursively search through the tree for the tag "$scaleMin"
+         */
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.hasChildNodes()) {
+                /*
+                 * Search all child nodes first
+                 */
+                Node scaleMinNode = findScaleMinNode(node.getChildNodes());
+                if (scaleMinNode != null) {
+                    return scaleMinNode;
+                }
+            }
+            /*
+             * Check this node's text
+             */
+            String nodeText = node.getTextContent();
+            if (nodeText != null && nodeText.matches(".*\\$scaleMin.*")) {
+                return node;
+            }
+        }
+        /*
+         * Nothing found in any of this NodeList, return null
+         */
+        return null;
+    }
+
+    /**
+     * Finds the name of the layer which contains the scale min node. This works
+     * by going up the document tree and checking all siblings for
+     * "layerName-xxx" until one is found.
+     * 
+     * @param scaleMinNode
+     *            The {@link Node} containing "$scaleMin"
+     * @return The name of the layer to which "$scaleMin" applies, or
+     *         <code>null</code> if there are none.
+     */
+    private String getScaledLayerName(Node scaleMinNode) {
+        /*
+         * Get the parent node and then check all of its children for a
+         * $layerName[-xxxx] tag.
+         * 
+         * If there are none, go up the tree one level and try again.
+         * 
+         * Although we end up checking some parts of the tree several times, if
+         * there are multiple layer names in the style definition we will get
+         * the one which is most closely related to the scaleMin tag.
+         */
+        Node parentNode = scaleMinNode.getParentNode();
+        if (parentNode == null) {
+            return null;
+        } else {
+            String layerName = recursivelyCheckChildrenForLayerName(parentNode);
+            if (layerName == null) {
+                return getScaledLayerName(parentNode);
+            } else {
+                return layerName;
+            }
+        }
+    }
+
+    /**
+     * This method takes a node and searches the entire tree below it for the
+     * string "$layerName-xxx", and returns the "xxx" bit
+     * 
+     * @param parentNode
+     *            A {@link Node} to test
+     * @return The role of the child node, "" for the parent layer, or
+     *         <code>null</code> if no such layers exist (e.g. for a fixed layer
+     *         name style which uses the scale URL arguments)
+     */
+    private String recursivelyCheckChildrenForLayerName(Node parentNode) {
+        /*
+         * This could probably be factored out for more efficiency, but this
+         * part of the code is really not a bottleneck (and only gets called at
+         * initialisation)
+         */
+        Pattern pattern = Pattern.compile(".*\\$layerName-?(\\w*).*");
+        /*
+         * Recursively search for the child layer name, returning it when found
+         */
+        NodeList nodes = parentNode.getChildNodes();
+        if (nodes != null) {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node childNode = nodes.item(i);
+                if (childNode.hasChildNodes()) {
+                    String layerName = recursivelyCheckChildrenForLayerName(childNode);
+                    if (layerName != null) {
+                        return layerName;
+                    }
+                }
+                String nodeText = childNode.getTextContent();
+                Matcher matcher = pattern.matcher(nodeText);
+                if (matcher.matches()) {
+                    String childSuffix = matcher.group(1);
+                    return childSuffix;
                 }
             }
         }
+        return null;
+    }
 
-        return new StyleDef(name, requiredChildren, usesPalette, needsNamedLayer);
+    /**
+     * Finds whether a particular tag exists in a tree
+     * 
+     * @param nodes
+     *            A {@link NodeList} representing the part of the tree to check
+     * @param regexp
+     *            A regular expression defining the tag to search for
+     * @return <code>true</code> if the regular expression matches
+     */
+    private boolean styleContainsTag(NodeList nodes, String regexp) {
+        if (nodes == null) {
+            return false;
+        }
+        /*
+         * Recursively search all nodes and their children until the named tag
+         * is found
+         */
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            String textContent = node.getTextContent();
+            if (textContent != null) {
+                if (textContent.matches(regexp)) {
+                    return true;
+                }
+            }
+            if (styleContainsTag(node.getChildNodes(), regexp)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * This searches a tree for tags of the form "$layerName-xxxx" and adds the
+     * "xxxx" parts to a {@link Set}
+     * 
+     * @param nodes
+     *            The {@link NodeList} to start searching from
+     * @param childRoles
+     *            A {@link Set} to add the child role names to
+     */
+    private void populateStyleChildRoles(NodeList nodes, Set<String> childRoles) {
+        Pattern pattern = Pattern.compile("^\\$layerName-?(\\w*)$");
+        if (nodes == null) {
+            return;
+        }
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            String textContent = node.getTextContent();
+            if (textContent != null) {
+                Matcher matcher = pattern.matcher(textContent);
+                if (matcher.matches()) {
+                    String role = matcher.group(1);
+                    if (!role.isEmpty()) {
+                        childRoles.add(role);
+                    }
+                }
+            }
+            populateStyleChildRoles(node.getChildNodes(), childRoles);
+        }
+    }
+
+    /**
+     * Returns the {@link StyleDef} object with the given name
+     * 
+     * @param styleName
+     *            The name of the style
+     * @return A {@link StyleDef} object representing the style, or
+     *         <code>null</code> if it doesn't exist
+     */
+    public StyleDef getStyleDefinitionByName(String styleName) {
+        return styleDefs.get(styleName);
     }
 
     /**
@@ -354,7 +656,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     /**
      * @return All available {@link Dataset}s on this server
      */
-    public abstract Collection<Dataset> getAllDatasets();
+    public abstract Collection<Dataset<?>> getAllDatasets();
 
     /**
      * @param datasetId
@@ -374,7 +676,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The ID of the dataset
      * @return The desired dataset
      */
-    public abstract Dataset getDatasetFromId(String datasetId);
+    public abstract Dataset<?> getDatasetFromId(String datasetId);
 
     /**
      * Returns a {@link Dataset} based on a given layer name
@@ -383,7 +685,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The full layer name
      * @return The desired dataset
      */
-    public abstract Dataset getDatasetFromLayerName(String layerName)
+    public abstract Dataset<?> getDatasetFromLayerName(String layerName)
             throws WmsLayerNotFoundException;
 
     /**
@@ -415,4 +717,37 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      */
     public abstract WmsLayerMetadata getLayerMetadata(String layerName)
             throws WmsLayerNotFoundException;
+
+    /**
+     * This is an {@link ZipInputStream} which only gets closed once it's been
+     * specifically told to. This is because otherwise when parsing XML using
+     * the {@link DocumentBuilder}, it will close the {@link InputStream}.
+     * 
+     * Since {@link ZipInputStream}s need to stay open to process everything
+     * within the zip file, this is not what we want. The ideal solution would
+     * be that {@link DocumentBuilder} didn't close {@link InputStream}s which
+     * it didn't create, but that's out of our control.
+     * 
+     * See http://stackoverflow.com/questions/20020982/java-create-inputstream-
+     * from-zipinputstream-entry
+     * 
+     * @author Guy Griffiths
+     */
+    private class NoAutoCloseZipInputStream extends ZipInputStream {
+        private boolean canBeClosed = false;
+
+        public NoAutoCloseZipInputStream(InputStream is) {
+            super(is);
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (canBeClosed)
+                super.close();
+        }
+
+        public void allowToBeClosed() {
+            canBeClosed = true;
+        }
+    }
 }

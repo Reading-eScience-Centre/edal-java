@@ -62,6 +62,7 @@ import org.apache.velocity.app.event.implement.EscapeXmlReference;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.runtime.RuntimeConstants;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -70,6 +71,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.chrono.ISOChronology;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +87,8 @@ import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
-import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
@@ -94,6 +97,7 @@ import uk.ac.rdg.resc.edal.geometry.LineString;
 import uk.ac.rdg.resc.edal.graphics.Charting;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
+import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
 import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
@@ -101,7 +105,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
+import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
@@ -114,7 +118,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
@@ -126,7 +130,17 @@ import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
- * Servlet implementation class WmsServlet
+ * The main servlet for all WMS operations, including extended behaviour. This
+ * servlet can be used as-is by defining it in the usual way in a web.xml file,
+ * and injecting a {@link WmsCatalogue} object by calling the
+ * {@link WmsServlet#setCatalogue(WmsCatalogue)}.
+ * 
+ * If the {@link WmsCatalogue} is not set, behaviour is undefined. It'll fail in
+ * all sorts of ways - nothing will work properly.
+ * 
+ * The recommended usage is to either subclass this servlet and set a valid
+ * instance of a {@link WmsCatalogue} in the constructor/init method or to use
+ * Spring to do the wiring for you.
  */
 public class WmsServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(WmsServlet.class);
@@ -162,6 +176,9 @@ public class WmsServlet extends HttpServlet {
         props.put("class.resource.loader.class",
                 "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
         velocityEngine = new VelocityEngine();
+        velocityEngine.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS,
+                "org.apache.velocity.runtime.log.Log4JLogChute");
+        velocityEngine.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
         velocityEngine.init(props);
     }
 
@@ -283,13 +300,13 @@ public class WmsServlet extends HttpServlet {
 
         PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
-        if (!(getMapParams.getImageFormat() instanceof SimpleFormat)) {
-            throw new EdalException("Currently KML is not supported.");
-            /*
-             * TODO Support KML
-             */
+
+        if (getMapParams.getImageFormat() instanceof KmzFormat) {
+            if (!GISUtils
+                    .isWgs84LonLat(plottingParameters.getBbox().getCoordinateReferenceSystem())) {
+                throw new EdalException("KMZ files can only be generated from WGS84 projections");
+            }
         }
-        SimpleFormat simpleFormat = (SimpleFormat) getMapParams.getImageFormat();
 
         /*
          * Do some checks on the style parameters.
@@ -337,9 +354,46 @@ public class WmsServlet extends HttpServlet {
             throw new UnsupportedOperationException("Animations are not yet supported");
         }
 
+        ImageFormat imageFormat = getMapParams.getImageFormat();
         try {
             ServletOutputStream outputStream = httpServletResponse.getOutputStream();
-            simpleFormat.writeImage(frames, outputStream, null);
+            if (imageFormat instanceof SimpleFormat) {
+                /*
+                 * We have a normal image format
+                 */
+                SimpleFormat simpleFormat = (SimpleFormat) getMapParams.getImageFormat();
+                simpleFormat.writeImage(frames, outputStream, null);
+            } else {
+                /*
+                 * We have KML (or another image format which needs additional
+                 * information)
+                 */
+                String[] layerNames = styleParameters.getLayerNames();
+                if (layerNames.length > 1) {
+                    throw new EdalException("Exactly 1 layer must be requested for KML ("
+                            + layerNames.length + " have been supplied)");
+                }
+                String layerName = layerNames[0];
+                if (imageFormat instanceof KmzFormat) {
+                    /*
+                     * If this is a KMZ file, give it a sensible filename
+                     */
+                    httpServletResponse.setHeader("Content-Disposition", "inline; filename="
+                            + layerName.replaceAll("/", "-") + ".kmz");
+                }
+                WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+                String name = layerMetadata.getTitle();
+                String description = layerMetadata.getDescription();
+                String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters
+                        .getTargetZ().toString();
+                List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT(ISOChronology
+                        .getInstance()));
+                BufferedImage legend = imageGenerator.getLegend(200);
+                GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters
+                        .getBbox());
+                imageFormat.writeImage(frames, outputStream, name, description, gbbox, tValues,
+                        zValue, legend, 24);
+            }
             outputStream.close();
         } catch (IOException e) {
             /*
@@ -402,7 +456,7 @@ public class WmsServlet extends HttpServlet {
          */
         String datasetId = params.getString("dataset");
 
-        Collection<Dataset> datasets;
+        Collection<Dataset<?>> datasets;
         if (datasetId == null || "".equals(datasetId.trim())) {
             /*
              * No specific dataset has been chosen so we create a Capabilities
@@ -418,11 +472,11 @@ public class WmsServlet extends HttpServlet {
                         + "You must specify a dataset identifier with &amp;DATASET=");
             }
         } else {
-            Dataset ds = catalogue.getDatasetFromId(datasetId);
+            Dataset<?> ds = catalogue.getDatasetFromId(datasetId);
             if (ds == null) {
                 throw new EdalException("There is no dataset with ID " + datasetId);
             }
-            datasets = new ArrayList<Dataset>();
+            datasets = new ArrayList<Dataset<?>>();
             datasets.add(ds);
         }
 
@@ -461,7 +515,7 @@ public class WmsServlet extends HttpServlet {
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params);
         PlottingDomainParams plottingParameters = featureInfoParameters
                 .getPlottingDomainParameters();
-        RegularGrid imageGrid = WmsUtils.getImageGrid(plottingParameters);
+        RegularGrid imageGrid = plottingParameters.getImageGrid();
         Double xVal = imageGrid.getXAxis().getCoordinateValue(featureInfoParameters.getI());
         Double yVal = imageGrid.getYAxis().getCoordinateValue(
                 imageGrid.getYAxis().size() - 1 - featureInfoParameters.getJ());
@@ -471,21 +525,53 @@ public class WmsServlet extends HttpServlet {
         String[] layerNames = featureInfoParameters.getLayerNames();
         List<FeatureInfoPoint> featureInfos = new ArrayList<FeatureInfoPoint>();
         for (String layerName : layerNames) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
+            VariableMetadata metadata = catalogue.getVariableMetadataFromId(layerName);
 
             if (dataset instanceof GridDataset) {
+                /*
+                 * This has to be a GridDataset because that's where the
+                 * readSinglePoint method is defined.
+                 * 
+                 * Once we implement in-situ data, we will probably move some
+                 * methods up the hierarchy and this will no longer be the case
+                 */
                 GridDataset gridDataset = (GridDataset) dataset;
-                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(variableId)
-                        .getTemporalDomain();
-                Chronology chronology = null;
-                if (temporalDomain != null) {
-                    chronology = temporalDomain.getChronology();
+
+                Set<VariableMetadata> children = metadata.getChildren();
+
+                if (metadata.isScalar()) {
+                    /*
+                     * If we have a scalar layer, add the value for it first
+                     */
+                    TemporalDomain temporalDomain = metadata.getTemporalDomain();
+                    Chronology chronology = null;
+                    if (temporalDomain != null) {
+                        chronology = temporalDomain.getChronology();
+                    }
+                    Number value;
+                    value = gridDataset.readSinglePoint(variableId, position,
+                            plottingParameters.getTargetZ(),
+                            plottingParameters.getTargetT(chronology));
+                    featureInfos.add(new FeatureInfoPoint(layerName, position, value));
                 }
-                Number value;
-                value = gridDataset.readSinglePoint(variableId, position,
-                        plottingParameters.getTargetZ(), plottingParameters.getTargetT(chronology));
-                featureInfos.add(new FeatureInfoPoint(layerName, position, value));
+                for (VariableMetadata child : children) {
+                    /*
+                     * Now add the values for every child layer.
+                     */
+                    TemporalDomain temporalDomain = child.getTemporalDomain();
+                    Chronology chronology = null;
+                    if (temporalDomain != null) {
+                        chronology = temporalDomain.getChronology();
+                    }
+                    Number value;
+                    value = gridDataset.readSinglePoint(child.getId(), position,
+                            plottingParameters.getTargetZ(),
+                            plottingParameters.getTargetT(chronology));
+                    featureInfos.add(new FeatureInfoPoint(catalogue.getLayerName(dataset.getId(),
+                            child.getId()), position, value));
+                }
             } else {
                 throw new UnsupportedOperationException(
                         "GetFeatureInfo not supported for non-gridded features yet");
@@ -547,7 +633,7 @@ public class WmsServlet extends HttpServlet {
         JSONObject menu = new JSONObject();
         menu.put("label", catalogue.getServerInfo().getName());
         JSONArray children = new JSONArray();
-        for (Dataset dataset : catalogue.getAllDatasets()) {
+        for (Dataset<?> dataset : catalogue.getAllDatasets()) {
             String datasetId = dataset.getId();
 
             Set<VariableMetadata> topLevelVariables = dataset.getTopLevelVariables();
@@ -580,14 +666,17 @@ public class WmsServlet extends HttpServlet {
             throws WmsLayerNotFoundException {
         JSONArray ret = new JSONArray();
         for (VariableMetadata variable : variables) {
-            JSONObject child = new JSONObject();
-
             String id = variable.getId();
             String layerName = catalogue.getLayerName(datasetId, id);
+            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            if (layerMetadata.isDisabled()) {
+                continue;
+            }
+
+            JSONObject child = new JSONObject();
 
             child.put("id", layerName);
 
-            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
             String title = layerMetadata.getTitle();
             child.put("label", title);
 
@@ -617,7 +706,7 @@ public class WmsServlet extends HttpServlet {
         }
         String requestedTime = params.getString("time");
 
-        Dataset dataset;
+        Dataset<?> dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -839,7 +928,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset dataset;
+        Dataset<?> dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -881,6 +970,7 @@ public class WmsServlet extends HttpServlet {
     }
 
     private String showMinMax(RequestParams params) throws MetadataException {
+        JSONObject minmax = new JSONObject();
         GetMapParameters getMapParams;
         try {
             getMapParams = new GetMapParameters(params);
@@ -890,7 +980,8 @@ public class WmsServlet extends HttpServlet {
         }
 
         String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
-        if (layerNames.length != 1) {
+        String[] styleNames = getMapParams.getStyleParameters().getStyleNames();
+        if (layerNames.length != 1 || styleNames.length > 1) {
             /*
              * TODO Perhaps relax this restriction and return min/max with layer
              * IDs?
@@ -898,9 +989,77 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Can only find min/max for exactly one layer at a time");
         }
 
-        MapFeatureAndMember featureAndMember;
+        VariableMetadata variableMetadata;
+        String datasetId;
         try {
-            featureAndMember = catalogue.getFeatureAndMemberName(layerNames[0],
+            variableMetadata = catalogue.getVariableMetadataFromId(layerNames[0]);
+            datasetId = catalogue.getDatasetFromLayerName(layerNames[0]).getId();
+        } catch (WmsLayerNotFoundException e) {
+            throw new MetadataException("Layer " + layerNames[0] + " not found on this server", e);
+        }
+
+        String layerName;
+        /*
+         * Find out which layer the scaling is being applied to
+         */
+
+        /*
+         * First get the style which is applied to this layer
+         */
+        StyleDef style = null;
+        if (styleNames != null && styleNames.length > 0) {
+            /*
+             * Specified as a URL parameter
+             */
+            String styleName = styleNames[0];
+            style = catalogue.getStyleDefinitionByName(styleName);
+            if (style == null) {
+                throw new MetadataException("Cannot find min-max for this layer.  The style "
+                        + styleName + " is not supported.");
+            }
+        } else {
+            /*
+             * The default style
+             */
+            List<StyleDef> supportedStyles = catalogue.getSupportedStyles(variableMetadata);
+            for (StyleDef supportedStyle : supportedStyles) {
+                if (supportedStyle.getStyleName().startsWith("default")) {
+                    style = supportedStyle;
+                }
+            }
+            if (style == null) {
+                throw new MetadataException(
+                        "Cannot find min-max for this layer.  No default styles are supported.");
+            }
+        }
+
+        /*
+         * Now find which layer the scale is being applied to
+         */
+        if (style.getScaledLayerRole() == null) {
+            /*
+             * No layer has scaling - we can return anything
+             */
+            minmax.put("min", 0);
+            minmax.put("max", 100);
+            return minmax.toString();
+        } else if ("".equals(style.getScaledLayerRole())) {
+            /*
+             * The named (possibly parent) layer is scaled.
+             */
+            layerName = layerNames[0];
+        } else {
+            /*
+             * A child layer is being scaled. This
+             */
+            String variableId = variableMetadata.getChildWithRole(style.getScaledLayerRole())
+                    .getId();
+            layerName = catalogue.getLayerName(datasetId, variableId);
+        }
+
+        FeaturesAndMemberName featuresAndMember;
+        try {
+            featuresAndMember = catalogue.getFeaturesForLayer(layerName,
                     getMapParams.getPlottingDomainParameters());
         } catch (BadTimeFormatException e) {
             log.error("Bad time format", e);
@@ -909,32 +1068,76 @@ public class WmsServlet extends HttpServlet {
             log.error("Bad layer name", e);
             throw new MetadataException("Problem reading data", e);
         }
-        MapFeature mapFeature = featureAndMember.getMapFeature();
-        Array2D<Number> values = mapFeature.getValues(featureAndMember.getMember());
-        if (values == null) {
-            throw new MetadataException("Cannot find min/max - this is not a scalar layer");
-        }
 
         double min = Double.MAX_VALUE;
         double max = -Double.MAX_VALUE;
-        Iterator<Number> iterator = values.iterator();
-        while (iterator.hasNext()) {
-            Number value = iterator.next();
-            if (value != null) {
-                if (value.doubleValue() > max) {
-                    max = value.doubleValue();
+        Collection<? extends DiscreteFeature<?, ?>> features = featuresAndMember.getFeatures();
+        for (DiscreteFeature<?, ?> f : features) {
+            if (f instanceof GridFeature) {
+                /*
+                 * We want to look at all values of the grid feature.
+                 */
+                Array<Number> values = f.getValues(featuresAndMember.getMember());
+                if (values == null) {
+                    continue;
                 }
-                if (value.doubleValue() < min) {
-                    min = value.doubleValue();
+                Iterator<Number> iterator = values.iterator();
+                while (iterator.hasNext()) {
+                    Number value = iterator.next();
+                    if (value != null) {
+                        if (value.doubleValue() > max) {
+                            max = value.doubleValue();
+                        }
+                        if (value.doubleValue() < min) {
+                            min = value.doubleValue();
+                        }
+                    }
                 }
+            } else if (f instanceof ProfileFeature) {
+                /*
+                 * For profile features, we do not want to read all values, only
+                 * those which are nearest the target depth
+                 */
+                ProfileFeature profileFeature = (ProfileFeature) f;
+                int zIndex = profileFeature.getDomain().findIndexOf(
+                        getMapParams.getPlottingDomainParameters().getTargetZ());
+                if (zIndex > 0) {
+                    Number value = profileFeature.getValues(featuresAndMember.getMember()).get(
+                            zIndex);
+                    if (value != null) {
+                        if (value.doubleValue() > max) {
+                            max = value.doubleValue();
+                        }
+                        if (value.doubleValue() < min) {
+                            min = value.doubleValue();
+                        }
+                    }
+                }
+            } else {
+                /*
+                 * Would handle other feature types here.
+                 * 
+                 * But perhaps we can refactor to make a few of the methods in
+                 * here independent of dataset type. Perhaps removing the need
+                 * for separate gridded/non-gridded dataset types altogether...
+                 */
             }
         }
 
-        if (min == Double.MAX_VALUE || max == -Double.MAX_VALUE || min == max) {
+        if (min == Double.MAX_VALUE || max == -Double.MAX_VALUE) {
             throw new MetadataException("No data in this area - cannot calculate min/max");
         }
 
-        JSONObject minmax = new JSONObject();
+        if (min == max) {
+            if (min == 0.0) {
+                min = -0.5;
+                max = 0.5;
+            } else {
+                min *= 0.95;
+                max *= 1.05;
+            }
+        }
+
         minmax.put("min", min);
         minmax.put("max", max);
 
@@ -947,7 +1150,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset dataset;
+        Dataset<?> dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -1080,11 +1283,14 @@ public class WmsServlet extends HttpServlet {
              * We're creating a legend with supporting text so we need to know
              * the colour scale range and the layer in question
              */
-            /*
-             * TODO This is relatively straightforward if full GetMap request
-             * parameters have been sent...
-             */
-            throw new MetadataException("Can only produce colourbars at present - not full legends");
+            try {
+                GetMapParameters getMapParameters = new GetMapParameters(params);
+                legend = getMapParameters.getStyleParameters().getImageGenerator(catalogue)
+                        .getLegend(200);
+            } catch (Exception e) {
+                throw new MetadataException(
+                        "A full set of GetMap parameters must be provided to generate a full legend.  You can set COLORBARONLY=true to just generate a colour bar");
+            }
         }
         httpServletResponse.setContentType("image/png");
         try {
@@ -1121,7 +1327,7 @@ public class WmsServlet extends HttpServlet {
 
         List<PointSeriesFeature> pointSeriesFeatures = new ArrayList<PointSeriesFeature>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
@@ -1216,7 +1422,7 @@ public class WmsServlet extends HttpServlet {
         boolean verticalSection = false;
         List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
@@ -1278,7 +1484,9 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        copyright.deleteCharAt(copyright.length() - 1);
+        if (copyright.length() > 0) {
+            copyright.deleteCharAt(copyright.length() - 1);
+        }
         JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
                 copyright.toString());
 
@@ -1287,7 +1495,7 @@ public class WmsServlet extends HttpServlet {
              * This can only be true if we have a GridSeriesFeature, so we can
              * cast
              */
-            Dataset dataset = catalogue.getDatasetFromLayerName(layers[0]);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layers[0]);
             String varId = catalogue.getVariableFromId(layers[0]);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
@@ -1393,7 +1601,7 @@ public class WmsServlet extends HttpServlet {
         String timeStr = params.getString("time");
         List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
             if (dataset instanceof GridDataset) {
                 GridDataset gridDataset = (GridDataset) dataset;
                 String varId = catalogue.getVariableFromId(layerName);
@@ -1453,14 +1661,26 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void handleWmsException(EdalException wmse, HttpServletResponse httpServletResponse,
+    /**
+     * Wraps {@link EdalException}s in an XML wrapper and returns them.
+     * 
+     * @param exception
+     *            The exception to handle
+     * @param httpServletResponse
+     *            The {@link HttpServletResponse} object to write to
+     * @param v130
+     *            Whether this should be handled as a WMS v1.3.0 exception
+     * @throws IOException
+     *             If there is a problem writing to the output stream
+     */
+    void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
         VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();
         ec.addEventHandler(new EscapeXmlReference());
         ec.attachToContext(context);
 
-        context.put("exception", wmse);
+        context.put("exception", exception);
 
         Template template;
         if (v130) {

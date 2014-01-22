@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
-import java.io.IOException;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -52,14 +51,7 @@ import uk.ac.rdg.resc.edal.position.VerticalPosition;
  * @author Jon
  * @author Guy
  */
-public interface GridDataset extends Dataset {
-    /*
-     * TODO perhaps this should be the signature for readFeature in
-     * GridDatasets?
-     */
-    // public Feature<GeoPosition> readFeature(String featureId) throws
-    // IOException;
-
+public interface GridDataset extends Dataset<GridFeature> {
     /**
      * Extracts a {@link MapFeature} from this {@link GridDataset}.
      * 
@@ -77,8 +69,8 @@ public interface GridDataset extends Dataset {
      *            The target {@link DateTime}. If this is <code>null</code> and
      *            the target variable has a time axis, the time closest to the
      *            current time
-     * @return The extracted {@link GridFeature}
-     * @throws IOException
+     * @return The extracted {@link MapFeature}
+     * @throws DataReadingException
      *             If the underlying data cannot be read for any reason
      */
     public MapFeature readMapData(Set<String> varIds, HorizontalGrid hGrid, Double zPos,

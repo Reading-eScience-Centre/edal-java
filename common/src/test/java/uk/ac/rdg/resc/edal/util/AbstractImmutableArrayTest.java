@@ -46,17 +46,12 @@ public class AbstractImmutableArrayTest {
 
     @Before
     public void setUp() throws Exception {
-        array = new AbstractImmutableArray<Float>(Float.class, YSIZE, XSIZE) {
+        array = new AbstractImmutableArray<Float>(YSIZE, XSIZE) {
             @Override
             public Float get(int... coords) {
                 int x = coords[1];
                 int y = coords[0];
                 return y + 0.1f * x;
-            }
-
-            @Override
-            public Class<Float> getValueClass() {
-                return Float.class;
             }
         };
 
@@ -81,11 +76,6 @@ public class AbstractImmutableArrayTest {
             assertEquals(expected.get(index), iterator.next());
             index++;
         }
-    }
-    
-    @Test
-    public void testGetValueClass() {
-        assertEquals(Float.class, array.getValueClass());
     }
     
     @Test

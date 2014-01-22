@@ -29,24 +29,19 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
+import java.util.Collection;
 
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.MapFeatureAndMember;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
-import uk.ac.rdg.resc.edal.util.Array2D;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "ImageLayerType")
 public abstract class ImageLayer extends Drawable {
-
-    protected interface DataReader {
-        public Array2D<Number> getDataForLayerName(String layerId) throws EdalException;
-    }
-
     /*
      * For when the plot type is SUBSAMPLE
      */
@@ -66,41 +61,8 @@ public abstract class ImageLayer extends Drawable {
         return image;
     }
 
-    protected void drawIntoImage(BufferedImage image, final PlottingDomainParams params,
-            final FeatureCatalogue catalogue) throws EdalException {
-        drawIntoImage(image, new DataReader() {
-            @Override
-            public Array2D<Number> getDataForLayerName(String layerId) throws EdalException {
-                MapFeatureAndMember featureAndMemberName = catalogue.getFeatureAndMemberName(
-                        layerId, params);
-                final Array2D<Number> values = featureAndMemberName.getMapFeature().getValues(
-                        featureAndMemberName.getMember());
-                /*
-                 * Since BufferedImages have the y-axis increasing downwards,
-                 * wrap the returned values in an Array2D with a flipped y-axis
-                 */
-                return new Array2D<Number>(values.getYSize(), values.getXSize()) {
-                    @Override
-                    public void set(Number value, int... coords) {
-                        throw new UnsupportedOperationException("This is an immutable Array2D");
-                    }
-                    
-                    @Override
-                    public Number get(int... coords) {
-                        return values.get(params.getHeight() - coords[0] - 1, coords[1]);
-                    }
-
-                    @Override
-                    public Class<Number> getValueClass() {
-                        return Number.class;
-                    }
-                };
-            }
-        });
-    }
-
-    protected abstract void drawIntoImage(BufferedImage image, DataReader dataReader)
-            throws EdalException;
+    protected abstract void drawIntoImage(BufferedImage image, final PlottingDomainParams params,
+            final FeatureCatalogue catalogue) throws EdalException;
 
     public void setXSampleSize(int xSampleSize) {
         this.xSampleSize = xSampleSize;
@@ -128,4 +90,6 @@ public abstract class ImageLayer extends Drawable {
     public SubsampleType getSubsampleType() {
         return subsampleType;
     }
+    
+    public abstract Collection<Class<? extends Feature<?>>> supportedFeatureTypes();
 }

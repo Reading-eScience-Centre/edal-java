@@ -95,4 +95,10 @@ public interface WmsLayerMetadata {
      *         requests
      */
     public boolean isQueryable();
+
+    /**
+     * @return Whether or not this layer is enabled (i.e. visible in
+     *         menu/GetCapabilities)
+     */
+    public boolean isDisabled();
 }
