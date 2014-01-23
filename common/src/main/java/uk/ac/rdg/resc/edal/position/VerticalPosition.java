@@ -60,8 +60,7 @@ public class VerticalPosition implements Comparable<VerticalPosition> {
     
     @Override
     public int compareTo(VerticalPosition o) {
-        // TODO Auto-generated method stub
-        return 0;
+        return Double.compare(z, o.z);
     }
     
     /*
