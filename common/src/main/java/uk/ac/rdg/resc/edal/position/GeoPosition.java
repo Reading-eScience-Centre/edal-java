@@ -73,4 +73,41 @@ public class GeoPosition {
     public DateTime getTime() {
         return time;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((hPos == null) ? 0 : hPos.hashCode());
+        result = prime * result + ((time == null) ? 0 : time.hashCode());
+        result = prime * result + ((zPos == null) ? 0 : zPos.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GeoPosition other = (GeoPosition) obj;
+        if (hPos == null) {
+            if (other.hPos != null)
+                return false;
+        } else if (!hPos.equals(other.hPos))
+            return false;
+        if (time == null) {
+            if (other.time != null)
+                return false;
+        } else if (!time.equals(other.time))
+            return false;
+        if (zPos == null) {
+            if (other.zPos != null)
+                return false;
+        } else if (!zPos.equals(other.zPos))
+            return false;
+        return true;
+    }
 }
