@@ -42,5 +42,4 @@ public class TrajectoryDomainTest {
 		DateTime dt = beginDate.plusDays(10);
 		assertTrue( tDomain.contains(new GeoPosition(hPos, vPos, dt)));
 	}
-
 }
