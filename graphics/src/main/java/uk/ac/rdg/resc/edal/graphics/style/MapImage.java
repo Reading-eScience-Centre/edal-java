@@ -50,8 +50,8 @@ import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.graphics.style.util.LegendDataGenerator;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "ImageType")
 @XmlRootElement(namespace = MapImage.NAMESPACE, name = "Image")

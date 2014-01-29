@@ -54,11 +54,11 @@ import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourableIcon;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "GlyphLayerType")
 public class ColouredGlyphLayer extends ImageLayer {

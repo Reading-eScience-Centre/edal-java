@@ -29,23 +29,31 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
+import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
+import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
@@ -54,7 +62,9 @@ import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
@@ -66,8 +76,11 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
 /**
@@ -77,7 +90,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  * @author Jon
  * @author Guy
  */
-public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> implements GridDataset {
+public abstract class AbstractGridDataset extends AbstractDataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
 
     public AbstractGridDataset(String id, Collection<GridVariableMetadata> vars) {
@@ -126,7 +139,7 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
             throw new DataReadingException("Problem reading the data from underlying storage");
         }
     }
-    
+
     @Override
     public Set<String> getFeatureIds() {
         /*
@@ -236,8 +249,26 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
     }
 
     @Override
-    public final MapFeature readMapData(Set<String> varIds, final HorizontalGrid targetGrid,
-            Double zPos, DateTime time) throws DataReadingException {
+    public final Collection<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException {
+        /*
+         * If the user has passed in null for the variable IDs, they want all
+         * variables returned
+         */
+        if (varIds == null) {
+            varIds = getVariableIds();
+        }
+        /*
+         * Create a list so that we can add to it whilst looping over the
+         * elements (to add required child members)
+         */
+        List<String> variableIds = new ArrayList<String>(varIds);
+
+        final HorizontalGrid targetGrid = params.getImageGrid();
+        Double zPos = params.getTargetZ();
+
+        DateTime time = params.getTargetT();
+
         GridDataSource dataSource = null;
         try {
             /*
@@ -256,6 +287,7 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
             StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
             id.append(System.currentTimeMillis());
             id.append(":");
+            StringBuilder name = new StringBuilder("Map of ");
             StringBuilder description = new StringBuilder("Map feature from variables:\n");
 
             /*
@@ -264,23 +296,24 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
 
-            /*
-             * If the user has passed in null for the variable IDs, they want
-             * all variables returned
-             */
-            if (varIds == null) {
-                varIds = getVariableIds();
-            }
-
-            for (String varId : varIds) {
+            
+            for(int i=0;i<variableIds.size();i++) {
+                String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read map data for unplottable variables
                      */
+                    Set<VariableMetadata> children = getVariableMetadata(varId).getChildren();
+                    for(VariableMetadata childMetadata : children) {
+                        if(!variableIds.contains(childMetadata.getId())) {
+                            variableIds.add(childMetadata.getId());
+                        }
+                    }
                     continue;
                 }
 
                 id.append(varId);
+                name.append(varId+", ");
                 description.append(varId + "\n");
 
                 /*
@@ -362,6 +395,7 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
              * grid and the VariableMetadata objects
              */
             MapDomain domain = new MapDomainImpl(targetGrid, zPos, vCrs, time);
+            name.delete(name.length()-2, name.length()-1);
             if (time != null) {
                 description.append("Time: " + time + "\n");
             }
@@ -370,10 +404,10 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
             }
 
             MapFeature mapFeature = new MapFeature(UUID.nameUUIDFromBytes(id.toString().getBytes())
-                    .toString(), "Extracted Map Feature", description.toString(), domain,
+                    .toString(), name.toString(), description.toString(), domain,
                     parameters, values);
 
-            return mapFeature;
+            return CollectionUtils.setOf(mapFeature);
         } catch (IOException e) {
             log.error("Problem reading data", e);
             throw new DataReadingException("Problem reading map feature", e);
@@ -459,8 +493,19 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
     }
 
     @Override
-    public final ProfileFeature readProfileData(Set<String> varIds, final HorizontalPosition hPos,
-            VerticalAxis zAxis, DateTime time) throws DataReadingException {
+    public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException {
+        /*
+         * If the user has passed in null for the variable IDs, they want all
+         * variables returned
+         */
+        if (varIds == null) {
+            varIds = getVariableIds();
+        }
+
+        final HorizontalPosition hPos = params.getTargetHorizontalPosition();
+        DateTime time = params.getTargetT();
+
         GridDataSource dataSource = null;
         try {
             /*
@@ -482,13 +527,7 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
 
-            /*
-             * If the user has passed in null for the variable IDs, they want
-             * all variables returned
-             */
-            if (varIds == null) {
-                varIds = getVariableIds();
-            }
+            VerticalAxis zAxis = getVerticalAxis(varIds);
 
             for (String varId : varIds) {
                 if (!getVariableMetadata(varId).isScalar()) {
@@ -589,9 +628,17 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
                     id.toString().getBytes()).toString(), "Extracted Profile Feature",
                     description.toString(), zAxis, hPos, time, parameters, values);
 
-            return profileFeature;
+            return CollectionUtils.setOf(profileFeature);
         } catch (IOException e) {
             throw new DataReadingException("Problem reading profile feature", e);
+        } catch (IncorrectDomainException e) {
+            /*
+             * We have had a problem creating a shared vertical axis to extract
+             * data onto
+             */
+            throw new DataReadingException(
+                    "Problem extracting profile features - all features need a common vertical axis",
+                    e);
         } finally {
             if (dataSource != null) {
                 try {
@@ -600,6 +647,96 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
                     log.error("Problem closing data source");
                 }
             }
+        }
+    }
+
+    private VerticalAxis getVerticalAxis(Set<String> varIds) throws IncorrectDomainException {
+        /*
+         * TODO Test?
+         */
+        VerticalAxis retAxis = null;
+        Extent<Double> zExtent = null;
+        VerticalCrs verticalCrs = null;
+        /*
+         * Loop through all variables and:
+         * 
+         * Make sure that all their vertical axes are equal
+         * 
+         * If individual variables only have an extent, store an extent which
+         * covers them all.
+         */
+        for (String varId : varIds) {
+            VariableMetadata variableMetadata = getVariableMetadata(varId);
+            VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
+
+            if (verticalDomain == null) {
+                /*
+                 * If any of our variables doesn't have a vertical domain, this
+                 * will not work
+                 */
+                throw new IncorrectDomainException(
+                        "All variables must have a vertical domain to extract profile features");
+            }
+
+            if (verticalDomain instanceof VerticalAxis) {
+                VerticalAxis verticalAxis = (VerticalAxis) verticalDomain;
+                if (retAxis == null) {
+                    retAxis = verticalAxis;
+                } else {
+                    if (!retAxis.equals(verticalAxis)) {
+                        throw new IncorrectDomainException(
+                                "Variables must share a vertical axis to extract profile features");
+                    }
+                }
+            } else {
+                if (zExtent == null) {
+                    zExtent = verticalDomain.getExtent();
+                    verticalCrs = verticalDomain.getVerticalCrs();
+                } else {
+                    if (verticalCrs.equals(verticalDomain.getVerticalCrs())) {
+                        zExtent = Extents.newExtent(
+                                Math.min(verticalDomain.getExtent().getLow(), zExtent.getLow()),
+                                Math.max(verticalDomain.getExtent().getHigh(), zExtent.getHigh()));
+                    } else {
+                        throw new IncorrectDomainException(
+                                "Variables must share the same vertical CRS to extract profile features");
+                    }
+                }
+            }
+        }
+        if (zExtent != null) {
+            if (retAxis == null) {
+                /*
+                 * We have no axes, just an extent. Create a linear axis with
+                 * 100 points
+                 */
+                List<Double> values = new ArrayList<Double>();
+                for (int i = 0; i < 100; i++) {
+                    values.add(zExtent.getLow() + i * (zExtent.getHigh() - zExtent.getLow()) / 99);
+                }
+                retAxis = new VerticalAxisImpl("Artificial z-axis", values, verticalCrs);
+                return retAxis;
+            } else {
+                if (retAxis.getCoordinateExtent().equals(zExtent)) {
+                    /*
+                     * This is the case where we have a single axis defined over
+                     * all required variables, as well as an extent which
+                     * matches it
+                     * 
+                     * We can just use the axis as-is
+                     */
+                    return retAxis;
+                } else {
+                    /*
+                     * The extents do not match - i.e. we don't have matching
+                     * axes
+                     */
+                    throw new IncorrectDomainException(
+                            "At least one variable has a vertical axis which is incompatible with the vertical axes of other variables");
+                }
+            }
+        } else {
+            return retAxis;
         }
     }
 
@@ -667,14 +804,27 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
     }
 
     @Override
-    public PointSeriesFeature readTimeSeriesData(Set<String> varIds, final HorizontalPosition hPos,
-            VerticalPosition zPos, TimeAxis tAxis) throws DataReadingException {
+    public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException {
+        /*
+         * If the user has passed in null for the variable IDs, they want all
+         * variables returned
+         */
+        if (varIds == null) {
+            varIds = getVariableIds();
+        }
+
+        final HorizontalPosition hPos = params.getTargetHorizontalPosition();
+        VerticalPosition zPos = new VerticalPosition(params.getTargetZ(), null);
+
         GridDataSource dataSource = null;
         try {
             /*
              * Open the source of data
              */
             dataSource = openGridDataSource();
+
+            TimeAxis tAxis = getTimeAxis(varIds);
 
             Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
             Map<String, Parameter> parameters = new HashMap<String, Parameter>();
@@ -689,14 +839,6 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
              * from a plugin
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
-
-            /*
-             * If the user has passed in null for the variable IDs, they want
-             * all variables returned
-             */
-            if (varIds == null) {
-                varIds = getVariableIds();
-            }
 
             for (String varId : varIds) {
                 if (!getVariableMetadata(varId).isScalar()) {
@@ -794,14 +936,18 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
             }
 
             PointSeriesFeature pointSeriesFeature = new PointSeriesFeature(UUID.nameUUIDFromBytes(
-                    id.toString().getBytes()).toString(), "Extracted Profile Feature",
+                    id.toString().getBytes()).toString(), "Extracted Point Series Feature",
                     description.toString(), tAxis, hPos, zPos, parameters, values);
 
-            return pointSeriesFeature;
+            return CollectionUtils.setOf(pointSeriesFeature);
         } catch (IOException e) {
-            throw new DataReadingException("Problem reading profile feature", e);
+            throw new DataReadingException("Problem reading point series feature", e);
         } catch (MismatchedCrsException e) {
-            throw new DataReadingException("Problem reading profile feature", e);
+            throw new DataReadingException("Problem reading point series feature", e);
+        } catch (IncorrectDomainException e) {
+            throw new DataReadingException(
+                    "Problem extracting point series features - all features need a common time axis",
+                    e);
         } finally {
             if (dataSource != null) {
                 try {
@@ -810,6 +956,100 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
                     log.error("Problem closing data source");
                 }
             }
+        }
+    }
+
+    private TimeAxis getTimeAxis(Set<String> varIds) throws IncorrectDomainException {
+        /*
+         * TODO Test?
+         */
+        TimeAxis retAxis = null;
+        Extent<DateTime> tExtent = null;
+        Chronology chronology = null;
+        /*
+         * Loop through all variables and:
+         * 
+         * Make sure that all their vertical axes are equal
+         * 
+         * If individual variables only have an extent, store an extent which
+         * covers them all.
+         */
+        for (String varId : varIds) {
+            VariableMetadata variableMetadata = getVariableMetadata(varId);
+            TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
+
+            if (temporalDomain == null) {
+                /*
+                 * If any of our variables doesn't have a vertical domain, this
+                 * will not work
+                 */
+                throw new IncorrectDomainException(
+                        "All variables must have a temporal domain to extract point series features");
+            }
+
+            if (temporalDomain instanceof TimeAxis) {
+                TimeAxis timeAxis = (TimeAxis) temporalDomain;
+                if (retAxis == null) {
+                    retAxis = timeAxis;
+                } else {
+                    if (!retAxis.equals(timeAxis)) {
+                        throw new IncorrectDomainException(
+                                "Variables must share a time axis to extract point series features");
+                    }
+                }
+            } else {
+                if (tExtent == null) {
+                    tExtent = temporalDomain.getExtent();
+                    chronology = temporalDomain.getChronology();
+                } else {
+                    if (chronology.equals(temporalDomain.getChronology())) {
+                        tExtent = Extents.newExtent(
+                                new DateTime(Math.min(temporalDomain.getExtent().getLow()
+                                        .getMillis(), tExtent.getLow().getMillis())),
+                                new DateTime(Math.max(temporalDomain.getExtent().getHigh()
+                                        .getMillis(), tExtent.getHigh().getMillis())));
+                    } else {
+                        throw new IncorrectDomainException(
+                                "Variables must share the same chronology to extract point series features");
+                    }
+                }
+            }
+        }
+        if (tExtent != null) {
+            if (retAxis == null) {
+                /*
+                 * We have no axes, just an extent. Create a linear axis with
+                 * 100 points
+                 */
+                List<DateTime> values = new ArrayList<DateTime>();
+                for (int i = 0; i < 100; i++) {
+                    values.add(new DateTime(tExtent.getLow().getMillis() + i
+                            * (tExtent.getHigh().getMillis() - tExtent.getLow().getMillis()) / 99,
+                            chronology));
+                }
+                retAxis = new TimeAxisImpl("Artificial time-axis", values);
+                return retAxis;
+            } else {
+                if (retAxis.getCoordinateExtent().equals(tExtent)) {
+                    /*
+                     * This is the case where we have a single axis defined over
+                     * all required variables, as well as an extent which
+                     * matches it
+                     * 
+                     * We can just use the axis as-is
+                     */
+                    return retAxis;
+                } else {
+                    /*
+                     * The extents do not match - i.e. we don't have matching
+                     * axes
+                     */
+                    throw new IncorrectDomainException(
+                            "At least one variable has a time axis which is incompatible with the time axes of other variables");
+                }
+            }
+        } else {
+            return retAxis;
         }
     }
 
@@ -861,7 +1101,7 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
          */
         Array4D<Number> data4d = dataSource.read(varId, tMin, tMax, zIndex, zIndex, yIndex, yIndex,
                 xIndex, xIndex);
-        
+
         int tSize = tAxis.size();
         Array1D<Number> data = new ValuesArray1D(tSize);
 
@@ -874,10 +1114,6 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
             }
             Number value = data4d.get(new int[] { tIndex - tMin, 0, 0, 0 });
             data.set(value, new int[] { i });
-            
-            
-//            System.out.println(time+","+tIndex+","+value+","+data.get(i));
-//            data.set(data4d.get(new int[] { tIndex - tMin, 0, 0, 0 }), new int[] { i });
             /*
              * TODO we need to test this
              */
@@ -886,7 +1122,11 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
         return data;
     }
 
-    @Override
+    /*
+     * TODO This is OK, and is possible a method of only AbstractGridDataset, or
+     * maybe we can re-introduce a minimal GridDataset type which has this
+     * method. Depends what we want to do with transects.
+     */
     public TrajectoryFeature readTrajectoryData(Set<String> varIds, final TrajectoryDomain domain)
             throws DataReadingException {
         GridDataSource dataSource = null;
@@ -1027,7 +1267,10 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
         }
     }
 
-    @Override
+    /*
+     * TODO like trajectory reading, do we still need this? Probably, but how to
+     * best use it?
+     */
     public final Number readSinglePoint(String variableId, HorizontalPosition position,
             Double zVal, DateTime time) throws DataReadingException {
         GridDataSource gridDataSource = null;
@@ -1111,9 +1354,9 @@ public abstract class AbstractGridDataset extends AbstractDataset<GridFeature> i
             }
         }
     }
-    
+
     @Override
-    public Class<GridFeature> getFeatureType() {
+    public Class<GridFeature> getMapFeatureType() {
         return GridFeature.class;
     }
 

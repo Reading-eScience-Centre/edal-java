@@ -632,6 +632,28 @@ public final class GISUtils {
             return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
         }
     }
+    
+    /**
+     * Increases the size of a {@link BoundingBox} by a given factor
+     * 
+     * @param bbox
+     *            The {@link BoundingBox} to increase the size of
+     * @param percentageIncrease
+     *            The percentage increase
+     * @return A larger {@link BoundingBox} with the same centre
+     */
+    public static BoundingBox getLargeBoundingBox(BoundingBox bbox, double percentageIncrease) {
+        /*
+         * Divide by 200 because we these values get used twice (once on each
+         * side)
+         */
+        double xExtra = bbox.getWidth() * (percentageIncrease / 200.0);
+        double yExtra = bbox.getHeight() * (percentageIncrease / 200.0);
+        BoundingBox bboxBordered = new BoundingBoxImpl(bbox.getMinX() - xExtra, bbox.getMinY()
+                - yExtra, bbox.getMaxX() + xExtra, bbox.getMaxY() + yExtra,
+                bbox.getCoordinateReferenceSystem());
+        return bboxBordered;
+    }
 
     static {
         /*

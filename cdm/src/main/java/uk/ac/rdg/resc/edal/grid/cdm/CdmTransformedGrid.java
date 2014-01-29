@@ -223,7 +223,8 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
                         }
                     };
 
-                    return new GridCell2DImpl(coords, centre, footprint, CdmTransformedGrid.this);
+                    return new GridCell2DImpl(new GridCoordinates2D(coords[1], coords[0]), centre,
+                            footprint, CdmTransformedGrid.this);
                 }
             };
         }

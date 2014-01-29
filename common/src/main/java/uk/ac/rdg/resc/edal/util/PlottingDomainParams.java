@@ -26,50 +26,53 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.graphics.style.util;
+package uk.ac.rdg.resc.edal.util;
 
-import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
-import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.TimeUtils;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 public class PlottingDomainParams {
     private int width = 256;
     private int height = 256;
 
     private BoundingBox bbox;
+    private HorizontalPosition targetPos;
+    
     private Extent<Double> zExtent;
     private Double targetZ;
 
-    private String endTime;
-    private String startTime;
-    private String targetT;
+    private Extent<DateTime> tExtent;
+    private DateTime targetT;
+    
+    private RegularGrid imageGrid = null;
 
     public PlottingDomainParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
-            String startTime, String endTime, Double targetZ, String targetT) {
+            Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ, DateTime targetT) {
         super();
         this.width = width;
         this.height = height;
         this.bbox = bbox;
+        this.targetPos = targetPos;
         this.zExtent = zExtent;
         this.targetZ = targetZ;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.tExtent = tExtent;
         this.targetT = targetT;
 
         if (zExtent == null && targetZ != null) {
             zExtent = Extents.newExtent(targetZ, targetZ);
         }
 
-        if (startTime == null && targetT != null) {
-            startTime = targetT;
-            endTime = targetT;
+        if (tExtent == null) {
+            if (targetT != null) {
+                tExtent = Extents.newExtent(targetT, targetT);
+            } else {
+                tExtent = Extents.emptyExtent(DateTime.class);
+            }
         }
     }
 
@@ -84,34 +87,35 @@ public class PlottingDomainParams {
     public BoundingBox getBbox() {
         return bbox;
     }
-    
+
+    public HorizontalPosition getTargetHorizontalPosition() {
+        return targetPos;
+    }
+
     /**
-     * Creates a {@link RegularGrid} based on the width, height and {@link BoundingBox} of these parameters
+     * Creates a {@link RegularGrid} based on the width, height and
+     * {@link BoundingBox} of these parameters
      */
     public RegularGrid getImageGrid() {
-        return new RegularGridImpl(bbox, width, height);
+        if(imageGrid == null) {
+            imageGrid = new RegularGridImpl(bbox, width, height);
+        }
+        return imageGrid;
     }
 
     public Extent<Double> getZExtent() {
         return zExtent;
     }
 
-    public Extent<DateTime> getTExtent(Chronology chronology) throws BadTimeFormatException {
-        if (startTime == null || endTime == null) {
-            return Extents.emptyExtent(DateTime.class);
-        }
-        return Extents.newExtent(TimeUtils.iso8601ToDateTime(startTime, chronology),
-                TimeUtils.iso8601ToDateTime(endTime, chronology));
+    public Extent<DateTime> getTExtent() {
+        return tExtent;
     }
 
     public Double getTargetZ() {
         return targetZ;
     }
 
-    public DateTime getTargetT(Chronology chronology) throws BadTimeFormatException {
-        if (targetT == null) {
-            return null;
-        }
-        return TimeUtils.iso8601ToDateTime(targetT, chronology);
+    public DateTime getTargetT() {
+        return targetT;
     }
 }

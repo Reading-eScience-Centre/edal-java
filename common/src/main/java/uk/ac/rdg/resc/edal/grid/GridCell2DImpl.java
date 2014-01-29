@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.grid;
 
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * Simple immutable implementation of a GridCell2D.
@@ -39,7 +40,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  */
 public final class GridCell2DImpl implements GridCell2D {
 
-    private final int[] gridCoords;
+    private final GridCoordinates2D gridCoords;
     private final HorizontalPosition centre;
     private final Polygon footprint;
     private final HorizontalGrid parentGrid;
@@ -47,7 +48,7 @@ public final class GridCell2DImpl implements GridCell2D {
     /**
      * @todo check that CRSs of centre, footprint and parentGrid all match?
      */
-    public GridCell2DImpl(int[] gridCoords, HorizontalPosition centre, Polygon footprint,
+    public GridCell2DImpl(GridCoordinates2D gridCoords, HorizontalPosition centre, Polygon footprint,
             HorizontalGrid parentGrid) {
         this.gridCoords = gridCoords;
         this.centre = centre;
@@ -56,7 +57,7 @@ public final class GridCell2DImpl implements GridCell2D {
     }
 
     @Override
-    public int[] getGridCoordinates() {
+    public GridCoordinates2D getGridCoordinates() {
         return gridCoords;
     }
 

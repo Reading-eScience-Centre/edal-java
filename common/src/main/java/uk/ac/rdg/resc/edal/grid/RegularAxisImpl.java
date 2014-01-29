@@ -78,7 +78,8 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     @Override
     public Double getCoordinateValue(int index) {
         if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException(index + " must be between 0 and " + (size - 1));
+            throw new IndexOutOfBoundsException("Index must be between 0 and " + (size - 1)
+                    + " (it is " + index + ")");
         }
         return firstValue + index * spacing;
     }

@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
-import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;

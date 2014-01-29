@@ -38,9 +38,12 @@ import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * Partial implementation of a {@link ContinuousDomainDataset} which performs
@@ -52,21 +55,20 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
  *            The type of {@link DiscreteFeature} contained in this
  *            {@link AbstractContinuousDomainDataset}
  */
-public abstract class AbstractContinuousDomainDataset<F extends DiscreteFeature<?, ?>> extends
-        AbstractDataset<F> implements ContinuousDomainDataset<F> {
+public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
 
-    private Class<F> featureType;
+    private Class<? extends DiscreteFeature<?, ?>> featureType;
     private FeatureIndexer featureIndexer;
 
     public AbstractContinuousDomainDataset(String id, Collection<? extends VariableMetadata> vars,
-            Class<F> featureType, FeatureIndexer featureIndexer) {
+            Class<? extends DiscreteFeature<?, ?>> featureType, FeatureIndexer featureIndexer) {
         super(id, vars);
         this.featureType = featureType;
         this.featureIndexer = featureIndexer;
     }
 
     @Override
-    public F readFeature(String featureId) throws DataReadingException {
+    public DiscreteFeature<?, ?> readFeature(String featureId) throws DataReadingException {
         return getFeatureReader().readFeature(featureId, null);
     }
 
@@ -76,8 +78,12 @@ public abstract class AbstractContinuousDomainDataset<F extends DiscreteFeature<
     }
 
     @Override
-    public Collection<F> extractFeatures(Set<String> varIds, BoundingBox hExtent,
-            Extent<Double> zExtent, Extent<DateTime> tExtent) throws DataReadingException {
+    public Collection<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException {
+        BoundingBox hExtent = params.getBbox();
+        Extent<Double> zExtent = params.getZExtent();
+        Extent<DateTime> tExtent = params.getTExtent();
+
         if (hExtent == null) {
             hExtent = getDatasetBoundingBox();
         }
@@ -87,12 +93,27 @@ public abstract class AbstractContinuousDomainDataset<F extends DiscreteFeature<
         if (tExtent == null) {
             tExtent = getDatasetTimeExtent();
         }
-        BoundingBox largeBoundingBox = getLargeBoundingBox(hExtent, 5);
-        List<F> features = new ArrayList<F>();
+        BoundingBox largeBoundingBox = GISUtils.getLargeBoundingBox(hExtent, 5);
+        List<DiscreteFeature<?, ?>> features = new ArrayList<DiscreteFeature<?, ?>>();
         Collection<String> featureIds = featureIndexer.findFeatureIds(largeBoundingBox, zExtent,
                 tExtent, varIds);
+        
         features.addAll(getFeatureReader().readFeatures(featureIds, varIds));
         return features;
+    }
+    
+    @Override
+    public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
+    @Override
+    public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     /**
@@ -111,30 +132,9 @@ public abstract class AbstractContinuousDomainDataset<F extends DiscreteFeature<
     protected abstract Extent<DateTime> getDatasetTimeExtent();
 
     @Override
-    public Class<F> getFeatureType() {
+    public Class<? extends DiscreteFeature<?, ?>> getMapFeatureType() {
         return featureType;
     }
 
-    /**
-     * Increases the size of a {@link BoundingBox} by a given factor
-     * 
-     * @param bbox
-     *            The {@link BoundingBox} to increase the size of
-     * @param percentageIncrease
-     *            The percentage increase
-     * @return A larger {@link BoundingBox} with the same centre
-     */
-    public static BoundingBox getLargeBoundingBox(BoundingBox bbox, double percentageIncrease) {
-        /*
-         * Divide by 200 because we these values get used twice (once on each side)
-         */
-        double xExtra = bbox.getWidth() * (percentageIncrease / 200.0);
-        double yExtra = bbox.getHeight() * (percentageIncrease / 200.0);
-        BoundingBox bboxBordered = new BoundingBoxImpl(bbox.getMinX() - xExtra, bbox.getMinY()
-                - yExtra, bbox.getMaxX() + xExtra, bbox.getMaxY() + yExtra,
-                bbox.getCoordinateReferenceSystem());
-        return bboxBordered;
-    }
-
-    public abstract DiscreteFeatureReader<F> getFeatureReader();
+    public abstract DiscreteFeatureReader<? extends DiscreteFeature<?, ?>> getFeatureReader();
 }
