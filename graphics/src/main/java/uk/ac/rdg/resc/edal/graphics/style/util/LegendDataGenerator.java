@@ -49,6 +49,7 @@ import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * A class to generate the correct data for a legend.
@@ -114,8 +115,7 @@ public class LegendDataGenerator {
         final MapFeature feature = getFeature(xFieldName, yFieldName);
         return new FeatureCatalogue() {
             @Override
-            public FeaturesAndMemberName getFeaturesForLayer(String id,
-                    PlottingDomainParams params) {
+            public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params) {
                 return new FeaturesAndMemberName(CollectionUtils.setOf(feature), id);
             }
         };
@@ -134,7 +134,7 @@ public class LegendDataGenerator {
             if (nameAndRange == null) {
                 continue;
             }
-            
+
             Array2D<Number> valuesArray;
             if (nameAndRange.getFieldLabel().equals(xFieldName)) {
                 valuesArray = new XYNull(MatrixType.X, nameAndRange.getScaleRange());

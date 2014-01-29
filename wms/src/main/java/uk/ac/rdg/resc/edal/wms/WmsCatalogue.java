@@ -64,23 +64,20 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import uk.ac.rdg.resc.edal.dataset.ContinuousDomainDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.util.ContactInfo;
 import uk.ac.rdg.resc.edal.wms.util.ServerInfo;
@@ -212,31 +209,11 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     @Override
     public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params)
             throws EdalException {
-        Dataset<?> dataset = getDatasetFromLayerName(id);
+        Dataset dataset = getDatasetFromLayerName(id);
         String variable = getVariableFromId(id);
-        TemporalDomain temporalDomain = dataset.getVariableMetadata(variable).getTemporalDomain();
-        Chronology chronology = null;
-        if (temporalDomain != null) {
-            chronology = temporalDomain.getChronology();
-        }
-        if (dataset instanceof GridDataset) {
-            GridDataset gridDataset = (GridDataset) dataset;
-            MapFeature mapData = gridDataset.readMapData(CollectionUtils.setOf(variable),
-                    params.getImageGrid(), params.getTargetZ(), params.getTargetT(chronology));
-            /*
-             * TODO Caching probably goes here
-             */
-            return new FeaturesAndMemberName(CollectionUtils.setOf(mapData), variable);
-        } else if (dataset instanceof ContinuousDomainDataset) {
-            ContinuousDomainDataset<?> continuousDomainDataset = (ContinuousDomainDataset<?>) dataset;
-            Collection<? extends DiscreteFeature<?, ?>> features = continuousDomainDataset
-                    .extractFeatures(CollectionUtils.setOf(variable), params.getBbox(),
-                            params.getZExtent(), params.getTExtent(chronology));
-            return new FeaturesAndMemberName(features, variable);
-        } else {
-            throw new UnsupportedOperationException(
-                    "The Dataset you are trying to extract data from is currently unsupported");
-        }
+        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(
+                CollectionUtils.setOf(variable), params);
+        return new FeaturesAndMemberName(mapFeatures, variable);
     }
 
     /**
@@ -250,7 +227,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      */
     public VariableMetadata getVariableMetadataFromId(String layerName)
             throws WmsLayerNotFoundException {
-        Dataset<?> dataset = getDatasetFromLayerName(layerName);
+        Dataset dataset = getDatasetFromLayerName(layerName);
         String variableFromId = getVariableFromId(layerName);
         if (dataset != null && variableFromId != null) {
             return dataset.getVariableMetadata(variableFromId);
@@ -656,7 +633,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     /**
      * @return All available {@link Dataset}s on this server
      */
-    public abstract Collection<Dataset<?>> getAllDatasets();
+    public abstract Collection<Dataset> getAllDatasets();
 
     /**
      * @param datasetId
@@ -676,7 +653,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The ID of the dataset
      * @return The desired dataset
      */
-    public abstract Dataset<?> getDatasetFromId(String datasetId);
+    public abstract Dataset getDatasetFromId(String datasetId);
 
     /**
      * Returns a {@link Dataset} based on a given layer name
@@ -685,7 +662,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The full layer name
      * @return The desired dataset
      */
-    public abstract Dataset<?> getDatasetFromLayerName(String layerName)
+    public abstract Dataset getDatasetFromLayerName(String layerName)
             throws WmsLayerNotFoundException;
 
     /**

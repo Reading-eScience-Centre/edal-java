@@ -90,6 +90,6 @@ public abstract class DatasetFactory {
      * @throws EdalException
      *             If there is a problem creating the dataset
      */
-    public abstract Dataset<?> createDataset(String id, String location) throws IOException,
+    public abstract Dataset createDataset(String id, String location) throws IOException,
             EdalException;
 }

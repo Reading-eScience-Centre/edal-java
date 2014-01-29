@@ -331,7 +331,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     }
 	
 	private String getRangeString(String datetime, String rangeStr) {
-	    DateTimeFormat parser = DateTimeFormat.getFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
+	    DateTimeFormat parser = DateTimeFormat.getFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	    Date centreDate = parser.parse(datetime);
 	    long range = Long.parseLong(rangeStr);
 	    Date startDate = new Date(centreDate.getTime() - range);

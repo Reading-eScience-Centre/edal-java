@@ -28,16 +28,24 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
+import java.util.Set;
+
+import org.joda.time.Chronology;
+import org.joda.time.DateTime;
+
+import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
@@ -51,26 +59,59 @@ public class GetMapParameters {
     private String wmsVersion;
     private String imageFormatString;
     private boolean animation;
-    
-    private PlottingDomainParams plottingDomainParams;
+
+    protected PlottingDomainParams plottingDomainParams;
     private GetMapStyleParams styleParameters;
 
     /**
      * Creates a new instance of GetMapParameter from the given RequestParams
-     * @param map 
+     * 
+     * @param params
+     *            A {@link RequestParams} object representing the URL parameters
+     *            to parse
+     * @param catalogue
+     *            A {@link WmsCatalogue}. This is used to determine the
+     *            {@link Chronology} of the dataset being referred to so that
+     *            the time values can be parsed correctly
      * 
      * @throws EdalException
      *             if the request is invalid
      */
-    public GetMapParameters(RequestParams params) throws EdalException {
+    public GetMapParameters(RequestParams params, WmsCatalogue catalogue) throws EdalException {
         this.wmsVersion = params.getMandatoryWmsVersion();
         if (!WmsUtils.SUPPORTED_VERSIONS.contains(this.wmsVersion)) {
             throw new EdalException("VERSION " + this.wmsVersion + " not supported");
         }
         imageFormatString = params.getString("format");
         animation = params.getBoolean("animation", false);
-        plottingDomainParams = parsePlottingParams(params);
         styleParameters = new GetMapStyleParams(params);
+
+        /*
+         * Now we have the style parameters, we can find out which layers we
+         * will be requesting, and hence which Chronology the time strings are
+         * referring to.
+         * 
+         * All layers need to share the same chronology (otherwise the time
+         * string may be ambiguous)
+         */
+        Chronology chronology = null;
+        Set<NameAndRange> fieldsWithScales = styleParameters.getImageGenerator(catalogue)
+                .getFieldsWithScales();
+        for (NameAndRange nameAndRange : fieldsWithScales) {
+            String wmsLayerName = nameAndRange.getFieldLabel();
+            Dataset dataset = catalogue.getDatasetFromLayerName(wmsLayerName);
+            if (chronology == null) {
+                chronology = dataset.getDatasetChronology();
+            } else {
+                if (dataset.getDatasetChronology() != null) {
+                    if (!chronology.equals(dataset.getDatasetChronology())) {
+                        throw new IncorrectDomainException(
+                                "All datasets referenced by a GetMap request must share the same chronology");
+                    }
+                }
+            }
+        }
+        plottingDomainParams = parsePlottingParams(params, chronology);
     }
 
     public PlottingDomainParams getPlottingDomainParameters() {
@@ -84,85 +125,90 @@ public class GetMapParameters {
     public String getWmsVersion() {
         return wmsVersion;
     }
-    
+
     public boolean isAnimation() {
         return animation;
     }
-    
+
     public ImageFormat getImageFormat() throws EdalException {
-        if(imageFormatString == null) {
+        if (imageFormatString == null) {
             throw new EdalException("Parameter FORMAT was not supplied");
         } else {
             try {
                 return ImageFormat.get(imageFormatString);
             } catch (InvalidFormatException e) {
-                throw new EdalException("Unsupported image format: "+imageFormatString);
+                throw new EdalException("Unsupported image format: " + imageFormatString);
             }
         }
     }
-    
-    private PlottingDomainParams parsePlottingParams(RequestParams params) throws EdalException {
-        String startTime = null;
-        String endTime = null;
+
+    private PlottingDomainParams parsePlottingParams(RequestParams params, Chronology chronology)
+            throws EdalException {
+        String startTimeStr = null;
+        String endTimeStr = null;
         String timeString = params.getString("time");
-        if(timeString != null && !timeString.trim().equals("")) {
+        if (timeString != null && !timeString.trim().equals("")) {
             String[] timeStrings = timeString.split("/");
-            if(timeStrings.length == 1) {
-                startTime = timeStrings[0];
-                endTime = timeStrings[0];
-            } else if(timeStrings.length == 2) {
-                startTime = timeStrings[0];
-                endTime = timeStrings[1];
+            if (timeStrings.length == 1) {
+                startTimeStr = timeStrings[0];
+                endTimeStr = timeStrings[0];
+            } else if (timeStrings.length == 2) {
+                startTimeStr = timeStrings[0];
+                endTimeStr = timeStrings[1];
             } else {
                 throw new BadTimeFormatException("Time can either be a single value or a range");
             }
         }
-            
-        String targetTime = params.getString("targettime");
-        if(targetTime == null && endTime != null) {
-            targetTime = endTime;
+        DateTime startTime = TimeUtils.iso8601ToDateTime(startTimeStr, chronology);
+        DateTime endTime = TimeUtils.iso8601ToDateTime(endTimeStr, chronology);
+        Extent<DateTime> tExtent = Extents.newExtent(startTime, endTime);
+
+        String targetTimeStr = params.getString("targettime");
+        if (targetTimeStr == null && endTimeStr != null) {
+            targetTimeStr = endTimeStr;
         }
-        
+        DateTime targetTime = TimeUtils.iso8601ToDateTime(targetTimeStr, chronology);
+
         Extent<Double> zExtent = null;
         String depthString = params.getString("elevation");
-        if(depthString != null && !depthString.trim().equals("")) {
+        if (depthString != null && !depthString.trim().equals("")) {
             String[] depthStrings = depthString.split("/");
-            if(depthStrings.length == 1) {
+            if (depthStrings.length == 1) {
                 try {
                     Double depth = Double.parseDouble(depthStrings[0]);
                     zExtent = Extents.newExtent(depth, depth);
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Depth format is wrong: "+depthStrings[0]);
+                    throw new IllegalArgumentException("Depth format is wrong: " + depthStrings[0]);
                 }
-            } else if(depthStrings.length == 2) {
+            } else if (depthStrings.length == 2) {
                 try {
-                    zExtent = Extents.newExtent(
-                            Double.parseDouble(depthStrings[0]),
+                    zExtent = Extents.newExtent(Double.parseDouble(depthStrings[0]),
                             Double.parseDouble(depthStrings[1]));
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Depth format is wrong: "+depthString);
+                    throw new IllegalArgumentException("Depth format is wrong: " + depthString);
                 }
             } else {
                 throw new IllegalArgumentException("Depth can either be a single value or a range");
             }
         }
-        
+
         Double targetDepth = null;
         String targetDepthString = params.getString("targetelevation");
-        if(targetDepthString != null) {
+        if (targetDepthString != null) {
             try {
                 targetDepth = Double.parseDouble(targetDepthString);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("TARGETELEVATION format is wrong: "+targetDepthString);
+                throw new IllegalArgumentException("TARGETELEVATION format is wrong: "
+                        + targetDepthString);
             }
         }
-        if(targetDepth == null && zExtent != null) {
+        if (targetDepth == null && zExtent != null) {
             targetDepth = zExtent.getHigh();
         }
-        
+
         String crsCode;
         BoundingBox bbox;
-        if(wmsVersion.equals("1.3.0")) {
+        if (wmsVersion.equals("1.3.0")) {
             crsCode = params.getMandatoryString("CRS");
             if (crsCode.equalsIgnoreCase("EPSG:4326")) {
                 crsCode = "CRS:84";
@@ -177,19 +223,10 @@ public class GetMapParameters {
             }
             bbox = GISUtils.parseBbox(params.getMandatoryString("bbox"), true, crsCode);
         }
-        
-        try {
-            return new PlottingDomainParams(
-                    params.getMandatoryPositiveInt("width"),
-                    params.getMandatoryPositiveInt("height"),
-                    bbox, zExtent, startTime, endTime, targetDepth, targetTime);
-        } catch (InvalidCrsException e) {
-            e.printStackTrace();
-            throw new EdalException("Something's wrong with your parameters");
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            throw new EdalException("Something's wrong with your parameters");
-        } 
+
+        return new PlottingDomainParams(params.getMandatoryPositiveInt("width"),
+                params.getMandatoryPositiveInt("height"), bbox, zExtent, tExtent, null,
+                targetDepth, targetTime);
     }
 
 }

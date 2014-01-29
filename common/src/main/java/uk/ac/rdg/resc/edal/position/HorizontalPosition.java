@@ -82,8 +82,10 @@ public class HorizontalPosition {
         sb.append(NUMBER_3DP.format(x));
         sb.append(',');
         sb.append(NUMBER_3DP.format(y));
-        sb.append(") - ");
-        sb.append(crs.getName());
+        sb.append(")");
+        if(crs != null) {
+            sb.append(" - "+crs.getName());
+        }
         return sb.toString();
     }
 

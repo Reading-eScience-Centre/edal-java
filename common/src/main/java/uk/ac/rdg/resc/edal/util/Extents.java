@@ -33,6 +33,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.joda.time.DateTime;
+
 import uk.ac.rdg.resc.edal.domain.Extent;
 
 /**
@@ -97,7 +99,11 @@ public final class Extents {
         return new SimpleExtent<T>(minCandidate, maxCandidate);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends Object & Comparable<? super T>> Extent<T> newExtent(T min, T max) {
+        if (min instanceof DateTime) {
+            return (Extent<T>) new DateTimeExtent((DateTime) min, (DateTime) max);
+        }
         return new SimpleExtent<T>(min, max);
     }
 
@@ -137,7 +143,7 @@ public final class Extents {
         protected abstract int compare(T val1, T val2);
 
         @Override
-        public final boolean contains(T val) {
+        public boolean contains(T val) {
             return compare(this.min, val) <= 0 && compare(this.max, val) >= 0;
         }
 
@@ -228,6 +234,36 @@ public final class Extents {
         @Override
         protected int compare(T val1, T val2) {
             return comp.compare(val1, val2);
+        }
+    }
+
+    /**
+     * We treat DateTime extents as a special case because although the compare
+     * method works with mixed Chronologies we don't want this to be the case when
+     * testing whether an extent contains a value.
+     * 
+     * @author Guy
+     */
+    private static final class DateTimeExtent extends AbstractExtent<DateTime> {
+        public DateTimeExtent(DateTime min, DateTime max) {
+            super(min, max, null);
+        }
+
+        @Override
+        protected int compare(DateTime val1, DateTime val2) {
+            return val1.compareTo(val2);
+        }
+
+        @Override
+        public boolean contains(DateTime val) {
+            DateTime low = getLow();
+            if (low == null) {
+                return false;
+            }
+            if (!val.getChronology().equals(low.getChronology())) {
+                return false;
+            }
+            return super.contains(val);
         }
     }
 }
