@@ -815,7 +815,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
 
         final HorizontalPosition hPos = params.getTargetHorizontalPosition();
-        VerticalPosition zPos = new VerticalPosition(params.getTargetZ(), null);
+        VerticalPosition zPos = new VerticalPosition(params.getTargetZ(), getDatasetVerticalCrs());
 
         GridDataSource dataSource = null;
         try {
