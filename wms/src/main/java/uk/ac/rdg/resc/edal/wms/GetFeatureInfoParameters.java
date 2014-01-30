@@ -58,7 +58,7 @@ public class GetFeatureInfoParameters extends GetMapParameters {
             throws EdalException {
         super(params, catalogue);
         layers = params.getMandatoryString("query_layers").split(",");
-        infoFormat = params.getMandatoryString("info_format");
+        infoFormat = params.getString("info_format", "text/xml");
 
         int i = params.getMandatoryPositiveInt("i");
         int j = getPlottingDomainParameters().getHeight() - 1 - params.getMandatoryPositiveInt("j");

@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-
 /**
  * Implementation of a {@link VerticalCrs}
  * 
@@ -67,6 +66,12 @@ public class VerticalCrsImpl implements VerticalCrs {
     @Override
     public boolean isPositiveUpwards() {
         return positiveUpwards;
+    }
+
+    @Override
+    public String toString() {
+        return "Units: " + units + ", Positive upwards: " + positiveUpwards + ", Pressure: "
+                + pressure + ", Dimensionless: " + dimensionless;
     }
 
     @Override

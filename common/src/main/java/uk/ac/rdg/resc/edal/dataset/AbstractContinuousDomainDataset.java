@@ -93,27 +93,52 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         if (tExtent == null) {
             tExtent = getDatasetTimeExtent();
         }
+        /*
+         * Extend the bounding box by 5% so that we include any features which
+         * are just off the map. This may not work if we are tiling very small
+         * images or using very big icons (i.e. cases where 5% of the total
+         * width < half the icon size). Then we will see artifacts at tile
+         * boundaries.
+         */
         BoundingBox largeBoundingBox = GISUtils.getLargeBoundingBox(hExtent, 5);
         List<DiscreteFeature<?, ?>> features = new ArrayList<DiscreteFeature<?, ?>>();
         Collection<String> featureIds = featureIndexer.findFeatureIds(largeBoundingBox, zExtent,
                 tExtent, varIds);
-        
+
         features.addAll(getFeatureReader().readFeatures(featureIds, varIds));
         return features;
     }
-    
+
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
-        // TODO Auto-generated method stub
-        return null;
+        if (!ProfileFeature.class.isAssignableFrom(getMapFeatureType())) {
+            throw new UnsupportedOperationException(
+                    "This dataset does not support profile features");
+        }
+        List<ProfileFeature> features = new ArrayList<ProfileFeature>();
+        Collection<String> featureIds = featureIndexer.findFeatureIds(params.getBbox(),
+                params.getZExtent(), params.getTExtent(), varIds);
+        features.addAll((Collection<? extends ProfileFeature>) getFeatureReader().readFeatures(
+                featureIds, varIds));
+        return features;
     }
-    
+
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
-        // TODO Auto-generated method stub
-        return null;
+        if (!PointSeriesFeature.class.isAssignableFrom(getMapFeatureType())) {
+            throw new UnsupportedOperationException(
+                    "This dataset does not support time series features");
+        }
+        List<PointSeriesFeature> features = new ArrayList<PointSeriesFeature>();
+        Collection<String> featureIds = featureIndexer.findFeatureIds(params.getBbox(),
+                params.getZExtent(), params.getTExtent(), varIds);
+        features.addAll((Collection<? extends PointSeriesFeature>) getFeatureReader().readFeatures(
+                featureIds, varIds));
+        return features;
     }
 
     /**
