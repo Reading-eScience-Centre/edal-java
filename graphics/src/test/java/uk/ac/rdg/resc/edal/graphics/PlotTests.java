@@ -66,10 +66,10 @@ import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * These tests plot a predictable (in-memory) dataset with missing values, and

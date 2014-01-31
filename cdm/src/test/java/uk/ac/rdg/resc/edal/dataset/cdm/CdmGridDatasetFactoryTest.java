@@ -31,9 +31,11 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -43,16 +45,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
-import uk.ac.rdg.resc.edal.dataset.GridDataset;
+import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * These tests perform various operations on a test dataset (originally
@@ -63,7 +67,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  */
 public class CdmGridDatasetFactoryTest {
 
-    private GridDataset dataset;
+    private Dataset dataset;
     private int xSize;
     private int ySize;
     private HorizontalGrid hGrid;
@@ -117,7 +121,14 @@ public class CdmGridDatasetFactoryTest {
                 DateTime time = new DateTime(2000, 01, 01 + daysFromStart, 00, 00);
                 float expectedTime = 100 * daysFromStart / 9.0f;
 
-                MapFeature mapData = dataset.readMapData(null, hGrid, zPos, time);
+                PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
+                        hGrid.getBoundingBox(), null, null, null, zPos, time);
+                Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset
+                        .extractMapFeatures(null, params);
+                assertEquals(mapFeatures.size(), 1);
+                DiscreteFeature<?, ?> feature = mapFeatures.iterator().next();
+                assertTrue(feature instanceof MapFeature);
+                MapFeature mapData = (MapFeature) feature;
 
                 Array2D<Number> lonValues = mapData.getValues("vLon");
                 Array2D<Number> latValues = mapData.getValues("vLat");
@@ -145,7 +156,8 @@ public class CdmGridDatasetFactoryTest {
 
                         double expectedMag = Math.sqrt(expectedLat * expectedLat + expectedLon
                                 * expectedLon);
-                        double expectedDir = GISUtils.RAD2DEG * Math.atan2(expectedLon, expectedLat);
+                        double expectedDir = GISUtils.RAD2DEG
+                                * Math.atan2(expectedLon, expectedLat);
                         /*
                          * NetCDF stores these as floats, so 1e-5 is about the
                          * right accuracy.
@@ -167,9 +179,11 @@ public class CdmGridDatasetFactoryTest {
         /*
          * The z-value is invalid
          */
+        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
+                hGrid.getBoundingBox(), null, null, null, 999., new DateTime(2000, 01, 01, 00, 00));
         @SuppressWarnings("unused")
-        MapFeature mapData = dataset.readMapData(null, hGrid, 999., new DateTime(2000, 01, 01, 00,
-                00));
+        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(null,
+                params);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -177,9 +191,11 @@ public class CdmGridDatasetFactoryTest {
         /*
          * The time-value is invalid
          */
+        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
+                hGrid.getBoundingBox(), null, null, null, 0.0, new DateTime(1999, 01, 01, 00, 00));
         @SuppressWarnings("unused")
-        MapFeature mapData = dataset.readMapData(null, hGrid, 0.0, new DateTime(1999, 01, 01, 00,
-                00));
+        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(null,
+                params);
     }
 
     @Test

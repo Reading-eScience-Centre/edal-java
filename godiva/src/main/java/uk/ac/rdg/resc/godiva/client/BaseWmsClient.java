@@ -700,7 +700,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          */
         widgetCollection.getTimeSelector().setContinuous(layerDetails.isContinuousT());
         widgetCollection.getElevationSelector().setContinuous(layerDetails.isContinuousZ());
-        mapArea.setMultiFeature(layerDetails.isContinuousT() || layerDetails.isContinuousZ());
+        mapArea.setAllowTransects(layerDetails.supportsTransects());
 
         if (layerDetails.isContinuousT()) {
             /*

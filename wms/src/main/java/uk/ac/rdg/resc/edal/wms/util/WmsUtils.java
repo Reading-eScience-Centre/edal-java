@@ -38,6 +38,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.FileChannel;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,19 +54,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.MapFeature;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
@@ -247,52 +246,65 @@ public class WmsUtils {
 
     /**
      * Estimate the range of values in this layer by reading a sample of data
-     * from the default time and elevation. Works for both Scalar and Vector
-     * layers.
+     * from the default time and elevation.
      * 
-     * @return
+     * @param dataset
+     *            The dataset containing the variable to estimate
+     * @param varId
+     *            The ID of the variable to estimate
+     * @return An approximate value range
      * @throws DataReadingException
      * @throws IOException
      *             if there was an error reading from the source data
      */
-    public static Extent<Float> estimateValueRange(Dataset<?> dataset, String varId) {
-        if (dataset instanceof GridDataset) {
-            GridDataset gridDataset = (GridDataset) dataset;
-            VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
-            if (!variableMetadata.isScalar()) {
-                /*
-                 * We have a non-scalar variable. We will attempt to use the
-                 * first child member to estimate the value range. This may not
-                 * work in which case we ignore it - worst case scenario is that
-                 * we end up with a bad scale range set - administrators can
-                 * just override it.
-                 */
-                try {
-                    variableMetadata = variableMetadata.getChildren().iterator().next();
-                    varId = variableMetadata.getId();
-                } catch (Exception e) {
-                    /*
-                     * Ignore this error and just generate a (probably)
-                     * inaccurate range
-                     */
-                }
-            }
-            HorizontalGrid hGrid = new RegularGridImpl(variableMetadata.getHorizontalDomain()
-                    .getBoundingBox(), 100, 100);
-            Double zPos = null;
-            if (variableMetadata.getVerticalDomain() != null) {
-                zPos = variableMetadata.getVerticalDomain().getExtent().getLow();
-            }
-            DateTime time = null;
-            if (variableMetadata.getTemporalDomain() != null) {
-                time = variableMetadata.getTemporalDomain().getExtent().getHigh();
-            }
-            float min = Float.MAX_VALUE;
-            float max = -Float.MAX_VALUE;
+    public static Extent<Float> estimateValueRange(Dataset dataset, String varId) {
+
+        VariableMetadata variableMetadata = dataset.getVariableMetadata(varId);
+        if (!variableMetadata.isScalar()) {
+            /*
+             * We have a non-scalar variable. We will attempt to use the first
+             * child member to estimate the value range. This may not work in
+             * which case we ignore it - worst case scenario is that we end up
+             * with a bad scale range set - administrators can just override it.
+             */
             try {
-                MapFeature sampleData = gridDataset.readMapData(CollectionUtils.setOf(varId),
-                        hGrid, zPos, time);
-                Array2D<Number> values = sampleData.getValues(varId);
+                variableMetadata = variableMetadata.getChildren().iterator().next();
+                varId = variableMetadata.getId();
+            } catch (Exception e) {
+                /*
+                 * Ignore this error and just generate a (probably) inaccurate
+                 * range
+                 */
+            }
+        }
+
+        Double zPos = null;
+        Extent<Double> zExtent = null;
+        /*
+         * TODO SLOW! This will be problematic if we are using
+         * AbstractContinuousDomainDatasets, because we will end up extracting
+         * every single feature. On the plus side, the value range returned will
+         * be absolutely accurate...
+         */
+        if (variableMetadata.getVerticalDomain() != null) {
+            zPos = variableMetadata.getVerticalDomain().getExtent().getLow();
+            zExtent = variableMetadata.getVerticalDomain().getExtent();
+        }
+        DateTime time = null;
+        Extent<DateTime> tExtent = null;
+        if (variableMetadata.getTemporalDomain() != null) {
+            time = variableMetadata.getTemporalDomain().getExtent().getHigh();
+            tExtent = variableMetadata.getTemporalDomain().getExtent();
+        }
+        PlottingDomainParams params = new PlottingDomainParams(100, 100, variableMetadata
+                .getHorizontalDomain().getBoundingBox(), zExtent, tExtent, null, zPos, time);
+        float min = Float.MAX_VALUE;
+        float max = -Float.MAX_VALUE;
+        try {
+            Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(
+                    CollectionUtils.setOf(varId), params);
+            for (DiscreteFeature<?, ?> feature : mapFeatures) {
+                Array<Number> values = feature.getValues(varId);
                 if (values != null) {
                     for (Number value : values) {
                         if (value != null) {
@@ -301,38 +313,35 @@ public class WmsUtils {
                         }
                     }
                 }
-            } catch (DataReadingException e) {
-                log.error(
-                        "Problem reading data whilst estimating scale range.  A default value will be used.",
-                        e);
             }
-
-            if (max == -Float.MAX_VALUE || min == Float.MAX_VALUE) {
-                /*
-                 * Defensive - either they are both equal to their start values,
-                 * or neither is.
-                 * 
-                 * Anyway, here we have no data, or can't read it. Pick a range.
-                 * I've chosen 0 to 100, but it really doesn't matter.
-                 */
-                min = 0;
-                max = 100;
-            } else if (min == max) {
-                /*
-                 * We've hit an area of uniform data. Make sure that max > min
-                 */
-                max += 1.0f;
-            } else {
-                float diff = max - min;
-                min -= 0.05 * diff;
-                max += 0.05 * diff;
-            }
-
-            return Extents.newExtent(min, max);
-        } else {
-            return Extents.newExtent(0.0f, 100.0f);
-//            throw new UnsupportedOperationException("Currently only gridded datasets are supported");
+        } catch (DataReadingException e) {
+            log.error(
+                    "Problem reading data whilst estimating scale range.  A default value will be used.",
+                    e);
         }
+
+        if (max == -Float.MAX_VALUE || min == Float.MAX_VALUE) {
+            /*
+             * Defensive - either they are both equal to their start values, or
+             * neither is.
+             * 
+             * Anyway, here we have no data, or can't read it. Pick a range.
+             * I've chosen 0 to 100, but it really doesn't matter.
+             */
+            min = 0;
+            max = 100;
+        } else if (min == max) {
+            /*
+             * We've hit an area of uniform data. Make sure that max > min
+             */
+            max += 1.0f;
+        } else {
+            float diff = max - min;
+            min -= 0.05 * diff;
+            max += 0.05 * diff;
+        }
+
+        return Extents.newExtent(min, max);
     }
 
     /** Copies a file */

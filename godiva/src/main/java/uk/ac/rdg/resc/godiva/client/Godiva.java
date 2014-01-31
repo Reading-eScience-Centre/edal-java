@@ -136,6 +136,12 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     protected AnimationButton anim;
 
     /*
+     * Use to store whether timeseries and vertical profiles are supported
+     */
+    private boolean timeseriesSupported = false;
+    private boolean profilesSupported = false;
+
+    /*
      * Implemented from interfaces/abstract methods
      */
 
@@ -396,9 +402,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID,
                 layerSelector.getSelectedId(), currentTime, targetTime, currentElevation,
                 targetElevation, currentStyle, currentPalette, aboveMaxString, belowMinString,
-                currentScaleRange, nColourBands, logScale, widgetCollection.getElevationSelector()
-                        .getNElevations() > 1, widgetCollection.getTimeSelector()
-                        .hasMultipleTimes());
+                currentScaleRange, nColourBands, logScale, profilesSupported, timeseriesSupported);
 
         /*
          * Set the opacity after updating the map, otherwise it doesn't work
@@ -547,6 +551,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     protected void layerDetailsLoaded(LayerDetails layerDetails, boolean autoUpdate) {
         super.layerDetailsLoaded(layerDetails, autoUpdate);
 
+        timeseriesSupported = layerDetails.supportsTimeseries();
+        profilesSupported = layerDetails.supportsProfiles();
+
         if (widgetCollection.getCopyrightInfo().hasCopyright()
                 || widgetCollection.getMoreInfo().hasInfo()) {
             infoButton.setEnabled(true);
@@ -671,7 +678,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         kmzLink.setHref(mapArea.getKMZUrl());
 
         String baseurl = "http://" + Window.Location.getHost() + Window.Location.getPath()
-                + "?permalinking=true&bgmap="+mapArea.getBackgroundMapName()+"&";
+                + "?permalinking=true&bgmap=" + mapArea.getBackgroundMapName() + "&";
 
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 

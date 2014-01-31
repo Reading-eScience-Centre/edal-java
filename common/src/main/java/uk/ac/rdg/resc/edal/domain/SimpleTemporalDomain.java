@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.domain;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
+import org.joda.time.chrono.ISOChronology;
 
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -44,11 +45,12 @@ public class SimpleTemporalDomain implements TemporalDomain {
     private final Extent<DateTime> extent;
     private final Chronology chronology;
     
-    public SimpleTemporalDomain(DateTime min, DateTime max, Chronology chronology) {
-        this.chronology = chronology;
+    public SimpleTemporalDomain(DateTime min, DateTime max) {
         if(min == null || max == null) {
+            chronology = ISOChronology.getInstanceUTC();
             extent = Extents.emptyExtent(DateTime.class);
         } else {
+            chronology = min.getChronology();
             extent = Extents.newExtent(min, max);
         }
     }

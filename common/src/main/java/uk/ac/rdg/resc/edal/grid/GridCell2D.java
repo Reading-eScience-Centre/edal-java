@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.grid;
 import uk.ac.rdg.resc.edal.domain.Domain;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * A cell in a {@link HorizontalGrid}.
@@ -42,7 +43,7 @@ public interface GridCell2D extends Domain<HorizontalPosition> {
     /**
      * @return the coordinates within the parent {@link HorizontalGrid}
      */
-    public int[] getGridCoordinates();
+    public GridCoordinates2D getGridCoordinates();
 
     /**
      * @return the centre of the grid cell in horizontal space

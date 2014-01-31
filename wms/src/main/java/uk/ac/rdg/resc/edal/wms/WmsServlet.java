@@ -31,10 +31,11 @@ package uk.ac.rdg.resc.edal.wms;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -63,65 +64,46 @@ import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.RuntimeConstants;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
-import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.chrono.ISOChronology;
 import org.opengis.metadata.extent.GeographicBoundingBox;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
-import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.geometry.LineString;
 import uk.ac.rdg.resc.edal.graphics.Charting;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
-import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
-import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
-import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
-import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
@@ -296,7 +278,7 @@ public class WmsServlet extends HttpServlet {
 
     private void getMap(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        GetMapParameters getMapParams = new GetMapParameters(params);
+        GetMapParameters getMapParams = new GetMapParameters(params, catalogue);
 
         PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
@@ -386,8 +368,7 @@ public class WmsServlet extends HttpServlet {
                 String description = layerMetadata.getDescription();
                 String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters
                         .getTargetZ().toString();
-                List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT(ISOChronology
-                        .getInstance()));
+                List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT());
                 BufferedImage legend = imageGenerator.getLegend(200);
                 GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters
                         .getBbox());
@@ -456,7 +437,7 @@ public class WmsServlet extends HttpServlet {
          */
         String datasetId = params.getString("dataset");
 
-        Collection<Dataset<?>> datasets;
+        Collection<Dataset> datasets;
         if (datasetId == null || "".equals(datasetId.trim())) {
             /*
              * No specific dataset has been chosen so we create a Capabilities
@@ -472,11 +453,11 @@ public class WmsServlet extends HttpServlet {
                         + "You must specify a dataset identifier with &amp;DATASET=");
             }
         } else {
-            Dataset<?> ds = catalogue.getDatasetFromId(datasetId);
+            Dataset ds = catalogue.getDatasetFromId(datasetId);
             if (ds == null) {
                 throw new EdalException("There is no dataset with ID " + datasetId);
             }
-            datasets = new ArrayList<Dataset<?>>();
+            datasets = new ArrayList<Dataset>();
             datasets.add(ds);
         }
 
@@ -512,72 +493,89 @@ public class WmsServlet extends HttpServlet {
 
     private void getFeatureInfo(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params);
+        GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
+                catalogue);
         PlottingDomainParams plottingParameters = featureInfoParameters
                 .getPlottingDomainParameters();
-        RegularGrid imageGrid = plottingParameters.getImageGrid();
-        Double xVal = imageGrid.getXAxis().getCoordinateValue(featureInfoParameters.getI());
-        Double yVal = imageGrid.getYAxis().getCoordinateValue(
-                imageGrid.getYAxis().size() - 1 - featureInfoParameters.getJ());
-        HorizontalPosition position = new HorizontalPosition(xVal, yVal,
-                imageGrid.getCoordinateReferenceSystem());
+        final HorizontalPosition position = featureInfoParameters.getClickedPosition();
 
         String[] layerNames = featureInfoParameters.getLayerNames();
+        /*
+         * List of FeatureInfoPoints to be sent to featureInfo velocity template
+         */
         List<FeatureInfoPoint> featureInfos = new ArrayList<FeatureInfoPoint>();
+        /*
+         * Loop over all requested layers
+         */
         for (String layerName : layerNames) {
-            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
             VariableMetadata metadata = catalogue.getVariableMetadataFromId(layerName);
+            Set<VariableMetadata> children = metadata.getChildren();
+            /*
+             * Extract the map features. Because of the way
+             * GetFeatureInfoParameters works, features are searched for in a
+             * 9-pixel box surrounding the clicked position on the map
+             */
+            Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(
+                    CollectionUtils.setOf(variableId), plottingParameters);
 
-            if (dataset instanceof GridDataset) {
-                /*
-                 * This has to be a GridDataset because that's where the
-                 * readSinglePoint method is defined.
-                 * 
-                 * Once we implement in-situ data, we will probably move some
-                 * methods up the hierarchy and this will no longer be the case
-                 */
-                GridDataset gridDataset = (GridDataset) dataset;
-
-                Set<VariableMetadata> children = metadata.getChildren();
-
+            /*
+             * We only want to return a layer name if there are more than one
+             */
+            String layerNameToSave = layerNames.length < 2 ? null : layerName;
+            for (DiscreteFeature<?, ?> feature : mapFeatures) {
                 if (metadata.isScalar()) {
                     /*
-                     * If we have a scalar layer, add the value for it first
+                     * If we have a scalar layer, add the value for it first,
+                     * using the feature name to identify values.
                      */
-                    TemporalDomain temporalDomain = metadata.getTemporalDomain();
-                    Chronology chronology = null;
-                    if (temporalDomain != null) {
-                        chronology = temporalDomain.getChronology();
+                    FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
+                            variableId, plottingParameters, layerNameToSave, feature.getName());
+                    if (featurePoint != null) {
+                        featureInfos.add(featurePoint);
                     }
-                    Number value;
-                    value = gridDataset.readSinglePoint(variableId, position,
-                            plottingParameters.getTargetZ(),
-                            plottingParameters.getTargetT(chronology));
-                    featureInfos.add(new FeatureInfoPoint(layerName, position, value));
                 }
                 for (VariableMetadata child : children) {
                     /*
-                     * Now add the values for every child layer.
+                     * Now add the values for every child layer, using the child
+                     * variable IDs to identify values.
+                     * 
+                     * TODO perhaps in cases where we have child layers for
+                     * multiple features we will want to use a combination of
+                     * feature ID + child variable ID.
                      */
-                    TemporalDomain temporalDomain = child.getTemporalDomain();
-                    Chronology chronology = null;
-                    if (temporalDomain != null) {
-                        chronology = temporalDomain.getChronology();
+                    FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
+                            child.getId(), plottingParameters, layerNameToSave, child.getId());
+                    if (featurePoint != null) {
+                        featureInfos.add(featurePoint);
                     }
-                    Number value;
-                    value = gridDataset.readSinglePoint(child.getId(), position,
-                            plottingParameters.getTargetZ(),
-                            plottingParameters.getTargetT(chronology));
-                    featureInfos.add(new FeatureInfoPoint(catalogue.getLayerName(dataset.getId(),
-                            child.getId()), position, value));
                 }
-            } else {
-                throw new UnsupportedOperationException(
-                        "GetFeatureInfo not supported for non-gridded features yet");
             }
         }
 
+        /*
+         * Sort the feature info according to how far each position is from the
+         * clicked position
+         */
+        Collections.sort(featureInfos, new Comparator<FeatureInfoPoint>() {
+            @Override
+            public int compare(FeatureInfoPoint o1, FeatureInfoPoint o2) {
+                return Double.compare(getDistSquared(o1.getPosition(), position),
+                        getDistSquared(o2.getPosition(), position));
+            }
+        });
+
+        /*
+         * Trim the list down to the number of requested features
+         */
+        while (featureInfos.size() > featureInfoParameters.getFeatureCount()) {
+            featureInfos.remove(featureInfos.size() - 1);
+        }
+
+        /*
+         * Now render the output XML and send to the output stream
+         */
         Template template = velocityEngine.getTemplate("templates/featureInfo.vm");
         VelocityContext context = new VelocityContext();
         context.put("position", position);
@@ -586,6 +584,68 @@ public class WmsServlet extends HttpServlet {
             template.merge(context, httpServletResponse.getWriter());
         } catch (Exception e) {
             log.error("Problem writing FeatureInfo XML", e);
+        }
+    }
+
+    /**
+     * Extracts the target value from a feature
+     * 
+     * @param feature
+     *            The feature to extract the value from
+     * @param variableId
+     *            The name of the variable within the feature
+     * @param plottingParameters
+     *            The {@link PlottingDomainParams} defining the target value to
+     *            extract
+     * @param layerName
+     *            The layer name to add to the {@link FeatureInfoPoint}
+     * @param featureName
+     *            The feature name to add to the {@link FeatureInfoPoint}
+     * @return The extracted value and corresponding information collected as a
+     *         {@link FeatureInfoPoint}
+     */
+    private FeatureInfoPoint getFeatureInfoValuesFromFeature(DiscreteFeature<?, ?> feature,
+            String variableId, PlottingDomainParams plottingParameters, String layerName,
+            String featureName) {
+        Number value = null;
+        HorizontalPosition position = null;
+        String timeStr = null;
+        if (feature instanceof MapFeature) {
+            MapFeature mapFeature = (MapFeature) feature;
+            GridCoordinates2D pointIndex = mapFeature.getDomain().findIndexOf(
+                    plottingParameters.getTargetHorizontalPosition());
+            if (pointIndex != null) {
+                position = mapFeature.getDomain().getDomainObjects()
+                        .get(pointIndex.getY(), pointIndex.getX()).getCentre();
+                value = mapFeature.getValues(variableId).get(pointIndex.getY(), pointIndex.getX());
+                if (mapFeature.getDomain().getTime() != null) {
+                    timeStr = TimeUtils.dateTimeToISO8601(mapFeature.getDomain().getTime());
+                }
+            }
+        } else if (feature instanceof ProfileFeature) {
+            ProfileFeature profileFeature = (ProfileFeature) feature;
+            int index = profileFeature.getDomain().findIndexOf(plottingParameters.getTargetZ());
+            if (index >= 0) {
+                value = profileFeature.getValues(variableId).get(index);
+                position = profileFeature.getHorizontalPosition();
+                if (profileFeature.getTime() != null) {
+                    timeStr = TimeUtils.dateTimeToISO8601(profileFeature.getTime());
+                }
+            }
+        } else if (feature instanceof PointSeriesFeature) {
+            PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) feature;
+            int index = pointSeriesFeature.getDomain().findIndexOf(plottingParameters.getTargetT());
+            if (index >= 0) {
+                position = pointSeriesFeature.getHorizontalPosition();
+                value = pointSeriesFeature.getValues(variableId).get(index);
+                timeStr = TimeUtils.dateTimeToISO8601(pointSeriesFeature.getDomain()
+                        .getCoordinateValue(index));
+            }
+        }
+        if (value != null) {
+            return new FeatureInfoPoint(layerName, featureName, position, timeStr, value);
+        } else {
+            return null;
         }
     }
 
@@ -633,7 +693,7 @@ public class WmsServlet extends HttpServlet {
         JSONObject menu = new JSONObject();
         menu.put("label", catalogue.getServerInfo().getName());
         JSONArray children = new JSONArray();
-        for (Dataset<?> dataset : catalogue.getAllDatasets()) {
+        for (Dataset dataset : catalogue.getAllDatasets()) {
             String datasetId = dataset.getId();
 
             Set<VariableMetadata> topLevelVariables = dataset.getTopLevelVariables();
@@ -706,7 +766,7 @@ public class WmsServlet extends HttpServlet {
         }
         String requestedTime = params.getString("time");
 
-        Dataset<?> dataset;
+        Dataset dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -904,6 +964,34 @@ public class WmsServlet extends HttpServlet {
                     WmsUtils.getTimeAxisUnits(temporalDomain.getChronology()));
         }
 
+        /*
+         * Set the supported plot types
+         */
+        boolean timeseries = false;
+        boolean profiles = false;
+        boolean transects = false;
+        Class<? extends DiscreteFeature<?, ?>> mapFeatureType = dataset.getMapFeatureType();
+        if (GridFeature.class.isAssignableFrom(mapFeatureType)) {
+            if (temporalDomain != null) {
+                timeseries = true;
+            }
+            if (verticalDomain != null) {
+                profiles = true;
+            }
+            transects = true;
+        } else if (ProfileFeature.class.isAssignableFrom(mapFeatureType)) {
+            if (verticalDomain != null) {
+                profiles = true;
+            }
+        } else if (PointSeriesFeature.class.isAssignableFrom(mapFeatureType)) {
+            if (temporalDomain != null) {
+                timeseries = true;
+            }
+        }
+        layerDetails.put("supportsTimeseries", timeseries);
+        layerDetails.put("supportsProfiles", profiles);
+        layerDetails.put("supportsTransects", transects);
+
         layerDetails.put("nearestTimeIso", TimeUtils.dateTimeToISO8601(nearestTime));
         layerDetails.put("moreInfo", moreInfo);
         layerDetails.put("copyright", copyright);
@@ -928,7 +1016,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset<?> dataset;
+        Dataset dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -973,7 +1061,7 @@ public class WmsServlet extends HttpServlet {
         JSONObject minmax = new JSONObject();
         GetMapParameters getMapParams;
         try {
-            getMapParams = new GetMapParameters(params);
+            getMapParams = new GetMapParameters(params, catalogue);
         } catch (EdalException e) {
             e.printStackTrace();
             throw new MetadataException("Problem parsing parameters", e);
@@ -998,10 +1086,10 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Layer " + layerNames[0] + " not found on this server", e);
         }
 
-        String layerName;
         /*
          * Find out which layer the scaling is being applied to
          */
+        String layerName;
 
         /*
          * First get the style which is applied to this layer
@@ -1050,20 +1138,21 @@ public class WmsServlet extends HttpServlet {
             layerName = layerNames[0];
         } else {
             /*
-             * A child layer is being scaled. This
+             * A child layer is being scaled. Get the WMS layer name
+             * corresponding to this child variable
              */
             String variableId = variableMetadata.getChildWithRole(style.getScaledLayerRole())
                     .getId();
             layerName = catalogue.getLayerName(datasetId, variableId);
         }
 
+        /*
+         * Now read the required features
+         */
         FeaturesAndMemberName featuresAndMember;
         try {
             featuresAndMember = catalogue.getFeaturesForLayer(layerName,
                     getMapParams.getPlottingDomainParameters());
-        } catch (BadTimeFormatException e) {
-            log.error("Bad time format", e);
-            throw new MetadataException("Bad time format", e);
         } catch (EdalException e) {
             log.error("Bad layer name", e);
             throw new MetadataException("Problem reading data", e);
@@ -1073,7 +1162,7 @@ public class WmsServlet extends HttpServlet {
         double max = -Double.MAX_VALUE;
         Collection<? extends DiscreteFeature<?, ?>> features = featuresAndMember.getFeatures();
         for (DiscreteFeature<?, ?> f : features) {
-            if (f instanceof GridFeature) {
+            if (f instanceof MapFeature) {
                 /*
                  * We want to look at all values of the grid feature.
                  */
@@ -1113,6 +1202,26 @@ public class WmsServlet extends HttpServlet {
                         }
                     }
                 }
+            } else if (f instanceof PointSeriesFeature) {
+                /*
+                 * For point series features, we do not want to read all values,
+                 * only those which are nearest the target time
+                 */
+                PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) f;
+                int tIndex = pointSeriesFeature.getDomain().findIndexOf(
+                        getMapParams.getPlottingDomainParameters().getTargetT());
+                if (tIndex > 0) {
+                    Number value = pointSeriesFeature.getValues(featuresAndMember.getMember()).get(
+                            tIndex);
+                    if (value != null) {
+                        if (value.doubleValue() > max) {
+                            max = value.doubleValue();
+                        }
+                        if (value.doubleValue() < min) {
+                            min = value.doubleValue();
+                        }
+                    }
+                }
             } else {
                 /*
                  * Would handle other feature types here.
@@ -1128,6 +1237,9 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("No data in this area - cannot calculate min/max");
         }
 
+        /*
+         * No variation in scale.
+         */
         if (min == max) {
             if (min == 0.0) {
                 min = -0.5;
@@ -1150,7 +1262,7 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
         }
 
-        Dataset<?> dataset;
+        Dataset dataset;
         String variableId;
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
@@ -1284,7 +1396,7 @@ public class WmsServlet extends HttpServlet {
              * the colour scale range and the layer in question
              */
             try {
-                GetMapParameters getMapParameters = new GetMapParameters(params);
+                GetMapParameters getMapParameters = new GetMapParameters(params, catalogue);
                 legend = getMapParameters.getStyleParameters().getImageGenerator(catalogue)
                         .getLegend(200);
             } catch (Exception e) {
@@ -1303,84 +1415,48 @@ public class WmsServlet extends HttpServlet {
 
     private void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        String outputFormat = params.getMandatoryString("format");
-        if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
-                && !"image/jpg".equals(outputFormat)) {
+        GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
+                catalogue);
+        PlottingDomainParams plottingParameters = featureInfoParameters
+                .getPlottingDomainParameters();
+        final HorizontalPosition position = featureInfoParameters.getClickedPosition();
+
+        String[] layerNames = featureInfoParameters.getLayerNames();
+        String outputFormat = featureInfoParameters.getInfoFormat();
+        if (!"image/png".equalsIgnoreCase(outputFormat)
+                && !"image/jpeg".equalsIgnoreCase(outputFormat)
+                && !"image/jpg".equalsIgnoreCase(outputFormat)) {
             throw new InvalidFormatException(outputFormat
-                    + " is not a valid output format for a time series plot");
+                    + " is not a valid output format for a profile plot");
         }
-
-        String[] layers = params.getMandatoryString("layers").split(",");
-
-        String[] lonLat = params.getMandatoryString("point").split(" +");
-        HorizontalPosition hPos;
-        try {
-            double lon = Double.parseDouble(lonLat[0]);
-            double lat = Double.parseDouble(lonLat[1]);
-            hPos = new HorizontalPosition(lon, lat, DefaultGeographicCRS.WGS84);
-        } catch (NumberFormatException nfe) {
-            log.error("Badly formed co-ordinates for time series", nfe);
-            throw new EdalException("POINT is not well-formed");
-        }
-
-        String timeStr = params.getMandatoryString("time");
-
+        /*
+         * Loop over all requested layers
+         */
         List<PointSeriesFeature> pointSeriesFeatures = new ArrayList<PointSeriesFeature>();
-        for (String layerName : layers) {
-            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
-            if (dataset instanceof GridDataset) {
-                GridDataset gridDataset = (GridDataset) dataset;
-                String varId = catalogue.getVariableFromId(layerName);
-                VariableMetadata variableMetadata = catalogue.getVariableMetadataFromId(layerName);
-                TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
-                VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
-                if (temporalDomain == null) {
-                    throw new IncorrectDomainException(
-                            "Variable must have a temporal domain to plot a time series");
-                }
-                Extent<DateTime> timeRange = TimeUtils.getTimeRangeForString(timeStr,
-                        temporalDomain.getChronology());
-
-                VerticalPosition zPos = null;
-                String elevationStr = params.getString("elevation");
-                if (elevationStr != null && verticalDomain != null) {
-                    zPos = new VerticalPosition(Double.parseDouble(elevationStr),
-                            verticalDomain.getVerticalCrs());
-                }
-
-                List<DateTime> axisValues = new ArrayList<DateTime>();
-                if (temporalDomain instanceof TimeAxis) {
-                    TimeAxis varTimeAxis = (TimeAxis) temporalDomain;
-                    for (DateTime time : varTimeAxis.getCoordinateValues()) {
-                        if ((time.isAfter(timeRange.getLow()) || time.isEqual(timeRange.getLow()))
-                                && (time.isBefore(timeRange.getHigh()) || time.isEqual(timeRange
-                                        .getHigh()))) {
-                            axisValues.add(time);
-                        }
-                    }
-                } else {
-                    long min = timeRange.getLow().getMillis();
-                    long max = timeRange.getHigh().getMillis();
-                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
-                        axisValues.add(new DateTime(min + (max - min) * ((double) i)
-                                / AXIS_RESOLUTION));
-                    }
-                }
-                TimeAxis timeAxis = new TimeAxisImpl("Artifical time-axis", axisValues);
-                PointSeriesFeature feature = gridDataset.readTimeSeriesData(
-                        CollectionUtils.setOf(varId), hPos, zPos, timeAxis);
-                pointSeriesFeatures.add(feature);
-            } else {
-                throw new UnsupportedOperationException(
-                        "Currently only gridded datasets are supported for time series plots");
-            }
+        for (String layerName : layerNames) {
+            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            String variableId = catalogue.getVariableFromId(layerName);
+            pointSeriesFeatures.addAll(dataset.extractTimeseriesFeatures(
+                    CollectionUtils.setOf(variableId), plottingParameters));
         }
 
-        int width = params.getPositiveInt("width", 700);
-        int height = params.getPositiveInt("height", 600);
+        Collections.sort(pointSeriesFeatures, new Comparator<PointSeriesFeature>() {
+            @Override
+            public int compare(PointSeriesFeature o1, PointSeriesFeature o2) {
+                return Double.compare(getDistSquared(o1.getHorizontalPosition(), position),
+                        getDistSquared(o2.getHorizontalPosition(), position));
+            }
+        });
 
-        /* Now create the time series plot */
-        JFreeChart chart = Charting.createTimeSeriesPlot(pointSeriesFeatures, hPos);
+        while (pointSeriesFeatures.size() > featureInfoParameters.getFeatureCount()) {
+            pointSeriesFeatures.remove(pointSeriesFeatures.size() - 1);
+        }
+
+        int width = 700;
+        int height = 600;
+
+        /* Now create the vertical profile plot */
+        JFreeChart chart = Charting.createTimeSeriesPlot(pointSeriesFeatures, position);
 
         httpServletResponse.setContentType(outputFormat);
         try {
@@ -1400,250 +1476,226 @@ public class WmsServlet extends HttpServlet {
 
     private void getTransect(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        String outputFormat = params.getMandatoryString("format");
-        if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
-                && !"image/jpg".equals(outputFormat)) {
-            throw new InvalidFormatException(outputFormat
-                    + " is not a valid output format for a profile plot");
-        }
-        String[] layers = params.getMandatoryString("layers").split(",");
-        CoordinateReferenceSystem crs = GISUtils.getCrs(params.getMandatoryString("CRS"));
-        LineString lineString = new LineString(params.getMandatoryString("linestring"), crs);
-        String timeStr = params.getString("time");
-
-        String elevationStr = params.getString("elevation");
-        Double zValue = null;
-        if (elevationStr != null) {
-            zValue = Double.parseDouble(elevationStr);
-        }
-        StringBuilder copyright = new StringBuilder();
-        List<TrajectoryFeature> trajectoryFeatures = new ArrayList<TrajectoryFeature>();
-        /* Do we also want to plot a vertical section plot? */
-        boolean verticalSection = false;
-        List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
-        for (String layerName : layers) {
-            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
-            if (dataset instanceof GridDataset) {
-                GridDataset gridDataset = (GridDataset) dataset;
-                String varId = catalogue.getVariableFromId(layerName);
-                String layerCopyright = catalogue.getLayerMetadata(layerName).getCopyright();
-                if (layerCopyright != null && !"".equals(layerCopyright)) {
-                    copyright.append(layerCopyright);
-                    copyright.append('\n');
-                }
-
-                VariableMetadata metadata = gridDataset.getVariableMetadata(varId);
-                VerticalDomain verticalDomain = metadata.getVerticalDomain();
-                final VerticalPosition zPos;
-                if (zValue != null && verticalDomain != null) {
-                    zPos = new VerticalPosition(zValue, verticalDomain.getVerticalCrs());
-                } else {
-                    zPos = null;
-                }
-                if (verticalDomain != null && layers.length == 1) {
-                    verticalSection = true;
-                }
-
-                final DateTime time;
-                TemporalDomain temporalDomain = metadata.getTemporalDomain();
-                if (timeStr != null) {
-                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
-                } else {
-                    time = null;
-                }
-                HorizontalDomain hDomain = metadata.getHorizontalDomain();
-                final List<HorizontalPosition> transectPoints;
-                if (hDomain instanceof HorizontalGrid) {
-                    transectPoints = GISUtils.getOptimalTransectPoints((HorizontalGrid) hDomain,
-                            lineString, zPos, time, AXIS_RESOLUTION / 10);
-                } else {
-                    transectPoints = lineString.getPointsOnPath(AXIS_RESOLUTION);
-                }
-                if (verticalSection) {
-                    verticalSectionHorizontalPositions = transectPoints;
-                }
-                TrajectoryDomain trajectoryDomain = new TrajectoryDomain(
-                        new AbstractList<GeoPosition>() {
-                            @Override
-                            public GeoPosition get(int index) {
-                                return new GeoPosition(transectPoints.get(index), zPos, time);
-                            }
-
-                            @Override
-                            public int size() {
-                                return transectPoints.size();
-                            }
-                        });
-
-                TrajectoryFeature feature = gridDataset.readTrajectoryData(
-                        CollectionUtils.setOf(varId), trajectoryDomain);
-                trajectoryFeatures.add(feature);
-            } else {
-                throw new UnsupportedOperationException(
-                        "Currently only gridded datasets are supported for transect plots");
-            }
-        }
-
-        if (copyright.length() > 0) {
-            copyright.deleteCharAt(copyright.length() - 1);
-        }
-        JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
-                copyright.toString());
-
-        if (verticalSection) {
-            /*
-             * This can only be true if we have a GridSeriesFeature, so we can
-             * cast
-             */
-            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layers[0]);
-            String varId = catalogue.getVariableFromId(layers[0]);
-            if (dataset instanceof GridDataset) {
-                GridDataset gridDataset = (GridDataset) dataset;
-
-                String paletteName = params
-                        .getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
-                int numColourBands = params.getPositiveInt("numcolorbands",
-                        ColourPalette.MAX_NUM_COLOURS);
-                Extent<Float> scaleRange = GetMapStyleParams.getColorScaleRange(params);
-                if (scaleRange == null || scaleRange.isEmpty()) {
-                    scaleRange = Extents.newExtent(270f, 300f);
-                }
-                ColourScale colourScale = new ColourScale(scaleRange.getLow(),
-                        scaleRange.getHigh(), params.getBoolean("logscale", false));
-
-                String bgColourStr = params.getString("bgcolor", "transparent");
-                String amColourStr = params.getString("abovemaxcolor", "0x000000");
-                String bmColourStr = params.getString("belowmincolor", "0x000000");
-                ColourMap palette = new ColourMap(GraphicsUtils.parseColour(bmColourStr),
-                        GraphicsUtils.parseColour(amColourStr),
-                        GraphicsUtils.parseColour(bgColourStr), paletteName, numColourBands);
-                ColourScheme colourScheme = new PaletteColourScheme(colourScale, palette);
-                List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
-
-                VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
-                VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
-                VerticalAxis vAxis;
-                if (verticalDomain instanceof VerticalAxis) {
-                    vAxis = (VerticalAxis) verticalDomain;
-                } else {
-                    /*
-                     * We don't have a valid vertical axis, so create one
-                     */
-                    List<Double> values = new ArrayList<Double>();
-                    double zMin = verticalDomain.getExtent().getLow();
-                    double zMax = verticalDomain.getExtent().getHigh();
-                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
-                        values.add(zMin + (zMax - zMin) / AXIS_RESOLUTION);
-                    }
-                    vAxis = new VerticalAxisImpl("Vertical section axis", values,
-                            verticalDomain.getVerticalCrs());
-                }
-                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId)
-                        .getTemporalDomain();
-                DateTime time = null;
-                if (timeStr != null) {
-                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
-                }
-                for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
-                    ProfileFeature profileFeature = gridDataset.readProfileData(
-                            CollectionUtils.setOf(varId), pos, vAxis, time);
-                    profileFeatures.add(profileFeature);
-                }
-                JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(
-                        profileFeatures, lineString, colourScheme, zValue);
-                chart = Charting.addVerticalSectionChart(chart, verticalSectionChart);
-            } else {
-                log.error("Vertical section charts not supported for non-grid datasets");
-            }
-        }
-        int width = params.getPositiveInt("width", 700);
-        int height = params.getPositiveInt("height", verticalSection ? 1000 : 600);
-
-        httpServletResponse.setContentType(outputFormat);
-        try {
-            if ("image/png".equals(outputFormat)) {
-                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
-                        height);
-            } else {
-                /* Must be a JPEG */
-                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
-                        width, height);
-            }
-        } catch (IOException e) {
-            log.error("Cannot write to output stream", e);
-            throw new EdalException("Problem writing data to output stream", e);
-        }
+//        String outputFormat = params.getMandatoryString("format");
+//        if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
+//                && !"image/jpg".equals(outputFormat)) {
+//            throw new InvalidFormatException(outputFormat
+//                    + " is not a valid output format for a profile plot");
+//        }
+//        String[] layers = params.getMandatoryString("layers").split(",");
+//        CoordinateReferenceSystem crs = GISUtils.getCrs(params.getMandatoryString("CRS"));
+//        LineString lineString = new LineString(params.getMandatoryString("linestring"), crs);
+//        String timeStr = params.getString("time");
+//
+//        String elevationStr = params.getString("elevation");
+//        Double zValue = null;
+//        if (elevationStr != null) {
+//            zValue = Double.parseDouble(elevationStr);
+//        }
+//        StringBuilder copyright = new StringBuilder();
+//        List<TrajectoryFeature> trajectoryFeatures = new ArrayList<TrajectoryFeature>();
+//        /* Do we also want to plot a vertical section plot? */
+//        boolean verticalSection = false;
+//        List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
+//        for (String layerName : layers) {
+//            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+//            if (dataset instanceof GridDataset) {
+//                GridDataset gridDataset = (GridDataset) dataset;
+//                String varId = catalogue.getVariableFromId(layerName);
+//                String layerCopyright = catalogue.getLayerMetadata(layerName).getCopyright();
+//                if (layerCopyright != null && !"".equals(layerCopyright)) {
+//                    copyright.append(layerCopyright);
+//                    copyright.append('\n');
+//                }
+//
+//                VariableMetadata metadata = gridDataset.getVariableMetadata(varId);
+//                VerticalDomain verticalDomain = metadata.getVerticalDomain();
+//                final VerticalPosition zPos;
+//                if (zValue != null && verticalDomain != null) {
+//                    zPos = new VerticalPosition(zValue, verticalDomain.getVerticalCrs());
+//                } else {
+//                    zPos = null;
+//                }
+//                if (verticalDomain != null && layers.length == 1) {
+//                    verticalSection = true;
+//                }
+//
+//                final DateTime time;
+//                TemporalDomain temporalDomain = metadata.getTemporalDomain();
+//                if (timeStr != null) {
+//                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
+//                } else {
+//                    time = null;
+//                }
+//                HorizontalDomain hDomain = metadata.getHorizontalDomain();
+//                final List<HorizontalPosition> transectPoints;
+//                if (hDomain instanceof HorizontalGrid) {
+//                    transectPoints = GISUtils.getOptimalTransectPoints((HorizontalGrid) hDomain,
+//                            lineString, zPos, time, AXIS_RESOLUTION / 10);
+//                } else {
+//                    transectPoints = lineString.getPointsOnPath(AXIS_RESOLUTION);
+//                }
+//                if (verticalSection) {
+//                    verticalSectionHorizontalPositions = transectPoints;
+//                }
+//                TrajectoryDomain trajectoryDomain = new TrajectoryDomain(
+//                        new AbstractList<GeoPosition>() {
+//                            @Override
+//                            public GeoPosition get(int index) {
+//                                return new GeoPosition(transectPoints.get(index), zPos, time);
+//                            }
+//
+//                            @Override
+//                            public int size() {
+//                                return transectPoints.size();
+//                            }
+//                        });
+//
+//                TrajectoryFeature feature = gridDataset.readTrajectoryData(
+//                        CollectionUtils.setOf(varId), trajectoryDomain);
+//                trajectoryFeatures.add(feature);
+//            } else {
+//                throw new UnsupportedOperationException(
+//                        "Currently only gridded datasets are supported for transect plots");
+//            }
+//        }
+//
+//        if (copyright.length() > 0) {
+//            copyright.deleteCharAt(copyright.length() - 1);
+//        }
+//        JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
+//                copyright.toString());
+//
+//        if (verticalSection) {
+//            /*
+//             * This can only be true if we have a GridSeriesFeature, so we can
+//             * cast
+//             */
+//            Dataset dataset = catalogue.getDatasetFromLayerName(layers[0]);
+//            String varId = catalogue.getVariableFromId(layers[0]);
+//            if (dataset instanceof GridDataset) {
+//                GridDataset gridDataset = (GridDataset) dataset;
+//
+//                String paletteName = params
+//                        .getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
+//                int numColourBands = params.getPositiveInt("numcolorbands",
+//                        ColourPalette.MAX_NUM_COLOURS);
+//                Extent<Float> scaleRange = GetMapStyleParams.getColorScaleRange(params);
+//                if (scaleRange == null || scaleRange.isEmpty()) {
+//                    scaleRange = Extents.newExtent(270f, 300f);
+//                }
+//                ColourScale colourScale = new ColourScale(scaleRange.getLow(),
+//                        scaleRange.getHigh(), params.getBoolean("logscale", false));
+//
+//                String bgColourStr = params.getString("bgcolor", "transparent");
+//                String amColourStr = params.getString("abovemaxcolor", "0x000000");
+//                String bmColourStr = params.getString("belowmincolor", "0x000000");
+//                ColourMap palette = new ColourMap(GraphicsUtils.parseColour(bmColourStr),
+//                        GraphicsUtils.parseColour(amColourStr),
+//                        GraphicsUtils.parseColour(bgColourStr), paletteName, numColourBands);
+//                ColourScheme colourScheme = new PaletteColourScheme(colourScale, palette);
+//                List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
+//
+//                VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
+//                VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
+//                VerticalAxis vAxis;
+//                if (verticalDomain instanceof VerticalAxis) {
+//                    vAxis = (VerticalAxis) verticalDomain;
+//                } else {
+//                    /*
+//                     * We don't have a valid vertical axis, so create one
+//                     */
+//                    List<Double> values = new ArrayList<Double>();
+//                    double zMin = verticalDomain.getExtent().getLow();
+//                    double zMax = verticalDomain.getExtent().getHigh();
+//                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
+//                        values.add(zMin + (zMax - zMin) / AXIS_RESOLUTION);
+//                    }
+//                    vAxis = new VerticalAxisImpl("Vertical section axis", values,
+//                            verticalDomain.getVerticalCrs());
+//                }
+//                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId)
+//                        .getTemporalDomain();
+//                DateTime time = null;
+//                if (timeStr != null) {
+//                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
+//                }
+//                for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
+//                    ProfileFeature profileFeature = gridDataset.readProfileData(
+//                            CollectionUtils.setOf(varId), pos, vAxis, time);
+//                    profileFeatures.add(profileFeature);
+//                }
+//                JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(
+//                        profileFeatures, lineString, colourScheme, zValue);
+//                chart = Charting.addVerticalSectionChart(chart, verticalSectionChart);
+//            } else {
+//                log.error("Vertical section charts not supported for non-grid datasets");
+//            }
+//        }
+//        int width = params.getPositiveInt("width", 700);
+//        int height = params.getPositiveInt("height", verticalSection ? 1000 : 600);
+//
+//        httpServletResponse.setContentType(outputFormat);
+//        try {
+//            if ("image/png".equals(outputFormat)) {
+//                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
+//                        height);
+//            } else {
+//                /* Must be a JPEG */
+//                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
+//                        width, height);
+//            }
+//        } catch (IOException e) {
+//            log.error("Cannot write to output stream", e);
+//            throw new EdalException("Problem writing data to output stream", e);
+//        }
     }
 
     private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        String outputFormat = params.getMandatoryString("format");
-        if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
-                && !"image/jpg".equals(outputFormat)) {
+        GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
+                catalogue);
+        PlottingDomainParams plottingParameters = featureInfoParameters
+                .getPlottingDomainParameters();
+        final HorizontalPosition position = featureInfoParameters.getClickedPosition();
+
+        String[] layerNames = featureInfoParameters.getLayerNames();
+        String outputFormat = featureInfoParameters.getInfoFormat();
+        if (!"image/png".equalsIgnoreCase(outputFormat)
+                && !"image/jpeg".equalsIgnoreCase(outputFormat)
+                && !"image/jpg".equalsIgnoreCase(outputFormat)) {
             throw new InvalidFormatException(outputFormat
                     + " is not a valid output format for a profile plot");
         }
-
-        String[] layers = params.getMandatoryString("layers").split(",");
-
-        String[] lonLat = params.getMandatoryString("point").split(" +");
-        HorizontalPosition hPos;
-        try {
-            double lon = Double.parseDouble(lonLat[0]);
-            double lat = Double.parseDouble(lonLat[1]);
-            hPos = new HorizontalPosition(lon, lat, DefaultGeographicCRS.WGS84);
-        } catch (NumberFormatException nfe) {
-            log.error("Badly formed co-ordinates for vertical profile", nfe);
-            throw new EdalException("POINT is not well-formed");
-        }
-
-        DateTime time = null;
-        String timeStr = params.getString("time");
+        
+        /*
+         * Loop over all requested layers
+         */
         List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
-        for (String layerName : layers) {
-            Dataset<?> dataset = catalogue.getDatasetFromLayerName(layerName);
-            if (dataset instanceof GridDataset) {
-                GridDataset gridDataset = (GridDataset) dataset;
-                String varId = catalogue.getVariableFromId(layerName);
-                VerticalDomain verticalDomain = gridDataset.getVariableMetadata(varId)
-                        .getVerticalDomain();
-                VerticalAxis zAxis;
-                if (verticalDomain instanceof VerticalAxis) {
-                    zAxis = (VerticalAxis) verticalDomain;
-                } else {
-                    List<Double> values = new ArrayList<Double>();
-                    Double min = verticalDomain.getExtent().getLow();
-                    Double max = verticalDomain.getExtent().getHigh();
-                    if (min == null || max == null) {
-                        log.error("Cannot plot profile for " + layerName
-                                + " - vertical domain is not well-defined");
-                        continue;
-                    }
-                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
-                        values.add(min + (max - min) * ((double) i) / AXIS_RESOLUTION);
-                    }
-                    TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId)
-                            .getTemporalDomain();
-                    if (timeStr != null) {
-                        time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
-                    }
-                    zAxis = new VerticalAxisImpl("Artificial z-axis", values,
-                            verticalDomain.getVerticalCrs());
-                }
-                ProfileFeature feature = gridDataset.readProfileData(CollectionUtils.setOf(varId),
-                        hPos, zAxis, time);
-                profileFeatures.add(feature);
-            } else {
-                throw new UnsupportedOperationException(
-                        "Currently only gridded datasets are supported for vertical profile plots");
-            }
+        for (String layerName : layerNames) {
+            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            String variableId = catalogue.getVariableFromId(layerName);
+            profileFeatures.addAll(dataset.extractProfileFeatures(
+                    CollectionUtils.setOf(variableId), plottingParameters));
         }
 
-        int width = params.getPositiveInt("width", 700);
-        int height = params.getPositiveInt("height", 600);
+        Collections.sort(profileFeatures, new Comparator<ProfileFeature>() {
+            @Override
+            public int compare(ProfileFeature o1, ProfileFeature o2) {
+                return Double.compare(getDistSquared(o1.getHorizontalPosition(), position),
+                        getDistSquared(o2.getHorizontalPosition(), position));
+            }
+        });
+
+        while (profileFeatures.size() > featureInfoParameters.getFeatureCount()) {
+            profileFeatures.remove(profileFeatures.size() - 1);
+        }
+
+        int width = 700;
+        int height = 600;
 
         /* Now create the vertical profile plot */
-        JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, hPos);
+        JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, position);
 
         httpServletResponse.setContentType(outputFormat);
         try {
@@ -1662,6 +1714,31 @@ public class WmsServlet extends HttpServlet {
     }
 
     /**
+     * Performs Pythagoras on two distances to calculate the distance squared.
+     * Useful for sorting lists according to distance from a point. The result
+     * shouldn't be used for anything critical, since two results may not
+     * accurately reflect the true distance (e.g. two points near the pole may
+     * incorrectly report a smaller distance apart than two near the equator).
+     * 
+     * No check that the positions have the same CRS is performed (for speed).
+     * 
+     * @param pos1
+     *            The first position
+     * @param pos2
+     *            The second position
+     * @return A number related to how far apart the positions are, or
+     *         {@link Double#MAX_VALUE} if either is <code>null</code>
+     */
+    private double getDistSquared(HorizontalPosition pos1, HorizontalPosition pos2) {
+        if (pos1 == null || pos2 == null) {
+            return Double.MAX_VALUE;
+        }
+        return (pos1.getX() - pos2.getX()) * (pos1.getX() - pos2.getX())
+                + (pos1.getY() - pos2.getY()) * (pos1.getY() - pos2.getY());
+
+    }
+
+    /**
      * Wraps {@link EdalException}s in an XML wrapper and returns them.
      * 
      * @param exception
@@ -1675,6 +1752,8 @@ public class WmsServlet extends HttpServlet {
      */
     void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
+        log.error("Wms Exception caught", exception);
+        
         VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();
         ec.addEventHandler(new EscapeXmlReference());

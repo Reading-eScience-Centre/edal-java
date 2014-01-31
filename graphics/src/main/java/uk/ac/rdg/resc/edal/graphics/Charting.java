@@ -34,13 +34,16 @@ import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -109,7 +112,7 @@ final public class Charting {
             HorizontalPosition hPos) throws MismatchedCrsException {
         XYSeriesCollection xySeriesColl = new XYSeriesCollection();
 
-        StringBuilder varList = new StringBuilder();
+        Set<String> plottedVarList = new HashSet<String>();
         String xAxisLabel = "";
         VerticalCrs vCrs = null;
         boolean invertYAxis = false;
@@ -117,21 +120,21 @@ final public class Charting {
             if (vCrs == null) {
                 vCrs = feature.getDomain().getVerticalCrs();
             } else {
-                if (vCrs.equals(feature.getDomain().getVerticalCrs())) {
+                if (!vCrs.equals(feature.getDomain().getVerticalCrs())) {
                     throw new MismatchedCrsException(
                             "All vertical CRSs must match to plot multiple profile plots");
                 }
             }
             for (String varId : feature.getParameterIds()) {
-                varList.append(varId);
-                varList.append(", ");
+                plottedVarList.add(varId);
                 List<Double> elevationValues = feature.getDomain().getCoordinateValues();
 
                 /*
                  * This is the label used for the legend.
                  */
-                String location = feature.getHorizontalPosition().toString();
-                XYSeries series = new XYSeries(location, true);
+                String legend = feature.getName() + "(" + feature.getHorizontalPosition().getX()
+                        + "," + feature.getHorizontalPosition().getY() + ")";
+                XYSeries series = new XYSeries(legend, true);
                 series.setDescription(feature.getParameter(varId).getDescription());
                 for (int i = 0; i < elevationValues.size(); i++) {
                     Number val = feature.getValues(varId).get(i);
@@ -176,19 +179,31 @@ final public class Charting {
         plot.setRangeGridlinePaint(Color.white);
         plot.setOrientation(PlotOrientation.HORIZONTAL);
 
-        String title;
-        if (varList.length() > 0) {
+        StringBuilder title = new StringBuilder();
+        
+        if (plottedVarList.size() > 0) {
+            StringBuilder varList = new StringBuilder();
+            for(String varId : plottedVarList) {
+                varList.append(varId);
+                varList.append(", ");
+            }
             varList.delete(varList.length() - 2, varList.length() - 1);
-            title = "Vertical profile of variables: " + varList.toString() + " at "
-                    + hPos.toString();
+            title.append("Vertical profile of ");
+            if(plottedVarList.size() > 1) {
+                title.append(" variables: ");
+            }
+            title.append(varList.toString());
+            title.append(" near ");
+            title.append(hPos.toString());
         } else {
-            title = "No data to plot at " + hPos.toString();
+            title.append("No data to plot at ");
+            title.append(hPos.toString());
         }
 
         /*
          * Use default font and create a legend if there are multiple lines
          */
-        return new JFreeChart(title, null, plot, xySeriesColl.getSeriesCount() > 1);
+        return new JFreeChart(title.toString(), null, plot, xySeriesColl.getSeriesCount() > 1);
     }
 
     /**
@@ -225,8 +240,8 @@ final public class Charting {
     public static JFreeChart createTimeSeriesPlot(List<PointSeriesFeature> features,
             HorizontalPosition hPos) throws MismatchedCrsException {
 
-        StringBuilder varList = new StringBuilder();
         Chronology chronology = null;
+        List<String> plottedVarList = new ArrayList<String>();
         Map<String, TimeSeriesCollection> phenomena2timeseries = new HashMap<String, TimeSeriesCollection>();
         for (PointSeriesFeature feature : features) {
             if (chronology == null) {
@@ -247,8 +262,7 @@ final public class Charting {
                     collection = new TimeSeriesCollection();
                     phenomena2timeseries.put(phenomena, collection);
                 }
-                varList.append(varId);
-                varList.append(", ");
+                plottedVarList.add(varId);
                 List<DateTime> timeValues = feature.getDomain().getCoordinateValues();
 
                 /*
@@ -273,15 +287,24 @@ final public class Charting {
         }
 
         StringBuilder title = new StringBuilder();
-        if (varList.length() > 0) {
+        if (plottedVarList.size() > 0) {
+            StringBuilder varList = new StringBuilder();
+            for(String varId : plottedVarList) {
+                varList.append(varId);
+                varList.append(", ");
+            }
             varList.delete(varList.length() - 2, varList.length() - 1);
-            title.append("Time series of variables: ");
+            title.append("Time series of ");
+            if(plottedVarList.size() > 1) {
+                title.append("variables: ");
+            }
             title.append(varList.toString());
+            title.append(" near ");
+            title.append(hPos.toString());
         } else {
-            title.append("No data to plot");
+            title.append("No data to plot at ");
+            title.append(hPos.toString());
         }
-        title.append(" at ");
-        title.append(hPos.toString());
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(title.toString(), "Date / time",
                 null, null, true, false, false);

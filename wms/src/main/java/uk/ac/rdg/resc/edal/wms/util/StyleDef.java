@@ -158,7 +158,8 @@ public class StyleDef {
              * is compatible with the layers which the named layer is required
              * in.
              */
-            if (!styleSupportsRoleAndFeatureType("", variableMetadata.getDataset().getFeatureType())) {
+            if (!styleSupportsRoleAndFeatureType("", variableMetadata.getDataset()
+                    .getMapFeatureType())) {
                 return false;
             }
         }
@@ -176,7 +177,7 @@ public class StyleDef {
                     return false;
                 }
                 if (!styleSupportsRoleAndFeatureType(requiredRole, childMetadata.getDataset()
-                        .getFeatureType())) {
+                        .getMapFeatureType())) {
                     /*
                      * We need the child metadata to support a feature type
                      * which it does not.

@@ -3,8 +3,16 @@
     <latitude>$position.y</latitude>
 #foreach( $info in $featureInfo )
     <Feature>
+#if( $info.layerName )        
         <layer>$info.layerName</layer>
+#end        
         <FeatureInfo>
+#if( $info.featureId )
+            <id>$info.featureId</id>
+#end
+#if( $info.time )
+            <time>$info.time</time>
+#end
 #if( !$info.value )
             <value>none</value>
 #else

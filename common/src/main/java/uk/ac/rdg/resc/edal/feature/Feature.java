@@ -63,7 +63,8 @@ public interface Feature<P> {
     public String getDescription();
 
     /**
-     * Gets the domain of the values contained with the feature
+     * Gets the domain of the values contained with the feature. May not return
+     * <code>null</code>
      */
     public Domain<P> getDomain();
 

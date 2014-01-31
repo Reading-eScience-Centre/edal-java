@@ -36,10 +36,10 @@ import org.gwtopenmaps.openlayers.client.LonLat;
 import org.gwtopenmaps.openlayers.client.Map;
 import org.gwtopenmaps.openlayers.client.MapOptions;
 import org.gwtopenmaps.openlayers.client.MapWidget;
-import org.gwtopenmaps.openlayers.client.Pixel;
 import org.gwtopenmaps.openlayers.client.Projection;
 import org.gwtopenmaps.openlayers.client.control.EditingToolbar;
 import org.gwtopenmaps.openlayers.client.control.LayerSwitcher;
+import org.gwtopenmaps.openlayers.client.control.MousePosition;
 import org.gwtopenmaps.openlayers.client.control.WMSGetFeatureInfo;
 import org.gwtopenmaps.openlayers.client.control.WMSGetFeatureInfoOptions;
 import org.gwtopenmaps.openlayers.client.event.EventHandler;
@@ -432,22 +432,27 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         if (timeStr != null) {
             vendorParams.setProperty("TIME", timeStr);
         }
-        final String colorbyTimeStr = wmsLayers.get(layerId).params.getJSObject()
+        final String targetTimeStr = wmsLayers.get(layerId).params.getJSObject()
                 .getPropertyAsString("TARGETTIME");
-        if (colorbyTimeStr != null) {
-            vendorParams.setProperty("TARGETTIME", colorbyTimeStr);
+        if (targetTimeStr != null) {
+            vendorParams.setProperty("TARGETTIME", targetTimeStr);
         }
         final String elevationStr = wmsLayers.get(layerId).params.getJSObject()
                 .getPropertyAsString("ELEVATION");
         if (elevationStr != null) {
             vendorParams.setProperty("ELEVATION", elevationStr);
         }
-        final String colorbyElevationStr = wmsLayers.get(layerId).params.getJSObject()
+        final String targetElevationStr = wmsLayers.get(layerId).params.getJSObject()
                 .getPropertyAsString("TARGETELEVATION");
-        if (colorbyElevationStr != null) {
-            vendorParams.setProperty("TARGETELEVATION", colorbyElevationStr);
+        if (targetElevationStr != null) {
+            vendorParams.setProperty("TARGETELEVATION", targetElevationStr);
         }
 
+        /*
+         * This is a little weird and should be unnecessary.  However, it's not unnecessary.
+         * 
+         * Take it out and try if you really want.
+         */
         if (getFeatureInfo != null) {
             getFeatureInfo.deactivate();
             map.removeControl(getFeatureInfo);
@@ -462,9 +467,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
                 final int mapXClick = Integer.parseInt(pixels[0].substring(2));
                 final int mapYClick = Integer.parseInt(pixels[1].substring(2));
-
-                final LonLat lonLat = MapArea.this.map.getLonLatFromPixel(new Pixel(mapXClick,
-                        mapYClick));
 
                 int x = mapXClick + MapArea.this.getAbsoluteLeft();
                 int y = mapYClick + MapArea.this.getAbsoluteTop();
@@ -508,17 +510,30 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     layerNames.deleteCharAt(layerNames.length() - 1);
                 }
 
-                final String layer = layerNames.toString();
-
+                final String layer = wmsLayers.get(layerId).wms.getParams().getLayers();
+                
                 if (multipleElevations && layerNames.length() > 0) {
                     /*
                      * If we have multiple depths, we can plot a vertical
                      * profile here
                      */
                     final String link = proxyUrl + wmsUrl + "?REQUEST=GetVerticalProfile"
-                            + "&LAYERS=" + layer + "&CRS=" + currentProjection
-                            + ((timeStr != null) ? ("&TIME=" + timeStr) : "") + "&POINT="
-                            + lonLat.lon() + "%20" + lonLat.lat() + "&FORMAT=image/png";
+                            + "&LAYERS=" + layer
+                            + "&QUERY_LAYERS=" + layer
+                            + "&BBOX=" + map.getExtent().toBBox(4)
+                            + "&SRS=" + currentProjection
+                            + "&FEATURE_COUNT=5"
+                            + "&INFO_FORMAT=image/png"
+                            + "&HEIGHT=" + ((int) map.getSize().getHeight())
+                            + "&WIDTH=" + ((int) map.getSize().getWidth())
+                            + "&I=" + mapXClick
+                            + "&J=" + mapYClick
+                            + "&STYLES=default/default"
+                            + ((elevationStr != null) ? ("&ELEVATION=" + elevationStr) : "")
+                            + ((targetElevationStr != null) ? ("&TARGETELEVATION=" + targetElevationStr) : "")
+                            + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
+                            + ((timeStr != null) ? ("&TIME=" + timeStr) : "") 
+                            + "&VERSION=1.1.1";
                     Anchor profilePlot = new Anchor("Vertical Profile Plot");
                     profilePlot.addClickHandler(new ClickHandler() {
                         @Override
@@ -550,15 +565,25 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                 @Override
                                 public void timesReceived(String startDateTime, String endDateTime) {
                                     String eS = elevationStr;
-                                    if (colorbyElevationStr != null) {
-                                        eS = colorbyElevationStr;
+                                    if (targetElevationStr != null) {
+                                        eS = targetElevationStr;
                                     }
-                                    String link = wmsUrl + "?REQUEST=GetTimeseries" + "&LAYERS="
-                                            + layer + "&CRS=" + currentProjection + "&TIME="
-                                            + startDateTime + "/" + endDateTime + "&POINT="
-                                            + lonLat.lon() + "%20" + lonLat.lat()
-                                            + "&FORMAT=image/png"
-                                            + (eS == null ? "" : "&ELEVATION=" + eS);
+                                    final String link = proxyUrl + wmsUrl + "?REQUEST=GetTimeseries"
+                                            + "&LAYERS=" + layer
+                                            + "&QUERY_LAYERS=" + layer
+                                            + "&BBOX=" + map.getExtent().toBBox(4)
+                                            + "&SRS=" + currentProjection
+                                            + "&FEATURE_COUNT=5"
+                                            + "&INFO_FORMAT=image/png"
+                                            + "&HEIGHT=" + ((int) map.getSize().getHeight())
+                                            + "&WIDTH=" + ((int) map.getSize().getWidth())
+                                            + "&I=" + mapXClick
+                                            + "&J=" + mapYClick
+                                            + "&STYLES=default/default"
+                                            + ((eS != null) ? ("&ELEVATION=" + eS) : "")
+                                            + "&TIME=" + startDateTime + "/" + endDateTime 
+                                            + "&VERSION=1.1.1";
+                                    
                                     displayImagePopup(link, "Time series");
                                     timeSelector.hide();
                                 }
@@ -582,8 +607,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     /**
-     * Used to display an image in a new window. This is used for showing vertical
-     * profiles or time series plots
+     * Used to display an image in a new window. This is used for showing
+     * vertical profiles or time series plots
      * 
      * @param url
      *            The URL of the image
@@ -598,8 +623,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
          * This is very much an empirical result. Also known as
          * "not documented anywhere". Still, the below code works...
          */
-        Window.open("../"+url, title, null);
-        
+        Window.open("../" + url, title, null);
+
         /*
          * This is how we can display the image in a popup box.
          */
@@ -744,6 +769,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
         currentProjection = map.getProjection();
         map.addControl(new LayerSwitcher());
+        map.addControl(new MousePosition());
         addDrawingLayer();
         map.setCenter(new LonLat(0.0, 0.0), 2);
         map.setMaxExtent(new Bounds(-180, -360, 180, 360));
@@ -771,11 +797,11 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     public String getBaseLayerLayers() {
         return layersForExport;
     }
-    
+
     public String getBackgroundMapName() {
         return map.getBaseLayer().getName();
     }
-    
+
     public void setBackgroundMap(String layerName) {
         Layer layer = map.getLayerByName(layerName);
         map.setBaseLayer(layer);
@@ -938,7 +964,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
         NodeList feature = featureInfo.getElementsByTagName("Feature");
         int length = feature.getLength();
-        String[] ids = new String[length];
+        String[] layerNames = new String[length];
         for (int i = 0; i < length; i++) {
             /*
              * For each feature...
@@ -946,14 +972,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             Node item = feature.item(i);
             NodeList childNodes = item.getChildNodes();
 
-            String id = null;
+            String layerName = null;
             Double actualX = null;
             Double actualY = null;
             NodeList featureInfoNode = null;
             for (int j = 0; j < childNodes.getLength(); j++) {
                 Node child = childNodes.item(j);
                 if (child.getNodeName().equalsIgnoreCase("layer")) {
-                    id = child.getFirstChild().getNodeValue();
+                    layerName = child.getFirstChild().getNodeValue();
                 } else if (child.getNodeName().equalsIgnoreCase("actualX")) {
                     actualX = Double.parseDouble(child.getFirstChild().getNodeValue());
                 } else if (child.getNodeName().equalsIgnoreCase("actualY")) {
@@ -963,15 +989,16 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 }
             }
 
-            if (id != null) {
-                ids[i] = id;
-                html.append("<tr><td><b>Feature:</b></td><td>" + id);
+            if (layerName != null) {
+                layerNames[i] = layerName;
+                html.append("<tr><td><b>Layer:</b></td><td>" + layerName);
             }
             if (actualX != null && actualY != null)
                 html.append(" (" + FORMATTER.format(actualX) + "," + FORMATTER.format(actualY)
                         + ")");
             html.append("</td></tr>");
             if (featureInfoNode != null) {
+                String id = null;
                 String time = null;
                 String value = null;
                 for (int j = 0; j < featureInfoNode.getLength(); j++) {
@@ -980,9 +1007,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         time = child.getFirstChild().getNodeValue();
                     } else if (child.getNodeName().equalsIgnoreCase("value")) {
                         value = child.getFirstChild().getNodeValue();
+                    } else if (child.getNodeName().equalsIgnoreCase("id")) {
+                        id = child.getFirstChild().getNodeValue();
                     }
                 }
                 if (value != null) {
+                    if (id != null) {
+                        html.append("<tr><td><b>Feature:</b></td><td>" + id);
+                    }
                     if (time != null) {
                         html.append("<tr><td><b>Time:</b></td><td>" + time + "</td></tr>");
                     }
@@ -992,7 +1024,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             }
         }
         html.append("</table>");
-        return new FeatureInfoMessageAndFeatureIds(html.toString(), ids);
+        return new FeatureInfoMessageAndFeatureIds(html.toString(), layerNames);
     }
 
     protected void addDrawingLayer() {
@@ -1101,8 +1133,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         this.transectLayer = transectLayer;
     }
 
-    public void setMultiFeature(boolean multiFeature) {
-        if (multiFeature) {
+    public void setAllowTransects(boolean allowTransects) {
+        if (allowTransects) {
             editingToolbar.deactivate();
         } else {
             editingToolbar.activate();
