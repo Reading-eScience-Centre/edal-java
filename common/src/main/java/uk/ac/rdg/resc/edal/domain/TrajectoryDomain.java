@@ -68,8 +68,7 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
     private final Chronology chronology;
 
     public TrajectoryDomain(List<GeoPosition> positions) throws MismatchedCrsException {
-        this.positions = new ImmutableArray1D<GeoPosition>(positions.size(),
-                positions.toArray(new GeoPosition[0]));
+        this.positions = new ImmutableArray1D<GeoPosition>(positions.toArray(new GeoPosition[0]));
         CoordinateReferenceSystem commonCrs = null;
         VerticalCrs commonVCrs = null;
         Chronology commonChronology = null;
