@@ -38,13 +38,11 @@ public class ImmutableArray1D<T> extends Array1D<T> {
      * 
      * @param clazz
      *            The class of the objects which this {@link Array1D} will hold
-     * @param size
-     *            The shape of the data
      * @param values
      *            An array containing the data.
      */
-    public ImmutableArray1D(int size, T[] values) {
-        super(size);
+    public ImmutableArray1D(T[] values) {
+        super(values.length);
         this.data = values;
     }
 

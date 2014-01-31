@@ -18,12 +18,12 @@ public class ImmutableArrayTest {
 			HorizontalPosition hPos = new HorizontalPosition(100.0 +i*0.2, 120.0+i*0.3, crs);
 			hPosArray [i] =hPos;
 		}
-		ImmutableArray1D<HorizontalPosition> hArray = new ImmutableArray1D<HorizontalPosition>(10, hPosArray);
+		ImmutableArray1D<HorizontalPosition> hArray = new ImmutableArray1D<HorizontalPosition>(hPosArray);
 		assertEquals(hArray.get(3), hPosArray[3]);
 		
 		Integer [] data ={1, 2, 3, 4, 5,};
-		ImmutableArray1D<Integer> iArray = new ImmutableArray1D<Integer>(10, data);
-		assertEquals(iArray.get(10), data[10]);
+		ImmutableArray1D<Integer> iArray = new ImmutableArray1D<Integer>(data);
+		assertEquals(iArray.get(2), data[2]);
 	}
 
 }
