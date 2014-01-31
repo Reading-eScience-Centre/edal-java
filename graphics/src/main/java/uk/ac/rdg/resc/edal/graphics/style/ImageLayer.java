@@ -38,7 +38,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 @XmlType(namespace = MapImage.NAMESPACE, name = "ImageLayerType")
 public abstract class ImageLayer extends Drawable {

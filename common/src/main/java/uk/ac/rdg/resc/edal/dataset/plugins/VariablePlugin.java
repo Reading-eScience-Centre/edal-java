@@ -612,7 +612,7 @@ public abstract class VariablePlugin {
             Collections.sort(values);
             return new TimeAxisImpl("Derived time axis", values);
         } else {
-            return new SimpleTemporalDomain(min, max, chronology);
+            return new SimpleTemporalDomain(min, max);
         }
     }
 }

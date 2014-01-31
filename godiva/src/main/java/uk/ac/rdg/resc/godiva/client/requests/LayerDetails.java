@@ -65,6 +65,11 @@ public class LayerDetails {
     private String startZ = null;
     private String endZ = null;
 
+    private boolean timeseriesSupported = false;
+    private boolean profilesSupported = false;
+    private boolean transectsSupported = false;
+
+
     public LayerDetails(String layerId) {
         id = layerId;
     }
@@ -128,7 +133,7 @@ public class LayerDetails {
     public List<String> getAvailableDates() {
         return availableDates;
     }
-
+    
     public String getNearestDateTime() {
         return nearestTime;
     }
@@ -247,5 +252,29 @@ public class LayerDetails {
 
     public void setEndZ(String endZ) {
         this.endZ = endZ;
+    }
+
+    public boolean supportsTimeseries() {
+        return timeseriesSupported;
+    }
+
+    public boolean supportsProfiles() {
+        return profilesSupported;
+    }
+
+    public boolean supportsTransects() {
+        return transectsSupported;
+    }
+
+    public void setTimeseriesSupported(boolean timeseriesSupported) {
+        this.timeseriesSupported = timeseriesSupported;
+    }
+
+    public void setProfilesSupported(boolean profilesSupported) {
+        this.profilesSupported = profilesSupported;
+    }
+
+    public void setTransectsSupported(boolean transectsSupported) {
+        this.transectsSupported = transectsSupported;
     }
 }

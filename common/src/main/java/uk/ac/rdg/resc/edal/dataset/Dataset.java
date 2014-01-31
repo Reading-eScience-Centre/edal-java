@@ -28,22 +28,30 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.util.Collection;
 import java.util.Set;
+
+import org.joda.time.Chronology;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * Provides access to data and metadata held in underlying storage,
  * {@literal e.g.} on disk, in a database or on a remote server.
  * 
- * @author Jon
  * @author Guy
+ * @author Jon
  */
-public interface Dataset<F extends Feature<?>> {
+public interface Dataset {
 
     /**
      * @return The ID which identifies this dataset.
@@ -58,7 +66,7 @@ public interface Dataset<F extends Feature<?>> {
     /**
      * Reads an entire feature from underlying storage
      */
-    public F readFeature(String featureId) throws DataReadingException;
+    public Feature<?> readFeature(String featureId) throws DataReadingException;
 
     /**
      * Returns the IDs of variables in this {@link Dataset}. Generally the term
@@ -91,9 +99,54 @@ public interface Dataset<F extends Feature<?>> {
      *             If there is a problem adding the plugin
      */
     public void addVariablePlugin(VariablePlugin plugin) throws EdalException;
-    
+
     /**
-     * @return The class of the {@link Feature}s contained within this {@link Dataset}
+     * @return The {@link Chronology} used for any times in this dataset. Can be
+     *         <code>null</code> if this dataset contains no features with time
+     *         information
      */
-    public Class<F> getFeatureType();
+    public Chronology getDatasetChronology();
+
+    /**
+     * @return The {@link VerticalCrs} used for any vertical positions in this
+     *         dataset. Can be <code>null</code> if this dataset contains no
+     *         features with vertical information
+     */
+    public VerticalCrs getDatasetVerticalCrs();
+
+    /**
+     * @return The class of the {@link Feature}s returned when calling the
+     *         {@link Dataset#extractMapFeatures} method
+     */
+    public Class<? extends DiscreteFeature<?, ?>> getMapFeatureType();
+
+    /**
+     * Extracts features to be plotted on a map
+     * 
+     * @param varIds
+     *            The IDs of the variables to be extracted. If this is
+     *            <code>null</code> then all variable IDs will be plotted
+     * @param params
+     *            The {@link PlottingDomainParams} object describing the domain
+     *            to be plotted
+     * @return A {@link Collection} of {@link DiscreteFeature}s which can be
+     *         plotted
+     * @throws DataReadingException
+     *             If there is a problem reading the underlying data
+     */
+    public Collection<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException;
+
+    /**
+     * TODO Document once finalised
+     * @param varIds
+     * @param params
+     * @return
+     * @throws DataReadingException
+     */
+    public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException;
+
+    public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
+            PlottingDomainParams params) throws DataReadingException;
 }

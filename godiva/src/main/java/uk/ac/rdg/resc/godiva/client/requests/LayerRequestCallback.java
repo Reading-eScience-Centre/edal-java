@@ -241,6 +241,27 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 layerDetails.setAvailableZs(availableZs);
             }
         }
+        
+        boolean supportsTimeseries = false;
+        JSONValue supportsTimeseriesJson = parentObj.get("supportsTimeseries");
+        if (supportsTimeseriesJson != null) {
+            supportsTimeseries = supportsTimeseriesJson.isBoolean().booleanValue();
+        }
+        layerDetails.setTimeseriesSupported(supportsTimeseries);
+        
+        boolean supportsProfiles = false;
+        JSONValue supportsProfilesJson = parentObj.get("supportsProfiles");
+        if (supportsProfilesJson != null) {
+            supportsProfiles = supportsProfilesJson.isBoolean().booleanValue();
+        }
+        layerDetails.setProfilesSupported(supportsProfiles);
+        
+        boolean supportsTransects = false;
+        JSONValue supportsTransectsJson = parentObj.get("supportsTransects");
+        if (supportsTransectsJson != null) {
+            supportsTransects = supportsTransectsJson.isBoolean().booleanValue();
+        }
+        layerDetails.setTransectsSupported(supportsTransects);
     }
 
 }

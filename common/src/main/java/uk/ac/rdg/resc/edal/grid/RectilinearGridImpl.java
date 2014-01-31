@@ -84,7 +84,7 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];
                     int yIndex = coords[0];
-                    return new GridCell2DImpl(coords,
+                    return new GridCell2DImpl(new GridCoordinates2D(xIndex, yIndex),
                             new HorizontalPosition(xAxis.getCoordinateValue(xIndex), yAxis
                                     .getCoordinateValue(yIndex), crs), new BoundingBoxImpl(
                                     xAxis.getCoordinateBounds(xIndex),
@@ -142,7 +142,7 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     public GridCoordinates2D findIndexOf(HorizontalPosition position) {
         int x = xAxis.findIndexOf(position.getX());
         int y = yAxis.findIndexOf(position.getY());
-        if (x > 0 && y > 0) {
+        if (x >= 0 && y >= 0) {
             return new GridCoordinates2D(x, y);
         } else {
             return null;

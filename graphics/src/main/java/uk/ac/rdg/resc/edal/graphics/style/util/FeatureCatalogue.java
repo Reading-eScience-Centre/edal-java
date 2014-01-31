@@ -33,6 +33,7 @@ import java.util.Collection;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 public interface FeatureCatalogue {
     public class FeaturesAndMemberName {

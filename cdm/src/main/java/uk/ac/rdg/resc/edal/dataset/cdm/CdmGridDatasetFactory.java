@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.joda.time.Chronology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,15 +59,16 @@ import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
-import uk.ac.rdg.resc.edal.dataset.GridDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
@@ -80,7 +82,9 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
 
     @Override
-    public GridDataset createDataset(String id, String location) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+        VerticalCrs vCrs = null;
+        Chronology chronology = null;
         NetcdfDataset nc = null;
         try {
             /*
@@ -136,6 +140,28 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                 HorizontalGrid hDomain = CdmUtils.createHorizontalGrid(coordSys);
                 VerticalAxis zDomain = CdmUtils.createVerticalAxis(coordSys);
                 TimeAxis tDomain = CdmUtils.createTimeAxis(coordSys);
+
+                if (zDomain != null) {
+                    if (vCrs == null) {
+                        vCrs = zDomain.getVerticalCrs();
+                    } else {
+                        if (!vCrs.equals(zDomain.getVerticalCrs())) {
+                            throw new IncorrectDomainException(
+                                    "A dataset may only have one unique vertical CRS");
+                        }
+                    }
+                }
+
+                if (tDomain != null) {
+                    if (chronology == null) {
+                        chronology = tDomain.getChronology();
+                    } else {
+                        if (!chronology.equals(tDomain.getChronology())) {
+                            throw new IncorrectDomainException(
+                                    "A dataset may only have one unique calendar system");
+                        }
+                    }
+                }
 
                 /*
                  * Create a VariableMetadata object for each GridDatatype
@@ -238,8 +264,8 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                 }
             }
 
-            GridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
-                    CdmUtils.getOptimumDataReadingStrategy(nc));
+            Dataset cdmGridDataset = new CdmGridDataset(id, location, vars,
+                    CdmUtils.getOptimumDataReadingStrategy(nc), vCrs, chronology);
             for (Entry<String, String[]> componentData : xyComponentPairs.entrySet()) {
                 String title = componentData.getKey();
                 String[] comps = componentData.getValue();
@@ -282,12 +308,16 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
     private static final class CdmGridDataset extends AbstractGridDataset {
         private final String location;
         private final DataReadingStrategy dataReadingStrategy;
+        private final VerticalCrs vCrs;
+        private final Chronology chronology;
 
         public CdmGridDataset(String id, String location, Collection<GridVariableMetadata> vars,
-                DataReadingStrategy dataReadingStrategy) {
+                DataReadingStrategy dataReadingStrategy, VerticalCrs vCrs, Chronology chronology) {
             super(id, vars);
             this.location = location;
             this.dataReadingStrategy = dataReadingStrategy;
+            this.vCrs = vCrs;
+            this.chronology = chronology;
         }
 
         @Override
@@ -304,6 +334,16 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         @Override
         protected DataReadingStrategy getDataReadingStrategy() {
             return dataReadingStrategy;
+        }
+
+        @Override
+        public VerticalCrs getDatasetVerticalCrs() {
+            return vCrs;
+        }
+
+        @Override
+        public Chronology getDatasetChronology() {
+            return chronology;
         }
     }
 
@@ -330,7 +370,8 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
      * @throws IOException
      *             if there was an error reading from the data source.
      */
-    private static NetcdfDataset openAndAggregateDataset(String location) throws IOException, EdalException {
+    private static NetcdfDataset openAndAggregateDataset(String location) throws IOException,
+            EdalException {
         List<File> files = CdmUtils.expandGlobExpression(location);
         NetcdfDataset nc;
         if (files.size() == 0) {

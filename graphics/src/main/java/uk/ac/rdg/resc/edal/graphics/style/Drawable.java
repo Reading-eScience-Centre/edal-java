@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlType;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 @XmlType(namespace=MapImage.NAMESPACE, name="Drawable")
 public abstract class Drawable {

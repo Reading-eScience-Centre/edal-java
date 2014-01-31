@@ -138,15 +138,16 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
     @Override
     public Array<GridCell2D> getDomainObjects() {
         if (domainObjects == null) {
-            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] {
-                    curvCoords.getNj(), curvCoords.getNi() }) {
+            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] { curvCoords.getNj(),
+                    curvCoords.getNi() }) {
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];
                     int yIndex = coords[0];
                     Cell cell = curvCoords.getCell(xIndex, yIndex);
-                    return new GridCell2DImpl(coords, cell.getCentre(),
-                            cell.getMinimumBoundingRectangle(), AbstractCurvilinearGrid.this);
+                    return new GridCell2DImpl(new GridCoordinates2D(xIndex, yIndex),
+                            cell.getCentre(), cell.getMinimumBoundingRectangle(),
+                            AbstractCurvilinearGrid.this);
                 }
             };
         }
@@ -174,7 +175,6 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
     public long size() {
         return curvCoords.size();
     }
-    
 
     @Override
     public int hashCode() {
