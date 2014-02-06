@@ -57,7 +57,11 @@ public class PatternScale {
         this.logarithmic = logarithmic;
     }
 
-    public int getNLevels() {
+    public Boolean isLogarithmic() {
+		return logarithmic;
+	}
+
+	public int getNLevels() {
         return nLevels;
     }
 
