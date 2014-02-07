@@ -144,7 +144,13 @@ public final class Extents {
 
         @Override
         public boolean contains(T val) {
-            return compare(this.min, val) <= 0 && compare(this.max, val) >= 0;
+            //modify by nan. assuming T is primitive wrapper class
+            if (val ==null){
+                return false;
+            }
+            else{
+                return compare(this.min, val) <= 0 && compare(this.max, val) >= 0;
+            }
         }
 
         @Override
