@@ -52,6 +52,9 @@ public abstract class AbstractPolygon implements Polygon {
          * Convert the position to the CRS of this polygon
          */
         pos = GISUtils.transformPosition(pos, this.getCoordinateReferenceSystem());
+        if (pos == null) {
+            return false;
+        }
         return this.contains(pos.getX(), pos.getY());
     }
 
