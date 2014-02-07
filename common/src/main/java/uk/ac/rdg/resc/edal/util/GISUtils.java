@@ -205,6 +205,9 @@ public final class GISUtils {
      */
     public static HorizontalPosition transformPosition(HorizontalPosition pos,
             CoordinateReferenceSystem targetCrs) {
+        if (pos == null) {
+            return null;
+        }
         if (targetCrs == null) {
             throw new NullPointerException("Target CRS cannot be null");
         }
@@ -632,7 +635,7 @@ public final class GISUtils {
             return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
         }
     }
-    
+
     /**
      * Increases the size of a {@link BoundingBox} by a given factor
      * 
