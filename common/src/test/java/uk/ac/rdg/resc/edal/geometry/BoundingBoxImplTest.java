@@ -6,8 +6,8 @@ import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import uk.ac.rdg.resc.edal.position.*;
-import uk.ac.rdg.resc.edal.util.*;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 public class BoundingBoxImplTest {
     private BoundingBoxImpl bbox;
