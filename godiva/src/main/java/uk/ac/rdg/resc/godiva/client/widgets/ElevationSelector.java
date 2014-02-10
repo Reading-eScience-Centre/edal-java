@@ -101,9 +101,18 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
 		        double secondVal = Double.parseDouble(availableElevations.get(1));
 		        double dZ = getOptimumDz(firstVal, secondVal, 20);
 		        int i = 0;
-		        for(double v = firstVal + 0.5*dZ; v <= secondVal; v+=dZ){
-		            String formattedElevationStr = format.format(v); 
-		            String formattedElevationRange = format.format(v-0.5*dZ)+"/"+format.format(v+0.5*dZ); 
+		        
+		        String formattedElevationStr = format.format(firstVal); 
+		        String formattedElevationRange = format.format(firstVal)+"/"+format.format(firstVal + 0.5*dZ); 
+		        elevations.addItem(formattedElevationStr);
+		        formattedValuesToRealValues.put(formattedElevationStr, formattedElevationRange);
+		        if(formattedElevationStr.equals(currentElevation)){
+		            elevations.setSelectedIndex(i);
+		        }
+		        i++;
+		        for(double v = firstVal + dZ; v <= secondVal - dZ; v+=dZ){
+		            formattedElevationStr = format.format(v); 
+		            formattedElevationRange = format.format(v-0.5*dZ)+"/"+format.format(v+0.5*dZ); 
 		            elevations.addItem(formattedElevationStr);
 		            formattedValuesToRealValues.put(formattedElevationStr, formattedElevationRange);
 		            if(formattedElevationStr.equals(currentElevation)){
@@ -111,6 +120,14 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
 		            }
 		            i++;
 		        }
+	            formattedElevationStr = format.format(secondVal); 
+	            formattedElevationRange = format.format(secondVal-0.5*dZ)+"/"+format.format(secondVal); 
+	            elevations.addItem(formattedElevationStr);
+	            formattedValuesToRealValues.put(formattedElevationStr, formattedElevationRange);
+	            if(formattedElevationStr.equals(currentElevation)){
+	                elevations.setSelectedIndex(i);
+	            }
+		        
 		    } else {
 		        int i=0;
 		        for(String elevationStr : availableElevations){

@@ -159,7 +159,7 @@ public class StyleDef {
              * in.
              */
             if (!styleSupportsRoleAndFeatureType("", variableMetadata.getDataset()
-                    .getMapFeatureType())) {
+                    .getMapFeatureType(variableMetadata.getId()))) {
                 return false;
             }
         }
@@ -176,13 +176,18 @@ public class StyleDef {
                      */
                     return false;
                 }
+                try{
                 if (!styleSupportsRoleAndFeatureType(requiredRole, childMetadata.getDataset()
-                        .getMapFeatureType())) {
+                        .getMapFeatureType(childMetadata.getId()))) {
                     /*
                      * We need the child metadata to support a feature type
                      * which it does not.
                      */
                     return false;
+                }
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                    System.out.println(childMetadata.getId()+","+childMetadata.getDataset());
                 }
             }
         }

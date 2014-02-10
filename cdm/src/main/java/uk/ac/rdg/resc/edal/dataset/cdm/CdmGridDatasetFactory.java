@@ -190,8 +190,8 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                         }
                     }
 
-                    Parameter parameter = new Parameter(varId, name, variable.getDescription(),
-                            variable.getUnitsString(), variable.getShortName());
+                    Parameter parameter = new Parameter(varId, variable.getShortName(), variable.getDescription(),
+                            variable.getUnitsString(), name);
                     GridVariableMetadata metadata = new GridVariableMetadata(variable.getName(),
                             parameter, hDomain, zDomain, tDomain, true);
                     vars.add(metadata);

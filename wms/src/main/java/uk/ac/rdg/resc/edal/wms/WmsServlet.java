@@ -545,8 +545,9 @@ public class WmsServlet extends HttpServlet {
                      * multiple features we will want to use a combination of
                      * feature ID + child variable ID.
                      */
+                    String name = catalogue.getLayerMetadata(catalogue.getLayerName(dataset.getId(), child.getId())).getTitle();
                     FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
-                            child.getId(), plottingParameters, layerNameToSave, child.getId());
+                            child.getId(), plottingParameters, layerNameToSave, name);
                     if (featurePoint != null) {
                         featureInfos.add(featurePoint);
                     }
@@ -617,7 +618,11 @@ public class WmsServlet extends HttpServlet {
             if (pointIndex != null) {
                 position = mapFeature.getDomain().getDomainObjects()
                         .get(pointIndex.getY(), pointIndex.getX()).getCentre();
+                try{
                 value = mapFeature.getValues(variableId).get(pointIndex.getY(), pointIndex.getX());
+                } catch (NullPointerException e) {
+                    System.out.println(variableId+", was NPE "+mapFeature.getValues(variableId));
+                }
                 if (mapFeature.getDomain().getTime() != null) {
                     timeStr = TimeUtils.dateTimeToISO8601(mapFeature.getDomain().getTime());
                 }
@@ -626,7 +631,11 @@ public class WmsServlet extends HttpServlet {
             ProfileFeature profileFeature = (ProfileFeature) feature;
             int index = profileFeature.getDomain().findIndexOf(plottingParameters.getTargetZ());
             if (index >= 0) {
+                try{
                 value = profileFeature.getValues(variableId).get(index);
+                }catch(NullPointerException e) {
+                    System.out.println(variableId+", was NPE "+profileFeature.getValues(variableId));
+                }
                 position = profileFeature.getHorizontalPosition();
                 if (profileFeature.getTime() != null) {
                     timeStr = TimeUtils.dateTimeToISO8601(profileFeature.getTime());
@@ -970,7 +979,7 @@ public class WmsServlet extends HttpServlet {
         boolean timeseries = false;
         boolean profiles = false;
         boolean transects = false;
-        Class<? extends DiscreteFeature<?, ?>> mapFeatureType = dataset.getMapFeatureType();
+        Class<? extends DiscreteFeature<?, ?>> mapFeatureType = dataset.getMapFeatureType(variableId);
         if (GridFeature.class.isAssignableFrom(mapFeatureType)) {
             if (temporalDomain != null) {
                 timeseries = true;
