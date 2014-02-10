@@ -28,38 +28,22 @@
 
 package uk.ac.rdg.resc.edal.dataset.plugins;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.joda.time.Chronology;
-import org.joda.time.DateTime;
-import org.opengis.metadata.extent.GeographicBoundingBox;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
-import uk.ac.rdg.resc.edal.domain.SimpleHorizontalDomain;
-import uk.ac.rdg.resc.edal.domain.SimpleTemporalDomain;
-import uk.ac.rdg.resc.edal.domain.SimpleVerticalDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * This class specifies a way of generating new variables on-the-fly from
@@ -395,224 +379,15 @@ public abstract class VariablePlugin {
     protected VariableMetadata newVariableMetadataFromDomains(String id, Parameter parameter,
             boolean scalar, HorizontalDomain[] hDomains, VerticalDomain[] zDomains,
             TemporalDomain[] tDomains) {
-        HorizontalDomain hDomain = getIntersectionOfHorizontalDomains(hDomains);
-        VerticalDomain vDomain = getIntersectionOfVerticalDomains(zDomains);
-        TemporalDomain tDomain = getIntersectionOfTemporalDomains(tDomains);
+        HorizontalDomain hDomain = GISUtils.getIntersectionOfHorizontalDomains(hDomains);
+        VerticalDomain vDomain = GISUtils.getIntersectionOfVerticalDomains(zDomains);
+        TemporalDomain tDomain = GISUtils.getIntersectionOfTemporalDomains(tDomains);
         if (hDomain instanceof HorizontalGrid && vDomain instanceof VerticalAxis
                 && tDomain instanceof TimeAxis) {
             return new GridVariableMetadata(id, parameter, (HorizontalGrid) hDomain,
                     (VerticalAxis) vDomain, (TimeAxis) tDomain, scalar);
         } else {
             return new VariableMetadata(id, parameter, hDomain, vDomain, tDomain, scalar);
-        }
-    }
-
-    /**
-     * Gets the union of a number of {@link HorizontalDomain}s
-     * 
-     * @param domains
-     *            The {@link HorizontalDomain}s to find a union of
-     * @return A new {@link HorizontalDomain} whose {@link BoundingBox}
-     *         represents the area where valid values can be found in all the
-     *         supplied {@link HorizontalDomain}s. The
-     *         {@link CoordinateReferenceSystem} of the returned
-     *         {@link HorizontalDomain} will be WGS84
-     */
-    private HorizontalDomain getIntersectionOfHorizontalDomains(HorizontalDomain... domains) {
-        if (domains.length == 0) {
-            throw new IllegalArgumentException("Must provide multiple domains to get a union");
-        }
-        double minLat = Double.MAX_VALUE;
-        double maxLat = -Double.MAX_VALUE;
-        double minLon = Double.MAX_VALUE;
-        double maxLon = -Double.MAX_VALUE;
-
-        boolean allEqual = true;
-        HorizontalDomain comparison = domains[0];
-        for (HorizontalDomain domain : domains) {
-            /*
-             * If one of the domains is null, their intersection is null
-             */
-            if (domain == null) {
-                return null;
-            }
-            if (!domain.equals(comparison)) {
-                allEqual = false;
-            }
-            GeographicBoundingBox gbbox = domain.getGeographicBoundingBox();
-            if (gbbox.getEastBoundLongitude() > maxLon) {
-                maxLon = gbbox.getEastBoundLongitude();
-            }
-            if (gbbox.getWestBoundLongitude() < minLon) {
-                minLon = gbbox.getWestBoundLongitude();
-            }
-            if (gbbox.getNorthBoundLatitude() > maxLat) {
-                maxLat = gbbox.getNorthBoundLatitude();
-            }
-            if (gbbox.getSouthBoundLatitude() < minLat) {
-                minLat = gbbox.getSouthBoundLatitude();
-            }
-        }
-        if (allEqual) {
-            return comparison;
-        }
-        return new SimpleHorizontalDomain(minLon, minLat, maxLon, maxLat);
-    }
-
-    /**
-     * Gets the union of a number of {@link VerticalDomain}s
-     * 
-     * @param domains
-     *            The {@link VerticalDomain}s to find a union of. They must all
-     *            share the same {@link VerticalCrs}
-     * @return A new {@link VerticalDomain} whose extent represents the range
-     *         where valid values can be found in all the supplied
-     *         {@link VerticalDomain}s
-     */
-    private VerticalDomain getIntersectionOfVerticalDomains(VerticalDomain... domains) {
-        if (domains.length == 0) {
-            throw new IllegalArgumentException("Must provide multiple domains to get a union");
-        }
-        if (domains[0] == null) {
-            return null;
-        }
-        VerticalCrs verticalCrs = domains[0].getVerticalCrs();
-        Double min = -Double.MAX_VALUE;
-        Double max = Double.MAX_VALUE;
-        boolean allVerticalAxes = true;
-        Set<Double> axisVals = new HashSet<Double>();
-
-        boolean allEqual = true;
-        VerticalDomain comparison = domains[0];
-        for (VerticalDomain domain : domains) {
-            /*
-             * If one of the domains is null, their intersection is null
-             */
-            if (domain == null) {
-                return null;
-            }
-            if ((domain.getVerticalCrs() == null && verticalCrs != null)
-                    || !domain.getVerticalCrs().equals(verticalCrs)) {
-                throw new IllegalArgumentException(
-                        "Vertical domain CRSs must match to calculate their union");
-            }
-
-            if (!domain.equals(comparison)) {
-                allEqual = false;
-            }
-
-            if (!(domain instanceof VerticalAxis)) {
-                /*
-                 * Not all of our domains are vertical axes
-                 */
-                allVerticalAxes = false;
-            }
-            if (allVerticalAxes) {
-                /*
-                 * If we still think we have all vertical axes, add the axis
-                 * values to the list
-                 */
-                axisVals.addAll(((VerticalAxis) domain).getCoordinateValues());
-            }
-
-            if (domain.getExtent().getLow() > min) {
-                min = domain.getExtent().getLow();
-            }
-            if (domain.getExtent().getHigh() < max) {
-                max = domain.getExtent().getHigh();
-            }
-        }
-
-        if (allEqual) {
-            return comparison;
-        }
-
-        if (allVerticalAxes) {
-            /*
-             * All of our domains were vertical axes, so we create a new axis
-             * out of the intersection of all their points. Often it's the case
-             * that all domains are the same.
-             */
-            List<Double> values = new ArrayList<Double>(axisVals);
-            Collections.sort(values);
-            return new VerticalAxisImpl("Derived vertical axis", values, verticalCrs);
-        } else {
-            return new SimpleVerticalDomain(min, max, verticalCrs);
-        }
-    }
-
-    /**
-     * Gets the union of a number of {@link TemporalDomain}s
-     * 
-     * @param domains
-     *            The {@link TemporalDomain}s to find a union of
-     * @return A new {@link TemporalDomain} whose extent represents the range
-     *         where valid values can be found in all the supplied
-     *         {@link TemporalDomain}s
-     */
-    private TemporalDomain getIntersectionOfTemporalDomains(TemporalDomain... domains) {
-        if (domains.length == 0) {
-            throw new IllegalArgumentException("Must provide multiple domains to get a union");
-        }
-        if (domains[0] == null) {
-            return null;
-        }
-        Chronology chronology = domains[0].getChronology();
-        DateTime min = new DateTime(0L, chronology);
-        DateTime max = new DateTime(Long.MAX_VALUE, chronology);
-        boolean allTimeAxes = true;
-        Set<DateTime> axisVals = new HashSet<DateTime>();
-
-        boolean allEqual = true;
-        TemporalDomain comparison = domains[0];
-        for (TemporalDomain domain : domains) {
-            /*
-             * If one of the domains is null, their intersection is null
-             */
-            if (domain == null) {
-                return null;
-            }
-
-            if (!domain.equals(comparison)) {
-                allEqual = false;
-            }
-            if (!(domain instanceof TimeAxis)) {
-                /*
-                 * Not all of our domains are time axes
-                 */
-                allTimeAxes = false;
-            }
-            if (allTimeAxes) {
-                /*
-                 * If we still think we have all time axes, add the axis values
-                 * to the list, ensuring they are in the same chronology.
-                 */
-                for (DateTime time : ((TimeAxis) domain).getCoordinateValues()) {
-                    axisVals.add(time.toDateTime(chronology));
-                }
-            }
-            if (domain.getExtent().getLow().isAfter(min)) {
-                min = domain.getExtent().getLow();
-            }
-            if (domain.getExtent().getHigh().isBefore(max)) {
-                max = domain.getExtent().getHigh();
-            }
-        }
-
-        if (allEqual) {
-            return comparison;
-        }
-        if (allTimeAxes) {
-            /*
-             * All of our domains were vertical axes, so we create a new axis
-             * out of the intersection of all their points. Often it's the case
-             * that all domains are the same.
-             */
-            List<DateTime> values = new ArrayList<DateTime>(axisVals);
-            Collections.sort(values);
-            return new TimeAxisImpl("Derived time axis", values);
-        } else {
-            return new SimpleTemporalDomain(min, max);
         }
     }
 }

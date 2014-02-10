@@ -106,4 +106,35 @@ public class Parameter {
     public String toString() {
         return id + ": " + title + " (" + description + ")" + " Units: " + units;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((standardName == null) ? 0 : standardName.hashCode());
+        result = prime * result + ((units == null) ? 0 : units.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Parameter other = (Parameter) obj;
+        if (standardName == null) {
+            if (other.standardName != null)
+                return false;
+        } else if (!standardName.equals(other.standardName))
+            return false;
+        if (units == null) {
+            if (other.units != null)
+                return false;
+        } else if (!units.equals(other.units))
+            return false;
+        return true;
+    }
 }

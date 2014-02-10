@@ -57,7 +57,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  */
 public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
 
-    private Class<? extends DiscreteFeature<?, ?>> featureType;
+    protected Class<? extends DiscreteFeature<?, ?>> featureType;
     private FeatureIndexer featureIndexer;
 
     public AbstractContinuousDomainDataset(String id, Collection<? extends VariableMetadata> vars,
@@ -113,7 +113,7 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
     @Override
     public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
-        if (!ProfileFeature.class.isAssignableFrom(getMapFeatureType())) {
+        if (!ProfileFeature.class.isAssignableFrom(featureType)) {
             throw new UnsupportedOperationException(
                     "This dataset does not support profile features");
         }
@@ -129,7 +129,7 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
     @Override
     public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
-        if (!PointSeriesFeature.class.isAssignableFrom(getMapFeatureType())) {
+        if (!PointSeriesFeature.class.isAssignableFrom(featureType)) {
             throw new UnsupportedOperationException(
                     "This dataset does not support time series features");
         }
@@ -157,7 +157,7 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
     protected abstract Extent<DateTime> getDatasetTimeExtent();
 
     @Override
-    public Class<? extends DiscreteFeature<?, ?>> getMapFeatureType() {
+    public final Class<? extends DiscreteFeature<?, ?>> getMapFeatureType(String variableId) {
         return featureType;
     }
 

@@ -1356,7 +1356,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     @Override
-    public Class<GridFeature> getMapFeatureType() {
+    public Class<GridFeature> getMapFeatureType(String variableId) {
         return GridFeature.class;
     }
 
