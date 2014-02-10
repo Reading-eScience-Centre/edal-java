@@ -33,7 +33,6 @@ public class TimeAxisTest {
     public void test() {
         Extent<DateTime> dateBound = tAxis.getExtent();
         DateTime firstDate = new DateTime(1999, 12, 1, 0, 0, chronology);
-
         DateTime lastDate = firstDate.plusDays(20);
         Extent<DateTime> expected = Extents.newExtent(firstDate, lastDate);
         assertEquals(dateBound, expected);
@@ -41,7 +40,6 @@ public class TimeAxisTest {
         int n = 4;
         DateTime fifthDate = tAxis.getCoordinateValue(n);
         assertEquals(tAxis.findIndexOf(fifthDate), n);
-
         assertTrue(tAxis.isAscending());
 
     }
