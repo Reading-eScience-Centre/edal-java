@@ -47,9 +47,12 @@ public interface RegularAxis extends ReferenceableAxis<Double> {
      * bounds of the axis.
      * 
      * @param position
-     *            The position to test
+     *            The position to test.
      * @return The index where the position would appear, even if outside the
      *         bounds of this axis
+     * @throws IllegalArgumentException
+     *             if the given position is <code>null</code> or
+     *             {@link Double#NaN}
      */
-    public int findIndexOfUnconstrained(Double position);
+    public int findIndexOfUnconstrained(Double position) throws IllegalArgumentException;
 }
