@@ -115,10 +115,17 @@ public interface Dataset {
     public VerticalCrs getDatasetVerticalCrs();
 
     /**
+     * Determines the type of feature returned by the
+     * {@link Dataset#extractMapFeatures(Set, PlottingDomainParams)} method for
+     * a particular variable
+     * 
+     * @param variableId
+     *            The ID of the variable
      * @return The class of the {@link Feature}s returned when calling the
-     *         {@link Dataset#extractMapFeatures} method
+     *         {@link Dataset#extractMapFeatures} method for the given variable
+     *         ID
      */
-    public Class<? extends DiscreteFeature<?, ?>> getMapFeatureType();
+    public Class<? extends DiscreteFeature<?, ?>> getMapFeatureType(String variableId);
 
     /**
      * Extracts features to be plotted on a map
@@ -139,6 +146,7 @@ public interface Dataset {
 
     /**
      * TODO Document once finalised
+     * 
      * @param varIds
      * @param params
      * @return

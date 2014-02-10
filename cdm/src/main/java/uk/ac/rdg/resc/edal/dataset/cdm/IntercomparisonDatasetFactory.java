@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 The University of Reading
+ * Copyright (c) 2014 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.grid;
+package uk.ac.rdg.resc.edal.dataset.cdm;
 
-/**
- * <p>
- * A one-dimensional axis of a Grid, whose coordinate values are regularly
- * spaced.
- * </p>
- * 
- * @author Jon Blower
- */
-public interface RegularAxis extends ReferenceableAxis<Double> {
-    /**
-     * Gets the spacing between coordinate values, might be negative.
-     */
-    public double getCoordinateSpacing();
+import java.io.IOException;
 
-    /**
-     * Finds the apparent index of a given position, even if this is beyond the
-     * bounds of the axis.
-     * 
-     * @param position
-     *            The position to test.
-     * @return The index where the position would appear, even if outside the
-     *         bounds of this axis
-     * @throws IllegalArgumentException
-     *             if the given position is <code>null</code> or
-     *             {@link Double#NaN}
-     */
-    public int findIndexOfUnconstrained(Double position) throws IllegalArgumentException;
+import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+
+public class IntercomparisonDatasetFactory extends DatasetFactory {
+
+    @Override
+    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+        try {
+            return new IntercomparisonDataset(id,
+                    DatasetFactory.forName("uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory"),
+                    "/home/guy/Data/EN3/EN3_v2a_Profiles_2011*.nc",
+                    DatasetFactory.forName("uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory"),
+                    "/home/guy/Data/FOAM_ONE/FOAM_one.ncml");
+        } catch (Exception e) {
+            throw new EdalException("Problem reading dataset", e);
+        }
+    }
+
 }

@@ -107,6 +107,9 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
 
     @Override
     public int findIndexOf(Double position) {
+        if (position == null || Double.isNaN(position)) {
+            return -1;
+        }
         if (isLongitude) {
             position = GISUtils
                     .getNextEquivalentLongitude(getCoordinateExtent().getLow(), position);
@@ -128,6 +131,9 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
 
     @Override
     public int findIndexOfUnconstrained(Double position) {
+        if (position == null || Double.isNaN(position)) {
+            throw new IllegalArgumentException("Cannot find the index of null or NaN");
+        }
         /*
          * The purpose of this method is to find the index of a position even if
          * it is outside the axis bounds.
