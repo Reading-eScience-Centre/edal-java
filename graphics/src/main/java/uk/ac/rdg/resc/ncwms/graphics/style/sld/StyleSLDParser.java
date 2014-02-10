@@ -55,7 +55,7 @@ public class StyleSLDParser {
 		registerSymbolizer("ArrowSymbolizer", SLDArrowSymbolizer.class);
 //		registerSymbolizer("InSituIconSymbolizer", SLDInSituIconSymbolizer.class);
 //		registerSymbolizer("SubsampledIconSymbolizer", SLDSubsampledIconSymbolizer.class);
-//		registerSymbolizer("ConfidenceIntervalSymbolizer", SLDConfidenceIntervalSymbolizer.class);
+		registerSymbolizer("ConfidenceIntervalSymbolizer", SLDConfidenceIntervalSymbolizer.class);
 	}
 	
 	/**
