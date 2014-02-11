@@ -96,7 +96,7 @@ public final class Extents {
             }
         }
 
-        return new SimpleExtent<T>(minCandidate, maxCandidate);
+        return newExtent(minCandidate, maxCandidate);
     }
 
     @SuppressWarnings("unchecked")

@@ -40,7 +40,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Jon
  */
 public class ReferenceableAxisImpl extends AbstractIrregularAxis<Double> {
-    
+
     private final boolean isLongitude;
 
     /**
@@ -68,12 +68,14 @@ public class ReferenceableAxisImpl extends AbstractIrregularAxis<Double> {
 
     @Override
     public int findIndexOf(Double position) {
+        if (position == null || Double.isNaN(position))
+            return -1;
         if (isLongitude) {
             position = GISUtils.getNextEquivalentLongitude(this.getMinimumValue(), position);
         }
         return super.findIndexOf(position);
     }
-    
+
     @Override
     protected Double extendFirstValue(Double firstVal, Double nextVal) {
         return firstVal - 0.5 * (nextVal - firstVal);
@@ -83,12 +85,12 @@ public class ReferenceableAxisImpl extends AbstractIrregularAxis<Double> {
     protected Double extendLastValue(Double lastVal, Double secondLastVal) {
         return lastVal + 0.5 * (lastVal - secondLastVal);
     }
-    
+
     @Override
     protected double difference(Double pos1, Double pos2) {
         return pos1 - pos2;
     }
-    
+
     @Override
     protected Double getMidpoint(Double pos1, Double pos2) {
         return 0.5 * (pos1 + pos2);
