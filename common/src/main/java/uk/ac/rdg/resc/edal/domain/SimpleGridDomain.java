@@ -54,6 +54,12 @@ public class SimpleGridDomain implements GridDomain {
     private VerticalAxis vAxis;
     private TimeAxis tAxis;
 
+    public SimpleGridDomain(HorizontalGrid hGrid, VerticalAxis vAxis, TimeAxis tAxis) {
+        this.hGrid = hGrid;
+        this.vAxis = vAxis;
+        this.tAxis = tAxis;
+    }
+
     @Override
     public Array<GridCell4D> getDomainObjects() {
         int xSize = hGrid == null ? 1 : hGrid.getXSize();
