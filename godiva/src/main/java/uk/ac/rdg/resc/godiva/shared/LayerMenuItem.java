@@ -81,7 +81,7 @@ public class LayerMenuItem implements Serializable {
         return plottable;
     }
     
-    public List<LayerMenuItem> getChildren(){
+    public List<? extends LayerMenuItem> getChildren(){
         return childItems;
     }
     

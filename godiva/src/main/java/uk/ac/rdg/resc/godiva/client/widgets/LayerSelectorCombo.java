@@ -135,7 +135,7 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
         } else {
             setText(nodeLabel);
         }
-        List<LayerMenuItem> children = topItem.getChildren();
+        List<? extends LayerMenuItem> children = topItem.getChildren();
         if (children != null) {
             for (LayerMenuItem child : children) {
                 addNode(child, null);
