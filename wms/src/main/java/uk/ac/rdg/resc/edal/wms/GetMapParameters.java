@@ -159,15 +159,27 @@ public class GetMapParameters {
                 throw new BadTimeFormatException("Time can either be a single value or a range");
             }
         }
-        DateTime startTime = TimeUtils.iso8601ToDateTime(startTimeStr, chronology);
-        DateTime endTime = TimeUtils.iso8601ToDateTime(endTimeStr, chronology);
-        Extent<DateTime> tExtent = Extents.newExtent(startTime, endTime);
+        DateTime startTime = null;
+        if(startTimeStr != null) {
+            startTime = TimeUtils.iso8601ToDateTime(startTimeStr, chronology);
+        }
+        DateTime endTime = null;
+        if(endTimeStr != null) {
+            endTime = TimeUtils.iso8601ToDateTime(endTimeStr, chronology);
+        }
+        Extent<DateTime> tExtent = null;
+        if(startTime != null && endTime != null) {
+            tExtent = Extents.newExtent(startTime, endTime);
+        }
 
         String targetTimeStr = params.getString("targettime");
         if (targetTimeStr == null && endTimeStr != null) {
             targetTimeStr = endTimeStr;
         }
-        DateTime targetTime = TimeUtils.iso8601ToDateTime(targetTimeStr, chronology);
+        DateTime targetTime = null;
+        if(targetTimeStr != null) {
+            targetTime = TimeUtils.iso8601ToDateTime(targetTimeStr, chronology);
+        }
 
         Extent<Double> zExtent = null;
         String depthString = params.getString("elevation");
