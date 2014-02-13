@@ -53,6 +53,8 @@ import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
+import uk.ac.rdg.resc.ncwms.graphics.style.sld.SLDException;
+import uk.ac.rdg.resc.ncwms.graphics.style.sld.StyleSLDParser;
 
 public class GetMapStyleParams {
 
@@ -100,24 +102,24 @@ public class GetMapStyleParams {
             styles = stylesStr.split(",");
         }
 
-        xmlStyle = params.getString("XML_STYLE");
+        xmlStyle = params.getString("SLD_BODY");
 
-        String jsonStyle = params.getString("JSON_STYLE");
-        if (jsonStyle != null && xmlStyle == null) {
-            try {
-                xmlStyle = StyleJSONParser.JSONtoXMLString(jsonStyle);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                throw new EdalException(
-                        "Problem parsing JSON style to XML style.  Check logs for stack trace");
-            }
-        }
+//        String jsonStyle = params.getString("JSON_STYLE");
+//        if (jsonStyle != null && xmlStyle == null) {
+//            try {
+//                xmlStyle = StyleJSONParser.JSONtoXMLString(jsonStyle);
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//                throw new EdalException(
+//                        "Problem parsing JSON style to XML style.  Check logs for stack trace");
+//            }
+//        }
 
         if (xmlStyle == null) {
             xmlSpecified = false;
             if (layers == null) {
                 throw new EdalException(
-                        "You must specify either XML_STYLE, JSON_STYLE or LAYERS and STYLES");
+                        "You must specify either SLD_BODY or LAYERS and STYLES");
             }
             if (styles != null && styles.length != layers.length && styles.length != 0) {
                 throw new EdalException("You must request exactly one STYLE per layer, "
@@ -221,8 +223,8 @@ public class GetMapStyleParams {
     public MapImage getImageGenerator(WmsCatalogue catalogue) throws EdalException {
         if (xmlStyle != null) {
             try {
-                return StyleXMLParser.deserialise(xmlStyle);
-            } catch (JAXBException e) {
+                return StyleSLDParser.createImage(xmlStyle);
+            } catch (SLDException e) {
                 e.printStackTrace();
                 throw new EdalException("Problem parsing XML style.  Check logs for stack trace");
             }

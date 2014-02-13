@@ -3,7 +3,7 @@
 <head>
 <title>Test of new Styled Layer Descriptor XML parser</title>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-<script type="text/javascript" src="sldtest.js"></script>
+<script type="text/javascript" src="js/sldtest.js"></script>
 </head>
 
 <body>
@@ -24,20 +24,20 @@ quoted in the name of the styled layer except where two variables are referenced
 <tr>
 <td>
 <select onchange="loadSampleSLD(this.value)">
-	<option value="no_document.txt">Select a sample SLD document...</option>
-	<option value="se_arrow.xml">Arrows</option>
-	<option value="se_raster2d.xml">Bivariate colour maps</option>
-	<option value="se_confidence_interval.xml">Confidence intervals</option>
-	<option value="se_contour.xml">Contours</option>
-<!--	<option value="se_in_situ_icon.xml">In situ icons</option> -->
-	<option value="se_interpolate.xml">Interpolation</option>
-	<option value="se_linear_opacity.xml">Linear opacity transformations</option>
-	<option value="se_palette.xml">Palettes</option>
-	<option value="se_example.xml">SE example</option>
-	<option value="se_stipple.xml">Stippling</option>
-<!--	<option value="se_subsampled_icon.xml">Subsampled icons</option> -->
-  	<option value="se_threshold.xml">Thresholds 1</option>
-  	<option value="se_threshold_1.xml">Thresholds 2</option>
+	<option value="sld/no_document.txt">Select a sample SLD document...</option>
+	<option value="sld/se_arrow.xml">Arrows</option>
+	<option value="sld/se_raster2d.xml">Bivariate colour maps</option>
+	<option value="sld/se_confidence_interval.xml">Confidence intervals</option>
+	<option value="sld/se_contour.xml">Contours</option>
+<!--	<option value="sld/se_in_situ_icon.xml">In situ icons</option> -->
+	<option value="sld/se_interpolate.xml">Interpolation</option>
+	<option value="sld/se_linear_opacity.xml">Linear opacity transformations</option>
+	<option value="sld/se_palette.xml">Palettes</option>
+	<option value="sld/se_example.xml">SE example</option>
+	<option value="sld/se_stipple.xml">Stippling</option>
+<!--	<option value="sld/se_subsampled_icon.xml">Subsampled icons</option> -->
+  	<option value="sld/se_threshold.xml">Thresholds 1</option>
+  	<option value="sld/se_threshold_1.xml">Thresholds 2</option>
 </select>
 Font size: <select onchange="sldtext.style.fontSize=this.value">
 	<option value="8pt">8</option>
