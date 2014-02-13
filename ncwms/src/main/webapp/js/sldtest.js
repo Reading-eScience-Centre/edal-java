@@ -1,7 +1,7 @@
 function getLayerNames()
 {
 	var theHtml = "";
-	var theUrl = "http://localhost:8080/ncWMS/wms?request=GetMetadata&item=menu";
+	var theUrl = "wms?request=GetMetadata&item=menu";
 	var JSONObject = JSON.parse(httpGet(theUrl));
 	var dataSets = JSONObject.children;
 	if (dataSets != null) {
@@ -46,12 +46,11 @@ function httpGet(theUrl)
 
 function loadNewImage()
 {
-	var xml = document.getElementById("sldtext").value; 
-	var newURL = "http://localhost:8080/ncWMS/wms?REQUEST=GetMap&VERSION=1.3.0&" +
-		"SLD_BODY=" + encodeURIComponent(xml) + 
-		"&CRS=CRS:84&WIDTH=1024&HEIGHT=512&FORMAT=image/png&TRANSPARENT=true" + 
-		"&BBOX=-179.97500610351562,-89.9749984741211,179.97500610351562,89.9749984741211";
-document.getElementById("image").src = newURL;
+	var xml = document.getElementById("sldtext").value;
+	var newURL = "wms?FORMAT=image%2Fpng&TRANSPARENT=TRUE&" +
+		"SLD_BODY=" + encodeURIComponent(xml) + "&VERSION=1.3.0&EXCEPTIONS=INIMAGE&" +
+		"SERVICE=WMS&REQUEST=GetMap&CRS=CRS%3A84&BBOX=-180,-90,180,90&WIDTH=1024&HEIGHT=512";
+	document.getElementById("image").src = newURL;
 }
 
 function loadSampleSLD(file)
