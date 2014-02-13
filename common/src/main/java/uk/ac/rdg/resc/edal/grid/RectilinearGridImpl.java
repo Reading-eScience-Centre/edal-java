@@ -78,8 +78,8 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     @Override
     public Array<GridCell2D> getDomainObjects() {
         if (domainObjects == null) {
-            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] {
-                    yAxis.size(), xAxis.size() }) {
+            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] { yAxis.size(),
+                    xAxis.size() }) {
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];
@@ -98,6 +98,8 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
 
     @Override
     public boolean contains(HorizontalPosition position) {
+        if (position == null)
+            return false;
         if (GISUtils.crsMatch(crs, position.getCoordinateReferenceSystem())) {
             return xAxis.contains(position.getX()) && yAxis.contains(position.getY());
         } else {
