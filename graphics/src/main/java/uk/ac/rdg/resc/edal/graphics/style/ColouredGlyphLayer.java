@@ -84,6 +84,21 @@ public class ColouredGlyphLayer extends ImageLayer {
          */
         icon = getIcon(glyphIconName);
     }
+    
+    public ColouredGlyphLayer(String dataFieldName, String glyphIconName,
+    		ColourScheme colourScheme) throws InstantiationException {
+    	this.dataFieldName = dataFieldName;
+    	this.glyphIconName = glyphIconName;
+    	this.colourScheme = colourScheme;
+        /*
+         * Read the icon files before the object is created.
+         */
+        readInIcons();
+        /*
+         * Now set the icon to the default
+         */
+        icon = getIcon(glyphIconName);
+    }
 
     void afterUnmarshal(Unmarshaller u, Object parent) {
         /*
