@@ -42,13 +42,13 @@ import org.apache.velocity.app.VelocityEngine;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
+import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
-import uk.ac.rdg.resc.ncwms.graphics.style.sld.SLDException;
-import uk.ac.rdg.resc.ncwms.graphics.style.sld.StyleSLDParser;
 
 public class GetMapStyleParams {
 
