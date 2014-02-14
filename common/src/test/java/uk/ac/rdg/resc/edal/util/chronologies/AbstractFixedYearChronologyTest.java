@@ -73,7 +73,6 @@ public abstract class AbstractFixedYearChronologyTest {
      */
     @Test
     public void test1970() {
-        System.out.println("1970");
         testDateTime(1970, 1, 1, 0, 0, 0, 0);
     }
 
@@ -82,43 +81,36 @@ public abstract class AbstractFixedYearChronologyTest {
      */
     @Test
     public void test1971() {
-        System.out.println("1971");
         testDateTime(1971, 1, 1, 0, 0, 0, 0);
     }
 
     @Test
     public void test1969() {
-        System.out.println("1969");
         testDateTime(1969, 1, 1, 0, 0, 0, 0);
     }
 
     @Test
     public void test1969AndAMillisecond() {
-        System.out.println("1969 + 1ms");
         testDateTime(1969, 1, 1, 0, 0, 0, 1);
     }
 
     @Test
     public void testZeroYear() {
-        System.out.println("1st Jan, 0000");
         testDateTime(0, 1, 1, 0, 0, 0, 0);
     }
 
     @Test
     public void testNegativeYear() {
-        System.out.println("Jan 30, -1");
         testDateTime(-1, 1, 30, 0, 0, 0, 0);
     }
 
     @Test
     public void testVeryNegativeYear() {
-        System.out.println("Jan 30, -2000");
         testDateTime(-2000, 1, 30, 0, 0, 0, 0);
     }
 
     @Test
     public void testDateTime() {
-        System.out.println("Jan 30, 2000, 13:45:56.789");
         testDateTime(2000, 1, 30, 13, 45, 56, 789);
     }
 
@@ -233,7 +225,6 @@ public abstract class AbstractFixedYearChronologyTest {
 
         dt = new DateTime(2000, 10, 1, 0, 0, 0, 0, this.chron);
         dt = dt.plusMonths(-1);
-        System.out.println(dt);
         assertEquals(2000, dt.getYear());
         assertEquals(9, dt.getMonthOfYear());
         assertEquals(1, dt.getDayOfMonth());
@@ -290,7 +281,6 @@ public abstract class AbstractFixedYearChronologyTest {
 
         // Do a round-trip format and parse
         String isoString = this.formatter.print(dt);
-        System.out.println(isoString);
         long parsedMillis = this.formatter.parseMillis(isoString);
         assertEquals(dt.getMillis(), parsedMillis);
     }

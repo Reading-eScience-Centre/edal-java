@@ -1,16 +1,20 @@
 package uk.ac.rdg.resc.edal.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.joda.time.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import uk.ac.rdg.resc.edal.util.TimeUtils;
-import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
-import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
-import java.util.*;
-import org.joda.time.chrono.*;
+import org.joda.time.Chronology;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.chrono.ISOChronology;
 import org.junit.Before;
 import org.junit.Test;
+
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 
 public class TimeUtilsTest {
     private DateTime start = new DateTime(2000, 1, 1, 0, 0, DateTimeZone.UTC);

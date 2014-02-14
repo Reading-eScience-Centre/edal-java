@@ -52,7 +52,6 @@ public final class ThreeSixtyDayChronologyTest extends AbstractFixedYearChronolo
     @Test
     public void testFeb30_2000() {
         // Only legal in this calendar system
-        System.out.println("Feb 30, 2000");
         testDateTime(2000, 2, 30, 0, 0, 0, 0);
     }
 
@@ -65,7 +64,6 @@ public final class ThreeSixtyDayChronologyTest extends AbstractFixedYearChronolo
         DateTime yearOne = sample.withYear(1);
         millis = yearOne.getMillis();
         assertEquals(millis - 4 * YEAR, yearOne.year().addToCopy(-4).getMillis());
-        System.out.println(yearOne);
     }
 
     @Test
