@@ -156,9 +156,9 @@ public class ThresholdColourScheme2D extends ColourScheme2D {
 	public Float getScaleMin(int dimension) {
 		switch (dimension) {
 			case 1:
-				return xThresholds.get(0);
+				return xThresholds.get(xThresholds.size() - 1);
 			case 2:
-				return yThresholds.get(0);
+				return yThresholds.get(yThresholds.size() - 1);
 			default:
 				throw new IllegalArgumentException("Dimension must be either 1 or 2.");
 		}
@@ -168,9 +168,9 @@ public class ThresholdColourScheme2D extends ColourScheme2D {
 	public Float getScaleMax(int dimension) {
 		switch (dimension) {
 			case 1:
-				return xThresholds.get(xThresholds.size() - 1);
+				return xThresholds.get(0);
 			case 2:
-				return yThresholds.get(yThresholds.size() - 1);
+				return yThresholds.get(0);
 			default:
 				throw new IllegalArgumentException("Dimension must be either 1 or 2.");
 		}	

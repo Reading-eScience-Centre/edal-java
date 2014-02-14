@@ -124,11 +124,11 @@ public class ThresholdColourScheme extends ColourScheme {
 
     @Override
     public Float getScaleMin() {
-        return thresholds.get(0);
+        return thresholds.get(thresholds.size() - 1);
     }
 
     @Override
     public Float getScaleMax() {
-        return thresholds.get(thresholds.size() - 1);
+        return thresholds.get(0);
     }
 }

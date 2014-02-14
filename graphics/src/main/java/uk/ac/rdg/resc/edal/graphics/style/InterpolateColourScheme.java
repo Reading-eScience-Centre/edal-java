@@ -64,7 +64,7 @@ public class InterpolateColourScheme extends ColourScheme {
 	
     private void initializeColours() {
 		if(points == null || points.size() < 2) {
-            throw new IllegalArgumentException("Interpolation points must not be null and must have at least one value");
+            throw new IllegalArgumentException("Interpolation points must not be null and must have at least two values");
         }
 		/*
          * Check that thresholds are correctly ordered. 
