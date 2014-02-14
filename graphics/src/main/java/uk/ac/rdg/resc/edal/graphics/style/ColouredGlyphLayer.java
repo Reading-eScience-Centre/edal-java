@@ -55,6 +55,7 @@ import uk.ac.rdg.resc.edal.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 public class ColouredGlyphLayer extends ImageLayer {
@@ -64,12 +65,12 @@ public class ColouredGlyphLayer extends ImageLayer {
 
     protected Map<String, ColourableIcon> icons;
     protected ColourableIcon icon;
-    
-    public ColouredGlyphLayer(String dataFieldName, String glyphIconName,
-    		ColourScheme colourScheme) throws InstantiationException {
-    	this.dataFieldName = dataFieldName;
-    	this.glyphIconName = glyphIconName;
-    	this.colourScheme = colourScheme;
+
+    public ColouredGlyphLayer(String dataFieldName, String glyphIconName, ColourScheme colourScheme)
+            throws InstantiationException {
+        this.dataFieldName = dataFieldName;
+        this.glyphIconName = glyphIconName;
+        this.colourScheme = colourScheme;
         /*
          * Read the icon files before the object is created.
          */
@@ -147,9 +148,9 @@ public class ColouredGlyphLayer extends ImageLayer {
          */
         RegularGrid imageGrid = params.getImageGrid();
         /*
-         * Get the RegularAxis objects so that we can find the
-         * unconstrained index of the position (i.e. the index even if
-         * it is beyond the axis bounds)
+         * Get the RegularAxis objects so that we can find the unconstrained
+         * index of the position (i.e. the index even if it is beyond the axis
+         * bounds)
          */
         RegularAxis xAxis = imageGrid.getXAxis();
         RegularAxis yAxis = imageGrid.getYAxis();
@@ -158,7 +159,7 @@ public class ColouredGlyphLayer extends ImageLayer {
          * The graphics object for drawing
          */
         Graphics2D g = image.createGraphics();
-        
+
         for (DiscreteFeature<?, ?> feature : features) {
             if (feature instanceof ProfileFeature) {
                 ProfileFeature profileFeature = (ProfileFeature) feature;
@@ -171,14 +172,24 @@ public class ColouredGlyphLayer extends ImageLayer {
                 int j = params.getHeight() - 1 - yAxis.findIndexOfUnconstrained(position.getY());
 
                 /*
-                 * Get the z-index of the target depth within the vertical domain
+                 * Get the z-index of the target depth within the vertical
+                 * domain
                  */
-                int zIndex = profileFeature.getDomain().findIndexOf(params.getTargetZ());
-                
-                if(zIndex < 0) {
+                int zIndex;
+                if (params.getTargetZ() == null) {
+                    /*
+                     * If no target z is provided, pick the value closest to the surface
+                     */
+                    zIndex = profileFeature.getDomain().findIndexOf(
+                            GISUtils.getClosestElevationToSurface(profileFeature.getDomain()));
+                } else {
+                    zIndex = profileFeature.getDomain().findIndexOf(params.getTargetZ());
+                }
+
+                if (zIndex < 0) {
                     continue;
                 }
-                
+
                 Number value = profileFeature.getValues(featuresForLayer.getMember()).get(zIndex);
                 if (value != null && !Float.isNaN(value.floatValue())) {
                     /*
