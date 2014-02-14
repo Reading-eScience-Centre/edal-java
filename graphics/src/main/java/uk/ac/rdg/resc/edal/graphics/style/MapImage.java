@@ -43,34 +43,13 @@ import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.LegendDataGenerator;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
-@XmlType(namespace = MapImage.NAMESPACE, name = "ImageType")
-@XmlRootElement(namespace = MapImage.NAMESPACE, name = "Image")
 public class MapImage extends Drawable {
-    /*
-     * This is the namespace for the XML.
-     * 
-     * IF YOU CHANGE IT, YOU NEED TO MODIFY pom.xml AS WELL
-     */
-    public static final String NAMESPACE = "http://www.resc.reading.ac.uk";
-
-    @XmlElements({
-            @XmlElement(name = "Image", type = MapImage.class),
-            @XmlElement(name = "ArrowLayer", type = ArrowLayer.class),
-            @XmlElement(name = "RasterLayer", type = RasterLayer.class),
-            @XmlElement(name = "Raster2DLayer", type = Raster2DLayer.class),
-            @XmlElement(name = "StippleLayer", type = StippleLayer.class),
-            @XmlElement(name = "ColouredGlyphLayer", type = ColouredGlyphLayer.class),
-            @XmlElement(name = "ContourLayer", type = ContourLayer.class) })
     private List<Drawable> layers = new ArrayList<Drawable>();
 
     public List<Drawable> getLayers() {

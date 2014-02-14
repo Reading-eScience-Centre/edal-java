@@ -30,9 +30,6 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
 
-import javax.xml.bind.annotation.XmlType;
-
-@XmlType(namespace = MapImage.NAMESPACE, propOrder = {}, name = "ColourSchemeType")
 public abstract class ColourScheme {
     protected ColourScheme() { }
     

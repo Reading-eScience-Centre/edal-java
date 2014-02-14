@@ -45,7 +45,7 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
+import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser.ColorAdapter;
 
 public class ColourPalette {
     /**

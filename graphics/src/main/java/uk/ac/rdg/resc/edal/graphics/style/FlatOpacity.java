@@ -32,21 +32,9 @@ import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.FlatOpacityAdapter;
-
-@XmlType(namespace = MapImage.NAMESPACE, name = "FlatOpacityType")
-@XmlJavaTypeAdapter(FlatOpacityAdapter.class)
 public class FlatOpacity extends OpacityTransform {
-    @XmlElement(name = "Opacity", required = true)
     private Float opacity = 1.0f;
 
-    @SuppressWarnings("unused")
-    private FlatOpacity(){}
-    
     public FlatOpacity(Float opacity) {
         super();
         this.opacity = opacity;

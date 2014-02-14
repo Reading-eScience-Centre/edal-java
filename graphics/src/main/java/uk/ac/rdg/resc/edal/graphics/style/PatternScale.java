@@ -28,26 +28,12 @@
 
 package uk.ac.rdg.resc.edal.graphics.style;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
-@XmlType(namespace = MapImage.NAMESPACE, propOrder = {}, name = "PatternScaleType")
 public class PatternScale {
 
-    @XmlElement(name = "PatternBands")
     private int nLevels = 10;
-    
-    @XmlElement(name = "OpaqueValue", required = true)
     private Float opaqueValue;
-    
-    @XmlElement(name = "TransparentValue", required = true)
     private Float transparentValue;
-    
-    @XmlElement(name = "Logarithmic")
     private Boolean logarithmic = false;
-    
-    @SuppressWarnings("unused")
-    private PatternScale(){}
     
     public PatternScale(int nLevels, Float transparentValue, Float opaqueValue, Boolean logarithmic) {
         super();

@@ -31,16 +31,12 @@ package uk.ac.rdg.resc.edal.graphics.style;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
 
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
-@XmlType(namespace = MapImage.NAMESPACE, name = "ImageLayerType")
 public abstract class ImageLayer extends Drawable {
     /*
      * For when the plot type is SUBSAMPLE
@@ -48,9 +44,6 @@ public abstract class ImageLayer extends Drawable {
     private int xSampleSize = 8;
     private int ySampleSize = 8;
     private SubsampleType subsampleType = SubsampleType.CLOSEST;
-
-    protected ImageLayer() {
-    }
 
     @Override
     public BufferedImage drawImage(final PlottingDomainParams params,
@@ -68,7 +61,6 @@ public abstract class ImageLayer extends Drawable {
         this.xSampleSize = xSampleSize;
     }
 
-    @XmlTransient
     public int getXSampleSize() {
         return xSampleSize;
     }
@@ -77,7 +69,6 @@ public abstract class ImageLayer extends Drawable {
         this.ySampleSize = ySampleSize;
     }
 
-    @XmlTransient
     public int getYSampleSize() {
         return ySampleSize;
     }
@@ -86,7 +77,6 @@ public abstract class ImageLayer extends Drawable {
         this.subsampleType = subsampleType;
     }
 
-    @XmlTransient
     public SubsampleType getSubsampleType() {
         return subsampleType;
     }

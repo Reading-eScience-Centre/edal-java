@@ -49,13 +49,11 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
-import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +63,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
@@ -73,8 +70,9 @@ import uk.ac.rdg.resc.edal.graphics.style.Drawable;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
+import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
@@ -359,7 +357,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
 
         xmlString = xmlString.replaceAll("\\$scaleMin", "0");
         xmlString = xmlString.replaceAll("\\$scaleMax", "10");
-        xmlString = xmlString.replaceAll("\\$logarithmic", "false");
+        xmlString = xmlString.replaceAll("\\$logarithmic", "linear");
         xmlString = xmlString.replaceAll("\\$numColorBands", "10");
         xmlString = xmlString.replaceAll("\\$bgColor", "#000000");
         xmlString = xmlString.replaceAll("\\$belowMinColor", "#000000");
@@ -383,7 +381,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
          */
         Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType = new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>();
         try {
-            MapImage mapImage = StyleXMLParser.deserialise(xmlString);
+            MapImage mapImage = StyleSLDParser.createImage(xmlString);
             for (Drawable layer : mapImage.getLayers()) {
                 Map<String, Collection<Class<? extends Feature<?>>>> role2FeatureType = new HashMap<String, Collection<Class<? extends Feature<?>>>>();
                 if (layer instanceof ImageLayer) {
@@ -414,7 +412,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
                 }
                 roles2FeatureType.add(role2FeatureType);
             }
-        } catch (JAXBException e) {
+        } catch (SLDException e) {
             log.error("Problem parsing style XML", e);
         }
 

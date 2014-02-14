@@ -28,23 +28,14 @@
 
 package uk.ac.rdg.resc.edal.graphics.style;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
 import uk.ac.rdg.resc.edal.domain.Extent;
 
-@XmlType(namespace = MapImage.NAMESPACE, propOrder={}, name="ColourScaleType")
 public class ColourScale {
     // The scale range spanned by this colour scheme
-    @XmlElement(required=true, name="ScaleMin")
     private Float scaleMin = -50f;
-    @XmlElement(required=true, name="ScaleMax")
     private Float scaleMax = 50f;
     // Whether or not the scale is logarithmic
-    @XmlElement(name="Logarithmic")
     private Boolean logarithmic = false;
-    
-    ColourScale(){}
     
     public ColourScale(Extent<Float> scaleRange, Boolean logarithmic) {
         this.scaleMin = scaleRange.getLow();
