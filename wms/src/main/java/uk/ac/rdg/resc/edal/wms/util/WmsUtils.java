@@ -308,7 +308,7 @@ public class WmsUtils {
                 Array<Number> values = feature.getValues(varId);
                 if (values != null) {
                     for (Number value : values) {
-                        if (value != null) {
+                        if (value != null && !Double.isNaN(value.doubleValue())) {
                             min = (float) Math.min(value.doubleValue(), min);
                             max = (float) Math.max(value.doubleValue(), max);
                         }
