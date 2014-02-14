@@ -30,19 +30,10 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
-@XmlType(namespace = MapImage.NAMESPACE, propOrder = {}, name = "PaletteColourSchemeType")
 public class PaletteColourScheme extends ColourScheme {
 
-    @XmlElement(name = "ScaleRange")
-    ColourScale scaleRange = new ColourScale();
-
-    @XmlElement(name = "ColourMap")
-    ColourMap colourPalette = new ColourMap();
-
-    PaletteColourScheme() {}
+    private ColourScale scaleRange;
+    private ColourMap colourPalette;
 
     public PaletteColourScheme(ColourScale scaleRange, ColourMap colourPalette) {
         super();

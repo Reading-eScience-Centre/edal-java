@@ -33,42 +33,18 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
-
-@XmlType(namespace = MapImage.NAMESPACE, propOrder = {"thresholds", "colours", "noDataColour"}, name = "ThresholdColourSchemeType")
 public class ThresholdColourScheme extends ColourScheme {
-
     /*
      * These hold lists of colours and the value which marks the lower boundary
      * of their threshold, IN REVERSE ORDER OF VALUES. It is supplied in
      * ascending order (because this is the logical way to think of things), but
      * is reversed in the setter.
      */
-    @XmlElement(name = "Thresholds", required = true)
     private List<Float> thresholds;
-    @XmlElement(name = "Colours", required = true)
-    @XmlJavaTypeAdapter(ColorAdapter.class)
     private List<Color> colours;
     
-    @XmlElement(name = "MissingDataColour")
-    @XmlJavaTypeAdapter(ColorAdapter.class)
     private Color noDataColour = new Color(0f, 0f, 0f, 0f);
     
-    /*
-     * This gets called after being unmarshalled from XML. This initialises the
-     * colours correctly
-     */
-    void afterUnmarshal( Unmarshaller u, Object parent ) {
-        initialiseColours();
-    }
-
-    ThresholdColourScheme() {}
-
     public ThresholdColourScheme(List<Float> thresholds, List<Color> colours, Color noDataColour) {
         super();
         this.noDataColour = noDataColour;

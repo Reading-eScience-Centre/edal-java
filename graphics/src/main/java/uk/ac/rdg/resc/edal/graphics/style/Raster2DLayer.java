@@ -33,26 +33,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-@XmlType(namespace = MapImage.NAMESPACE, name = "Raster2DLayerType")
 public class Raster2DLayer extends GriddedImageLayer {
 
-    @XmlElement(name = "XDataFieldName", required = true)
     private String xDataFieldName;
-    @XmlElement(name = "YDataFieldName", required = true)
     private String yDataFieldName;
-    @XmlElement(name = "ThresholdColourScheme2D", type = ThresholdColourScheme2D.class)
-    private ColourScheme2D colourScheme = new ThresholdColourScheme2D();
-
-    @SuppressWarnings("unused")
-    private Raster2DLayer() {
-    }
+    private ColourScheme2D colourScheme;
     
     public Raster2DLayer(String xDataFieldName, String yDataFieldName, ColourScheme2D colourScheme) {
         this.xDataFieldName = xDataFieldName;

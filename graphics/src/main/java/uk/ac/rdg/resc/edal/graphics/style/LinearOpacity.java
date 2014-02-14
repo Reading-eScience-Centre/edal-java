@@ -33,40 +33,25 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-
-@XmlType(namespace = MapImage.NAMESPACE, name="LinearOpacityType")
 public class LinearOpacity extends OpacityTransform {
-    @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
-    @XmlElement(name = "OpaqueValue", required = true)
     private Float opaqueValue;
-    @XmlElement(name = "TransparentValue", required = true)
     private Float transparentValue;
-//    @XmlElement(name = "MissingDataOpacity")
-//    private Float opacityForMissingData = 1.0f;
 
-    LinearOpacity() { }
-
-    public LinearOpacity(String dataFieldName, Float opaqueValue, Float transparentValue
-            /*, Float opacityForMissingData*/) {
+    public LinearOpacity(String dataFieldName, Float opaqueValue, Float transparentValue) {
         super();
         this.dataFieldName = dataFieldName;
         this.opaqueValue = opaqueValue;
         this.transparentValue = transparentValue;
-//        this.opacityForMissingData = opacityForMissingData;
     }
 
     private Float getOpacityForValue(Number value) {
         if (value == null || Float.isNaN(value.floatValue())) {
             return 1f;
-//            return opacityForMissingData;
         }
         boolean highOpaque = opaqueValue > transparentValue;
         
@@ -118,13 +103,5 @@ public class LinearOpacity extends OpacityTransform {
             ret.add(new NameAndRange(dataFieldName, Extents.newExtent(opaqueValue, transparentValue)));
         }
         return ret;
-    }
-    
-    public static void main(String[] args) {
-        LinearOpacity o = new LinearOpacity("a", 0f, 1f);
-        LinearOpacity o2 = new LinearOpacity("a", 1f, 0f);
-        for(float i = -0.01f; i<=1.01f; i += 0.01) {
-            System.out.println(i+", "+o.getOpacityForValue(i)+", "+o2.getOpacityForValue(i));
-        }
     }
 }

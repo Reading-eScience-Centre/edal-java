@@ -51,7 +51,7 @@ public class ConfidenceIntervalLayer extends GriddedImageLayer {
     // The size of the glyphs
     private Integer glyphSize = 9;
 	// The colour scheme to use
-    protected ColourScheme colourScheme = new PaletteColourScheme();
+    protected ColourScheme colourScheme;
 
 	public ConfidenceIntervalLayer(String lowerFieldName, String upperFieldName,
 			int glyphSize, ColourScheme colourSceme) {

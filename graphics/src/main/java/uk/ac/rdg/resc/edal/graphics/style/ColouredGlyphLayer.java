@@ -43,9 +43,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlType;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -60,30 +57,13 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
-@XmlType(namespace = MapImage.NAMESPACE, name = "GlyphLayerType")
 public class ColouredGlyphLayer extends ImageLayer {
-
-    @XmlElement(name = "DataFieldName", required = true)
     protected String dataFieldName;
-    @XmlElement(name = "GlyphIconName")
     protected String glyphIconName = "circle";
-    @XmlElements({ @XmlElement(name = "PaletteColourScheme", type = PaletteColourScheme.class),
-            @XmlElement(name = "ThresholdColourScheme", type = ThresholdColourScheme.class) })
-    protected ColourScheme colourScheme = new PaletteColourScheme();
+    protected ColourScheme colourScheme;
 
     protected Map<String, ColourableIcon> icons;
     protected ColourableIcon icon;
-
-    private ColouredGlyphLayer() throws InstantiationException {
-        /*
-         * Read the icon files before the object is created.
-         */
-        readInIcons();
-        /*
-         * Now set the icon to the default
-         */
-        icon = getIcon(glyphIconName);
-    }
     
     public ColouredGlyphLayer(String dataFieldName, String glyphIconName,
     		ColourScheme colourScheme) throws InstantiationException {

@@ -35,34 +35,19 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
-@XmlType(namespace = MapImage.NAMESPACE, propOrder = { "directionFieldName", "arrowSize",
-        "arrowColour" }, name = "ArrowLayerType")
 public class ArrowLayer extends GriddedImageLayer {
-    @XmlElement(name = "DirectionFieldName", required = true)
     private String directionFieldName;
-    @XmlElement(name = "ArrowColour")
-    @XmlJavaTypeAdapter(ColorAdapter.class)
     private Color arrowColour = Color.black;
 
     private Integer arrowSize = 8;
 
-    @SuppressWarnings("unused")
-    private ArrowLayer() {
-    }
-
-    @XmlElement(name = "ArrowSize")
     public void setArrowSize(Integer arrowSize) {
         this.arrowSize = arrowSize;
         /*

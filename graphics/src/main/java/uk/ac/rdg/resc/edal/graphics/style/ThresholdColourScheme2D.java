@@ -33,41 +33,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser.ColorAdapter;
-
-@XmlType(namespace = MapImage.NAMESPACE, propOrder = {"xThresholds", "yThresholds", "colours", "noDataColour"}, name = "ThresholdColourScheme2DType")
 public class ThresholdColourScheme2D extends ColourScheme2D {
-
-    @XmlElement(name = "MissingDataColour")
-    @XmlJavaTypeAdapter(ColorAdapter.class)
     private Color noDataColour = new Color(0f, 0f, 0f, 0f);
 
     /*
      * Thresholds (their lower boundaries) and colours are supplied in ascending order,
      * because that is the logical way to think about things, but then reversed in order.
      */
-    @XmlElement(name = "XThresholds", required = true)
     private List<Float> xThresholds;
-    @XmlElement(name = "YThresholds", required = true)
     private List<Float> yThresholds;
-    @XmlElement(name = "Colours", required = true)
-    @XmlJavaTypeAdapter(ColorAdapter.class)
     private List<Color> colours;
-
-    /*
-     * This gets called after being unmarshalled from XML. This initialises the
-     * colours correctly
-     */
-    void afterUnmarshal( Unmarshaller u, Object parent ) {
-        initialiseColours();
-    }
-
-    ThresholdColourScheme2D() {}
 
     public ThresholdColourScheme2D(List<Float> xThresholds, List<Float> yThresholds,
     		List<Color> colours, Color noDataColour) {

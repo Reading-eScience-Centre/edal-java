@@ -30,12 +30,9 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
 
-import javax.xml.bind.annotation.XmlType;
-
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
 
-@XmlType(namespace=MapImage.NAMESPACE, name="OpacityTransformType")
 public abstract class OpacityTransform extends GriddedImageLayer {
 
     protected abstract void applyOpacityToImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException;

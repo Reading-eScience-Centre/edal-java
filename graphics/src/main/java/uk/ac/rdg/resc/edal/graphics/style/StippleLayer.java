@@ -33,25 +33,14 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-@XmlType(namespace = MapImage.NAMESPACE, name = "PatternLayerType")
 public class StippleLayer extends GriddedImageLayer {
     
-    @XmlElement(name = "DataFieldName", required = true)
     private String dataFieldName;
-    
-    @XmlElement(name = "Scale", required = true)
     private PatternScale scale;
-
-    @SuppressWarnings("unused")
-    private StippleLayer() {
-    }
     
     public StippleLayer(String dataFieldName, PatternScale scale) {
         this.dataFieldName = dataFieldName;
