@@ -35,10 +35,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import javax.xml.bind.JAXBException;
-
-import net.sf.json.JSONException;
-
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -48,8 +44,6 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleJSONParser;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleXMLParser;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
@@ -364,6 +358,7 @@ public class GetMapStyleParams {
         } else {
             logarithmic = false;
         }
+        String logString = logarithmic ? "logarithmic" : "linear";
 
         /*-
          * Choose how many colour bands to use:
@@ -394,7 +389,7 @@ public class GetMapStyleParams {
         context.put("paletteName", paletteName);
         context.put("scaleMin", colourScaleRange.getLow());
         context.put("scaleMax", colourScaleRange.getHigh());
-        context.put("logarithmic", logarithmic);
+        context.put("logarithmic", logString);
         context.put("numColorBands", numColourBands);
         context.put("bgColor", GraphicsUtils.colourToString(backgroundColour));
         context.put("belowMinColor", GraphicsUtils.colourToString(belowMinColour));
@@ -422,8 +417,8 @@ public class GetMapStyleParams {
              * We now have an XML description of the style for this request.
              * Parse it into a MapImage and return the result.
              */
-            return StyleXMLParser.deserialise(xmlStringWriter.toString());
-        } catch (JAXBException e) {
+            return StyleSLDParser.createImage(xmlStringWriter.toString());
+        } catch (SLDException e) {
             e.printStackTrace();
             /*
              * There is a problem parsing the XML
