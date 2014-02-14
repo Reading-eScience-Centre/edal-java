@@ -9,7 +9,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ColouredGlyphLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 
-public class SLDColouredGlyphSymbolizer extends AbstractSLDSymbolizer {
+public class SLDColoredGlyphSymbolizer extends AbstractSLDSymbolizer {
 
 	/*
 	 * Parse symbolizer using XPath

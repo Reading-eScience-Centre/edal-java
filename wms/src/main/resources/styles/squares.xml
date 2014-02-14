@@ -10,7 +10,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
         <se:Rule>
           <resc:ColoredGlyphSymbolizer>
             <se:Opacity>1.0</se:Opacity>
-            <resc:IconName>squares</resc:IconName>
+            <resc:IconName>square</resc:IconName>
             <se:ColorMap>
               <resc:Segment fallbackValue="$bgColor">
                 <se:LookupValue>Rasterdata</se:LookupValue>
