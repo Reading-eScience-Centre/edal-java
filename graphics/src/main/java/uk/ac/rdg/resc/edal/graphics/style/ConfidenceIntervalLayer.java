@@ -92,11 +92,13 @@ public class ConfidenceIntervalLayer extends GriddedImageLayer {
             if (value != null && !Float.isNaN(value.floatValue())) {
             	int j = index/image.getWidth();
             	int i = index - j*image.getWidth();
-            	Color color = colourScheme.getColor(value);
-        		int[] xPoints = {i - glyphSize / 2, i + glyphSize / 2 - 1, i + glyphSize / 2 - 1};
-        		int[] yPoints = {j + glyphSize / 2 - 1, j + glyphSize / 2 - 1, j - glyphSize / 2};
-        		g.setColor(color);
-            	g.fillPolygon(xPoints, yPoints, 3);	
+            	if (j%getYSampleSize() == 0 && i%getXSampleSize() == 0) {
+	            	Color color = colourScheme.getColor(value);
+	        		int[] xPoints = {i - glyphSize / 2, i + glyphSize / 2, i + glyphSize / 2};
+	        		int[] yPoints = {j + glyphSize / 2, j + glyphSize / 2, j - glyphSize / 2};
+	        		g.setColor(color);
+	            	g.fillPolygon(xPoints, yPoints, 3);	
+            	}
             }
         	index++;
         }
@@ -105,7 +107,7 @@ public class ConfidenceIntervalLayer extends GriddedImageLayer {
          * Plot the upper triangles. Start by extracting the data from the
          * catalogue. 
          */
-        values = dataReader.getDataForLayerName(lowerFieldName);
+        values = dataReader.getDataForLayerName(upperFieldName);
         /*
          * The iterator iterates over the x-dimension first.
          */
@@ -114,11 +116,13 @@ public class ConfidenceIntervalLayer extends GriddedImageLayer {
             if (value != null && !Float.isNaN(value.floatValue())) {
             	int j = index/image.getWidth();
             	int i = index - j*image.getWidth();
-            	Color color = colourScheme.getColor(value);
-            	int[] xPoints = {i - glyphSize / 2, i - glyphSize / 2, i + glyphSize / 2 - 1};
-        		int[] yPoints = {j + glyphSize / 2 - 1, j - glyphSize / 2, j - glyphSize / 2};
-        		g.setColor(color);
-            	g.fillPolygon(xPoints, yPoints, 3);	
+            	if (j%getYSampleSize() == 0 && i%getXSampleSize() == 0) {
+            		Color color = colourScheme.getColor(value);
+            		int[] xPoints = {i - glyphSize / 2, i - glyphSize / 2, i + glyphSize / 2};
+            		int[] yPoints = {j + glyphSize / 2, j - glyphSize / 2, j - glyphSize / 2};
+            		g.setColor(color);
+            		g.fillPolygon(xPoints, yPoints, 3);
+            	}
             }
         	index++;
         }
