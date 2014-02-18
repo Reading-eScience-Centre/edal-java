@@ -8,7 +8,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.PatternScale;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 
-public class SLDStippleSymbolizer extends AbstractSLDSymbolizer {
+public class SLDStippleSymbolizer extends AbstractSLDSymbolizer1D {
 
 	/*
 	 * Parse symbolizer using XPath

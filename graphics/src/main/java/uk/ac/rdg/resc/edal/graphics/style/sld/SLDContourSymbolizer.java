@@ -11,7 +11,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 
-public class SLDContourSymbolizer extends AbstractSLDSymbolizer {
+public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
 
 	/*
 	 * Parse symbolizer using XPath

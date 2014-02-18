@@ -4,6 +4,7 @@ import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDOpacityMapParser.parseLo
 import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDOpacityMapParser.parseOpacityMap;
 
 import java.awt.Color;
+import java.util.List;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -19,7 +20,7 @@ import uk.ac.rdg.resc.edal.graphics.style.PatternScale;
 
 public abstract class AbstractSLDSymbolizer implements SLDSymbolizer{
 	
-	protected String layerName;
+	protected List<String> varNames;
 	protected Node symbolizerNode;
 	protected ImageLayer imageLayer;
 	protected XPath xPath;
@@ -48,10 +49,10 @@ public abstract class AbstractSLDSymbolizer implements SLDSymbolizer{
 	 * @throws SLDException
 	 */
 	@Override
-	public ImageLayer getImageLayer(String layerName, Node symbolizerNode) throws SLDException {
+	public ImageLayer getImageLayer(List<String> varNames, Node symbolizerNode) throws SLDException {
 		if (imageLayer == null) {
 			try {
-				setLayerName(layerName);
+				setVarNames(varNames);
 				setSymbolizerNode(symbolizerNode);
 				xPath = XPathFactory.newInstance().newXPath();
 				xPath.setNamespaceContext(new SLDNamespaceResolver());
@@ -64,13 +65,8 @@ public abstract class AbstractSLDSymbolizer implements SLDSymbolizer{
 		return imageLayer;
 	}
 	
-	private void setLayerName(String layerName) throws SLDException {
-		if (layerName == null) {
-			throw new SLDException("The layer name cannot be null");
-		}
-		this.layerName = layerName;
-	}
-	
+	protected abstract void setVarNames(List<String> varNames) throws SLDException;
+
 	private void setSymbolizerNode(Node symbolizerNode) throws SLDException {
 		// make sure layer is not null and an element node
 		if (symbolizerNode == null || symbolizerNode.getNodeType() != Node.ELEMENT_NODE) {

@@ -8,7 +8,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
 
-public class SLDRasterSymbolizer extends AbstractSLDSymbolizer {
+public class SLDRasterSymbolizer extends AbstractSLDSymbolizer1D {
 
 	/*
 	 * Parse symbolizer using XPath
