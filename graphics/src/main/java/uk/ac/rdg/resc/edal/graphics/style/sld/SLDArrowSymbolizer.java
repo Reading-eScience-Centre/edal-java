@@ -8,7 +8,7 @@ import javax.xml.xpath.XPathExpressionException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 
-public class SLDArrowSymbolizer extends AbstractSLDSymbolizer {
+public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
 
 	/*
 	 * Parse symbolizer using XPath

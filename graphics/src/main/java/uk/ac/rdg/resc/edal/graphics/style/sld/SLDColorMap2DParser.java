@@ -19,14 +19,9 @@ public class SLDColorMap2DParser {
 	 * @return ColourScheme2D
 	 * @throws SLDException
 	 */
-	public static ColourScheme2D parseColorMap2D(XPath xPath, Node node, SLDVariables2D variables)
+	public static ColourScheme2D parseColorMap2D(XPath xPath, Node node)
 			throws SLDException {
 		try {
-			// check that the variable names object is not null
-			if (variables == null) {
-				throw new SLDException("A variables object must be passed to parseColorMap2D.");
-			}
-			
 			// get the function defining the colour map
 			Node colorMap2D = (Node) xPath.evaluate(
 					"./resc:ColorMap2D", node, XPathConstants.NODE);
@@ -41,7 +36,6 @@ public class SLDColorMap2DParser {
 			ColourScheme2D colourScheme2D;
 			if (function instanceof ColorSLDCategorize2DFunction) {
 				ColorSLDCategorize2DFunction categorize2D = (ColorSLDCategorize2DFunction) function;
-				categorize2D.copyVariables(variables);
 				colourScheme2D = new ThresholdColourScheme2D(categorize2D.getXThresholds(),
 						categorize2D.getYThresholds(), categorize2D.getValues(), categorize2D.getFallbackValue());
 			} else {

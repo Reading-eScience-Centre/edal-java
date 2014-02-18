@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -166,41 +168,62 @@ public class StyleSLDParser {
         // Instantiate a new MapImage object
         MapImage image = new MapImage();
 
-        // Get all the named layers in the document and loop through each one
-        NodeList namedLayers = (NodeList) xPath.evaluate(
-                "/sld:StyledLayerDescriptor/sld:NamedLayer", xmlDocument, XPathConstants.NODESET);
-        if (!(namedLayers.getLength() > 0)) {
-            throw new SLDException("There must be at least one named layer.");
+        // Get all the layers in the document and loop through each one
+        NodeList layers = (NodeList) xPath.evaluate(
+                "/sld:StyledLayerDescriptor/sld:*", xmlDocument, XPathConstants.NODESET);
+        if (!(layers.getLength() > 0)) {
+            throw new SLDException("There must be at least one layer in an SLD document.");
         }
-        for (int i = 0; i < namedLayers.getLength(); i++) {
+        for (int i = 0; i < layers.getLength(); i++) {
 
-            // get the layer node and check it is an element node
-            Node layerNode = namedLayers.item(i);
-            if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
-                throw new SLDException("Named layer no. " + (i + 1) + " is not an element node.");
-            }
-
-            // get name of the layer
-            Node nameNode = (Node) xPath.evaluate("./se:Name", layerNode, XPathConstants.NODE);
-            if (nameNode == null) {
-                throw new SLDException("The layer must be named.");
-            }
-            String layerName = nameNode.getTextContent();
-            if (layerName.equals("")) {
-                throw new SLDException("The name of the layer cannot be empty.");
+            // get each layer node and extract the variable names
+            Node layerNode = layers.item(i);
+            List<String> varNames = new ArrayList<String>(); 
+            if (layerNode.getLocalName().equals("NamedLayer")) {
+            	if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
+            		throw new SLDException("Named layer is not an element node.");
+            	}
+                // get the name of the layer
+                Node nameNode = (Node) xPath.evaluate("./se:Name", layerNode, XPathConstants.NODE);
+                if (nameNode == null) {
+                    throw new SLDException("A named layer must be named.");
+                }
+                String layerName = nameNode.getTextContent();
+                if (layerName.equals("")) {
+                    throw new SLDException("The name of the layer cannot be empty.");
+                }
+                varNames.add(layerName);
+            } else if (layerNode.getLocalName().equals("UserLayer")) {
+            	if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
+            		throw new SLDException("User layer is not an element node.");
+            	}
+            	NodeList nameNodes = (NodeList) xPath.evaluate(
+            			"./sld:LayerCoverageConstraints/sld:CoverageConstraint/se:CoverageName",
+            			layerNode, XPathConstants.NODESET);
+                if (nameNodes == null || nameNodes.getLength() == 0) {
+                    throw new SLDException("A user layer must specify the coverage constraints.");
+                }
+                for(int j = 0; j < nameNodes.getLength(); j++) {
+                	String coverageName = nameNodes.item(j).getTextContent();
+                    if (coverageName == null || coverageName.equals("")) {
+                        throw new SLDException("The name of the coverage must be specified.");
+                    }
+                    varNames.add(coverageName);
+                }
+            } else {
+            	continue;
             }
 
             // get the children of the first rule and check that there is exactly one child
-            NodeList symbolizers = (NodeList) xPath
-                    .evaluate("./sld:UserStyle/se:CoverageStyle/se:Rule/*", layerNode,
-                            XPathConstants.NODESET);
+            NodeList symbolizers = (NodeList) xPath.evaluate(
+            		"./sld:UserStyle/se:CoverageStyle/se:Rule/*", layerNode,
+            		XPathConstants.NODESET);
             if (symbolizers.getLength() != 1) {
-                throw new SLDException(
-                        "There must be exactly one symbolizer within a coverage style.");
+                throw new SLDException("There must be exactly one symbolizer per layer.");
             }
             Node symbolizerNode = symbolizers.item(0);
 
-            // parse the symbolizer
+            // create the corresponding symbolizer object
             SLDSymbolizer sldSymbolizer = null;
             for (Entry<String, Class<? extends SLDSymbolizer>> entry : symbolizerList.entrySet()) {
                 String symbolizerTag = entry.getKey();
@@ -214,8 +237,8 @@ public class StyleSLDParser {
                 throw new SLDException("Symbolizer type not recognized.");
             }
 
-            // add the resulting image layer to the image
-            ImageLayer imageLayer = sldSymbolizer.getImageLayer(layerName, symbolizerNode);
+            // parse the symbolizer and add the resulting image layer to the image
+            ImageLayer imageLayer = sldSymbolizer.getImageLayer(varNames, symbolizerNode);
             if (imageLayer != null) {
                 image.getLayers().add(imageLayer);
             }

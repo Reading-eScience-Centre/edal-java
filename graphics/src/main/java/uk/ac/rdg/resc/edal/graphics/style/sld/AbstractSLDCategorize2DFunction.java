@@ -10,7 +10,7 @@ import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class AbstractSLDCategorize2DFunction<T> extends AbstractSLDFunction2D<T> {
+public class AbstractSLDCategorize2DFunction<T> extends AbstractSLDFunction<T> {
 
 	protected List<T> values;
 	protected List<Float> xThresholds;
