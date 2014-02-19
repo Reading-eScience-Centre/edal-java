@@ -529,8 +529,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             + "&I=" + mapXClick
                             + "&J=" + mapYClick
                             + "&STYLES=default/default"
-                            + ((elevationStr != null) ? ("&ELEVATION=" + elevationStr) : "")
-                            + ((targetElevationStr != null) ? ("&TARGETELEVATION=" + targetElevationStr) : "")
                             + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
                             + ((timeStr != null) ? ("&TIME=" + timeStr) : "") 
                             + "&VERSION=1.1.1";

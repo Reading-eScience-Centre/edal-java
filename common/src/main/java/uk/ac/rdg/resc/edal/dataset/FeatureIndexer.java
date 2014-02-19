@@ -36,9 +36,34 @@ import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 
+/**
+ * A class representing a spatial indexer for features.
+ * 
+ * @author Guy Griffiths
+ */
 public interface FeatureIndexer {
-    public Collection<String> findFeatureIds(BoundingBox horizontalExtent, Extent<Double> verticalExtent,
-            Extent<DateTime> timeExtent, Collection<String> variableIds);
-    
+    /**
+     * Finds the IDs of features with the given spatio-temporal constraints. If
+     * any constraint is <code>null</code> it is considered to be unconstrained
+     * in that dimension.
+     * 
+     * @param horizontalExtent
+     *            The {@link BoundingBox} which features must have positions in.
+     * @param verticalExtent
+     *            The vertical range which features must have positions in.
+     * @param timeExtent
+     *            The time range which features must have positions in.
+     * @param variableIds
+     *            The variable IDs which features must contain
+     * @return A {@link Collection} of IDs for features which match all of the
+     *         given constraints
+     */
+    public Collection<String> findFeatureIds(BoundingBox horizontalExtent,
+            Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
+            Collection<String> variableIds);
+
+    /**
+     * @return All feature IDs present in this {@link FeatureIndexer}
+     */
     public Set<String> getAllFeatureIds();
 }
