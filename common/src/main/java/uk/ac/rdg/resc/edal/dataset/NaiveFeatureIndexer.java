@@ -81,8 +81,9 @@ public class NaiveFeatureIndexer implements FeatureIndexer {
     }
 
     @Override
-    public Collection<String> findFeatureIds(BoundingBox horizontalExtent, Extent<Double> verticalExtent,
-            Extent<DateTime> timeExtent, Collection<String> variableIds) {
+    public Collection<String> findFeatureIds(BoundingBox horizontalExtent,
+            Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
+            Collection<String> variableIds) {
         List<String> featureIds = new ArrayList<String>();
         int hRej = 0;
         int zRej = 0;
@@ -92,7 +93,7 @@ public class NaiveFeatureIndexer implements FeatureIndexer {
             FeatureBounds bounds = entry.getValue();
             boolean hContains = false;
             for (HorizontalPosition pos : bounds.horizontalPositions) {
-                if (horizontalExtent.contains(pos)) {
+                if (horizontalExtent == null || horizontalExtent.contains(pos)) {
                     hContains = true;
                     break;
                 }
@@ -101,16 +102,16 @@ public class NaiveFeatureIndexer implements FeatureIndexer {
                 hRej++;
                 continue;
             }
-            if (!verticalExtent.intersects(bounds.verticalExtent)) {
+            if (verticalExtent != null && !verticalExtent.intersects(bounds.verticalExtent)) {
                 zRej++;
                 continue;
             }
-            if (!timeExtent.intersects(bounds.timeExtent)) {
+            if (timeExtent != null && !timeExtent.intersects(bounds.timeExtent)) {
                 tRej++;
                 continue;
             }
             boolean varsContain = false;
-            if(variableIds != null) {
+            if (variableIds != null) {
                 for (String varId : variableIds) {
                     if (bounds.variableIds.contains(varId)) {
                         varsContain = true;
@@ -126,11 +127,11 @@ public class NaiveFeatureIndexer implements FeatureIndexer {
                 vRej++;
             }
         }
-//        System.out.println(featureIds.size()+" found from indexing");
-//        System.out.println(hRej+" features rejected horizontally");
-//        System.out.println(zRej+" features rejected vertically");
-//        System.out.println(tRej+" features rejected temporally");
-//        System.out.println(vRej+" features rejected on variables");
+        //        System.out.println(featureIds.size()+" found from indexing");
+        //        System.out.println(hRej+" features rejected horizontally");
+        //        System.out.println(zRej+" features rejected vertically");
+        //        System.out.println(tRej+" features rejected temporally");
+        //        System.out.println(vRej+" features rejected on variables");
         return featureIds;
     }
 

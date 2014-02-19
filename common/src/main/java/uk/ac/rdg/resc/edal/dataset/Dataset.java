@@ -34,6 +34,7 @@ import java.util.Set;
 import org.joda.time.Chronology;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -128,14 +129,15 @@ public interface Dataset {
     public Class<? extends DiscreteFeature<?, ?>> getMapFeatureType(String variableId);
 
     /**
-     * Extracts features to be plotted on a map
+     * Extracts features to be plotted on a map.
      * 
      * @param varIds
      *            The IDs of the variables to be extracted. If this is
      *            <code>null</code> then all variable IDs will be plotted
      * @param params
      *            The {@link PlottingDomainParams} object describing the domain
-     *            to be plotted
+     *            to be plotted. The exact manner these are interpreted may
+     *            depend on the type of {@link DiscreteFeature} returned.
      * @return A {@link Collection} of {@link DiscreteFeature}s which can be
      *         plotted
      * @throws DataReadingException
@@ -145,16 +147,122 @@ public interface Dataset {
             PlottingDomainParams params) throws DataReadingException;
 
     /**
-     * TODO Document once finalised
+     * Extracts {@link ProfileFeature}(s) from the {@link Dataset}
      * 
      * @param varIds
+     *            The variable IDs to extract
      * @param params
-     * @return
+     *            The {@link PlottingDomainParams} describing the domain to be
+     *            extracted:
+     * 
+     *            <li>{@link PlottingDomainParams#getTargetZ()} is ignored.
+     * 
+     *            <li>If {@link PlottingDomainParams#getZExtent()} is non-
+     *            <code>null</code>, all of the domains of the
+     *            {@link ProfileFeature}s will fully contain the vertical extent
+     *            - i.e. the domain may extend one discrete point either side of
+     *            the supplied extent, but no more.
+     * 
+     *            <li>If {@link PlottingDomainParams#getZExtent()} is
+     *            <code>null</code>, the profile features will have the maximum
+     *            recorded vertical extent.
+     * 
+     *            <li>If {@link PlottingDomainParams#getTargetT()} is non-
+     *            <code>null</code> only profiles exactly matching the time will
+     *            be extracted
+     * 
+     *            <li>If {@link PlottingDomainParams#getTargetT()} is
+     *            <code>null</code>, all measurements which fall entirely within
+     *            the extent given by {@link PlottingDomainParams#getTExtent()}
+     *            will be extracted
+     * 
+     *            <li>If {@link PlottingDomainParams#getTargetT()} and
+     *            {@link PlottingDomainParams#getTExtent()} are both
+     *            <code>null</code>, {@link ProfileFeature}s for all available
+     *            time values will be extracted.
+     * 
+     *            <li>If
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
+     *            non-<code>null</code>, only measurements which match the
+     *            horizontal position will be extracted. In the case of a
+     *            gridded feature, this will be the profile of the grid cell
+     *            which the position falls into, but for a dataset with a
+     *            continuous {@link HorizontalDomain} only exact matches will be
+     *            extracted
+     * 
+     *            <li>If
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
+     *            <code>null</code>, all measurements falling within
+     *            {@link PlottingDomainParams#getBbox()} will be returned.
+     * 
+     *            <li>If both
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} and
+     *            {@link PlottingDomainParams#getBbox()} are <code>null</code>
+     *            no constraint is placed on horizontal positions - e.g. for a
+     *            gridded field a profile will be returned for every horizontal
+     *            grid point.
+     * 
+     * @return A {@link Collection} of {@link ProfileFeature}s
      * @throws DataReadingException
+     *             if there is a problem reading the underlying data
      */
     public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException;
 
+    /**
+     * Extracts {@link PointSeriesFeature}(s) from the {@link Dataset}
+     * 
+     * @param varIds
+     *            The variable IDs to extract
+     * @param params
+     *            The {@link PlottingDomainParams} describing the domain to be
+     *            extracted:
+     * 
+     *            <li>{@link PlottingDomainParams#getTargetT()} is ignored.
+     * 
+     *            <li>If {@link PlottingDomainParams#getTExtent()} is non-
+     *            <code>null</code>, all of the domains of the
+     *            {@link PointSeriesFeature}s will fully contain the time extent
+     *            - i.e. the domain may extend one discrete point either side of
+     *            the supplied extent, but no more.
+     * 
+     *            <li>If {@link PlottingDomainParams#getTExtent()} is
+     *            <code>null</code>, all {@link PointSeriesFeature}s will
+     *            contain the full range of times.
+     * 
+     *            <li>If {@link PlottingDomainParams#getTargetZ()} is non-
+     *            <code>null</code> only profiles exactly matching the depth
+     *            will be extracted
+     * 
+     *            <li>If {@link PlottingDomainParams#getTargetZ()} is
+     *            <code>null</code> , all measurements which fall entirely
+     *            within the extent given by
+     *            {@link PlottingDomainParams#getZExtent()} will be extracted
+     * 
+     *            <li>
+     *            If {@link PlottingDomainParams#getTargetZ()} and
+     *            {@link PlottingDomainParams#getZExtent()} are both
+     *            <code>null</code>, {@link PointSeriesFeature}s for all
+     *            available elevations will be extracted.
+     * 
+     *            <li>If
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
+     *            non-<code>null</code>, only measurements which match the
+     *            horizontal position will be extracted. In the case of a
+     *            gridded feature, this will be the timeseries of the grid cell
+     *            which the position falls into, but for a dataset with a
+     *            continuous {@link HorizontalDomain} only exact matches will be
+     *            extracted
+     * 
+     *            <li>If
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
+     *            <code>null</code>, all measurements falling within
+     *            {@link PlottingDomainParams#getBbox()} will be returned.
+     * 
+     * @return A {@link Collection} of {@link PointSeriesFeature}s
+     * @throws DataReadingException
+     *             if there is a problem reading the underlying data
+     */
     public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException;
 }

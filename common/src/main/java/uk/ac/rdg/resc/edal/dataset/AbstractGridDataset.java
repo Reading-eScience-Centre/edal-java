@@ -32,8 +32,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -59,6 +61,8 @@ import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -296,16 +300,15 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
 
-            
-            for(int i=0;i<variableIds.size();i++) {
+            for (int i = 0; i < variableIds.size(); i++) {
                 String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read map data for unplottable variables
                      */
                     Set<VariableMetadata> children = getVariableMetadata(varId).getChildren();
-                    for(VariableMetadata childMetadata : children) {
-                        if(!variableIds.contains(childMetadata.getId())) {
+                    for (VariableMetadata childMetadata : children) {
+                        if (!variableIds.contains(childMetadata.getId())) {
                             variableIds.add(childMetadata.getId());
                         }
                     }
@@ -313,7 +316,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 }
 
                 id.append(varId);
-                name.append(varId+", ");
+                name.append(varId + ", ");
                 description.append(varId + "\n");
 
                 /*
@@ -395,7 +398,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * grid and the VariableMetadata objects
              */
             MapDomain domain = new MapDomainImpl(targetGrid, zPos, vCrs, time);
-            name.delete(name.length()-2, name.length()-1);
+            name.delete(name.length() - 2, name.length() - 1);
             if (time != null) {
                 description.append("Time: " + time + "\n");
             }
@@ -404,8 +407,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             }
 
             MapFeature mapFeature = new MapFeature(UUID.nameUUIDFromBytes(id.toString().getBytes())
-                    .toString(), name.toString(), description.toString(), domain,
-                    parameters, values);
+                    .toString(), name.toString(), description.toString(), domain, parameters,
+                    values);
 
             return CollectionUtils.setOf(mapFeature);
         } catch (IOException e) {
@@ -492,9 +495,20 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return zIndex;
     }
 
+    private class ProfileLocation {
+        HorizontalPosition hPos;
+        DateTime time;
+
+        public ProfileLocation(HorizontalPosition hPos, DateTime time) {
+            this.hPos = hPos;
+            this.time = time;
+        }
+    };
+
     @Override
     public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
+
         /*
          * If the user has passed in null for the variable IDs, they want all
          * variables returned
@@ -503,157 +517,240 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             varIds = getVariableIds();
         }
 
-        final HorizontalPosition hPos = params.getTargetHorizontalPosition();
-        DateTime time = params.getTargetT();
+        /*
+         * Find a common z-axis
+         */
+        Extent<Double> zExtent = params.getZExtent();
+        VerticalAxis zAxis;
+        try {
+            zAxis = getVerticalAxis(varIds);
+        } catch (IncorrectDomainException e) {
+            log.error("Cannot extract profiles for variables without vertical information", e);
+            throw new DataReadingException("Problem finding common z-axis", e);
+        }
+        zAxis = limitZAxis(zAxis, zExtent);
+
+        /*
+         * Find a bounding box to extract all profiles from
+         */
+        BoundingBox bbox;
+        HorizontalPosition pos = params.getTargetHorizontalPosition();
+        if (pos != null) {
+            bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
+                    pos.getCoordinateReferenceSystem());
+        } else {
+            bbox = params.getBbox();
+        }
+
+        /*
+         * Find a time range to extract all profiles from
+         */
+        Extent<DateTime> timeExtent;
+        if (params.getTargetT() != null) {
+            timeExtent = Extents.newExtent(params.getTargetT(), params.getTargetT());
+        } else {
+            timeExtent = params.getTExtent();
+        }
 
         GridDataSource dataSource = null;
+        /*
+         * Open the source of data
+         */
         try {
-            /*
-             * Open the source of data
-             */
             dataSource = openGridDataSource();
+        } catch (IOException e) {
+            throw new DataReadingException("Problem reading profile feature", e);
+        }
 
-            Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
-            Map<String, Parameter> parameters = new HashMap<String, Parameter>();
+        Map<String, Parameter> parameters = new HashMap<String, Parameter>();
 
-            StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
-            id.append(System.currentTimeMillis());
-            id.append(":");
-            StringBuilder description = new StringBuilder("Profile feature from variables:\n");
+        StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
+        id.append(System.currentTimeMillis());
+        id.append(":");
+        StringBuilder description = new StringBuilder("Profile feature from variables:\n");
 
-            /*
-             * Keep a list of variable IDs which we need to generate data for
-             * from a plugin
-             */
-            Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
+        /*
+         * Keep a list of variable IDs which we need to generate data for from a
+         * plugin
+         */
+        Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
 
-            VerticalAxis zAxis = getVerticalAxis(varIds);
+        /*
+         * Store a map of unique profile locations to a variable IDs/values
+         */
+        Map<String, Map<ProfileLocation, Array1D<Number>>> allVariablesData = new HashMap<>();
 
-            for (String varId : varIds) {
-                if (!getVariableMetadata(varId).isScalar()) {
-                    /*
-                     * Don't read profile data for unplottable variables
-                     */
-                    continue;
-                }
-
-                id.append(varId);
-                description.append(varId + "\n");
-
+        /*
+         * Read all of the data from non-plugin variables. This loops over all
+         * variables, and then ignores those which are plugin-derived.
+         */
+        for (String varId : varIds) {
+            if (!getVariableMetadata(varId).isScalar()) {
                 /*
-                 * We defer plugin-generated variables until after all other
-                 * required variables have been read. This way, if any of the
-                 * plugin-generated variables require data which we will read
-                 * anyway, we don't have to read it twice.
+                 * Don't read profile data for unplottable variables
                  */
-                VariablePlugin derivingPlugin = isDerivedVariable(varId);
-                if (derivingPlugin != null) {
-                    /*
-                     * Save the variable ID and continue on the outer loop
-                     */
-                    varsToGenerate.put(varId, derivingPlugin);
-                    continue;
-                }
-
-                /*
-                 * Do the actual data reading
-                 */
-                Array1D<Number> data = readVerticalData(varId, zAxis, hPos, time, dataSource);
-
-                values.put(varId, data);
-                /*
-                 * We just use the existing parameter data, as it will be the
-                 * same.
-                 */
-                parameters.put(varId, getVariableMetadata(varId).getParameter());
+                continue;
             }
 
-            for (String derivedVarId : varsToGenerate.keySet()) {
-                VariablePlugin plugin = varsToGenerate.get(derivedVarId);
-                @SuppressWarnings("unchecked")
-                Array1D<Number>[] pluginSourceData = new Array1D[plugin.usesVariables().length];
-                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin
-                        .usesVariables().length];
-                /*
-                 * Loop through the variable IDs required by this plugin,
-                 * getting data and metadata
-                 * 
-                 * If we have already read the data, add it to the array,
-                 * otherwise read the data first.
-                 */
-                for (int i = 0; i < pluginSourceData.length; i++) {
-                    String pluginSourceVarId = plugin.usesVariables()[i];
-                    if (values.containsKey(pluginSourceVarId)) {
-                        pluginSourceData[i] = values.get(pluginSourceVarId);
-                    } else {
-                        pluginSourceData[i] = readVerticalData(pluginSourceVarId, zAxis, hPos,
-                                time, dataSource);
-                    }
-                    pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
-                }
+            id.append(varId);
+            description.append(varId + "\n");
 
-                values.put(derivedVarId, plugin.generateArray1D(derivedVarId,
-                        new Array1D<HorizontalPosition>(pluginSourceData.length) {
+            /*
+             * We defer plugin-generated variables until after all other
+             * required variables have been read. This way, if any of the
+             * plugin-generated variables require data which we will read
+             * anyway, we don't have to read it twice.
+             */
+            VariablePlugin derivingPlugin = isDerivedVariable(varId);
+            if (derivingPlugin != null) {
+                /*
+                 * Save the variable ID and continue on the outer loop
+                 */
+                varsToGenerate.put(varId, derivingPlugin);
+                continue;
+            }
+
+            /*
+             * We now know that this is not a derived variable, and hence will
+             * have GridVariableMetadata
+             */
+            GridVariableMetadata gridVariableMetadata = (GridVariableMetadata) getVariableMetadata(varId);
+
+            /*
+             * Do the actual data reading
+             */
+            Map<ProfileLocation, Array1D<Number>> data;
+            try {
+                data = readVerticalData(gridVariableMetadata, zAxis, bbox, timeExtent, dataSource);
+            } catch (IOException e) {
+                throw new DataReadingException("Problem reading profile feature", e);
+            }
+            allVariablesData.put(varId, data);
+
+            /*
+             * We just use the existing parameter data, as it will be the same.
+             */
+            parameters.put(varId, getVariableMetadata(varId).getParameter());
+        }
+
+        /*
+         * Now read the plugin-derived variables
+         */
+        for (String derivedVarId : varsToGenerate.keySet()) {
+            VariablePlugin plugin = varsToGenerate.get(derivedVarId);
+            List<Map<ProfileLocation, Array1D<Number>>> pluginSourceData = new ArrayList<>();
+            int nSourceVars = plugin.usesVariables().length;
+            VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+            /*
+             * Loop through the variable IDs required by this plugin, getting
+             * data and metadata
+             * 
+             * If we have already read the data, add it to the array, otherwise
+             * read the data first.
+             */
+            for (int i = 0; i < nSourceVars; i++) {
+                String pluginSourceVarId = plugin.usesVariables()[i];
+                if (allVariablesData.containsKey(pluginSourceVarId)) {
+                    pluginSourceData.add(allVariablesData.get(pluginSourceVarId));
+                } else {
+                    /*
+                     * This cast should be OK, but there may be issues if we
+                     * have multiple nesting of plugins
+                     * 
+                     * TODO Either fix is or disallow multiple-plugin nesting
+                     */
+                    GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(pluginSourceVarId);
+                    try {
+                        pluginSourceData.add(readVerticalData(variableMetadata, zAxis, bbox,
+                                timeExtent, dataSource));
+                    } catch (IOException e) {
+                        log.error("Problem reading data", e);
+                        throw new DataReadingException(
+                                "Problem reading data to generate a plugin variable", e);
+                    }
+                }
+                pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
+            }
+
+            /*
+             * Check that all plugin source variables share the same profile
+             * locations
+             */
+            Set<ProfileLocation> profileLocations = new HashSet<>();
+            for (int i = 0; i < nSourceVars; i++) {
+                profileLocations = pluginSourceData.get(i).keySet();
+                for (int j = i; j < nSourceVars; j++) {
+                    Set<ProfileLocation> otherSourceValueLocations = pluginSourceData.get(j)
+                            .keySet();
+                    if (!profileLocations.equals(otherSourceValueLocations)) {
+                        throw new DataReadingException(
+                                "Cannot extract plugin-derived profiles for variables which have different spatio-temporal locations");
+                    }
+                }
+            }
+
+            Map<ProfileLocation, Array1D<Number>> locationsToValues = new HashMap<>();
+            for (final ProfileLocation location : profileLocations) {
+                @SuppressWarnings("unchecked")
+                Array1D<Number>[] pluginSource = new Array1D[nSourceVars];
+                for (int i = 0; i < nSourceVars; i++) {
+                    pluginSource[i] = pluginSourceData.get(i).get(location);
+                }
+                Array1D<Number> values = plugin.generateArray1D(derivedVarId,
+                        new Array1D<HorizontalPosition>(nSourceVars) {
                             @Override
                             public HorizontalPosition get(int... coords) {
-                                return hPos;
+                                return location.hPos;
                             }
 
                             @Override
                             public void set(HorizontalPosition value, int... coords) {
                                 throw new UnsupportedOperationException("This array is immutable");
                             }
-                        }, pluginSourceData));
-                parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
-                /*
-                 * TODO This needs testing!
-                 */
+                        }, pluginSource);
+                locationsToValues.put(location, values);
             }
 
-            /*
-             * Release resources held by the DataSource
-             */
-            dataSource.close();
+            allVariablesData.put(derivedVarId, locationsToValues);
+            parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
+        }
 
-            /*
-             * Construct the GridFeature from the t and z values, the horizontal
-             * grid and the VariableMetadata objects
-             */
-            description.append("Position: " + hPos + "\n");
-            if (time != null) {
-                description.append("Time: " + time + "\n");
-            }
-
-            ProfileFeature profileFeature = new ProfileFeature(UUID.nameUUIDFromBytes(
-                    id.toString().getBytes()).toString(), "Extracted Profile Feature",
-                    description.toString(), zAxis, hPos, time, parameters, values);
-
-            return CollectionUtils.setOf(profileFeature);
-        } catch (IOException e) {
-            throw new DataReadingException("Problem reading profile feature", e);
-        } catch (IncorrectDomainException e) {
-            /*
-             * We have had a problem creating a shared vertical axis to extract
-             * data onto
-             */
-            throw new DataReadingException(
-                    "Problem extracting profile features - all features need a common vertical axis",
-                    e);
-        } finally {
-            if (dataSource != null) {
-                try {
-                    dataSource.close();
-                } catch (IOException e) {
-                    log.error("Problem closing data source");
+        /*
+         * We now have a map of variable ID -> locations -> values.
+         * 
+         * We want a map of location -> variable ID -> values.
+         */
+        Map<ProfileLocation, Map<String, Array1D<Number>>> location2Var2Values = new HashMap<>();
+        for (Entry<String, Map<ProfileLocation, Array1D<Number>>> entry : allVariablesData
+                .entrySet()) {
+            Map<ProfileLocation, Array1D<Number>> varData = entry.getValue();
+            for (ProfileLocation location : varData.keySet()) {
+                if (!location2Var2Values.containsKey(location)) {
+                    location2Var2Values.put(location, new HashMap<String, Array1D<Number>>());
                 }
+                Map<String, Array1D<Number>> map = location2Var2Values.get(location);
+                map.put(entry.getKey(), varData.get(location));
             }
         }
+
+        /*
+         * Now for each location we can create a profile feature with all
+         * available variables in
+         */
+        List<ProfileFeature> features = new ArrayList<>();
+        for (ProfileLocation location : location2Var2Values.keySet()) {
+            Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
+            ProfileFeature feature = new ProfileFeature(UUID.nameUUIDFromBytes(
+                    id.toString().getBytes()).toString(), "Extracted Profile Feature",
+                    description.toString(), zAxis, location.hPos, location.time, parameters,
+                    var2Values);
+            features.add(feature);
+        }
+
+        return features;
     }
 
     private VerticalAxis getVerticalAxis(Set<String> varIds) throws IncorrectDomainException {
-        /*
-         * TODO Test?
-         */
         VerticalAxis retAxis = null;
         Extent<Double> zExtent = null;
         VerticalCrs verticalCrs = null;
@@ -740,14 +837,68 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
     }
 
-    private Array1D<Number> readVerticalData(String varId, VerticalAxis zAxis,
-            HorizontalPosition hPos, DateTime time, GridDataSource dataSource) throws IOException {
-        /*
-         * This conversion is safe, because we are not dealing with derived
-         * variables, and all non-derived must have GridVariableMetadata
-         * (specified in constructor)
-         */
-        GridVariableMetadata metadata = (GridVariableMetadata) getVariableMetadata(varId);
+    /**
+     * Limits a z-axis to include a range as tightly as possible
+     * 
+     * @param axis
+     *            The axis to limit
+     * @param limits
+     *            The range to limit to
+     * @return A new {@link VerticalAxis} which will extend by at most one point
+     *         over each of the bounds provided by limits, or the original axis
+     *         if limits is <code>null</code>
+     */
+    private VerticalAxis limitZAxis(VerticalAxis axis, Extent<Double> limits) {
+        if (limits == null) {
+            return axis;
+        }
+        int lowIndex = 0;
+        for (int i = 0; i < axis.size(); i++) {
+            Double axisValue = axis.getCoordinateValue(i);
+            if (axisValue < limits.getLow()) {
+                lowIndex = i;
+            } else {
+                break;
+            }
+        }
+        int highIndex = 0;
+        for (int i = axis.size() - 1; i >= 0; i--) {
+            Double axisValue = axis.getCoordinateValue(i);
+            if (axisValue > limits.getHigh()) {
+                highIndex = i;
+            } else {
+                break;
+            }
+        }
+        List<Double> values = new ArrayList<Double>();
+        for (int i = lowIndex; i <= highIndex; i++) {
+            values.add(axis.getCoordinateValue(i));
+        }
+        return new VerticalAxisImpl(axis.getName(), values, axis.getVerticalCrs());
+    }
+
+    /**
+     * Reads profile data for a given variable
+     * 
+     * @param metadata
+     *            The {@link GridVariableMetadata} representing the variable
+     * @param zAxis
+     *            The desired vertical axis of the data
+     * @param bbox
+     *            The {@link BoundingBox} within which to read profiles
+     * @param tExtent
+     *            The time {@link Extent} within which to read profiles
+     * @param dataSource
+     *            The {@link GridDataSource} to read from
+     * @return A {@link Map} of unique profile locations to data for each
+     * @throws IOException
+     *             If there was a problem reading data from the
+     *             {@link GridDataSource}
+     */
+    private Map<ProfileLocation, Array1D<Number>> readVerticalData(GridVariableMetadata metadata,
+            VerticalAxis zAxis, BoundingBox bbox, Extent<DateTime> tExtent,
+            GridDataSource dataSource) throws IOException {
+        String varId = metadata.getId();
 
         /*
          * Get the domain of the grid
@@ -757,51 +908,167 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         VerticalAxis variableZAxis = metadata.getVerticalDomain();
 
         /*
-         * Use these objects to convert natural coordinates to grid indices
+         * Find all of the horizontal positions which should be included
          */
-        GridCoordinates2D hIndices = hDomain.findIndexOf(hPos);
-        int xIndex = hIndices.getX();
-        int yIndex = hIndices.getY();
-
-        int tIndex = getTimeIndex(time, tAxis, varId);
-
-        /*
-         * Now read the z-limits
-         */
-        if (variableZAxis == null) {
-            throw new IllegalArgumentException("The variable " + varId
-                    + " has no vertical axis, so a vertical profile cannot be read.");
+        List<HorizontalPosition> horizontalPositions = new ArrayList<HorizontalPosition>();
+        if (bbox == null) {
+            bbox = hDomain.getBoundingBox();
         }
-        if (!variableZAxis.getVerticalCrs().equals(zAxis.getVerticalCrs())) {
-            throw new IllegalArgumentException("The vertical CRS of the variable " + varId
-                    + " must match that of the domain you are trying to read.");
-        }
-        int zMin = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
-        int zMax = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
-
-        /*
-         * Read the data and move it to a 1D Array
-         */
-        Array4D<Number> data4d = dataSource.read(varId, tIndex, tIndex, zMin, zMax, yIndex, yIndex,
-                xIndex, xIndex);
-        int zSize = zAxis.size();
-        Array1D<Number> data = new ValuesArray1D(zSize);
-
-        for (int i = 0; i < zSize; i++) {
-            Double zVal = zAxis.getCoordinateValue(i);
-            int zIndex = variableZAxis.findIndexOf(zVal);
-            if (zIndex < 0) {
-                throw new IllegalArgumentException("The z-axis for the variable " + varId
-                        + " does not contain the position " + zVal + " which was requested.");
-            }
-            data.set(data4d.get(new int[] { 0, zIndex - zMin, 0, 0 }), new int[] { i });
+        if (bbox.getLowerCorner().equals(bbox.getUpperCorner())) {
             /*
-             * TODO we need to test this
+             * We have a single position
              */
+            horizontalPositions.add(bbox.getLowerCorner());
+        } else {
+            /*
+             * We want all horizontal grid cells which fall within the bounding
+             * box
+             */
+            for (GridCell2D gridCell : hDomain.getDomainObjects()) {
+                if (bbox.contains(gridCell.getCentre())) {
+                    horizontalPositions.add(gridCell.getCentre());
+                }
+            }
         }
 
-        return data;
+        /*
+         * Find all of the times which should be included
+         */
+        List<DateTime> times = new ArrayList<DateTime>();
+        if (tExtent == null) {
+            tExtent = tAxis.getExtent();
+        }
+        if (tExtent.getLow().equals(tExtent.getHigh())) {
+            times.add(tExtent.getLow());
+        } else {
+            for (DateTime time : tAxis.getCoordinateValues()) {
+                if (tExtent.contains(time)) {
+                    times.add(time);
+                }
+            }
+        }
+
+        /*
+         * Now read the data for each unique profile location.
+         */
+        Map<ProfileLocation, Array1D<Number>> ret = new HashMap<ProfileLocation, Array1D<Number>>();
+        for (HorizontalPosition hPos : horizontalPositions) {
+            for (DateTime time : times) {
+                ProfileLocation location = new ProfileLocation(hPos, time);
+
+                GridCoordinates2D hIndices = hDomain.findIndexOf(hPos);
+
+                int xIndex = hIndices.getX();
+                int yIndex = hIndices.getY();
+
+                int tIndex = getTimeIndex(time, tAxis, varId);
+
+                /*
+                 * Now read the z-limits
+                 */
+                if (variableZAxis == null) {
+                    throw new IllegalArgumentException("The variable " + varId
+                            + " has no vertical axis, so a vertical profile cannot be read.");
+                }
+                if (!variableZAxis.getVerticalCrs().equals(zAxis.getVerticalCrs())) {
+                    throw new IllegalArgumentException("The vertical CRS of the variable " + varId
+                            + " must match that of the domain you are trying to read.");
+                }
+                int zMin = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
+                int zMax = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
+
+                /*
+                 * Read the data and move it to a 1D Array
+                 */
+                Array4D<Number> data4d = dataSource.read(varId, tIndex, tIndex, zMin, zMax, yIndex,
+                        yIndex, xIndex, xIndex);
+                int zSize = zAxis.size();
+                Array1D<Number> data = new ValuesArray1D(zSize);
+
+                for (int i = 0; i < zSize; i++) {
+                    Double zVal = zAxis.getCoordinateValue(i);
+                    int zIndex = variableZAxis.findIndexOf(zVal);
+                    if (zIndex < 0) {
+                        throw new IllegalArgumentException("The z-axis for the variable " + varId
+                                + " does not contain the position " + zVal
+                                + " which was requested.");
+                    }
+                    data.set(data4d.get(new int[] { 0, zIndex - zMin, 0, 0 }), new int[] { i });
+                    /*
+                     * TODO we need to test this
+                     */
+                }
+
+                ret.put(location, data);
+
+            }
+        }
+
+        return ret;
     }
+
+    //    private Array1D<Number> readVerticalData(String varId, VerticalAxis zAxis,
+    //            HorizontalPosition hPos, DateTime time, GridDataSource dataSource) throws IOException {
+    //        /*
+    //         * This conversion is safe, because we are not dealing with derived
+    //         * variables, and all non-derived must have GridVariableMetadata
+    //         * (specified in constructor)
+    //         */
+    //        GridVariableMetadata metadata = (GridVariableMetadata) getVariableMetadata(varId);
+    //        
+    //        /*
+    //         * Get the domain of the grid
+    //         */
+    //        HorizontalGrid hDomain = metadata.getHorizontalDomain();
+    //        TimeAxis tAxis = metadata.getTemporalDomain();
+    //        VerticalAxis variableZAxis = metadata.getVerticalDomain();
+    //        
+    //        /*
+    //         * Use these objects to convert natural coordinates to grid indices
+    //         */
+    //        GridCoordinates2D hIndices = hDomain.findIndexOf(hPos);
+    //        int xIndex = hIndices.getX();
+    //        int yIndex = hIndices.getY();
+    //        
+    //        int tIndex = getTimeIndex(time, tAxis, varId);
+    //        
+    //        /*
+    //         * Now read the z-limits
+    //         */
+    //        if (variableZAxis == null) {
+    //            throw new IllegalArgumentException("The variable " + varId
+    //                    + " has no vertical axis, so a vertical profile cannot be read.");
+    //        }
+    //        if (!variableZAxis.getVerticalCrs().equals(zAxis.getVerticalCrs())) {
+    //            throw new IllegalArgumentException("The vertical CRS of the variable " + varId
+    //                    + " must match that of the domain you are trying to read.");
+    //        }
+    //        int zMin = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
+    //        int zMax = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
+    //        
+    //        /*
+    //         * Read the data and move it to a 1D Array
+    //         */
+    //        Array4D<Number> data4d = dataSource.read(varId, tIndex, tIndex, zMin, zMax, yIndex, yIndex,
+    //                xIndex, xIndex);
+    //        int zSize = zAxis.size();
+    //        Array1D<Number> data = new ValuesArray1D(zSize);
+    //        
+    //        for (int i = 0; i < zSize; i++) {
+    //            Double zVal = zAxis.getCoordinateValue(i);
+    //            int zIndex = variableZAxis.findIndexOf(zVal);
+    //            if (zIndex < 0) {
+    //                throw new IllegalArgumentException("The z-axis for the variable " + varId
+    //                        + " does not contain the position " + zVal + " which was requested.");
+    //            }
+    //            data.set(data4d.get(new int[] { 0, zIndex - zMin, 0, 0 }), new int[] { i });
+    //            /*
+    //             * TODO we need to test this
+    //             */
+    //        }
+    //        
+    //        return data;
+    //    }
 
     @Override
     public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,

@@ -41,7 +41,10 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
@@ -118,8 +121,23 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
                     "This dataset does not support profile features");
         }
         List<ProfileFeature> features = new ArrayList<ProfileFeature>();
-        Collection<String> featureIds = featureIndexer.findFeatureIds(params.getBbox(),
-                params.getZExtent(), params.getTExtent(), varIds);
+
+        HorizontalPosition pos = params.getTargetHorizontalPosition();
+        BoundingBox bbox;
+        if (pos == null) {
+            bbox = params.getBbox();
+        } else {
+            bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
+                    pos.getCoordinateReferenceSystem());
+        }
+        Extent<DateTime> timeExtent;
+        if (params.getTargetT() != null) {
+            timeExtent = Extents.newExtent(params.getTargetT(), params.getTargetT());
+        } else {
+            timeExtent = params.getTExtent();
+        }
+        Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, params.getZExtent(),
+                timeExtent, varIds);
         features.addAll((Collection<? extends ProfileFeature>) getFeatureReader().readFeatures(
                 featureIds, varIds));
         return features;
@@ -134,8 +152,23 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
                     "This dataset does not support time series features");
         }
         List<PointSeriesFeature> features = new ArrayList<PointSeriesFeature>();
-        Collection<String> featureIds = featureIndexer.findFeatureIds(params.getBbox(),
-                params.getZExtent(), params.getTExtent(), varIds);
+
+        HorizontalPosition pos = params.getTargetHorizontalPosition();
+        BoundingBox bbox;
+        if (pos == null) {
+            bbox = params.getBbox();
+        } else {
+            bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
+                    pos.getCoordinateReferenceSystem());
+        }
+        Extent<Double> zExtent;
+        if (params.getTargetZ() != null) {
+            zExtent = Extents.newExtent(params.getTargetZ(), params.getTargetZ());
+        } else {
+            zExtent = params.getZExtent();
+        }
+        Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, zExtent,
+                params.getTExtent(), varIds);
         features.addAll((Collection<? extends PointSeriesFeature>) getFeatureReader().readFeatures(
                 featureIds, varIds));
         return features;
