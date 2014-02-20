@@ -15,8 +15,8 @@ import org.w3c.dom.Node;
 
 import uk.ac.rdg.resc.edal.graphics.style.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
-import uk.ac.rdg.resc.edal.graphics.style.LinearOpacity;
-import uk.ac.rdg.resc.edal.graphics.style.PatternScale;
+import uk.ac.rdg.resc.edal.graphics.style.OpacityMap;
+import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
 
 public abstract class AbstractSLDSymbolizer implements SLDSymbolizer{
 	
@@ -100,14 +100,8 @@ public abstract class AbstractSLDSymbolizer implements SLDSymbolizer{
 		
 		if (transformNode != null) {
 			String dataFieldName = parseLookupValue(xPath, transformNode);
-			PatternScale patternScale =  parseOpacityMap(xPath, transformNode);
-			if (patternScale.isLogarithmic() == true) {
-				throw new SLDException("Currently logarithmic opacity transforms " +
-						"are not supported.");
-			}
-			imageLayer.setOpacityTransform(new LinearOpacity(dataFieldName,
-					patternScale.getOpaqueValue(),
-					patternScale.getTransparentValue()));
+			DensityMap opacityMap =  parseOpacityMap(xPath, transformNode);
+			imageLayer.setOpacityTransform(new OpacityMap(dataFieldName, opacityMap));
 			return;
 		}
 		

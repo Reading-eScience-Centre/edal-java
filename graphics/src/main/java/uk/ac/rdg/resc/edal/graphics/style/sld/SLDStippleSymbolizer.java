@@ -5,7 +5,7 @@ import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDOpacityMapParser.parseOp
 import javax.xml.xpath.XPathExpressionException;
 
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
-import uk.ac.rdg.resc.edal.graphics.style.PatternScale;
+import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 
 public class SLDStippleSymbolizer extends AbstractSLDSymbolizer1D {
@@ -16,10 +16,10 @@ public class SLDStippleSymbolizer extends AbstractSLDSymbolizer1D {
 	@Override
 	protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException, SLDException {
 		// create the scale
-		PatternScale scale = parseOpacityMap(xPath, symbolizerNode);
+		DensityMap map = parseOpacityMap(xPath, symbolizerNode);
 				
 		// instantiate a new stipple layer and add it to the image
-		StippleLayer stippleLayer = new StippleLayer(layerName, scale);
+		StippleLayer stippleLayer = new StippleLayer(layerName, map);
 		return stippleLayer;
 	}
 
