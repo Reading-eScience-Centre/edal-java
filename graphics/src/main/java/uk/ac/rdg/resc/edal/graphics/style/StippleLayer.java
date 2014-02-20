@@ -33,6 +33,8 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.naming.OperationNotSupportedException;
+
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
@@ -40,36 +42,39 @@ import uk.ac.rdg.resc.edal.util.Extents;
 public class StippleLayer extends GriddedImageLayer {
     
     private String dataFieldName;
-    private PatternScale scale;
+    private DensityMap map;
     
-    public StippleLayer(String dataFieldName, PatternScale scale) {
+    public StippleLayer(String dataFieldName, DensityMap map) {
         this.dataFieldName = dataFieldName;
-        this.scale = scale;
+        this.map = map;
     }
 
     @Override
     protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         int[][] alphas = new int[image.getWidth()][image.getHeight()];
         Array2D<Number> values = dataReader.getDataForLayerName(dataFieldName);
-        
-        /*
-         * Set the alpha values
-         */
-        for(int i=0; i< image.getWidth();i++) {
-            for(int j=0; j< image.getHeight();j++) {
-                /*
-                 * This is an int between 0 and 255, representing the alpha channel value.
-                 * 
-                 * We use values.get(j, i) because Array2Ds specify the co-ordinates as (y,x) 
-                 */
-                int alpha = (int) (256 * (scale.getLevel(values.get(j, i)) / (float) (scale.getNLevels()-1)));
-                alphas[i][j] = alpha;
-            }
+        try {
+	        /*
+	         * Set the alpha values
+	         */
+	        for(int i=0; i< image.getWidth();i++) {
+	            for(int j=0; j< image.getHeight();j++) {
+	                /*
+	                 * This is an int between 0 and 255, representing the alpha channel value.
+	                 * 
+	                 * We use values.get(j, i) because Array2Ds specify the co-ordinates as (y,x) 
+	                 */
+	                int alpha = Math.round(255 * map.getDensity(values.get(j, i)));
+	                alphas[i][j] = alpha;
+	            }
+	        }
+	        /*
+	         * Apply black/transparent stippling to the blue image
+	         */
+	        stippleAlphas(image, alphas, image.getWidth(), image.getHeight());
+        } catch (OperationNotSupportedException onse) {
+        	throw new EdalException("Problem plotting stipple layer.", onse);
         }
-        /*
-         * Apply black/transparent stippling to the blue image
-         */
-        stippleAlphas(image, alphas, image.getWidth(), image.getHeight());
     }
     
     private static int[][] thresholdMap = new int[][]{
@@ -114,13 +119,7 @@ public class StippleLayer extends GriddedImageLayer {
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
-        if (scale.getOpaqueValue() > scale.getTransparentValue()) {
-            ret.add(new NameAndRange(dataFieldName, Extents.newExtent(scale.getTransparentValue(),
-                    scale.getOpaqueValue())));
-        } else {
-            ret.add(new NameAndRange(dataFieldName, Extents.newExtent(scale.getOpaqueValue(),
-                    scale.getTransparentValue())));
-        }
+        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(map.getMinValue(), map.getMaxValue())));
         return ret;
     }
 }
