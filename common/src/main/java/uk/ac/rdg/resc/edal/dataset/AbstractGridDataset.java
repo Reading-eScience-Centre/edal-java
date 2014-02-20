@@ -503,6 +503,44 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             this.hPos = hPos;
             this.time = time;
         }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((hPos == null) ? 0 : hPos.hashCode());
+            result = prime * result + ((time == null) ? 0 : time.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            ProfileLocation other = (ProfileLocation) obj;
+            if (!getOuterType().equals(other.getOuterType()))
+                return false;
+            if (hPos == null) {
+                if (other.hPos != null)
+                    return false;
+            } else if (!hPos.equals(other.hPos))
+                return false;
+            if (time == null) {
+                if (other.time != null)
+                    return false;
+            } else if (!time.equals(other.time))
+                return false;
+            return true;
+        }
+
+        private AbstractGridDataset getOuterType() {
+            return AbstractGridDataset.this;
+        }
     };
 
     @Override
@@ -836,7 +874,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             return retAxis;
         }
     }
-    
+
     /**
      * Limits a z-axis to include a range as tightly as possible
      * 
@@ -861,7 +899,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 break;
             }
         }
-        int highIndex = 0;
+        int highIndex = axis.size() - 1;
         for (int i = axis.size() - 1; i >= 0; i--) {
             Double axisValue = axis.getCoordinateValue(i);
             if (axisValue > limits.getHigh()) {
@@ -1010,10 +1048,48 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     private class PointSeriesLocation {
         HorizontalPosition hPos;
         VerticalPosition elevation;
-    
+
         public PointSeriesLocation(HorizontalPosition hPos, VerticalPosition elevation) {
             this.hPos = hPos;
             this.elevation = elevation;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((elevation == null) ? 0 : elevation.hashCode());
+            result = prime * result + ((hPos == null) ? 0 : hPos.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            PointSeriesLocation other = (PointSeriesLocation) obj;
+            if (!getOuterType().equals(other.getOuterType()))
+                return false;
+            if (elevation == null) {
+                if (other.elevation != null)
+                    return false;
+            } else if (!elevation.equals(other.elevation))
+                return false;
+            if (hPos == null) {
+                if (other.hPos != null)
+                    return false;
+            } else if (!hPos.equals(other.hPos))
+                return false;
+            return true;
+        }
+
+        private AbstractGridDataset getOuterType() {
+            return AbstractGridDataset.this;
         }
     }
 
@@ -1362,7 +1438,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             return retAxis;
         }
     }
-    
+
     /**
      * Limits a t-axis to include a range as tightly as possible
      * 
@@ -1387,7 +1463,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 break;
             }
         }
-        int highIndex = 0;
+        int highIndex = axis.size() - 1;
         for (int i = axis.size() - 1; i >= 0; i--) {
             DateTime axisValue = axis.getCoordinateValue(i);
             if (axisValue.isAfter(limits.getHigh())) {
@@ -1403,7 +1479,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return new TimeAxisImpl(axis.getName(), values);
     }
 
-    private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox,
+    private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(
+            GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox,
             Extent<Double> zExtent, GridDataSource dataSource) throws IOException,
             MismatchedCrsException {
         String varId = metadata.getId();
@@ -1463,7 +1540,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         for (HorizontalPosition hPos : horizontalPositions) {
             for (Double zVal : zVals) {
                 VerticalPosition zPos = null;
-                if(zVal != null) {
+                if (zVal != null) {
                     zPos = new VerticalPosition(zVal, zAxis.getVerticalCrs());
                 }
                 PointSeriesLocation location = new PointSeriesLocation(hPos, zPos);
@@ -1501,8 +1578,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     DateTime time = tAxis.getCoordinateValue(i);
                     int tIndex = variableTAxis.findIndexOf(time);
                     if (tIndex < 0) {
-                        throw new IllegalArgumentException("The time-axis for the variable " + varId
-                                + " does not contain the time " + time
+                        throw new IllegalArgumentException("The time-axis for the variable "
+                                + varId + " does not contain the time " + time
                                 + " which was requested.");
                     }
                     data.set(data4d.get(new int[] { tIndex - tMin, 0, 0, 0 }), new int[] { i });
@@ -1515,7 +1592,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
 
         return ret;
     }
-        
+
     /*
      * TODO This is OK, and is possible a method of only AbstractGridDataset, or
      * maybe we can re-introduce a minimal GridDataset type which has this
