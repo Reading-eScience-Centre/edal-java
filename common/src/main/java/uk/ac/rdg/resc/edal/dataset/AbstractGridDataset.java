@@ -503,6 +503,44 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             this.hPos = hPos;
             this.time = time;
         }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((hPos == null) ? 0 : hPos.hashCode());
+            result = prime * result + ((time == null) ? 0 : time.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            ProfileLocation other = (ProfileLocation) obj;
+            if (!getOuterType().equals(other.getOuterType()))
+                return false;
+            if (hPos == null) {
+                if (other.hPos != null)
+                    return false;
+            } else if (!hPos.equals(other.hPos))
+                return false;
+            if (time == null) {
+                if (other.time != null)
+                    return false;
+            } else if (!time.equals(other.time))
+                return false;
+            return true;
+        }
+
+        private AbstractGridDataset getOuterType() {
+            return AbstractGridDataset.this;
+        }
     };
 
     @Override
@@ -1014,6 +1052,44 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         public PointSeriesLocation(HorizontalPosition hPos, VerticalPosition elevation) {
             this.hPos = hPos;
             this.elevation = elevation;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((elevation == null) ? 0 : elevation.hashCode());
+            result = prime * result + ((hPos == null) ? 0 : hPos.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            PointSeriesLocation other = (PointSeriesLocation) obj;
+            if (!getOuterType().equals(other.getOuterType()))
+                return false;
+            if (elevation == null) {
+                if (other.elevation != null)
+                    return false;
+            } else if (!elevation.equals(other.elevation))
+                return false;
+            if (hPos == null) {
+                if (other.hPos != null)
+                    return false;
+            } else if (!hPos.equals(other.hPos))
+                return false;
+            return true;
+        }
+
+        private AbstractGridDataset getOuterType() {
+            return AbstractGridDataset.this;
         }
     }
 
