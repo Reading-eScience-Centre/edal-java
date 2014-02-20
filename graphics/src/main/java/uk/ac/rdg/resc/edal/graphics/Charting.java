@@ -91,6 +91,7 @@ import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array1D;
+import uk.ac.rdg.resc.edal.util.TimeUtils;
 
 /**
  * Code to produce various types of chart.
@@ -108,8 +109,9 @@ final public class Charting {
         NUMBER_FORMAT.setMaximumFractionDigits(4);
     }
 
-    public static JFreeChart createVerticalProfilePlot(Collection<ProfileFeature> features,
-            HorizontalPosition hPos) throws MismatchedCrsException {
+    public static JFreeChart createVerticalProfilePlot(
+            Collection<? extends ProfileFeature> features, HorizontalPosition hPos)
+            throws MismatchedCrsException {
         XYSeriesCollection xySeriesColl = new XYSeriesCollection();
 
         Set<String> plottedVarList = new HashSet<String>();
@@ -133,7 +135,8 @@ final public class Charting {
                  * This is the label used for the legend.
                  */
                 String legend = feature.getName() + "(" + feature.getHorizontalPosition().getX()
-                        + "," + feature.getHorizontalPosition().getY() + ")";
+                        + "," + feature.getHorizontalPosition().getY() + ") - "
+                        + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
                 XYSeries series = new XYSeries(legend, true);
                 series.setDescription(feature.getParameter(varId).getDescription());
                 for (int i = 0; i < elevationValues.size(); i++) {
@@ -180,16 +183,16 @@ final public class Charting {
         plot.setOrientation(PlotOrientation.HORIZONTAL);
 
         StringBuilder title = new StringBuilder();
-        
+
         if (plottedVarList.size() > 0) {
             StringBuilder varList = new StringBuilder();
-            for(String varId : plottedVarList) {
+            for (String varId : plottedVarList) {
                 varList.append(varId);
                 varList.append(", ");
             }
             varList.delete(varList.length() - 2, varList.length() - 1);
             title.append("Vertical profile of ");
-            if(plottedVarList.size() > 1) {
+            if (plottedVarList.size() > 1) {
                 title.append(" variables: ");
             }
             title.append(varList.toString());
@@ -237,8 +240,9 @@ final public class Charting {
         return zAxis;
     }
 
-    public static JFreeChart createTimeSeriesPlot(List<PointSeriesFeature> features,
-            HorizontalPosition hPos) throws MismatchedCrsException {
+    public static JFreeChart createTimeSeriesPlot(
+            Collection<? extends PointSeriesFeature> features, HorizontalPosition hPos)
+            throws MismatchedCrsException {
 
         Chronology chronology = null;
         List<String> plottedVarList = new ArrayList<String>();
@@ -255,8 +259,8 @@ final public class Charting {
             for (String varId : feature.getParameterIds()) {
                 Parameter parameter = feature.getParameter(varId);
                 TimeSeriesCollection collection;
-                String phenomena = parameter.getStandardName() + " ("+parameter.getUnits()+")";
-                if(phenomena2timeseries.containsKey(phenomena)) {
+                String phenomena = parameter.getStandardName() + " (" + parameter.getUnits() + ")";
+                if (phenomena2timeseries.containsKey(phenomena)) {
                     collection = phenomena2timeseries.get(phenomena);
                 } else {
                     collection = new TimeSeriesCollection();
@@ -289,13 +293,13 @@ final public class Charting {
         StringBuilder title = new StringBuilder();
         if (plottedVarList.size() > 0) {
             StringBuilder varList = new StringBuilder();
-            for(String varId : plottedVarList) {
+            for (String varId : plottedVarList) {
                 varList.append(varId);
                 varList.append(", ");
             }
             varList.delete(varList.length() - 2, varList.length() - 1);
             title.append("Time series of ");
-            if(plottedVarList.size() > 1) {
+            if (plottedVarList.size() > 1) {
                 title.append("variables: ");
             }
             title.append(varList.toString());
@@ -310,16 +314,15 @@ final public class Charting {
                 null, null, true, false, false);
 
         XYPlot plot = chart.getXYPlot();
-        
+
         NumberAxis timeAxis = new NumberAxis("Time");
         timeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         timeAxis.setAutoRangeIncludesZero(false);
-        
-        
-        int i=0;
+
+        int i = 0;
         boolean legendNeeded = false;
-        for(Entry<String, TimeSeriesCollection> entry : phenomena2timeseries.entrySet()) {
-            if(i > 0) {
+        for (Entry<String, TimeSeriesCollection> entry : phenomena2timeseries.entrySet()) {
+            if (i > 0) {
                 legendNeeded = true;
             }
             TimeSeriesCollection coll = entry.getValue();
@@ -334,7 +337,7 @@ final public class Charting {
             for (int j = 0; j < coll.getSeriesCount(); j++) {
                 renderer.setSeriesShape(j, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
                 renderer.setSeriesShapesVisible(j, true);
-                if(j > 0) {
+                if (j > 0) {
                     legendNeeded = true;
                 }
             }
@@ -407,11 +410,11 @@ final public class Charting {
                 title.append(", ");
             }
         }
-        if(yLabel.length() > 1) {
+        if (yLabel.length() > 1) {
             yLabel.deleteCharAt(yLabel.length() - 1);
             yLabel.deleteCharAt(yLabel.length() - 1);
         }
-        if(title.length() > 1) {
+        if (title.length() > 1) {
             title.deleteCharAt(title.length() - 1);
             title.deleteCharAt(title.length() - 1);
         }
@@ -768,9 +771,9 @@ final public class Charting {
                     nearestElevationIndex = i;
                 }
             }
-            
+
             Number number = features.get(xIndex).getValues(paramId).get(nearestElevationIndex);
-            if(number != null) {
+            if (number != null) {
                 return number.floatValue();
             } else {
                 return null;

@@ -32,7 +32,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -476,14 +475,14 @@ public final class GISUtils {
 
     /**
      * Returns the closest elevation to the surface of the given
-     * {@link VerticalAxis}
+     * {@link VerticalDomain}
      * 
      * @param vAxis
-     *            The {@link VerticalAxis} to test
-     * @return The uppermost elevation, or null if no {@link VerticalAxis} is
+     *            The {@link VerticalDomain} to test
+     * @return The uppermost elevation, or null if no {@link VerticalDomain} is
      *         provided
      */
-    public static Double getClosestElevationToSurface(VerticalAxis vAxis) {
+    public static Double getClosestElevationToSurface(VerticalDomain vAxis) {
         if (vAxis == null) {
             return null;
         }
@@ -493,19 +492,18 @@ public final class GISUtils {
              * The vertical axis is pressure. The default (closest to the
              * surface) is therefore the maximum value.
              */
-            return Collections.max(vAxis.getCoordinateValues());
+            return vAxis.getExtent().getHigh();
         } else {
             /*
              * The vertical axis represents linear height, so we find which
              * value is closest to zero (the surface), i.e. the smallest
              * absolute value
              */
-            return Collections.min(vAxis.getCoordinateValues(), new Comparator<Double>() {
-                @Override
-                public int compare(Double d1, Double d2) {
-                    return Double.compare(Math.abs(d1), Math.abs(d2));
-                }
-            });
+            if(vAxis.getExtent().contains(0.0)) {
+                return 0.0;
+            } else {
+                return vAxis.getExtent().getLow();
+            }
         }
     }
 
