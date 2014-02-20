@@ -874,7 +874,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             return retAxis;
         }
     }
-    
+
     /**
      * Limits a z-axis to include a range as tightly as possible
      * 
@@ -899,7 +899,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 break;
             }
         }
-        int highIndex = 0;
+        int highIndex = axis.size() - 1;
         for (int i = axis.size() - 1; i >= 0; i--) {
             Double axisValue = axis.getCoordinateValue(i);
             if (axisValue > limits.getHigh()) {
@@ -1048,7 +1048,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     private class PointSeriesLocation {
         HorizontalPosition hPos;
         VerticalPosition elevation;
-    
+
         public PointSeriesLocation(HorizontalPosition hPos, VerticalPosition elevation) {
             this.hPos = hPos;
             this.elevation = elevation;
@@ -1438,7 +1438,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             return retAxis;
         }
     }
-    
+
     /**
      * Limits a t-axis to include a range as tightly as possible
      * 
@@ -1463,7 +1463,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 break;
             }
         }
-        int highIndex = 0;
+        int highIndex = axis.size() - 1;
         for (int i = axis.size() - 1; i >= 0; i--) {
             DateTime axisValue = axis.getCoordinateValue(i);
             if (axisValue.isAfter(limits.getHigh())) {
@@ -1479,7 +1479,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return new TimeAxisImpl(axis.getName(), values);
     }
 
-    private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox,
+    private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(
+            GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox,
             Extent<Double> zExtent, GridDataSource dataSource) throws IOException,
             MismatchedCrsException {
         String varId = metadata.getId();
@@ -1539,7 +1540,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         for (HorizontalPosition hPos : horizontalPositions) {
             for (Double zVal : zVals) {
                 VerticalPosition zPos = null;
-                if(zVal != null) {
+                if (zVal != null) {
                     zPos = new VerticalPosition(zVal, zAxis.getVerticalCrs());
                 }
                 PointSeriesLocation location = new PointSeriesLocation(hPos, zPos);
@@ -1577,8 +1578,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     DateTime time = tAxis.getCoordinateValue(i);
                     int tIndex = variableTAxis.findIndexOf(time);
                     if (tIndex < 0) {
-                        throw new IllegalArgumentException("The time-axis for the variable " + varId
-                                + " does not contain the time " + time
+                        throw new IllegalArgumentException("The time-axis for the variable "
+                                + varId + " does not contain the time " + time
                                 + " which was requested.");
                     }
                     data.set(data4d.get(new int[] { tIndex - tMin, 0, 0, 0 }), new int[] { i });
@@ -1591,7 +1592,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
 
         return ret;
     }
-        
+
     /*
      * TODO This is OK, and is possible a method of only AbstractGridDataset, or
      * maybe we can re-introduce a minimal GridDataset type which has this
