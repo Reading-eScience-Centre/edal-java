@@ -546,7 +546,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     @Override
     public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
-
+        List<ProfileFeature> features = new ArrayList<>();
         /*
          * If the user has passed in null for the variable IDs, they want all
          * variables returned
@@ -567,6 +567,12 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             throw new DataReadingException("Problem finding common z-axis", e);
         }
         zAxis = limitZAxis(zAxis, zExtent);
+        if (zAxis == null) {
+            /*
+             * No z-axis within given limits - return empty collection
+             */
+            return features;
+        }
 
         /*
          * Find a bounding box to extract all profiles from
@@ -775,7 +781,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
          * Now for each location we can create a profile feature with all
          * available variables in
          */
-        List<ProfileFeature> features = new ArrayList<>();
         for (ProfileLocation location : location2Var2Values.keySet()) {
             Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
             ProfileFeature feature = new ProfileFeature(UUID.nameUUIDFromBytes(
@@ -890,6 +895,11 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         if (limits == null) {
             return axis;
         }
+        if (limits.getHigh() < axis.getCoordinateExtent().getLow()
+                || limits.getLow() > axis.getCoordinateExtent().getHigh()) {
+            return null;
+        }
+
         int lowIndex = 0;
         for (int i = 0; i < axis.size(); i++) {
             Double axisValue = axis.getCoordinateValue(i);
@@ -908,6 +918,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 break;
             }
         }
+
         List<Double> values = new ArrayList<Double>();
         for (int i = lowIndex; i <= highIndex; i++) {
             values.add(axis.getCoordinateValue(i));
@@ -1096,6 +1107,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     @Override
     public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
+        List<PointSeriesFeature> features = new ArrayList<>();
         /*
          * If the user has passed in null for the variable IDs, they want all
          * variables returned
@@ -1116,6 +1128,12 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             throw new DataReadingException("Problem finding common t-axis", e);
         }
         tAxis = limitTAxis(tAxis, tExtent);
+        if (tAxis == null) {
+            /*
+             * No time axis within given limits. Return empty collection
+             */
+            return features;
+        }
 
         /*
          * Find a bounding box to extract all profiles from
@@ -1332,7 +1350,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
          * Now for each location we can create a profile feature with all
          * available variables in
          */
-        List<PointSeriesFeature> features = new ArrayList<>();
         for (PointSeriesLocation location : location2Var2Values.keySet()) {
             Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
             PointSeriesFeature feature = new PointSeriesFeature(UUID.nameUUIDFromBytes(
@@ -1453,6 +1470,10 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     private TimeAxis limitTAxis(TimeAxis axis, Extent<DateTime> limits) {
         if (limits == null) {
             return axis;
+        }
+        if (limits.getHigh().isBefore(axis.getCoordinateExtent().getLow())
+                || limits.getLow().isAfter(axis.getCoordinateExtent().getHigh())) {
+            return null;
         }
         int lowIndex = 0;
         for (int i = 0; i < axis.size(); i++) {
