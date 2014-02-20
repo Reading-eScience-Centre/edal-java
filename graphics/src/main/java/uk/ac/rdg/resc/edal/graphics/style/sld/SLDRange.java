@@ -13,11 +13,16 @@ public class SLDRange {
 		LOGARITHMIC
 	}
 	
-	private Float minimum;
-	private Float maximum;
+	private float minimum;
+	private float maximum;
 	private Spacing spacing;
 
-	public SLDRange(Float minimum, Float maximum, Spacing spacing) {
+	public SLDRange(Float minimum, Float maximum, Spacing spacing) throws SLDException {
+		if (minimum > maximum) {
+			throw new SLDException("The minimum of a range cannot be greater than the maximum.");
+		} if (spacing == Spacing.LOGARITHMIC && minimum <= 0) {
+			throw new SLDException("Cannot use a negative or zero value for logarithmic scale.");
+		}
 		this.minimum = minimum;
 		this.maximum = maximum;
 		this.spacing = spacing;

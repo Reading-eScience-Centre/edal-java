@@ -59,12 +59,16 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.PatternScale;
 import uk.ac.rdg.resc.edal.graphics.style.Raster2DLayer;
 import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
+import uk.ac.rdg.resc.edal.graphics.style.SegmentDensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme2D;
+import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
+import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange;
+import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
@@ -194,13 +198,18 @@ public class PlotTests {
 
     @Test
     public void testStipple() throws EdalException {
-        PatternScale pattern = new PatternScale(10, 0f, 1f, false);
-        StippleLayer stippleLayer = new StippleLayer("test", pattern);
-        MapImage mapImage = new MapImage();
-        mapImage.getLayers().add(stippleLayer);
-        BufferedImage image = mapImage.drawImage(params, catalogue);
-        BufferedImage comparisonImage = getComparisonImage("stipple");
-        compareImages(comparisonImage, image);
+    	try {
+    		SLDRange range = new SLDRange(0f, 1f, Spacing.LINEAR);
+    		DensityMap function = new SegmentDensityMap(10, range, 0f, 1f, 0f, 1f, 0f);
+    		StippleLayer stippleLayer = new StippleLayer("test", function);
+    		MapImage mapImage = new MapImage();
+    		mapImage.getLayers().add(stippleLayer);
+    		BufferedImage image = mapImage.drawImage(params, catalogue);
+    		BufferedImage comparisonImage = getComparisonImage("stipple");
+    		compareImages(comparisonImage, image);
+    	} catch (SLDException slde) {
+    		throw new EdalException("Problem creating range.", slde);
+    	}
     }
 
     @Test

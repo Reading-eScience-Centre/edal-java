@@ -33,51 +33,30 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.naming.OperationNotSupportedException;
+
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
-public class LinearOpacity extends OpacityTransform {
+public class OpacityMap extends OpacityTransform {
     private String dataFieldName;
-    private Float opaqueValue;
-    private Float transparentValue;
-
-    public LinearOpacity(String dataFieldName, Float opaqueValue, Float transparentValue) {
+    private DensityMap opacityMap;
+    
+    public OpacityMap(String dataFieldName, DensityMap opacityMap) {
         super();
         this.dataFieldName = dataFieldName;
-        this.opaqueValue = opaqueValue;
-        this.transparentValue = transparentValue;
+        this.opacityMap = opacityMap;
     }
 
-    private Float getOpacityForValue(Number value) {
-        if (value == null || Float.isNaN(value.floatValue())) {
-            return 1f;
-        }
-        boolean highOpaque = opaqueValue > transparentValue;
-        
-        float floatValue = value.floatValue();
-        if (highOpaque) {
-            if (floatValue > opaqueValue) {
-                return 1.0f;
-            } else if (floatValue < transparentValue) {
-                return 0f;
-            } else {
-                return (floatValue - transparentValue) / (opaqueValue - transparentValue);
-            }
-        } else {
-            if (floatValue < opaqueValue) {
-                return 1.0f;
-            } else if (floatValue > transparentValue) {
-                return 0f;
-            } else {
-                return 1f - ((floatValue - opaqueValue) / (transparentValue - opaqueValue));
-            }
-        }
+    private Float getOpacityForValue(Number value) throws OperationNotSupportedException {
+    	return opacityMap.getDensity(value);
     }
 
     @Override
     protected void applyOpacityToImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
-        int width = image.getWidth();
+        try {
+    	int width = image.getWidth();
         int height = image.getHeight();
 
         int[] imagePixels = image.getRGB(0, 0, width, height, null, 0, width);
@@ -92,16 +71,15 @@ public class LinearOpacity extends OpacityTransform {
             index++;
         }
         image.setRGB(0, 0, width, height, imagePixels, 0, width);
+        } catch (OperationNotSupportedException onse) {
+        	throw new EdalException("Problem applying opacity transform", onse);
+        }
     }
 
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
-        if(opaqueValue > transparentValue) {
-            ret.add(new NameAndRange(dataFieldName, Extents.newExtent(transparentValue, opaqueValue)));
-        } else {
-            ret.add(new NameAndRange(dataFieldName, Extents.newExtent(opaqueValue, transparentValue)));
-        }
+        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(opacityMap.getMinValue(), opacityMap.getMaxValue())));
         return ret;
     }
 }
