@@ -196,8 +196,8 @@ final public class Charting {
                 title.append(" variables: ");
             }
             title.append(varList.toString());
-            title.append(" near ");
-            title.append(hPos.toString());
+//            title.append(" near ");
+//            title.append(hPos.toString());
         } else {
             title.append("No data to plot at ");
             title.append(hPos.toString());
@@ -303,8 +303,8 @@ final public class Charting {
                 title.append("variables: ");
             }
             title.append(varList.toString());
-            title.append(" near ");
-            title.append(hPos.toString());
+//            title.append(" near ");
+//            title.append(hPos.toString());
         } else {
             title.append("No data to plot at ");
             title.append(hPos.toString());

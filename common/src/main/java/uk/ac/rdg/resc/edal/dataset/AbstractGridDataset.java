@@ -595,7 +595,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         } else {
             timeExtent = params.getTExtent();
         }
-
+        
         GridDataSource dataSource = null;
         /*
          * Open the source of data
@@ -984,19 +984,23 @@ public abstract class AbstractGridDataset extends AbstractDataset {
          * Find all of the times which should be included
          */
         List<DateTime> times = new ArrayList<DateTime>();
-        if (tExtent == null) {
+        if (tExtent == null && tAxis != null) {
             tExtent = tAxis.getExtent();
         }
-        if (tExtent.getLow().equals(tExtent.getHigh())) {
-            times.add(tExtent.getLow());
-        } else {
-            for (DateTime time : tAxis.getCoordinateValues()) {
-                if (tExtent.contains(time)) {
-                    times.add(time);
+        if(tExtent != null)  {
+            if (tExtent.getLow().equals(tExtent.getHigh())) {
+                times.add(tExtent.getLow());
+            } else {
+                for (DateTime time : tAxis.getCoordinateValues()) {
+                    if (tExtent.contains(time)) {
+                        times.add(time);
+                    }
                 }
             }
+        } else {
+            times.add(null);
         }
-
+        
         /*
          * Now read the data for each unique profile location.
          */
@@ -1538,20 +1542,24 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
 
         /*
-         * Find all of the times which should be included
+         * Find all of the elevations which should be included
          */
         List<Double> zVals = new ArrayList<Double>();
-        if (zExtent == null) {
+        if (zExtent == null && zAxis != null) {
             zExtent = zAxis.getExtent();
         }
-        if (zExtent.getLow().equals(zExtent.getHigh())) {
-            zVals.add(zExtent.getLow());
-        } else {
-            for (Double zVal : zAxis.getCoordinateValues()) {
-                if (zExtent.contains(zVal)) {
-                    zVals.add(zVal);
+        if(zExtent != null) {
+            if (zExtent.getLow().equals(zExtent.getHigh())) {
+                zVals.add(zExtent.getLow());
+            } else {
+                for (Double zVal : zAxis.getCoordinateValues()) {
+                    if (zExtent.contains(zVal)) {
+                        zVals.add(zVal);
+                    }
                 }
             }
+        } else {
+            zVals.add(null);
         }
 
         /*
