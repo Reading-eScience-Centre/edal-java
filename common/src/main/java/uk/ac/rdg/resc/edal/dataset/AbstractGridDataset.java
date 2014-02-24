@@ -465,7 +465,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return data;
     }
 
-    private int getTimeIndex(DateTime time, TimeAxis tAxis, String varId) {
+    private static int getTimeIndex(DateTime time, TimeAxis tAxis, String varId) {
         int tIndex = 0;
         if (tAxis != null) {
             if (time == null) {
@@ -480,7 +480,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return tIndex;
     }
 
-    private int getVerticalIndex(Double zPos, VerticalAxis zAxis, String varId) {
+    private static int getVerticalIndex(Double zPos, VerticalAxis zAxis, String varId) {
         int zIndex = 0;
         if (zAxis != null) {
             if (zPos == null) {
@@ -595,7 +595,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         } else {
             timeExtent = params.getTExtent();
         }
-        
+
         GridDataSource dataSource = null;
         /*
          * Open the source of data
@@ -891,7 +891,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *         over each of the bounds provided by limits, or the original axis
      *         if limits is <code>null</code>
      */
-    private VerticalAxis limitZAxis(VerticalAxis axis, Extent<Double> limits) {
+    private static VerticalAxis limitZAxis(VerticalAxis axis, Extent<Double> limits) {
         if (limits == null) {
             return axis;
         }
@@ -912,7 +912,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         int highIndex = axis.size() - 1;
         for (int i = axis.size() - 1; i >= 0; i--) {
             Double axisValue = axis.getCoordinateValue(i);
-            if (axisValue > limits.getHigh()) {
+            if (axisValue >= limits.getHigh()) {
                 highIndex = i;
             } else {
                 break;
@@ -987,7 +987,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         if (tExtent == null && tAxis != null) {
             tExtent = tAxis.getExtent();
         }
-        if(tExtent != null)  {
+        if (tExtent != null) {
             if (tExtent.getLow().equals(tExtent.getHigh())) {
                 times.add(tExtent.getLow());
             } else {
@@ -1000,7 +1000,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         } else {
             times.add(null);
         }
-        
+
         /*
          * Now read the data for each unique profile location.
          */
@@ -1471,7 +1471,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *         over each of the bounds provided by limits, or the original axis
      *         if limits is <code>null</code>
      */
-    private TimeAxis limitTAxis(TimeAxis axis, Extent<DateTime> limits) {
+    private static TimeAxis limitTAxis(TimeAxis axis, Extent<DateTime> limits) {
         if (limits == null) {
             return axis;
         }
@@ -1491,7 +1491,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         int highIndex = axis.size() - 1;
         for (int i = axis.size() - 1; i >= 0; i--) {
             DateTime axisValue = axis.getCoordinateValue(i);
-            if (axisValue.isAfter(limits.getHigh())) {
+            if (axisValue.isAfter(limits.getHigh()) || axisValue.isEqual(limits.getHigh())) {
                 highIndex = i;
             } else {
                 break;
@@ -1548,7 +1548,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         if (zExtent == null && zAxis != null) {
             zExtent = zAxis.getExtent();
         }
-        if(zExtent != null) {
+        if (zExtent != null) {
             if (zExtent.getLow().equals(zExtent.getHigh())) {
                 zVals.add(zExtent.getLow());
             } else {
