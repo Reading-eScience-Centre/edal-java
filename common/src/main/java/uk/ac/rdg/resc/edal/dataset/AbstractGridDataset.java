@@ -903,7 +903,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         int lowIndex = 0;
         for (int i = 0; i < axis.size(); i++) {
             Double axisValue = axis.getCoordinateValue(i);
-            if (axisValue < limits.getLow()) {
+            if (axisValue <= limits.getLow()) {
                 lowIndex = i;
             } else {
                 break;
@@ -1482,7 +1482,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         int lowIndex = 0;
         for (int i = 0; i < axis.size(); i++) {
             DateTime axisValue = axis.getCoordinateValue(i);
-            if (axisValue.isBefore(limits.getLow())) {
+            if (axisValue.isBefore(limits.getLow()) || axisValue.isEqual(limits.getLow())) {
                 lowIndex = i;
             } else {
                 break;
