@@ -42,6 +42,8 @@ import org.junit.Test;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
@@ -165,18 +167,19 @@ public class GISUtilsTest {
         for (long t = 0L; t <= 100; t += 10) {
             tValues.add(new DateTime(t));
         }
+        TimeAxis tAxis = new TimeAxisImpl("time", tValues);
         assertNull(GISUtils.getClosestTimeTo(new DateTime(), null));
-        assertEquals(new DateTime(100), GISUtils.getClosestTimeTo(null, tValues));
+        assertEquals(new DateTime(100), GISUtils.getClosestTimeTo(null, tAxis));
 
-        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(0L), tValues));
-        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(1L), tValues));
-        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(2L), tValues));
-        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(3L), tValues));
-        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(4L), tValues));
-        assertEquals(new DateTime(10L), GISUtils.getClosestTimeTo(new DateTime(5L), tValues));
-        assertEquals(new DateTime(20L), GISUtils.getClosestTimeTo(new DateTime(15L), tValues));
-        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(-1000L), tValues));
-        assertEquals(new DateTime(100L), GISUtils.getClosestTimeTo(new DateTime(1000L), tValues));
+        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(0L), tAxis));
+        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(1L), tAxis));
+        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(2L), tAxis));
+        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(3L), tAxis));
+        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(4L), tAxis));
+        assertEquals(new DateTime(10L), GISUtils.getClosestTimeTo(new DateTime(5L), tAxis));
+        assertEquals(new DateTime(20L), GISUtils.getClosestTimeTo(new DateTime(15L), tAxis));
+        assertEquals(new DateTime(0L), GISUtils.getClosestTimeTo(new DateTime(-1000L), tAxis));
+        assertEquals(new DateTime(100L), GISUtils.getClosestTimeTo(new DateTime(1000L), tAxis));
     }
 
     @Test

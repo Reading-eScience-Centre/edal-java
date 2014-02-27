@@ -32,6 +32,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -411,12 +412,12 @@ public final class GISUtils {
     /**
      * Returns the closest time to the current time from a list of values
      * 
-     * @param tValues
+     * @param tDomain
      *            The list of times to check
      * @return The closest from the list to the current time.
      */
-    public static DateTime getClosestToCurrentTime(List<DateTime> tValues) {
-        return getClosestTimeTo(new DateTime(), tValues);
+    public static DateTime getClosestToCurrentTime(TemporalDomain tDomain) {
+        return getClosestTimeTo(new DateTime(), tDomain);
     }
 
     /**
@@ -430,79 +431,118 @@ public final class GISUtils {
      *         current time if the target is <code>null</code>, or
      *         <code>null</code> if the list of times is <code>null</code>
      */
-    public static DateTime getClosestTimeTo(DateTime targetTime, List<DateTime> tValues) {
-        if (tValues == null) {
+    public static DateTime getClosestTimeTo(DateTime targetTime, TemporalDomain tDomain) {
+        if (tDomain == null) {
             return null;
         }
         if (targetTime == null) {
-            return getClosestToCurrentTime(tValues);
+            targetTime = new DateTime();
         }
-        int index = TimeUtils.findTimeIndex(tValues, targetTime);
-        if (index < 0) {
-            /*
-             * We can calculate the insertion point
-             */
-            int insertionPoint = -(index + 1);
-            /*
-             * We set the index to the most recent past time
-             */
-            if (insertionPoint == tValues.size()) {
-                index = insertionPoint - 1;
-            } else if (insertionPoint > 0) {
+        if (tDomain instanceof TimeAxis) {
+            TimeAxis timeAxis = (TimeAxis) tDomain;
+            List<DateTime> tValues = timeAxis.getCoordinateValues();
+            int index = TimeUtils.findTimeIndex(tValues, targetTime);
+            if (index < 0) {
                 /*
-                 * We need to find which of the two possibilities is the closest
-                 * time
+                 * We can calculate the insertion point
                  */
-                long t1 = tValues.get(insertionPoint - 1).getMillis();
-                long t2 = tValues.get(insertionPoint).getMillis();
-
-                if ((t2 - targetTime.getMillis()) <= (targetTime.getMillis() - t1)) {
-                    index = insertionPoint;
-                } else {
+                int insertionPoint = -(index + 1);
+                /*
+                 * We set the index to the most recent past time
+                 */
+                if (insertionPoint == tValues.size()) {
                     index = insertionPoint - 1;
+                } else if (insertionPoint > 0) {
+                    /*
+                     * We need to find which of the two possibilities is the
+                     * closest time
+                     */
+                    long t1 = tValues.get(insertionPoint - 1).getMillis();
+                    long t2 = tValues.get(insertionPoint).getMillis();
+
+                    if ((t2 - targetTime.getMillis()) <= (targetTime.getMillis() - t1)) {
+                        index = insertionPoint;
+                    } else {
+                        index = insertionPoint - 1;
+                    }
+                } else {
+                    /*
+                     * All DateTimes on the axis are in the future, so we take
+                     * the earliest
+                     */
+                    index = 0;
                 }
+            }
+            return tValues.get(index);
+        } else {
+            /*
+             * We just have a domain representing an extent. If it contains the
+             * target time, return the target time, otherwise return either the
+             * upper or lower bound, as appropriate.
+             */
+            if (tDomain.contains(targetTime)) {
+                return targetTime;
+            } else if (targetTime.isBefore(tDomain.getExtent().getLow())) {
+                return tDomain.getExtent().getLow();
             } else {
-                /*
-                 * All DateTimes on the axis are in the future, so we take the
-                 * earliest
-                 */
-                index = 0;
+                return tDomain.getExtent().getHigh();
             }
         }
 
-        return tValues.get(index);
     }
 
     /**
      * Returns the closest elevation to the surface of the given
      * {@link VerticalDomain}
      * 
-     * @param vAxis
+     * @param vDomain
      *            The {@link VerticalDomain} to test
      * @return The uppermost elevation, or null if no {@link VerticalDomain} is
      *         provided
      */
-    public static Double getClosestElevationToSurface(VerticalDomain vAxis) {
-        if (vAxis == null) {
+    public static Double getClosestElevationToSurface(VerticalDomain vDomain) {
+        if (vDomain == null) {
             return null;
         }
-
-        if (vAxis.getVerticalCrs().isPressure()) {
-            /*
-             * The vertical axis is pressure. The default (closest to the
-             * surface) is therefore the maximum value.
-             */
-            return vAxis.getExtent().getHigh();
-        } else {
-            /*
-             * The vertical axis represents linear height, so we find which
-             * value is closest to zero (the surface), i.e. the smallest
-             * absolute value
-             */
-            if(vAxis.getExtent().contains(0.0)) {
-                return 0.0;
+        if (vDomain instanceof VerticalAxis) {
+            VerticalAxis vAxis = (VerticalAxis) vDomain;
+            if (vAxis.getVerticalCrs().isPressure()) {
+                /*
+                 * The vertical axis is pressure. The default (closest to the
+                 * surface) is therefore the maximum value.
+                 */
+                return Collections.max(vAxis.getCoordinateValues());
             } else {
-                return vAxis.getExtent().getLow();
+                /*
+                 * The vertical axis represents linear height, so we find which
+                 * value is closest to zero (the surface), i.e. the smallest
+                 * absolute value
+                 */
+                return Collections.min(vAxis.getCoordinateValues(), new Comparator<Double>() {
+                    @Override
+                    public int compare(Double d1, Double d2) {
+                        return Double.compare(Math.abs(d1), Math.abs(d2));
+                    }
+                });
+            }
+        } else {
+            if (vDomain.getVerticalCrs().isPressure()) {
+                /*
+                 * The vertical domain is pressure. The default (closest to the
+                 * surface) is therefore the maximum value.
+                 */
+                return vDomain.getExtent().getHigh();
+            } else {
+                /*
+                 * The vertical domain represents linear height, so if includes
+                 * 0.0, this is the closest to the surface, otherwise the lowest
+                 * value is closest to the surface
+                 */
+                if (vDomain.getExtent().contains(0.0)) {
+                    return 0.0;
+                } else {
+                    return vDomain.getExtent().getLow();
+                }
             }
         }
     }
@@ -664,7 +704,7 @@ public final class GISUtils {
                 bbox.getCoordinateReferenceSystem());
         return bboxBordered;
     }
-    
+
     /**
      * Gets the intersection of a number of {@link HorizontalDomain}s
      * 
@@ -721,8 +761,8 @@ public final class GISUtils {
      * Gets the intersection of a number of {@link VerticalDomain}s
      * 
      * @param domains
-     *            The {@link VerticalDomain}s to find a intersection of. They must all
-     *            share the same {@link VerticalCrs}
+     *            The {@link VerticalDomain}s to find a intersection of. They
+     *            must all share the same {@link VerticalCrs}
      * @return A new {@link VerticalDomain} whose extent represents the range
      *         where valid values can be found in all the supplied
      *         {@link VerticalDomain}s
@@ -873,7 +913,7 @@ public final class GISUtils {
             /*
              * There is no intersection between these TemporalDomain
              */
-            if(max.isBefore(min)) {
+            if (max.isBefore(min)) {
                 return null;
             }
             return new SimpleTemporalDomain(min, max);
