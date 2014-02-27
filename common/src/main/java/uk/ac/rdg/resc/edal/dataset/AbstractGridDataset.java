@@ -469,7 +469,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         int tIndex = 0;
         if (tAxis != null) {
             if (time == null) {
-                time = GISUtils.getClosestToCurrentTime(tAxis.getCoordinateValues());
+                time = GISUtils.getClosestToCurrentTime(tAxis);
             }
             tIndex = tAxis.findIndexOf(time);
         }
