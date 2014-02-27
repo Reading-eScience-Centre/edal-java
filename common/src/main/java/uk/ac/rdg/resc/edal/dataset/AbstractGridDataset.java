@@ -49,6 +49,7 @@ import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
+import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
@@ -128,7 +129,9 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             /*
              * Create a GridDomain from the GridVariableMetadata
              */
-            GridDomain domain = null;
+            GridDomain domain = new SimpleGridDomain(gridVariableMetadata.getHorizontalDomain(),
+                    gridVariableMetadata.getVerticalDomain(),
+                    gridVariableMetadata.getTemporalDomain());
 
             Map<String, Parameter> parameters = new HashMap<String, Parameter>();
             parameters.put(featureId, getVariableMetadata(featureId).getParameter());
@@ -189,7 +192,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             int zSize = variableMetadata.getVerticalDomain().size();
             int tSize = variableMetadata.getTemporalDomain().size();
 
-            return gridDataSource.read(varId, 0, tSize, 0, zSize, 0, ySize, 0, xSize);
+            return gridDataSource.read(varId, 0, tSize - 1, 0, zSize - 1, 0, ySize - 1, 0,
+                    xSize - 1);
         } else {
             String[] requiredVariables = plugin.usesVariables();
             /*
