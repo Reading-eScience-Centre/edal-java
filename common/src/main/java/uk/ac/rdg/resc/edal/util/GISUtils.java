@@ -311,6 +311,16 @@ public final class GISUtils {
      */
     public static boolean crsMatch(CoordinateReferenceSystem sourceCrs,
             CoordinateReferenceSystem targetCrs) {
+        if (sourceCrs == null) {
+            if (targetCrs == null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (targetCrs == null) {
+            return false;
+        }
+
         MathTransform transform;
         try {
             transform = CRS.findMathTransform(sourceCrs, targetCrs);
