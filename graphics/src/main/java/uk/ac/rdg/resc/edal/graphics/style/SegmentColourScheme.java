@@ -47,13 +47,13 @@ public class SegmentColourScheme extends ColourScheme {
     // The number of colour bands
     private Integer nColourBands = 254;
     
+    // A string representing the palette
     private String paletteString = "default";
     
     private ColourPalette palette = null;
     
-
     public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour,
-    		Color aboveMaxColour, Color noDataColour, String palette,
+    		Color aboveMaxColour, Color noDataColour, Color[] palette,
     		Integer nColourBands) {
         super();
         this.scaleRange = scaleRange;
@@ -61,7 +61,19 @@ public class SegmentColourScheme extends ColourScheme {
         this.aboveMaxColour = aboveMaxColour;
         this.noDataColour = noDataColour;
         this.nColourBands = nColourBands;
-        this.paletteString = palette;
+        this.palette = new ColourPalette(palette, nColourBands);
+    }
+
+    public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour,
+    		Color aboveMaxColour, Color noDataColour, String paletteString,
+    		Integer nColourBands) {
+        super();
+        this.scaleRange = scaleRange;
+        this.belowMinColour = belowMinColour;
+        this.aboveMaxColour = aboveMaxColour;
+        this.noDataColour = noDataColour;
+        this.nColourBands = nColourBands;
+        this.paletteString = paletteString;
     }
 
     @Override
