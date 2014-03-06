@@ -30,21 +30,63 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
 
-public class PaletteColourScheme extends ColourScheme {
+import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
+
+public class SegmentColourScheme extends ColourScheme {
 
     private ColourScale scaleRange;
-    private ColourMap colourPalette;
+    // The colour to plot for values below the minimum. If null, then use the
+    // lowest value in the palette
+    private Color belowMinColour = null;
+    // The colour to plot for values above the maximum. If null, then use the
+    // highest value in the palette
+    private Color aboveMaxColour = null;
+    // The colour to plot for missing data
+    private Color noDataColour = new Color(0, 0, 0, 0);
+    
+    // The number of colour bands
+    private Integer nColourBands = 254;
+    
+    private String paletteString = "default";
+    
+    private ColourPalette palette = null;
+    
 
-    public PaletteColourScheme(ColourScale scaleRange, ColourMap colourPalette) {
+    public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour,
+    		Color aboveMaxColour, Color noDataColour, String palette,
+    		Integer nColourBands) {
         super();
         this.scaleRange = scaleRange;
-        this.colourPalette = colourPalette;
+        this.belowMinColour = belowMinColour;
+        this.aboveMaxColour = aboveMaxColour;
+        this.noDataColour = noDataColour;
+        this.nColourBands = nColourBands;
+        this.paletteString = palette;
     }
 
     @Override
     public Color getColor(Number value) {
         Float zeroToOne = scaleRange.scaleZeroToOne(value);
-        return colourPalette.getColor(zeroToOne);
+        if(palette == null) {
+            palette = ColourPalette.fromString(paletteString, nColourBands);
+        }
+        if (zeroToOne == null || Float.isNaN(zeroToOne.floatValue())) {
+            return noDataColour;
+        }
+        float val = zeroToOne.floatValue();
+        if (val < 0.0) {
+            if(belowMinColour == null) {
+                return palette.getColor(0f);
+            }
+            return belowMinColour;
+        }
+        if (val > 1.0) {
+            if(aboveMaxColour == null) {
+                return palette.getColor(1f);
+            }
+            return aboveMaxColour;
+        }
+        return palette.getColor(val);
     }
 
     @Override

@@ -7,11 +7,10 @@ import javax.xml.xpath.XPathConstants;
 
 import org.w3c.dom.Node;
 
-import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.InterpolateColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
 
@@ -67,13 +66,13 @@ public class SLDColorMapParser {
 					}
 					
 				}
-				ColourMap colourMap = new ColourMap(segment.getBelowMinValue(),
-						segment.getAboveMaxValue(),segment.getFallbackValue(), palette,
-						segment.getNumberOfSegments());
 				SLDRange range = segment.getRange();
 				ColourScale colourScale = new ColourScale(range.getMinimum(),
 						range.getMaximum(), range.getSpacing() == Spacing.LOGARITHMIC);
-				colourScheme = new PaletteColourScheme(colourScale, colourMap);
+				colourScheme = new SegmentColourScheme(colourScale,
+						segment.getBelowMinValue(), segment.getAboveMaxValue(),
+						segment.getFallbackValue(), palette,
+						segment.getNumberOfSegments());
 			} else {
 				throw new SLDException("Unexpected function in ColorMap.");
 			}
