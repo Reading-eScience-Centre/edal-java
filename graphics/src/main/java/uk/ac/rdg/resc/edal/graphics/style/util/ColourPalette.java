@@ -138,7 +138,7 @@ public class ColourPalette {
 
     private final Color[] colours;
 
-    private ColourPalette(Color[] palette, int numColorBands) {
+    public ColourPalette(Color[] palette, int numColorBands) {
         colours = generateColourSet(palette, numColorBands);
     }
 
