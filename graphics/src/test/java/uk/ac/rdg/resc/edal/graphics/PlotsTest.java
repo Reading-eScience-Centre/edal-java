@@ -59,9 +59,9 @@ import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
 import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
-import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.Raster2DLayer;
 import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
+import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentDensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme2D;
@@ -90,7 +90,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  * 
  * @author Guy
  */
-public class PlotTests {
+public class PlotsTest {
 
     private static final int WIDTH = 500;
     private static final int HEIGHT = 250;
@@ -300,7 +300,7 @@ public class PlotTests {
 
         @Override
         public Number get(int... coords) {
-            return 2*Math.PI*((double) coords[1]) / WIDTH;
+            return 360*((double) coords[1]) / WIDTH;
         }
     };
 }
