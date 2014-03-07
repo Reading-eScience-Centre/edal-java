@@ -52,17 +52,16 @@ import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
-import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
-import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
-import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.Raster2DLayer;
 import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
+import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentDensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme2D;
@@ -91,7 +90,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  * 
  * @author Guy
  */
-public class PlotTests {
+public class PlotsTest {
 
     private static final int WIDTH = 500;
     private static final int HEIGHT = 250;
@@ -175,8 +174,8 @@ public class PlotTests {
 
     @Test
     public void testRaster() throws EdalException {
-        ColourScheme colourScheme = new PaletteColourScheme(scale, new ColourMap(Color.blue,
-                Color.red, new Color(0, true), "#000000,#00ff00", 10));
+        ColourScheme colourScheme = new SegmentColourScheme(scale, Color.blue,
+                Color.red, new Color(0, true), "#000000,#00ff00", 10);
         RasterLayer rasterLayer = new RasterLayer("test", colourScheme);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(rasterLayer);
@@ -301,7 +300,7 @@ public class PlotTests {
 
         @Override
         public Number get(int... coords) {
-            return 2*Math.PI*((double) coords[1]) / WIDTH;
+            return 360*((double) coords[1]) / WIDTH;
         }
     };
 }

@@ -1,17 +1,17 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
 import java.awt.Color;
+import java.util.List;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 
 import org.w3c.dom.Node;
 
-import uk.ac.rdg.resc.edal.graphics.style.ColourMap;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.InterpolateColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.PaletteColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
 
@@ -50,30 +50,21 @@ public class SLDColorMapParser {
 						interpolate.getFallbackValue());
 			} else if (function instanceof ColorSLDSegmentFunction) {
 				ColorSLDSegmentFunction segment = (ColorSLDSegmentFunction) function;
-				String palette;
-				if (segment.getPaletteName() != null) {
-					palette = segment.getPaletteName();
-				} else {
-					palette = "";
-					int i = 1;
-					int l = segment.getValueList().size();
-					for (Color c: segment.getValueList()) {
-						palette = palette + String.format("#%02x%02x%02x%02x",
-								c.getAlpha(), c.getRed(), c.getGreen(), c.getBlue());
-						if (i < l) {
-							palette = palette + ",";
-						}
-						i++;
-					}
-					
-				}
-				ColourMap colourMap = new ColourMap(segment.getBelowMinValue(),
-						segment.getAboveMaxValue(),segment.getFallbackValue(), palette,
-						segment.getNumberOfSegments());
 				SLDRange range = segment.getRange();
 				ColourScale colourScale = new ColourScale(range.getMinimum(),
 						range.getMaximum(), range.getSpacing() == Spacing.LOGARITHMIC);
-				colourScheme = new PaletteColourScheme(colourScale, colourMap);
+				if (segment.getPaletteName() != null) {
+					colourScheme = new SegmentColourScheme(colourScale,
+							segment.getBelowMinValue(), segment.getAboveMaxValue(),
+							segment.getFallbackValue(), segment.getPaletteName(),
+							segment.getNumberOfSegments());
+				} else {
+					List<Color> colours = segment.getValueList();
+					colourScheme = new SegmentColourScheme(colourScale,
+							segment.getBelowMinValue(), segment.getAboveMaxValue(),
+							segment.getFallbackValue(), colours.toArray(new Color[colours.size()]),
+							segment.getNumberOfSegments());
+				}
 			} else {
 				throw new SLDException("Unexpected function in ColorMap.");
 			}

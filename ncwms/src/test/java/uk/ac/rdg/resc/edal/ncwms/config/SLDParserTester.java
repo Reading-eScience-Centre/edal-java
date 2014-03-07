@@ -17,7 +17,7 @@ import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.ncwms.NcwmsCatalogue;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
-public class SLDParserTest {
+public class SLDParserTester {
 
 	public static void main(String[] args) {
 		try {
@@ -52,6 +52,10 @@ public class SLDParserTest {
 					// write the image to a PNG file
 					File outputfile = new File("N:\\Documents\\SLDOutput\\" + fileName.replace("xml", "png"));
 					ImageIO.write(image, "png", outputfile);
+					// create the legend
+					BufferedImage legend = mapImage.getLegend(250);
+					outputfile = new File("N:\\Documents\\SLDOutput\\" + fileName.replace(".xml", "_lgd.png"));
+					ImageIO.write(legend, "png", outputfile);
 				}
 			}
 		} catch (Exception e) {
