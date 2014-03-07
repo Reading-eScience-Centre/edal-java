@@ -382,8 +382,8 @@ public abstract class VariablePlugin {
         HorizontalDomain hDomain = GISUtils.getIntersectionOfHorizontalDomains(hDomains);
         VerticalDomain vDomain = GISUtils.getIntersectionOfVerticalDomains(zDomains);
         TemporalDomain tDomain = GISUtils.getIntersectionOfTemporalDomains(tDomains);
-        if (hDomain instanceof HorizontalGrid && vDomain instanceof VerticalAxis
-                && tDomain instanceof TimeAxis) {
+        if (hDomain instanceof HorizontalGrid && (vDomain instanceof VerticalAxis || vDomain == null)  
+                && (tDomain instanceof TimeAxis || tDomain == null)) {
             return new GridVariableMetadata(id, parameter, (HorizontalGrid) hDomain,
                     (VerticalAxis) vDomain, (TimeAxis) tDomain, scalar);
         } else {
