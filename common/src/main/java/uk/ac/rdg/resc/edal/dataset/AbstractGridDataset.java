@@ -189,8 +189,14 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             int xSize = variableMetadata.getHorizontalDomain().getXSize();
             int ySize = variableMetadata.getHorizontalDomain().getYSize();
-            int zSize = variableMetadata.getVerticalDomain().size();
-            int tSize = variableMetadata.getTemporalDomain().size();
+            int zSize = 1;
+            if(variableMetadata.getVerticalDomain() != null) {
+                zSize = variableMetadata.getVerticalDomain().size();
+            }
+            int tSize = 1;
+            if(variableMetadata.getTemporalDomain() != null) {
+                tSize = variableMetadata.getTemporalDomain().size();
+            }
 
             return gridDataSource.read(varId, 0, tSize - 1, 0, zSize - 1, 0, ySize - 1, 0,
                     xSize - 1);
