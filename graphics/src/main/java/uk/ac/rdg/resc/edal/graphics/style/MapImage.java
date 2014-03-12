@@ -36,7 +36,7 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.text.DecimalFormat;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -252,16 +252,43 @@ public class MapImage extends Drawable {
         AffineTransform at = new AffineTransform();
         at.rotate(-Math.PI / 2.0);
         Font sidewaysFont = textFont.deriveFont(at);
-        DecimalFormat formatter = new DecimalFormat("0.###E0");
 
         int textBorder = 4;
 
+        /*
+         * Find the values to use for the labels and the minimum difference
+         * between adjacent values. The latter and the maximum value are used
+         * to calculate the number of significant figures required.
+         */
         Float lowVal = nameAndRange.getScaleRange().getLow();
         Float highVal = nameAndRange.getScaleRange().getHigh();
-        String lowStr = formatter.format(lowVal);
-        String medLowStr = formatter.format(lowVal + (highVal - lowVal) / 3.0);
-        String medHighStr = formatter.format(lowVal + 2.0 * (highVal - lowVal) / 3.0);
-        String highStr = formatter.format(highVal);
+        float vals[] = new float[4];
+        for (int i = 0; i < 4; i++) {
+        	vals[i] = lowVal + (float)i * (highVal - lowVal) / 3.0F;
+        }
+        float minDiff = Float.POSITIVE_INFINITY;
+        for (int i = 1; i < 4; i++) {
+        	float diff = Math.abs(vals[i] - vals[i - 1]);
+        	if (diff < minDiff) {
+        		minDiff = diff;
+        	}
+        }
+        // Find the order of magnitude of the minimum difference between adjacent values 
+        int oMinDiff = (int)Math.floor(Math.log10(Math.abs(minDiff)));
+        // Find the order of magnitude of the maximum value
+        int oHighVal = (int)Math.floor(Math.log10(Math.abs(highVal)));
+        // Find the number of significant figures required to display the smallest difference 
+        int sigfigs = oHighVal - oMinDiff + 1;
+        // Convert values to BigDecimals with correct number of significant figures
+    	BigDecimal[] bds = new BigDecimal[4];
+    	for (int i = 0; i <4; i++) {
+    		bds[i] = new BigDecimal(vals[i], new java.math.MathContext(sigfigs + 1));
+    	}
+
+        String lowStr = String.valueOf(bds[0].doubleValue());
+        String medLowStr = String.valueOf(bds[1].doubleValue());
+        String medHighStr = String.valueOf(bds[2].doubleValue());
+        String highStr = String.valueOf(bds[3].doubleValue());;
 
         /*
          * Create a temporary image so that we can get some metrics about the
