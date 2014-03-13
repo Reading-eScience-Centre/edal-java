@@ -1,7 +1,7 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDOpacityMapParser.parseLookupValue;
-import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDOpacityMapParser.parseOpacityMap;
+import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDDensityMapParser.parseLookupValue;
+import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDDensityMapParser.parseDensityMap;
 
 import java.awt.Color;
 import java.util.List;
@@ -100,7 +100,7 @@ public abstract class AbstractSLDSymbolizer implements SLDSymbolizer{
 		
 		if (transformNode != null) {
 			String dataFieldName = parseLookupValue(xPath, transformNode);
-			DensityMap opacityMap =  parseOpacityMap(xPath, transformNode);
+			DensityMap opacityMap =  parseDensityMap(xPath, transformNode);
 			imageLayer.setOpacityTransform(new OpacityMap(dataFieldName, opacityMap));
 			return;
 		}
