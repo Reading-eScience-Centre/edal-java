@@ -10,8 +10,9 @@ import org.w3c.dom.Node;
 import uk.ac.rdg.resc.edal.graphics.style.InterpolateDensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentDensityMap;
+import uk.ac.rdg.resc.edal.graphics.style.ThresholdDensityMap;
 
-public class SLDOpacityMapParser {
+public class SLDDensityMapParser {
 
 	/**
 	 * Parse the functions within a node for a pattern symbolizer or opacity transform
@@ -21,7 +22,7 @@ public class SLDOpacityMapParser {
 	 * @return PatternScale
 	 * @throws SLDException
 	 */
-	public static DensityMap parseOpacityMap(XPath xPath, Node node)
+	public static DensityMap parseDensityMap(XPath xPath, Node node)
 			throws SLDException{
 		try {
 			// get the function defining the pattern
@@ -30,8 +31,8 @@ public class SLDOpacityMapParser {
 			// create the pattern scale
 			DensityMap opacityMap;
 			if (function instanceof FloatSLDCategorizeFunction) {
-				// TODO support Categorize function
-				throw new SLDException("The Categorize function is not currently supported as a method of specifying patterns or opacities.");
+				FloatSLDCategorizeFunction categorize = (FloatSLDCategorizeFunction) function;
+				opacityMap = new ThresholdDensityMap(categorize.getThresholds(), categorize.getValues(), categorize.getFallbackValue());
 			} else if (function instanceof FloatSLDInterpolateFunction) {
 				FloatSLDInterpolateFunction interpolate = (FloatSLDInterpolateFunction) function;
 				opacityMap = new InterpolateDensityMap(interpolate.getInterpolationPoints(), interpolate.getFallbackValue());
@@ -66,10 +67,15 @@ public class SLDOpacityMapParser {
 	 */
 	public static String parseLookupValue(XPath xPath, Node node) throws SLDException {
 		try {
-			// TODO support Categorize function
+			// parse Categorize function
+			String lookupValue = (String) xPath.evaluate(
+					"./se:Categorize/se:LookupValue", node, XPathConstants.STRING);
+			if (!(lookupValue == null) && !(lookupValue.equals(""))) {
+				return lookupValue;
+			}			
 
 			// parse Interpolate function
-			String lookupValue = (String) xPath.evaluate(
+			lookupValue = (String) xPath.evaluate(
 					"./se:Interpolate/se:LookupValue", node, XPathConstants.STRING);
 			if (!(lookupValue == null) && !(lookupValue.equals(""))) {
 				return lookupValue;
