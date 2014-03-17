@@ -263,8 +263,11 @@ public final class Extents {
         @Override
         public boolean contains(DateTime val) {
             DateTime low = getLow();
-            if (low == null) {
+            if (low == null || val == null) {
                 return false;
+            }
+            if(val.getChronology() == null) {
+                return low.getChronology() == null;
             }
             if (!val.getChronology().equals(low.getChronology())) {
                 return false;

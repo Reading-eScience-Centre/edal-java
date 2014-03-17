@@ -57,7 +57,8 @@ public class MapImage extends Drawable {
     }
 
     @Override
-    public BufferedImage drawImage(PlottingDomainParams params, FeatureCatalogue catalogue) throws EdalException {
+    public BufferedImage drawImage(PlottingDomainParams params, FeatureCatalogue catalogue)
+            throws EdalException {
         BufferedImage finalImage = new BufferedImage(params.getWidth(), params.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = finalImage.createGraphics();
@@ -78,6 +79,8 @@ public class MapImage extends Drawable {
         return finalImage;
     }
 
+    private static final int COLOURBAR_WIDTH = 50;
+
     /**
      * Generate a legend for this {@link MapImage}.
      * 
@@ -89,9 +92,12 @@ public class MapImage extends Drawable {
      * @return An {@link BufferedImage} representing the legend for this
      *         {@link MapImage}
      */
-    private static final int COLOURBAR_WIDTH = 50;
-
     public BufferedImage getLegend(int componentSize) throws EdalException {
+        return getLegend(componentSize, Color.black, Color.white, true, COLOURBAR_WIDTH);
+    }
+
+    public BufferedImage getLegend(int componentSize, Color textColour, Color bgColour,
+            boolean layerNameLabels, int width1d) throws EdalException {
         /*
          * TODO componentSize doesn't actually specify the total size of a
          * component, just the data bit of it. We *may* want to fix this
@@ -99,8 +105,6 @@ public class MapImage extends Drawable {
         BufferedImage finalImage;
         Set<NameAndRange> fieldsWithScales = getFieldsWithScales();
         int noOfIndependentFields = fieldsWithScales.size();
-        Color fgColour = Color.black;
-        Color bgColour = Color.white;
         /*
          * This is the fraction of the colourbar which *gets added* as
          * out-of-range data.
@@ -129,11 +133,11 @@ public class MapImage extends Drawable {
              * Get the data for the colourbar and draw it.
              */
             LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales,
-                    COLOURBAR_WIDTH, componentSize, null, extraAmountOutOfRange);
+                    width1d, componentSize, null, extraAmountOutOfRange);
             BufferedImage colourbar = drawImage(dataGenerator.getGlobalParams(),
                     dataGenerator.getFeatureCatalogue(null, nameAndRange.getFieldLabel()));
             Graphics2D graphics = colourbar.createGraphics();
-            graphics.setColor(fgColour);
+            graphics.setColor(textColour);
             graphics.drawRect(0, 0, colourbar.getWidth() - 1, colourbar.getHeight() - 1);
             graphics.dispose();
 
@@ -141,12 +145,12 @@ public class MapImage extends Drawable {
              * Now generate the labels for this legend
              */
             BufferedImage labels = getLabels(nameAndRange, extraAmountOutOfRange, componentSize,
-                    fgColour);
+                    textColour, layerNameLabels);
 
             /*
              * Now create the correctly-sized final image...
              */
-            finalImage = new BufferedImage(COLOURBAR_WIDTH + labels.getWidth(), componentSize,
+            finalImage = new BufferedImage(width1d + labels.getWidth(), componentSize,
                     BufferedImage.TYPE_INT_ARGB);
             /*
              * ...and draw everything into it
@@ -155,7 +159,7 @@ public class MapImage extends Drawable {
             graphics.setColor(bgColour);
             graphics.fill(new Rectangle(finalImage.getWidth(), finalImage.getHeight()));
             graphics.drawImage(colourbar, 0, 0, null);
-            graphics.drawImage(labels, COLOURBAR_WIDTH, 0, null);
+            graphics.drawImage(labels, width1d, 0, null);
         } else {
             /*
              * General case, where we need to generate each possible combination
@@ -172,7 +176,8 @@ public class MapImage extends Drawable {
             BufferedImage[] labels = new BufferedImage[fields.size()];
             int borderSize = 0;
             for (int i = 0; i < fields.size(); i++) {
-                labels[i] = getLabels(fields.get(i), extraAmountOutOfRange, componentSize, fgColour);
+                labels[i] = getLabels(fields.get(i), extraAmountOutOfRange, componentSize,
+                        textColour, layerNameLabels);
                 if (labels[i].getWidth() > borderSize) {
                     borderSize = labels[i].getWidth() + 8;
                 }
@@ -214,7 +219,7 @@ public class MapImage extends Drawable {
                      * Draw the 2d legend and outline it
                      */
                     graphics.drawImage(colourbar2d, xStart, yStart, null);
-                    graphics.setColor(fgColour);
+                    graphics.setColor(textColour);
                     graphics.drawRect(xStart, yStart, colourbar2d.getWidth() - 1,
                             colourbar2d.getHeight() - 1);
                     graphics.drawRect(xStart - 2, yStart - 2, borderSize + colourbar2d.getWidth()
@@ -242,10 +247,11 @@ public class MapImage extends Drawable {
      * @param nameAndRange
      * @param extraAmountOutOfRange
      * @param componentSize
+     * @param layerNameLabels
      * @return
      */
     private static BufferedImage getLabels(NameAndRange nameAndRange, float extraAmountOutOfRange,
-            int componentSize, Color textColor) {
+            int componentSize, Color textColor, boolean layerNameLabels) {
         String fieldName = nameAndRange.getFieldLabel();
 
         Font textFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
@@ -257,38 +263,39 @@ public class MapImage extends Drawable {
 
         /*
          * Find the values to use for the labels and the minimum difference
-         * between adjacent values. The latter and the maximum value are used
-         * to calculate the number of significant figures required.
+         * between adjacent values. The latter and the maximum value are used to
+         * calculate the number of significant figures required.
          */
         Float lowVal = nameAndRange.getScaleRange().getLow();
         Float highVal = nameAndRange.getScaleRange().getHigh();
         float vals[] = new float[4];
         for (int i = 0; i < 4; i++) {
-        	vals[i] = lowVal + (float)i * (highVal - lowVal) / 3.0F;
+            vals[i] = lowVal + (float) i * (highVal - lowVal) / 3.0F;
         }
         float minDiff = Float.POSITIVE_INFINITY;
         for (int i = 1; i < 4; i++) {
-        	float diff = Math.abs(vals[i] - vals[i - 1]);
-        	if (diff < minDiff) {
-        		minDiff = diff;
-        	}
+            float diff = Math.abs(vals[i] - vals[i - 1]);
+            if (diff < minDiff) {
+                minDiff = diff;
+            }
         }
         // Find the order of magnitude of the minimum difference between adjacent values 
-        int oMinDiff = (int)Math.floor(Math.log10(Math.abs(minDiff)));
+        int oMinDiff = (int) Math.floor(Math.log10(Math.abs(minDiff)));
         // Find the order of magnitude of the maximum value
-        int oHighVal = (int)Math.floor(Math.log10(Math.abs(highVal)));
+        int oHighVal = (int) Math.floor(Math.log10(Math.abs(highVal)));
         // Find the number of significant figures required to display the smallest difference 
         int sigfigs = oHighVal - oMinDiff + 1;
         // Convert values to BigDecimals with correct number of significant figures
-    	BigDecimal[] bds = new BigDecimal[4];
-    	for (int i = 0; i <4; i++) {
-    		bds[i] = new BigDecimal(vals[i], new java.math.MathContext(sigfigs + 1));
-    	}
+        BigDecimal[] bds = new BigDecimal[4];
+        for (int i = 0; i < 4; i++) {
+            bds[i] = new BigDecimal(vals[i], new java.math.MathContext(sigfigs + 1));
+        }
 
         String lowStr = String.valueOf(bds[0].doubleValue());
         String medLowStr = String.valueOf(bds[1].doubleValue());
         String medHighStr = String.valueOf(bds[2].doubleValue());
-        String highStr = String.valueOf(bds[3].doubleValue());;
+        String highStr = String.valueOf(bds[3].doubleValue());
+        ;
 
         /*
          * Create a temporary image so that we can get some metrics about the
@@ -316,16 +323,20 @@ public class MapImage extends Drawable {
         int highYPos = outOfRangeOffset + textHeightOffset;
         int medLowYPos = (int) (highYPos + 2.0 * (lowYPos - highYPos) / 3.0);
         int medHighYPos = (int) (highYPos + 1.0 * (lowYPos - highYPos) / 3.0);
-        /*
-         * The length required to write the field name
-         */
-        int fieldLength = fontMetrics.stringWidth(fieldName);
-        /*
-         * Number of lines of text needed for field name. The 20 is in there to
-         * get around the fact that characters don't take up equal space. It's
-         * an empirical value. Feel free to empiricise it more.
-         */
-        int nLines = (int) Math.ceil((double) (fieldLength + 20) / componentSize);
+        int fieldLength = 0;
+        int nLines = 0;
+        if (layerNameLabels) {
+            /*
+             * The length required to write the field name
+             */
+            fieldLength = fontMetrics.stringWidth(fieldName);
+            /*
+             * Number of lines of text needed for field name. The 20 is in there
+             * to get around the fact that characters don't take up equal space.
+             * It's an empirical value. Feel free to empiricise it more.
+             */
+            nLines = (int) Math.ceil((double) (fieldLength + 20) / componentSize);
+        }
         if (nLines > 1) {
             /*
              * It needs splitting.
@@ -382,10 +393,12 @@ public class MapImage extends Drawable {
         graphics.setFont(sidewaysFont);
 
         int offset = 0;
-        for (String line : fieldName.split("\n")) {
-            graphics.drawString(line, textBorder + numberSpace + lineHeight + offset, componentSize
-                    - textBorder);
-            offset += lineHeight;
+        if(layerNameLabels) {
+            for (String line : fieldName.split("\n")) {
+                graphics.drawString(line, textBorder + numberSpace + lineHeight + offset, componentSize
+                        - textBorder);
+                offset += lineHeight;
+            }
         }
 
         return ret;
