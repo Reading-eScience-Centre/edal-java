@@ -181,16 +181,15 @@ public class PlotsTest {
      * @return blank
      */
     private boolean imageBlank(BufferedImage image) {
-    	boolean blank = true;
     	int rgb = image.getRGB(0, 0);
     	for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {
             	if (image.getRGB(i, j) != rgb) {
-            		blank = false;
+            		return false;
             	}
             }
         }
-    	return blank;
+    	return true;
     }
 
     @Test
