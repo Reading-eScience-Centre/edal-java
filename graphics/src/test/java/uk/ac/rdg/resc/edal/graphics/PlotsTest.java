@@ -175,16 +175,17 @@ public class PlotsTest {
 
     /**
      * Accepts a buffered image as input and returns a boolean indicating if
-     * the image is blank (black and transparent).
+     * the image is entirely the same colour.
      * 
      * @param image
      * @return blank
      */
     private boolean imageBlank(BufferedImage image) {
     	boolean blank = true;
+    	int rgb = image.getRGB(0, 0);
     	for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {
-            	if (image.getRGB(i, j) != 0) {
+            	if (image.getRGB(i, j) != rgb) {
             		blank = false;
             	}
             }
