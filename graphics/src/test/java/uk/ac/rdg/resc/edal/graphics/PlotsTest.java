@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.graphics;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.awt.Color;
@@ -172,6 +173,25 @@ public class PlotsTest {
         }
     }
 
+    /**
+     * Accepts a buffered image as input and returns a boolean indicating if
+     * the image is blank (black and transparent).
+     * 
+     * @param image
+     * @return blank
+     */
+    private boolean imageBlank(BufferedImage image) {
+    	boolean blank = true;
+    	for (int i = 0; i < image.getWidth(); i++) {
+            for (int j = 0; j < image.getHeight(); j++) {
+            	if (image.getRGB(i, j) != 0) {
+            		blank = false;
+            	}
+            }
+        }
+    	return blank;
+    }
+
     @Test
     public void testRaster() throws EdalException {
         ColourScheme colourScheme = new SegmentColourScheme(scale, Color.blue,
@@ -191,8 +211,7 @@ public class PlotsTest {
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(contourLayer);
         BufferedImage image = mapImage.drawImage(params, catalogue);
-        BufferedImage comparisonImage = getComparisonImage("contour");
-        compareImages(comparisonImage, image);
+        assertFalse(imageBlank(image));
     }
 
     @Test
