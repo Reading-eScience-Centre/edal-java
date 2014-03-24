@@ -31,7 +31,6 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +60,8 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
 import uk.ac.rdg.resc.edal.dataset.FeatureIndexer;
-import uk.ac.rdg.resc.edal.dataset.NaiveFeatureIndexer;
+import uk.ac.rdg.resc.edal.dataset.FeatureIndexer.FeatureBounds;
+import uk.ac.rdg.resc.edal.dataset.PRTreeFeatureIndexer;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.SimpleHorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleTemporalDomain;
@@ -155,10 +155,9 @@ public final class En3DatasetFactory extends DatasetFactory {
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
         /*
          * The spatial indexer to use
-         * 
-         * TODO Use a real spatial indexer
          */
-        NaiveFeatureIndexer indexer = new NaiveFeatureIndexer();
+        FeatureIndexer indexer = new PRTreeFeatureIndexer();
+        List<PRTreeFeatureIndexer.FeatureBounds> featureBounds = new ArrayList<>();
 
         /*
          * Use these to calculate the spatial extent of the entire dataset
@@ -265,11 +264,12 @@ public final class En3DatasetFactory extends DatasetFactory {
                 profileId2FileAndProfile.put(profileId, new FileAndProfileNumber(file, i));
 
                 /*
-                 * Add this feature to the spatial indexer
+                 * Store the bounds of this feature to load into the spatial
+                 * indexer
                  */
-                indexer.addFeature(profileId, Arrays.asList(horizontalPosition), zExtent, tExtent,
-                        CollectionUtils.setOf(TEMP_PARAMETER.getId(), POT_TEMP_PARAMETER.getId(),
-                                PSAL_PARAMETER.getId()));
+                featureBounds.add(new FeatureBounds(profileId, horizontalPosition, zExtent,
+                        tExtent, CollectionUtils.setOf(TEMP_PARAMETER.getId(),
+                                POT_TEMP_PARAMETER.getId(), PSAL_PARAMETER.getId())));
 
                 /*
                  * Update entire dataset extents
@@ -297,6 +297,12 @@ public final class En3DatasetFactory extends DatasetFactory {
 
             CdmUtils.closeDataset(nc);
         }
+        
+        /*
+         * Now add all features to the spatial indexer
+         */
+        indexer.addFeatures(featureBounds);
+        
         /*
          * The domain of this dataset. Since all variables are valid for the
          * entire dataset, their domain must include the domains of all points
@@ -598,7 +604,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                  * ignore these profiles (1-2% of total) but later we may need
                  * to re-order the measurement values
                  */
-//                log.error("Invalid domain in EN3 file", e);
+                //                log.error("Invalid domain in EN3 file", e);
                 return null;
             }
             /*

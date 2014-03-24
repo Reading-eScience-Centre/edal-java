@@ -29,12 +29,14 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
  * A class representing a spatial indexer for features.
@@ -42,6 +44,7 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
  * @author Guy Griffiths
  */
 public interface FeatureIndexer {
+
     /**
      * Finds the IDs of features with the given spatio-temporal constraints. If
      * any constraint is <code>null</code> it is considered to be unconstrained
@@ -66,4 +69,36 @@ public interface FeatureIndexer {
      * @return All feature IDs present in this {@link FeatureIndexer}
      */
     public Set<String> getAllFeatureIds();
+
+    /**
+     * Adds features to this indexer. Features are defined in terms of
+     * {@link FeatureBounds} objects which define the spatial boundaries of
+     * point features
+     * 
+     * @param features
+     */
+    public void addFeatures(List<FeatureBounds> features);
+
+    /**
+     * A class representing the spatial bounds of a feature with a single point.
+     * This is used to index features.
+     */
+    public static class FeatureBounds {
+        String id;
+        HorizontalPosition horizontalPosition;
+        Extent<Double> verticalExtent;
+        Extent<DateTime> timeExtent;
+        Collection<String> variableIds;
+
+        public FeatureBounds(String id, HorizontalPosition horizontalPosition,
+                Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
+                Collection<String> variableIds) {
+            super();
+            this.id = id;
+            this.horizontalPosition = horizontalPosition;
+            this.verticalExtent = verticalExtent;
+            this.timeExtent = timeExtent;
+            this.variableIds = variableIds;
+        }
+    }
 }

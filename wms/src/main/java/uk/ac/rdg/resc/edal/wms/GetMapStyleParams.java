@@ -75,10 +75,13 @@ public class GetMapStyleParams {
     private boolean xmlSpecified = false;
 
     /* Velocity templating engine used for reading fixed styles */
-    private VelocityEngine velocityEngine;
+    private static VelocityEngine velocityEngine;
+
+    static {
+        initVelocity();
+    }
 
     public GetMapStyleParams(RequestParams params) throws EdalException {
-        initVelocity();
 
         String layersStr = params.getString("layers");
         if (layersStr == null || layersStr.trim().isEmpty()) {
@@ -98,22 +101,21 @@ public class GetMapStyleParams {
 
         xmlStyle = params.getString("SLD_BODY");
 
-//        String jsonStyle = params.getString("JSON_STYLE");
-//        if (jsonStyle != null && xmlStyle == null) {
-//            try {
-//                xmlStyle = StyleJSONParser.JSONtoXMLString(jsonStyle);
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//                throw new EdalException(
-//                        "Problem parsing JSON style to XML style.  Check logs for stack trace");
-//            }
-//        }
+        //        String jsonStyle = params.getString("JSON_STYLE");
+        //        if (jsonStyle != null && xmlStyle == null) {
+        //            try {
+        //                xmlStyle = StyleJSONParser.JSONtoXMLString(jsonStyle);
+        //            } catch (JSONException e) {
+        //                e.printStackTrace();
+        //                throw new EdalException(
+        //                        "Problem parsing JSON style to XML style.  Check logs for stack trace");
+        //            }
+        //        }
 
         if (xmlStyle == null) {
             xmlSpecified = false;
             if (layers == null) {
-                throw new EdalException(
-                        "You must specify either SLD_BODY or LAYERS and STYLES");
+                throw new EdalException("You must specify either SLD_BODY or LAYERS and STYLES");
             }
             if (styles != null && styles.length != layers.length && styles.length != 0) {
                 throw new EdalException("You must request exactly one STYLE per layer, "
@@ -165,7 +167,7 @@ public class GetMapStyleParams {
         }
     }
 
-    private void initVelocity() {
+    private static void initVelocity() {
         Properties props = new Properties();
         props.put("resource.loader", "class");
         props.put("class.resource.loader.class",
@@ -278,7 +280,7 @@ public class GetMapStyleParams {
             }
         } else {
             /*
-             * Check that the requested style is actually supported 
+             * Check that the requested style is actually supported
              */
             boolean supported = false;
             for (StyleDef supportedStyle : supportedStyles) {
@@ -287,9 +289,9 @@ public class GetMapStyleParams {
                     break;
                 }
             }
-            if(!supported) {
-                throw new StyleNotSupportedException(
-                        "The layer "+layerName+" does not support the style "+plotStyleName);
+            if (!supported) {
+                throw new StyleNotSupportedException("The layer " + layerName
+                        + " does not support the style " + plotStyleName);
             }
         }
 
@@ -358,7 +360,6 @@ public class GetMapStyleParams {
         } else {
             logarithmic = false;
         }
-        String logString = logarithmic ? "logarithmic" : "linear";
 
         /*-
          * Choose how many colour bands to use:
@@ -375,6 +376,50 @@ public class GetMapStyleParams {
             numColourBands = ColourPalette.MAX_NUM_COLOURS;
         }
 
+        return getMapImageFromStyleNameAndParams(catalogue, layerName, plotStyleName, paletteName,
+                colourScaleRange, logarithmic, numColourBands, backgroundColour, belowMinColour,
+                aboveMaxColour);
+    }
+
+    public boolean isTransparent() {
+        return transparent;
+    }
+
+    /**
+     * Return the opacity of the image as a percentage
+     */
+    public int getOpacity() {
+        return opacity;
+    }
+
+    public int getNumLayers() {
+        return layers.length;
+    }
+
+    public boolean isXmlDefined() {
+        return xmlSpecified;
+    }
+
+    public String[] getLayerNames() {
+        return layers;
+    }
+
+    public String[] getStyleNames() {
+        return styles;
+    }
+
+    public static MapImage getDefaultMapImage(WmsCatalogue catalogue, String layerName,
+            String plotStyleName, WmsLayerMetadata defaults) throws EdalException {
+        return getMapImageFromStyleNameAndParams(catalogue, layerName, plotStyleName,
+                defaults.getPalette(), defaults.getColorScaleRange(), defaults.isLogScaling(),
+                defaults.getNumColorBands(), new Color(0, true), Color.black, Color.black);
+    }
+
+    public static MapImage getMapImageFromStyleNameAndParams(WmsCatalogue catalogue,
+            String layerName, String plotStyleName, String paletteName,
+            Extent<Float> colourScaleRange, boolean logarithmic, int numColourBands,
+            Color backgroundColour, Color belowMinColour, Color aboveMaxColour)
+            throws EdalException {
         /*
          * Now that we have all the URL parameters + any server defined
          * defaults, we get the style XML template
@@ -389,7 +434,7 @@ public class GetMapStyleParams {
         context.put("paletteName", paletteName);
         context.put("scaleMin", colourScaleRange.getLow());
         context.put("scaleMax", colourScaleRange.getHigh());
-        context.put("logarithmic", logString);
+        context.put("logarithmic", logarithmic ? "logarithmic" : "linear");
         context.put("numColorBands", numColourBands);
         context.put("bgColor", GraphicsUtils.colourToString(backgroundColour));
         context.put("belowMinColor", GraphicsUtils.colourToString(belowMinColour));
@@ -425,32 +470,5 @@ public class GetMapStyleParams {
              */
             throw new EdalException("Problem parsing XML template for style " + plotStyleName);
         }
-    }
-
-    public boolean isTransparent() {
-        return transparent;
-    }
-
-    /**
-     * Return the opacity of the image as a percentage
-     */
-    public int getOpacity() {
-        return opacity;
-    }
-
-    public int getNumLayers() {
-        return layers.length;
-    }
-
-    public boolean isXmlDefined() {
-        return xmlSpecified;
-    }
-
-    public String[] getLayerNames() {
-        return layers;
-    }
-    
-    public String[] getStyleNames() {
-        return styles;
     }
 }
