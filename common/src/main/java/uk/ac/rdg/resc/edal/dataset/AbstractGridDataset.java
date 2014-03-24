@@ -56,7 +56,6 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
-import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
@@ -263,7 +262,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     @Override
-    public final Collection<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+    public final Collection<MapFeature> extractMapFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -1866,8 +1865,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     @Override
-    public Class<GridFeature> getMapFeatureType(String variableId) {
-        return GridFeature.class;
+    public Class<MapFeature> getMapFeatureType(String variableId) {
+        return MapFeature.class;
     }
 
     protected abstract GridDataSource openGridDataSource() throws IOException;
