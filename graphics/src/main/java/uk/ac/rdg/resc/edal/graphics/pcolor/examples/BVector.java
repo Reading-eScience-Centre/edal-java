@@ -8,8 +8,14 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Paths;
 
 /**
- * Example that outputs an HTML page that shows a matrix of colors of identical
- * hue but varying saturation and brightness.
+ * Creates a vector of varying Brightness B given the hue H and saturation S as
+ * command line argument using the HSB colour model for comparison with CIECAM02. The
+ * results are output as a HTML table which is saved in the working directory of the
+ * project and a list of values in an XML file for thresholding which are saved in the
+ * working directory of the project.
+ * 
+ * The filename of the HTML table and the hue and the saturation are expected as command
+ * line arguments.
  */
 public class BVector {
 	
