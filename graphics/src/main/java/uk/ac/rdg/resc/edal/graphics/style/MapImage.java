@@ -96,12 +96,27 @@ public class MapImage extends Drawable {
         return getLegend(componentSize, Color.black, Color.white, true, COLOURBAR_WIDTH);
     }
 
+    /**
+     * Generate a legend for this {@link MapImage}.
+     * 
+     * @param componentSize
+     *            A single integer specifying the size of each component of the
+     *            legend. The final image size will depend upon this number as
+     *            well as the number of unique data fields which this
+     *            {@link MapImage} depends upon
+     * @param textColour
+     *            The {@link Color} of the text
+     * @param bgColour
+     *            The {@link Color} of the background
+     * @param layerNameLabels
+     *            Whether or not to plot the ID of the layers on the legend
+     * @param width1d
+     *            The width of a 1D colourbar
+     * @return An {@link BufferedImage} representing the legend for this
+     *         {@link MapImage}
+     */
     public BufferedImage getLegend(int componentSize, Color textColour, Color bgColour,
             boolean layerNameLabels, int width1d) throws EdalException {
-        /*
-         * TODO componentSize doesn't actually specify the total size of a
-         * component, just the data bit of it. We *may* want to fix this
-         */
         BufferedImage finalImage;
         Set<NameAndRange> fieldsWithScales = getFieldsWithScales();
         int noOfIndependentFields = fieldsWithScales.size();
@@ -132,8 +147,8 @@ public class MapImage extends Drawable {
             /*
              * Get the data for the colourbar and draw it.
              */
-            LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales,
-                    width1d, componentSize, null, extraAmountOutOfRange);
+            LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales, width1d,
+                    componentSize, null, extraAmountOutOfRange);
             BufferedImage colourbar = drawImage(dataGenerator.getGlobalParams(),
                     dataGenerator.getFeatureCatalogue(null, nameAndRange.getFieldLabel()));
             Graphics2D graphics = colourbar.createGraphics();
@@ -144,7 +159,7 @@ public class MapImage extends Drawable {
             /*
              * Now generate the labels for this legend
              */
-            BufferedImage labels = getLabels(nameAndRange, extraAmountOutOfRange, componentSize,
+            BufferedImage labels = getLegendLabels(nameAndRange, extraAmountOutOfRange, componentSize,
                     textColour, layerNameLabels);
 
             /*
@@ -176,7 +191,7 @@ public class MapImage extends Drawable {
             BufferedImage[] labels = new BufferedImage[fields.size()];
             int borderSize = 0;
             for (int i = 0; i < fields.size(); i++) {
-                labels[i] = getLabels(fields.get(i), extraAmountOutOfRange, componentSize,
+                labels[i] = getLegendLabels(fields.get(i), extraAmountOutOfRange, componentSize,
                         textColour, layerNameLabels);
                 if (labels[i].getWidth() > borderSize) {
                     borderSize = labels[i].getWidth() + 8;
@@ -250,7 +265,7 @@ public class MapImage extends Drawable {
      * @param layerNameLabels
      * @return
      */
-    private static BufferedImage getLabels(NameAndRange nameAndRange, float extraAmountOutOfRange,
+    static BufferedImage getLegendLabels(NameAndRange nameAndRange, float extraAmountOutOfRange,
             int componentSize, Color textColor, boolean layerNameLabels) {
         String fieldName = nameAndRange.getFieldLabel();
 
@@ -295,7 +310,6 @@ public class MapImage extends Drawable {
         String medLowStr = String.valueOf(bds[1].doubleValue());
         String medHighStr = String.valueOf(bds[2].doubleValue());
         String highStr = String.valueOf(bds[3].doubleValue());
-        ;
 
         /*
          * Create a temporary image so that we can get some metrics about the
@@ -393,10 +407,10 @@ public class MapImage extends Drawable {
         graphics.setFont(sidewaysFont);
 
         int offset = 0;
-        if(layerNameLabels) {
+        if (layerNameLabels) {
             for (String line : fieldName.split("\n")) {
-                graphics.drawString(line, textBorder + numberSpace + lineHeight + offset, componentSize
-                        - textBorder);
+                graphics.drawString(line, textBorder + numberSpace + lineHeight + offset,
+                        componentSize - textBorder);
                 offset += lineHeight;
             }
         }

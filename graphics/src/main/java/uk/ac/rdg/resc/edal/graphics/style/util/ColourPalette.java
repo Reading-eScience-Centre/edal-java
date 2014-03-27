@@ -29,7 +29,6 @@
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -362,21 +361,5 @@ public class ColourPalette {
         }
 
         throw new UnsupportedOperationException("Cannot list files for URL " + dirURL);
-    }
-
-    public BufferedImage createColourBar(int width, int height, boolean vertical) {
-        BufferedImage ret = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                float frac;
-                if (vertical) {
-                    frac = ((float) j) / height;
-                } else {
-                    frac = ((float) i) / width;
-                }
-                ret.setRGB(i, height - j - 1, getColor(frac).getRGB());
-            }
-        }
-        return ret;
     }
 }

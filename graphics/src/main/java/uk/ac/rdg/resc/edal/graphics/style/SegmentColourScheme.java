@@ -35,26 +35,29 @@ import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 public class SegmentColourScheme extends ColourScheme {
 
     private ColourScale scaleRange;
-    // The colour to plot for values below the minimum. If null, then use the
-    // lowest value in the palette
+    /*
+     * The colour to plot for values below the minimum. If null, then use the
+     * lowest value in the palette
+     */
     private Color belowMinColour = null;
-    // The colour to plot for values above the maximum. If null, then use the
-    // highest value in the palette
+    /*
+     * The colour to plot for values above the maximum. If null, then use the
+     * highest value in the palette
+     */
     private Color aboveMaxColour = null;
-    // The colour to plot for missing data
+    /* The colour to plot for missing data */
     private Color noDataColour = new Color(0, 0, 0, 0);
-    
-    // The number of colour bands
+
+    /* The number of colour bands */
     private Integer nColourBands = 254;
-    
-    // A string representing the palette
+
+    /* A string representing the palette */
     private String paletteString = "default";
-    
+
     private ColourPalette palette = null;
-    
-    public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour,
-    		Color aboveMaxColour, Color noDataColour, Color[] palette,
-    		Integer nColourBands) {
+
+    public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour, Color aboveMaxColour,
+            Color noDataColour, Color[] palette, Integer nColourBands) {
         super();
         this.scaleRange = scaleRange;
         this.belowMinColour = belowMinColour;
@@ -64,9 +67,8 @@ public class SegmentColourScheme extends ColourScheme {
         this.palette = new ColourPalette(palette, nColourBands);
     }
 
-    public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour,
-    		Color aboveMaxColour, Color noDataColour, String paletteString,
-    		Integer nColourBands) {
+    public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour, Color aboveMaxColour,
+            Color noDataColour, String paletteString, Integer nColourBands) {
         super();
         this.scaleRange = scaleRange;
         this.belowMinColour = belowMinColour;
@@ -79,7 +81,7 @@ public class SegmentColourScheme extends ColourScheme {
     @Override
     public Color getColor(Number value) {
         Float zeroToOne = scaleRange.scaleZeroToOne(value);
-        if(palette == null) {
+        if (palette == null) {
             palette = ColourPalette.fromString(paletteString, nColourBands);
         }
         if (zeroToOne == null || Float.isNaN(zeroToOne.floatValue())) {
@@ -87,13 +89,13 @@ public class SegmentColourScheme extends ColourScheme {
         }
         float val = zeroToOne.floatValue();
         if (val < 0.0) {
-            if(belowMinColour == null) {
+            if (belowMinColour == null) {
                 return palette.getColor(0f);
             }
             return belowMinColour;
         }
         if (val > 1.0) {
-            if(aboveMaxColour == null) {
+            if (aboveMaxColour == null) {
                 return palette.getColor(1f);
             }
             return aboveMaxColour;

@@ -37,7 +37,7 @@ import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 public abstract class Drawable {
-    public class NameAndRange {
+    public static class NameAndRange {
         private String fieldLabel;
         private Extent<Float> scaleRange;
 

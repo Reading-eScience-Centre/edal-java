@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.SocketException;
@@ -92,7 +93,9 @@ import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
+import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -101,6 +104,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
@@ -269,8 +273,8 @@ public class WmsServlet extends HttpServlet {
             getTransect(params, httpServletResponse);
         } else if (request.equals("GetVerticalProfile")) {
             getVerticalProfile(params, httpServletResponse);
-//        } else if (request.equals("GetVerticalSection")) {
-//            getVerticalSection(params, httpServletResponse);
+            //        } else if (request.equals("GetVerticalSection")) {
+            //            getVerticalSection(params, httpServletResponse);
         } else {
             throw new OperationNotSupportedException(request);
         }
@@ -545,7 +549,8 @@ public class WmsServlet extends HttpServlet {
                      * multiple features we will want to use a combination of
                      * feature ID + child variable ID.
                      */
-                    String name = catalogue.getLayerMetadata(catalogue.getLayerName(dataset.getId(), child.getId())).getTitle();
+                    String name = catalogue.getLayerMetadata(
+                            catalogue.getLayerName(dataset.getId(), child.getId())).getTitle();
                     FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
                             child.getId(), plottingParameters, layerNameToSave, name);
                     if (featurePoint != null) {
@@ -618,11 +623,7 @@ public class WmsServlet extends HttpServlet {
             if (pointIndex != null) {
                 position = mapFeature.getDomain().getDomainObjects()
                         .get(pointIndex.getY(), pointIndex.getX()).getCentre();
-                try{
                 value = mapFeature.getValues(variableId).get(pointIndex.getY(), pointIndex.getX());
-                } catch (NullPointerException e) {
-                    System.out.println(variableId+", was NPE "+mapFeature.getValues(variableId));
-                }
                 if (mapFeature.getDomain().getTime() != null) {
                     timeStr = TimeUtils.dateTimeToISO8601(mapFeature.getDomain().getTime());
                 }
@@ -631,11 +632,7 @@ public class WmsServlet extends HttpServlet {
             ProfileFeature profileFeature = (ProfileFeature) feature;
             int index = profileFeature.getDomain().findIndexOf(plottingParameters.getTargetZ());
             if (index >= 0) {
-                try{
                 value = profileFeature.getValues(variableId).get(index);
-                }catch(NullPointerException e) {
-                    System.out.println(variableId+", was NPE "+profileFeature.getValues(variableId));
-                }
                 position = profileFeature.getHorizontalPosition();
                 if (profileFeature.getTime() != null) {
                     timeStr = TimeUtils.dateTimeToISO8601(profileFeature.getTime());
@@ -979,7 +976,8 @@ public class WmsServlet extends HttpServlet {
         boolean timeseries = false;
         boolean profiles = false;
         boolean transects = false;
-        Class<? extends DiscreteFeature<?, ?>> mapFeatureType = dataset.getMapFeatureType(variableId);
+        Class<? extends DiscreteFeature<?, ?>> mapFeatureType = dataset
+                .getMapFeatureType(variableId);
         if (GridFeature.class.isAssignableFrom(mapFeatureType)) {
             if (temporalDomain != null) {
                 timeseries = true;
@@ -1333,7 +1331,7 @@ public class WmsServlet extends HttpServlet {
             response.put("timeStrings", timeStrings);
             return response.toString();
         } else {
-//            Extent<DateTime> extent = temporalDomain.getExtent();
+            //            Extent<DateTime> extent = temporalDomain.getExtent();
             /*
              * TODO How do we deal with timesteps for a continuous time domain?
              */
@@ -1397,8 +1395,10 @@ public class WmsServlet extends HttpServlet {
             int width = params.getPositiveInt("width", 50);
             int height = params.getPositiveInt("height", 200);
             /* Find the requested colour palette, or use the default if not set */
-            ColourPalette palette = ColourPalette.fromString(paletteName, numColourBands);
-            legend = palette.createColourBar(width, height, vertical);
+            SegmentColourScheme colourScheme = new SegmentColourScheme(new ColourScale(
+                    Extents.newExtent(0f, 1f), false), Color.black, Color.black, Color.black,
+                    paletteName, numColourBands);
+            legend = colourScheme.getScaleBar(width, height, 0.0f, vertical, false);
         } else {
             /*
              * We're creating a legend with supporting text so we need to know
@@ -1676,7 +1676,7 @@ public class WmsServlet extends HttpServlet {
             throw new InvalidFormatException(outputFormat
                     + " is not a valid output format for a profile plot");
         }
-        
+
         /*
          * Loop over all requested layers
          */
@@ -1762,7 +1762,7 @@ public class WmsServlet extends HttpServlet {
     void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
         log.error("Wms Exception caught", exception);
-        
+
         VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();
         ec.addEventHandler(new EscapeXmlReference());
