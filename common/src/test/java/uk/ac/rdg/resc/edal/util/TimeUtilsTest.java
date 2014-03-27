@@ -1,20 +1,19 @@
 package uk.ac.rdg.resc.edal.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.joda.time.*;
 
-import org.joda.time.Chronology;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.chrono.ISOChronology;
+import uk.ac.rdg.resc.edal.util.TimeUtils;
+import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
+import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
+
+import java.util.*;
+
+import org.joda.time.chrono.*;
 import org.junit.Before;
 import org.junit.Test;
-
-import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 
 public class TimeUtilsTest {
     private DateTime start = new DateTime(2000, 1, 1, 0, 0, DateTimeZone.UTC);
@@ -129,6 +128,10 @@ public class TimeUtilsTest {
         DateTime start = TimeUtils.iso8601ToDateTime("1990-12-30T12:00:00.000Z", isoChronology);
         DateTime end = TimeUtils.iso8601ToDateTime("2000-01-01T13:00:00.000Z", isoChronology);
         assertEquals(Extents.newExtent(start, end),
+                TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()));
+        
+        Extent<DateTime> tExent =Extents.newExtent((new DateTime(1990, 12, 30, 0, 0, isoChronology)), new DateTime(2000, 01, 01, 13,0, isoChronology));
+        assertEquals(tExent,
                 TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()));
     }
 
