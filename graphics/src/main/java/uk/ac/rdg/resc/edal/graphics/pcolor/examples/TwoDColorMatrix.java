@@ -15,6 +15,19 @@ import de.fhg.igd.pcolor.util.ColorTools;
 import de.fhg.igd.pcolor.util.MathTools;
 
 /**
+ * Creates a 2D matrix of varying Colorfulness C and Hue H given the lightness J as
+ * command line argument using the perceptually uniform CIECAM02 colour model. The
+ * error delta E in encoding the CIECAM02 colour into sRGB is calculated. A value
+ * less than 1 for this is good. The results are output as a HTML table which is saved
+ * in the working directory of the project. NB. There are loops controlling the
+ * Colorfulness in two places, once for generating the table headers and once for
+ * generating the colours. 
+ * 
+ * The filename of the HTML table and the lightness are expected as command line
+ * arguments.
+ */
+
+/**
  * Example that outputs an HTML page that shows a matrix of colors of identical J
  * but varying hue and colorfulness.
  * @author Simon Thum

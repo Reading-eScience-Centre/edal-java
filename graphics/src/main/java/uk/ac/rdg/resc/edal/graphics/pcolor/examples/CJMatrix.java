@@ -16,10 +16,15 @@ import de.fhg.igd.pcolor.util.ColorTools;
 import de.fhg.igd.pcolor.util.MathTools;
 
 /**
- * Example that outputs an HTML page that shows a matrix of colors of identical
- * hue, but varying colorfulness and lightness.
- * @author Simon Thum
- * @author Charles Roberts
+ * Creates a 2D matrix of varying Colorfulness C and Lightness J given hue H as
+ * command line argument using the perceptually uniform CIECAM02 colour model. The
+ * error delta E in encoding the CIECAM02 colour into sRGB is calculated. A value
+ * less than 1 for this is good. The results are output as a HTML table and a list
+ * of XML values for thresholding called CJMatrix.xml which are saved in the working
+ * directory of the project. NB. There are loops controlling the Colorfulness in two
+ * places, once for generating the table headers and once for generating the colours. 
+ * 
+ * The filename of the HTML table and the hue are expected as command line arguments.
  */
 public class CJMatrix {
 	

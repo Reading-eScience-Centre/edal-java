@@ -8,8 +8,14 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Paths;
 
 /**
- * Example that outputs an HTML page that shows a matrix of colors of identical
- * hue but varying saturation and brightness.
+ * Creates a 2D matrix of varying Saturation S and Brightness B given the hue H as a
+ * command line argument using the HSB colour model for comparison with CIECAM02. The
+ * results are output as a HTML table which is saved in the working directory of the
+ * project and a list of values in an XML file for thresholding which are saved in the
+ * working directory of the project. NB. There are loops controlling the Saturation in
+ * two places, once for generating the table headers and once for generating the colours. 
+ * 
+ * The filename of the HTML table and the hue are expected as command line arguments.
  */
 public class SBMatrix {
 	

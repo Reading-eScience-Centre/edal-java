@@ -14,40 +14,49 @@ import de.fhg.igd.pcolor.colorspace.CS_CAMLch;
 import de.fhg.igd.pcolor.util.ColorTools;
 import de.fhg.igd.pcolor.util.MathTools;
 
+/**
+ * Creates a vector of varying Lightness J given Hue H and Colorfulness C as
+ * command line arguments using the perceptually uniform CIECAM02 colour
+ * model. The error delta E in encoding the CIECAM02 colour into sRGB is
+ * calculated. A value less than 1 for this is good. The results are output
+ * as a HTML table and a list of XML values for thresholding called JVector.xml
+ * which are saved in the working directory of the project.
+ * 
+ * The filename of the HTML table, the hue and the colorfulness are expected
+ * as command line arguments.
+ */
 public class JVector {
 
-
 	public static void main(String[] args) throws Throwable {
-		if (args.length < 2) {
-			System.err.println("Please specify a file and then h (0-360)");
+		if (args.length < 3) {
+			System.err.println("Please specify a file and then h (0-360) and C (0-100)");
 			return;
 		}
 		new JVector().emitTable(
 				new OutputStreamWriter(new FileOutputStream(Paths.get(args[0]).toFile())),
-				Integer.parseInt(args[1]));
+				Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 	}
 
-	public void emitTable(OutputStreamWriter out, int theH) throws Throwable {
-		final float C = 25;
+	public void emitTable(OutputStreamWriter out, int theH, int theC) throws Throwable {
 		CAMLch start_col = new CAMLch(new float[] {0, 0, theH}, 1, CS_CAMLch.defaultJChInstance);
 		
 		out.write("<!DOCTYPE html>\n");
 		out.write("<html>\n");
 		out.write("<body style='background-color: #757575; text-color:#bbb'>\r\n");
 		out.write("<h3>Colors of equal Hue (h = " + start_col.get(CAMLch.h) + ")</h3>\r\n");
-		out.write("<p>and Colorfulness (C = " + C + ").</p>");
+		out.write("<p>and Colorfulness (C = " + theC + ").</p>");
 		out.write("<p>Lightness (J) varied according to CIECAM02.</p>");
 		out.write("<table width = \"90%\">\r\n");
 		
 		// table header - same as inner loop plus start column
 		out.write("<th>Start color</th>");
-		out.write("<th>(C = " + Float.toString(C) + ")</th>\r\n");
+		out.write("<th>(C = " + Float.toString(theC) + ")</th>\r\n");
 
 		// create XML output file
 		OutputStreamWriter xmlOut = new OutputStreamWriter(
 				new FileOutputStream(new File("JVector.xml")));
 		xmlOut.write("                <!-- Colors of equal Hue (h = " + start_col.get(CAMLch.h) + ") -->\r\n");
-		xmlOut.write("                <!-- and Colorfulness (C = " + C + "). -->\r\n");
+		xmlOut.write("                <!-- and Colorfulness (C = " + theC + "). -->\r\n");
 		xmlOut.write("                <!-- Lightness (J) varied according to CIECAM02. -->\r\n");
 		
 		// color table
@@ -58,7 +67,7 @@ public class JVector {
 //				xmlOut.write("                <!-- J = " + J + " -->\r\n");
 			String colStr = String.format("J %.0f C %.0f h %.0f", col.get(CAMLch.L), col.get(CAMLch.c), col.get(CAMLch.h));
 			out.write(String.format("  <td>(J = %.0f) (" + colStr + ")</td>\n", J));
-			col = ColorTools.setChannel(col, CAMLch.c, C);
+			col = ColorTools.setChannel(col, CAMLch.c, theC);
 			float[] rgb_f = col.getColorSpace().toRGB(col.getComponents());
 			int[] rgb = new int[3];
 			for (int j = 0; j < 3; j++)
