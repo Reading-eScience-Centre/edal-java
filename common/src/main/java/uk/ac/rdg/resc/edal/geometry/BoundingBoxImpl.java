@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.RangeMeaning;
@@ -52,6 +53,10 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
     private final double maxx;
     private final double maxy;
     private final CoordinateReferenceSystem crs;
+    
+    public static BoundingBoxImpl global() {
+        return new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84);
+    }
 
     /**
      * Creates a {@link BoundingBox} from the minimum and maximum axis values

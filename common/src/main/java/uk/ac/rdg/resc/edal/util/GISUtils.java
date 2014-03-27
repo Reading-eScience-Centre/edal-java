@@ -556,6 +556,42 @@ public final class GISUtils {
             }
         }
     }
+    
+    public static int getIndexOfClosestElevationTo(Double target, VerticalAxis zAxis) {
+        if(zAxis == null || target == null) {
+            return -1;
+        }
+        List<Double> zVals = zAxis.getCoordinateValues();
+        int zIndex = Collections.binarySearch(zVals, target);
+        if(zIndex < 0) {
+            /*
+             * We can calculate the insertion point
+             */
+            int insertionPoint = -(zIndex + 1);
+            /*
+             * We set the index to the most recent past time
+             */
+            if (insertionPoint == zVals.size()) {
+                zIndex = insertionPoint - 1;
+            } else if (insertionPoint > 0) {
+                /*
+                 * We need to find which of the two possibilities is the
+                 * closest time
+                 */
+                double z1 = zVals.get(insertionPoint - 1);
+                double z2 = zVals.get(insertionPoint);
+
+                if ((z2 - target) <= (target - z1)) {
+                    zIndex = insertionPoint;
+                } else {
+                    zIndex = insertionPoint - 1;
+                }
+            } else {
+                zIndex = 0;
+            }
+        }
+        return zIndex;
+    }
 
     /**
      * Gets a HorizontalDomain that contains (near) the minimum necessary number
@@ -779,7 +815,7 @@ public final class GISUtils {
      */
     public static VerticalDomain getIntersectionOfVerticalDomains(VerticalDomain... domains) {
         if (domains.length == 0) {
-            throw new IllegalArgumentException("Must provide multiple domains to get a union");
+            throw new IllegalArgumentException("Must provide multiple domains to get an intersection");
         }
         if (domains[0] == null) {
             return null;
