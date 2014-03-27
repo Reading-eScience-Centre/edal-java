@@ -22,9 +22,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
-import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
@@ -188,15 +186,11 @@ public class RectiLinearGridDatasetTest {
                 Array1D<Number> latValues = data.getValues("vLat");
                 Array1D<Number> depthValues = data.getValues("vDepth");
                 Array1D<Number> timeValues = data.getValues("vTime");
-                // Array1D<Number> magValues = data.getValues("vLonvLat-mag");
-                // Array1D<Number> dirValues = data.getValues("vLonvLat-dir");
 
                 assertArrayEquals(lonValues.getShape(), new int[] { tSize });
                 assertArrayEquals(latValues.getShape(), new int[] { tSize });
                 assertArrayEquals(depthValues.getShape(), new int[] { tSize });
                 assertArrayEquals(timeValues.getShape(), new int[] { tSize });
-                // assertArrayEquals(magValues.getShape(), new int[] { tSize });
-                // assertArrayEquals(dirValues.getShape(), new int[] { tSize });
 
                 float expectedLon = 100.0f * xIndex / (xSize - 1);
                 float expectedLat = 100.0f * yIndex / (ySize - 1);
@@ -371,15 +365,11 @@ public class RectiLinearGridDatasetTest {
             Array1D<Number> latValues = data.getValues("vLat");
             Array1D<Number> depthValues = data.getValues("vDepth");
             Array1D<Number> timeValues = data.getValues("vTime");
-            // Array1D<Number> magValues = data.getValues("vLonvLat-mag");
-            // Array1D<Number> dirValues = data.getValues("vLonvLat-dir");
 
             assertArrayEquals(new int[] { dateIndex.size() }, lonValues.getShape());
             assertArrayEquals(new int[] { dateIndex.size() }, latValues.getShape());
             assertArrayEquals(new int[] { dateIndex.size() }, depthValues.getShape());
             assertArrayEquals(new int[] { dateIndex.size() }, timeValues.getShape());
-            // assertArrayEquals(magValues.getShape(), new int[] { tSize });
-            // assertArrayEquals(dirValues.getShape(), new int[] { tSize });
 
             float expectedLon = 100.0f * xIndex / (xSize - 1);
             float expectedLat = 100.0f * yIndex / (ySize - 1);
@@ -429,17 +419,12 @@ public class RectiLinearGridDatasetTest {
             Array1D<Number> latValues = data.getValues("vLat");
             Array1D<Number> depthValues = data.getValues("vDepth");
             Array1D<Number> timeValues = data.getValues("vTime");
-            // Array1D<Number> magValues =
-            // data.getValues("eastECompeastNComp-mag");
-            // Array1D<Number> dirValues =
-            // data.getValues("eastECompeastNComp-dir");
 
             assertArrayEquals(lonValues.getShape(), new int[] { tSize + 1 });
             assertArrayEquals(latValues.getShape(), new int[] { tSize + 1 });
             assertArrayEquals(depthValues.getShape(), new int[] { tSize + 1 });
             assertArrayEquals(timeValues.getShape(), new int[] { tSize + 1 });
-            // assertArrayEquals(magValues.getShape(), new int[] { tSize + 1 });
-            // assertArrayEquals(dirValues.getShape(), new int[] { tSize + 1 });
+
             float expectedLon = 100.0f * xIndex / (xSize - 1);
             float expectedLat = 100.0f * yIndex / (ySize - 1);
 
@@ -855,7 +840,5 @@ public class RectiLinearGridDatasetTest {
                }
            }
        }
-       GridDomain gDomain =feature.getDomain();
-       //gDomain.
     }
 }
