@@ -153,7 +153,7 @@ public abstract class GriddedImageLayer extends ImageLayer {
     @Override
     public Collection<Class<? extends Feature<?>>> supportedFeatureTypes() {
         List<Class<? extends Feature<?>>> clazzes = new ArrayList<Class<? extends Feature<?>>>();
-        clazzes.add(GridFeature.class);
+        clazzes.add(MapFeature.class);
         return clazzes;
     }
 

@@ -53,6 +53,7 @@ import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
+import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
@@ -393,24 +394,22 @@ public final class En3DatasetFactory extends DatasetFactory {
             FileAndProfileNumber fileAndProfileNumber = En3DatasetFactory.this.profileId2FileAndProfile
                     .get(id);
             ProfileFeature profileFeature = null;
-            NetcdfDataset nc = null;
+            NetcdfFile nc = null;
             try {
                 /*
                  * Open the dataset, read the profile, and close the dataset
                  */
-                nc = CdmUtils.openDataset(fileAndProfileNumber.file.getAbsolutePath());
+                nc = NetcdfFile.open(fileAndProfileNumber.file.getAbsolutePath());
                 profileFeature = doRead(id, nc, fileAndProfileNumber.profileNumber, variableIds);
-                CdmUtils.closeDataset(nc);
+                nc.close();
             } catch (IOException e) {
                 throw new DataReadingException("Problem reading EN3 profile data", e);
             } catch (InvalidRangeException e) {
                 throw new DataReadingException("Problem reading EN3 profile data", e);
-            } catch (EdalException e) {
-                throw new DataReadingException("Problem reading EN3 profile data", e);
             } finally {
                 if (nc != null) {
                     try {
-                        CdmUtils.closeDataset(nc);
+                        nc.close();
                     } catch (IOException e) {
                         log.error("Cannot close NetCDF dataset");
                     }
@@ -509,7 +508,7 @@ public final class En3DatasetFactory extends DatasetFactory {
          *             {@link NetcdfDataset}
          * @throws InvalidRangeException
          */
-        private ProfileFeature doRead(String id, NetcdfDataset nc, int profNum,
+        private ProfileFeature doRead(String id, NetcdfFile nc, int profNum,
                 Set<String> variableIds) throws IOException, InvalidRangeException {
             /*
              * This is a fixed value. We could read the "STRING8" dimension and
