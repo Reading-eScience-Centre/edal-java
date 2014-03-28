@@ -536,6 +536,7 @@ public class WmsServlet extends HttpServlet {
                      */
                     FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
                             variableId, plottingParameters, layerNameToSave, feature.getName());
+                    System.out.println(feature.getId() + ":" + featurePoint);
                     if (featurePoint != null) {
                         featureInfos.add(featurePoint);
                     }
@@ -630,7 +631,8 @@ public class WmsServlet extends HttpServlet {
             }
         } else if (feature instanceof ProfileFeature) {
             ProfileFeature profileFeature = (ProfileFeature) feature;
-            int index = profileFeature.getDomain().findIndexOf(plottingParameters.getTargetZ());
+            int index = GISUtils.getIndexOfClosestElevationTo(plottingParameters.getTargetZ(),
+                    profileFeature.getDomain());
             if (index >= 0) {
                 value = profileFeature.getValues(variableId).get(index);
                 position = profileFeature.getHorizontalPosition();
@@ -640,7 +642,8 @@ public class WmsServlet extends HttpServlet {
             }
         } else if (feature instanceof PointSeriesFeature) {
             PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) feature;
-            int index = pointSeriesFeature.getDomain().findIndexOf(plottingParameters.getTargetT());
+            int index = GISUtils.getIndexOfClosestTimeTo(plottingParameters.getTargetT(),
+                    pointSeriesFeature.getDomain());
             if (index >= 0) {
                 position = pointSeriesFeature.getHorizontalPosition();
                 value = pointSeriesFeature.getValues(variableId).get(index);
@@ -1485,179 +1488,179 @@ public class WmsServlet extends HttpServlet {
 
     private void getTransect(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-//        String outputFormat = params.getMandatoryString("format");
-//        if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
-//                && !"image/jpg".equals(outputFormat)) {
-//            throw new InvalidFormatException(outputFormat
-//                    + " is not a valid output format for a profile plot");
-//        }
-//        String[] layers = params.getMandatoryString("layers").split(",");
-//        CoordinateReferenceSystem crs = GISUtils.getCrs(params.getMandatoryString("CRS"));
-//        LineString lineString = new LineString(params.getMandatoryString("linestring"), crs);
-//        String timeStr = params.getString("time");
-//
-//        String elevationStr = params.getString("elevation");
-//        Double zValue = null;
-//        if (elevationStr != null) {
-//            zValue = Double.parseDouble(elevationStr);
-//        }
-//        StringBuilder copyright = new StringBuilder();
-//        List<TrajectoryFeature> trajectoryFeatures = new ArrayList<TrajectoryFeature>();
-//        /* Do we also want to plot a vertical section plot? */
-//        boolean verticalSection = false;
-//        List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
-//        for (String layerName : layers) {
-//            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
-//            if (dataset instanceof GridDataset) {
-//                GridDataset gridDataset = (GridDataset) dataset;
-//                String varId = catalogue.getVariableFromId(layerName);
-//                String layerCopyright = catalogue.getLayerMetadata(layerName).getCopyright();
-//                if (layerCopyright != null && !"".equals(layerCopyright)) {
-//                    copyright.append(layerCopyright);
-//                    copyright.append('\n');
-//                }
-//
-//                VariableMetadata metadata = gridDataset.getVariableMetadata(varId);
-//                VerticalDomain verticalDomain = metadata.getVerticalDomain();
-//                final VerticalPosition zPos;
-//                if (zValue != null && verticalDomain != null) {
-//                    zPos = new VerticalPosition(zValue, verticalDomain.getVerticalCrs());
-//                } else {
-//                    zPos = null;
-//                }
-//                if (verticalDomain != null && layers.length == 1) {
-//                    verticalSection = true;
-//                }
-//
-//                final DateTime time;
-//                TemporalDomain temporalDomain = metadata.getTemporalDomain();
-//                if (timeStr != null) {
-//                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
-//                } else {
-//                    time = null;
-//                }
-//                HorizontalDomain hDomain = metadata.getHorizontalDomain();
-//                final List<HorizontalPosition> transectPoints;
-//                if (hDomain instanceof HorizontalGrid) {
-//                    transectPoints = GISUtils.getOptimalTransectPoints((HorizontalGrid) hDomain,
-//                            lineString, zPos, time, AXIS_RESOLUTION / 10);
-//                } else {
-//                    transectPoints = lineString.getPointsOnPath(AXIS_RESOLUTION);
-//                }
-//                if (verticalSection) {
-//                    verticalSectionHorizontalPositions = transectPoints;
-//                }
-//                TrajectoryDomain trajectoryDomain = new TrajectoryDomain(
-//                        new AbstractList<GeoPosition>() {
-//                            @Override
-//                            public GeoPosition get(int index) {
-//                                return new GeoPosition(transectPoints.get(index), zPos, time);
-//                            }
-//
-//                            @Override
-//                            public int size() {
-//                                return transectPoints.size();
-//                            }
-//                        });
-//
-//                TrajectoryFeature feature = gridDataset.readTrajectoryData(
-//                        CollectionUtils.setOf(varId), trajectoryDomain);
-//                trajectoryFeatures.add(feature);
-//            } else {
-//                throw new UnsupportedOperationException(
-//                        "Currently only gridded datasets are supported for transect plots");
-//            }
-//        }
-//
-//        if (copyright.length() > 0) {
-//            copyright.deleteCharAt(copyright.length() - 1);
-//        }
-//        JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
-//                copyright.toString());
-//
-//        if (verticalSection) {
-//            /*
-//             * This can only be true if we have a GridSeriesFeature, so we can
-//             * cast
-//             */
-//            Dataset dataset = catalogue.getDatasetFromLayerName(layers[0]);
-//            String varId = catalogue.getVariableFromId(layers[0]);
-//            if (dataset instanceof GridDataset) {
-//                GridDataset gridDataset = (GridDataset) dataset;
-//
-//                String paletteName = params
-//                        .getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
-//                int numColourBands = params.getPositiveInt("numcolorbands",
-//                        ColourPalette.MAX_NUM_COLOURS);
-//                Extent<Float> scaleRange = GetMapStyleParams.getColorScaleRange(params);
-//                if (scaleRange == null || scaleRange.isEmpty()) {
-//                    scaleRange = Extents.newExtent(270f, 300f);
-//                }
-//                ColourScale colourScale = new ColourScale(scaleRange.getLow(),
-//                        scaleRange.getHigh(), params.getBoolean("logscale", false));
-//
-//                String bgColourStr = params.getString("bgcolor", "transparent");
-//                String amColourStr = params.getString("abovemaxcolor", "0x000000");
-//                String bmColourStr = params.getString("belowmincolor", "0x000000");
-//                ColourMap palette = new ColourMap(GraphicsUtils.parseColour(bmColourStr),
-//                        GraphicsUtils.parseColour(amColourStr),
-//                        GraphicsUtils.parseColour(bgColourStr), paletteName, numColourBands);
-//                ColourScheme colourScheme = new PaletteColourScheme(colourScale, palette);
-//                List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
-//
-//                VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
-//                VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
-//                VerticalAxis vAxis;
-//                if (verticalDomain instanceof VerticalAxis) {
-//                    vAxis = (VerticalAxis) verticalDomain;
-//                } else {
-//                    /*
-//                     * We don't have a valid vertical axis, so create one
-//                     */
-//                    List<Double> values = new ArrayList<Double>();
-//                    double zMin = verticalDomain.getExtent().getLow();
-//                    double zMax = verticalDomain.getExtent().getHigh();
-//                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
-//                        values.add(zMin + (zMax - zMin) / AXIS_RESOLUTION);
-//                    }
-//                    vAxis = new VerticalAxisImpl("Vertical section axis", values,
-//                            verticalDomain.getVerticalCrs());
-//                }
-//                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId)
-//                        .getTemporalDomain();
-//                DateTime time = null;
-//                if (timeStr != null) {
-//                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
-//                }
-//                for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
-//                    ProfileFeature profileFeature = gridDataset.readProfileData(
-//                            CollectionUtils.setOf(varId), pos, vAxis, time);
-//                    profileFeatures.add(profileFeature);
-//                }
-//                JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(
-//                        profileFeatures, lineString, colourScheme, zValue);
-//                chart = Charting.addVerticalSectionChart(chart, verticalSectionChart);
-//            } else {
-//                log.error("Vertical section charts not supported for non-grid datasets");
-//            }
-//        }
-//        int width = params.getPositiveInt("width", 700);
-//        int height = params.getPositiveInt("height", verticalSection ? 1000 : 600);
-//
-//        httpServletResponse.setContentType(outputFormat);
-//        try {
-//            if ("image/png".equals(outputFormat)) {
-//                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
-//                        height);
-//            } else {
-//                /* Must be a JPEG */
-//                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
-//                        width, height);
-//            }
-//        } catch (IOException e) {
-//            log.error("Cannot write to output stream", e);
-//            throw new EdalException("Problem writing data to output stream", e);
-//        }
+        //        String outputFormat = params.getMandatoryString("format");
+        //        if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
+        //                && !"image/jpg".equals(outputFormat)) {
+        //            throw new InvalidFormatException(outputFormat
+        //                    + " is not a valid output format for a profile plot");
+        //        }
+        //        String[] layers = params.getMandatoryString("layers").split(",");
+        //        CoordinateReferenceSystem crs = GISUtils.getCrs(params.getMandatoryString("CRS"));
+        //        LineString lineString = new LineString(params.getMandatoryString("linestring"), crs);
+        //        String timeStr = params.getString("time");
+        //
+        //        String elevationStr = params.getString("elevation");
+        //        Double zValue = null;
+        //        if (elevationStr != null) {
+        //            zValue = Double.parseDouble(elevationStr);
+        //        }
+        //        StringBuilder copyright = new StringBuilder();
+        //        List<TrajectoryFeature> trajectoryFeatures = new ArrayList<TrajectoryFeature>();
+        //        /* Do we also want to plot a vertical section plot? */
+        //        boolean verticalSection = false;
+        //        List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
+        //        for (String layerName : layers) {
+        //            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+        //            if (dataset instanceof GridDataset) {
+        //                GridDataset gridDataset = (GridDataset) dataset;
+        //                String varId = catalogue.getVariableFromId(layerName);
+        //                String layerCopyright = catalogue.getLayerMetadata(layerName).getCopyright();
+        //                if (layerCopyright != null && !"".equals(layerCopyright)) {
+        //                    copyright.append(layerCopyright);
+        //                    copyright.append('\n');
+        //                }
+        //
+        //                VariableMetadata metadata = gridDataset.getVariableMetadata(varId);
+        //                VerticalDomain verticalDomain = metadata.getVerticalDomain();
+        //                final VerticalPosition zPos;
+        //                if (zValue != null && verticalDomain != null) {
+        //                    zPos = new VerticalPosition(zValue, verticalDomain.getVerticalCrs());
+        //                } else {
+        //                    zPos = null;
+        //                }
+        //                if (verticalDomain != null && layers.length == 1) {
+        //                    verticalSection = true;
+        //                }
+        //
+        //                final DateTime time;
+        //                TemporalDomain temporalDomain = metadata.getTemporalDomain();
+        //                if (timeStr != null) {
+        //                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
+        //                } else {
+        //                    time = null;
+        //                }
+        //                HorizontalDomain hDomain = metadata.getHorizontalDomain();
+        //                final List<HorizontalPosition> transectPoints;
+        //                if (hDomain instanceof HorizontalGrid) {
+        //                    transectPoints = GISUtils.getOptimalTransectPoints((HorizontalGrid) hDomain,
+        //                            lineString, zPos, time, AXIS_RESOLUTION / 10);
+        //                } else {
+        //                    transectPoints = lineString.getPointsOnPath(AXIS_RESOLUTION);
+        //                }
+        //                if (verticalSection) {
+        //                    verticalSectionHorizontalPositions = transectPoints;
+        //                }
+        //                TrajectoryDomain trajectoryDomain = new TrajectoryDomain(
+        //                        new AbstractList<GeoPosition>() {
+        //                            @Override
+        //                            public GeoPosition get(int index) {
+        //                                return new GeoPosition(transectPoints.get(index), zPos, time);
+        //                            }
+        //
+        //                            @Override
+        //                            public int size() {
+        //                                return transectPoints.size();
+        //                            }
+        //                        });
+        //
+        //                TrajectoryFeature feature = gridDataset.readTrajectoryData(
+        //                        CollectionUtils.setOf(varId), trajectoryDomain);
+        //                trajectoryFeatures.add(feature);
+        //            } else {
+        //                throw new UnsupportedOperationException(
+        //                        "Currently only gridded datasets are supported for transect plots");
+        //            }
+        //        }
+        //
+        //        if (copyright.length() > 0) {
+        //            copyright.deleteCharAt(copyright.length() - 1);
+        //        }
+        //        JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
+        //                copyright.toString());
+        //
+        //        if (verticalSection) {
+        //            /*
+        //             * This can only be true if we have a GridSeriesFeature, so we can
+        //             * cast
+        //             */
+        //            Dataset dataset = catalogue.getDatasetFromLayerName(layers[0]);
+        //            String varId = catalogue.getVariableFromId(layers[0]);
+        //            if (dataset instanceof GridDataset) {
+        //                GridDataset gridDataset = (GridDataset) dataset;
+        //
+        //                String paletteName = params
+        //                        .getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
+        //                int numColourBands = params.getPositiveInt("numcolorbands",
+        //                        ColourPalette.MAX_NUM_COLOURS);
+        //                Extent<Float> scaleRange = GetMapStyleParams.getColorScaleRange(params);
+        //                if (scaleRange == null || scaleRange.isEmpty()) {
+        //                    scaleRange = Extents.newExtent(270f, 300f);
+        //                }
+        //                ColourScale colourScale = new ColourScale(scaleRange.getLow(),
+        //                        scaleRange.getHigh(), params.getBoolean("logscale", false));
+        //
+        //                String bgColourStr = params.getString("bgcolor", "transparent");
+        //                String amColourStr = params.getString("abovemaxcolor", "0x000000");
+        //                String bmColourStr = params.getString("belowmincolor", "0x000000");
+        //                ColourMap palette = new ColourMap(GraphicsUtils.parseColour(bmColourStr),
+        //                        GraphicsUtils.parseColour(amColourStr),
+        //                        GraphicsUtils.parseColour(bgColourStr), paletteName, numColourBands);
+        //                ColourScheme colourScheme = new PaletteColourScheme(colourScale, palette);
+        //                List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
+        //
+        //                VariableMetadata variableMetadata = gridDataset.getVariableMetadata(varId);
+        //                VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
+        //                VerticalAxis vAxis;
+        //                if (verticalDomain instanceof VerticalAxis) {
+        //                    vAxis = (VerticalAxis) verticalDomain;
+        //                } else {
+        //                    /*
+        //                     * We don't have a valid vertical axis, so create one
+        //                     */
+        //                    List<Double> values = new ArrayList<Double>();
+        //                    double zMin = verticalDomain.getExtent().getLow();
+        //                    double zMax = verticalDomain.getExtent().getHigh();
+        //                    for (int i = 0; i < AXIS_RESOLUTION; i++) {
+        //                        values.add(zMin + (zMax - zMin) / AXIS_RESOLUTION);
+        //                    }
+        //                    vAxis = new VerticalAxisImpl("Vertical section axis", values,
+        //                            verticalDomain.getVerticalCrs());
+        //                }
+        //                TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId)
+        //                        .getTemporalDomain();
+        //                DateTime time = null;
+        //                if (timeStr != null) {
+        //                    time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
+        //                }
+        //                for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
+        //                    ProfileFeature profileFeature = gridDataset.readProfileData(
+        //                            CollectionUtils.setOf(varId), pos, vAxis, time);
+        //                    profileFeatures.add(profileFeature);
+        //                }
+        //                JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(
+        //                        profileFeatures, lineString, colourScheme, zValue);
+        //                chart = Charting.addVerticalSectionChart(chart, verticalSectionChart);
+        //            } else {
+        //                log.error("Vertical section charts not supported for non-grid datasets");
+        //            }
+        //        }
+        //        int width = params.getPositiveInt("width", 700);
+        //        int height = params.getPositiveInt("height", verticalSection ? 1000 : 600);
+        //
+        //        httpServletResponse.setContentType(outputFormat);
+        //        try {
+        //            if ("image/png".equals(outputFormat)) {
+        //                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
+        //                        height);
+        //            } else {
+        //                /* Must be a JPEG */
+        //                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
+        //                        width, height);
+        //            }
+        //        } catch (IOException e) {
+        //            log.error("Cannot write to output stream", e);
+        //            throw new EdalException("Problem writing data to output stream", e);
+        //        }
     }
 
     private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse)

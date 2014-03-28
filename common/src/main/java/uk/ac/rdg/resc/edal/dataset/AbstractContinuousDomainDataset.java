@@ -107,7 +107,6 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         List<DiscreteFeature<?, ?>> features = new ArrayList<DiscreteFeature<?, ?>>();
         Collection<String> featureIds = featureIndexer.findFeatureIds(largeBoundingBox, zExtent,
                 tExtent, varIds);
-
         features.addAll(getFeatureReader().readFeatures(featureIds, varIds));
         return features;
     }
@@ -122,22 +121,32 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         }
         List<ProfileFeature> features = new ArrayList<ProfileFeature>();
 
-        HorizontalPosition pos = params.getTargetHorizontalPosition();
-        BoundingBox bbox;
-        if (pos == null) {
-            bbox = params.getBbox();
-        } else {
-            bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
-                    pos.getCoordinateReferenceSystem());
+        BoundingBox bbox = params.getBbox();
+        if (bbox == null) {
+            HorizontalPosition pos;
+            pos = params.getTargetHorizontalPosition();
+            if (pos != null) {
+                bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
+                        pos.getCoordinateReferenceSystem());
+            } else {
+                bbox = getDatasetBoundingBox();
+            }
         }
         Extent<DateTime> timeExtent;
-        if (params.getTargetT() != null) {
-            timeExtent = Extents.newExtent(params.getTargetT(), params.getTargetT());
-        } else {
+        if (params.getTExtent() != null) {
             timeExtent = params.getTExtent();
+        } else {
+            if (params.getTargetT() != null) {
+                timeExtent = Extents.newExtent(params.getTargetT(), params.getTargetT());
+            } else {
+                timeExtent = getDatasetTimeExtent();
+            }
         }
         Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, params.getZExtent(),
                 timeExtent, varIds);
+        for (String featureId : featureIds) {
+            System.out.println("extracting profile: " + featureId);
+        }
         features.addAll((Collection<? extends ProfileFeature>) getFeatureReader().readFeatures(
                 featureIds, varIds));
         return features;
@@ -153,20 +162,28 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         }
         List<PointSeriesFeature> features = new ArrayList<PointSeriesFeature>();
 
-        HorizontalPosition pos = params.getTargetHorizontalPosition();
-        BoundingBox bbox;
-        if (pos == null) {
-            bbox = params.getBbox();
-        } else {
-            bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
-                    pos.getCoordinateReferenceSystem());
+        HorizontalPosition pos;
+        BoundingBox bbox = params.getBbox();
+        if (bbox == null) {
+            pos = params.getTargetHorizontalPosition();
+            if (pos != null) {
+                bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
+                        pos.getCoordinateReferenceSystem());
+            } else {
+                bbox = getDatasetBoundingBox();
+            }
         }
         Extent<Double> zExtent;
-        if (params.getTargetZ() != null) {
-            zExtent = Extents.newExtent(params.getTargetZ(), params.getTargetZ());
-        } else {
+        if (params.getZExtent() != null) {
             zExtent = params.getZExtent();
+        } else {
+            if (params.getTargetZ() != null) {
+                zExtent = Extents.newExtent(params.getTargetZ(), params.getTargetZ());
+            } else {
+                zExtent = getDatasetVerticalExtent();
+            }
         }
+
         Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, zExtent,
                 params.getTExtent(), varIds);
         features.addAll((Collection<? extends PointSeriesFeature>) getFeatureReader().readFeatures(

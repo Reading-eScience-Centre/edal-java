@@ -450,40 +450,8 @@ public final class GISUtils {
         }
         if (tDomain instanceof TimeAxis) {
             TimeAxis timeAxis = (TimeAxis) tDomain;
-            List<DateTime> tValues = timeAxis.getCoordinateValues();
-            int index = TimeUtils.findTimeIndex(tValues, targetTime);
-            if (index < 0) {
-                /*
-                 * We can calculate the insertion point
-                 */
-                int insertionPoint = -(index + 1);
-                /*
-                 * We set the index to the most recent past time
-                 */
-                if (insertionPoint == tValues.size()) {
-                    index = insertionPoint - 1;
-                } else if (insertionPoint > 0) {
-                    /*
-                     * We need to find which of the two possibilities is the
-                     * closest time
-                     */
-                    long t1 = tValues.get(insertionPoint - 1).getMillis();
-                    long t2 = tValues.get(insertionPoint).getMillis();
-
-                    if ((t2 - targetTime.getMillis()) <= (targetTime.getMillis() - t1)) {
-                        index = insertionPoint;
-                    } else {
-                        index = insertionPoint - 1;
-                    }
-                } else {
-                    /*
-                     * All DateTimes on the axis are in the future, so we take
-                     * the earliest
-                     */
-                    index = 0;
-                }
-            }
-            return tValues.get(index);
+            int index = getIndexOfClosestTimeTo(targetTime, timeAxis);
+            return timeAxis.getCoordinateValue(index);
         } else {
             /*
              * We just have a domain representing an extent. If it contains the
@@ -499,6 +467,43 @@ public final class GISUtils {
             }
         }
 
+    }
+
+    public static int getIndexOfClosestTimeTo(DateTime targetTime, TimeAxis timeAxis) {
+        List<DateTime> tValues = timeAxis.getCoordinateValues();
+        int index = TimeUtils.findTimeIndex(tValues, targetTime);
+        if (index < 0) {
+            /*
+             * We can calculate the insertion point
+             */
+            int insertionPoint = -(index + 1);
+            /*
+             * We set the index to the most recent past time
+             */
+            if (insertionPoint == tValues.size()) {
+                index = insertionPoint - 1;
+            } else if (insertionPoint > 0) {
+                /*
+                 * We need to find which of the two possibilities is the
+                 * closest time
+                 */
+                long t1 = tValues.get(insertionPoint - 1).getMillis();
+                long t2 = tValues.get(insertionPoint).getMillis();
+
+                if ((t2 - targetTime.getMillis()) <= (targetTime.getMillis() - t1)) {
+                    index = insertionPoint;
+                } else {
+                    index = insertionPoint - 1;
+                }
+            } else {
+                /*
+                 * All DateTimes on the axis are in the future, so we take
+                 * the earliest
+                 */
+                index = 0;
+            }
+        }
+        return index;
     }
 
     /**
