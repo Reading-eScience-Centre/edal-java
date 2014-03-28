@@ -1398,7 +1398,7 @@ public class WmsServlet extends HttpServlet {
             SegmentColourScheme colourScheme = new SegmentColourScheme(new ColourScale(
                     Extents.newExtent(0f, 1f), false), Color.black, Color.black, Color.black,
                     paletteName, numColourBands);
-            legend = colourScheme.getScaleBar(width, height, 0.0f, vertical, false);
+            legend = colourScheme.getScaleBar(width, height, 0.0f, vertical, false, null, null);
         } else {
             /*
              * We're creating a legend with supporting text so we need to know
