@@ -50,7 +50,11 @@ public class VerticalAxisImpl extends ReferenceableAxisImpl implements VerticalA
 
     @Override
     public Extent<Double> getExtent() {
-        return Extents.newExtent(getFirstValue(), getLastValue());
+        if(reversed) {
+            return Extents.newExtent(getLastValue(), getFirstValue());
+        } else {
+            return Extents.newExtent(getFirstValue(), getLastValue());
+        }
     }
 
     @Override

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.joda.time.DateTime;
+import org.khelekore.prtree.MBR;
 import org.khelekore.prtree.MBRConverter;
 import org.khelekore.prtree.PRTree;
 import org.khelekore.prtree.SimpleMBR;
@@ -76,10 +77,22 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
     public Collection<String> findFeatureIds(BoundingBox horizontalExtent,
             Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
             Collection<String> variableIds) {
-        Iterable<FeatureBounds> features = prTree.find(new SimpleMBR(horizontalExtent.getMinX(),
-                horizontalExtent.getMaxX(), horizontalExtent.getMinY(), horizontalExtent.getMaxY(),
-                verticalExtent.getLow(), verticalExtent.getHigh(), timeExtent.getLow().getMillis(),
-                timeExtent.getHigh().getMillis()));
+
+        Double zLow = -Double.MAX_VALUE;
+        Double zHigh = Double.MAX_VALUE;
+        if (verticalExtent != null) {
+            zLow = verticalExtent.getLow();
+            zHigh = verticalExtent.getHigh();
+        }
+        Long tLow = -Long.MAX_VALUE;
+        Long tHigh = Long.MAX_VALUE;
+        if (timeExtent != null) {
+            tLow = timeExtent.getLow().getMillis();
+            tHigh = timeExtent.getHigh().getMillis();
+        }
+        MBR mbr = new SimpleMBR(horizontalExtent.getMinX(), horizontalExtent.getMaxX(),
+                horizontalExtent.getMinY(), horizontalExtent.getMaxY(), zLow, zHigh, tLow, tHigh);
+        Iterable<FeatureBounds> features = prTree.find(mbr);
         Collection<String> featureIds = new ArrayList<>();
         for (FeatureBounds feature : features) {
             featureIds.add(feature.id);
@@ -107,7 +120,7 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
         case 2:
             return bounds.verticalExtent.getHigh();
         case 3:
-            return bounds.timeExtent.getHigh().getMillis();
+            return bounds.timeExtent.getHigh();
         default:
             return Double.NaN;
         }
@@ -123,7 +136,7 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
         case 2:
             return bounds.verticalExtent.getLow();
         case 3:
-            return bounds.timeExtent.getLow().getMillis();
+            return bounds.timeExtent.getLow();
         default:
             return Double.NaN;
         }

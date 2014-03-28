@@ -167,33 +167,33 @@ public interface Dataset {
      *            <code>null</code>, the profile features will have the maximum
      *            recorded vertical extent.
      * 
-     *            <li>If {@link PlottingDomainParams#getTargetT()} is non-
-     *            <code>null</code> only profiles exactly matching the time will
-     *            be extracted
-     * 
-     *            <li>If {@link PlottingDomainParams#getTargetT()} is
+     *            <li>If {@link PlottingDomainParams#getTExtent()} is non-
      *            <code>null</code>, all measurements which fall entirely within
      *            the extent given by {@link PlottingDomainParams#getTExtent()}
      *            will be extracted
+     * 
+     *            <li>If {@link PlottingDomainParams#getTExtent()} is
+     *            <code>null</code> only profiles exactly matching the time
+     *            specified by {@link PlottingDomainParams#getTargetT()} will be
+     *            extracted
      * 
      *            <li>If {@link PlottingDomainParams#getTargetT()} and
      *            {@link PlottingDomainParams#getTExtent()} are both
      *            <code>null</code>, {@link ProfileFeature}s for all available
      *            time values will be extracted.
      * 
-     *            <li>If
-     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
-     *            non-<code>null</code>, only measurements which match the
-     *            horizontal position will be extracted. In the case of a
-     *            gridded feature, this will be the profile of the grid cell
-     *            which the position falls into, but for a dataset with a
-     *            continuous {@link HorizontalDomain} only exact matches will be
-     *            extracted
-     * 
-     *            <li>If
-     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
+     *            <li>If {@link PlottingDomainParams#getBbox()} is non-
      *            <code>null</code>, all measurements falling within
      *            {@link PlottingDomainParams#getBbox()} will be returned.
+     * 
+     *            <li>If {@link PlottingDomainParams#getBbox()} is
+     *            <code>null</code>, only measurements which match the
+     *            horizontal position given by
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()}
+     *            will be extracted. In the case of a gridded feature, this will
+     *            be the profile of the grid cell which the position falls into,
+     *            but for a dataset with a continuous {@link HorizontalDomain}
+     *            only exact matches will be extracted
      * 
      *            <li>If both
      *            {@link PlottingDomainParams#getTargetHorizontalPosition()} and
@@ -230,14 +230,15 @@ public interface Dataset {
      *            <code>null</code>, all {@link PointSeriesFeature}s will
      *            contain the full range of times.
      * 
-     *            <li>If {@link PlottingDomainParams#getTargetZ()} is non-
-     *            <code>null</code> only profiles exactly matching the depth
-     *            will be extracted
-     * 
-     *            <li>If {@link PlottingDomainParams#getTargetZ()} is
+     *            <li>If {@link PlottingDomainParams#getZExtent()} is non-
      *            <code>null</code> , all measurements which fall entirely
      *            within the extent given by
      *            {@link PlottingDomainParams#getZExtent()} will be extracted
+     * 
+     *            <li>If {@link PlottingDomainParams#getZExtent()} is
+     *            <code>null</code> only profiles exactly matching the depth
+     *            specified by {@link PlottingDomainParams#getTargetZ()} will be
+     *            extracted
      * 
      *            <li>
      *            If {@link PlottingDomainParams#getTargetZ()} and
@@ -245,19 +246,25 @@ public interface Dataset {
      *            <code>null</code>, {@link PointSeriesFeature}s for all
      *            available elevations will be extracted.
      * 
-     *            <li>If
-     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
-     *            non-<code>null</code>, only measurements which match the
-     *            horizontal position will be extracted. In the case of a
-     *            gridded feature, this will be the timeseries of the grid cell
-     *            which the position falls into, but for a dataset with a
-     *            continuous {@link HorizontalDomain} only exact matches will be
-     *            extracted
-     * 
-     *            <li>If
-     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
+     *            <li>If {@link PlottingDomainParams#getBbox()} is non-
      *            <code>null</code>, all measurements falling within
      *            {@link PlottingDomainParams#getBbox()} will be returned.
+     * 
+     *            <li>If {@link PlottingDomainParams#getBbox()} is
+     *            <code>null</code>, only measurements which match the
+     *            horizontal position given by
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()}
+     *            will be extracted. In the case of a gridded feature, this will
+     *            be the timeseries of the grid cell which the position falls
+     *            into, but for a dataset with a continuous
+     *            {@link HorizontalDomain} only exact matches will be extracted
+     * 
+     *            <li>If both
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} and
+     *            {@link PlottingDomainParams#getBbox()} are <code>null</code>
+     *            no constraint is placed on horizontal positions - e.g. for a
+     *            gridded field a timeseries will be returned for every
+     *            horizontal grid point.
      * 
      * @return A {@link Collection} of {@link PointSeriesFeature}s
      * @throws DataReadingException

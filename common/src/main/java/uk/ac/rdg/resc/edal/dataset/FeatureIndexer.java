@@ -37,6 +37,7 @@ import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * A class representing a spatial indexer for features.
@@ -87,7 +88,7 @@ public interface FeatureIndexer {
         String id;
         HorizontalPosition horizontalPosition;
         Extent<Double> verticalExtent;
-        Extent<DateTime> timeExtent;
+        Extent<Long> timeExtent;
         Collection<String> variableIds;
 
         public FeatureBounds(String id, HorizontalPosition horizontalPosition,
@@ -97,7 +98,8 @@ public interface FeatureIndexer {
             this.id = id;
             this.horizontalPosition = horizontalPosition;
             this.verticalExtent = verticalExtent;
-            this.timeExtent = timeExtent;
+            this.timeExtent = Extents.newExtent(timeExtent.getLow().getMillis(), timeExtent
+                    .getHigh().getMillis());
             this.variableIds = variableIds;
         }
     }
