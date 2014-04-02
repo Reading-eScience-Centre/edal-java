@@ -202,6 +202,12 @@ public interface Dataset {
      *            gridded field a profile will be returned for every horizontal
      *            grid point.
      * 
+     *            <li>If a
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
+     *            non-<code>null</code>, the resulting {@link Collection} will
+     *            be sorted according to distance (in co-ordinate units) from
+     *            the target position
+     * 
      * @return A {@link Collection} of {@link ProfileFeature}s
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
@@ -265,6 +271,12 @@ public interface Dataset {
      *            no constraint is placed on horizontal positions - e.g. for a
      *            gridded field a timeseries will be returned for every
      *            horizontal grid point.
+     * 
+     *            <li>If a
+     *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
+     *            non-<code>null</code>, the resulting {@link Collection} will
+     *            be sorted according to distance (in co-ordinate units) from
+     *            the target position
      * 
      * @return A {@link Collection} of {@link PointSeriesFeature}s
      * @throws DataReadingException

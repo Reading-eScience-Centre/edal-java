@@ -30,6 +30,8 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -122,9 +124,8 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         List<ProfileFeature> features = new ArrayList<ProfileFeature>();
 
         BoundingBox bbox = params.getBbox();
+        final HorizontalPosition pos = params.getTargetHorizontalPosition();
         if (bbox == null) {
-            HorizontalPosition pos;
-            pos = params.getTargetHorizontalPosition();
             if (pos != null) {
                 bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
                         pos.getCoordinateReferenceSystem());
@@ -144,11 +145,18 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         }
         Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, params.getZExtent(),
                 timeExtent, varIds);
-        for (String featureId : featureIds) {
-            System.out.println("extracting profile: " + featureId);
-        }
         features.addAll((Collection<? extends ProfileFeature>) getFeatureReader().readFeatures(
                 featureIds, varIds));
+        
+        if(pos != null) {
+            Collections.sort(features, new Comparator<ProfileFeature>() {
+                @Override
+                public int compare(ProfileFeature o1, ProfileFeature o2) {
+                    return Double.compare(GISUtils.getDistSquared(o1.getHorizontalPosition(), pos),
+                            GISUtils.getDistSquared(o2.getHorizontalPosition(), pos));
+                }
+            });
+        }
         return features;
     }
 
@@ -162,10 +170,9 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         }
         List<PointSeriesFeature> features = new ArrayList<PointSeriesFeature>();
 
-        HorizontalPosition pos;
         BoundingBox bbox = params.getBbox();
+        final HorizontalPosition pos = params.getTargetHorizontalPosition();
         if (bbox == null) {
-            pos = params.getTargetHorizontalPosition();
             if (pos != null) {
                 bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
                         pos.getCoordinateReferenceSystem());
@@ -188,6 +195,15 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
                 params.getTExtent(), varIds);
         features.addAll((Collection<? extends PointSeriesFeature>) getFeatureReader().readFeatures(
                 featureIds, varIds));
+        if(pos != null) {
+            Collections.sort(features, new Comparator<PointSeriesFeature>() {
+                @Override
+                public int compare(PointSeriesFeature o1, PointSeriesFeature o2) {
+                    return Double.compare(GISUtils.getDistSquared(o1.getHorizontalPosition(), pos),
+                            GISUtils.getDistSquared(o2.getHorizontalPosition(), pos));
+                }
+            });
+        }
         return features;
     }
 

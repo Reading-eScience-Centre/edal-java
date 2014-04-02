@@ -970,6 +970,31 @@ public final class GISUtils {
             return new SimpleTemporalDomain(min, max);
         }
     }
+    
+    /**
+     * Performs Pythagoras on two distances to calculate the distance squared.
+     * Useful for sorting lists according to distance from a point. The result
+     * shouldn't be used for anything critical, since two results may not
+     * accurately reflect the true distance (e.g. two points near the pole may
+     * incorrectly report a smaller distance apart than two near the equator).
+     * 
+     * No check that the positions have the same CRS is performed (for speed).
+     * 
+     * @param pos1
+     *            The first position
+     * @param pos2
+     *            The second position
+     * @return A number related to how far apart the positions are, or
+     *         {@link Double#MAX_VALUE} if either is <code>null</code>
+     */
+    public static double getDistSquared(HorizontalPosition pos1, HorizontalPosition pos2) {
+        if (pos1 == null || pos2 == null) {
+            return Double.MAX_VALUE;
+        }
+        return (pos1.getX() - pos2.getX()) * (pos1.getX() - pos2.getX())
+                + (pos1.getY() - pos2.getY()) * (pos1.getY() - pos2.getY());
+
+    }
 
     static {
         /*
