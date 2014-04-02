@@ -568,8 +568,8 @@ public class WmsServlet extends HttpServlet {
         Collections.sort(featureInfos, new Comparator<FeatureInfoPoint>() {
             @Override
             public int compare(FeatureInfoPoint o1, FeatureInfoPoint o2) {
-                return Double.compare(getDistSquared(o1.getPosition(), position),
-                        getDistSquared(o2.getPosition(), position));
+                return Double.compare(GISUtils.getDistSquared(o1.getPosition(), position),
+                        GISUtils.getDistSquared(o2.getPosition(), position));
             }
         });
 
@@ -1452,14 +1452,6 @@ public class WmsServlet extends HttpServlet {
                     CollectionUtils.setOf(variableId), plottingParameters));
         }
 
-        Collections.sort(pointSeriesFeatures, new Comparator<PointSeriesFeature>() {
-            @Override
-            public int compare(PointSeriesFeature o1, PointSeriesFeature o2) {
-                return Double.compare(getDistSquared(o1.getHorizontalPosition(), position),
-                        getDistSquared(o2.getHorizontalPosition(), position));
-            }
-        });
-
         while (pointSeriesFeatures.size() > featureInfoParameters.getFeatureCount()) {
             pointSeriesFeatures.remove(pointSeriesFeatures.size() - 1);
         }
@@ -1691,14 +1683,6 @@ public class WmsServlet extends HttpServlet {
                     CollectionUtils.setOf(variableId), plottingParameters));
         }
 
-        Collections.sort(profileFeatures, new Comparator<ProfileFeature>() {
-            @Override
-            public int compare(ProfileFeature o1, ProfileFeature o2) {
-                return Double.compare(getDistSquared(o1.getHorizontalPosition(), position),
-                        getDistSquared(o2.getHorizontalPosition(), position));
-            }
-        });
-
         while (profileFeatures.size() > featureInfoParameters.getFeatureCount()) {
             profileFeatures.remove(profileFeatures.size() - 1);
         }
@@ -1723,31 +1707,6 @@ public class WmsServlet extends HttpServlet {
             log.error("Cannot write to output stream", e);
             throw new EdalException("Problem writing data to output stream", e);
         }
-    }
-
-    /**
-     * Performs Pythagoras on two distances to calculate the distance squared.
-     * Useful for sorting lists according to distance from a point. The result
-     * shouldn't be used for anything critical, since two results may not
-     * accurately reflect the true distance (e.g. two points near the pole may
-     * incorrectly report a smaller distance apart than two near the equator).
-     * 
-     * No check that the positions have the same CRS is performed (for speed).
-     * 
-     * @param pos1
-     *            The first position
-     * @param pos2
-     *            The second position
-     * @return A number related to how far apart the positions are, or
-     *         {@link Double#MAX_VALUE} if either is <code>null</code>
-     */
-    private double getDistSquared(HorizontalPosition pos1, HorizontalPosition pos2) {
-        if (pos1 == null || pos2 == null) {
-            return Double.MAX_VALUE;
-        }
-        return (pos1.getX() - pos2.getX()) * (pos1.getX() - pos2.getX())
-                + (pos1.getY() - pos2.getY()) * (pos1.getY() - pos2.getY());
-
     }
 
     /**

@@ -31,6 +31,8 @@ package uk.ac.rdg.resc.edal.dataset;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -586,23 +588,29 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         /*
          * Find a bounding box to extract all profiles from
          */
-        BoundingBox bbox;
-        HorizontalPosition pos = params.getTargetHorizontalPosition();
-        if (pos != null) {
-            bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
-                    pos.getCoordinateReferenceSystem());
-        } else {
-            bbox = params.getBbox();
+        BoundingBox bbox = params.getBbox();
+        final HorizontalPosition pos = params.getTargetHorizontalPosition();
+        if (bbox == null) {
+            if (pos != null) {
+                bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
+                        pos.getCoordinateReferenceSystem());
+            } else {
+                bbox = null;
+            }
         }
 
         /*
          * Find a time range to extract all profiles from
          */
         Extent<DateTime> timeExtent;
-        if (params.getTargetT() != null) {
-            timeExtent = Extents.newExtent(params.getTargetT(), params.getTargetT());
-        } else {
+        if (params.getTExtent() != null) {
             timeExtent = params.getTExtent();
+        } else {
+            if (params.getTargetT() != null) {
+                timeExtent = Extents.newExtent(params.getTargetT(), params.getTargetT());
+            } else {
+                timeExtent = null;
+            }
         }
 
         GridDataSource dataSource = null;
@@ -797,6 +805,16 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     description.toString(), zAxis, location.hPos, location.time, parameters,
                     var2Values);
             features.add(feature);
+        }
+        
+        if(pos != null) {
+            Collections.sort(features, new Comparator<ProfileFeature>() {
+                @Override
+                public int compare(ProfileFeature o1, ProfileFeature o2) {
+                    return Double.compare(GISUtils.getDistSquared(o1.getHorizontalPosition(), pos),
+                            GISUtils.getDistSquared(o2.getHorizontalPosition(), pos));
+                }
+            });
         }
 
         return features;
@@ -1151,23 +1169,28 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         /*
          * Find a bounding box to extract all profiles from
          */
-        BoundingBox bbox;
-        HorizontalPosition pos = params.getTargetHorizontalPosition();
-        if (pos != null) {
-            bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
-                    pos.getCoordinateReferenceSystem());
-        } else {
-            bbox = params.getBbox();
+        BoundingBox bbox = params.getBbox();
+        final HorizontalPosition pos = params.getTargetHorizontalPosition();
+        if (bbox == null) {
+            if (pos != null) {
+                bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
+                        pos.getCoordinateReferenceSystem());
+            } else {
+                bbox = null;
+            }
         }
-
         /*
          * Find a time range to extract all profiles from
          */
         Extent<Double> zExtent;
-        if (params.getTargetZ() != null) {
-            zExtent = Extents.newExtent(params.getTargetZ(), params.getTargetZ());
-        } else {
+        if (params.getZExtent() != null) {
             zExtent = params.getZExtent();
+        } else {
+            if (params.getTargetZ() != null) {
+                zExtent = Extents.newExtent(params.getTargetZ(), params.getTargetZ());
+            } else {
+                zExtent = null;
+            }
         }
 
         GridDataSource dataSource = null;
@@ -1372,6 +1395,16 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             features.add(feature);
         }
 
+        if(pos != null) {
+            Collections.sort(features, new Comparator<PointSeriesFeature>() {
+                @Override
+                public int compare(PointSeriesFeature o1, PointSeriesFeature o2) {
+                    return Double.compare(GISUtils.getDistSquared(o1.getHorizontalPosition(), pos),
+                            GISUtils.getDistSquared(o2.getHorizontalPosition(), pos));
+                }
+            });
+        }
+        
         return features;
     }
 
