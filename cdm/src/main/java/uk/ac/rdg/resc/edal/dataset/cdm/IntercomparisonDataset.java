@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -372,6 +371,12 @@ public class IntercomparisonDataset implements Dataset {
     }
 
     @Override
+    public boolean supportsProfileFeatureExtraction(String varId) {
+        DatasetAndId datasetAndId = varId2DatasetAndId.get(varId);
+        return datasetAndId.dataset.supportsProfileFeatureExtraction(datasetAndId.variableId);
+    }
+    
+    @Override
     public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         List<ProfileFeature> ret = new ArrayList<ProfileFeature>();
@@ -388,6 +393,12 @@ public class IntercomparisonDataset implements Dataset {
                     CollectionUtils.setOf(datasetAndId.variableId), params));
         }
         return ret;
+    }
+    
+    @Override
+    public boolean supportsTimeseriesExtraction(String varId) {
+        DatasetAndId datasetAndId = varId2DatasetAndId.get(varId);
+        return datasetAndId.dataset.supportsTimeseriesExtraction(datasetAndId.variableId);
     }
 
     @Override

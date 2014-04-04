@@ -191,11 +191,11 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             int xSize = variableMetadata.getHorizontalDomain().getXSize();
             int ySize = variableMetadata.getHorizontalDomain().getYSize();
             int zSize = 1;
-            if(variableMetadata.getVerticalDomain() != null) {
+            if (variableMetadata.getVerticalDomain() != null) {
                 zSize = variableMetadata.getVerticalDomain().size();
             }
             int tSize = 1;
-            if(variableMetadata.getTemporalDomain() != null) {
+            if (variableMetadata.getTemporalDomain() != null) {
                 tSize = variableMetadata.getTemporalDomain().size();
             }
 
@@ -555,6 +555,25 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     };
 
     @Override
+    public boolean supportsProfileFeatureExtraction(String varId) {
+        try {
+            /*
+             * We support profile feature extraction if the given variable has a
+             * vertical domain.
+             * 
+             * If there is a problem getting the metadata, assume that profiles
+             * are not supported (most likely cause is that the variable ID is
+             * not found)
+             * 
+             * TODO Make getVariableMetadata throw a VarNotFoundException or somethign
+             */
+            return getVariableMetadata(varId).getVerticalDomain() != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
     public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         List<ProfileFeature> features = new ArrayList<>();
@@ -806,8 +825,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     var2Values);
             features.add(feature);
         }
-        
-        if(pos != null) {
+
+        if (pos != null) {
             Collections.sort(features, new Comparator<ProfileFeature>() {
                 @Override
                 public int compare(ProfileFeature o1, ProfileFeature o2) {
@@ -1041,7 +1060,13 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 int xIndex = hIndices.getX();
                 int yIndex = hIndices.getY();
 
-                int tIndex = getTimeIndex(time, tAxis, varId);
+                /*
+                 * We only want times which exactly match
+                 */
+                int tIndex = tAxis.getCoordinateValues().indexOf(time);
+                if (tIndex < 0) {
+                    continue;
+                }
 
                 /*
                  * Now read the z-limits
@@ -1135,6 +1160,25 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
     }
 
+    @Override
+    public boolean supportsTimeseriesExtraction(String varId) {
+        try {
+            /*
+             * We support timeseries extraction if the given variable has a
+             * temporal domain.
+             * 
+             * If there is a problem getting the metadata, assume that timeseries
+             * are not supported (most likely cause is that the variable ID is
+             * not found)
+             * 
+             * TODO Make getVariableMetadata throw a VarNotFoundException or somethign
+             */
+            return getVariableMetadata(varId).getTemporalDomain() != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
     @Override
     public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
@@ -1395,7 +1439,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             features.add(feature);
         }
 
-        if(pos != null) {
+        if (pos != null) {
             Collections.sort(features, new Comparator<PointSeriesFeature>() {
                 @Override
                 public int compare(PointSeriesFeature o1, PointSeriesFeature o2) {
@@ -1404,7 +1448,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 }
             });
         }
-        
+
         return features;
     }
 
@@ -1621,7 +1665,13 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 int xIndex = hIndices.getX();
                 int yIndex = hIndices.getY();
 
-                int zIndex = getVerticalIndex(zVal, zAxis, varId);
+                /*
+                 * We only want co-ordinate values which match exactly
+                 */
+                int zIndex = zAxis.getCoordinateValues().indexOf(zVal);
+                if (zIndex < 0) {
+                    continue;
+                }
 
                 /*
                  * Now read the t-limits
