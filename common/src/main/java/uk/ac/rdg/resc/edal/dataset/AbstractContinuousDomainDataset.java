@@ -83,7 +83,7 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
     }
 
     @Override
-    public Collection<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+    public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         BoundingBox hExtent = params.getBbox();
         Extent<Double> zExtent = params.getZExtent();
@@ -115,7 +115,7 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
+    public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         if (!ProfileFeature.class.isAssignableFrom(featureType)) {
             throw new UnsupportedOperationException(
@@ -162,7 +162,7 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
+    public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         if (!PointSeriesFeature.class.isAssignableFrom(featureType)) {
             throw new UnsupportedOperationException(

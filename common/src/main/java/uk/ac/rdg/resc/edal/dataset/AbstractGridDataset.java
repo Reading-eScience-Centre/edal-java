@@ -82,7 +82,6 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
@@ -264,7 +263,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     @Override
-    public final Collection<MapFeature> extractMapFeatures(Set<String> varIds,
+    public final List<MapFeature> extractMapFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -421,7 +420,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     .toString(), name.toString(), description.toString(), domain, parameters,
                     values);
 
-            return CollectionUtils.setOf(mapFeature);
+            return Collections.singletonList(mapFeature);
         } catch (IOException e) {
             log.error("Problem reading data", e);
             throw new DataReadingException("Problem reading map feature", e);
@@ -574,7 +573,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     @Override
-    public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
+    public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         List<ProfileFeature> features = new ArrayList<>();
         /*
@@ -1180,7 +1179,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
     
     @Override
-    public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
+    public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         List<PointSeriesFeature> features = new ArrayList<>();
         /*
