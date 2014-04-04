@@ -331,7 +331,7 @@ public class IntercomparisonDataset implements Dataset {
     }
 
     @Override
-    public Collection<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+    public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         List<DiscreteFeature<?, ?>> ret = new ArrayList<DiscreteFeature<?, ?>>();
         List<String> variableIds = new ArrayList<String>(varIds);
@@ -377,7 +377,7 @@ public class IntercomparisonDataset implements Dataset {
     }
     
     @Override
-    public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
+    public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         List<ProfileFeature> ret = new ArrayList<ProfileFeature>();
         for (String varId : varIds) {
@@ -402,7 +402,7 @@ public class IntercomparisonDataset implements Dataset {
     }
 
     @Override
-    public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
+    public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
         List<PointSeriesFeature> ret = new ArrayList<PointSeriesFeature>();
         for (String varId : varIds) {

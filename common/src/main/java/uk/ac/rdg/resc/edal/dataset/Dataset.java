@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.joda.time.Chronology;
@@ -145,7 +146,7 @@ public interface Dataset {
      * @throws DataReadingException
      *             If there is a problem reading the underlying data
      */
-    public Collection<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+    public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException;
 
     /**
@@ -219,7 +220,7 @@ public interface Dataset {
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
      */
-    public Collection<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
+    public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException;
 
     /**
@@ -304,7 +305,7 @@ public interface Dataset {
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
      */
-    public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
+    public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException;
 
     /**
