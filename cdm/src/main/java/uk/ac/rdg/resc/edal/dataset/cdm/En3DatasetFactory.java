@@ -374,6 +374,22 @@ public final class En3DatasetFactory extends DatasetFactory {
         public VerticalCrs getDatasetVerticalCrs() {
             return EN3_VERTICAL_CRS;
         }
+        
+        @Override
+        public boolean supportsProfileFeatureExtraction(String varId) {
+            /*
+             * All variables are supported for profile features
+             */
+            return true;
+        }
+        
+        @Override
+        public boolean supportsTimeseriesExtraction(String varId) {
+            /*
+             * No variables are supported for timeseries
+             */
+            return false;
+        }
     }
 
     private final class En3DatabaseReader implements DiscreteFeatureReader<ProfileFeature> {

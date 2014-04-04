@@ -41,6 +41,8 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
@@ -173,9 +175,14 @@ public interface Dataset {
      *            will be extracted
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is
-     *            <code>null</code> only profiles exactly matching the time
-     *            specified by {@link PlottingDomainParams#getTargetT()} will be
-     *            extracted
+     *            <code>null</code> only profiles matching the time specified by
+     *            {@link PlottingDomainParams#getTargetT()} will be extracted.
+     *            In the case of a gridded dataset a time is considered to match
+     *            if the method
+     *            {@link TimeAxis#contains(org.joda.time.DateTime)} on its time
+     *            axis returns <code>true</code> for the target time. For a
+     *            non-gridded dataset, the feature time must exactly match the
+     *            target time.
      * 
      *            <li>If {@link PlottingDomainParams#getTargetT()} and
      *            {@link PlottingDomainParams#getTExtent()} are both
@@ -216,6 +223,16 @@ public interface Dataset {
             PlottingDomainParams params) throws DataReadingException;
 
     /**
+     * @param varId
+     *            The ID of the variable to extract
+     * @return <code>true</code> if this dataset supports the extraction of the
+     *         given variable to {@link ProfileFeature}s via the
+     *         {@link Dataset#extractProfileFeatures(Set, PlottingDomainParams)}
+     *         method
+     */
+    public boolean supportsProfileFeatureExtraction(String varId);
+
+    /**
      * Extracts {@link PointSeriesFeature}(s) from the {@link Dataset}
      * 
      * @param varIds
@@ -242,9 +259,14 @@ public interface Dataset {
      *            {@link PlottingDomainParams#getZExtent()} will be extracted
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is
-     *            <code>null</code> only profiles exactly matching the depth
-     *            specified by {@link PlottingDomainParams#getTargetZ()} will be
-     *            extracted
+     *            <code>null</code> only profiles matching the depth specified
+     *            by {@link PlottingDomainParams#getTargetZ()} will be
+     *            extracted. In the case of a gridded dataset a depth is
+     *            considered to match if the method
+     *            {@link VerticalAxis#contains(Double)} on its vertical axis
+     *            returns <code>true</code> for the target depth. For a
+     *            non-gridded dataset, the feature depth must exactly match the
+     *            target depth.
      * 
      *            <li>
      *            If {@link PlottingDomainParams#getTargetZ()} and
@@ -284,4 +306,14 @@ public interface Dataset {
      */
     public Collection<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException;
+
+    /**
+     * @param varId
+     *            The ID of the variable to extract
+     * @return <code>true</code> if this dataset supports the extraction of the
+     *         given variable to {@link PointSeriesFeature}s via the
+     *         {@link Dataset#extractTimeseriesFeatures(Set, PlottingDomainParams)}
+     *         method
+     */
+    public boolean supportsTimeseriesExtraction(String varId);
 }
