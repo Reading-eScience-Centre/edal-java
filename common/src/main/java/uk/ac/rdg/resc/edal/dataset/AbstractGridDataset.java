@@ -263,8 +263,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     @Override
-    public final List<MapFeature> extractMapFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
+    public final List<MapFeature> extractMapFeatures(Set<String> varIds, PlottingDomainParams params)
+            throws DataReadingException {
         /*
          * If the user has passed in null for the variable IDs, they want all
          * variables returned
@@ -564,7 +564,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * are not supported (most likely cause is that the variable ID is
              * not found)
              * 
-             * TODO Make getVariableMetadata throw a VarNotFoundException or somethign
+             * TODO Make getVariableMetadata throw a VarNotFoundException or
+             * somethign
              */
             return getVariableMetadata(varId).getVerticalDomain() != null;
         } catch (Exception e) {
@@ -1062,7 +1063,10 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 /*
                  * We only want times which exactly match
                  */
-                int tIndex = tAxis.getCoordinateValues().indexOf(time);
+                int tIndex = 0;
+                if (tAxis != null) {
+                    tAxis.getCoordinateValues().indexOf(time);
+                }
                 if (tIndex < 0) {
                     continue;
                 }
@@ -1166,18 +1170,19 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * We support timeseries extraction if the given variable has a
              * temporal domain.
              * 
-             * If there is a problem getting the metadata, assume that timeseries
-             * are not supported (most likely cause is that the variable ID is
-             * not found)
+             * If there is a problem getting the metadata, assume that
+             * timeseries are not supported (most likely cause is that the
+             * variable ID is not found)
              * 
-             * TODO Make getVariableMetadata throw a VarNotFoundException or somethign
+             * TODO Make getVariableMetadata throw a VarNotFoundException or
+             * somethign
              */
             return getVariableMetadata(varId).getTemporalDomain() != null;
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
@@ -1667,7 +1672,10 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 /*
                  * We only want co-ordinate values which match exactly
                  */
-                int zIndex = zAxis.getCoordinateValues().indexOf(zVal);
+                int zIndex = 0;
+                if (zAxis != null) {
+                    zIndex = zAxis.getCoordinateValues().indexOf(zVal);
+                }
                 if (zIndex < 0) {
                     continue;
                 }
