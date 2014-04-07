@@ -1065,7 +1065,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                  */
                 int tIndex = 0;
                 if (tAxis != null) {
-                    tAxis.getCoordinateValues().indexOf(time);
+                    tIndex = tAxis.getCoordinateValues().indexOf(time);
                 }
                 if (tIndex < 0) {
                     continue;
