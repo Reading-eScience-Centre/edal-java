@@ -982,18 +982,22 @@ public abstract class AbstractGridDataset extends AbstractDataset {
          * Find all of the times which should be included
          */
         List<DateTime> times = new ArrayList<DateTime>();
-        if (tExtent == null && tAxis != null) {
-            tExtent = tAxis.getExtent();
-        }
-        if (tExtent != null) {
-            if (tExtent.getLow().equals(tExtent.getHigh())) {
-                times.add(tExtent.getLow());
-            } else {
-                for (DateTime time : tAxis.getCoordinateValues()) {
-                    if (tExtent.contains(time)) {
-                        times.add(time);
+        if (tAxis != null) {
+            if (tExtent != null) {
+                if (tExtent.getLow().equals(tExtent.getHigh())) {
+                    if (tAxis.contains(tExtent.getLow())) {
+                        int tIndex = GISUtils.getIndexOfClosestTimeTo(tExtent.getLow(), tAxis);
+                        times.add(tAxis.getCoordinateValue(tIndex));
+                    }
+                } else {
+                    for (DateTime time : tAxis.getCoordinateValues()) {
+                        if (tExtent.contains(time)) {
+                            times.add(time);
+                        }
                     }
                 }
+            } else {
+                tExtent = tAxis.getExtent();
             }
         } else {
             times.add(null);
@@ -1499,7 +1503,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             return retAxis;
         }
     }
-    
+
     private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(
             GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox,
             Extent<Double> zExtent, GridDataSource dataSource) throws IOException,
@@ -1541,18 +1545,22 @@ public abstract class AbstractGridDataset extends AbstractDataset {
          * Find all of the elevations which should be included
          */
         List<Double> zVals = new ArrayList<Double>();
-        if (zExtent == null && zAxis != null) {
-            zExtent = zAxis.getExtent();
-        }
-        if (zExtent != null) {
-            if (zExtent.getLow().equals(zExtent.getHigh())) {
-                zVals.add(zExtent.getLow());
-            } else {
-                for (Double zVal : zAxis.getCoordinateValues()) {
-                    if (zExtent.contains(zVal)) {
-                        zVals.add(zVal);
+        if (zAxis != null) {
+            if (zExtent != null) {
+                if (zExtent.getLow().equals(zExtent.getHigh())) {
+                    if (zAxis.contains(zExtent.getLow())) {
+                        int zIndex = GISUtils.getIndexOfClosestElevationTo(zExtent.getLow(), zAxis);
+                        zVals.add(zAxis.getCoordinateValue(zIndex));
+                    }
+                } else {
+                    for (Double zVal : zAxis.getCoordinateValues()) {
+                        if (zExtent.contains(zVal)) {
+                            zVals.add(zVal);
+                        }
                     }
                 }
+            } else {
+                zExtent = zAxis.getExtent();
             }
         } else {
             zVals.add(null);
