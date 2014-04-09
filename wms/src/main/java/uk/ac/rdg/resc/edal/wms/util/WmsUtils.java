@@ -49,21 +49,17 @@ import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.chrono.JulianChronology;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
-import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
@@ -139,109 +135,6 @@ public class WmsUtils {
      */
     public static boolean isNcmlAggregation(String location) {
         return location.endsWith(".xml") || location.endsWith(".ncml");
-    }
-
-    /**
-     * Utility method for getting the dataset ID from the given layer name
-     */
-    public static String getDatasetId(String layerName) throws EdalException {
-        // Find which layer the user is requesting
-        String[] layerParts = layerName.split("/");
-        if (layerParts.length != 2) {
-            throw new EdalException("Layers should be of the form Dataset/Variable");
-        }
-        return layerParts[0];
-    }
-
-    /**
-     * Utility method for getting the member name from the given layer name
-     */
-    public static String getMemberName(String layerName) throws EdalException {
-        // Find which layer the user is requesting
-        String[] layerParts = layerName.split("/");
-        if (layerParts.length != 2) {
-            throw new EdalException("Layers should be of the form Dataset/Variable");
-        }
-        return layerParts[1];
-    }
-
-    /*
-     * Starting here, we have methods which are only used in the Velocity
-     * templates (mostly those defining Capabilities documents)
-     * 
-     * Don't delete them just because you can't find where they're used in Java
-     * code
-     */
-
-    public static class StyleInfo {
-        private String stylename;
-        private String palettename;
-
-        public StyleInfo(String stylename, String palettename) {
-            super();
-            this.stylename = stylename;
-            this.palettename = palettename;
-        }
-
-        public String getStylename() {
-            return stylename;
-        }
-
-        public String getPalettename() {
-            return palettename;
-        }
-
-        @Override
-        public String toString() {
-            return stylename + "/" + palettename;
-        }
-    }
-
-    /**
-     * <p>
-     * Returns the string to be used to display units for the TIME dimension in
-     * Capabilities documents. For standard (ISO) chronologies, this will return
-     * "ISO8601". For 360-day chronologies this will return "360_day". For other
-     * chronologies this will return "unknown".
-     * </p>
-     */
-    public static String getTimeAxisUnits(Chronology chronology) {
-        if (chronology instanceof ISOChronology)
-            return "ISO8601";
-        // The following are the CF names for these calendars
-        if (chronology instanceof JulianChronology)
-            return "julian";
-        if (chronology instanceof ThreeSixtyDayChronology)
-            return "360_day";
-        if (chronology instanceof NoLeapChronology)
-            return "noleap";
-        if (chronology instanceof AllLeapChronology)
-            return "all_leap";
-        return "unknown";
-    }
-
-    public static HorizontalPosition getPositionFromUrlArgs(String crsCode, String firstCoord,
-            String secondCoord, String wmsVersion) throws EdalException {
-        final CoordinateReferenceSystem crs = GISUtils.getCrs(crsCode);
-
-        boolean normalOrder = true;
-        if (crsCode.equalsIgnoreCase("EPSG:4326") && "1.3.0".equals(wmsVersion)) {
-            normalOrder = false;
-        }
-
-        double x, y;
-        try {
-            if (normalOrder) {
-                x = Double.parseDouble(firstCoord);
-                y = Double.parseDouble(secondCoord);
-            } else {
-                x = Double.parseDouble(secondCoord);
-                y = Double.parseDouble(firstCoord);
-            }
-        } catch (NumberFormatException nfe) {
-            throw new EdalException("Co-ordinates are not properly formatted");
-        }
-        return new HorizontalPosition(x, y, crs);
     }
 
     /**
@@ -429,5 +322,36 @@ public class WmsUtils {
                 }
             }
         }
+    }
+    
+    /*
+     * Starting here, we have methods which are only used in the Velocity
+     * templates (mostly those defining Capabilities documents)
+     * 
+     * Don't delete them just because you can't find where they're used in Java
+     * code
+     */
+
+    /**
+     * <p>
+     * Returns the string to be used to display units for the TIME dimension in
+     * Capabilities documents. For standard (ISO) chronologies, this will return
+     * "ISO8601". For 360-day chronologies this will return "360_day". For other
+     * chronologies this will return "unknown".
+     * </p>
+     */
+    public static String getTimeAxisUnits(Chronology chronology) {
+        if (chronology instanceof ISOChronology)
+            return "ISO8601";
+        // The following are the CF names for these calendars
+        if (chronology instanceof JulianChronology)
+            return "julian";
+        if (chronology instanceof ThreeSixtyDayChronology)
+            return "360_day";
+        if (chronology instanceof NoLeapChronology)
+            return "noleap";
+        if (chronology instanceof AllLeapChronology)
+            return "all_leap";
+        return "unknown";
     }
 }
