@@ -161,14 +161,12 @@ public interface Dataset {
      *            <li>{@link PlottingDomainParams#getTargetZ()} is ignored.
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is non-
-     *            <code>null</code>, all of the domains of the
-     *            {@link ProfileFeature}s will fully contain the vertical extent
-     *            - i.e. the domain may extend one discrete point either side of
-     *            the supplied extent, but no more.
+     *            <code>null</code>, all {@link ProfileFeature}s whose domains
+     *            intersect with this vertical extent will be extracted
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is
-     *            <code>null</code>, the profile features will have the maximum
-     *            recorded vertical extent.
+     *            <code>null</code>, no constraint will be placed on the
+     *            vertical domain of the {@link ProfileFeature}s to extract.
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is non-
      *            <code>null</code>, all measurements which fall entirely within
@@ -245,14 +243,12 @@ public interface Dataset {
      *            <li>{@link PlottingDomainParams#getTargetT()} is ignored.
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is non-
-     *            <code>null</code>, all of the domains of the
-     *            {@link PointSeriesFeature}s will fully contain the time extent
-     *            - i.e. the domain may extend one discrete point either side of
-     *            the supplied extent, but no more.
+     *            <code>null</code>, all {@link PointSeriesFeature}s whose
+     *            domains intersect with this time extent will be extracted.
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is
-     *            <code>null</code>, all {@link PointSeriesFeature}s will
-     *            contain the full range of times.
+     *            <code>null</code>, no constraint will be placed on the
+     *            temporal domain of the {@link PointSeriesFeature}s to extract
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is non-
      *            <code>null</code> , all measurements which fall entirely
