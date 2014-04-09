@@ -616,20 +616,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             }
         }
 
-        /*
-         * Find a time range to extract all profiles from
-         */
-        Extent<DateTime> timeExtent;
-        if (params.getTExtent() != null) {
-            timeExtent = params.getTExtent();
-        } else {
-            if (params.getTargetT() != null) {
-                timeExtent = Extents.newExtent(params.getTargetT(), params.getTargetT());
-            } else {
-                timeExtent = null;
-            }
-        }
-
         GridDataSource dataSource = null;
         /*
          * Open the source of data
@@ -699,7 +685,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             Map<ProfileLocation, Array1D<Number>> data;
             try {
-                data = readVerticalData(gridVariableMetadata, zAxis, bbox, timeExtent, dataSource);
+                data = readVerticalData(gridVariableMetadata, zAxis, bbox, params.getTargetT(),
+                        params.getTExtent(), dataSource);
             } catch (IOException e) {
                 throw new DataReadingException("Problem reading profile feature", e);
             }
@@ -740,7 +727,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(pluginSourceVarId);
                     try {
                         pluginSourceData.add(readVerticalData(variableMetadata, zAxis, bbox,
-                                timeExtent, dataSource));
+                                params.getTargetT(), params.getTExtent(), dataSource));
                     } catch (IOException e) {
                         log.error("Problem reading data", e);
                         throw new DataReadingException(
@@ -943,7 +930,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *             {@link GridDataSource}
      */
     private Map<ProfileLocation, Array1D<Number>> readVerticalData(GridVariableMetadata metadata,
-            VerticalAxis zAxis, BoundingBox bbox, Extent<DateTime> tExtent,
+            VerticalAxis zAxis, BoundingBox bbox, DateTime targetT, Extent<DateTime> tExtent,
             GridDataSource dataSource) throws IOException {
         String varId = metadata.getId();
 
@@ -984,20 +971,18 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         List<DateTime> times = new ArrayList<DateTime>();
         if (tAxis != null) {
             if (tExtent != null) {
-                if (tExtent.getLow().equals(tExtent.getHigh())) {
-                    if (tAxis.contains(tExtent.getLow())) {
-                        int tIndex = GISUtils.getIndexOfClosestTimeTo(tExtent.getLow(), tAxis);
-                        times.add(tAxis.getCoordinateValue(tIndex));
-                    }
-                } else {
-                    for (DateTime time : tAxis.getCoordinateValues()) {
-                        if (tExtent.contains(time)) {
-                            times.add(time);
-                        }
+                for (DateTime time : tAxis.getCoordinateValues()) {
+                    if (tExtent.contains(time)) {
+                        times.add(time);
                     }
                 }
+            } else if (targetT != null) {
+                if (tAxis.contains(targetT)) {
+                    int tIndex = GISUtils.getIndexOfClosestTimeTo(targetT, tAxis);
+                    times.add(tAxis.getCoordinateValue(tIndex));
+                }
             } else {
-                tExtent = tAxis.getExtent();
+                times = tAxis.getCoordinateValues();
             }
         } else {
             times.add(null);
@@ -1181,19 +1166,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 bbox = null;
             }
         }
-        /*
-         * Find a time range to extract all profiles from
-         */
-        Extent<Double> zExtent;
-        if (params.getZExtent() != null) {
-            zExtent = params.getZExtent();
-        } else {
-            if (params.getTargetZ() != null) {
-                zExtent = Extents.newExtent(params.getTargetZ(), params.getTargetZ());
-            } else {
-                zExtent = null;
-            }
-        }
 
         GridDataSource dataSource = null;
         /*
@@ -1264,7 +1236,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             Map<PointSeriesLocation, Array1D<Number>> data;
             try {
-                data = readTemporalData(gridVariableMetadata, tAxis, bbox, zExtent, dataSource);
+                data = readTemporalData(gridVariableMetadata, tAxis, bbox, params.getTargetZ(),
+                        params.getZExtent(), dataSource);
             } catch (IOException e) {
                 log.error("Problem reading data", e);
                 throw new DataReadingException("Problem reading timeseries feature", e);
@@ -1309,7 +1282,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(pluginSourceVarId);
                     try {
                         pluginSourceData.add(readTemporalData(variableMetadata, tAxis, bbox,
-                                zExtent, dataSource));
+                                params.getTargetZ(), params.getZExtent(), dataSource));
                     } catch (IOException e) {
                         log.error("Problem reading data", e);
                         throw new DataReadingException(
@@ -1505,7 +1478,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(
-            GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox,
+            GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox, Double targetZ,
             Extent<Double> zExtent, GridDataSource dataSource) throws IOException,
             MismatchedCrsException {
         String varId = metadata.getId();
@@ -1547,20 +1520,18 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         List<Double> zVals = new ArrayList<Double>();
         if (zAxis != null) {
             if (zExtent != null) {
-                if (zExtent.getLow().equals(zExtent.getHigh())) {
-                    if (zAxis.contains(zExtent.getLow())) {
-                        int zIndex = GISUtils.getIndexOfClosestElevationTo(zExtent.getLow(), zAxis);
-                        zVals.add(zAxis.getCoordinateValue(zIndex));
-                    }
-                } else {
-                    for (Double zVal : zAxis.getCoordinateValues()) {
-                        if (zExtent.contains(zVal)) {
-                            zVals.add(zVal);
-                        }
+                for (Double zVal : zAxis.getCoordinateValues()) {
+                    if (zExtent.contains(zVal)) {
+                        zVals.add(zVal);
                     }
                 }
+            } else if (targetZ != null) {
+                if (zAxis.contains(targetZ)) {
+                    int zIndex = GISUtils.getIndexOfClosestElevationTo(targetZ, zAxis);
+                    zVals.add(zAxis.getCoordinateValue(zIndex));
+                }
             } else {
-                zExtent = zAxis.getExtent();
+                zVals = zAxis.getCoordinateValues();
             }
         } else {
             zVals.add(null);
