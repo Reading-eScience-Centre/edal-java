@@ -588,7 +588,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         /*
          * Find a common z-axis
          */
-        Extent<Double> zExtent = params.getZExtent();
         VerticalAxis zAxis;
         try {
             zAxis = getVerticalAxis(varIds);
@@ -596,7 +595,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             log.error("Cannot extract profiles for variables without vertical information", e);
             throw new DataReadingException("Problem finding common z-axis", e);
         }
-        zAxis = limitZAxis(zAxis, zExtent);
         if (zAxis == null) {
             /*
              * No z-axis within given limits - return empty collection
@@ -927,52 +925,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     /**
-     * Limits a z-axis to include a range as tightly as possible
-     * 
-     * @param axis
-     *            The axis to limit
-     * @param limits
-     *            The range to limit to
-     * @return A new {@link VerticalAxis} which will extend by at most one point
-     *         over each of the bounds provided by limits, or the original axis
-     *         if limits is <code>null</code>
-     */
-    private static VerticalAxis limitZAxis(VerticalAxis axis, Extent<Double> limits) {
-        if (limits == null) {
-            return axis;
-        }
-        if (limits.getHigh() < axis.getCoordinateExtent().getLow()
-                || limits.getLow() > axis.getCoordinateExtent().getHigh()) {
-            return null;
-        }
-
-        int lowIndex = 0;
-        for (int i = 0; i < axis.size(); i++) {
-            Double axisValue = axis.getCoordinateValue(i);
-            if (axisValue <= limits.getLow()) {
-                lowIndex = i;
-            } else {
-                break;
-            }
-        }
-        int highIndex = axis.size() - 1;
-        for (int i = axis.size() - 1; i >= 0; i--) {
-            Double axisValue = axis.getCoordinateValue(i);
-            if (axisValue >= limits.getHigh()) {
-                highIndex = i;
-            } else {
-                break;
-            }
-        }
-
-        List<Double> values = new ArrayList<Double>();
-        for (int i = lowIndex; i <= highIndex; i++) {
-            values.add(axis.getCoordinateValue(i));
-        }
-        return new VerticalAxisImpl(axis.getName(), values, axis.getVerticalCrs());
-    }
-
-    /**
      * Reads profile data for a given variable
      * 
      * @param metadata
@@ -1198,7 +1150,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         /*
          * Find a common time-axis
          */
-        Extent<DateTime> tExtent = params.getTExtent();
         TimeAxis tAxis;
         try {
             tAxis = getTimeAxis(varIds);
@@ -1206,7 +1157,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             log.error("Cannot extract timeseries for variables without time information", e);
             throw new DataReadingException("Problem finding common t-axis", e);
         }
-        tAxis = limitTAxis(tAxis, tExtent);
         if (tAxis == null) {
             /*
              * No time axis within given limits. Return empty collection
@@ -1549,51 +1499,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             return retAxis;
         }
     }
-
-    /**
-     * Limits a t-axis to include a range as tightly as possible
-     * 
-     * @param axis
-     *            The axis to limit
-     * @param limits
-     *            The range to limit to
-     * @return A new {@link TimeAxis} which will extend by at most one point
-     *         over each of the bounds provided by limits, or the original axis
-     *         if limits is <code>null</code>
-     */
-    private static TimeAxis limitTAxis(TimeAxis axis, Extent<DateTime> limits) {
-        if (limits == null) {
-            return axis;
-        }
-        if (limits.getHigh().isBefore(axis.getCoordinateExtent().getLow())
-                || limits.getLow().isAfter(axis.getCoordinateExtent().getHigh())) {
-            return null;
-        }
-        int lowIndex = 0;
-        for (int i = 0; i < axis.size(); i++) {
-            DateTime axisValue = axis.getCoordinateValue(i);
-            if (axisValue.isBefore(limits.getLow()) || axisValue.isEqual(limits.getLow())) {
-                lowIndex = i;
-            } else {
-                break;
-            }
-        }
-        int highIndex = axis.size() - 1;
-        for (int i = axis.size() - 1; i >= 0; i--) {
-            DateTime axisValue = axis.getCoordinateValue(i);
-            if (axisValue.isAfter(limits.getHigh()) || axisValue.isEqual(limits.getHigh())) {
-                highIndex = i;
-            } else {
-                break;
-            }
-        }
-        List<DateTime> values = new ArrayList<DateTime>();
-        for (int i = lowIndex; i <= highIndex; i++) {
-            values.add(axis.getCoordinateValue(i));
-        }
-        return new TimeAxisImpl(axis.getName(), values);
-    }
-
+    
     private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(
             GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox,
             Extent<Double> zExtent, GridDataSource dataSource) throws IOException,
