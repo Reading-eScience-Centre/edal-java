@@ -162,7 +162,10 @@ public interface Dataset {
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is non-
      *            <code>null</code>, all {@link ProfileFeature}s whose domains
-     *            intersect with this vertical extent will be extracted
+     *            have any intersection with this vertical extent will be
+     *            extracted. The domains of the extracted {@link ProfileFeature}
+     *            s will be the entire available domains, not just the
+     *            intersection.
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is
      *            <code>null</code>, no constraint will be placed on the
@@ -244,7 +247,10 @@ public interface Dataset {
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is non-
      *            <code>null</code>, all {@link PointSeriesFeature}s whose
-     *            domains intersect with this time extent will be extracted.
+     *            domains have any intersection with this vertical extent will
+     *            be extracted. The domains of the extracted
+     *            {@link PointSeriesFeature}s will be the entire available
+     *            domains, not just the intersection.
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is
      *            <code>null</code>, no constraint will be placed on the
