@@ -595,11 +595,23 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             log.error("Cannot extract profiles for variables without vertical information", e);
             throw new DataReadingException("Problem finding common z-axis", e);
         }
+
         if (zAxis == null) {
             /*
              * No z-axis within given limits - return empty collection
              */
             return features;
+        }
+
+        Extent<Double> zExtent = params.getZExtent();
+        if (zExtent != null) {
+            /*
+             * The given z extent does not overlap with the z-extent for the
+             * requested variables.  Return an empty collection
+             */
+            if (!zExtent.intersects(zAxis.getExtent())) {
+                return features;
+            }
         }
 
         /*
@@ -1151,6 +1163,17 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * No time axis within given limits. Return empty collection
              */
             return features;
+        }
+
+        Extent<DateTime> tExtent = params.getTExtent();
+        if (tExtent != null) {
+            /*
+             * The given time extent does not overlap with the z-extent for the
+             * requested variables.  Return an empty collection
+             */
+            if (!tExtent.intersects(tAxis.getExtent())) {
+                return features;
+            }
         }
 
         /*
