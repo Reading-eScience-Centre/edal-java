@@ -111,7 +111,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
-import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
+import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
@@ -714,7 +714,7 @@ public class WmsServlet extends HttpServlet {
                 datasetJson.put("label", datasetLabel);
                 datasetJson.put("children", datasetChildren);
                 children.add(datasetJson);
-            } catch (WmsLayerNotFoundException e) {
+            } catch (EdalLayerNotFoundException e) {
                 /*
                  * This shouldn't happen - it means that we've failed to get
                  * layer metadata for a layer which definitely exists.
@@ -732,7 +732,7 @@ public class WmsServlet extends HttpServlet {
     }
 
     private JSONArray addVariablesToArray(Set<VariableMetadata> variables, String datasetId)
-            throws WmsLayerNotFoundException {
+            throws EdalLayerNotFoundException {
         JSONArray ret = new JSONArray();
         for (VariableMetadata variable : variables) {
             String id = variable.getId();
@@ -780,14 +780,14 @@ public class WmsServlet extends HttpServlet {
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
             variableId = catalogue.getVariableFromId(layerName);
-        } catch (WmsLayerNotFoundException e) {
+        } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
         }
 
         WmsLayerMetadata layerMetadata;
         try {
             layerMetadata = catalogue.getLayerMetadata(layerName);
-        } catch (WmsLayerNotFoundException e1) {
+        } catch (EdalLayerNotFoundException e1) {
             throw new MetadataException("Layer not found", e1);
         }
         if (dataset == null || variableId == null || layerMetadata == null) {
@@ -1031,7 +1031,7 @@ public class WmsServlet extends HttpServlet {
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
             variableId = catalogue.getVariableFromId(layerName);
-        } catch (WmsLayerNotFoundException e) {
+        } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
         }
         VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
@@ -1092,7 +1092,7 @@ public class WmsServlet extends HttpServlet {
         try {
             variableMetadata = catalogue.getVariableMetadataFromId(layerNames[0]);
             datasetId = catalogue.getDatasetFromLayerName(layerNames[0]).getId();
-        } catch (WmsLayerNotFoundException e) {
+        } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("Layer " + layerNames[0] + " not found on this server", e);
         }
 
@@ -1277,7 +1277,7 @@ public class WmsServlet extends HttpServlet {
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
             variableId = catalogue.getVariableFromId(layerName);
-        } catch (WmsLayerNotFoundException e) {
+        } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
         }
         VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);

@@ -76,7 +76,7 @@ import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
-import uk.ac.rdg.resc.edal.wms.exceptions.WmsLayerNotFoundException;
+import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.util.ContactInfo;
 import uk.ac.rdg.resc.edal.wms.util.ServerInfo;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
@@ -220,17 +220,17 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * @param layerName
      *            The name of the WMS layer
      * @return The corresponding {@link VariableMetadata}
-     * @throws WmsLayerNotFoundException
+     * @throws EdalLayerNotFoundException
      *             If the WMS layer name doesn't map to a variable
      */
     public VariableMetadata getVariableMetadataFromId(String layerName)
-            throws WmsLayerNotFoundException {
+            throws EdalLayerNotFoundException {
         Dataset dataset = getDatasetFromLayerName(layerName);
         String variableFromId = getVariableFromId(layerName);
         if (dataset != null && variableFromId != null) {
             return dataset.getVariableMetadata(variableFromId);
         } else {
-            throw new WmsLayerNotFoundException("The layer name " + layerName
+            throw new EdalLayerNotFoundException("The layer name " + layerName
                     + " doesn't map to a variable");
         }
     }
@@ -269,11 +269,11 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The style name to be plotted
      * @return A {@link Map} of keys used in XML templates to the concrete WMS
      *         layer names which they represent.
-     * @throws WmsLayerNotFoundException
+     * @throws EdalLayerNotFoundException
      *             If the layer specified does not exist on this WMS server
      */
     public Map<String, String> getStyleTemplateLayerNames(String layerName, String styleName)
-            throws WmsLayerNotFoundException {
+            throws EdalLayerNotFoundException {
         StyleDef styleDef = styleDefs.get(styleName);
         Map<String, String> layerKeyToLayerName = new HashMap<String, String>();
         if (styleDef.needsNamedLayer()) {
@@ -661,7 +661,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * @return The desired dataset
      */
     public abstract Dataset getDatasetFromLayerName(String layerName)
-            throws WmsLayerNotFoundException;
+            throws EdalLayerNotFoundException;
 
     /**
      * Returns a variable ID based on a given layer name
@@ -670,7 +670,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      *            The full layer name
      * @return The ID of the variable (within its {@link Dataset})
      */
-    public abstract String getVariableFromId(String layerName) throws WmsLayerNotFoundException;
+    public abstract String getVariableFromId(String layerName) throws EdalLayerNotFoundException;
 
     /**
      * Returns the layer name based on the dataset and variable ID
@@ -691,7 +691,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * @return Default metadata values for the desired layer
      */
     public abstract WmsLayerMetadata getLayerMetadata(String layerName)
-            throws WmsLayerNotFoundException;
+            throws EdalLayerNotFoundException;
 
     /**
      * This is an {@link ZipInputStream} which only gets closed once it's been

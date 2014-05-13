@@ -63,12 +63,15 @@ import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
@@ -372,7 +375,13 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
      */
     private static NetcdfDataset openAndAggregateDataset(String location) throws IOException,
             EdalException {
-        List<File> files = CdmUtils.expandGlobExpression(location);
+        List<File> files = null;
+        try{
+            files = CdmUtils.expandGlobExpression(location);
+        } catch (NullPointerException e) {
+            System.out.println("NPE processing location: "+location);
+            throw e;
+        }
         NetcdfDataset nc;
         if (files.size() == 0) {
             throw new EdalException("The location " + location
@@ -381,25 +390,6 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         if (files.size() == 1) {
             location = files.get(0).getAbsolutePath();
             nc = CdmUtils.openDataset(location);
-            if (CdmUtils.isNcmlAggregation(location)) {
-                /*
-                 * We use the cache of NetcdfDatasets to read NcML aggregations
-                 * as they can be time-consuming to put together. If the
-                 * underlying data can change we rely on the server admin
-                 * setting the "recheckEvery" parameter in the aggregation file.
-                 */
-                nc = NetcdfDataset.acquireDataset(location, null);
-            } else {
-                /*
-                 * For local single files and OPeNDAP datasets we don't use the
-                 * cache, to ensure that we are always reading the most
-                 * up-to-date data. There is a small possibility that the
-                 * dataset cache will have swallowed up all available file
-                 * handles, in which case the server admin will need to increase
-                 * the number of available handles on the server.
-                 */
-                nc = NetcdfDataset.openDataset(location);
-            }
         } else {
             /*
              * We have multiple files in a glob expression. We write some NcML
