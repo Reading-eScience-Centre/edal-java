@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.exceptions;
 
 /**
- * Exception specific to WMS
+ * Exception specific to EDAL
  * 
  * @author Jon Blower
  */

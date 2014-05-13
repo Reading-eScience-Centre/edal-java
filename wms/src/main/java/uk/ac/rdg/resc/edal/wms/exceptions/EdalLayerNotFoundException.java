@@ -30,18 +30,18 @@ package uk.ac.rdg.resc.edal.wms.exceptions;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
-public class WmsLayerNotFoundException extends EdalException {
+public class EdalLayerNotFoundException extends EdalException {
     private static final long serialVersionUID = 1L;
 
-    public WmsLayerNotFoundException(String message) {
+    public EdalLayerNotFoundException(String message) {
         super(message);
     }
 
-    public WmsLayerNotFoundException(String message, String code) {
+    public EdalLayerNotFoundException(String message, String code) {
         super(message, code);
     }
 
-    public WmsLayerNotFoundException(String message, Throwable cause) {
+    public EdalLayerNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
 }
