@@ -121,6 +121,7 @@
                 </dependencies>
                 <configuration>
                     <inputDirectory>${project.reporting.outputDirectory}/apidocs</inputDirectory>
+                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
