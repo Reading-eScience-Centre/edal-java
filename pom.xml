@@ -108,21 +108,6 @@
                 </configuration>
                 <version>2.9</version>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.3</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.wagon</groupId>
-                        <artifactId>wagon-ssh</artifactId>
-                        <version>1.0</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <inputDirectory>${project.reporting.outputDirectory}/apidocs</inputDirectory>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
     <profiles>
