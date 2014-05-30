@@ -43,6 +43,8 @@ import org.joda.time.DateTime;
 import org.joda.time.chrono.GregorianChronology;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.chrono.JulianChronology;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ucar.nc2.Attribute;
 import ucar.nc2.constants.AxisType;
@@ -56,6 +58,7 @@ import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
+import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
@@ -90,6 +93,8 @@ import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
  * @author Guy
  */
 public final class CdmUtils {
+    private static final Logger log = LoggerFactory.getLogger(CdmUtils.class);
+
     /*
      * Enforce non-instantiability
      */
@@ -398,27 +403,25 @@ public final class CdmUtils {
     }
 
     /**
-     * Expands a glob expression to give a List of absolute paths to files. This
-     * method recursively searches directories, allowing for glob expressions
-     * like {@code "c:\\data\\200[6-7]\\*\\1*\\A*.nc"}.
+     * Expands a glob expression to give a List of paths to files. This method
+     * recursively searches directories, allowing for glob expressions like
+     * {@code "c:\\data\\200[6-7]\\*\\1*\\A*.nc"}.
      * 
-     * @return a a List of absolute paths to files matching the given glob
+     * @return a {@link List} of {@link File}s matching the given glob
      *         expression
-     * @throws IllegalArgumentException
-     *             if the glob expression does not represent an absolute path
-     *             (according to {@code new File(globExpression).isAbsolute()}).
      * @author Mike Grant, Plymouth Marine Labs
      * @author Jon Blower
+     * @author Guy Griffiths
      */
     public static List<File> expandGlobExpression(String globExpression) {
         /*
-         * Check that the glob expression represents an absolute path. Relative
-         * paths would cause unpredictable and platform-dependent behaviour so
-         * we disallow them.
+         * Check whether the glob expression represents an absolute path.
+         * Relative paths may cause unpredictable and platform-dependent
+         * behaviour so we give a warning
          */
         File globFile = new File(globExpression);
         if (!globFile.isAbsolute()) {
-            throw new IllegalArgumentException("Location must be an absolute path");
+            log.warn("Using relative path for a dataset.  This may cause unpredictable or platform-dependent behaviour.  The use of absolute paths is recommended");
         }
 
         /*
