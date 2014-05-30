@@ -121,7 +121,6 @@
                 </dependencies>
                 <configuration>
                     <inputDirectory>${project.reporting.outputDirectory}/apidocs</inputDirectory>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
@@ -231,23 +230,4 @@
         <module>cdm</module>
         <module>ncwms</module>
     </modules>
-    <repositories>
-        <repository>
-            <!-- This allows us to include local maven repos in each module 
-                to contain dependencies which are not available through maven. We have only 
-                a single example, in the graphics module. We could define it in the graphics 
-                pom.xml, but that means that javadoc generation fails when we call it from 
-                this level. -->
-            <id>libs</id>
-            <name>Non-maven dependencies</name>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>ignore</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <url>file://${project.basedir}/lib</url>
-        </repository>
-    </repositories>
 </project>
