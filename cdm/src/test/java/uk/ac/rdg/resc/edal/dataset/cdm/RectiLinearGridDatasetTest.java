@@ -108,6 +108,10 @@ public class RectiLinearGridDatasetTest {
         vAxis = new VerticalAxisImpl("depth", zAxisValues, vCrs);
     }
 
+    /**
+     * Here is the convenience place to test {@link VectorPlugin} since the dependency library netCDF is available here.
+     * */
+  
     @Test
     public void testVectorPlugin() throws Exception {
         VectorPlugin vplugin = new VectorPlugin("vLon", "vLat", "Test Vector Field", true);
@@ -149,7 +153,11 @@ public class RectiLinearGridDatasetTest {
         }
     }
 
-    // test metadata of the dataset
+    /**
+     * Test some {@Dataset} get methods here by evaluating the metadata of the dataset.
+     **/
+    
+    // test metadata info of the dataset
     @Test
     public void testMetadataInfo() throws Exception {
         assertEquals(chrnology, dataset.getDatasetChronology());
@@ -165,9 +173,11 @@ public class RectiLinearGridDatasetTest {
         assertTrue(metadata.isScalar());
     }
 
-    // test if the result is null when arguments in PlottingdomainParams are set
-    // out of
-    // the domains of T and Z.
+    /**
+     *test if the result is null when arguments in {@PlottingDomainParams} are set
+     *out of the domains of T and Z.
+     **/
+    
     @Test
     public void testNullTimeSerieFeatures() throws Exception {
         DateTime start = new DateTime(1990, 01, 01, 00, 00, chrnology);
@@ -230,10 +240,14 @@ public class RectiLinearGridDatasetTest {
         assertEquals(0, mapFeature.size());
     }
 
+    /**
+     * test {@Dataset@extractMapFeatures} method
+     */
+
     @Test
     public void testMapFeatures() throws Exception {
         DateTime tValue = new DateTime(2000, 01, 02, 15, 00, chrnology);
-        for (Double zPos = 0.0; zPos <= 100; zPos += 10.0) {
+        for (Double zPos = 0.0; zPos <= 100; zPos += 20.0) {
             PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
                     rGrid.getBoundingBox(), datasetZExtent, datasetTExtent, null, zPos, tValue);
             Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset.extractMapFeatures(
@@ -255,7 +269,7 @@ public class RectiLinearGridDatasetTest {
 
             float expectedDepth = (float) zPos.doubleValue();
 
-            for (int m = 0; m < ySize; m++) {
+            for (int m = 0; m < ySize; m+=2) {
                 float expectedLat = 100.0f * m / (ySize - 1);
                 float expectedTime = 100.0f * tAxis.findIndexOf(tValue) / (tSize - 1);
                 for (int n = 0; n < xSize; n++) {
@@ -269,6 +283,10 @@ public class RectiLinearGridDatasetTest {
         }
     }
 
+    /**
+     * General test {@Dataset@extractTimeSeriesFeatures} method
+     */
+    
     @Test
     public void testTimeSerieFeatures() throws Exception {
         Double zPos = 30.0;
@@ -305,7 +323,7 @@ public class RectiLinearGridDatasetTest {
             float expectedLat = 100.0f * yIndex / (ySize - 1);
             float expectedDepth = (float) zPos.doubleValue();
 
-            for (int k = 0; k < tSize; k++) {
+            for (int k = 0; k < tSize; k+=2) {
                 float expectedTime = 100 * k / 9.0f;
                 assertEquals(expectedLon, lonValues.get(k).floatValue(), delta);
                 assertEquals(expectedLat, latValues.get(k).floatValue(), delta);
@@ -313,7 +331,6 @@ public class RectiLinearGridDatasetTest {
                 assertEquals(expectedTime, timeValues.get(k).floatValue(), delta);
             }
         }
-
     }
 
     private void getFeatureByZExtent(Extent<Double> zExtent) throws Exception{
@@ -342,9 +359,6 @@ public class RectiLinearGridDatasetTest {
             int zIndex = vAxis.findIndexOf(targetZ);
             for(int i=0; i<samplePoints.size(); i++){
                 GridCell2D cell =samplePoints.get(i);
-                //GridCoordinates2D gCoordinate = cell.getGridCoordinates();
-                //int xIndex = gCoordinate.getX();
-                //int yIndex = gCoordinate.getY();
                 BoundingBox bbox= (BoundingBox) cell.getFootprint();
                 PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, null, datasetTExtent, null,
                         targetZ, null);
@@ -370,9 +384,11 @@ public class RectiLinearGridDatasetTest {
             }
         }
     }
-    // in this test, the params of zExtent and targetZ are set to various values
-    // to test
-    // the behaviours of extract TimesSeriesFeature method.
+    
+    /**
+     * in this test, the params in{@Dataset} extraceTimeSeriesFeatures method of zExtent and targetZ are set to various values
+     */
+
     @Test
     public void testTimeSerieFeaturesPartofZExents() throws Exception {
         // a zExtent is inside of the zExtent of dataset.
@@ -405,8 +421,10 @@ public class RectiLinearGridDatasetTest {
         getFeatureByTargetZ(targetZ);
     }
 
-    // in this test, the params of tExent and targetT are set to various
-    // so the behaviours of extract TimeSeriesFeature method are tested.
+    
+    /**
+     * in this test, the params in{@Dataset} extraceTimeSeriesFeatures method of tExtent and targetT are set to various values
+     */
     @Test
     public void testTimeSerieFeaturesPartofTExents() throws Exception {
         DateTime start = new DateTime(1999, 12, 25, 15, 00, chrnology);
@@ -496,7 +514,10 @@ public class RectiLinearGridDatasetTest {
         }
     }
 
-    // General test to extract profile features
+    /**
+     * General test to extract profile features of{@Dataset} extraceProfileFeatures method.
+     */
+
     @Test
     public void testProfileFeatures() throws Exception {
         DateTime dt = new DateTime(2000, 01, 05, 00, 00);
@@ -519,6 +540,10 @@ public class RectiLinearGridDatasetTest {
         }
     }
 
+    /**
+     * Test to extract features by setting the para of BoundingBox in {@Dataset} extraceXXXFeatures methods.
+     */
+    
     @Test
     public void testFeaturesBBox() throws Exception {
         BoundingBox bbox = new BoundingBoxImpl(-124.89, -20.9, 50.004, 25.0, crs);
@@ -610,7 +635,7 @@ public class RectiLinearGridDatasetTest {
             return n - m + 1;
     }
 
-    // for profile features, targetZ is ignored.
+    // remember for profile features, targetZ is ignored.
     private void zExtentCaseForProfileFeatures(Extent<Double> zExtent)
             throws Exception {
         for(int i=0; i<samplePoints.size(); i++){
@@ -638,41 +663,42 @@ public class RectiLinearGridDatasetTest {
         
     }
 
+    /**
+     * test {@Dataset} extractProfileFeatures method by setting various values for zExtent
+     */
+    
     @Test
     public void testProfileFeaturesPartOfZExtent() throws Exception {
-
-
         // test case 1
         Extent<Double> zExtent = Extents.newExtent(1220.0, 4401.0);
-
         zExtentCaseForProfileFeatures(zExtent);
-
 
         // test case 2, the given zExtent intersect with the one of the data set
         // it should return all profile features the data set contain
+        
         zExtent = Extents.newExtent(25.0, 300.0);
+        zExtentCaseForProfileFeatures(zExtent);
         
-
         // test case 3: a given zExtent is in the range of of the zExtent of the
-        // dataset
-        // all profile features return
+        // dataset, all profile features return
         zExtent = Extents.newExtent(38.0, 55.0);
+        zExtentCaseForProfileFeatures(zExtent);
         
-
         // test case 4: another example a given zExtent intersects with the
         // zExtent of the data set.
         zExtent = Extents.newExtent(-100.0, 95.0);
+        zExtentCaseForProfileFeatures(zExtent);
         
-
         zExtent = Extents.newExtent(-100.0, -5.0);
-        
+        zExtentCaseForProfileFeatures(zExtent);
 
         zExtentCaseForProfileFeatures(null);
-
+        zExtentCaseForProfileFeatures(zExtent);
     }
 
-    // set the params of tExent and targetT for various values
-    // in order to test extractProfileFeature method
+    /**
+     * test {@Dataset} extractProfileFeatures method by setting various values for para of tExtent and targetT
+     */
     @Test
     public void testProfileFeaturesPartOfTExtent() throws Exception {
         DateTime start = new DateTime(2000, 01, 01, 00, 00, chrnology);
@@ -773,6 +799,10 @@ public class RectiLinearGridDatasetTest {
         }
     }
 
+    /**
+     * test {@Dataset} extractProfileFeatures. null must return when the testing conditions are met.
+     */
+    
     @Test
     public void testNullProfileFeatures() throws Exception {
         DateTime start = new DateTime(2011, 01, 15, 00, 00, chrnology);
@@ -809,6 +839,10 @@ public class RectiLinearGridDatasetTest {
         assertEquals(0, profileFeatures.size());
     }
 
+    /**
+     * test {@Dataset} readFeature method.
+     */
+    
     @Test
     public void readFeatureTest() throws Exception {
         assertTrue(dataset.readFeature("vLon") instanceof GridFeature);
