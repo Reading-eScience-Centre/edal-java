@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Top-level POM for Java-CSML library -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <!-- We inherit from oss-parent so we can deploy to sonatype.org -->
     <parent>
         <groupId>org.sonatype.oss</groupId>
@@ -229,4 +230,23 @@
         <module>cdm</module>
         <module>ncwms</module>
     </modules>
+    <repositories>
+        <repository>
+            <!-- This allows us to include local maven repos in each module 
+                to contain dependencies which are not available through maven. We have only 
+                a single example, in the graphics module. We could define it in the graphics 
+                pom.xml, but that means that javadoc generation fails when we call it from 
+                this level. -->
+            <id>libs</id>
+            <name>Non-maven dependencies</name>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>ignore</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <url>file://${project.basedir}/lib</url>
+        </repository>
+    </repositories>
 </project>

@@ -28,13 +28,13 @@
             <groupId>gov.noaa.pmel</groupId>
             <artifactId>sgt</artifactId>
             <version>3.0</version>
-            <!-- <scope>provided</scope> -->
+<!--             <scope>provided</scope> -->
         </dependency>
         <dependency>
             <groupId>org.monte</groupId>
             <artifactId>monte</artifactId>
             <version>0.7.3</version>
-            <!-- <scope>provided</scope> -->
+<!--             <scope>provided</scope> -->
         </dependency>
         <dependency>
             <groupId>net.sf.json-lib</groupId>
@@ -89,19 +89,5 @@
             </plugin>
         </plugins>
     </build>
-    <repositories>
-        <repository>
-            <id>libs</id>
-            <name>Non-maven dependencies</name>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>ignore</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <url>file://${project.basedir}/lib</url>
-        </repository>
-    </repositories>
 </project>
 
