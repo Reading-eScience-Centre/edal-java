@@ -68,7 +68,11 @@ public class RectiLinearGridDatasetTest {
     private Extent<Double> datasetZExtent;
     private TimeAxis tAxis;
     private VerticalAxis vAxis;
-
+    
+    //not every cell in the grid be tested, only a few on the edges and near the centre are
+    //chosen.
+    private ArrayList<GridCell2D> samplePoints =new ArrayList<>();
+    
     @Before
     public void setUp() throws Exception {
         URL url = this.getClass().getResource("/rectilinear_test_data.nc");
@@ -77,6 +81,16 @@ public class RectiLinearGridDatasetTest {
         dataset = datasetFactory.createDataset("testdataset", location);
 
         rGrid = new RegularGridImpl(-185.0, -95.0, 175.0, 95.0, crs, xSize, ySize);
+        for(GridCell2D cell: rGrid.getDomainObjects()){
+            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+            int xIndex = gCoordinate.getX();
+            int yIndex = gCoordinate.getY();
+            if(xIndex==0 || xIndex ==15 || xIndex==35){
+                if(yIndex==0 || yIndex ==10 || yIndex==19){
+                    samplePoints.add(cell);
+                }
+            }
+        }
         vCrs = new VerticalCrsImpl("m", false, false, false);
         chrnology = ISOChronology.getInstance();
         DateTime start = new DateTime(2000, 01, 01, 00, 00, chrnology);
@@ -302,6 +316,60 @@ public class RectiLinearGridDatasetTest {
 
     }
 
+    private void getFeatureByZExtent(Extent<Double> zExtent) throws Exception{
+        for(int i=0; i<samplePoints.size(); i++){
+            GridCell2D cell =samplePoints.get(i);
+            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+            int xIndex = gCoordinate.getX();
+            int yIndex = gCoordinate.getY();
+            BoundingBox bbox= (BoundingBox) cell.getFootprint();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, zExtent,
+                    datasetTExtent, null, null, null);
+            Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
+                    .extractTimeseriesFeatures(null, params);
+            if(!zExtent.intersects(datasetZExtent)){
+                assertEquals(0, timeSeriesFeatures.size());
+            }
+            else{
+                PointSeriesFeature data = (PointSeriesFeature) timeSeriesFeatures.iterator().next();
+                verifyTimeSeriesFeature(data, data.getHorizontalPosition(), xIndex, yIndex);
+            }
+        }
+    }
+    
+    private void getFeatureByTargetZ(double targetZ) throws Exception{
+        if (vAxis.contains(targetZ)) {
+            int zIndex = vAxis.findIndexOf(targetZ);
+            for(int i=0; i<samplePoints.size(); i++){
+                GridCell2D cell =samplePoints.get(i);
+                //GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+                //int xIndex = gCoordinate.getX();
+                //int yIndex = gCoordinate.getY();
+                BoundingBox bbox= (BoundingBox) cell.getFootprint();
+                PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, null, datasetTExtent, null,
+                        targetZ, null);
+                Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
+                for (PointSeriesFeature data : timeSeriesFeatures) {
+                    Array1D<Number> depthValues = data.getValues("vDepth");
+                    assertArrayEquals(new int[] { tSize }, depthValues.getShape());
+                    float expectedDepth = 10.0f * zIndex;
+                    for (int k = 0; k < tSize; k+=2) {
+                        assertEquals(expectedDepth, depthValues.get(k).floatValue(), delta);
+                    }
+                }
+            }
+        }
+        else{
+            for(int i=0; i<samplePoints.size(); i++){
+                GridCell2D cell =samplePoints.get(i);
+                BoundingBox bbox= (BoundingBox) cell.getFootprint();
+                PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, null, datasetTExtent, null, targetZ,
+                 null);
+                Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
+                assertEquals(0, timeSeriesFeatures.size());
+            }
+        }
+    }
     // in this test, the params of zExtent and targetZ are set to various values
     // to test
     // the behaviours of extract TimesSeriesFeature method.
@@ -309,79 +377,32 @@ public class RectiLinearGridDatasetTest {
     public void testTimeSerieFeaturesPartofZExents() throws Exception {
         // a zExtent is inside of the zExtent of dataset.
         Extent<Double> zExtent = Extents.newExtent(18.6, 53.4);
-        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, null, zExtent,
-                datasetTExtent, null, null, null);
-        Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                .extractTimeseriesFeatures(null, params);
-        for (PointSeriesFeature data : timeSeriesFeatures) {
-            GridCoordinates2D gCoordinate = rGrid.findIndexOf(data.getHorizontalPosition());
-            int xIndex = gCoordinate.getX();
-            int yIndex = gCoordinate.getY();
-            verifyTimeSeriesFeature(data, data.getHorizontalPosition(), xIndex, yIndex);
-        }
+        getFeatureByZExtent(zExtent);
+        
 
         // a zExtent is overlay of the zExtent of dataset.
         zExtent = Extents.newExtent(20.0, 153.4);
-        params = new PlottingDomainParams(xSize, ySize, null, zExtent, datasetTExtent, null, null,
-                null);
-        timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
-        for (PointSeriesFeature data : timeSeriesFeatures) {
-            GridCoordinates2D gCoordinate = rGrid.findIndexOf(data.getHorizontalPosition());
-            int xIndex = gCoordinate.getX();
-            int yIndex = gCoordinate.getY();
-            verifyTimeSeriesFeature(data, data.getHorizontalPosition(), xIndex, yIndex);
-        }
+        getFeatureByZExtent(zExtent);
+        
 
         // another zExtent is overlay of the zExtent of dataset.
         zExtent = Extents.newExtent(-120.6, 47.18);
-        params = new PlottingDomainParams(xSize, ySize, null, zExtent, datasetTExtent, null, null,
-                null);
-        timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
-        for (PointSeriesFeature data : timeSeriesFeatures) {
-            GridCoordinates2D gCoordinate = rGrid.findIndexOf(data.getHorizontalPosition());
-            int xIndex = gCoordinate.getX();
-            int yIndex = gCoordinate.getY();
-            verifyTimeSeriesFeature(data, data.getHorizontalPosition(), xIndex, yIndex);
-        }
+        getFeatureByZExtent(zExtent);
 
         // a zExtent is outside of the zExtent of dataset.
         zExtent = Extents.newExtent(-18.6, -10.0);
-        params = new PlottingDomainParams(xSize, ySize, null, zExtent, datasetTExtent, null, null,
-                null);
-        timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
-        assertEquals(0, timeSeriesFeatures.size());
+        getFeatureByZExtent(zExtent);
 
         // a targetZ value is inside of the zExtent of the dataset
         double targetZ = 85.8;
-        int zIndex = -1;
-        if (vAxis.contains(targetZ)) {
-            zIndex = vAxis.findIndexOf(targetZ);
-            params = new PlottingDomainParams(xSize, ySize, null, null, datasetTExtent, null,
-                    targetZ, null);
-            timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
-
-            for (PointSeriesFeature data : timeSeriesFeatures) {
-                Array1D<Number> depthValues = data.getValues("vDepth");
-                assertArrayEquals(new int[] { tSize }, depthValues.getShape());
-                float expectedDepth = 10.0f * zIndex;
-                for (int k = 0; k < tSize; k++) {
-                    assertEquals(expectedDepth, depthValues.get(k).floatValue(), delta);
-                }
-            }
-        }
+        getFeatureByTargetZ(targetZ);
 
         // a targetZ value is outside of the zExtent of the dataset
         targetZ = 110.8; // vAxis.contains(targetZ) return false
-        params = new PlottingDomainParams(xSize, ySize, null, null, datasetTExtent, null, targetZ,
-                null);
-        timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
-        assertEquals(0, timeSeriesFeatures.size());
+        getFeatureByTargetZ(targetZ);
 
         targetZ = -20.8; // vAxis.contains(targetZ) return false
-        params = new PlottingDomainParams(xSize, ySize, null, null, datasetTExtent, null, targetZ,
-                null);
-        timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
-        assertEquals(0, timeSeriesFeatures.size());
+        getFeatureByTargetZ(targetZ);
     }
 
     // in this test, the params of tExent and targetT are set to various
@@ -427,22 +448,25 @@ public class RectiLinearGridDatasetTest {
     }
 
     private void extractTimeSeriesFeature(Extent<DateTime> tExtent) throws Exception {
-        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, null, datasetZExtent,
-                tExtent, null, null, null);
-        Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                .extractTimeseriesFeatures(null, params);
-        if (tExtent == null || tExtent.intersects(datasetTExtent)) {
-            assertEquals(zSize * xSize * ySize, timeSeriesFeatures.size());
-
-            for (PointSeriesFeature feature : timeSeriesFeatures) {
-                HorizontalPosition hPos = feature.getHorizontalPosition();
-                GridCoordinates2D gCoordinate = rGrid.findIndexOf(hPos);
-                int xIndex = gCoordinate.getX();
-                int yIndex = gCoordinate.getY();
-                verifyTimeSeriesFeature(feature, hPos, xIndex, yIndex);
+        for(int i=0; i<samplePoints.size(); i++){
+            GridCell2D cell =samplePoints.get(i);
+            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+            int xIndex = gCoordinate.getX();
+            int yIndex = gCoordinate.getY();
+            BoundingBox bbox= (BoundingBox) cell.getFootprint();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
+                    tExtent, null, null, null);
+            Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
+                    .extractTimeseriesFeatures(null, params);
+            if (tExtent == null || tExtent.intersects(datasetTExtent)) {
+                assertEquals(zSize, timeSeriesFeatures.size());
+                for (PointSeriesFeature feature : timeSeriesFeatures) {
+                    HorizontalPosition hPos = feature.getHorizontalPosition();
+                    verifyTimeSeriesFeature(feature, hPos, xIndex, yIndex);
+                }
+            } else {
+                assertEquals(0, timeSeriesFeatures.size());
             }
-        } else {
-            assertEquals(0, timeSeriesFeatures.size());
         }
     }
 
@@ -463,7 +487,7 @@ public class RectiLinearGridDatasetTest {
         float expectedLat = 100.0f * yIndex / (ySize - 1);
         float expectedDepth = (float) data.getVerticalPosition().getZ();
 
-        for (int k = 0; k < tSize; k++) {
+        for (int k = 0; k < tSize; k+=2) {
             float expectedTime = 100 * k / 9.0f;
             assertEquals(expectedLon, lonValues.get(k).floatValue(), delta);
             assertEquals(expectedLat, latValues.get(k).floatValue(), delta);
@@ -587,66 +611,64 @@ public class RectiLinearGridDatasetTest {
     }
 
     // for profile features, targetZ is ignored.
-    private void zExtentCaseForProfileFeatures(Extent<Double> zExtent, GridCell2D cell)
+    private void zExtentCaseForProfileFeatures(Extent<Double> zExtent)
             throws Exception {
-        HorizontalPosition hPos = cell.getCentre();
-        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, null, zExtent, null,
-                hPos, null, null);
-        Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(null,
-                params);
-        if (zExtent == null || zExtent.intersects(datasetZExtent)) {
-            assertEquals(tSize, profileFeature.size());
+        for(int i=0; i<samplePoints.size(); i++){
+            GridCell2D cell =samplePoints.get(i);
             GridCoordinates2D gCoordinate = cell.getGridCoordinates();
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
-            for (ProfileFeature feature : profileFeature) {
-                verifyProfileFeature(feature, hPos, xIndex, yIndex);
+            BoundingBox bbox= (BoundingBox) cell.getFootprint();
+            HorizontalPosition hPos = cell.getCentre();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, zExtent, null,
+                    hPos, null, null);
+            Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(null,
+                    params);
+            if (zExtent == null || zExtent.intersects(datasetZExtent)) {
+                assertEquals(tSize, profileFeature.size());
+
+                for (ProfileFeature feature : profileFeature) {
+                    verifyProfileFeature(feature, hPos, xIndex, yIndex);
+                }
+            } else {
+                assertEquals(0, profileFeature.size());
             }
-        } else {
-            assertEquals(0, profileFeature.size());
         }
+
+        
     }
 
     @Test
     public void testProfileFeaturesPartOfZExtent() throws Exception {
-        Array<GridCell2D> cells = rGrid.getDomainObjects();
+
 
         // test case 1
         Extent<Double> zExtent = Extents.newExtent(1220.0, 4401.0);
-        for (GridCell2D cell : cells) {
-            zExtentCaseForProfileFeatures(zExtent, cell);
-        }
+
+        zExtentCaseForProfileFeatures(zExtent);
+
 
         // test case 2, the given zExtent intersect with the one of the data set
         // it should return all profile features the data set contain
         zExtent = Extents.newExtent(25.0, 300.0);
-        for (GridCell2D cell : cells) {
-            zExtentCaseForProfileFeatures(zExtent, cell);
-        }
+        
 
         // test case 3: a given zExtent is in the range of of the zExtent of the
         // dataset
         // all profile features return
         zExtent = Extents.newExtent(38.0, 55.0);
-        for (GridCell2D cell : cells) {
-            zExtentCaseForProfileFeatures(zExtent, cell);
-        }
+        
 
         // test case 4: another example a given zExtent intersects with the
         // zExtent of the data set.
         zExtent = Extents.newExtent(-100.0, 95.0);
-        for (GridCell2D cell : cells) {
-            zExtentCaseForProfileFeatures(zExtent, cell);
-        }
+        
 
         zExtent = Extents.newExtent(-100.0, -5.0);
-        for (GridCell2D cell : cells) {
-            zExtentCaseForProfileFeatures(zExtent, cell);
-        }
+        
 
-        for (GridCell2D cell : cells) {
-            zExtentCaseForProfileFeatures(null, cell);
-        }
+        zExtentCaseForProfileFeatures(null);
+
     }
 
     // set the params of tExent and targetT for various values
@@ -688,43 +710,43 @@ public class RectiLinearGridDatasetTest {
 
     private void tExentCaseForProfileFeatures(Extent<DateTime> tExtent, DateTime targetT)
             throws Exception {
-        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, null, datasetZExtent,
-                tExtent, null, null, targetT);
-        Collection<? extends ProfileFeature> profileFeatures = dataset.extractProfileFeatures(null,
-                params);
-        if (tExtent == null && targetT == null) {
-            assertEquals(tSize * xSize * ySize, profileFeatures.size());
-            for (ProfileFeature feature : profileFeatures) {
-                HorizontalPosition hPos = feature.getHorizontalPosition();
-                GridCoordinates2D gCoordinate = rGrid.findIndexOf(hPos);
-                int xIndex = gCoordinate.getX();
-                int yIndex = gCoordinate.getY();
-                verifyProfileFeature(feature, hPos, xIndex, yIndex);
-            }
-        } else if (tExtent == null && targetT != null) {
-            if (tAxis.contains(targetT)) {
-                assertEquals(xSize * ySize, profileFeatures.size());
+        for(int i=0; i<samplePoints.size(); i++){
+            GridCell2D cell =samplePoints.get(i);
+            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+            int xIndex = gCoordinate.getX();
+            int yIndex = gCoordinate.getY();
+            BoundingBox bbox= (BoundingBox) cell.getFootprint();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
+                    tExtent, null, null, targetT);
+            Collection<? extends ProfileFeature> profileFeatures = dataset.extractProfileFeatures(null,
+                    params);
+            if (tExtent == null && targetT == null) {
+                assertEquals(tSize, profileFeatures.size());
                 for (ProfileFeature feature : profileFeatures) {
                     HorizontalPosition hPos = feature.getHorizontalPosition();
-                    GridCoordinates2D gCoordinate = rGrid.findIndexOf(hPos);
-                    int xIndex = gCoordinate.getX();
-                    int yIndex = gCoordinate.getY();
                     verifyProfileFeature(feature, hPos, xIndex, yIndex);
                 }
-            } else {
+            } else if (tExtent == null && targetT != null) {
+                if (tAxis.contains(targetT)) {
+                    assertEquals(1, profileFeatures.size());
+                    for (ProfileFeature feature : profileFeatures) {
+                        HorizontalPosition hPos = feature.getHorizontalPosition();
+                        verifyProfileFeature(feature, hPos, xIndex, yIndex);
+                    }
+                } else {
+                    assertEquals(0, profileFeatures.size());
+                }
+            } else if (tExtent != null && tExtent.intersects(datasetTExtent)) {
+                for (ProfileFeature feature : profileFeatures) {
+                    HorizontalPosition hPos = feature.getHorizontalPosition();
+                    verifyProfileFeature(feature, hPos, xIndex, yIndex);
+                }
+            } else if (tExtent != null && !tExtent.intersects(datasetTExtent)) {
                 assertEquals(0, profileFeatures.size());
             }
-        } else if (tExtent != null && tExtent.intersects(datasetTExtent)) {
-            for (ProfileFeature feature : profileFeatures) {
-                HorizontalPosition hPos = feature.getHorizontalPosition();
-                GridCoordinates2D gCoordinate = rGrid.findIndexOf(hPos);
-                int xIndex = gCoordinate.getX();
-                int yIndex = gCoordinate.getY();
-                verifyProfileFeature(feature, hPos, xIndex, yIndex);
-            }
-        } else if (tExtent != null && !tExtent.intersects(datasetTExtent)) {
-            assertEquals(0, profileFeatures.size());
         }
+        
+        
     }
 
     private void verifyProfileFeature(ProfileFeature data, HorizontalPosition hPos, int xIndex,
@@ -742,7 +764,7 @@ public class RectiLinearGridDatasetTest {
         int dateIndex = tAxis.findIndexOf(data.getTime());
         float expectedTime = 100 * dateIndex / 9.0f;
 
-        for (int k = 0; k < zSize; k++) {
+        for (int k = 0; k < zSize; k+=2) {
             float expectedDepth = 10.0f * k;
             assertEquals(expectedLon, lonValues.get(k).floatValue(), delta);
             assertEquals(expectedLat, latValues.get(k).floatValue(), delta);
