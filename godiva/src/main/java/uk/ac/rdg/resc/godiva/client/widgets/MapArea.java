@@ -157,7 +157,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         } else {
             this.proxyUrl = proxyUrl;
         }
-
+        
         wmsLayers = new LinkedHashMap<String, WmsDetails>();
 
         /*
@@ -188,6 +188,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
         wmsStandardOptions = new WMSOptions();
         wmsStandardOptions.setWrapDateLine(true);
+        wmsStandardOptions.setTransitionEffect(TransitionEffect.RESIZE);
     }
 
     /**
@@ -378,7 +379,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
              * If we already have an existing layer, we remove it and re-add it.
              * 
              * New parameters can be merged, but this can cause problems if the
-             * new layer doesn't required some parameters which the old layer
+             * new layer doesn't require some parameters which the old layer
              * had, so this is simpler.
              */
             map.removeLayer(wmsLayers.get(internalLayerId).wms);
@@ -396,8 +397,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 multipleTimes);
         wmsLayers.put(internalLayerId, newWmsAndParams);
         setGetFeatureInfoDetails(wmsUrl, multipleElevations, multipleTimes, internalLayerId);
-        if (animLayer != null)
+        if (animLayer != null) {
             animLayer.setIsVisible(false);
+        }
     }
 
     public void removeLayer(String layerId) {
@@ -769,8 +771,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.addControl(new LayerSwitcher());
         map.addControl(new MousePosition());
         addDrawingLayer();
+        map.setMaxExtent(new Bounds(-180, -90, 180, 90));
         map.setCenter(new LonLat(0.0, 0.0), 2);
-        map.setMaxExtent(new Bounds(-180, -360, 180, 360));
+        map.setFractionalZoom(true);
     }
 
     public void setOpacity(String layerId, float opacity) {
@@ -819,6 +822,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsOptions = new WMSOptions();
         wmsOptions.setProjection("EPSG:4326");
         wmsOptions.setWrapDateLine(true);
+        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
         wmsParams = new WMSParams();
         wmsParams.setLayers("basic");
         openLayers = new WMS("OpenLayers WMS", "http://labs.metacarta.com/wms-c/Basic.py?",

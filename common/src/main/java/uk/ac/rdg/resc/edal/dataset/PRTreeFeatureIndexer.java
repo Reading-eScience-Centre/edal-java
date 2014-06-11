@@ -34,24 +34,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 import org.khelekore.prtree.MBR;
 import org.khelekore.prtree.MBRConverter;
 import org.khelekore.prtree.PRTree;
 import org.khelekore.prtree.SimpleMBR;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
- * This stores all feature bounds in memory and then exhaustively searches them
- * to find features.
+ * This uses a {@link PRTree} to index features spatially.
  * 
- * That may sound like a terrible method of spatial indexing, but what do you
- * expect from a class named "NaiveFeatureIndexer"? This is really a placeholder
- * until something better is written.
+ * All features within this {@link PRTree} have their positions specified in
+ * WGS84 with longitudes in the range (-180:180] - this is guaranteed by the
+ * {@link PRTreeFeatureIndexer#addFeatures} method.
  * 
- * @author Guy
+ * @author Guy Griffiths
  */
 public class PRTreeFeatureIndexer implements FeatureIndexer,
         MBRConverter<FeatureIndexer.FeatureBounds> {
@@ -66,17 +70,64 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
 
     @Override
     public void addFeatures(final List<FeatureBounds> features) {
-        prTree.load(features);
-
         for (FeatureBounds feature : features) {
             featureIds.add(feature.id);
+
+            /*
+             * Transform to WGS84 if required
+             */
+            if (!GISUtils.isWgs84LonLat(feature.horizontalPosition.getCoordinateReferenceSystem())) {
+                feature.horizontalPosition = GISUtils.transformPosition(feature.horizontalPosition,
+                        DefaultGeographicCRS.WGS84);
+            }
+
+            /*
+             * Now ensure position is in the range (-180:180]
+             */
+            double constrainedX = GISUtils.constrainLongitude180(feature.horizontalPosition.getX());
+            if (feature.horizontalPosition.getX() != constrainedX) {
+                feature.horizontalPosition = new HorizontalPosition(constrainedX,
+                        feature.horizontalPosition.getY(),
+                        feature.horizontalPosition.getCoordinateReferenceSystem());
+            }
         }
+
+        prTree.load(features);
     }
 
     @Override
     public Collection<String> findFeatureIds(BoundingBox horizontalExtent,
             Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
             Collection<String> variableIds) {
+        
+        if (!GISUtils.isWgs84LonLat(horizontalExtent.getCoordinateReferenceSystem())) {
+            GeographicBoundingBox geographicBoundingBox = GISUtils.toGeographicBoundingBox(horizontalExtent);
+            horizontalExtent = new BoundingBoxImpl(geographicBoundingBox.getWestBoundLongitude(),
+                    geographicBoundingBox.getSouthBoundLatitude(),
+                    geographicBoundingBox.getEastBoundLongitude(),
+                    geographicBoundingBox.getNorthBoundLatitude(), DefaultGeographicCRS.WGS84);
+        }
+
+        /*
+         * Transform bounding box to lat-lon here with min value in range
+         * (-180:180].
+         * 
+         * We do this manually rather than using GISUtils.constrainLongitude180
+         * because we want to shift both sides of the bounding box by the same
+         * amount.
+         */
+        double minx = horizontalExtent.getMinX();
+        double maxx = horizontalExtent.getMaxX();
+        boolean changed = false;
+        while (minx <= -180) {
+            minx += 360.0;
+            maxx += 360.0;
+            changed = true;
+        }
+        if (changed) {
+            horizontalExtent = new BoundingBoxImpl(minx, horizontalExtent.getMinY(), maxx,
+                    horizontalExtent.getMaxY(), horizontalExtent.getCoordinateReferenceSystem());
+        }
 
         Double zLow = -Double.MAX_VALUE;
         Double zHigh = Double.MAX_VALUE;
@@ -90,12 +141,47 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
             tLow = timeExtent.getLow().getMillis();
             tHigh = timeExtent.getHigh().getMillis();
         }
-        MBR mbr = new SimpleMBR(horizontalExtent.getMinX(), horizontalExtent.getMaxX(),
-                horizontalExtent.getMinY(), horizontalExtent.getMaxY(), zLow, zHigh, tLow, tHigh);
-        Iterable<FeatureBounds> features = prTree.find(mbr);
+
+        /*
+         * Check to see if we have a bounding box which crosses the date line.
+         * If so, make 2 requests to the PRTree
+         */
         Collection<String> featureIds = new ArrayList<>();
-        for (FeatureBounds feature : features) {
-            featureIds.add(feature.id);
+        Iterable<FeatureBounds> features;
+        if (horizontalExtent.getMaxX() > 180) {
+            if (horizontalExtent.getMaxX() > 540) {
+                /*
+                 * We have a bounding box that spans the date line at both ends
+                 */
+                MBR mbr = new SimpleMBR(-180, 180, horizontalExtent.getMinY(),
+                        horizontalExtent.getMaxY(), zLow, zHigh, tLow, tHigh);
+                features = prTree.find(mbr);
+            } else {
+                MBR mbr = new SimpleMBR(horizontalExtent.getMinX(), 180,
+                        horizontalExtent.getMinY(), horizontalExtent.getMaxY(), zLow, zHigh, tLow,
+                        tHigh);
+                features = prTree.find(mbr);
+                for (FeatureBounds feature : features) {
+                    featureIds.add(feature.id);
+                }
+
+                mbr = new SimpleMBR(-180,
+                        GISUtils.constrainLongitude180(horizontalExtent.getMaxX()),
+                        horizontalExtent.getMinY(), horizontalExtent.getMaxY(), zLow, zHigh, tLow,
+                        tHigh);
+                features = prTree.find(mbr);
+            }
+            for (FeatureBounds feature : features) {
+                featureIds.add(feature.id);
+            }
+        } else {
+            MBR mbr = new SimpleMBR(horizontalExtent.getMinX(), horizontalExtent.getMaxX(),
+                    horizontalExtent.getMinY(), horizontalExtent.getMaxY(), zLow, zHigh, tLow,
+                    tHigh);
+            features = prTree.find(mbr);
+            for (FeatureBounds feature : features) {
+                featureIds.add(feature.id);
+            }
         }
         return featureIds;
     }

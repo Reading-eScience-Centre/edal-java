@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Stack;
 
 import javax.imageio.ImageIO;
 import javax.naming.OperationNotSupportedException;
@@ -80,6 +81,7 @@ import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -889,15 +891,13 @@ public class WmsServlet extends HttpServlet {
 
         if (verticalDomain != null) {
             layerDetails.put("continuousZ", !discreteZ);
-            /*
-             * TODO This changes the format slightly for continuous z-axis.
-             * Remove this todo once godiva has been tested with continuous
-             * z-axes
-             */
             JSONObject zAxisJson = new JSONObject();
             zAxisJson.put("units", verticalDomain.getVerticalCrs().getUnits());
             zAxisJson.put("positive", verticalDomain.getVerticalCrs().isPositiveUpwards());
             if (verticalDomain instanceof VerticalAxis) {
+                /*
+                 * We have discrete vertical axis values
+                 */
                 VerticalAxis verticalAxis = (VerticalAxis) verticalDomain;
                 JSONArray zValuesJson = new JSONArray();
                 for (Double z : verticalAxis.getCoordinateValues()) {
@@ -905,8 +905,163 @@ public class WmsServlet extends HttpServlet {
                 }
                 zAxisJson.put("values", zValuesJson);
             } else {
-                zAxisJson.put("startZ", verticalDomain.getExtent().getLow());
-                zAxisJson.put("endZ", verticalDomain.getExtent().getHigh());
+                if (!dataset.getMapFeatureType(variableId).isAssignableFrom(ProfileFeature.class)) {
+                    /*
+                     * We don't have profile features. Just supply a start and
+                     * end elevation. The client can split this however it
+                     * wants. Usually this will be a naive split into x levels
+                     */
+                    zAxisJson.put("startZ", verticalDomain.getExtent().getLow());
+                    zAxisJson.put("endZ", verticalDomain.getExtent().getHigh());
+                } else {
+                    /*
+                     * We have profile features. Try and calculate a rough
+                     * distribution of depths by reading a sample. Then we can
+                     * generate more sensible depth values which
+                     * increase/decrease as required.
+                     * 
+                     * Note that we could do this for any type of feature where
+                     * the dataset has a continuous z-domain, but unless each
+                     * feature has a discrete vertical domain, we'd need to read
+                     * a lot more of them.
+                     */
+
+                    /*
+                     * First read a sample of depth axis values
+                     */
+                    Set<String> featureIds = dataset.getFeatureIds();
+                    Iterator<String> iterator = featureIds.iterator();
+                    List<Double> depthValues = new ArrayList<>();
+                    /*
+                     * Make sure that the end points are included
+                     */
+                    depthValues.add(verticalDomain.getExtent().getLow());
+                    depthValues.add(verticalDomain.getExtent().getHigh());
+                    int nFeatures = 0;
+                    for (; nFeatures < 100; nFeatures++) {
+                        /*
+                         * Read up to 100 features
+                         */
+                        if (iterator.hasNext()) {
+                            try {
+                                ProfileFeature feature = (ProfileFeature) dataset
+                                        .readFeature(iterator.next());
+                                if (feature != null) {
+                                    depthValues.addAll(feature.getDomain().getCoordinateValues());
+                                }
+                            } catch (DataReadingException e) {
+                                log.error("Problem reading profile feature to test depth levels", e);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    Collections.sort(depthValues);
+                    /*
+                     * We now have a sorted list of axis values for (up to) 100
+                     * features.
+                     * 
+                     * Next we create a stack of delta-elevation values which we
+                     * want to use. These are all round numbers which will make
+                     * the axis values nicely human-readable in the client.
+                     * 
+                     * Note that because this is a stack, 0.001 will be on top
+                     * after the values have been added.
+                     * 
+                     * We will pop these out until we reach a suitable size.
+                     * From that point our elevation values will get further
+                     * apart.
+                     * 
+                     * The aim is to get something like:
+                     * 0,10,20,30,40,50,100,200,300,800,1300,2300
+                     * 
+                     * However, if the elevation values are clustered at the top
+                     * end (lots of measurements at a large elevation value) we
+                     * reverse the stack and hence we'd get something like:
+                     * 0,5000,10000,10500,10600,10700,10750,10800
+                     */
+                    Stack<Double> deltas = new Stack<>();
+                    deltas.addAll(Arrays.asList(new Double[] { 10000.0, 5000.0, 1000.0, 500.0,
+                            200.0, 100.0, 50.0, 20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05, 0.01,
+                            0.005, 0.001 }));
+                    /*
+                     * If the widest increments are at the end of the depth
+                     * values list, we want to reverse the deltas (because we
+                     * use pop
+                     */
+                    if (Math.abs(depthValues.get(0) - depthValues.get(1)) > Math.abs(depthValues
+                            .get(depthValues.size() - 1) - depthValues.get(depthValues.size() - 2))) {
+                        Collections.reverse(deltas);
+                    }
+
+                    /*
+                     * The first level should be the minimum of the extent,
+                     * since this was explicitly added to depthValues
+                     */
+                    List<Double> levels = new ArrayList<>();
+                    double lastDeltaStart = depthValues.get(0);
+                    levels.add(lastDeltaStart);
+                    Double delta = 0.0;
+                    /*
+                     * Split the elevation values into 25 levels (fairly
+                     * arbitrary but I *think* this provides an upper limit on
+                     * the number of levels we'll end up with).
+                     * 
+                     * We could just use these elevation values. We'd get a nice
+                     * distribution of levels, but they'd be horrible numbers.
+                     * So now we get complicated instead...
+                     */
+                    for (int i = 1; i < depthValues.size(); i += depthValues.size() / 25) {
+                        /*
+                         * With these 25 levels, what is the difference between
+                         * the two we're considering?
+                         */
+                        Double lastDeltaEnd = depthValues.get(i);
+                        Double testDelta = lastDeltaEnd - lastDeltaStart;
+                        /*
+                         * Find a nice delta value which is close to this.
+                         */
+                        if (!deltas.empty()) {
+                            while (testDelta > delta) {
+                                delta = deltas.pop();
+                            }
+                        }
+
+                        /*
+                         * Now add levels with this delta until we reach the
+                         * next of the 25 levels
+                         */
+                        while (levels.get(levels.size() - 1) < lastDeltaEnd) {
+                            levels.add(levels.get(levels.size() - 1) + delta);
+                        }
+                        lastDeltaStart = lastDeltaEnd;
+                    }
+                    /*
+                     * Now add a final level which is at least as large as the
+                     * highest extent value, and is a multiple of the current
+                     * delta away from the penultimate value.
+                     */
+                    double finalLevel = levels.get(levels.size() - 1);
+                    while (finalLevel < verticalDomain.getExtent().getHigh()) {
+                        finalLevel += delta;
+                    }
+                    levels.add(finalLevel);
+
+                    /*
+                     * Now we have a nice set of values, serialise them to JSON.
+                     * 
+                     * Thanks for reading, and if you're trying to change this
+                     * code, I'm sorry. Maybe you should start from scratch? Or
+                     * maybe it's simpler than I think and you understand it
+                     * perfectly.
+                     */
+                    JSONArray zValuesJson = new JSONArray();
+                    for (Double level : levels) {
+                        zValuesJson.add(level);
+                    }
+                    zAxisJson.put("values", zValuesJson);
+                }
+
             }
             layerDetails.put("zaxis", zAxisJson);
         }
@@ -1198,9 +1353,21 @@ public class WmsServlet extends HttpServlet {
                  * those which are nearest the target depth
                  */
                 ProfileFeature profileFeature = (ProfileFeature) f;
-                int zIndex = profileFeature.getDomain().findIndexOf(
-                        getMapParams.getPlottingDomainParameters().getTargetZ());
-                if (zIndex > 0) {
+                int zIndex;
+                Double targetZ = getMapParams.getPlottingDomainParameters().getTargetZ();
+                if (targetZ == null) {
+                    /*
+                     * If no target z is provided, pick the value closest to the
+                     * surface
+                     */
+                    zIndex = profileFeature.getDomain().findIndexOf(
+                            GISUtils.getClosestElevationToSurface(profileFeature.getDomain()));
+                } else {
+                    zIndex = GISUtils.getIndexOfClosestElevationTo(targetZ,
+                            profileFeature.getDomain());
+                }
+
+                if (zIndex >= 0) {
                     Number value = profileFeature.getValues(featuresAndMember.getMember()).get(
                             zIndex);
                     if (value != null) {
@@ -1220,7 +1387,7 @@ public class WmsServlet extends HttpServlet {
                 PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) f;
                 int tIndex = pointSeriesFeature.getDomain().findIndexOf(
                         getMapParams.getPlottingDomainParameters().getTargetT());
-                if (tIndex > 0) {
+                if (tIndex >= 0) {
                     Number value = pointSeriesFeature.getValues(featuresAndMember.getMember()).get(
                             tIndex);
                     if (value != null) {

@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.UUID;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.Chronology;
@@ -115,17 +114,13 @@ public final class En3DatasetFactory extends DatasetFactory {
         ALL_PARAMETERS.put(PSAL_PARAMETER.getId(), PSAL_PARAMETER);
     }
 
-    /*-
-     * Keep a map of internal ID to file and profile number. We could simply
-     * choose a reversible transformation - e.g. "filename:number" but this
-     * method:
+    /*
+     * Converting between ID and file/profile number could be done (and was
+     * previously done) using a map of internal ID to file and profile number.
      * 
-     * a) Takes more effort to break (difficult to do accidentally)
-     * b) Means we don't have to worry about choosing a character which will be
-     * guaranteed to not appear in any absolute file path (on any platform)
+     * By using a simple string encoding (number:filepath) we use less memory,
+     * which can be a concern when querying the entire EN3 database
      */
-    protected Map<String, FileAndProfileNumber> profileId2FileAndProfile = new HashMap<String, En3DatasetFactory.FileAndProfileNumber>();
-
     private static class FileAndProfileNumber {
         private File file;
         private int profileNumber;
@@ -134,6 +129,58 @@ public final class En3DatasetFactory extends DatasetFactory {
             this.file = file;
             this.profileNumber = profileNumber;
         }
+    }
+
+    /**
+     * Converts an ID to a {@link FileAndProfileNumber}
+     * 
+     * @param id
+     *            The ID
+     * @return The corresponding {@link FileAndProfileNumber}
+     */
+    private static FileAndProfileNumber deserialiseId(String id) {
+        /*
+         * The ID is of the form:
+         * 
+         * 123:/path/to/file
+         */
+        String[] split = id.split(":");
+        int profileNumber = Integer.parseInt(split[0]);
+
+        if (split.length > 2) {
+            /*
+             * The file contains ":", so we need to concatenate all of the
+             * elements of split
+             */
+            StringBuilder filePath = new StringBuilder();
+            for (int i = 1; i < split.length; i++) {
+                filePath.append(split[i]);
+                if (i != split.length - 1) {
+                    filePath.append(":");
+                }
+            }
+
+            return new FileAndProfileNumber(new File(filePath.toString()), profileNumber);
+        } else {
+            return new FileAndProfileNumber(new File(split[1]), profileNumber);
+        }
+    }
+
+    /**
+     * Converts a {@link File} and profile number into a unique ID
+     * 
+     * @param file
+     *            The file containing the profile
+     * @param profileNumber
+     *            The profile number within the file
+     * @return A unique ID
+     */
+    private static String serialiseId(File file, int profileNumber) {
+        /*
+         * We just use a very simple format here - easy and quick to go back and
+         * forth.
+         */
+        return profileNumber + ":" + file.getAbsolutePath();
     }
 
     /*
@@ -260,9 +307,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 /*
                  * Create a unique ID
                  */
-                String profileId = UUID.nameUUIDFromBytes((file.getAbsolutePath() + i).getBytes())
-                        .toString();
-                profileId2FileAndProfile.put(profileId, new FileAndProfileNumber(file, i));
+                String profileId = serialiseId(file, i);
 
                 /*
                  * Store the bounds of this feature to load into the spatial
@@ -297,13 +342,21 @@ public final class En3DatasetFactory extends DatasetFactory {
             }
 
             CdmUtils.closeDataset(nc);
+
+            log.debug("Read " + nProfiles.getLength() + " profiles from file: "
+                    + file.getAbsolutePath());
+            log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L) + "/"
+                    + (Runtime.getRuntime().maxMemory() / 1_000_000L));
         }
-        
+
         /*
          * Now add all features to the spatial indexer
          */
         indexer.addFeatures(featureBounds);
-        
+        log.debug("Indexed features.");
+        log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L) + "/"
+                + (Runtime.getRuntime().maxMemory() / 1_000_000L));
+
         /*
          * The domain of this dataset. Since all variables are valid for the
          * entire dataset, their domain must include the domains of all points
@@ -374,7 +427,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         public VerticalCrs getDatasetVerticalCrs() {
             return EN3_VERTICAL_CRS;
         }
-        
+
         @Override
         public boolean supportsProfileFeatureExtraction(String varId) {
             /*
@@ -382,7 +435,7 @@ public final class En3DatasetFactory extends DatasetFactory {
              */
             return true;
         }
-        
+
         @Override
         public boolean supportsTimeseriesExtraction(String varId) {
             /*
@@ -407,8 +460,8 @@ public final class En3DatasetFactory extends DatasetFactory {
              * Find the file containing the ID, and the profile number within
              * the file
              */
-            FileAndProfileNumber fileAndProfileNumber = En3DatasetFactory.this.profileId2FileAndProfile
-                    .get(id);
+            FileAndProfileNumber fileAndProfileNumber = deserialiseId(id);
+
             ProfileFeature profileFeature = null;
             NetcdfFile nc = null;
             try {
@@ -456,16 +509,35 @@ public final class En3DatasetFactory extends DatasetFactory {
              */
             Map<File, List<FeatureAndProfileId>> file2Ids = new HashMap<File, List<FeatureAndProfileId>>();
             for (String id : ids) {
-                FileAndProfileNumber fileAndProfileNumber = profileId2FileAndProfile.get(id);
-                if (profileId2FileAndProfile != null) {
-                    File file = fileAndProfileNumber.file.getAbsoluteFile();
-                    if (!file2Ids.containsKey(file)) {
-                        List<FeatureAndProfileId> idsList = new ArrayList<FeatureAndProfileId>();
-                        file2Ids.put(file, idsList);
+                String[] split = id.split(":");
+                int profileNumber = Integer.parseInt(split[0]);
+                StringBuilder filePath = new StringBuilder();
+                /*
+                 * On the off-chance the file contains ":", we should
+                 * concatenate all of the elements of split
+                 */
+                for (int i = 1; i < split.length; i++) {
+                    filePath.append(split[i]);
+                    if (i != split.length - 1) {
+                        filePath.append(":");
                     }
-                    file2Ids.get(file).add(
-                            new FeatureAndProfileId(id, fileAndProfileNumber.profileNumber));
                 }
+
+                // FileAndProfileNumber fileAndProfileNumber =
+                // profileId2FileAndProfile.get(id);
+                // if (profileId2FileAndProfile != null) {
+                // File file = fileAndProfileNumber.file.getAbsoluteFile();
+                File file = new File(filePath.toString());
+                if (!file2Ids.containsKey(file)) {
+                    List<FeatureAndProfileId> idsList = new ArrayList<FeatureAndProfileId>();
+                    file2Ids.put(file, idsList);
+                }
+                file2Ids.get(file).add(new FeatureAndProfileId(id, /*
+                                                                    * fileAndProfileNumber
+                                                                    * .
+                                                                    */
+                profileNumber));
+                // }
             }
             /*
              * Now open each file in turn and read the profiles from them
@@ -524,8 +596,8 @@ public final class En3DatasetFactory extends DatasetFactory {
          *             {@link NetcdfDataset}
          * @throws InvalidRangeException
          */
-        private ProfileFeature doRead(String id, NetcdfFile nc, int profNum,
-                Set<String> variableIds) throws IOException, InvalidRangeException {
+        private ProfileFeature doRead(String id, NetcdfFile nc, int profNum, Set<String> variableIds)
+                throws IOException, InvalidRangeException {
             /*
              * This is a fixed value. We could read the "STRING8" dimension and
              * find its length, but that seems a little unnecessary, since it
@@ -604,7 +676,7 @@ public final class En3DatasetFactory extends DatasetFactory {
             List<Double> zValues = new ArrayList<Double>();
             for (int i = 0; i < nLevels.getLength(); i++) {
                 double depth = depthValues.getDouble(i);
-                if (!Double.isNaN(depth)) {
+                if (!Double.isNaN(depth) && depth != 99999.0) {
                     zValues.add(depth);
                 } else {
                     break;
@@ -619,7 +691,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                  * ignore these profiles (1-2% of total) but later we may need
                  * to re-order the measurement values
                  */
-                //                log.error("Invalid domain in EN3 file", e);
+                // log.error("Invalid domain in EN3 file", e);
                 return null;
             }
             /*

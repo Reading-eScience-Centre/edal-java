@@ -747,14 +747,22 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             /*
              * Set all options which depend on this being a layer with a continuous z-axis
              */
-            
-            if (layerDetails.getStartZ().equals(layerDetails.getEndZ())) {
-                widgetCollection.getElevationSelector().populateElevations(null);
+            if(layerDetails.getStartZ() != null && layerDetails.getEndZ() != null) {
+                if (layerDetails.getStartZ().equals(layerDetails.getEndZ())) {
+                    widgetCollection.getElevationSelector().populateElevations(null);
+                } else {
+                    List<String> startEndZs = new ArrayList<String>();
+                    startEndZs.add(layerDetails.getStartZ());
+                    startEndZs.add(layerDetails.getEndZ());
+                    widgetCollection.getElevationSelector().populateElevations(startEndZs);
+                }
+            } else if(layerDetails.getAvailableZs() != null) {
+                widgetCollection.getElevationSelector().populateElevations(layerDetails.getAvailableZs());
             } else {
-                List<String> startEndZs = new ArrayList<String>();
-                startEndZs.add(layerDetails.getStartZ());
-                startEndZs.add(layerDetails.getEndZ());
-                widgetCollection.getElevationSelector().populateElevations(startEndZs);
+                /*
+                 * We have either the start or end z being null
+                 */
+                widgetCollection.getElevationSelector().populateElevations(null);
             }
         } else {
             /*

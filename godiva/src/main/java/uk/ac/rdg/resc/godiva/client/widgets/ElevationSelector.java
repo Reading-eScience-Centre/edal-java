@@ -51,7 +51,7 @@ import com.google.gwt.user.client.ui.ListBox;
  * 
  */
 public class ElevationSelector extends BaseSelector implements ElevationSelectorIF {
-	private ListBox elevations;
+    private ListBox elevations;
     private final NumberFormat format = NumberFormat.getFormat("#0.##");
     /*
      * This is required because the server will respond with the exact values it
@@ -61,90 +61,129 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
     private String id;
     private String units;
     private boolean continuous;
-    
-	public ElevationSelector(String id, String title, final ElevationSelectionHandler handler) {
-		super(title);
-		this.id = id;
-		
-		elevations = new ListBox();
-		elevations.addChangeHandler(new ChangeHandler() {
+
+    public ElevationSelector(String id, String title, final ElevationSelectionHandler handler) {
+        super(title);
+        this.id = id;
+
+        elevations = new ListBox();
+        elevations.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
                 handler.elevationSelected(ElevationSelector.this.id, getSelectedElevation());
             }
         });
-		add(elevations);
-		
-	}
-	
-	@Override
-    public void setId(String id) {
-	    this.id = id;
+        add(elevations);
+
     }
 
     @Override
-    public void populateElevations(List<String> availableElevations){
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public void populateElevations(List<String> availableElevations) {
         String currentElevation = getSelectedElevation();
-		elevations.clear();
-		formattedValuesToRealValues = new HashMap<String, String>();
-		label.setStylePrimaryName("labelStyle");
-		if(availableElevations == null || availableElevations.size()==0){
-			label.addStyleDependentName("inactive");
-			elevations.setEnabled(false);
-		} else {
-		    if(continuous){
-		        if(availableElevations.size() != 2){
-                    throw new IllegalArgumentException(
-                            "For a continuous elevation axis, you must provide exactly 2 elevation");
+        elevations.clear();
+        formattedValuesToRealValues = new HashMap<String, String>();
+        label.setStylePrimaryName("labelStyle");
+        if (availableElevations == null || availableElevations.size() == 0) {
+            label.addStyleDependentName("inactive");
+            elevations.setEnabled(false);
+        } else {
+            if (continuous) {
+                if (availableElevations.size() == 2) {
+                    /*
+                     * We have a start and end elevation. Calculate some
+                     * sensible intermediate values
+                     */
+                    double firstVal = Double.parseDouble(availableElevations.get(0));
+                    double secondVal = Double.parseDouble(availableElevations.get(1));
+                    double dZ = getOptimumDz(firstVal, secondVal, 20);
+                    int i = 0;
+
+                    String formattedElevationStr = format.format(firstVal);
+                    String formattedElevationRange = format.format(firstVal) + "/"
+                            + format.format(firstVal + 0.5 * dZ);
+                    elevations.addItem(formattedElevationStr);
+                    formattedValuesToRealValues.put(formattedElevationStr, formattedElevationRange);
+                    if (formattedElevationStr.equals(currentElevation)) {
+                        elevations.setSelectedIndex(i);
+                    }
+                    i++;
+                    for (double v = firstVal + dZ; v <= secondVal - dZ; v += dZ) {
+                        formattedElevationStr = format.format(v);
+                        formattedElevationRange = format.format(v - 0.5 * dZ) + "/"
+                                + format.format(v + 0.5 * dZ);
+                        elevations.addItem(formattedElevationStr);
+                        formattedValuesToRealValues.put(formattedElevationStr,
+                                formattedElevationRange);
+                        if (formattedElevationStr.equals(currentElevation)) {
+                            elevations.setSelectedIndex(i);
+                        }
+                        i++;
+                    }
+                    formattedElevationStr = format.format(secondVal);
+                    formattedElevationRange = format.format(secondVal - 0.5 * dZ) + "/"
+                            + format.format(secondVal);
+                    elevations.addItem(formattedElevationStr);
+                    formattedValuesToRealValues.put(formattedElevationStr, formattedElevationRange);
+                    if (formattedElevationStr.equals(currentElevation)) {
+                        elevations.setSelectedIndex(i);
+                    }
+                } else {
+                    /*
+                     * The server has provided us with axis values. We assume
+                     * that these are to be midpoints in a range (apart from
+                     * endpoints which are endpoints).
+                     */
+                    double previousVal = Double.parseDouble(availableElevations.get(0));
+                    for (int i = 0; i < availableElevations.size(); i++) {
+                        double currentVal = Double.parseDouble(availableElevations.get(i));
+                        double nextVal;
+                        if (i != availableElevations.size() - 1) {
+                            nextVal = Double.parseDouble(availableElevations.get(i + 1));
+                        } else {
+                            nextVal = currentVal;
+                        }
+                        double prevBound = (currentVal + previousVal) / 2.0;
+                        double nextBound = (currentVal + nextVal) / 2.0;
+
+                        String formattedElevationStr = format.format(currentVal);
+                        String formattedElevationRange = format.format(prevBound) + "/"
+                                + format.format(nextBound);
+                        elevations.addItem(
+                                formattedElevationStr + units + "  (" + format.format(prevBound)
+                                        + units + "-" + format.format(nextBound) + units + ")",
+                                formattedElevationStr);
+                        formattedValuesToRealValues.put(formattedElevationStr,
+                                formattedElevationRange);
+                        if (formattedElevationStr.equals(currentElevation)) {
+                            elevations.setSelectedIndex(i);
+                        }
+                        previousVal = currentVal;
+                    }
+
                 }
-		        double firstVal = Double.parseDouble(availableElevations.get(0));
-		        double secondVal = Double.parseDouble(availableElevations.get(1));
-		        double dZ = getOptimumDz(firstVal, secondVal, 20);
-		        int i = 0;
-		        
-		        String formattedElevationStr = format.format(firstVal); 
-		        String formattedElevationRange = format.format(firstVal)+"/"+format.format(firstVal + 0.5*dZ); 
-		        elevations.addItem(formattedElevationStr);
-		        formattedValuesToRealValues.put(formattedElevationStr, formattedElevationRange);
-		        if(formattedElevationStr.equals(currentElevation)){
-		            elevations.setSelectedIndex(i);
-		        }
-		        i++;
-		        for(double v = firstVal + dZ; v <= secondVal - dZ; v+=dZ){
-		            formattedElevationStr = format.format(v); 
-		            formattedElevationRange = format.format(v-0.5*dZ)+"/"+format.format(v+0.5*dZ); 
-		            elevations.addItem(formattedElevationStr);
-		            formattedValuesToRealValues.put(formattedElevationStr, formattedElevationRange);
-		            if(formattedElevationStr.equals(currentElevation)){
-		                elevations.setSelectedIndex(i);
-		            }
-		            i++;
-		        }
-	            formattedElevationStr = format.format(secondVal); 
-	            formattedElevationRange = format.format(secondVal-0.5*dZ)+"/"+format.format(secondVal); 
-	            elevations.addItem(formattedElevationStr);
-	            formattedValuesToRealValues.put(formattedElevationStr, formattedElevationRange);
-	            if(formattedElevationStr.equals(currentElevation)){
-	                elevations.setSelectedIndex(i);
-	            }
-		        
-		    } else {
-		        int i=0;
-		        for(String elevationStr : availableElevations){
-		            Float elevation = Float.parseFloat(elevationStr);
-		            String formattedElevationStr = format.format(elevation); 
-		            elevations.addItem(formattedElevationStr);
-		            formattedValuesToRealValues.put(formattedElevationStr, elevationStr);
-		            if(elevationStr.equals(currentElevation)){
-		                elevations.setSelectedIndex(i);
-		            }
-		            i++;
-		        }
-		    }
-		    label.removeStyleDependentName("inactive");
-		    elevations.setEnabled(true);
-		}
-	}
+
+            } else {
+                int i = 0;
+                for (String elevationStr : availableElevations) {
+                    Float elevation = Float.parseFloat(elevationStr);
+                    String formattedElevationStr = format.format(elevation);
+                    elevations.addItem(formattedElevationStr);
+                    formattedValuesToRealValues.put(formattedElevationStr, elevationStr);
+                    if (elevationStr.equals(currentElevation)) {
+                        elevations.setSelectedIndex(i);
+                    }
+                    i++;
+                }
+            }
+            label.removeStyleDependentName("inactive");
+            elevations.setEnabled(true);
+        }
+    }
 
     /*
      * This method just picks a nice step value, based on start value, stop
@@ -168,40 +207,41 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
     }
 
     @Override
-    public void setUnitsAndDirection(String units, boolean positive){
-	    this.units = units;
-	    if(positive) {
-	        label.setText("Elevation");
-	        elevations.setTitle("Select the elevation");
-	    } else {
-	        label.setText("Depth");
-	        elevations.setTitle("Select the depth");
-	    }
-	    if(units != null){
-	        label.setText(label.getText()+" ("+units+"):");
-	    }else{
-	        label.setText(label.getText()+":");
-	    }
-	}
-	
-	@Override
-    public String getSelectedElevation(){
-	    if(!elevations.isEnabled()) return null;
-	    int index = elevations.getSelectedIndex();
-	    if(index < 0)
-	        return null;
-	    if(continuous){
-	        return elevations.getValue(index);
-	    } else {
-	        return formattedValuesToRealValues.get(elevations.getValue(index));
-	    }
-	}
+    public void setUnitsAndDirection(String units, boolean positive) {
+        this.units = units;
+        if (positive) {
+            label.setText("Elevation");
+            elevations.setTitle("Select the elevation");
+        } else {
+            label.setText("Depth");
+            elevations.setTitle("Select the depth");
+        }
+        if (units != null) {
+            label.setText(label.getText() + " (" + units + "):");
+        } else {
+            label.setText(label.getText() + ":");
+        }
+    }
+
+    @Override
+    public String getSelectedElevation() {
+        if (!elevations.isEnabled())
+            return null;
+        int index = elevations.getSelectedIndex();
+        if (index < 0)
+            return null;
+        if (continuous) {
+            return elevations.getValue(index);
+        } else {
+            return formattedValuesToRealValues.get(elevations.getValue(index));
+        }
+    }
 
     @Override
     public void setSelectedElevation(String currentElevation) {
-        for(int i=0; i < elevations.getItemCount(); i++){
+        for (int i = 0; i < elevations.getItemCount(); i++) {
             String elevation = elevations.getValue(i);
-            if(currentElevation.equals(elevation)){
+            if (currentElevation.equals(elevation)) {
                 elevations.setSelectedIndex(i);
                 return;
             }
@@ -210,12 +250,12 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
 
     @Override
     public void setEnabled(boolean enabled) {
-        if(elevations.getItemCount() > 1)
+        if (elevations.getItemCount() > 1)
             elevations.setEnabled(enabled);
-        else 
+        else
             elevations.setEnabled(false);
-        
-        if(!elevations.isEnabled()){
+
+        if (!elevations.isEnabled()) {
             label.addStyleDependentName("inactive");
         } else {
             label.removeStyleDependentName("inactive");
@@ -234,9 +274,10 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
 
     @Override
     public String getSelectedElevationRange() {
-        if(!elevations.isEnabled()) return null;
+        if (!elevations.isEnabled())
+            return null;
         int index = elevations.getSelectedIndex();
-        if(index < 0)
+        if (index < 0)
             return null;
         return formattedValuesToRealValues.get(elevations.getValue(index));
     }
@@ -245,6 +286,7 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
     public void setContinuous(boolean continuous) {
         this.continuous = continuous;
     }
+
     @Override
     public boolean isContinuous() {
         return continuous;

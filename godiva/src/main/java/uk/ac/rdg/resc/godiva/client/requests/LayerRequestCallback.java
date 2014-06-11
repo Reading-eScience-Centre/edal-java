@@ -72,6 +72,7 @@ public abstract class LayerRequestCallback implements RequestCallback {
 
     @Override
     public void onResponseReceived(Request request, Response response) {
+        long t1 = System.currentTimeMillis();
         JSONValue jsonMap = JSONParser.parseLenient(response.getText());
         JSONObject parentObj = jsonMap.isObject();
 
@@ -160,9 +161,10 @@ public abstract class LayerRequestCallback implements RequestCallback {
         JSONValue nearestTimeJson = parentObj.get("nearestTimeIso");
         if (nearestTimeJson != null) {
             String nearestTime = nearestTimeJson.isString().stringValue();
-            if(!nearestTime.equals("") && nearestTime.length() > 10) {
+            if (!nearestTime.equals("") && nearestTime.length() > 10) {
                 layerDetails.setNearestTime(nearestTime);
-                layerDetails.setNearestDate(nearestTimeJson.isString().stringValue().substring(0, 10));
+                layerDetails.setNearestDate(nearestTimeJson.isString().stringValue()
+                        .substring(0, 10));
             }
         }
 
@@ -172,7 +174,7 @@ public abstract class LayerRequestCallback implements RequestCallback {
             continuousT = continuousTJson.isBoolean().booleanValue();
         }
         layerDetails.setContinuousT(continuousT);
-        
+
         boolean continuousZ = false;
         JSONValue continuousZJson = parentObj.get("continuousZ");
         if (continuousZJson != null) {
@@ -212,56 +214,60 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 layerDetails.setAvailableDates(availableDates);
             }
         }
-        if (continuousZ) {
-            JSONValue zvalsJson = parentObj.get("zaxis");
-            if (zvalsJson != null) {
-                JSONObject zvalsObj = zvalsJson.isObject();
-                layerDetails.setZUnits(zvalsObj.get("units").isString().stringValue());
-                layerDetails.setZPositive(zvalsObj.get("positive").isBoolean().booleanValue());
-                JSONValue startZJson = zvalsObj.get("startZ");
-                if (startZJson != null) {
-                    layerDetails.setStartZ(startZJson.isNumber().toString());
-                }
-                JSONValue endZJson = zvalsObj.get("endZ");
-                if (endZJson != null) {
-                    layerDetails.setEndZ(endZJson.isNumber().toString());
-                }
+
+        JSONValue zvalsJson = parentObj.get("zaxis");
+        if (zvalsJson != null) {
+            JSONObject zvalsObj = zvalsJson.isObject();
+            layerDetails.setZUnits(zvalsObj.get("units").isString().stringValue());
+            layerDetails.setZPositive(zvalsObj.get("positive").isBoolean().booleanValue());
+
+            /*
+             * We expect either startZ and endZ or values. The first usually
+             * corresponds to a continuous domain, but we may want to determine
+             * sensible values depending on the data distribution, so we parse
+             * both for both continuous and discrete z.
+             */
+            JSONValue startZJson = zvalsObj.get("startZ");
+            if (startZJson != null) {
+                layerDetails.setStartZ(startZJson.isNumber().toString());
             }
-        } else {
-            JSONValue zvalsJson = parentObj.get("zaxis");
-            if (zvalsJson != null) {
-                JSONObject zvalsObj = zvalsJson.isObject();
-                layerDetails.setZUnits(zvalsObj.get("units").isString().stringValue());
-                layerDetails.setZPositive(zvalsObj.get("positive").isBoolean().booleanValue());
+            JSONValue endZJson = zvalsObj.get("endZ");
+            if (endZJson != null) {
+                layerDetails.setEndZ(endZJson.isNumber().toString());
+            }
+
+            JSONArray zvalsArr = zvalsObj.get("values").isArray();
+            if (zvalsArr != null) {
                 List<String> availableZs = new ArrayList<String>();
-                JSONArray zvalsArr = zvalsObj.get("values").isArray();
                 for (int i = 0; i < zvalsArr.size(); i++) {
                     availableZs.add(zvalsArr.get(i).isNumber().toString());
                 }
                 layerDetails.setAvailableZs(availableZs);
             }
         }
-        
+
         boolean supportsTimeseries = false;
         JSONValue supportsTimeseriesJson = parentObj.get("supportsTimeseries");
         if (supportsTimeseriesJson != null) {
             supportsTimeseries = supportsTimeseriesJson.isBoolean().booleanValue();
         }
         layerDetails.setTimeseriesSupported(supportsTimeseries);
-        
+
         boolean supportsProfiles = false;
         JSONValue supportsProfilesJson = parentObj.get("supportsProfiles");
         if (supportsProfilesJson != null) {
             supportsProfiles = supportsProfilesJson.isBoolean().booleanValue();
         }
         layerDetails.setProfilesSupported(supportsProfiles);
-        
+
         boolean supportsTransects = false;
         JSONValue supportsTransectsJson = parentObj.get("supportsTransects");
         if (supportsTransectsJson != null) {
             supportsTransects = supportsTransectsJson.isBoolean().booleanValue();
         }
         layerDetails.setTransectsSupported(supportsTransects);
+        long t2 = System.currentTimeMillis();
+        System.out.println("Time to parse details: " + (t2 - t1));
     }
 
 }

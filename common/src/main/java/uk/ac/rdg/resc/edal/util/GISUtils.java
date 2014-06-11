@@ -47,6 +47,7 @@ import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.opengis.metadata.extent.GeographicBoundingBox;
+import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
@@ -167,7 +168,7 @@ public final class GISUtils {
 
     /**
      * Constrains a lat-lon bounding box to have all longitude values in the
-     * range [-180:180]
+     * range (-180:180]
      * 
      * @param bbox
      *            The {@link BoundingBox} to constrain
@@ -485,8 +486,8 @@ public final class GISUtils {
                 index = insertionPoint - 1;
             } else if (insertionPoint > 0) {
                 /*
-                 * We need to find which of the two possibilities is the
-                 * closest time
+                 * We need to find which of the two possibilities is the closest
+                 * time
                  */
                 long t1 = tValues.get(insertionPoint - 1).getMillis();
                 long t2 = tValues.get(insertionPoint).getMillis();
@@ -498,8 +499,8 @@ public final class GISUtils {
                 }
             } else {
                 /*
-                 * All DateTimes on the axis are in the future, so we take
-                 * the earliest
+                 * All DateTimes on the axis are in the future, so we take the
+                 * earliest
                  */
                 index = 0;
             }
@@ -562,14 +563,14 @@ public final class GISUtils {
             }
         }
     }
-    
+
     public static int getIndexOfClosestElevationTo(Double target, VerticalAxis zAxis) {
-        if(zAxis == null || target == null) {
+        if (zAxis == null || target == null) {
             return -1;
         }
         List<Double> zVals = zAxis.getCoordinateValues();
         int zIndex = Collections.binarySearch(zVals, target);
-        if(zIndex < 0) {
+        if (zIndex < 0) {
             /*
              * We can calculate the insertion point
              */
@@ -581,8 +582,8 @@ public final class GISUtils {
                 zIndex = insertionPoint - 1;
             } else if (insertionPoint > 0) {
                 /*
-                 * We need to find which of the two possibilities is the
-                 * closest time
+                 * We need to find which of the two possibilities is the closest
+                 * time
                  */
                 double z1 = zVals.get(insertionPoint - 1);
                 double z2 = zVals.get(insertionPoint);
@@ -683,6 +684,28 @@ public final class GISUtils {
             double maxx = -Double.MAX_VALUE;
             double miny = Double.MAX_VALUE;
             double maxy = -Double.MAX_VALUE;
+
+            /*
+             * Check for north/south polar stereographic - then we know that a
+             * pole is included which checking the border will not pick up
+             */
+            ReferenceIdentifier crsId = bbox.getCoordinateReferenceSystem().getName();
+
+            if ("EPSG".equalsIgnoreCase(crsId.getCodeSpace())) {
+                if ("32661".equals(crsId.getCode()) || crsId.getCode().contains("UPS North")) {
+                    System.out.println("NPS");
+                    /*
+                     * North polar stereographic
+                     */
+                    maxy = 90;
+                } else if ("32761".equals(crsId.getCode()) || crsId.getCode().contains("UPS South")) {
+                    System.out.println("SPS");
+                    /*
+                     * South polar stereographic
+                     */
+                    miny = -90;
+                }
+            }
             /*
              * There is no simple mapping from an arbitrary bounding box to a
              * lat-lon one. We scan around the edge of the bounding box (10
@@ -821,7 +844,8 @@ public final class GISUtils {
      */
     public static VerticalDomain getIntersectionOfVerticalDomains(VerticalDomain... domains) {
         if (domains.length == 0) {
-            throw new IllegalArgumentException("Must provide multiple domains to get an intersection");
+            throw new IllegalArgumentException(
+                    "Must provide multiple domains to get an intersection");
         }
         if (domains[0] == null) {
             return null;
@@ -971,7 +995,7 @@ public final class GISUtils {
             return new SimpleTemporalDomain(min, max);
         }
     }
-    
+
     /**
      * Performs Pythagoras on two distances to calculate the distance squared.
      * Useful for sorting lists according to distance from a point. The result
@@ -996,7 +1020,6 @@ public final class GISUtils {
                 + (pos1.getY() - pos2.getY()) * (pos1.getY() - pos2.getY());
 
     }
-    
 
     /**
      * Limits a z-axis to include a range as tightly as possible
@@ -1043,7 +1066,7 @@ public final class GISUtils {
         }
         return new VerticalAxisImpl(axis.getName(), values, axis.getVerticalCrs());
     }
-    
+
     /**
      * Limits a t-axis to include a range as tightly as possible
      * 
@@ -1087,7 +1110,6 @@ public final class GISUtils {
         }
         return new TimeAxisImpl(axis.getName(), values);
     }
-
 
     static {
         /*

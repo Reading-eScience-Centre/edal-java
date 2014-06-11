@@ -44,16 +44,16 @@ import uk.ac.rdg.resc.godiva.client.state.GodivaStateInfo;
 import uk.ac.rdg.resc.godiva.client.state.InfoIF;
 import uk.ac.rdg.resc.godiva.client.state.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
+import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF.OutOfRangeState;
 import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.UnitsInfoIF;
-import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF.OutOfRangeState;
 import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 import uk.ac.rdg.resc.godiva.client.widgets.ElevationSelector;
 import uk.ac.rdg.resc.godiva.client.widgets.Info;
-import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorCombo;
+import uk.ac.rdg.resc.godiva.client.widgets.LayerSelectorTree;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 import uk.ac.rdg.resc.godiva.client.widgets.PaletteSelector;
 import uk.ac.rdg.resc.godiva.client.widgets.TimeSelector;
@@ -868,6 +868,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         return new ElevationSelector("mainLayer", "Depth", this);
     }
 
+    private HTML titleLabel;
+
     /**
      * Gets a new layer selector. This method is used in the construction of the
      * Godiva interface and is only called once.
@@ -875,7 +877,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      * @return A new instance of a {@link LayerSelectorIF}
      */
     protected LayerSelectorIF getLayerSelector() {
-        return new LayerSelectorCombo(this);
+        titleLabel = new HTML();
+        return new LayerSelectorTree(this, titleLabel);
     }
 
     /**
@@ -884,9 +887,15 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      * layout
      */
     protected Widget getLayout() {
-        return LayoutManager.getGodiva3Layout(layerSelector, widgetCollection.getUnitsInfo(),
-                widgetCollection.getTimeSelector(), widgetCollection.getElevationSelector(),
-                widgetCollection.getPaletteSelector(), kmzLink, permalink, email, screenshot, logo,
-                mapArea, loadingImage, anim, infoButton);
+        return LayoutManager.getTraditionalGodiva3Layout(layerSelector, titleLabel,
+                widgetCollection.getUnitsInfo(), widgetCollection.getTimeSelector(),
+                widgetCollection.getElevationSelector(), widgetCollection.getPaletteSelector(),
+                kmzLink, permalink, email, screenshot, logo, mapArea, loadingImage, anim,
+                infoButton);
+//        return LayoutManager.getCompactGodiva3Layout(layerSelector,
+//                widgetCollection.getUnitsInfo(), widgetCollection.getTimeSelector(),
+//                widgetCollection.getElevationSelector(), widgetCollection.getPaletteSelector(),
+//                kmzLink, permalink, email, screenshot, logo, mapArea, loadingImage, anim,
+//                infoButton);
     }
 }

@@ -168,6 +168,12 @@ public class ColouredGlyphLayer extends ImageLayer {
                  * Find the co-ordinates to draw the icon at
                  */
                 HorizontalPosition position = profileFeature.getHorizontalPosition();
+                if (!GISUtils.crsMatch(position.getCoordinateReferenceSystem(), params.getBbox()
+                        .getCoordinateReferenceSystem())) {
+                    position = GISUtils.transformPosition(position, params.getBbox()
+                            .getCoordinateReferenceSystem());
+                }
+
                 int i = xAxis.findIndexOfUnconstrained(position.getX());
                 int j = params.getHeight() - 1 - yAxis.findIndexOfUnconstrained(position.getY());
 
@@ -178,12 +184,14 @@ public class ColouredGlyphLayer extends ImageLayer {
                 int zIndex;
                 if (params.getTargetZ() == null) {
                     /*
-                     * If no target z is provided, pick the value closest to the surface
+                     * If no target z is provided, pick the value closest to the
+                     * surface
                      */
                     zIndex = profileFeature.getDomain().findIndexOf(
                             GISUtils.getClosestElevationToSurface(profileFeature.getDomain()));
                 } else {
-                    zIndex = profileFeature.getDomain().findIndexOf(params.getTargetZ());
+                    zIndex = GISUtils.getIndexOfClosestElevationTo(params.getTargetZ(),
+                            profileFeature.getDomain());
                 }
 
                 if (zIndex < 0) {

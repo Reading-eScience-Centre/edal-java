@@ -43,6 +43,7 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Guy Griffiths
  */
+@SuppressWarnings("deprecation")
 public class DialogBoxWithCloseButton extends DialogBox {
 
     private CentrePosIF localCentre;

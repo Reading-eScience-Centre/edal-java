@@ -183,7 +183,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         };
 
         maxScale = new TextBox();
-        maxScale.setWidth("60px");
+        maxScale.setWidth("80px");
         maxScale.addChangeHandler(scaleChangeHandler);
         maxScale.setTitle("The maximum value of the colour range");
         maxScale.setMaxLength(8);
@@ -215,7 +215,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         logScale = new ListBox();
         logScale.addItem("linear");
         logScale.addItem("log");
-        logScale.setWidth("60px");
+        logScale.setWidth("80px");
         logScale.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
@@ -231,7 +231,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         logScale.setTitle("Choose between a linear and a logarithmic scale");
 
         minScale = new TextBox();
-        minScale.setWidth("60px");
+        minScale.setWidth("80px");
         minScale.addChangeHandler(scaleChangeHandler);
         minScale.setTitle("The minimum value of the colour range");
         minScale.setMaxLength(8);
