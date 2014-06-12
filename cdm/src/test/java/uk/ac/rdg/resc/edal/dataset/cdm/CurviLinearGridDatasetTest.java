@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +30,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
+import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 
@@ -37,133 +39,142 @@ public class CurviLinearGridDatasetTest {
     private Dataset dataset;
     private NetcdfFile cdf;
     private String location;
+
     // parameters about the used test dataset
     private int etaSize = 336;
     private int xiSize = 896;
-    
+
     @Before
     public void setUp() throws Exception {
-       URL url = this.getClass().getResource("/output-curvilinear.nc");
-       
-        //URL url = this.getClass().getResource("/rectilinear_test_data.nc");
+        URL url = this.getClass().getResource("/output-curvilinear.nc");
         location = url.getPath();
-        //"C:/Users/yv903893/workspace/edal-java/cdm/src/test/resources/output-curvilinear.nc"
-        cdf =NetcdfFile.open(location);
+        cdf = NetcdfFile.open(location);
         CdmGridDatasetFactory datasetFactory = new CdmGridDatasetFactory();
         dataset = datasetFactory.createDataset("testdataset", location);
     }
-    
-    @Test
-    public void readData() throws IOException{
-        Variable allxU =cdf.findVariable("ally_u");
-        Variable allxV =cdf.findVariable("ally_v");
-        ArrayFloat uValue = (ArrayFloat) allxU.read();
-        ArrayFloat vValue = (ArrayFloat) allxV.read();
-        for(int i=0; i<vValue.getSize(); i++)
-            System.out.print(vValue.getFloat(i)+" ");
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testUnSupportedOperation() throws DataReadingException {
+        assertFalse(dataset.supportsProfileFeatureExtraction("allx_u"));
+        assertFalse(dataset.supportsTimeseriesExtraction("allx_u"));
+
+        HorizontalDomain hDomain = dataset.getVariableMetadata("allx_u").getHorizontalDomain();
+
+        BoundingBox bbox = hDomain.getBoundingBox();
+        PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
+                null, null, null);
+        Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
+                .extractTimeseriesFeatures(null, params);
+        assertEquals(0, timeSeriesFeatures.size());
+
+        Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(null,
+                params);
+        assertEquals(0, profileFeature.size());
     }
-    
+
     @Test
-    public void testCurviLinearCoords() throws Exception{
-        //for(String varId : dataset.getFeatureIds())
-            //System.out.println(varId);
-        //System.out.println(location);
-        Variable lon_rho =cdf.findVariable("lon_rho");
-        Variable lat_rho =cdf.findVariable("lat_rho");
+    public void testCurviLinearCoords() throws Exception {
+        Variable lon_rho = cdf.findVariable("lon_rho");
+        Variable lat_rho = cdf.findVariable("lat_rho");
 
         ArrayDouble lon_data = (ArrayDouble) lon_rho.read();
         ArrayDouble lat_data = (ArrayDouble) lat_rho.read();
 
-        //int yySize =lon_data.getShape()[1]; //896
-        //int xxSize =lon_data.getShape()[0]; //336
-        ValuesArray2D lon_values =new ValuesArray2D(xiSize, etaSize);
-        ValuesArray2D lat_values =new ValuesArray2D(xiSize, etaSize);
-        for(int i=0; i<lon_data.getSize(); i++){
+        ValuesArray2D lon_values = new ValuesArray2D(xiSize, etaSize);
+        ValuesArray2D lat_values = new ValuesArray2D(xiSize, etaSize);
+        for (int i = 0; i < lon_data.getSize(); i++) {
             int m = i % etaSize;
             int n = i / etaSize;
-            int [] coords =new int[ ] {n, m};
+            int[] coords = new int[] { n, m };
             lon_values.set(lon_data.getDouble(i), coords);
             lat_values.set(lat_data.getDouble(i), coords);
         }
-        assertEquals(lon_data.getDouble(etaSize), lon_values.get(1,0).doubleValue(), delta);
-        assertEquals(lat_data.getDouble(etaSize), lat_values.get(1,0).doubleValue(), delta);
-        CurvilinearCoords cCoords =new CurvilinearCoords(lon_values, lat_values);
-        
-        BoundingBox  expectedBbox = dataset.getVariableMetadata("allx_u").getHorizontalDomain().getBoundingBox();
-        
+        assertEquals(lon_data.getDouble(etaSize), lon_values.get(1, 0).doubleValue(), delta);
+        assertEquals(lat_data.getDouble(etaSize * 2), lat_values.get(2, 0).doubleValue(), delta);
+
+        CurvilinearCoords cCoords = new CurvilinearCoords(lon_values, lat_values);
+
+        BoundingBox expectedBbox = dataset.getVariableMetadata("allx_u").getHorizontalDomain()
+                .getBoundingBox();
+
         assertEquals(expectedBbox, cCoords.getBoundingBox());
         assertEquals(lon_data.getSize(), lon_values.size());
         assertEquals(etaSize, cCoords.getNi());
         assertEquals(xiSize, cCoords.getNj());
-        
-        int index =15000;
-        LonLatPosition expectedPos =new LonLatPosition(lon_data.getDouble(index), lat_data.getDouble(index));
-        int cCoords_i =index % etaSize;
-        int cCoords_j =index / etaSize;
-        //assertEquals(expectedPos, cCoords.getMidpoint(cCoords_i, cCoords_j));
 
-        //dataset.supportsProfileFeatureExtraction(varId)
-        //dataset.getVariableMetadata("allx_u").getHorizontalDomain().
-        
-        GridVariableMetadata metadata =(GridVariableMetadata) dataset.getVariableMetadata("allx_u");
+        int index = 15000;
+        LonLatPosition expectedPos = new LonLatPosition(lon_data.getDouble(index),
+                lat_data.getDouble(index));
+        int cCoords_i = index % etaSize;
+        int cCoords_j = index / etaSize;
+        // LonLatPosition not implement hash code and equals method so the below
+        // statement return false
+        // thought the values are right.
+        // assertEquals(expectedPos, cCoords.getMidpoint(cCoords_i, cCoords_j));
 
-        int xSize = metadata.getHorizontalDomain().getXSize();
-        System.out.println(xSize);
-        dataset.readFeature("allx_u");
-        //System.out.println(metadata.getHorizontalDomain().getXSize());
-        assertTrue(dataset.readFeature("allx_u") instanceof GridFeature);
+        List<Cell> celllist = cCoords.getCells();
+        CurvilinearCoords.Cell cell = cCoords.getCell(cCoords_i, cCoords_j);
+        assertEquals(celllist.get(index), cell);
 
+        assertEquals(cCoords_i, cell.getI());
+        assertEquals(cCoords_j, cell.getJ());
+        // assertEquals(expectedPos, cell.getCentre());
     }
 
     @Test
-    public void testCurviLinearDataset() throws DataReadingException, IOException{
+    public void testCurviLinearDataset() throws DataReadingException, IOException {
         assertTrue(dataset instanceof AbstractGridDataset);
-        GridFeature uValue = ((AbstractGridDataset) dataset).readFeature("ally_u");
-        GridFeature vValue = ((AbstractGridDataset) dataset).readFeature("ally_v");
-        
-        Variable allxU =cdf.findVariable("ally_u");
-        Variable allxV =cdf.findVariable("ally_v");
-        assertEquals(allxU.getSize(), allxV.getSize());
-        ArrayFloat uValues = (ArrayFloat) allxU.read();
-        ArrayFloat vValues = (ArrayFloat) allxV.read();
-        
-        for(int i=0; i< uValues.getSize(); i++){
-            int xIndex = i % xiSize;
-            int yIndex = i /xiSize;
-            float allxUValue =uValue.getValues("ally_u").get(0,0,yIndex,xIndex).floatValue();
-            float allxVValue =vValue.getValues("ally_v").get(0,0,yIndex,xIndex).floatValue();
-            assertEquals(uValues.getFloat(i), allxUValue, delta);
-            assertEquals(vValues.getFloat(i), allxVValue, delta);
+
+        GridFeature allxUValues = ((AbstractGridDataset) dataset).readFeature("allx_u");
+        GridFeature allxVValues = ((AbstractGridDataset) dataset).readFeature("allx_v");
+        GridFeature allyUValues = ((AbstractGridDataset) dataset).readFeature("ally_u");
+        GridFeature allyVValues = ((AbstractGridDataset) dataset).readFeature("ally_v");
+
+        for (int n = 0; n < xiSize; n++) {
+            for (int m = 0; m < etaSize; m++) {
+                float xUVale = allxUValues.getValues("allx_u").get(0, 0, m, n).floatValue();
+                float xVVale = allxVValues.getValues("allx_v").get(0, 0, m, n).floatValue();
+                float yUVale = allyUValues.getValues("ally_u").get(0, 0, m, n).floatValue();
+                float yVVale = allyVValues.getValues("ally_v").get(0, 0, m, n).floatValue();
+
+                float expectedXU = m;
+                float expectedXV = 0.0f;
+                float expectedYU = 0.0f;
+                float expectedYV = n;
+
+                assertEquals(expectedXU, xUVale, delta);
+                assertEquals(expectedXV, xVVale, delta);
+                assertEquals(expectedYU, yUVale, delta);
+                assertEquals(expectedYV, yVVale, delta);
+            }
         }
-        
-        HorizontalDomain hDomain =dataset.getVariableMetadata("allx_u").getHorizontalDomain();
-        
-        BoundingBox  bbox = hDomain.getBoundingBox();
-        PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null,
-                null, null, null, null);
-        /*Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                .extractTimeseriesFeatures(null, params);
-        assertEquals(0, timeSeriesFeatures.size());*/
-        
-        /*Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(
-                null, params);
-        assertEquals(0, profileFeature.size());*/
-        
-        Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset
-                .extractMapFeatures(null, params);
+
+        HorizontalDomain hDomain = dataset.getVariableMetadata("allx_u").getHorizontalDomain();
+
+        BoundingBox bbox = hDomain.getBoundingBox();
+        PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
+                null, null, null);
+        Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset.extractMapFeatures(null,
+                params);
         DiscreteFeature<?, ?> feature = mapFeature.iterator().next();
         MapFeature data = (MapFeature) feature;
 
-        
         Array2D<Number> xUValues = data.getValues("allx_u");
         assertArrayEquals(new int[] { xiSize, etaSize }, xUValues.getShape());
-        for(int m=0; m<xiSize; m++){
-            for(int n=0; n<etaSize; n++){
-                int index = n+ m*etaSize;
-                System.out.println(index);
-                //float f =uValues.getFloat(index);
-                //float ff =xUValues.get(m,n).floatValue();
-                //assertEquals(uValues.getFloat(index), xUValues.get(m,n).floatValue(), delta);
+
+        // as discussed, dataset uses the horizontal grid to fetch data not the
+        // curvilinear grid
+        // so the data it can fetch is limited and it's difficult for use to
+        // compare
+        for (int m = 0; m < xiSize; m++) {
+            for (int n = 0; n < etaSize; n++) {
+
+                Number number = xUValues.get(m, n);
+//                if(number != null) {
+                // System.out.println(number);
+//                }
+                // assertEquals(uValues.getFloat(index),
+                // xUValues.get(m,n).floatValue(), delta);
             }
         }
     }
