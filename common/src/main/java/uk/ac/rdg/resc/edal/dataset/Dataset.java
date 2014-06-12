@@ -220,9 +220,11 @@ public interface Dataset {
      * @return A {@link Collection} of {@link ProfileFeature}s
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
+     * @throws UnsupportedOperationException
+     *             if not all of the requested variables have a vertical domain
      */
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException;
+            PlottingDomainParams params) throws DataReadingException, UnsupportedOperationException;
 
     /**
      * @param varId
@@ -306,9 +308,11 @@ public interface Dataset {
      * @return A {@link Collection} of {@link PointSeriesFeature}s
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
+     * @throws UnsupportedOperationException
+     *             if not all of the requested variables have a time domain
      */
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException;
+            PlottingDomainParams params) throws DataReadingException, UnsupportedOperationException;
 
     /**
      * @param varId

@@ -97,6 +97,8 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  */
 public abstract class AbstractGridDataset extends AbstractDataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
+    private static final String NO_Z_AXIS_CODE = "NO_Z_AXIS";
+    private static final String NO_T_AXIS_CODE = "NO_T_AXIS";
 
     public AbstractGridDataset(String id, Collection<GridVariableMetadata> vars) {
         super(id, vars);
@@ -596,8 +598,14 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         try {
             zAxis = getVerticalAxis(varIds);
         } catch (IncorrectDomainException e) {
-            log.error("Cannot extract profiles for variables without vertical information", e);
-            throw new DataReadingException("Problem finding common z-axis", e);
+            if (NO_Z_AXIS_CODE.equals(e.getCode())) {
+                log.error("Cannot extract profiles for variables without vertical information", e);
+                throw new UnsupportedOperationException(
+                        "Extraction of vertical profile features is only supported when all requested variables have a vertical domain",
+                        e);
+            } else {
+                throw new DataReadingException("Problem finding common z-axis", e);
+            }
         }
 
         if (zAxis == null) {
@@ -875,7 +883,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                  * will not work
                  */
                 throw new IncorrectDomainException(
-                        "All variables must have a vertical domain to extract profile features");
+                        "All variables must have a vertical domain to extract profile features",
+                        NO_Z_AXIS_CODE);
             }
 
             if (verticalDomain instanceof VerticalAxis) {
@@ -1172,8 +1181,14 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         try {
             tAxis = getTimeAxis(varIds);
         } catch (IncorrectDomainException e) {
-            log.error("Cannot extract timeseries for variables without time information", e);
-            throw new DataReadingException("Problem finding common t-axis", e);
+            if (NO_T_AXIS_CODE.equals(e.getCode())) {
+                log.error("Cannot extract timeseries for variables without time information", e);
+                throw new UnsupportedOperationException(
+                        "Extraction of time-series features is only supported when all requested variables have a time domain",
+                        e);
+            } else {
+                throw new DataReadingException("Problem finding common t-axis", e);
+            }
         }
         if (tAxis == null) {
             /*
@@ -1461,7 +1476,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                  * will not work
                  */
                 throw new IncorrectDomainException(
-                        "All variables must have a temporal domain to extract point series features");
+                        "All variables must have a temporal domain to extract point series features",
+                        NO_T_AXIS_CODE);
             }
 
             if (temporalDomain instanceof TimeAxis) {
