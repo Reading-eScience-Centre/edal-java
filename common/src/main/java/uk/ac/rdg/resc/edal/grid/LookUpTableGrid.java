@@ -32,9 +32,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.LookUpTable;
@@ -106,6 +109,9 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
 
     @Override
     public GridCoordinates2D findIndexOf(HorizontalPosition position) {
+        if(!GISUtils.isWgs84LonLat(position.getCoordinateReferenceSystem())) {
+            position = GISUtils.transformPosition(position, DefaultGeographicCRS.WGS84);
+        }
         double x = position.getX();
         double y = position.getY();
         /*
@@ -178,12 +184,12 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
 
     @Override
     public int getXSize() {
-        return lut.getNumLonPoints();
+        return curvCoords.getNi();
     }
 
     @Override
     public int getYSize() {
-        return lut.getNumLatPoints();
+        return curvCoords.getNj();
     }
 
     @Override
