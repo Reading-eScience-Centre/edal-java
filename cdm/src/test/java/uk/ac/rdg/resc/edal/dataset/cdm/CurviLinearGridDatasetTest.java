@@ -15,6 +15,7 @@ import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
@@ -26,7 +27,9 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 
 public class CurviLinearGridDatasetTest {
@@ -117,18 +120,51 @@ public class CurviLinearGridDatasetTest {
         assertTrue(dataset instanceof AbstractGridDataset);
         GridFeature uValue = ((AbstractGridDataset) dataset).readFeature("ally_u");
         GridFeature vValue = ((AbstractGridDataset) dataset).readFeature("ally_v");
+        
         Variable allxU =cdf.findVariable("ally_u");
         Variable allxV =cdf.findVariable("ally_v");
+        assertEquals(allxU.getSize(), allxV.getSize());
         ArrayFloat uValues = (ArrayFloat) allxU.read();
         ArrayFloat vValues = (ArrayFloat) allxV.read();
         
         for(int i=0; i< uValues.getSize(); i++){
-            int m = i % xiSize;
-            int n = i /xiSize;
-            float f =uValue.getValues("ally_u").get(0,0,n,m).floatValue();
-            float ff =vValue.getValues("ally_v").get(0,0,n,m).floatValue();
-            assertEquals(uValues.getFloat(i), f, delta);
-            assertEquals(vValues.getFloat(i), ff, delta);
+            int xIndex = i % xiSize;
+            int yIndex = i /xiSize;
+            float allxUValue =uValue.getValues("ally_u").get(0,0,yIndex,xIndex).floatValue();
+            float allxVValue =vValue.getValues("ally_v").get(0,0,yIndex,xIndex).floatValue();
+            assertEquals(uValues.getFloat(i), allxUValue, delta);
+            assertEquals(vValues.getFloat(i), allxVValue, delta);
+        }
+        
+        HorizontalDomain hDomain =dataset.getVariableMetadata("allx_u").getHorizontalDomain();
+        
+        BoundingBox  bbox = hDomain.getBoundingBox();
+        PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null,
+                null, null, null, null);
+        /*Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
+                .extractTimeseriesFeatures(null, params);
+        assertEquals(0, timeSeriesFeatures.size());*/
+        
+        /*Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(
+                null, params);
+        assertEquals(0, profileFeature.size());*/
+        
+        Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset
+                .extractMapFeatures(null, params);
+        DiscreteFeature<?, ?> feature = mapFeature.iterator().next();
+        MapFeature data = (MapFeature) feature;
+
+        
+        Array2D<Number> xUValues = data.getValues("allx_u");
+        assertArrayEquals(new int[] { xiSize, etaSize }, xUValues.getShape());
+        for(int m=0; m<xiSize; m++){
+            for(int n=0; n<etaSize; n++){
+                int index = n+ m*etaSize;
+                System.out.println(index);
+                //float f =uValues.getFloat(index);
+                //float ff =xUValues.get(m,n).floatValue();
+                //assertEquals(uValues.getFloat(index), xUValues.get(m,n).floatValue(), delta);
+            }
         }
     }
 }
