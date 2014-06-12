@@ -148,22 +148,17 @@ public final class GISUtils {
      * value which is nearest to the target, taking wrapping into account
      * 
      * @param target
-     *            The longitude which we are aiming to be nearest to, in the
-     *            range (-180:180]
+     *            The longitude which we are aiming to be nearest to
      * @param longitude
      *            The longitude which we want to be nearest to the target
      * @return A longitude value which is equivalent to <code>longitude</code>
      */
     public static double getNearestEquivalentLongitude(double target, double longitude) {
-        if (target <= -180.0 || target > 180.0) {
-            throw new IllegalArgumentException(
-                    "Reference longitude must be in the range (-180,180]");
-        }
-        double lon1 = constrainLongitude180(longitude);
-        double lon2 = target < 0.0 ? lon1 - 360.0 : lon1 + 360.0;
+        double lon1 = getNextEquivalentLongitude(target, longitude);
+        double lon2 = lon1 - 360.0;
         double d1 = Math.abs(target - lon1);
         double d2 = Math.abs(target - lon2);
-        return d1 < d2 ? lon1 : lon2;
+        return d1 <= d2 ? lon1 : lon2;
     }
 
     /**
