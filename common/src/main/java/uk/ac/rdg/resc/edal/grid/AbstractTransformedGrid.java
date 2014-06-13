@@ -33,8 +33,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * This is an abstract implementation of a {@link HorizontalGrid} for which
- * there exists a mathematical transformation to convert WGS84 to the native
- * CRS.
+ * there exists a transformation to convert WGS84 to the native CRS.
  * 
  * This transformation is invisible externally - i.e.
  * {@link AbstractTransformedGrid#getCoordinateReferenceSystem()} will return

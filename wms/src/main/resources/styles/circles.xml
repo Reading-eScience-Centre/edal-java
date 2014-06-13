@@ -22,7 +22,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
                 <resc:Range>
                   <resc:Minimum>$scaleMin</resc:Minimum>
                   <resc:Maximum>$scaleMax</resc:Maximum>
-                  <resc:Spacing>linear</resc:Spacing>
+                  <resc:Spacing>$logarithmic</resc:Spacing>
                 </resc:Range>
                 <resc:NumberOfSegments>$numColorBands</resc:NumberOfSegments>
               </resc:Segment>

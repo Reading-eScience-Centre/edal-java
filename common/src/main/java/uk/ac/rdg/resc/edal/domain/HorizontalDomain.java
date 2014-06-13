@@ -43,7 +43,12 @@ public interface HorizontalDomain extends Domain<HorizontalPosition> {
 
     /**
      * Returns the bounding box of the domain in the domain's own coordinate
-     * reference system
+     * reference system.
+     * 
+     * For domains which do not have a native co-ordinate reference system this
+     * may return a {@link BoundingBox} in a different CRS. Consequently this
+     * {@link BoundingBox} is not guaranteed to be a tight bound around the
+     * domain.
      */
     public BoundingBox getBoundingBox();
 
