@@ -94,7 +94,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * time) is separate to the call where we discover what actual times (as
      * opposed to dates) are available
      */
-    private String nearestTime;
+    protected String nearestTime;
 
     /*
      * Map widget
@@ -110,9 +110,9 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * These 3 booleans are used so that we only update the map when all
      * required data have been loaded
      */
-    private boolean layerDetailsLoaded;
-    private boolean dateTimeDetailsLoaded;
-    private boolean minMaxDetailsLoaded;
+    protected boolean layerDetailsLoaded;
+    protected boolean dateTimeDetailsLoaded;
+    protected boolean minMaxDetailsLoaded;
 
     /**
      * This is the entry point for GWT.
@@ -265,7 +265,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            a {@link Map} of parameters and their values
      * @return the URL of the request
      */
-    private String getWmsRequestUrl(String wmsUrl, String request, Map<String, String> parameters) {
+    protected String getWmsRequestUrl(String wmsUrl, String request, Map<String, String> parameters) {
         StringBuilder url = new StringBuilder();
         url.append("?request=" + request);
         for (String key : parameters.keySet()) {
@@ -777,7 +777,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * Checks that all the required details are loaded (or do not need to be)
      * before calling the subclass method
      */
-    private void updateMapBase(String layerUpdated) {
+    protected void updateMapBase(String layerUpdated) {
         if (layerDetailsLoaded && dateTimeDetailsLoaded && minMaxDetailsLoaded) {
             mapArea.updatePos();
             updateMap(mapArea, layerUpdated);

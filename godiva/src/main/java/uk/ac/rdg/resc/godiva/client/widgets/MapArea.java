@@ -1123,7 +1123,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      * 
      * If it hasn't been set, pick a random layer. Failing that, return null
      */
-    private String getTransectLayerId() {
+    protected String getTransectLayerId() {
         if (transectLayer != null) {
             return transectLayer;
         } else {

@@ -90,8 +90,19 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 err.handleError(new IndexOutOfBoundsException(
                         "Wrong number of elements for bounding box: " + bboxArr.size()));
             } else {
-                layerDetails.setExtents(bboxArr.get(0) + "," + bboxArr.get(1) + ","
-                        + bboxArr.get(2) + "," + bboxArr.get(3));
+                if (bboxArr.get(0).isNumber() != null) {
+                    layerDetails.setExtents(bboxArr.get(0) + "," + bboxArr.get(1) + ","
+                            + bboxArr.get(2) + "," + bboxArr.get(3));
+                } else {
+                    /*
+                     * Backward-compatibility for servers where the bounding box
+                     * was returned as a JSONArray containing strings
+                     */
+                    layerDetails.setExtents(bboxArr.get(0).isString().stringValue() + ","
+                            + bboxArr.get(1).isString().stringValue() + ","
+                            + bboxArr.get(2).isString().stringValue() + ","
+                            + bboxArr.get(3).isString().stringValue());
+                }
             }
         }
 
@@ -102,7 +113,16 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 err.handleError(new IndexOutOfBoundsException(
                         "Wrong number of elements for scale range: " + scaleRangeArr.size()));
             } else {
-                layerDetails.setScaleRange(scaleRangeArr.get(0) + "," + scaleRangeArr.get(1));
+                if (scaleRangeArr.get(0).isNumber() != null) {
+                    layerDetails.setScaleRange(scaleRangeArr.get(0) + "," + scaleRangeArr.get(1));
+                } else {
+                    /*
+                     * Backward-compatibility for servers where the scale range
+                     * was returned as a JSONArray containing strings
+                     */
+                    layerDetails.setScaleRange(scaleRangeArr.get(0).isString().stringValue() + ","
+                            + scaleRangeArr.get(1).isString().stringValue());
+                }
             }
         }
 
@@ -182,7 +202,17 @@ public abstract class LayerRequestCallback implements RequestCallback {
         }
         layerDetails.setContinuousZ(continuousZ);
 
-        if (continuousT) {
+        /*
+         * Backwards compatibility for old clients which marked continuous z and
+         * t as multifeature.
+         */
+        JSONValue multiFeatureJson = parentObj.get("multiFeature");
+        if(multiFeatureJson != null) {
+            layerDetails.setContinuousZ(true);
+            layerDetails.setContinuousT(true);
+        }
+
+        if (layerDetails.isContinuousT()) {
             JSONValue startTimeJson = parentObj.get("startTime");
             if (startTimeJson != null) {
                 layerDetails.setStartTime(startTimeJson.isString().stringValue());
