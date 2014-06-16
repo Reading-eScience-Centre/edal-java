@@ -63,15 +63,12 @@ import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
-import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
@@ -84,6 +81,8 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 public final class CdmGridDatasetFactory extends DatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
 
+    private String ncmlString = null;
+
     @Override
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
         VerticalCrs vCrs = null;
@@ -94,6 +93,47 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
              * Open the dataset, using the cache for NcML aggregations
              */
             nc = openAndAggregateDataset(location);
+
+            /*-
+             * We may in future be able to use forecast model run collection aggregations for
+             * dealing with the case of overlapping time axes.  To do this the code will look
+             * something like this:
+             * 
+             * StringBuilder sb = new StringBuilder(); 
+             * Formatter formatter = new Formatter(sb, Locale.UK);
+             * Fmrc f = Fmrc.open(location, formatter);
+             * 
+             * in openAndAggregateDataset.  It will need to build up an NcML document which
+             * does this.  It should look something like:
+             * 
+             *  <netcdf xmlns="http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2" enhance="true">
+             *      <aggregation dimName="run" type="forecastModelRunCollection" timeUnitsChange="true">
+             *           <!-- scanFmrc actually works, but what we want is something like the following bit -->
+             *           <scanFmrc location="/home/guy/Data/POLCOMS_IRISH/" regExp=".*\.nc"/>
+             *           <netcdf location="/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090320.nc" coordValue="2009-03-20T00:00:00Z" enhance="true" />
+             *           <netcdf location="/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090321.nc" coordValue="2009-03-21T00:00:00Z" enhance="true" />
+             *           <netcdf location="/home/guy/Data/POLCOMS_IRISH/polcoms_irish_hourly_20090322.nc" coordValue="2009-03-22T00:00:00Z" enhance="true" />
+             *      </aggregation>
+             *  </netcdf>
+             * 
+             * For more documentation see: 
+             * http://mailman.unidata.ucar.edu/software/thredds/current/netcdf-java/ncml/FmrcAggregation.html
+             * 
+             * We then can do stuff like:
+             * 
+             * ucar.nc2.dt.GridDataset gridDataset = f.getDatasetBest();
+             * 
+             * To get the single best aggregation of the overlapping time axis
+             * 
+             * Then we need to work with GridDatasets in place of NetcdfDatasets.  Stuff like:
+             * 
+             * for(Variable variable : gridDataset.getNetcdfFile().getVariables()) {
+             *    // blah blah
+             * }
+             * 
+             * will be necessary.  We need to check that that works with remote datasets too
+             */
+
             /*
              * We look for NetCDF-U variables to group mean/standard-deviation.
              * 
@@ -107,8 +147,8 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                  * grid directly associated with them
                  */
                 for (Attribute attr : variable.getAttributes()) {
-                    if (attr.getName().equalsIgnoreCase("ancillary_variables")) {
-                        varId2AncillaryVars.put(variable.getName(), attr.getStringValue()
+                    if (attr.getFullName().equalsIgnoreCase("ancillary_variables")) {
+                        varId2AncillaryVars.put(variable.getFullName(), attr.getStringValue()
                                 .split(" "));
                         continue;
                     }
@@ -171,7 +211,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                  */
                 for (GridDatatype grid : gridset.getGrids()) {
                     VariableDS variable = grid.getVariable();
-                    String varId = variable.getName();
+                    String varId = variable.getFullName();
                     String name = getVariableName(variable);
 
                     /*
@@ -188,15 +228,15 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                      * UncertML, store its ID and the (possible) UncertML URI
                      */
                     for (Attribute attr : variable.getAttributes()) {
-                        if (attr.getName().equalsIgnoreCase("ref")) {
+                        if (attr.getFullName().equalsIgnoreCase("ref")) {
                             varId2UncertMLRefs.put(varId, attr.getStringValue());
                         }
                     }
 
-                    Parameter parameter = new Parameter(varId, variable.getShortName(), variable.getDescription(),
-                            variable.getUnitsString(), name);
-                    GridVariableMetadata metadata = new GridVariableMetadata(variable.getName(),
-                            parameter, hDomain, zDomain, tDomain, true);
+                    Parameter parameter = new Parameter(varId, variable.getShortName(),
+                            variable.getDescription(), variable.getUnitsString(), name);
+                    GridVariableMetadata metadata = new GridVariableMetadata(
+                            variable.getFullName(), parameter, hDomain, zDomain, tDomain, true);
                     vars.add(metadata);
 
                     if (name != null) {
@@ -308,7 +348,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         }
     }
 
-    private static final class CdmGridDataset extends AbstractGridDataset {
+    private final class CdmGridDataset extends AbstractGridDataset {
         private final String location;
         private final DataReadingStrategy dataReadingStrategy;
         private final VerticalCrs vCrs;
@@ -373,13 +413,13 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
      * @throws IOException
      *             if there was an error reading from the data source.
      */
-    private static NetcdfDataset openAndAggregateDataset(String location) throws IOException,
+    private NetcdfDataset openAndAggregateDataset(String location) throws IOException,
             EdalException {
         List<File> files = null;
-        try{
+        try {
             files = CdmUtils.expandGlobExpression(location);
         } catch (NullPointerException e) {
-            System.out.println("NPE processing location: "+location);
+            System.out.println("NPE processing location: " + location);
             throw e;
         }
         NetcdfDataset nc;
@@ -395,104 +435,118 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
              * We have multiple files in a glob expression. We write some NcML
              * and use the NetCDF aggregation libs to parse this into an
              * aggregated dataset.
+             * 
+             * If we have already generated the ncML on a previous call, just
+             * use that.
              */
-
-            /*
-             * Find the name of the time dimension
-             */
-            NetcdfDataset first = openAndAggregateDataset(files.get(0).getAbsolutePath());
-            String timeDimName = null;
-            for (Variable var : first.getVariables()) {
-                if (var.isCoordinateVariable()) {
-                    for (Attribute attr : var.getAttributes()) {
-                        if (attr.getName().equalsIgnoreCase("units")
-                                && attr.getStringValue().contains(" since ")) {
+            if (ncmlString == null) {
+                /*
+                 * Find the name of the time dimension
+                 */
+                NetcdfDataset first = openAndAggregateDataset(files.get(0).getAbsolutePath());
+                String timeDimName = null;
+                for (Variable var : first.getVariables()) {
+                    if (var.isCoordinateVariable()) {
+                        for (Attribute attr : var.getAttributes()) {
+                            if (attr.getFullName().equalsIgnoreCase("units")
+                                    && attr.getStringValue().contains(" since ")) {
+                                /*
+                                 * This is the time dimension. Since this is a
+                                 * co-ordinate variable, there is only 1
+                                 * dimension
+                                 */
+                                Dimension timeDimension = var.getDimension(0);
+                                timeDimName = timeDimension.getFullName();
+                            }
+                        }
+                    }
+                }
+                first.close();
+                if (timeDimName == null) {
+                    throw new EdalException("Cannot join multiple files without time dimensions");
+                }
+                /*
+                 * We can't assume that the glob expression will have returned
+                 * the files in time order.
+                 * 
+                 * We could assume that alphabetical == time ordered (and for
+                 * properly named files it will - but let's not rely on our
+                 * users having sensible naming conventions...
+                 * 
+                 * Sort the list using a comparator which opens the file and
+                 * gets the first value of the time dimension
+                 */
+                final String aggDimName = timeDimName;
+                Collections.sort(files, new Comparator<File>() {
+                    @Override
+                    public int compare(File ncFile1, File ncFile2) {
+                        NetcdfFile nc1 = null;
+                        NetcdfFile nc2 = null;
+                        try {
+                            nc1 = NetcdfFile.open(ncFile1.getAbsolutePath());
+                            nc2 = NetcdfFile.open(ncFile2.getAbsolutePath());
+                            Variable timeVar1 = nc1.findVariable(aggDimName);
+                            Variable timeVar2 = nc2.findVariable(aggDimName);
+                            long time1 = timeVar1.read().getLong(0);
+                            long time2 = timeVar2.read().getLong(0);
+                            return Long.compare(time1, time2);
+                        } catch (Exception e) {
                             /*
-                             * This is the time dimension. Since this is a
-                             * co-ordinate variable, there is only 1 dimension
+                             * There was a problem reading the data. Sort
+                             * alphanumerically by filename and hope for the
+                             * best...
+                             * 
+                             * This catches all exceptions because however it
+                             * fails this is still our best option.
+                             * 
+                             * If the error is a genuine problem, it'll show up
+                             * as soon as we try and aggregate.
                              */
-                            Dimension timeDimension = var.getDimension(0);
-                            timeDimName = timeDimension.getName();
-                        }
-                    }
-                }
-            }
-            first.close();
-            if (timeDimName == null) {
-                throw new EdalException("Cannot join multiple files without time dimensions");
-            }
-            /*
-             * We can't assume that the glob expression will have returned the
-             * files in time order.
-             * 
-             * We could assume that alphabetical == time ordered (and for
-             * properly named files it will - but let's not rely on our users
-             * having sensible naming conventions...
-             * 
-             * Sort the list using a comparator which opens the file and gets
-             * the first value of the time dimension
-             */
-            final String aggDimName = timeDimName;
-            Collections.sort(files, new Comparator<File>() {
-                @Override
-                public int compare(File ncFile1, File ncFile2) {
-                    NetcdfFile nc1 = null;
-                    NetcdfFile nc2 = null;
-                    try {
-                        nc1 = NetcdfFile.open(ncFile1.getAbsolutePath());
-                        nc2 = NetcdfFile.open(ncFile2.getAbsolutePath());
-                        Variable timeVar1 = nc1.findVariable(aggDimName);
-                        Variable timeVar2 = nc2.findVariable(aggDimName);
-                        long time1 = timeVar1.read().getLong(0);
-                        long time2 = timeVar2.read().getLong(0);
-                        return Long.compare(time1, time2);
-                    } catch (Exception e) {
-                        /*
-                         * There was a problem reading the data. Sort
-                         * alphanumerically by filename and hope for the best...
-                         * 
-                         * This catches all exceptions because however it fails
-                         * this is still our best option.
-                         * 
-                         * If the error is a genuine problem, it'll show up as
-                         * soon as we try and aggregate.
-                         */
-                        return ncFile1.getAbsolutePath().compareTo(ncFile2.getAbsolutePath());
-                    } finally {
-                        if (nc1 != null) {
-                            try {
-                                nc1.close();
-                            } catch (IOException e) {
-                                log.error("Problem closing netcdf file", e);
+                            return ncFile1.getAbsolutePath().compareTo(ncFile2.getAbsolutePath());
+                        } finally {
+                            if (nc1 != null) {
+                                try {
+                                    nc1.close();
+                                } catch (IOException e) {
+                                    log.error("Problem closing netcdf file", e);
+                                }
                             }
-                        }
-                        if (nc2 != null) {
-                            try {
-                                nc2.close();
-                            } catch (IOException e) {
-                                log.error("Problem closing netcdf file", e);
+                            if (nc2 != null) {
+                                try {
+                                    nc2.close();
+                                } catch (IOException e) {
+                                    log.error("Problem closing netcdf file", e);
+                                }
                             }
                         }
                     }
+                });
+
+                /*
+                 * Now create the NcML string and use it to create an aggregated
+                 * dataset
+                 */
+                StringBuffer ncmlStringBuffer = new StringBuffer();
+                ncmlStringBuffer
+                        .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
+                ncmlStringBuffer
+                        .append("<aggregation dimName=\"run\" type=\"forecastModelRunCollection\">");
+                ncmlStringBuffer.append("<netcdf coordValue=\"2009-03-20T00:00:00Z\">");
+                ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName
+                        + "\" type=\"joinExisting\">");
+                int i = 0;
+                for (File file : files) {
+                    ncmlStringBuffer.append("<netcdf location=\"" + file.getAbsolutePath()
+                            + "\" coordValue=\"" + i + "\"/>");
                 }
-            });
+                ncmlStringBuffer.append("</aggregation>");
+                ncmlStringBuffer.append("</netcdf>");
+                ncmlStringBuffer.append("</aggregation>");
+                ncmlStringBuffer.append("</netcdf>");
 
-            /*
-             * Now create the NcML string and use it to create an aggregated
-             * dataset
-             */
-            StringBuffer ncmlString = new StringBuffer();
-            ncmlString
-                    .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
-            ncmlString
-                    .append("<aggregation dimName=\"" + timeDimName + "\" type=\"joinExisting\">");
-            for (File file : files) {
-                ncmlString.append("<netcdf location=\"" + file.getAbsolutePath() + "\"/>");
+                ncmlString = ncmlStringBuffer.toString();
             }
-            ncmlString.append("</aggregation>");
-            ncmlString.append("</netcdf>");
-
-            nc = NcMLReader.readNcML(new StringReader(ncmlString.toString()), null);
+            nc = NcMLReader.readNcML(new StringReader(ncmlString), null);
         }
 
         return nc;
@@ -514,7 +568,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         if (stdNameAtt == null || stdNameAtt.getStringValue().trim().equals("")) {
             Attribute longNameAtt = var.findAttributeIgnoreCase("long_name");
             if (longNameAtt == null || longNameAtt.getStringValue().trim().equals("")) {
-                return var.getName();
+                return var.getFullName();
             } else {
                 return longNameAtt.getStringValue();
             }

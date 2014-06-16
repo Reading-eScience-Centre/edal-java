@@ -33,7 +33,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.oro.io.GlobFilenameFilter;
@@ -58,7 +57,7 @@ import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
-import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
+import ucar.nc2.time.CalendarDate;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
@@ -281,8 +280,8 @@ public final class CdmUtils {
                     + " cannot be handled");
         }
         List<DateTime> timesteps = new ArrayList<DateTime>();
-        for (Date date : timeAxis.getTimeDates()) {
-            timesteps.add(new DateTime(date.getTime(), chron));
+        for (CalendarDate date : timeAxis.getCalendarDates()) {
+            timesteps.add(new DateTime(date.getMillis(), chron));
         }
         return new TimeAxisImpl("time", timesteps);
     }
@@ -331,7 +330,7 @@ public final class CdmUtils {
             boolean isLongitude) {
         if (axis == null)
             throw new NullPointerException();
-        String name = axis.getName();
+        String name = axis.getFullName();
         // TODO: generate coordinate system axes if appropriate
         if (axis.isRegular()) {
             return new RegularAxisImpl(name, axis.getStart(), axis.getIncrement(),

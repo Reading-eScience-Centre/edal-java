@@ -98,7 +98,7 @@ final class DataChunk {
      */
     private static Array readVariable(Variable var, RangesList ranges) throws IOException {
         try {
-            log.debug("Reading from variable {} with ranges {}", var.getName(), ranges.toString());
+            log.debug("Reading from variable {} with ranges {}", var.getFullName(), ranges.toString());
             return var.read(ranges.getRanges());
         } catch (InvalidRangeException ire) {
             throw new IllegalArgumentException(ire);

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- POM for core module -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>edal</artifactId>
@@ -20,7 +21,7 @@
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>netcdf</artifactId>
-            <version>4.2.20</version>
+            <version>4.3.22</version>
             <optional>false</optional>
             <exclusions>
                 <exclusion>
@@ -60,5 +61,11 @@
             <version>4.0.92</version>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <id>unidata-releases</id>
+            <url>https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/</url>
+        </repository>
+    </repositories>
 </project>
 
