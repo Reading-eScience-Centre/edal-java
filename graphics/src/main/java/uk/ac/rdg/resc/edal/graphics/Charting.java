@@ -134,9 +134,10 @@ final public class Charting {
                 /*
                  * This is the label used for the legend.
                  */
-                String legend = feature.getName() + "(" + feature.getHorizontalPosition().getX()
-                        + "," + feature.getHorizontalPosition().getY() + ") - "
-                        + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
+                String legend = feature.getName() + "("
+                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ","
+                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ") - "
+                        + " - " + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
                 XYSeries series = new XYSeries(legend, true);
                 series.setDescription(feature.getParameter(varId).getDescription());
                 for (int i = 0; i < elevationValues.size(); i++) {
@@ -196,8 +197,6 @@ final public class Charting {
                 title.append(" variables: ");
             }
             title.append(varList.toString());
-//            title.append(" near ");
-//            title.append(hPos.toString());
         } else {
             title.append("No data to plot at ");
             title.append(hPos.toString());
@@ -303,8 +302,6 @@ final public class Charting {
                 title.append("variables: ");
             }
             title.append(varList.toString());
-//            title.append(" near ");
-//            title.append(hPos.toString());
         } else {
             title.append("No data to plot at ");
             title.append(hPos.toString());

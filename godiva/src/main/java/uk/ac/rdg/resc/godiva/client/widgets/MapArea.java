@@ -157,7 +157,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         } else {
             this.proxyUrl = proxyUrl;
         }
-        
+
         wmsLayers = new LinkedHashMap<String, WmsDetails>();
 
         /*
@@ -451,7 +451,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
 
         /*
-         * This is a little weird and should be unnecessary.  However, it's not unnecessary.
+         * This is a little weird and should be unnecessary. However, it's not
+         * unnecessary.
          * 
          * Take it out and try if you really want.
          */
@@ -513,27 +514,21 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 }
 
                 final String layer = wmsLayers.get(layerId).wms.getParams().getLayers();
-                
+
                 if (multipleElevations && layerNames.length() > 0) {
                     /*
                      * If we have multiple depths, we can plot a vertical
                      * profile here
                      */
                     final String link = proxyUrl + wmsUrl + "?REQUEST=GetVerticalProfile"
-                            + "&LAYERS=" + layer
-                            + "&QUERY_LAYERS=" + layer
-                            + "&BBOX=" + map.getExtent().toBBox(4)
-                            + "&SRS=" + currentProjection
-                            + "&FEATURE_COUNT=5"
-                            + "&INFO_FORMAT=image/png"
-                            + "&HEIGHT=" + ((int) map.getSize().getHeight())
-                            + "&WIDTH=" + ((int) map.getSize().getWidth())
-                            + "&I=" + mapXClick
-                            + "&J=" + mapYClick
-                            + "&STYLES=default/default"
+                            + "&LAYERS=" + layer + "&QUERY_LAYERS=" + layer + "&BBOX="
+                            + map.getExtent().toBBox(4) + "&SRS=" + currentProjection
+                            + "&FEATURE_COUNT=5" + "&INFO_FORMAT=image/png" + "&HEIGHT="
+                            + ((int) map.getSize().getHeight()) + "&WIDTH="
+                            + ((int) map.getSize().getWidth()) + "&I=" + mapXClick + "&J="
+                            + mapYClick + "&STYLES=default/default"
                             + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
-                            + ((timeStr != null) ? ("&TIME=" + timeStr) : "") 
-                            + "&VERSION=1.1.1";
+                            + ((timeStr != null) ? ("&TIME=" + timeStr) : "") + "&VERSION=1.1.1";
                     Anchor profilePlot = new Anchor("Vertical Profile Plot");
                     profilePlot.addClickHandler(new ClickHandler() {
                         @Override
@@ -568,22 +563,18 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                     if (targetElevationStr != null) {
                                         eS = targetElevationStr;
                                     }
-                                    final String link = proxyUrl + wmsUrl + "?REQUEST=GetTimeseries"
-                                            + "&LAYERS=" + layer
-                                            + "&QUERY_LAYERS=" + layer
-                                            + "&BBOX=" + map.getExtent().toBBox(4)
-                                            + "&SRS=" + currentProjection
-                                            + "&FEATURE_COUNT=5"
-                                            + "&INFO_FORMAT=image/png"
-                                            + "&HEIGHT=" + ((int) map.getSize().getHeight())
-                                            + "&WIDTH=" + ((int) map.getSize().getWidth())
-                                            + "&I=" + mapXClick
-                                            + "&J=" + mapYClick
-                                            + "&STYLES=default/default"
-                                            + ((eS != null) ? ("&ELEVATION=" + eS) : "")
-                                            + "&TIME=" + startDateTime + "/" + endDateTime 
-                                            + "&VERSION=1.1.1";
-                                    
+                                    final String link = proxyUrl + wmsUrl
+                                            + "?REQUEST=GetTimeseries" + "&LAYERS=" + layer
+                                            + "&QUERY_LAYERS=" + layer + "&BBOX="
+                                            + map.getExtent().toBBox(4) + "&SRS="
+                                            + currentProjection + "&FEATURE_COUNT=5"
+                                            + "&INFO_FORMAT=image/png" + "&HEIGHT="
+                                            + ((int) map.getSize().getHeight()) + "&WIDTH="
+                                            + ((int) map.getSize().getWidth()) + "&I=" + mapXClick
+                                            + "&J=" + mapYClick + "&STYLES=default/default"
+                                            + ((eS != null) ? ("&ELEVATION=" + eS) : "") + "&TIME="
+                                            + startDateTime + "/" + endDateTime + "&VERSION=1.1.1";
+
                                     displayImagePopup(link, "Time series");
                                     timeSelector.hide();
                                 }
@@ -628,23 +619,23 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         /*
          * This is how we can display the image in a popup box.
          */
-//        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(this);
-//        final com.google.gwt.user.client.ui.Image image = new com.google.gwt.user.client.ui.Image(url);
-//        image.addLoadHandler(new LoadHandler() {
-//            @Override
-//            public void onLoad(LoadEvent event) {
-//                popup.center();
-//            }
-//        });
-//        /*
-//         * NOTTODO this doesn't seem to appear on Chromium...
-//         */
-//        image.setAltText("Image loading...");
-//        if(title != null){
-//            popup.setHTML(title);
-//        }
-//        popup.add(image);
-//        popup.center();
+        //        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(this);
+        //        final com.google.gwt.user.client.ui.Image image = new com.google.gwt.user.client.ui.Image(url);
+        //        image.addLoadHandler(new LoadHandler() {
+        //            @Override
+        //            public void onLoad(LoadEvent event) {
+        //                popup.center();
+        //            }
+        //        });
+        //        /*
+        //         * NOTTODO this doesn't seem to appear on Chromium...
+        //         */
+        //        image.setAltText("Image loading...");
+        //        if(title != null){
+        //            popup.setHTML(title);
+        //        }
+        //        popup.add(image);
+        //        popup.center();
     }
 
     public void zoomToExtents(String extents) throws Exception {
@@ -1009,6 +1000,17 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         time = child.getFirstChild().getNodeValue();
                     } else if (child.getNodeName().equalsIgnoreCase("value")) {
                         value = child.getFirstChild().getNodeValue();
+                        /*
+                         * This is probably a number. Parse it as if it is, but
+                         * ignore any errors
+                         */
+                        try {
+                            value = FORMATTER.format(Double.parseDouble(value));
+                        } catch (Exception e) {
+                            /*
+                             * Ignore, we'll just use the string value as-is.
+                             */
+                        }
                     } else if (child.getNodeName().equalsIgnoreCase("id")) {
                         id = child.getFirstChild().getNodeValue();
                     }
