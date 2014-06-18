@@ -5,7 +5,9 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +37,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 
 public class CurviLinearGridDatasetTest {
+    // accuracy value set for assert equal method for comparison.
     private static final double delta = 1e-5;
     private Dataset dataset;
     private NetcdfFile cdf;
@@ -53,6 +56,10 @@ public class CurviLinearGridDatasetTest {
         dataset = datasetFactory.createDataset("testdataset", location);
     }
 
+    /**
+     * Dateset contains only x and y data. When we try to extract data including
+     * T and Z info, the method should return UnupportedOperationException.
+     */
     @Test(expected = UnsupportedOperationException.class)
     public void testUnSupportedOperation() throws DataReadingException {
         assertFalse(dataset.supportsProfileFeatureExtraction("allx_u"));
@@ -107,13 +114,15 @@ public class CurviLinearGridDatasetTest {
                 lat_data.getDouble(index));
         int cCoords_i = index % etaSize;
         int cCoords_j = index / etaSize;
-        // LonLatPosition not implement hash code and equals method so the below
-        // statement return false
-        // thought the values are right.
+        /*
+         * LonLatPosition not implement hash code and equals method so the below
+         * statement return false though the values are right.
+         */
+
         // assertEquals(expectedPos, cCoords.getMidpoint(cCoords_i, cCoords_j));
 
         List<Cell> celllist = cCoords.getCells();
-        CurvilinearCoords.Cell cell = cCoords.getCell(cCoords_i, cCoords_j);
+        Cell cell = cCoords.getCell(cCoords_i, cCoords_j);
         assertEquals(celllist.get(index), cell);
 
         assertEquals(cCoords_i, cell.getI());
@@ -125,6 +134,17 @@ public class CurviLinearGridDatasetTest {
     public void testCurviLinearDataset() throws DataReadingException, IOException {
         assertTrue(dataset instanceof AbstractGridDataset);
 
+        assertEquals(dataset.getDatasetVerticalCrs(), null);
+
+        List<Variable> variables = cdf.getVariables();
+        Set<String> vars = new HashSet<>();
+        for (Variable v : variables) {
+            vars.add(v.getName());
+        }
+        /*netcdt use variable but dataset use feature. Two different concepts.
+        How can I use another to get feature info?*/
+        
+        assertEquals(vars, dataset.getFeatureIds());
         GridFeature allxUValues = ((AbstractGridDataset) dataset).readFeature("allx_u");
         GridFeature allxVValues = ((AbstractGridDataset) dataset).readFeature("allx_v");
         GridFeature allyUValues = ((AbstractGridDataset) dataset).readFeature("ally_u");
@@ -137,6 +157,7 @@ public class CurviLinearGridDatasetTest {
                 float yUVale = allyUValues.getValues("ally_u").get(0, 0, m, n).floatValue();
                 float yVVale = allyVValues.getValues("ally_v").get(0, 0, m, n).floatValue();
 
+                // below four values are set by dataset generator
                 float expectedXU = m;
                 float expectedXV = 0.0f;
                 float expectedYU = 0.0f;
@@ -162,10 +183,11 @@ public class CurviLinearGridDatasetTest {
         Array2D<Number> xUValues = data.getValues("allx_u");
         assertArrayEquals(new int[] { xiSize, etaSize }, xUValues.getShape());
 
-        // as discussed, dataset uses the horizontal grid to fetch data not the
-        // curvilinear grid
-        // so the data it can fetch is limited and it's difficult for use to
-        // compare
+        /*
+         * as discussed, dataset uses the horizontal grid to fetch data not the
+         * curvilinear grid so the data it can fetch is limited. Use readFeature
+         * method to extract data instead of extractMapFeature method at moment.
+         */
         for (int m = 0; m < xiSize; m++) {
             for (int n = 0; n < etaSize; n++) {
 
