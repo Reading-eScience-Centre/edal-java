@@ -29,7 +29,11 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -201,12 +205,8 @@ public final class En3DatasetFactory extends DatasetFactory {
 
     @Override
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
-        /*
-         * The spatial indexer to use
-         */
-        FeatureIndexer indexer = new PRTreeFeatureIndexer();
-        List<PRTreeFeatureIndexer.FeatureBounds> featureBounds = new ArrayList<>();
-
+        long t1 = System.currentTimeMillis();
+        
         /*
          * Use these to calculate the spatial extent of the entire dataset
          */
@@ -226,145 +226,285 @@ public final class En3DatasetFactory extends DatasetFactory {
          * Expand the glob expression and then loop over each individual file
          */
         List<File> files = CdmUtils.expandGlobExpression(location);
-        for (File file : files) {
-            NetcdfDataset nc = CdmUtils.openDataset(file.getAbsolutePath());
 
-            Dimension nProfiles = nc.findDimension("N_PROF");
-            Dimension nLevels = nc.findDimension("N_LEVELS");
+        /*
+         * TODO Read the id.files file and check if the list of files matches.
+         * 
+         * If so, read the id.index file and deserialise as the spatial index
+         * and domain (or something)
+         * 
+         * If it's different, delete the spatial index, and create a new one,
+         * serialising it to disk afterwards (as long as the working directory
+         * is non-null).
+         */
+        File spatialIndexFile = new File(workingDir, id + ".index.ser");
+        boolean readExistingSpatialIndex = false;
+        ObjectInputStream in = null;
+        FileInputStream fileIn = null;
 
-            Variable latitudeVar = nc.findVariable("LATITUDE");
-            Variable longitudeVar = nc.findVariable("LONGITUDE");
-            Variable timeVar = nc.findVariable("JULD");
-            Variable depthVar = nc.findVariable("DEPH_CORRECTED");
-
-            Attribute timeUnits = timeVar.findAttribute("units");
-            String timeUnitsStr = timeUnits.getStringValue();
-            String[] timeUnitsParts = timeUnitsStr.split(" since ");
-
-            if (timeUnitsParts.length != 2) {
-                log.error("Expected time units of the form xxxs since yyyy-dd-mm hh:mm:ss utc");
-                continue;
-            }
-
-            /*
-             * Find the length of a unit, in seconds (we don't use milliseconds
-             * because the DateTime.plusMillis takes an integer argument and
-             * there is a very good chance of integer overflow for recent
-             * values)
+        if (spatialIndexFile.exists()) {
+            /*-
+             * We have an existing spatial index for this ID.
+             * 
+             * This file contains simple serialisations of (in order):
+             * 
+             * The list of files used in the index.
+             * The horizontal domain
+             * The vertical domain
+             * The time domain
+             * The spatial indexer
              */
-            int unitLength = TimeUtils.getUnitLengthSeconds(timeUnitsParts[0]);
-            DateTime refTime = EN3_DATE_TIME_FORMATTER.parseDateTime(timeUnitsParts[1]);
-
-            Array latValues = latitudeVar.read();
-            Array lonValues = longitudeVar.read();
-            Array timeValues = timeVar.read();
-            Array depthValues = depthVar.read();
-
-            /*
-             * Loop over all profiles
-             */
-            for (int i = 0; i < nProfiles.getLength(); i++) {
-                /*
-                 * Get the horizontal position of the current profile
-                 */
-                double lat = latValues.getDouble(i);
-                double lon = lonValues.getDouble(i);
-                /*
-                 * All positions are in WGS84
-                 */
-                HorizontalPosition horizontalPosition = new HorizontalPosition(lon, lat,
-                        DefaultGeographicCRS.WGS84);
-                /*
-                 * Find the time of the current profile measurement
-                 */
-                double seconds = (timeValues.getDouble(i) * unitLength);
-                DateTime time = refTime.plusSeconds((int) seconds);
-                Extent<DateTime> tExtent = Extents.newExtent(time, time);
-
-                /*
-                 * Find the vertical extent of the current profile
-                 */
-                double minProfDepth = Double.MAX_VALUE;
-                double maxProfDepth = -Double.MAX_VALUE;
-                for (int j = 0; j < nLevels.getLength(); j++) {
-                    double depth = depthValues.getDouble(i * nLevels.getLength() + j);
-                    if (!Double.isNaN(depth)) {
-                        minProfDepth = Math.min(depth, minProfDepth);
-                        maxProfDepth = Math.max(depth, maxProfDepth);
-                    }
-                }
-                if (maxProfDepth < minProfDepth) {
+            try {
+                fileIn = new FileInputStream(spatialIndexFile);
+                in = new ObjectInputStream(fileIn);
+                @SuppressWarnings("unchecked")
+                List<File> existingFilesList = (List<File>) in.readObject();
+                if (files.equals(existingFilesList)) {
                     /*
-                     * We have the situation where all values of depth returned
-                     * NaN.
-                     * 
-                     * This profile cannot be indexed
+                     * The current list of files is the same as the one used in
+                     * the previous indexing.
                      */
-                    continue;
+                    readExistingSpatialIndex = true;
                 }
-                Extent<Double> zExtent = Extents.newExtent(minProfDepth, maxProfDepth);
-
+            } catch (ClassNotFoundException | IOException e) {
                 /*
-                 * Create a unique ID
+                 * Log this error, but otherwise ignore it - we will just
+                 * recreate the spatial index, so it's not a big problem.
                  */
-                String profileId = serialiseId(file, i);
-
-                /*
-                 * Store the bounds of this feature to load into the spatial
-                 * indexer
-                 */
-                featureBounds.add(new FeatureBounds(profileId, horizontalPosition, zExtent,
-                        tExtent, CollectionUtils.setOf(TEMP_PARAMETER.getId(),
-                                POT_TEMP_PARAMETER.getId(), PSAL_PARAMETER.getId())));
-
-                /*
-                 * Update entire dataset extents
-                 */
-                minLat = Math.min(minLat, lat);
-                maxLat = Math.max(maxLat, lat);
-
-                minLon = Math.min(minLon, lon);
-                maxLon = Math.max(maxLon, lon);
-
-                if (!Double.isNaN(minProfDepth)) {
-                    minZ = Math.min(minZ, minProfDepth);
-                }
-                if (!Double.isNaN(maxProfDepth)) {
-                    maxZ = Math.max(maxZ, maxProfDepth);
-                }
-
-                if (minT.isAfter(time)) {
-                    minT = time;
-                }
-                if (maxT.isBefore(time)) {
-                    maxT = time;
-                }
+                log.warn("Problem reading EN3 serialisation index", e);
             }
-
-            CdmUtils.closeDataset(nc);
-
-            log.debug("Read " + nProfiles.getLength() + " profiles from file: "
-                    + file.getAbsolutePath());
-            log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L) + "/"
-                    + (Runtime.getRuntime().maxMemory() / 1_000_000L));
         }
 
         /*
-         * Now add all features to the spatial indexer
+         * The domain of this EN3 dataset
          */
-        indexer.addFeatures(featureBounds);
-        log.debug("Indexed features.");
-        log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L) + "/"
-                + (Runtime.getRuntime().maxMemory() / 1_000_000L));
-
+        SimpleHorizontalDomain hDomain = null;
+        SimpleVerticalDomain zDomain = null;
+        SimpleTemporalDomain tDomain = null;
         /*
-         * The domain of this dataset. Since all variables are valid for the
-         * entire dataset, their domain must include the domains of all points
-         * within it.
+         * The spatial indexer to use
          */
-        SimpleVerticalDomain zDomain = new SimpleVerticalDomain(minZ, maxZ, EN3_VERTICAL_CRS);
-        SimpleTemporalDomain tDomain = new SimpleTemporalDomain(minT, maxT);
-        SimpleHorizontalDomain hDomain = new SimpleHorizontalDomain(minLon, minLat, maxLon, maxLat);
+        FeatureIndexer indexer = null;
+
+        if (readExistingSpatialIndex) {
+            try {
+                hDomain = (SimpleHorizontalDomain) in.readObject();
+                zDomain = (SimpleVerticalDomain) in.readObject();
+                tDomain = (SimpleTemporalDomain) in.readObject();
+                indexer = (PRTreeFeatureIndexer) in.readObject();
+                
+                log.debug("Successfully read spatial index from file");
+            } catch (ClassNotFoundException | IOException e) {
+                /*
+                 * Problem reading spatial index/domain from file. Set the flag
+                 * to regenerate it.
+                 */
+                log.warn("Problem reading EN3 domain/spatial index", e);
+                readExistingSpatialIndex = false;
+            }
+        }
+
+        if (!readExistingSpatialIndex) {
+            /*
+             * We don't want to keep reading from the file, because it either
+             * doesn't exist, or it doesn't match the file set we are now
+             * reading (e.g. a new file has been added, or this ID was last used
+             * for a different EN3 dataset)
+             */
+            if (in != null) {
+                in.close();
+            }
+            if (fileIn != null) {
+                fileIn.close();
+            }
+            if (spatialIndexFile.exists()) {
+                /*
+                 * We have a spatial index file but it doesn't match the files
+                 * list. Delete it to create a new one.
+                 */
+                spatialIndexFile.delete();
+            }
+
+            /*
+             * Now loop through all files, read the profile domains and IDs and
+             * create the spatial index.
+             */
+            indexer = new PRTreeFeatureIndexer();
+            List<PRTreeFeatureIndexer.FeatureBounds> featureBounds = new ArrayList<>();
+
+            int totalProfiles = 0;
+            
+            for (File file : files) {
+                NetcdfDataset nc = CdmUtils.openDataset(file.getAbsolutePath());
+
+                Dimension nProfiles = nc.findDimension("N_PROF");
+                Dimension nLevels = nc.findDimension("N_LEVELS");
+
+                Variable latitudeVar = nc.findVariable("LATITUDE");
+                Variable longitudeVar = nc.findVariable("LONGITUDE");
+                Variable timeVar = nc.findVariable("JULD");
+                Variable depthVar = nc.findVariable("DEPH_CORRECTED");
+
+                Attribute timeUnits = timeVar.findAttribute("units");
+                String timeUnitsStr = timeUnits.getStringValue();
+                String[] timeUnitsParts = timeUnitsStr.split(" since ");
+
+                if (timeUnitsParts.length != 2) {
+                    log.error("Expected time units of the form xxxs since yyyy-dd-mm hh:mm:ss utc");
+                    continue;
+                }
+
+                /*
+                 * Find the length of a unit, in seconds (we don't use
+                 * milliseconds because the DateTime.plusMillis takes an integer
+                 * argument and there is a very good chance of integer overflow
+                 * for recent values)
+                 */
+                int unitLength = TimeUtils.getUnitLengthSeconds(timeUnitsParts[0]);
+                DateTime refTime = EN3_DATE_TIME_FORMATTER.parseDateTime(timeUnitsParts[1]);
+
+                Array latValues = latitudeVar.read();
+                Array lonValues = longitudeVar.read();
+                Array timeValues = timeVar.read();
+                Array depthValues = depthVar.read();
+
+                /*
+                 * Loop over all profiles
+                 */
+                for (int i = 0; i < nProfiles.getLength(); i++) {
+                    /*
+                     * Get the horizontal position of the current profile
+                     */
+                    double lat = latValues.getDouble(i);
+                    double lon = lonValues.getDouble(i);
+                    /*
+                     * All positions are in WGS84
+                     */
+                    HorizontalPosition horizontalPosition = new HorizontalPosition(lon, lat,
+                            DefaultGeographicCRS.WGS84);
+                    /*
+                     * Find the time of the current profile measurement
+                     */
+                    double seconds = (timeValues.getDouble(i) * unitLength);
+                    DateTime time = refTime.plusSeconds((int) seconds);
+                    Extent<DateTime> tExtent = Extents.newExtent(time, time);
+
+                    /*
+                     * Find the vertical extent of the current profile
+                     */
+                    double minProfDepth = Double.MAX_VALUE;
+                    double maxProfDepth = -Double.MAX_VALUE;
+                    for (int j = 0; j < nLevels.getLength(); j++) {
+                        double depth = depthValues.getDouble(i * nLevels.getLength() + j);
+                        if (!Double.isNaN(depth)) {
+                            minProfDepth = Math.min(depth, minProfDepth);
+                            maxProfDepth = Math.max(depth, maxProfDepth);
+                        }
+                    }
+                    if (maxProfDepth < minProfDepth) {
+                        /*
+                         * We have the situation where all values of depth
+                         * returned NaN.
+                         * 
+                         * This profile cannot be indexed
+                         */
+                        continue;
+                    }
+                    Extent<Double> zExtent = Extents.newExtent(minProfDepth, maxProfDepth);
+
+                    /*
+                     * Create a unique ID
+                     */
+                    String profileId = serialiseId(file, i);
+
+                    /*
+                     * Store the bounds of this feature to load into the spatial
+                     * indexer
+                     */
+                    featureBounds.add(new FeatureBounds(profileId, horizontalPosition, zExtent,
+                            tExtent, CollectionUtils.setOf(TEMP_PARAMETER.getId(),
+                                    POT_TEMP_PARAMETER.getId(), PSAL_PARAMETER.getId())));
+
+                    /*
+                     * Update entire dataset extents
+                     */
+                    minLat = Math.min(minLat, lat);
+                    maxLat = Math.max(maxLat, lat);
+
+                    minLon = Math.min(minLon, lon);
+                    maxLon = Math.max(maxLon, lon);
+
+                    if (!Double.isNaN(minProfDepth)) {
+                        minZ = Math.min(minZ, minProfDepth);
+                    }
+                    if (!Double.isNaN(maxProfDepth)) {
+                        maxZ = Math.max(maxZ, maxProfDepth);
+                    }
+
+                    if (minT.isAfter(time)) {
+                        minT = time;
+                    }
+                    if (maxT.isBefore(time)) {
+                        maxT = time;
+                    }
+                }
+
+                CdmUtils.closeDataset(nc);
+
+                log.debug("Read " + nProfiles.getLength() + " profiles from file: "
+                        + file.getAbsolutePath());
+                log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L)
+                        + "/" + (Runtime.getRuntime().maxMemory() / 1_000_000L));
+                totalProfiles += nProfiles.getLength();
+            }
+            log.debug("Read "+totalProfiles+" features.  Starting indexing...");
+            /*
+             * The domain of this dataset. Since all variables are valid for the
+             * entire dataset, their domain must include the domains of all
+             * points within it.
+             */
+            hDomain = new SimpleHorizontalDomain(minLon, minLat, maxLon, maxLat);
+            zDomain = new SimpleVerticalDomain(minZ, maxZ, EN3_VERTICAL_CRS);
+            tDomain = new SimpleTemporalDomain(minT, maxT);
+
+            /*
+             * Now add all features to the spatial indexer
+             */
+            indexer.addFeatures(featureBounds);
+            log.debug("Indexed "+totalProfiles+" features.");
+            log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L) + "/"
+                    + (Runtime.getRuntime().maxMemory() / 1_000_000L));
+
+            /*
+             * Now serialise the file list, domains, and indexer to file
+             */
+            try {
+                FileOutputStream fileOut = new FileOutputStream(spatialIndexFile);
+                ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                out.writeObject(files);
+                out.writeObject(hDomain);
+                out.writeObject(zDomain);
+                out.writeObject(tDomain);
+                out.writeObject(indexer);
+                out.close();
+                fileOut.close();
+                log.debug("Serialised spatial index to file");
+            } catch (IOException e) {
+                log.warn("Unable to serialise spatial index to file", e);
+            }
+        }
+
+        if (hDomain == null || zDomain == null || tDomain == null || indexer == null) {
+            /*
+             * The above is equivalent to an if-else block, but is implemented
+             * as 2 opposite ifs so that the second block can be entered if the
+             * first fails.
+             * 
+             * The upshot is that none of the above variables can be null,
+             * unless the logic is seriously wrong.
+             */
+            assert false;
+        }
 
         /*
          * Create a list of VariableMetadata objects for this domain. These can
@@ -378,6 +518,9 @@ public final class En3DatasetFactory extends DatasetFactory {
                 zDomain, tDomain));
         metadata.add(new VariableMetadata(PSAL_PARAMETER.getId(), PSAL_PARAMETER, hDomain, zDomain,
                 tDomain));
+
+        long t2 = System.currentTimeMillis();
+        log.debug("Time to create EN3 dataset: "+((t2-t1)/1000.0)+"s");
 
         return new En3Dataset(id, metadata, indexer, hDomain.getBoundingBox(), zDomain.getExtent(),
                 tDomain.getExtent());

@@ -60,6 +60,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 public class PRTreeFeatureIndexer implements FeatureIndexer,
         MBRConverter<FeatureIndexer.FeatureBounds> {
 
+    private static final long serialVersionUID = 1L;
     private PRTree<FeatureBounds> prTree;
     private Set<String> featureIds;
 
