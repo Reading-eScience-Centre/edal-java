@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,8 +53,25 @@ public abstract class DatasetFactory {
 
     private static String defaultDatasetFactoryName = null;
 
+    /**
+     * @param clazz
+     *            The default {@link DatasetFactory} class for reading data
+     */
     public static void setDefaultDatasetFactoryClass(Class<?> clazz) {
         defaultDatasetFactoryName = clazz.getName();
+    }
+
+    protected static File workingDir = null;
+
+    /**
+     * @param workingDir
+     *            A default working directory which {@link DatasetFactory}
+     *            subclasses can use to store data (e.g. to write spatial
+     *            indices to disk)
+     * 
+     */
+    public static void setWorkingDirectory(File workingDir) {
+        DatasetFactory.workingDir = workingDir;
     }
 
     public synchronized static DatasetFactory forName(String clazz) throws InstantiationException,
@@ -76,7 +94,6 @@ public abstract class DatasetFactory {
             readers.put(clazz, (DatasetFactory) dfObj);
         }
         return readers.get(clazz);
-
     }
 
     /**
