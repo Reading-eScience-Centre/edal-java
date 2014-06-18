@@ -89,7 +89,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
 /**
- * A partial implementation of a {@link GridDataset}, using a
+ * A partial implementation of a {@link Dataset} based on a 4D grid, using a
  * {@link GridDataSource} and a {@link DataReadingStrategy}.
  * 
  * @author Jon

@@ -51,14 +51,10 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
- * Partial implementation of a {@link ContinuousDomainDataset} which performs
- * spatial indexing of features.
+ * Partial implementation of a {@link Dataset} with a continuous domain which
+ * performs spatial indexing of features.
  * 
  * @author Guy Griffiths
- * 
- * @param <F>
- *            The type of {@link DiscreteFeature} contained in this
- *            {@link AbstractContinuousDomainDataset}
  */
 public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
 
@@ -147,8 +143,8 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
                 timeExtent, varIds);
         features.addAll((Collection<? extends ProfileFeature>) getFeatureReader().readFeatures(
                 featureIds, varIds));
-        
-        if(pos != null) {
+
+        if (pos != null) {
             Collections.sort(features, new Comparator<ProfileFeature>() {
                 @Override
                 public int compare(ProfileFeature o1, ProfileFeature o2) {
@@ -195,7 +191,7 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
                 params.getTExtent(), varIds);
         features.addAll((Collection<? extends PointSeriesFeature>) getFeatureReader().readFeatures(
                 featureIds, varIds));
-        if(pos != null) {
+        if (pos != null) {
             Collections.sort(features, new Comparator<PointSeriesFeature>() {
                 @Override
                 public int compare(PointSeriesFeature o1, PointSeriesFeature o2) {
