@@ -243,7 +243,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                         /*
                          * Check for vector components
                          */
-                        if (name.contains("eastward")) {
+                        if (name.contains("eastward_")) {
                             String compoundName = name.replaceFirst("eastward_", "");
                             String[] cData;
                             if (!xyComponentPairs.containsKey(compoundName)) {
@@ -257,7 +257,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                              * coverage
                              */
                             cData[0] = varId;
-                        } else if (name.contains("northward")) {
+                        } else if (name.contains("northward_")) {
                             String compoundName = name.replaceFirst("northward_", "");
                             String[] cData;
                             if (!xyComponentPairs.containsKey(compoundName)) {
@@ -301,7 +301,8 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             cData[1] = varId;
                         }
                         /*
-                         * TODO Add zonal/meriodional check
+                         * We could potentially add a check for zonal/meridional
+                         * here if required.
                          */
                     }
                 }
