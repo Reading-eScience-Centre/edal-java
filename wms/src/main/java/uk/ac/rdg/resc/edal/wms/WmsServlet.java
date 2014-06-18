@@ -44,7 +44,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
-
 import javax.imageio.ImageIO;
 import javax.naming.OperationNotSupportedException;
 import javax.servlet.ServletException;
@@ -937,10 +936,10 @@ public class WmsServlet extends HttpServlet {
                      */
                     depthValues.add(verticalDomain.getExtent().getLow());
                     depthValues.add(verticalDomain.getExtent().getHigh());
-                    int nFeatures = 0;
-                    for (; nFeatures < 100; nFeatures++) {
+
+                    for (int nFeatures = 0; nFeatures < 50; nFeatures++) {
                         /*
-                         * Read up to 100 features
+                         * Read up to 50 features
                          */
                         if (iterator.hasNext()) {
                             try {
@@ -958,108 +957,123 @@ public class WmsServlet extends HttpServlet {
                     }
                     Collections.sort(depthValues);
                     /*
-                     * We now have a sorted list of axis values for (up to) 100
+                     * We now have a sorted list of axis values for (up to) 50
                      * features.
-                     * 
-                     * Next we create a stack of delta-elevation values which we
-                     * want to use. These are all round numbers which will make
-                     * the axis values nicely human-readable in the client.
-                     * 
-                     * Note that because this is a stack, 0.001 will be on top
-                     * after the values have been added.
-                     * 
-                     * We will pop these out until we reach a suitable size.
-                     * From that point our elevation values will get further
-                     * apart.
-                     * 
-                     * The aim is to get something like:
-                     * 0,10,20,30,40,50,100,200,300,800,1300,2300
-                     * 
-                     * However, if the elevation values are clustered at the top
-                     * end (lots of measurements at a large elevation value) we
-                     * reverse the stack and hence we'd get something like:
-                     * 0,5000,10000,10500,10600,10700,10750,10800
-                     */
-                    Stack<Double> deltas = new Stack<>();
-                    deltas.addAll(Arrays.asList(new Double[] { 10000.0, 5000.0, 1000.0, 500.0,
-                            200.0, 100.0, 50.0, 20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05, 0.01,
-                            0.005, 0.001 }));
-                    /*
-                     * If the widest increments are at the end of the depth
-                     * values list, we want to reverse the deltas (because we
-                     * use pop
                      */
                     if (Math.abs(depthValues.get(0) - depthValues.get(1)) > Math.abs(depthValues
                             .get(depthValues.size() - 1) - depthValues.get(depthValues.size() - 2))) {
-                        Collections.reverse(deltas);
-                    }
+                        /*
+                         * If the widest increments are at the end of the depth
+                         * values list, this will not work, so we just use the
+                         * start/end method
+                         */
+                        zAxisJson.put("startZ", verticalDomain.getExtent().getLow());
+                        zAxisJson.put("endZ", verticalDomain.getExtent().getHigh());
+                    } else {
+                        /*
+                         * Next we create a stack of delta-elevation values
+                         * which we want to use. These are all round numbers
+                         * which will make the axis values nicely human-readable
+                         * in the client.
+                         * 
+                         * Note that because this is a stack, 0.001 will be on
+                         * top after the values have been added.
+                         * 
+                         * We will pop these out until we reach a suitable size.
+                         * From that point our elevation values will get further
+                         * apart.
+                         * 
+                         * The aim is to get something like:
+                         * 0,10,20,30,40,50,100,200,300,800,1300,2300
+                         */
 
-                    /*
-                     * The first level should be the minimum of the extent,
-                     * since this was explicitly added to depthValues
-                     */
-                    List<Double> levels = new ArrayList<>();
-                    double lastDeltaStart = depthValues.get(0);
-                    levels.add(lastDeltaStart);
-                    Double delta = 0.0;
-                    /*
-                     * Split the elevation values into 25 levels (fairly
-                     * arbitrary but I *think* this provides an upper limit on
-                     * the number of levels we'll end up with).
-                     * 
-                     * We could just use these elevation values. We'd get a nice
-                     * distribution of levels, but they'd be horrible numbers.
-                     * So now we get complicated instead...
-                     */
-                    for (int i = 1; i < depthValues.size(); i += depthValues.size() / 25) {
+                        Stack<Double> deltas = new Stack<>();
+                        deltas.addAll(Arrays.asList(new Double[] { 10000.0, 5000.0, 1000.0, 500.0,
+                                200.0, 100.0, 50.0, 20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05,
+                                0.01, 0.005, 0.001 }));
+
                         /*
-                         * With these 25 levels, what is the difference between
-                         * the two we're considering?
+                         * The first level should be the minimum of the extent,
+                         * since this was explicitly added to depthValues
                          */
-                        Double lastDeltaEnd = depthValues.get(i);
-                        Double testDelta = lastDeltaEnd - lastDeltaStart;
+                        List<Double> levels = new ArrayList<>();
+                        double lastDeltaStart = depthValues.get(0);
+                        levels.add(lastDeltaStart);
+                        double delta = 0.0;
+                        double lastDelta = 0.0;
+
+                        int nLevels = 25;
                         /*
-                         * Find a nice delta value which is close to this.
+                         * Split the elevation values into 25 levels.
+                         * 
+                         * We could just use these elevation values. We'd get a
+                         * nice distribution of levels, but they'd be horrible
+                         * numbers. So now we get complicated instead...
                          */
-                        if (!deltas.empty()) {
-                            while (testDelta > delta) {
-                                delta = deltas.pop();
+                        for (int i = depthValues.size() / nLevels; i < depthValues.size(); i += depthValues
+                                .size() / nLevels) {
+                            /*
+                             * With these nLevels levels, what is the difference
+                             * between the two we're considering?
+                             */
+                            Double lastDeltaEnd = depthValues.get(i);
+                            Double testDelta = lastDeltaEnd - lastDeltaStart;
+
+                            /*
+                             * Find a nice delta value which is close to this.
+                             */
+                            if (!deltas.empty()) {
+                                while (testDelta > delta) {
+                                    lastDelta = delta;
+                                    delta = deltas.pop();
+                                    /*
+                                     * We have a new delta. Keep using the old
+                                     * delta until we get a value which is a
+                                     * multiple of the current delta. These
+                                     * values are much more pleasing (e.g. you
+                                     * don't get 110, 210, 310, etc)
+                                     */
+                                    while (levels.get(levels.size() - 1) % delta != 0) {
+                                        levels.add(levels.get(levels.size() - 1) + lastDelta);
+                                    }
+                                }
                             }
+
+                            /*
+                             * Now add levels with this delta until we reach the
+                             * next of the 25 levels
+                             */
+                            while (levels.get(levels.size() - 1) < lastDeltaEnd) {
+                                levels.add(levels.get(levels.size() - 1) + delta);
+                            }
+                            lastDeltaStart = lastDeltaEnd;
+                        }
+                        /*
+                         * Now add the final levels. Keep the final delta value
+                         * and keep going until we have exceeded the maximum
+                         * value of the extent.
+                         */
+                        double finalLevels = levels.get(levels.size() - 1);
+                        while (finalLevels < verticalDomain.getExtent().getHigh()) {
+                            finalLevels += delta;
+                            levels.add(finalLevels);
                         }
 
                         /*
-                         * Now add levels with this delta until we reach the
-                         * next of the 25 levels
+                         * Now we have a nice set of values, serialise them to
+                         * JSON.
+                         * 
+                         * Thanks for reading, and if you're trying to change
+                         * this code, I'm sorry. Maybe you should start from
+                         * scratch? Or maybe it's simpler than I think and you
+                         * understand it perfectly.
                          */
-                        while (levels.get(levels.size() - 1) < lastDeltaEnd) {
-                            levels.add(levels.get(levels.size() - 1) + delta);
+                        JSONArray zValuesJson = new JSONArray();
+                        for (Double level : levels) {
+                            zValuesJson.add(level);
                         }
-                        lastDeltaStart = lastDeltaEnd;
+                        zAxisJson.put("values", zValuesJson);
                     }
-                    /*
-                     * Now add a final level which is at least as large as the
-                     * highest extent value, and is a multiple of the current
-                     * delta away from the penultimate value.
-                     */
-                    double finalLevel = levels.get(levels.size() - 1);
-                    while (finalLevel < verticalDomain.getExtent().getHigh()) {
-                        finalLevel += delta;
-                    }
-                    levels.add(finalLevel);
-
-                    /*
-                     * Now we have a nice set of values, serialise them to JSON.
-                     * 
-                     * Thanks for reading, and if you're trying to change this
-                     * code, I'm sorry. Maybe you should start from scratch? Or
-                     * maybe it's simpler than I think and you understand it
-                     * perfectly.
-                     */
-                    JSONArray zValuesJson = new JSONArray();
-                    for (Double level : levels) {
-                        zValuesJson.add(level);
-                    }
-                    zAxisJson.put("values", zValuesJson);
                 }
 
             }
