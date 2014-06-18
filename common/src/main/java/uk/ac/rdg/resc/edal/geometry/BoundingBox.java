@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.geometry;
 
+import java.io.Serializable;
+
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
@@ -35,7 +37,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * 
  * @author Jon Blower
  */
-public interface BoundingBox extends Polygon {
+public interface BoundingBox extends Polygon, Serializable {
     /**
      * Gets the minimum ordinate along the first axis, equivalent to
      * {@code getMinimum(0)}.

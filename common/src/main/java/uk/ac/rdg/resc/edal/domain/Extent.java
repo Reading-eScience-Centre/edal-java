@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.domain;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * Defines a contiguous domain that is defined by "low" and "high" bounds. Any
@@ -42,7 +44,7 @@ package uk.ac.rdg.resc.edal.domain;
  * @author Jon Blower
  * @author Guy
  */
-public interface Extent<P> extends Domain<P> {
+public interface Extent<P> extends Domain<P>, Serializable {
     /**
      * @return The low bound of this {@link Extent}
      */

@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.domain;
 
+import java.io.Serializable;
+
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
@@ -40,8 +42,8 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * 
  * @author Guy Griffiths
  */
-public class SimpleTemporalDomain implements TemporalDomain {
-
+public class SimpleTemporalDomain implements TemporalDomain, Serializable {
+    private static final long serialVersionUID = 1L;
     private final Extent<DateTime> extent;
     private final Chronology chronology;
     

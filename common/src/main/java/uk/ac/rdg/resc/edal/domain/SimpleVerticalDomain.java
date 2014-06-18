@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.domain;
 
+import java.io.Serializable;
+
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -37,8 +39,8 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * 
  * @author Guy Griffiths
  */
-public class SimpleVerticalDomain implements VerticalDomain {
-
+public class SimpleVerticalDomain implements VerticalDomain, Serializable {
+    private static final long serialVersionUID = 1L;
     private final Extent<Double> extent;
     private final VerticalCrs crs;
 

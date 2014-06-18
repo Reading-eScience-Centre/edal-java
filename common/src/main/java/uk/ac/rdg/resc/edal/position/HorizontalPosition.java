@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.position;
 
+import java.io.Serializable;
 import java.text.DecimalFormat;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -38,7 +39,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * @author Jon Blower
  * @author Guy
  */
-public class HorizontalPosition {
+public class HorizontalPosition implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static final DecimalFormat NUMBER_3DP = new DecimalFormat("#0.000");
     private double x;
     private double y;

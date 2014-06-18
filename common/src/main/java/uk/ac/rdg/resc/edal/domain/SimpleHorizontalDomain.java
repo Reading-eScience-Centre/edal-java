@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.domain;
 
+import java.io.Serializable;
+
 import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
@@ -43,8 +45,8 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * 
  * @author Guy Griffiths
  */
-public class SimpleHorizontalDomain implements HorizontalDomain {
-
+public class SimpleHorizontalDomain implements HorizontalDomain, Serializable {
+    private static final long serialVersionUID = 1L;
     private final BoundingBox bbox;
 
     /**

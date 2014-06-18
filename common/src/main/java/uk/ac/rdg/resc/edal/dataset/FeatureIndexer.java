@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -44,7 +45,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * 
  * @author Guy Griffiths
  */
-public interface FeatureIndexer {
+public interface FeatureIndexer extends Serializable {
 
     /**
      * Finds the IDs of features with the given spatio-temporal constraints. If
@@ -84,7 +85,8 @@ public interface FeatureIndexer {
      * A class representing the spatial bounds of a feature with a single point.
      * This is used to index features.
      */
-    public static class FeatureBounds {
+    public static class FeatureBounds implements Serializable {
+        private static final long serialVersionUID = 1L;
         String id;
         HorizontalPosition horizontalPosition;
         Extent<Double> verticalExtent;

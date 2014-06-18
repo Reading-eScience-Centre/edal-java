@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.position;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * A vertical coordinate reference system.
@@ -40,7 +42,7 @@ package uk.ac.rdg.resc.edal.position;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public interface VerticalCrs {
+public interface VerticalCrs extends Serializable {
     /**
      * Returns the units for the values in this {@link VerticalCrs}
      * <p>
