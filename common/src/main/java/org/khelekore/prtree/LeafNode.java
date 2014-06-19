@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 class LeafNode<T> extends NodeBase<T, T> {
+    private static final long serialVersionUID = 1L;
 
     public LeafNode (Object[] data) {
 	super (data);

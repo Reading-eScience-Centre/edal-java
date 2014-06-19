@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 class InternalNode<T> extends NodeBase<Node<T>, T> {
+    private static final long serialVersionUID = 1L;
+    
     public InternalNode (Object[] data) {
 	super (data);
     }

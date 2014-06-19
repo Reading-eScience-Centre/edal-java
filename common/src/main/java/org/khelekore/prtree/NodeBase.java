@@ -5,6 +5,8 @@ package org.khelekore.prtree;
  * @param <T> the type of the data entries
  */
 abstract class NodeBase<N, T> implements Node<T> {
+    private static final long serialVersionUID = 1L;
+    
     private MBR mbr;
     private Object[] data;
 

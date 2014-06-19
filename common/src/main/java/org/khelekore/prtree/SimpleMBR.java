@@ -7,6 +7,8 @@ package org.khelekore.prtree;
  * wants a MBR since this will actually use a lot of extra memory.
  */
 public class SimpleMBR implements MBR {
+    private static final long serialVersionUID = 1L;
+    
     private final double values[];
 
     private SimpleMBR (int dimensions) {

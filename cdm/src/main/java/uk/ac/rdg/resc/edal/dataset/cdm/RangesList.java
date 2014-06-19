@@ -91,11 +91,11 @@ final class RangesList {
          * return the index in *canonical* (tzyx) order and therefore can't be
          * used.
          */
-        String xDimName = grid.getXDimension() == null ? null : grid.getXDimension().getName();
-        String yDimName = grid.getYDimension() == null ? null : grid.getYDimension().getName();
-        String zDimName = grid.getZDimension() == null ? null : grid.getZDimension().getName();
+        String xDimName = grid.getXDimension() == null ? null : grid.getXDimension().getFullName();
+        String yDimName = grid.getYDimension() == null ? null : grid.getYDimension().getFullName();
+        String zDimName = grid.getZDimension() == null ? null : grid.getZDimension().getFullName();
         String tDimName = grid.getTimeDimension() == null ? null : grid.getTimeDimension()
-                .getName();
+                .getFullName();
 
         /*
          * The dimensions in this list are in physical order
@@ -107,13 +107,13 @@ final class RangesList {
          */
         for (int i = 0; i < dims.size(); i++) {
             Dimension dim = dims.get(i);
-            if (dim.getName().equals(xDimName))
+            if (dim.getFullName().equals(xDimName))
                 xAxisIndex = i;
-            else if (dim.getName().equals(yDimName))
+            else if (dim.getFullName().equals(yDimName))
                 yAxisIndex = i;
-            else if (dim.getName().equals(zDimName))
+            else if (dim.getFullName().equals(zDimName))
                 zAxisIndex = i;
-            else if (dim.getName().equals(tDimName))
+            else if (dim.getFullName().equals(tDimName))
                 tAxisIndex = i;
         }
 

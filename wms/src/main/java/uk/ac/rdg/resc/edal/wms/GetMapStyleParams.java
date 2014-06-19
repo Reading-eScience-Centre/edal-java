@@ -69,8 +69,12 @@ public class GetMapStyleParams {
     private Boolean logarithmic = null;
 
     private Extent<Float> colourScaleRange = null;
-    /* true if we want to auto-scale the data */
-    private boolean autoScale = false;
+    /*
+     * true if we want to auto-scale the data 
+     * 
+     * TODO Not currently used
+     */
+//    private boolean autoScale = false;
     /* true if we are using an XML/JSON style specification */
     private boolean xmlSpecified = false;
 

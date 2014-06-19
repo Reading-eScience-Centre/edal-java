@@ -52,6 +52,7 @@ import ucar.nc2.Variable;
  * output contains whatever variables are desired. Paths etc. will need
  * changing.
  */
+@SuppressWarnings("deprecation")
 public class CreateNetCDFCurvilinear {
     public static void main(String args[]) throws IOException {
         /*

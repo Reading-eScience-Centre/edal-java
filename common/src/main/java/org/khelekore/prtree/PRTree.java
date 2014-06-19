@@ -13,6 +13,7 @@ import java.util.List;
  * @param <T> the data type stored in the PRTree
  */
 public class PRTree<T> implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private MBRConverter<T> converter;
     private int branchFactor;

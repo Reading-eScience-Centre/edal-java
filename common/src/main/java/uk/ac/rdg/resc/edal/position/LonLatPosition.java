@@ -38,6 +38,7 @@ import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
  * @author Guy
  */
 public class LonLatPosition extends HorizontalPosition {
+    private static final long serialVersionUID = 1L;
 
     public LonLatPosition(double lon, double lat) {
         super(lon, lat, DefaultGeographicCRS.WGS84);

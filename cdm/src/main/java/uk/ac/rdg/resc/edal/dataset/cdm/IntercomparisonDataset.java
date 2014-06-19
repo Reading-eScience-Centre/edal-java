@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -75,7 +74,7 @@ public class IntercomparisonDataset implements Dataset {
          * TODO Move this to edal-common once done. It's only in this package to
          * aid in testing
          */
-        Dataset dataset = (new IntercomparisonDatasetFactory()).createDataset("test", "");
+//        Dataset dataset = (new IntercomparisonDatasetFactory()).createDataset("test", "");
 //        IntercomparisonDataset dataset = new IntercomparisonDataset("test",
 //                DatasetFactory.forName("uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory"),
 //                "/home/guy/Data/EN3/EN3_v2a_Profiles_2011*.nc",
@@ -202,7 +201,9 @@ public class IntercomparisonDataset implements Dataset {
                         TemporalDomain tDomain = GISUtils.getIntersectionOfTemporalDomains(
                                 gridMetadata.getTemporalDomain(),
                                 inSituMetadata.getTemporalDomain());
-                        System.out.println(zDomain.getExtent());
+                        if (zDomain != null) {
+                            System.out.println(zDomain.getExtent());
+                        }
                         if (tDomain != null) {
                             System.out.println(tDomain.getExtent());
                         }

@@ -46,6 +46,7 @@ import ucar.nc2.NetcdfFileWriteable;
  * portable way, so this class doesn't attempt this. Test data should generally
  * only need generating once anyway.
  */
+@SuppressWarnings("deprecation")
 public class CreateNetCDF {
     public static void main(String args[]) {
         /*

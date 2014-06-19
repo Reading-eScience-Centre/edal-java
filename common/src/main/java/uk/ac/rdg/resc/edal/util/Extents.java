@@ -118,6 +118,7 @@ public final class Extents {
 
     private abstract static class AbstractExtent<T extends Comparable<? super T>> implements
             Extent<T> {
+        private static final long serialVersionUID = 1L;
         private final T min;
         private final T max;
         protected final Comparator<? super T> comp;
@@ -221,6 +222,8 @@ public final class Extents {
 
     private static final class SimpleExtent<T extends Comparable<? super T>> extends
             AbstractExtent<T> {
+        private static final long serialVersionUID = 1L;
+
         public SimpleExtent(T min, T max) {
             super(min, max, null);
         }
@@ -233,6 +236,8 @@ public final class Extents {
 
     private static final class SimpleExtentWithComparator<T extends Comparable<? super T>> extends
             AbstractExtent<T> {
+        private static final long serialVersionUID = 1L;
+        
         public SimpleExtentWithComparator(T min, T max, Comparator<? super T> comparator) {
             super(min, max, comparator);
         }
@@ -251,6 +256,8 @@ public final class Extents {
      * @author Guy
      */
     private static final class DateTimeExtent extends AbstractExtent<DateTime> {
+        private static final long serialVersionUID = 1L;
+        
         public DateTimeExtent(DateTime min, DateTime max) {
             super(min, max, null);
         }

@@ -34,7 +34,8 @@ package uk.ac.rdg.resc.edal.position;
  * @author Guy
  */
 public class VerticalCrsImpl implements VerticalCrs {
-
+    private static final long serialVersionUID = 1L;
+    
     private String units;
     private boolean pressure;
     private boolean dimensionless;

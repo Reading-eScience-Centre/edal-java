@@ -48,6 +48,7 @@ import ucar.nc2.Variable;
  * (src/test/resources/input-rotated.nc) and clears the variables, replacing
  * them with more useful vector components. Paths etc. will need changing.
  */
+@SuppressWarnings("deprecation")
 public class CreateNetCDFRotated {
     public static void main(String args[]) throws IOException {
         /*

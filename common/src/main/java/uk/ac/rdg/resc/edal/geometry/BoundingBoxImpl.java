@@ -48,6 +48,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Jon
  */
 public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBox {
+    private static final long serialVersionUID = 1L;
+    
     private final double minx;
     private final double miny;
     private final double maxx;
