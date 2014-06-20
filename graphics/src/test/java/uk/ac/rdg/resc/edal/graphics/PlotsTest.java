@@ -53,6 +53,7 @@ import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
+import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme2D;
@@ -250,11 +251,11 @@ public class PlotsTest {
 
     @Test
     public void testArrow() throws EdalException {
-        ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black);
+        ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black, ArrowStyle.UPSTREAM);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(arrowLayer);
         BufferedImage image = mapImage.drawImage(params, catalogue);
-        BufferedImage comparisonImage = getComparisonImage("arrow");
+        BufferedImage comparisonImage = getComparisonImage("upstream_dots");
         compareImages(comparisonImage, image);
     }
 

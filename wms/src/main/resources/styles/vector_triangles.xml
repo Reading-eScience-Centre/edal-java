@@ -40,7 +40,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
             <se:Opacity>1.0</se:Opacity>
             <resc:ArrowSize>8</resc:ArrowSize>
             <resc:ArrowColour>#FF000000</resc:ArrowColour>
-            <resc:ArrowStyle>THIN_ARROW</resc:ArrowStyle>
+            <resc:ArrowStyle>TRI_ARROW</resc:ArrowStyle>
           </resc:ArrowSymbolizer>
         </se:Rule>
       </se:CoverageStyle>

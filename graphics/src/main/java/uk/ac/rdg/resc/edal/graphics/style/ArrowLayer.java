@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.graphics.style.util.VectorFactory;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -48,6 +49,20 @@ public class ArrowLayer extends GriddedImageLayer {
 
     private Integer arrowSize = 8;
 
+    public enum ArrowStyle {
+        UPSTREAM, THIN_ARROW, FAT_ARROW, TRI_ARROW
+    };
+
+    private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
+
+    public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour,
+            ArrowStyle arrowStyle) {
+        this.directionFieldName = directionFieldName;
+        this.arrowColour = arrowColour;
+        setArrowSize(arrowSize);
+        this.arrowStyle = arrowStyle;
+    }
+
     public void setArrowSize(Integer arrowSize) {
         this.arrowSize = arrowSize;
         /*
@@ -59,12 +74,6 @@ public class ArrowLayer extends GriddedImageLayer {
         }
         setXSampleSize((int) (arrowSize * 1.5));
         setYSampleSize((int) (arrowSize * 1.5));
-    }
-
-    public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour) {
-        this.directionFieldName = directionFieldName;
-        this.arrowColour = arrowColour;
-        setArrowSize(arrowSize);
     }
 
     public String getDirectionFieldName() {
@@ -80,7 +89,8 @@ public class ArrowLayer extends GriddedImageLayer {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader)
+            throws EdalException {
         Array2D<Number> values = dataReader.getDataForLayerName(directionFieldName);
 
         Graphics2D g = image.createGraphics();
@@ -111,26 +121,45 @@ public class ArrowLayer extends GriddedImageLayer {
                 for (int i = 0; i < width; i++) {
                     if (xLoc > xPixelsPerArrow) {
                         xLoc -= xPixelsPerArrow;
+
                         /*
                          * We are at a point where we need to draw an arrow
                          */
                         Double angle = GISUtils.transformWgs84Heading(values.get(j, i),
                                 domainObjects.get(j, i));
                         if (angle != null && !Float.isNaN(angle.floatValue())) {
-                            /* Convert from degrees to radians */
-                            angle = angle * GISUtils.DEG2RAD;
-                            /* Calculate the end point of the arrow */
-                            double iEnd = i + arrowSize * Math.sin(angle);
-                            /*
-                             * Screen coordinates go down, but north is up,
-                             * hence the minus sign
-                             */
-                            double jEnd = j - arrowSize * Math.cos(angle);
-                            /* Draw a dot representing the data location */
-                            g.fillOval(i - 2, j - 2, 4, 4);
-                            /* Draw a line representing the vector direction */
-                            g.setStroke(new BasicStroke(1));
-                            g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
+                            if (arrowStyle == ArrowStyle.UPSTREAM) {
+                                /* Convert from degrees to radians */
+                                angle = angle * GISUtils.DEG2RAD;
+                                /* Calculate the end point of the arrow */
+                                double iEnd = i + arrowSize * Math.sin(angle);
+                                /*
+                                 * Screen coordinates go down, but north is up,
+                                 * hence the minus sign
+                                 */
+                                double jEnd = j - arrowSize * Math.cos(angle);
+                                /* Draw a dot representing the data location */
+                                g.fillOval(i - 2, j - 2, 4, 4);
+                                /* Draw a line representing the vector direction */
+                                g.setStroke(new BasicStroke(1));
+                                g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
+                            } else if (arrowStyle == ArrowStyle.THIN_ARROW) {
+                                /*
+                                 * The overall arrow size is 10 for things
+                                 * returned from the VectorFactory, so we
+                                 * multiply the arrow size by 0.1 to get the
+                                 * scale factor.
+                                 */
+                                VectorFactory.renderVector("LINEVEC", 1.0, angle.doubleValue()
+                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                            } else if (arrowStyle == ArrowStyle.FAT_ARROW) {
+                                VectorFactory.renderVector("STUMPVEC", 1.0, angle.doubleValue()
+                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                            } else if (arrowStyle == ArrowStyle.TRI_ARROW) {
+                                VectorFactory.renderVector("TRIVEC", 1.0, angle.doubleValue()
+                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                            }
+
                         }
                     }
                     xLoc += 1.0;

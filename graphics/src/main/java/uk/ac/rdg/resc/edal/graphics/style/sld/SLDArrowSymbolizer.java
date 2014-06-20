@@ -6,6 +6,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
+import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 
 public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
@@ -25,12 +26,19 @@ public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
 		String arrowColourText = (String) xPath.evaluate(
 				"./resc:ArrowColour", symbolizerNode, XPathConstants.STRING);
 		Color arrowColour = Color.BLACK;
-		if (!(arrowColourText == null) && !(arrowColourText.equals(""))) {
+		if (arrowColourText != null && !(arrowColourText.equals(""))) {
 			arrowColour = decodeColour(arrowColourText);
+		}
+		
+		ArrowStyle arrowStyle = ArrowStyle.THIN_ARROW;
+		String arrowStyleText = (String) xPath.evaluate(
+		        "./resc:ArrowStyle", symbolizerNode, XPathConstants.STRING);
+		if (arrowStyleText != null && !(arrowStyleText.equals(""))) {
+		    arrowStyle = ArrowStyle.valueOf(arrowStyleText);
 		}
 				
 		// instantiate a new arrow layer and add it to the image
-		ArrowLayer arrowLayer = new ArrowLayer(layerName, arrowSize, arrowColour);
+		ArrowLayer arrowLayer = new ArrowLayer(layerName, arrowSize, arrowColour, arrowStyle);
 		return arrowLayer;
 	}
 
