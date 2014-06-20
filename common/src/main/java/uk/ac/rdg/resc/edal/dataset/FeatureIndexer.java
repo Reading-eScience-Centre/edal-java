@@ -97,11 +97,30 @@ public interface FeatureIndexer extends Serializable {
                 Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
                 Collection<String> variableIds) {
             super();
+            /*
+             * We need at least an ID and a horizontal position.
+             * 
+             * If vertical position or time are missing (i.e. null), give them
+             * the maximum possible extent so that they will always be included
+             * in any query.
+             */
+            if (id == null || horizontalPosition == null) {
+                throw new IllegalArgumentException(
+                        "Must provide a non-null ID and horizontal position to index a feature");
+            }
             this.id = id;
             this.horizontalPosition = horizontalPosition;
-            this.verticalExtent = verticalExtent;
-            this.timeExtent = Extents.newExtent(timeExtent.getLow().getMillis(), timeExtent
-                    .getHigh().getMillis());
+            if (verticalExtent != null) {
+                this.verticalExtent = verticalExtent;
+            } else {
+                this.verticalExtent = Extents.newExtent(-Double.MAX_VALUE, Double.MAX_VALUE);
+            }
+            if (timeExtent != null) {
+                this.timeExtent = Extents.newExtent(timeExtent.getLow().getMillis(), timeExtent
+                        .getHigh().getMillis());
+            } else {
+                this.timeExtent = Extents.newExtent(-Long.MAX_VALUE, Long.MAX_VALUE);
+            }
             this.variableIds = variableIds;
         }
     }

@@ -100,9 +100,10 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
     public Collection<String> findFeatureIds(BoundingBox horizontalExtent,
             Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
             Collection<String> variableIds) {
-        
+
         if (!GISUtils.isWgs84LonLat(horizontalExtent.getCoordinateReferenceSystem())) {
-            GeographicBoundingBox geographicBoundingBox = GISUtils.toGeographicBoundingBox(horizontalExtent);
+            GeographicBoundingBox geographicBoundingBox = GISUtils
+                    .toGeographicBoundingBox(horizontalExtent);
             horizontalExtent = new BoundingBoxImpl(geographicBoundingBox.getWestBoundLongitude(),
                     geographicBoundingBox.getSouthBoundLatitude(),
                     geographicBoundingBox.getEastBoundLongitude(),
@@ -181,7 +182,20 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
                     tHigh);
             features = prTree.find(mbr);
             for (FeatureBounds feature : features) {
-                featureIds.add(feature.id);
+                /*
+                 * Make sure that the returned features contain all of the
+                 * required variables.
+                 */
+                boolean addFeature = true;
+                for (String varId : variableIds) {
+                    if (!feature.variableIds.contains(varId)) {
+                        addFeature = false;
+                        break;
+                    }
+                }
+                if (addFeature) {
+                    featureIds.add(feature.id);
+                }
             }
         }
         return featureIds;
