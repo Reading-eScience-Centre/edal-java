@@ -1,9 +1,6 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.URL;
@@ -20,6 +17,7 @@ import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
+
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -28,6 +26,7 @@ import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
@@ -40,7 +39,6 @@ public class CurviLinearGridDatasetTest {
     private Dataset dataset;
     private NetcdfFile cdf;
     private String location;
-
     // parameters about the used test dataset
     private int etaSize = 336;
     private int xiSize = 896;
@@ -108,8 +106,8 @@ public class CurviLinearGridDatasetTest {
         assertEquals(xiSize, cCoords.getNj());
 
         int index = 15000;
-//        LonLatPosition expectedPos = new LonLatPosition(lon_data.getDouble(index),
-//                lat_data.getDouble(index));
+        LonLatPosition expectedPos = new LonLatPosition(lon_data.getDouble(index),
+                lat_data.getDouble(index));
         int cCoords_i = index % etaSize;
         int cCoords_j = index / etaSize;
         /*
@@ -137,7 +135,7 @@ public class CurviLinearGridDatasetTest {
         List<Variable> variables = cdf.getVariables();
         Set<String> vars = new HashSet<>();
         for (Variable v : variables) {
-            vars.add(v.getFullName());
+            vars.add(v.getName());
         }
         /*netcdt use variable but dataset use feature. Two different concepts.
         How can I use another to get feature info?*/
@@ -171,6 +169,7 @@ public class CurviLinearGridDatasetTest {
         HorizontalDomain hDomain = dataset.getVariableMetadata("allx_u").getHorizontalDomain();
 
         BoundingBox bbox = hDomain.getBoundingBox();
+        System.out.println(bbox);
         PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
                 null, null, null);
         Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset.extractMapFeatures(null,
@@ -189,7 +188,7 @@ public class CurviLinearGridDatasetTest {
         for (int m = 0; m < xiSize; m++) {
             for (int n = 0; n < etaSize; n++) {
 
-//                Number number = xUValues.get(m, n);
+                Number number = xUValues.get(m, n);
 //                if(number != null) {
                 // System.out.println(number);
 //                }
