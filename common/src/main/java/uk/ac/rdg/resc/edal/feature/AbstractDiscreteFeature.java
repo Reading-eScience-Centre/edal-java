@@ -124,6 +124,11 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
     public Parameter getParameter(String parameterId) {
         return parameters.get(parameterId);
     }
+    
+    @Override
+    public Map<String, Parameter> getParameterMap() {
+        return parameters;
+    }
 
     @Override
     public Array<Number> getValues(String paramId) {

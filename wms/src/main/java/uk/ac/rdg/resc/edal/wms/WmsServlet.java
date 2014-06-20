@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
+
 import javax.imageio.ImageIO;
 import javax.naming.OperationNotSupportedException;
 import javax.servlet.ServletException;
@@ -86,6 +87,7 @@ import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
@@ -111,8 +113,8 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
-import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
+import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
@@ -630,6 +632,13 @@ public class WmsServlet extends HttpServlet {
                     timeStr = TimeUtils.dateTimeToISO8601(mapFeature.getDomain().getTime());
                 }
             }
+        } else if (feature instanceof PointFeature) {
+            PointFeature pointFeature = (PointFeature) feature;
+            value = pointFeature.getValue(variableId);
+            position = pointFeature.getHorizontalPosition();
+            if (pointFeature.getGeoPosition().getTime() != null) {
+                timeStr = TimeUtils.dateTimeToISO8601(pointFeature.getGeoPosition().getTime());
+            }
         } else if (feature instanceof ProfileFeature) {
             ProfileFeature profileFeature = (ProfileFeature) feature;
             int index = GISUtils.getIndexOfClosestElevationTo(plottingParameters.getTargetZ(),
@@ -904,7 +913,7 @@ public class WmsServlet extends HttpServlet {
                 }
                 zAxisJson.put("values", zValuesJson);
             } else {
-                if (!dataset.getMapFeatureType(variableId).isAssignableFrom(ProfileFeature.class)) {
+                if (!dataset.getFeatureType(variableId).isAssignableFrom(ProfileFeature.class)) {
                     /*
                      * We don't have profile features. Just supply a start and
                      * end elevation. The client can split this however it
@@ -1148,9 +1157,9 @@ public class WmsServlet extends HttpServlet {
         boolean timeseries = false;
         boolean profiles = false;
         boolean transects = false;
-        Class<? extends DiscreteFeature<?, ?>> mapFeatureType = dataset
-                .getMapFeatureType(variableId);
-        if (GridFeature.class.isAssignableFrom(mapFeatureType)) {
+        Class<? extends DiscreteFeature<?, ?>> underlyingFeatureType = dataset
+                .getFeatureType(variableId);
+        if (GridFeature.class.isAssignableFrom(underlyingFeatureType)) {
             if (temporalDomain != null) {
                 timeseries = true;
             }
@@ -1158,11 +1167,11 @@ public class WmsServlet extends HttpServlet {
                 profiles = true;
             }
             transects = true;
-        } else if (ProfileFeature.class.isAssignableFrom(mapFeatureType)) {
+        } else if (ProfileFeature.class.isAssignableFrom(underlyingFeatureType)) {
             if (verticalDomain != null) {
                 profiles = true;
             }
-        } else if (PointSeriesFeature.class.isAssignableFrom(mapFeatureType)) {
+        } else if (PointSeriesFeature.class.isAssignableFrom(underlyingFeatureType)) {
             if (temporalDomain != null) {
                 timeseries = true;
             }

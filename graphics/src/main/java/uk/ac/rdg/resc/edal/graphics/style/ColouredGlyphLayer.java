@@ -47,7 +47,7 @@ import javax.xml.bind.Unmarshaller;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourableIcon;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
@@ -161,13 +161,16 @@ public class ColouredGlyphLayer extends ImageLayer {
         Graphics2D g = image.createGraphics();
 
         for (DiscreteFeature<?, ?> feature : features) {
-            if (feature instanceof ProfileFeature) {
-                ProfileFeature profileFeature = (ProfileFeature) feature;
+            /*
+             * We only support plotting of PointFeatures
+             */
+            if (feature instanceof PointFeature) {
+                PointFeature pointFeature = (PointFeature) feature;
 
                 /*
                  * Find the co-ordinates to draw the icon at
                  */
-                HorizontalPosition position = profileFeature.getHorizontalPosition();
+                HorizontalPosition position = pointFeature.getHorizontalPosition();
                 if (!GISUtils.crsMatch(position.getCoordinateReferenceSystem(), params.getBbox()
                         .getCoordinateReferenceSystem())) {
                     position = GISUtils.transformPosition(position, params.getBbox()
@@ -177,28 +180,7 @@ public class ColouredGlyphLayer extends ImageLayer {
                 int i = xAxis.findIndexOfUnconstrained(position.getX());
                 int j = params.getHeight() - 1 - yAxis.findIndexOfUnconstrained(position.getY());
 
-                /*
-                 * Get the z-index of the target depth within the vertical
-                 * domain
-                 */
-                int zIndex;
-                if (params.getTargetZ() == null) {
-                    /*
-                     * If no target z is provided, pick the value closest to the
-                     * surface
-                     */
-                    zIndex = profileFeature.getDomain().findIndexOf(
-                            GISUtils.getClosestElevationToSurface(profileFeature.getDomain()));
-                } else {
-                    zIndex = GISUtils.getIndexOfClosestElevationTo(params.getTargetZ(),
-                            profileFeature.getDomain());
-                }
-
-                if (zIndex < 0) {
-                    continue;
-                }
-
-                Number value = profileFeature.getValues(featuresForLayer.getMember()).get(zIndex);
+                Number value = pointFeature.getValue(featuresForLayer.getMember());
                 if (value != null && !Float.isNaN(value.floatValue())) {
                     /*
                      * Draw the icon
@@ -207,10 +189,6 @@ public class ColouredGlyphLayer extends ImageLayer {
                     g.drawImage(icon.getColouredIcon(color), i - icon.getWidth() / 2,
                             j - icon.getHeight() / 2, null);
                 }
-            } else {
-                /*
-                 * Write other features (just PointSeriesFeature ?) here
-                 */
             }
         }
     }
@@ -218,7 +196,7 @@ public class ColouredGlyphLayer extends ImageLayer {
     @Override
     public Collection<Class<? extends Feature<?>>> supportedFeatureTypes() {
         List<Class<? extends Feature<?>>> clazzes = new ArrayList<Class<? extends Feature<?>>>();
-        clazzes.add(ProfileFeature.class);
+        clazzes.add(PointFeature.class);
         return clazzes;
     }
 

@@ -50,6 +50,14 @@ public abstract class AbstractDataset implements Dataset {
     private Map<String, VariableMetadata> vars;
     private List<VariablePlugin> plugins;
 
+    /**
+     * @param id
+     *            The ID to use for this {@link Dataset}
+     * @param vars
+     *            A {@link Collection} of {@link VariableMetadata} objects
+     *            representing the data which will be stored in this
+     *            {@link Dataset}
+     */
     public AbstractDataset(String id, Collection<? extends VariableMetadata> vars) {
         this.id = id;
         this.vars = new LinkedHashMap<String, VariableMetadata>();

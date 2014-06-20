@@ -31,9 +31,9 @@ package uk.ac.rdg.resc.edal.feature;
 import java.util.Map;
 
 import uk.ac.rdg.resc.edal.domain.PointDomain;
-import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 
 /**
@@ -43,8 +43,7 @@ import uk.ac.rdg.resc.edal.util.Array1D;
  */
 public class PointFeature extends AbstractDiscreteFeature<GeoPosition, GeoPosition> {
     public PointFeature(String id, String name, String description, GeoPosition pos4d,
-            Map<String, Parameter> parameters, Map<String, Array1D<Number>> values)
-            throws MismatchedCrsException {
+            Map<String, Parameter> parameters, Map<String, Array1D<Number>> values) {
         super(id, name, description, new PointDomain(pos4d), parameters, values);
     }
 
@@ -53,8 +52,41 @@ public class PointFeature extends AbstractDiscreteFeature<GeoPosition, GeoPositi
         return (PointDomain) super.getDomain();
     }
 
+    /**
+     * Convenience method for returning the horizontal position. This is
+     * equivalent to calling {@link PointFeature()#getGeoPosition()} and
+     * extracting the horizontal part of the position
+     * 
+     * @return The {@link HorizontalPosition} of this feature
+     */
+    public HorizontalPosition getHorizontalPosition() {
+        return getGeoPosition().getHorizontalPosition();
+    }
+
+    /**
+     * Convenience method for returning the 4d position of this feature. This is
+     * equivalent to calling {@link PointDomain#getDomainObjects()} and
+     * extracting the first (and only) position.
+     * 
+     * @return The {@link GeoPosition} of this feature
+     */
+    public GeoPosition getGeoPosition() {
+        return getDomain().getDomainObjects().get(0);
+    }
+
     @Override
     public Array1D<Number> getValues(String paramId) {
         return (Array1D<Number>) super.getValues(paramId);
+    }
+
+    /**
+     * Convenience method for extracting the single value associated with a
+     * particular parameter.  Equivalent to calling getValues().get(0)
+     * 
+     * @param varId The variable ID to read
+     * @return The value
+     */
+    public Number getValue(String varId) {
+        return getValues(varId).get(0);
     }
 }

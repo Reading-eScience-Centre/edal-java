@@ -68,6 +68,18 @@ public interface Dataset {
     public Set<String> getFeatureIds();
 
     /**
+     * Determines the type of feature returned by the
+     * {@link Dataset#readFeature(String)} method for a particular variable
+     * (feature ID)
+     * 
+     * @param variableId
+     *            The ID of the variable
+     * @return The class of the {@link Feature}s returned when calling the
+     *         {@link Dataset#readFeature} method for the same variable ID
+     */
+    public Class<? extends DiscreteFeature<?, ?>> getFeatureType(String variableId);
+
+    /**
      * Reads an entire feature from underlying storage
      */
     public Feature<?> readFeature(String featureId) throws DataReadingException;

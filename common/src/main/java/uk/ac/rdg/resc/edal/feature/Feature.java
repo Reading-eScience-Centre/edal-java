@@ -28,7 +28,9 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.Map;
 import java.util.Set;
+
 import uk.ac.rdg.resc.edal.domain.Domain;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 
@@ -81,4 +83,10 @@ public interface Feature<P> {
      *            The ID of the desired parameter
      */
     public Parameter getParameter(String parameterId);
+
+    /**
+     * Gets the set of identifiers of the parameters of this Feature mapped to
+     * the {@link Parameter}s themselves
+     */
+    public Map<String, Parameter> getParameterMap();
 }

@@ -255,6 +255,15 @@ public class IntercomparisonDataset implements Dataset {
     }
 
     @Override
+    public Class<? extends DiscreteFeature<?, ?>> getFeatureType(String variableId) {
+        /*
+         * Return the feature type returned by the underlying dataset
+         */
+        DatasetAndId datasetAndId = varId2DatasetAndId.get(variableId);
+        return datasetAndId.dataset.getFeatureType(datasetAndId.variableId);
+    }
+    
+    @Override
     public Feature<?> readFeature(String featureId) throws DataReadingException {
         if (!featureIdsInGrid.containsKey(featureId)) {
             throw new DataReadingException("Feature " + featureId

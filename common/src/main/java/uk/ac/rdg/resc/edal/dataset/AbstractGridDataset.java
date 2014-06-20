@@ -105,6 +105,15 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     @Override
+    public Class<GridFeature> getFeatureType(String variableId) {
+        /*
+         * All classes based on this class will have GridFeature as their
+         * underlying data type
+         */
+        return GridFeature.class;
+    }
+
+    @Override
     public GridFeature readFeature(String featureId) throws DataReadingException {
         VariableMetadata variableMetadata = getVariableMetadata(featureId);
         if (!(variableMetadata instanceof GridVariableMetadata)) {

@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.domain;
 
-import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
@@ -45,7 +44,11 @@ public class PointDomain implements DiscretePointDomain<GeoPosition> {
 
     private final Array1D<GeoPosition> positions;
 
-    public PointDomain(GeoPosition position) throws MismatchedCrsException {
+    public PointDomain(GeoPosition position) {
+        if (position == null || position.getHorizontalPosition() == null) {
+            throw new IllegalArgumentException(
+                    "A PointDomain must have at least a valid (i.e. non-null) horizontal position");
+        }
         this.positions = new ImmutableArray1D<GeoPosition>(new GeoPosition[] { position });
     }
 

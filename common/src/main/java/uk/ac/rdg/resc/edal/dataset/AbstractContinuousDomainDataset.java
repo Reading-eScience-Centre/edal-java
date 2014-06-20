@@ -57,14 +57,11 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  * @author Guy Griffiths
  */
 public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
-
-    protected Class<? extends DiscreteFeature<?, ?>> featureType;
     private FeatureIndexer featureIndexer;
 
     public AbstractContinuousDomainDataset(String id, Collection<? extends VariableMetadata> vars,
-            Class<? extends DiscreteFeature<?, ?>> featureType, FeatureIndexer featureIndexer) {
+            FeatureIndexer featureIndexer) {
         super(id, vars);
-        this.featureType = featureType;
         this.featureIndexer = featureIndexer;
     }
 
@@ -102,7 +99,7 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
          * boundaries.
          */
         BoundingBox largeBoundingBox = GISUtils.getLargeBoundingBox(hExtent, 5);
-        List<DiscreteFeature<?, ?>> features = new ArrayList<DiscreteFeature<?, ?>>();
+        List<DiscreteFeature<?, ?>> features = new ArrayList<>();
         Collection<String> featureIds = featureIndexer.findFeatureIds(largeBoundingBox, zExtent,
                 tExtent, varIds);
         features.addAll(getFeatureReader().readFeatures(featureIds, varIds));
@@ -113,9 +110,11 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
     @Override
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
-        if (!ProfileFeature.class.isAssignableFrom(featureType)) {
-            throw new UnsupportedOperationException(
-                    "This dataset does not support profile features");
+        for (String varId : varIds) {
+            if (!supportsProfileFeatureExtraction(varId)) {
+                throw new UnsupportedOperationException(
+                        "This dataset does not support profile features");
+            }
         }
         List<ProfileFeature> features = new ArrayList<ProfileFeature>();
 
@@ -160,9 +159,11 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
     @Override
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             PlottingDomainParams params) throws DataReadingException {
-        if (!PointSeriesFeature.class.isAssignableFrom(featureType)) {
-            throw new UnsupportedOperationException(
-                    "This dataset does not support time series features");
+        for (String varId : varIds) {
+            if (!supportsTimeseriesExtraction(varId)) {
+                throw new UnsupportedOperationException(
+                        "This dataset does not support time series features");
+            }
         }
         List<PointSeriesFeature> features = new ArrayList<PointSeriesFeature>();
 
@@ -217,11 +218,6 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
      * @return The {@link Extent} of the time domain for the entire dataset
      */
     protected abstract Extent<DateTime> getDatasetTimeExtent();
-
-    @Override
-    public final Class<? extends DiscreteFeature<?, ?>> getMapFeatureType(String variableId) {
-        return featureType;
-    }
 
     public abstract DiscreteFeatureReader<? extends DiscreteFeature<?, ?>> getFeatureReader();
 }

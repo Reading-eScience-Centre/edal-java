@@ -59,7 +59,7 @@ import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
-import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
+import uk.ac.rdg.resc.edal.dataset.AbstractPointDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
@@ -72,17 +72,24 @@ import uk.ac.rdg.resc.edal.domain.SimpleTemporalDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleVerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
@@ -206,7 +213,7 @@ public final class En3DatasetFactory extends DatasetFactory {
     @Override
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
         long t1 = System.currentTimeMillis();
-        
+
         /*
          * Use these to calculate the spatial extent of the entire dataset
          */
@@ -228,14 +235,9 @@ public final class En3DatasetFactory extends DatasetFactory {
         List<File> files = CdmUtils.expandGlobExpression(location);
 
         /*
-         * TODO Read the id.files file and check if the list of files matches.
-         * 
-         * If so, read the id.index file and deserialise as the spatial index
-         * and domain (or something)
-         * 
-         * If it's different, delete the spatial index, and create a new one,
-         * serialising it to disk afterwards (as long as the working directory
-         * is non-null).
+         * Check to see if we have indexed this set of files in the past. If so,
+         * read the spatial index from disk, otherwise generate a new one and
+         * write that.
          */
         File spatialIndexFile = new File(workingDir, id + ".index.ser");
         boolean readExistingSpatialIndex = false;
@@ -292,7 +294,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 zDomain = (SimpleVerticalDomain) in.readObject();
                 tDomain = (SimpleTemporalDomain) in.readObject();
                 indexer = (PRTreeFeatureIndexer) in.readObject();
-                
+
                 log.debug("Successfully read spatial index from file");
             } catch (ClassNotFoundException | IOException e) {
                 /*
@@ -333,7 +335,7 @@ public final class En3DatasetFactory extends DatasetFactory {
             List<PRTreeFeatureIndexer.FeatureBounds> featureBounds = new ArrayList<>();
 
             int totalProfiles = 0;
-            
+
             for (File file : files) {
                 NetcdfDataset nc = CdmUtils.openDataset(file.getAbsolutePath());
 
@@ -457,7 +459,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                         + "/" + (Runtime.getRuntime().maxMemory() / 1_000_000L));
                 totalProfiles += nProfiles.getLength();
             }
-            log.debug("Read "+totalProfiles+" features.  Starting indexing...");
+            log.debug("Read " + totalProfiles + " features.  Starting indexing...");
             /*
              * The domain of this dataset. Since all variables are valid for the
              * entire dataset, their domain must include the domains of all
@@ -471,7 +473,7 @@ public final class En3DatasetFactory extends DatasetFactory {
              * Now add all features to the spatial indexer
              */
             indexer.addFeatures(featureBounds);
-            log.debug("Indexed "+totalProfiles+" features.");
+            log.debug("Indexed " + totalProfiles + " features.");
             log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L) + "/"
                     + (Runtime.getRuntime().maxMemory() / 1_000_000L));
 
@@ -520,13 +522,13 @@ public final class En3DatasetFactory extends DatasetFactory {
                 tDomain));
 
         long t2 = System.currentTimeMillis();
-        log.debug("Time to create EN3 dataset: "+((t2-t1)/1000.0)+"s");
+        log.debug("Time to create EN3 dataset: " + ((t2 - t1) / 1000.0) + "s");
 
         return new En3Dataset(id, metadata, indexer, hDomain.getBoundingBox(), zDomain.getExtent(),
                 tDomain.getExtent());
     }
 
-    private final class En3Dataset extends AbstractContinuousDomainDataset {
+    private final class En3Dataset extends AbstractPointDataset<ProfileFeature> {
         private En3DatabaseReader reader = new En3DatabaseReader(this);
         private BoundingBox bbox;
         private Extent<Double> zExtent;
@@ -535,10 +537,18 @@ public final class En3DatasetFactory extends DatasetFactory {
         public En3Dataset(String id, Collection<? extends VariableMetadata> vars,
                 FeatureIndexer featureIndexer, BoundingBox bbox, Extent<Double> zExtent,
                 Extent<DateTime> tExtent) {
-            super(id, vars, ProfileFeature.class, featureIndexer);
+            super(id, vars, featureIndexer);
             this.bbox = bbox;
             this.zExtent = zExtent;
             this.tExtent = tExtent;
+        }
+
+        @Override
+        public Class<? extends DiscreteFeature<?, ?>> getFeatureType(String variableId) {
+            /*
+             * All variables return a ProfileFeature
+             */
+            return ProfileFeature.class;
         }
 
         @Override
@@ -585,6 +595,48 @@ public final class En3DatasetFactory extends DatasetFactory {
              * No variables are supported for timeseries
              */
             return false;
+        }
+
+        @Override
+        protected PointFeature convertFeature(ProfileFeature feature, PlottingDomainParams params) {
+            ProfileFeature profileFeature = (ProfileFeature) feature;
+
+            HorizontalPosition position = profileFeature.getHorizontalPosition();
+
+            /*
+             * Get the z-index of the target depth within the vertical domain
+             */
+            int zIndex;
+            if (params.getTargetZ() == null) {
+                /*
+                 * If no target z is provided, pick the value closest to the
+                 * surface
+                 */
+                zIndex = profileFeature.getDomain().findIndexOf(
+                        GISUtils.getClosestElevationToSurface(profileFeature.getDomain()));
+            } else {
+                zIndex = GISUtils.getIndexOfClosestElevationTo(params.getTargetZ(),
+                        feature.getDomain());
+            }
+            if (zIndex < 0) {
+                return null;
+            }
+
+            Double zValue = feature.getDomain().getCoordinateValue(zIndex);
+
+            GeoPosition pos4d = new GeoPosition(position, new VerticalPosition(zValue, feature
+                    .getDomain().getVerticalCrs()), feature.getTime());
+
+            Map<String, Array1D<Number>> values = new HashMap<>();
+            for (String paramId : feature.getParameterIds()) {
+                values.put(paramId,
+                        new ImmutableArray1D<>(new Number[] { profileFeature.getValues(paramId)
+                                .get(zIndex) }));
+            }
+
+            return new PointFeature(feature.getId() + ":" + zValue, "Measurement from "
+                    + feature.getName(), "Value extracted at depth " + zValue + " from "
+                    + feature.getDescription(), pos4d, feature.getParameterMap(), values);
         }
     }
 
@@ -867,11 +919,13 @@ public final class En3DatasetFactory extends DatasetFactory {
                 parameters.put(varId, ALL_PARAMETERS.get(varId));
             }
 
+            String platformIdStr = platformId.toString().trim();
+
             /*
              * Finally create and return the ProfileFeature
              */
-            return new ProfileFeature(id, "EN3 platform " + platformId,
-                    "Profile data from platform " + platformId + " in the EN3 database", domain,
+            return new ProfileFeature(id, "EN3 platform " + platformIdStr,
+                    "Profile data from platform " + platformIdStr + " in the EN3 database", domain,
                     hPos, time, parameters, values);
         }
 
