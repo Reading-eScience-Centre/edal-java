@@ -137,7 +137,7 @@ final public class Charting {
                 String legend = feature.getName() + "("
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ","
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ") - "
-                        + " - " + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
+                        + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
                 XYSeries series = new XYSeries(legend, true);
                 series.setDescription(feature.getParameter(varId).getDescription());
                 for (int i = 0; i < elevationValues.size(); i++) {
