@@ -13,11 +13,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ucar.ma2.ArrayDouble;
+import ucar.ma2.ArrayFloat;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
-
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -110,12 +110,17 @@ public class CurviLinearGridDatasetTest {
                 lat_data.getDouble(index));
         int cCoords_i = index % etaSize;
         int cCoords_j = index / etaSize;
+
         /*
-         * LonLatPosition not implement hash code and equals method so the below
-         * statement return false though the values are right.
+         * CurvilinearCoords use "float" to save coordinates but LatLonPosition
+         * use double. This makes a little difficulty for testing. We have to
+         * compare them side by side.
          */
 
-        // assertEquals(expectedPos, cCoords.getMidpoint(cCoords_i, cCoords_j));
+        assertEquals(expectedPos.getX(), cCoords.getMidpoint(cCoords_i, cCoords_j).getX(), delta);
+        assertEquals(expectedPos.getY(), cCoords.getMidpoint(cCoords_i, cCoords_j).getY(), delta);
+        assertEquals(expectedPos.getCoordinateReferenceSystem(),
+                cCoords.getMidpoint(cCoords_i, cCoords_j).getCoordinateReferenceSystem());
 
         List<Cell> celllist = cCoords.getCells();
         Cell cell = cCoords.getCell(cCoords_i, cCoords_j);
@@ -123,7 +128,10 @@ public class CurviLinearGridDatasetTest {
 
         assertEquals(cCoords_i, cell.getI());
         assertEquals(cCoords_j, cell.getJ());
-        // assertEquals(expectedPos, cell.getCentre());
+        assertEquals(expectedPos.getX(), cell.getCentre().getX(), delta);
+        assertEquals(expectedPos.getY(), cell.getCentre().getY(), delta);
+        assertEquals(expectedPos.getCoordinateReferenceSystem(), cell.getCentre()
+                .getCoordinateReferenceSystem());
     }
 
     @Test
@@ -135,12 +143,14 @@ public class CurviLinearGridDatasetTest {
         List<Variable> variables = cdf.getVariables();
         Set<String> vars = new HashSet<>();
         for (Variable v : variables) {
-            vars.add(v.getName());
+            vars.add(v.getFullName());
         }
-        /*netcdt use variable but dataset use feature. Two different concepts.
-        How can I use another to get feature info?*/
-        
-        //assertEquals(vars, dataset.getFeatureIds());
+        /*
+         * netcdt use variable but dataset use feature. Two different concepts.
+         * How can I use another to get feature info?
+         */
+
+        // assertEquals(vars, dataset.getFeatureIds());
         GridFeature allxUValues = ((AbstractGridDataset) dataset).readFeature("allx_u");
         GridFeature allxVValues = ((AbstractGridDataset) dataset).readFeature("allx_v");
         GridFeature allyUValues = ((AbstractGridDataset) dataset).readFeature("ally_u");
@@ -169,7 +179,6 @@ public class CurviLinearGridDatasetTest {
         HorizontalDomain hDomain = dataset.getVariableMetadata("allx_u").getHorizontalDomain();
 
         BoundingBox bbox = hDomain.getBoundingBox();
-        System.out.println(bbox);
         PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
                 null, null, null);
         Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset.extractMapFeatures(null,
@@ -185,16 +194,14 @@ public class CurviLinearGridDatasetTest {
          * curvilinear grid so the data it can fetch is limited. Use readFeature
          * method to extract data instead of extractMapFeature method at moment.
          */
+        
+        /*Variable xU =cdf.findVariable("allx_u");
+        ArrayFloat uValues =(ArrayFloat) xU.read();
         for (int m = 0; m < xiSize; m++) {
             for (int n = 0; n < etaSize; n++) {
-
                 Number number = xUValues.get(m, n);
-//                if(number != null) {
-                // System.out.println(number);
-//                }
-                // assertEquals(uValues.getFloat(index),
-                // xUValues.get(m,n).floatValue(), delta);
+                assertEquals(uValues.getFloat(n+m*etaSize), number.floatValue(), delta);
             }
-        }
+        }*/
     }
 }
