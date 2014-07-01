@@ -1,6 +1,9 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
@@ -13,7 +16,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ucar.ma2.ArrayDouble;
-import ucar.ma2.ArrayFloat;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
