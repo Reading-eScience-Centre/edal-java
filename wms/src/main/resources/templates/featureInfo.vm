@@ -18,6 +18,9 @@
 #else
             <value>$info.value</value>
 #end
+#foreach( $property in $info.featureProperties.entrySet() )
+            <property name="$property.key">$property.value</property>
+#end
         </FeatureInfo>
     </Feature>
 #end

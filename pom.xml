@@ -85,6 +85,11 @@
                     </execution>
                 </executions>
                 <version>2.8.1</version>
+                <configuration>
+                    <!-- This is required for Java 8 until we make all javadoc 
+                        W3C HTML 4.01 compliant -->
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

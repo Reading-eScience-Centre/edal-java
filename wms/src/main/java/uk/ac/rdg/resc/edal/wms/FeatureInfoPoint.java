@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
+import java.util.Properties;
+
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
@@ -37,79 +39,92 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * @author Guy
  */
 public class FeatureInfoPoint {
-    private String layerName;
-    private HorizontalPosition position;
-    private Number value;
-    private String featureId;
-    private String timeStr;
+	private String layerName;
+	private HorizontalPosition position;
+	private Number value;
+	private String featureId;
+	private String timeStr;
+	private Properties properties;
 
-    /**
-     * Constructs a {@link FeatureInfoPoint}
-     * 
-     * @param layerName
-     *            The layer name to be displayed. If no layer name is required
-     *            (e.g. all features belong to the same layer), this can be
-     *            <code>null</code>
-     * @param featureId
-     *            The feature ID/name to be displayed. If this is not required
-     *            (e.g. there is a single feature) this can be <code>null</code>
-     * @param position
-     *            The position at which the feature is located. This is required
-     *            to sort multiple feature info points and filter by distance to
-     *            the clicked point
-     * @param timeStr
-     *            The time associated with the feature. This can be
-     *            <code>null</code>
-     * @param value
-     *            The value of the feature at the clicked point
-     */
-    public FeatureInfoPoint(String layerName, String featureId, HorizontalPosition position,
-            String timeStr, Number value) {
-        this.layerName = layerName;
-        this.featureId = featureId;
-        this.position = position;
-        this.timeStr = timeStr;
-        this.value = value;
-    }
+	/**
+	 * Constructs a {@link FeatureInfoPoint}
+	 * 
+	 * @param layerName
+	 *            The layer name to be displayed. If no layer name is required
+	 *            (e.g. all features belong to the same layer), this can be
+	 *            <code>null</code>
+	 * @param featureId
+	 *            The feature ID/name to be displayed. If this is not required
+	 *            (e.g. there is a single feature) this can be <code>null</code>
+	 * @param position
+	 *            The position at which the feature is located. This is required
+	 *            to sort multiple feature info points and filter by distance to
+	 *            the clicked point
+	 * @param timeStr
+	 *            The time associated with the feature. This can be
+	 *            <code>null</code>
+	 * @param value
+	 *            The value of the feature at the clicked point
+	 * @param properties
+	 *            Any additional properties associated with the feature
+	 */
+	public FeatureInfoPoint(String layerName, String featureId,
+			HorizontalPosition position, String timeStr, Number value,
+			Properties properties) {
+		this.layerName = layerName;
+		this.featureId = featureId;
+		this.position = position;
+		this.timeStr = timeStr;
+		this.value = value;
+		this.properties = properties;
+	}
 
-    /**
-     * @return The layer name to be displayed. If no layer name is required
-     *         (e.g. all features belong to the same layer), this can be
-     *         <code>null</code>
-     */
-    public String getLayerName() {
-        return layerName;
-    }
+	/**
+	 * @return The layer name to be displayed. If no layer name is required
+	 *         (e.g. all features belong to the same layer), this can be
+	 *         <code>null</code>
+	 */
+	public String getLayerName() {
+		return layerName;
+	}
 
-    /**
-     * @return The feature ID/name to be displayed. If this is not required
-     *         (e.g. there is a single feature) this can be <code>null</code>
-     */
-    public String getFeatureId() {
-        return featureId;
-    }
+	/**
+	 * @return The feature ID/name to be displayed. If this is not required
+	 *         (e.g. there is a single feature) this can be <code>null</code>
+	 */
+	public String getFeatureId() {
+		return featureId;
+	}
 
-    /**
-     * @return The position at which the feature is located. This is required to
-     *         sort multiple feature info points and filter by distance to the
-     *         clicked point
-     */
-    public HorizontalPosition getPosition() {
-        return position;
-    }
+	/**
+	 * @return The position at which the feature is located. This is required to
+	 *         sort multiple feature info points and filter by distance to the
+	 *         clicked point
+	 */
+	public HorizontalPosition getPosition() {
+		return position;
+	}
 
-    /**
-     * @return The time associated with the feature. This can be
-     *         <code>null</code>
-     */
-    public String getTime() {
-        return timeStr;
-    }
+	/**
+	 * @return The time associated with the feature. This can be
+	 *         <code>null</code>
+	 */
+	public String getTime() {
+		return timeStr;
+	}
 
-    /**
-     * @return The value of the feature at the clicked point
-     */
-    public Number getValue() {
-        return value;
-    }
+	/**
+	 * @return The value of the feature at the clicked point
+	 */
+	public Number getValue() {
+		return value;
+	}
+
+	/**
+	 * @return A set of additional {@link Properties} associated with the
+	 *         feature at the clicked point
+	 */
+	public Properties getFeatureProperties() {
+		return properties;
+	}
 }

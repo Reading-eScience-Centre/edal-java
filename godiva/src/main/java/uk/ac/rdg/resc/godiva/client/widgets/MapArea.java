@@ -619,23 +619,25 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         /*
          * This is how we can display the image in a popup box.
          */
-        //        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(this);
-        //        final com.google.gwt.user.client.ui.Image image = new com.google.gwt.user.client.ui.Image(url);
-        //        image.addLoadHandler(new LoadHandler() {
-        //            @Override
-        //            public void onLoad(LoadEvent event) {
-        //                popup.center();
-        //            }
-        //        });
-        //        /*
-        //         * NOTTODO this doesn't seem to appear on Chromium...
-        //         */
-        //        image.setAltText("Image loading...");
-        //        if(title != null){
-        //            popup.setHTML(title);
-        //        }
-        //        popup.add(image);
-        //        popup.center();
+        // final DialogBoxWithCloseButton popup = new
+        // DialogBoxWithCloseButton(this);
+        // final com.google.gwt.user.client.ui.Image image = new
+        // com.google.gwt.user.client.ui.Image(url);
+        // image.addLoadHandler(new LoadHandler() {
+        // @Override
+        // public void onLoad(LoadEvent event) {
+        // popup.center();
+        // }
+        // });
+        // /*
+        // * NOTTODO this doesn't seem to appear on Chromium...
+        // */
+        // image.setAltText("Image loading...");
+        // if(title != null){
+        // popup.setHTML(title);
+        // }
+        // popup.add(image);
+        // popup.center();
     }
 
     public void zoomToExtents(String extents) throws Exception {
@@ -1025,7 +1027,21 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     value = value.replaceAll(";", "<br/>");
                     html.append("<tr><td><b>Value:</b></td><td>" + value + "</td></tr>");
                 }
+                /*
+                 * Now process any arbitrary properties
+                 */
+                for (int j = 0; j < featureInfoNode.getLength(); j++) {
+                    Node child = featureInfoNode.item(j);
+                    if (child.getNodeName().equalsIgnoreCase("property")) {
+                        String propertyName = child.getAttributes().getNamedItem("name")
+                                .getNodeValue();
+                        String propertyValue = child.getFirstChild().getNodeValue();
+                        html.append("<tr><td><b>" + propertyName + ":</b></td><td>" + propertyValue
+                                + "</td></tr>");
+                    }
+                }
             }
+            html.append("<tr><td>&nbsp;</td></tr>");
         }
         html.append("</table>");
         return new FeatureInfoMessageAndFeatureIds(html.toString(), layerNames);

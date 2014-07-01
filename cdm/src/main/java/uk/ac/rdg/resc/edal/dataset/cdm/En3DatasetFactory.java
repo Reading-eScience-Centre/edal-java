@@ -36,10 +36,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
@@ -105,9 +107,11 @@ public final class En3DatasetFactory extends DatasetFactory {
     /*
      * Static definitions of parameters found in the EN3 database
      */
-    private static final Parameter TEMP_PARAMETER = new Parameter("TEMP", "Sea Water Temperature",
-            "The measured temperature, in degrees celcius, of the sea water", "degrees_C",
-            "sea_water_temperature");
+    // private static final Parameter TEMP_PARAMETER = new Parameter("TEMP",
+    // "Sea Water Temperature",
+    // "The measured temperature, in degrees celcius, of the sea water",
+    // "degrees_C",
+    // "sea_water_temperature");
     private static final Parameter POT_TEMP_PARAMETER = new Parameter("POTM_CORRECTED",
             "Sea Water Potential Temperature",
             "The potential temperature, in degrees celcius, of the sea water", "degrees_C",
@@ -120,7 +124,7 @@ public final class En3DatasetFactory extends DatasetFactory {
     private static final Map<String, Parameter> ALL_PARAMETERS = new HashMap<String, Parameter>();
 
     static {
-        ALL_PARAMETERS.put(TEMP_PARAMETER.getId(), TEMP_PARAMETER);
+        // ALL_PARAMETERS.put(TEMP_PARAMETER.getId(), TEMP_PARAMETER);
         ALL_PARAMETERS.put(POT_TEMP_PARAMETER.getId(), POT_TEMP_PARAMETER);
         ALL_PARAMETERS.put(PSAL_PARAMETER.getId(), PSAL_PARAMETER);
     }
@@ -140,6 +144,11 @@ public final class En3DatasetFactory extends DatasetFactory {
             this.file = file;
             this.profileNumber = profileNumber;
         }
+    }
+
+    public static void main(String[] args) throws IOException, EdalException {
+        En3DatasetFactory f = new En3DatasetFactory();
+        f.createDataset("en3", "/home/guy/Data/EN3/EN3_v2a_Profiles_201312.nc");
     }
 
     /**
@@ -276,6 +285,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 log.warn("Problem reading EN3 serialisation index", e);
             }
         }
+        readExistingSpatialIndex = false;
 
         /*
          * The domain of this EN3 dataset
@@ -333,7 +343,6 @@ public final class En3DatasetFactory extends DatasetFactory {
              */
             indexer = new PRTreeFeatureIndexer();
             List<PRTreeFeatureIndexer.FeatureBounds> featureBounds = new ArrayList<>();
-
             int totalProfiles = 0;
 
             for (File file : files) {
@@ -394,25 +403,48 @@ public final class En3DatasetFactory extends DatasetFactory {
                     /*
                      * Find the vertical extent of the current profile
                      */
-                    double minProfDepth = Double.MAX_VALUE;
-                    double maxProfDepth = -Double.MAX_VALUE;
+                    List<Double> depths = new ArrayList<>();
                     for (int j = 0; j < nLevels.getLength(); j++) {
                         double depth = depthValues.getDouble(i * nLevels.getLength() + j);
-                        if (!Double.isNaN(depth)) {
-                            minProfDepth = Math.min(depth, minProfDepth);
-                            maxProfDepth = Math.max(depth, maxProfDepth);
+                        if (!Double.isNaN(depth) && depth != 99999.0) {
+                            depths.add(depth);
+                        } else {
+                            break;
                         }
                     }
-                    if (maxProfDepth < minProfDepth) {
+
+                    if (depths.size() == 0) {
                         /*
                          * We have the situation where all values of depth
-                         * returned NaN.
+                         * returned NaN
                          * 
                          * This profile cannot be indexed
                          */
                         continue;
                     }
-                    Extent<Double> zExtent = Extents.newExtent(minProfDepth, maxProfDepth);
+                    boolean nonMonotonic = false;
+                    for (int k = 0; k < depths.size() - 1; k++) {
+                        double depth = depths.get(k);
+                        double nextDepth = depths.get(k + 1);
+                        if (nextDepth <= depth) {
+                            /*
+                             * We have a non-monotonic value. This usually
+                             * follows a very large value in the middle of a
+                             * normally increasing depth axis.
+                             */
+                            nonMonotonic = true;
+                            break;
+                        }
+                    }
+                    if (nonMonotonic) {
+                        /*
+                         * Ignore profiles with non-monotonic axes
+                         */
+                        continue;
+                    }
+
+                    Extent<Double> zExtent = Extents.newExtent(Collections.min(depths),
+                            Collections.max(depths));
 
                     /*
                      * Create a unique ID
@@ -424,8 +456,8 @@ public final class En3DatasetFactory extends DatasetFactory {
                      * indexer
                      */
                     featureBounds.add(new FeatureBounds(profileId, horizontalPosition, zExtent,
-                            tExtent, CollectionUtils.setOf(TEMP_PARAMETER.getId(),
-                                    POT_TEMP_PARAMETER.getId(), PSAL_PARAMETER.getId())));
+                            tExtent, CollectionUtils.setOf(POT_TEMP_PARAMETER.getId(),
+                                    PSAL_PARAMETER.getId())));
 
                     /*
                      * Update entire dataset extents
@@ -436,12 +468,8 @@ public final class En3DatasetFactory extends DatasetFactory {
                     minLon = Math.min(minLon, lon);
                     maxLon = Math.max(maxLon, lon);
 
-                    if (!Double.isNaN(minProfDepth)) {
-                        minZ = Math.min(minZ, minProfDepth);
-                    }
-                    if (!Double.isNaN(maxProfDepth)) {
-                        maxZ = Math.max(maxZ, maxProfDepth);
-                    }
+                    minZ = Math.min(minZ, zExtent.getLow());
+                    maxZ = Math.max(maxZ, zExtent.getHigh());
 
                     if (minT.isAfter(time)) {
                         minT = time;
@@ -514,8 +542,9 @@ public final class En3DatasetFactory extends DatasetFactory {
          * measures, and this reader is only for EN3 datasets...
          */
         List<VariableMetadata> metadata = new ArrayList<VariableMetadata>();
-        metadata.add(new VariableMetadata(TEMP_PARAMETER.getId(), TEMP_PARAMETER, hDomain, zDomain,
-                tDomain));
+        // metadata.add(new VariableMetadata(TEMP_PARAMETER.getId(),
+        // TEMP_PARAMETER, hDomain, zDomain,
+        // tDomain));
         metadata.add(new VariableMetadata(POT_TEMP_PARAMETER.getId(), POT_TEMP_PARAMETER, hDomain,
                 zDomain, tDomain));
         metadata.add(new VariableMetadata(PSAL_PARAMETER.getId(), PSAL_PARAMETER, hDomain, zDomain,
@@ -623,6 +652,17 @@ public final class En3DatasetFactory extends DatasetFactory {
             }
 
             Double zValue = feature.getDomain().getCoordinateValue(zIndex);
+            if (params.getZExtent() != null && !params.getZExtent().contains(zValue)) {
+                /*
+                 * If we have specified a z-extent, make sure that the z-value
+                 * is actually contained within that extent.
+                 * 
+                 * This is to avoid the case where a feature may have an overall
+                 * extent which overlaps the supplied extent, but has no actual
+                 * measurements within that range.
+                 */
+                return null;
+            }
 
             GeoPosition pos4d = new GeoPosition(position, new VerticalPosition(zValue, feature
                     .getDomain().getVerticalCrs()), feature.getTime());
@@ -634,9 +674,11 @@ public final class En3DatasetFactory extends DatasetFactory {
                                 .get(zIndex) }));
             }
 
-            return new PointFeature(feature.getId() + ":" + zValue, "Measurement from "
+            PointFeature ret = new PointFeature(feature.getId() + ":" + zValue, "Measurement from "
                     + feature.getName(), "Value extracted at depth " + zValue + " from "
                     + feature.getDescription(), pos4d, feature.getParameterMap(), values);
+            ret.getFeatureProperties().putAll(profileFeature.getFeatureProperties());
+            return ret;
         }
     }
 
@@ -704,35 +746,15 @@ public final class En3DatasetFactory extends DatasetFactory {
              */
             Map<File, List<FeatureAndProfileId>> file2Ids = new HashMap<File, List<FeatureAndProfileId>>();
             for (String id : ids) {
-                String[] split = id.split(":");
-                int profileNumber = Integer.parseInt(split[0]);
-                StringBuilder filePath = new StringBuilder();
-                /*
-                 * On the off-chance the file contains ":", we should
-                 * concatenate all of the elements of split
-                 */
-                for (int i = 1; i < split.length; i++) {
-                    filePath.append(split[i]);
-                    if (i != split.length - 1) {
-                        filePath.append(":");
-                    }
-                }
+                FileAndProfileNumber fileAndProfileNumber = deserialiseId(id);
+                File file = fileAndProfileNumber.file.getAbsoluteFile();
 
-                // FileAndProfileNumber fileAndProfileNumber =
-                // profileId2FileAndProfile.get(id);
-                // if (profileId2FileAndProfile != null) {
-                // File file = fileAndProfileNumber.file.getAbsoluteFile();
-                File file = new File(filePath.toString());
                 if (!file2Ids.containsKey(file)) {
                     List<FeatureAndProfileId> idsList = new ArrayList<FeatureAndProfileId>();
                     file2Ids.put(file, idsList);
                 }
-                file2Ids.get(file).add(new FeatureAndProfileId(id, /*
-                                                                    * fileAndProfileNumber
-                                                                    * .
-                                                                    */
-                profileNumber));
-                // }
+                file2Ids.get(file).add(
+                        new FeatureAndProfileId(id, fileAndProfileNumber.profileNumber));
             }
             /*
              * Now open each file in turn and read the profiles from them
@@ -922,11 +944,101 @@ public final class En3DatasetFactory extends DatasetFactory {
             String platformIdStr = platformId.toString().trim();
 
             /*
-             * Finally create and return the ProfileFeature
+             * Create the ProfileFeature
              */
-            return new ProfileFeature(id, "EN3 platform " + platformIdStr,
+            ProfileFeature ret = new ProfileFeature(id, "EN3 platform " + platformIdStr,
                     "Profile data from platform " + platformIdStr + " in the EN3 database", domain,
                     hPos, time, parameters, values);
+
+            /*
+             * Read the quality control flags and store in the properties of the
+             * profile feature
+             */
+            Variable qcPosVar = nc.findVariable("POSITION_QC");
+            Variable qcPotmCorrectedVar = nc.findVariable("PROFILE_POTM_QC");
+            Variable qcPsalCorrectedVar = nc.findVariable("PROFILE_PSAL_QC");
+
+            //			Variable qcDepthVar = nc.findVariable("PROFILE_DEPH_QC");
+            //			Variable qcJuldVar = nc.findVariable("JULD_QC");
+
+            Array qcPos = qcPosVar.read();
+            Array qcPotmCorrected = qcPotmCorrectedVar.read();
+            Array qcPsalCorrected = qcPsalCorrectedVar.read();
+
+            //			Array qcDepth = qcDepthVar.read();
+            //			Array qcJuld = qcJuldVar.read();
+
+            Properties props = new Properties();
+            String key;
+            String value;
+
+            key = "Position QC";
+            if (qcPos.getChar(profNum) == '1') {
+                value = "Accept";
+            } else if (qcPos.getChar(profNum) == '4') {
+                value = "Reject";
+            } else if (qcPos.getChar(profNum) == '0') {
+                value = "No QC data";
+            } else {
+                value = "N/A";
+            }
+            props.put(key, value);
+
+            if (variableIds.contains(POT_TEMP_PARAMETER.getId())) {
+                key = "Potential temperature QC";
+                if (qcPotmCorrected.getChar(profNum) == '1') {
+                    value = "Accept";
+                } else if (qcPotmCorrected.getChar(profNum) == '4') {
+                    value = "Reject";
+                } else if (qcPotmCorrected.getChar(profNum) == '0') {
+                    value = "No QC data";
+                } else {
+                    value = "N/A";
+                }
+                props.put(key, value);
+            }
+
+            if (variableIds.contains(PSAL_PARAMETER.getId())) {
+                key = "Practical salinity QC";
+                if (qcPsalCorrected.getChar(profNum) == '1') {
+                    value = "Accept";
+                } else if (qcPsalCorrected.getChar(profNum) == '4') {
+                    value = "Reject";
+                } else if (qcPsalCorrected.getChar(profNum) == '0') {
+                    value = "No QC data";
+                } else {
+                    value = "N/A";
+                }
+                props.put(key, value);
+            }
+
+            //			key = "Depth QC";
+            //			if (qcDepth.getChar(profNum) == '1') {
+            //				value = "Accept";
+            //			} else if (qcDepth.getChar(profNum) == '4') {
+            //				value = "Reject";
+            //			} else if (qcDepth.getChar(profNum) == '0') {
+            //				value = "No QC data";
+            //			} else {
+            //				value = "N/A";
+            //			}
+            //			props.put(key, value);
+            //			
+            //			key = "Date/time QC";
+            //			if (qcJuld.getChar(profNum) == '1') {
+            //				value = "Accept";
+            //			} else if (qcJuld.getChar(profNum) == '4') {
+            //				value = "Reject";
+            //			} else if (qcJuld.getChar(profNum) == '0') {
+            //				value = "No QC data";
+            //			} else {
+            //				value = "N/A";
+            //			}
+            //			props.put(key, value);
+
+            ret.getFeatureProperties().putAll(props);
+
+            return ret;
         }
 
     }

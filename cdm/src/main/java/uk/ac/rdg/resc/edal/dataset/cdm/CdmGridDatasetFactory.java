@@ -531,20 +531,13 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                 ncmlStringBuffer
                         .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
                 ncmlStringBuffer
-                        .append("<aggregation dimName=\"run\" type=\"forecastModelRunCollection\">");
-                ncmlStringBuffer.append("<netcdf coordValue=\"2009-03-20T00:00:00Z\">");
-                ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName
-                        + "\" type=\"joinExisting\">");
-                int i = 0;
+                        .append("<aggregation dimName=\"" + timeDimName + "\" type=\"joinExisting\">");
                 for (File file : files) {
-                    ncmlStringBuffer.append("<netcdf location=\"" + file.getAbsolutePath()
-                            + "\" coordValue=\"" + i + "\"/>");
+                    ncmlStringBuffer.append("<netcdf location=\"" + file.getAbsolutePath() + "\"/>");
                 }
                 ncmlStringBuffer.append("</aggregation>");
                 ncmlStringBuffer.append("</netcdf>");
-                ncmlStringBuffer.append("</aggregation>");
-                ncmlStringBuffer.append("</netcdf>");
-
+                
                 ncmlString = ncmlStringBuffer.toString();
             }
             nc = NcMLReader.readNcML(new StringReader(ncmlString), null);

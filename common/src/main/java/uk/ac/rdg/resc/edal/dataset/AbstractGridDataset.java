@@ -155,7 +155,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     "The entire range of data for the variable: " + featureId, domain, parameters,
                     values);
         } catch (IOException e) {
-            throw new DataReadingException("Problem reading the data from underlying storage");
+            throw new DataReadingException("Problem reading the data from underlying storage", e);
         } finally {
             if (gridDataSource != null) {
                 try {

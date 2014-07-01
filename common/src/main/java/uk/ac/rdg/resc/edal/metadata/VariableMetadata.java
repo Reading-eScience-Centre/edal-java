@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.metadata;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -248,10 +249,12 @@ public class VariableMetadata {
              * have this as a child any more.
              */
             this.parent.children.remove(this);
-            for (Entry<String, VariableMetadata> children : this.parent.childrenWithRoles
-                    .entrySet()) {
+            
+            Iterator<Entry<String, VariableMetadata>> iterator = this.parent.childrenWithRoles.entrySet().iterator();
+            while(iterator.hasNext()) {
+                Entry<String, VariableMetadata> children = iterator.next();
                 if (children.getValue().equals(this)) {
-                    this.parent.childrenWithRoles.remove(children.getKey());
+                    iterator.remove();
                 }
             }
         }

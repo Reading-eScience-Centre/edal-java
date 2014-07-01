@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.feature;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.domain.Domain;
@@ -47,32 +48,32 @@ import uk.ac.rdg.resc.edal.metadata.Parameter;
  */
 public interface Feature<P> {
     /**
-     * Gets an identifier that is unique within the
-     * {@link #getFeatureCollection() feature collection to which this feature
-     * belongs}. Must never be null.
+     * @return an identifier that is unique within the
+     *         {@link #getFeatureCollection() feature collection to which this
+     *         feature belongs}. Must never be null.
      */
     public String getId();
 
     /**
-     * Gets a human-readable short string that identifies this feature. Not
-     * enforced to be unique.
+     * @return a human-readable short string that identifies this feature. Not
+     *         enforced to be unique.
      */
     public String getName();
 
     /**
-     * Gets a (perhaps lengthy) human-readable description of this feature.
+     * @return a (perhaps lengthy) human-readable description of this feature.
      */
     public String getDescription();
 
     /**
-     * Gets the domain of the values contained with the feature. May not return
-     * <code>null</code>
+     * @return the domain of the values contained with the feature. May not
+     *         return <code>null</code>
      */
     public Domain<P> getDomain();
 
     /**
-     * Gets the set of identifiers of the parameters of this Feature (
-     * {@literal i.e.} the variables that the feature records).
+     * @return the set of identifiers of the parameters of this Feature (
+     *         {@literal i.e.} the variables that the feature records).
      */
     public Set<String> getParameterIds();
 
@@ -80,13 +81,23 @@ public interface Feature<P> {
      * Gets a {@link Parameter} associated with this {@link Feature}
      * 
      * @param parameterId
-     *            The ID of the desired parameter
+     *            The ID of the desired {@link Parameter}
+     * @return the desired {@link Parameter}
      */
     public Parameter getParameter(String parameterId);
 
     /**
-     * Gets the set of identifiers of the parameters of this Feature mapped to
-     * the {@link Parameter}s themselves
+     * @return the set of identifiers of the parameters of this Feature mapped
+     *         to the {@link Parameter}s themselves
      */
     public Map<String, Parameter> getParameterMap();
+
+    /**
+     * @return a {@link Properties} object containing an arbitrary list of
+     *         {@link String} properties associated with this {@link Feature}.
+     *         This can be used to attach any additional information to the
+     *         {@link Feature} which doesn't fit elsewhere. Will not return
+     *         <code>null</code>, but may be empty.
+     */
+    public Properties getFeatureProperties();
 }

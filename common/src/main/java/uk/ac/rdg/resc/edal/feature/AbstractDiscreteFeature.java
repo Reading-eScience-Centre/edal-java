@@ -59,6 +59,7 @@ package uk.ac.rdg.resc.edal.feature;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
@@ -79,6 +80,7 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
     private final DiscreteDomain<P, DO> domain;
     private final Map<String, Parameter> parameters;
     private final Map<String, ? extends Array<Number>> values;
+    private final Properties properties;
 
     public AbstractDiscreteFeature(String id, String name, String description,
             DiscreteDomain<P, DO> domain, Map<String, Parameter> parameters,
@@ -98,6 +100,11 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
         this.domain = domain;
         this.values = values;
         this.parameters = parameters;
+        /*
+         * Create empty properties. Can be populated by using
+         * getFeatureProperties().put(..., ...)
+         */
+        this.properties = new Properties();
     }
 
     @Override
@@ -124,7 +131,7 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
     public Parameter getParameter(String parameterId) {
         return parameters.get(parameterId);
     }
-    
+
     @Override
     public Map<String, Parameter> getParameterMap() {
         return parameters;
@@ -138,5 +145,10 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
     @Override
     public DiscreteDomain<P, DO> getDomain() {
         return domain;
+    }
+
+    @Override
+    public Properties getFeatureProperties() {
+        return properties;
     }
 }

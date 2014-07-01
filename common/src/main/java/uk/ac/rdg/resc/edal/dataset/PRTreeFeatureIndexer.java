@@ -121,7 +121,7 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
         double minx = horizontalExtent.getMinX();
         double maxx = horizontalExtent.getMaxX();
         boolean changed = false;
-        while (minx >= 180) {
+        while (minx > 180) {
             minx -= 360.0;
             maxx -= 360.0;
             changed = true;
