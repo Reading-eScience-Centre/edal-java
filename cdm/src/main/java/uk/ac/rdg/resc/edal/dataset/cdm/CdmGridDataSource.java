@@ -30,12 +30,18 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Set;
 
+import ucar.ma2.Array;
 import ucar.ma2.Index;
+import ucar.ma2.InvalidRangeException;
+import ucar.nc2.Variable;
+import ucar.nc2.dataset.NetcdfDataset.Enhance;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridDataset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
@@ -50,14 +56,14 @@ final class CdmGridDataSource implements GridDataSource {
      * Note that this is the CDM GridDataset, not the EDAL one
      */
     private final GridDataset gridDataset;
-    
+
     public CdmGridDataSource(GridDataset gridDataset) {
         this.gridDataset = gridDataset;
     }
 
     @Override
-    public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax, int ymin,
-            int ymax, int xmin, int xmax) throws IOException {
+    public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax,
+            int ymin, int ymax, int xmin, int xmax) throws IOException, DataReadingException {
 
         /*
          * Get hold of the variable from which we want to read data
@@ -83,20 +89,49 @@ final class CdmGridDataSource implements GridDataSource {
         rangesList.setYRange(ymin, ymax);
         rangesList.setXRange(xmin, xmax);
 
-        /*
-         * Read data, then convert or wrap as Array
-         */
-        DataChunk data = DataChunk.readDataChunk(var, rangesList);
+        final Array arr;
+        Variable origVar = var.getOriginalVariable();
+
+        try {
+            if (origVar == null) {
+                /* We read from the enhanced variable */
+                arr = var.read(rangesList.getRanges());
+            } else {
+                /*
+                 * We read from the original variable to avoid enhancing data
+                 * values that we won't use
+                 */
+                arr = origVar.read(rangesList.getRanges());
+            }
+        } catch (InvalidRangeException ire) {
+            throw new DataReadingException("Cannot read data - invalid range specified", ire);
+        }
 
         /*
-         * Returns a 4D array that wraps the DataChunk
-         * 
-         * TODO Hmm. This is not an in-memory object. Perhaps that doesn't
-         * matter, but we need to be aware of it when using this class to create
-         * features
+         * Decide whether or not we need to enhance any data values we read from
+         * this array
          */
-        int[] shape = new int[] { (tmax - tmin + 1), (zmax - zmin + 1), (ymax - ymin + 1), (xmax - xmin + 1) };
-        return new WrappedArray(rangesList, data, shape);
+        final boolean needsEnhance;
+        Set<Enhance> enhanceMode = var.getEnhanceMode();
+        if (enhanceMode.contains(Enhance.ScaleMissingDefer)) {
+            /* Values read from the array are not enhanced, but need to be */
+            needsEnhance = true;
+        } else if (enhanceMode.contains(Enhance.ScaleMissing)) {
+            /* We only need to enhance if we read data from the plain Variable */
+            needsEnhance = origVar != null;
+        } else {
+            /* Values read from the array will not be enhanced */
+            needsEnhance = false;
+        }
+
+        /*
+         * Returns a 4D array that wraps the Array
+         */
+        int[] shape = new int[] { (tmax - tmin + 1), (zmax - zmin + 1), (ymax - ymin + 1),
+                (xmax - xmin + 1) };
+        WrappedArray wrappedArray = new WrappedArray(var, arr, needsEnhance, shape, rangesList);
+        
+        return wrappedArray;
     }
 
     @Override
@@ -105,17 +140,22 @@ final class CdmGridDataSource implements GridDataSource {
     }
 
     private static final class WrappedArray extends Array4D<Number> {
-        private final DataChunk dataChunk;
+        private VariableDS var;
+        private Array arr;
+        private boolean needsEnhance;
         private final int[] shape;
         private final int xAxisIndex;
         private final int yAxisIndex;
         private final int zAxisIndex;
         private final int tAxisIndex;
 
-        public WrappedArray(RangesList rangesList, DataChunk dataChunk, int[] shape) {
+        public WrappedArray(VariableDS var, Array arr, boolean needsEnhance, int[] shape, RangesList rangesList) {
             super(shape[0], shape[1], shape[2], shape[3]);
-            this.dataChunk = dataChunk;
+            this.var = var;
+            this.arr = arr;
+            this.needsEnhance = needsEnhance;
             this.shape = shape;
+            
             xAxisIndex = rangesList.getXAxisIndex();
             yAxisIndex = rangesList.getYAxisIndex();
             zAxisIndex = rangesList.getZAxisIndex();
@@ -136,11 +176,12 @@ final class CdmGridDataSource implements GridDataSource {
             int y = coords[2];
             int z = coords[1];
             int t = coords[0];
+            
 
             /*
              * Create a new index
              */
-            Index index = dataChunk.getIndex();
+            Index index = arr.getIndex();
             /*
              * Set the index values
              */
@@ -153,11 +194,15 @@ final class CdmGridDataSource implements GridDataSource {
             if (xAxisIndex >= 0)
                 index.setDim(xAxisIndex, x);
 
-            /*
-             * Now read the data, converting missing values to null if necessary
-             */
-            float val = dataChunk.readFloatValue(index);
-            return Float.isNaN(val) ? null : val;
+            float val = arr.getFloat(index);
+            if (needsEnhance) {
+                val = (float) var.convertScaleOffsetMissing(val);
+            }
+            if (var.isMissing(val)) {
+                return null;
+            }else{
+                return val;
+            }
         }
 
         @Override

@@ -155,6 +155,13 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     "The entire range of data for the variable: " + featureId, domain, parameters,
                     values);
         } catch (IOException e) {
+            e.printStackTrace();
+            throw new DataReadingException("Problem reading the data from underlying storage", e);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new DataReadingException("Problem reading the data from underlying storage", e);
+        } catch (Throwable e) {
+            e.printStackTrace();
             throw new DataReadingException("Problem reading the data from underlying storage", e);
         } finally {
             if (gridDataSource != null) {
@@ -451,7 +458,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     private Array2D<Number> readHorizontalData(String varId, HorizontalGrid targetGrid,
-            Double zPos, DateTime time, GridDataSource dataSource) throws IOException {
+            Double zPos, DateTime time, GridDataSource dataSource) throws IOException, DataReadingException {
         /*
          * This cast will always work, because we only ever call this method for
          * non-derived variables - i.e. those whose metadata was provided in the
@@ -978,7 +985,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      */
     private Map<ProfileLocation, Array1D<Number>> readVerticalData(GridVariableMetadata metadata,
             VerticalAxis zAxis, BoundingBox bbox, DateTime targetT, Extent<DateTime> tExtent,
-            GridDataSource dataSource) throws IOException {
+            GridDataSource dataSource) throws IOException, DataReadingException {
         String varId = metadata.getId();
 
         /*
@@ -1558,7 +1565,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(
             GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox, Double targetZ,
             Extent<Double> zExtent, GridDataSource dataSource) throws IOException,
-            MismatchedCrsException {
+            MismatchedCrsException, DataReadingException {
         String varId = metadata.getId();
 
         /*

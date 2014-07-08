@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
 
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
@@ -45,7 +46,7 @@ import uk.ac.rdg.resc.edal.util.Array4D;
 public interface GridDataSource {
 
     public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax,
-            int ymin, int ymax, int xmin, int xmax) throws IOException;
+            int ymin, int ymax, int xmin, int xmax) throws IOException, DataReadingException;
 
     public void close() throws IOException;
 

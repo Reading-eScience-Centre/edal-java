@@ -73,16 +73,15 @@ public abstract class Array4D<T> implements Array<T> {
             public T next() {
                 T value = get(tCounter, zCounter, yCounter, xCounter);
                 /*
-                 * Increment the counters if necessary, resetting to zero if
-                 * necessary
+                 * Increment the counters, resetting to zero if necessary
                  */
-                if (xCounter++ >= shape[X_IND]) {
+                if (++xCounter >= shape[X_IND]) {
                     xCounter = 0;
-                    if (yCounter++ >= shape[Y_IND]) {
+                    if (++yCounter >= shape[Y_IND]) {
                         yCounter = 0;
-                        if (zCounter++ >= shape[Z_IND]) {
+                        if (++zCounter >= shape[Z_IND]) {
                             zCounter = 0;
-                            if (tCounter++ >= shape[T_IND]) {
+                            if (++tCounter >= shape[T_IND]) {
                                 tCounter = 0;
                                 done = true;
                             }

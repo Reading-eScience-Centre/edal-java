@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ucar.nc2.dataset.NetcdfDataset;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
@@ -25,7 +26,7 @@ public class CdmGridDataSourceTest {
     }
 
     @Test
-    public void readTest() throws IOException {
+    public void readTest() throws IOException, DataReadingException {
         int tmin = 0;
         int tmax = 9;
         int xmin = 0;

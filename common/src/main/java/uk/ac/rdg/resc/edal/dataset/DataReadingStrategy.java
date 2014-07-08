@@ -35,6 +35,7 @@ import org.h2.store.DataReader;
 
 import uk.ac.rdg.resc.edal.dataset.DomainMapper.DomainMapperEntry;
 import uk.ac.rdg.resc.edal.dataset.DomainMapper.Scanline;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
@@ -118,7 +119,7 @@ public enum DataReadingStrategy {
     SCANLINE {
         @Override
         public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, Domain2DMapper pixelMap) throws IOException {
+                int zIndex, Domain2DMapper pixelMap) throws IOException, DataReadingException {
             Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
 
@@ -154,7 +155,7 @@ public enum DataReadingStrategy {
     BOUNDING_BOX {
         @Override
         public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, Domain2DMapper pixelMap) throws IOException {
+                int zIndex, Domain2DMapper pixelMap) throws IOException, DataReadingException {
             Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
             if(pixelMap.isEmpty()) {
@@ -185,7 +186,7 @@ public enum DataReadingStrategy {
     PIXEL_BY_PIXEL {
         @Override
         public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, Domain2DMapper pixelMap) throws IOException {
+                int zIndex, Domain2DMapper pixelMap) throws IOException, DataReadingException {
             Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
                     pixelMap.getTargetXSize());
             for (DomainMapperEntry<int[]> pme : pixelMap) {
@@ -202,5 +203,5 @@ public enum DataReadingStrategy {
     };
 
     abstract public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
-            int zIndex, Domain2DMapper pixelMap) throws IOException;
+            int zIndex, Domain2DMapper pixelMap) throws IOException, DataReadingException;
 }
