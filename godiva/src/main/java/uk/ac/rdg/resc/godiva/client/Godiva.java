@@ -174,7 +174,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         email.setEnabled(false);
 
         screenshot = new Anchor("Export to PNG");
-        screenshot.setHref("/screenshots/getScreenshot?");
+        screenshot.setHref("screenshots/getScreenshot?");
         screenshot.setStylePrimaryName("linkStyle");
         screenshot.setTarget("_blank");
         screenshot.setTitle("Open a downloadable image in a new window - may be slow to load");
