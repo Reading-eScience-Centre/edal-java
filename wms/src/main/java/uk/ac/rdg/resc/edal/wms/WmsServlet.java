@@ -144,6 +144,8 @@ public class WmsServlet extends HttpServlet {
             "EPSG:3408", // NSIDC EASE-Grid North
             "EPSG:3409", // NSIDC EASE-Grid South
             "EPSG:3857", // Google Maps
+            "EPSG:5041", // North Polar stereographic
+            "EPSG:5042", // South Polar stereographic
             "EPSG:32661", // North Polar stereographic
             "EPSG:32761" // South Polar stereographic
     };
@@ -1370,65 +1372,20 @@ public class WmsServlet extends HttpServlet {
                         }
                     }
                 }
-            } else if (f instanceof ProfileFeature) {
-                /*
-                 * For profile features, we do not want to read all values, only
-                 * those which are nearest the target depth
-                 */
-                ProfileFeature profileFeature = (ProfileFeature) f;
-                int zIndex;
-                Double targetZ = getMapParams.getPlottingDomainParameters().getTargetZ();
-                if (targetZ == null) {
-                    /*
-                     * If no target z is provided, pick the value closest to the
-                     * surface
-                     */
-                    zIndex = profileFeature.getDomain().findIndexOf(
-                            GISUtils.getClosestElevationToSurface(profileFeature.getDomain()));
-                } else {
-                    zIndex = GISUtils.getIndexOfClosestElevationTo(targetZ,
-                            profileFeature.getDomain());
-                }
-
-                if (zIndex >= 0) {
-                    Number value = profileFeature.getValues(featuresAndMember.getMember()).get(
-                            zIndex);
-                    if (value != null) {
-                        if (value.doubleValue() > max) {
-                            max = value.doubleValue();
-                        }
-                        if (value.doubleValue() < min) {
-                            min = value.doubleValue();
-                        }
+            } else if (f instanceof PointFeature) {
+                PointFeature pointFeature = (PointFeature) f;
+                Number value = pointFeature.getValues(featuresAndMember.getMember()).get(0);
+                if (value != null) {
+                    if (value.doubleValue() > max) {
+                        max = value.doubleValue();
                     }
-                }
-            } else if (f instanceof PointSeriesFeature) {
-                /*
-                 * For point series features, we do not want to read all values,
-                 * only those which are nearest the target time
-                 */
-                PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) f;
-                int tIndex = pointSeriesFeature.getDomain().findIndexOf(
-                        getMapParams.getPlottingDomainParameters().getTargetT());
-                if (tIndex >= 0) {
-                    Number value = pointSeriesFeature.getValues(featuresAndMember.getMember()).get(
-                            tIndex);
-                    if (value != null) {
-                        if (value.doubleValue() > max) {
-                            max = value.doubleValue();
-                        }
-                        if (value.doubleValue() < min) {
-                            min = value.doubleValue();
-                        }
+                    if (value.doubleValue() < min) {
+                        min = value.doubleValue();
                     }
                 }
             } else {
                 /*
                  * Would handle other feature types here.
-                 * 
-                 * But perhaps we can refactor to make a few of the methods in
-                 * here independent of dataset type. Perhaps removing the need
-                 * for separate gridded/non-gridded dataset types altogether...
                  */
             }
         }
