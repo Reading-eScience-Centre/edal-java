@@ -63,7 +63,6 @@ import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
-import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -83,15 +82,6 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
 
     private String ncmlString = null;
-    
-    public static void main(String[] args) throws IOException, EdalException {
-        CdmGridDatasetFactory f = new CdmGridDatasetFactory();
-//        Dataset d = f.createDataset("test", "/home/guy/Data/era_interim/ivt2.erai.2013.nc");
-//        Feature<?> readFeature = d.readFeature("IVT");
-        Dataset d = f.createDataset("test", "/home/guy/Data/FOAM_ONE/FOAM_20110101.0.nc");
-        Feature<?> readFeature = d.readFeature("TMP");
-        System.out.println("Done");
-    }
 
     @Override
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
