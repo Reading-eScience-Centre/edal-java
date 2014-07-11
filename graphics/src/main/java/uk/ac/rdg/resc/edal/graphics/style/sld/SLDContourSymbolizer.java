@@ -5,10 +5,12 @@ import java.awt.Color;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 
 public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
@@ -17,7 +19,7 @@ public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
 	 * Parse symbolizer using XPath
 	 */
 	@Override
-	protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException, SLDException {
+	protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException, SLDException, EdalParseException {
 		// create the scale
 		String autoscaleEnabledText = (String) xPath.evaluate(
 				"./resc:AutoscaleEnabled", symbolizerNode, XPathConstants.STRING);
@@ -47,7 +49,7 @@ public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
 				"./resc:ContourLineColour", symbolizerNode, XPathConstants.STRING);
 		Color contourLineColour = Color.BLACK;
 		if (!(contourLineColourText == null) && !(contourLineColourText.equals(""))) {
-			contourLineColour = decodeColour(contourLineColourText);
+			contourLineColour = GraphicsUtils.parseColour(contourLineColourText);
 			if (contourLineColour == null) {
 				throw new SLDException("Contour line colour incorrectly formatted.");
 			}

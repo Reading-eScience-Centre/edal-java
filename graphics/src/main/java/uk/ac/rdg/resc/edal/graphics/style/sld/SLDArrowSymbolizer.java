@@ -5,9 +5,11 @@ import java.awt.Color;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 
 public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
 
@@ -15,7 +17,7 @@ public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
 	 * Parse symbolizer using XPath
 	 */
 	@Override
-	protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException, SLDException {
+	protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException, SLDException, EdalParseException {
 		// get the arrow properties
 		String arrowSizeText = (String) xPath.evaluate(
 				"./resc:ArrowSize", symbolizerNode, XPathConstants.STRING);
@@ -27,7 +29,7 @@ public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
 				"./resc:ArrowColour", symbolizerNode, XPathConstants.STRING);
 		Color arrowColour = Color.BLACK;
 		if (arrowColourText != null && !(arrowColourText.equals(""))) {
-			arrowColour = decodeColour(arrowColourText);
+			arrowColour = GraphicsUtils.parseColour(arrowColourText);
 		}
 		
 		ArrowStyle arrowStyle = ArrowStyle.THIN_ARROW;

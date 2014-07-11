@@ -1,9 +1,8 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDDensityMapParser.parseLookupValue;
 import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDDensityMapParser.parseDensityMap;
+import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDDensityMapParser.parseLookupValue;
 
-import java.awt.Color;
 import java.util.List;
 
 import javax.xml.xpath.XPath;
@@ -13,10 +12,10 @@ import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Node;
 
+import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.FlatOpacity;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.OpacityMap;
-import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
 
 public abstract class AbstractSLDSymbolizer implements SLDSymbolizer{
 	
@@ -104,24 +103,5 @@ public abstract class AbstractSLDSymbolizer implements SLDSymbolizer{
 			imageLayer.setOpacityTransform(new OpacityMap(dataFieldName, opacityMap));
 			return;
 		}
-		
 	}
-	
-	/**
-	 * Decode a string representing a colour in both the case when there is an opacity or not
-	 * @param s
-	 * @return
-	 */
-	public static Color decodeColour(String s) {
-        if (s.length() == 7) {
-            return Color.decode(s);
-        } else if (s.length() == 9) {
-            Color color = Color.decode("#"+s.substring(3));
-            int alpha = Integer.parseInt(s.substring(1,3), 16);
-            return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
-        } else {
-            return null;
-        }
-    }
-
 }

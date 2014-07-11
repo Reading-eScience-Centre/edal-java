@@ -1,7 +1,5 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.sld.AbstractSLDSymbolizer.decodeColour;
-
 import java.awt.Color;
 import java.util.ArrayList;
 
@@ -9,6 +7,8 @@ import javax.xml.xpath.XPath;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 
 public class ColorSLDCategorize2DFunction extends
 		AbstractSLDCategorize2DFunction<Color> {
@@ -25,7 +25,7 @@ public class ColorSLDCategorize2DFunction extends
 			values = new ArrayList<Color>();
 			for (int j = 0; j < colourNodes.getLength(); j++) {
 				Node colourNode = colourNodes.item(j);
-				values.add(decodeColour(colourNode.getTextContent()));
+				values.add(GraphicsUtils.parseColour(colourNode.getTextContent()));
 			}
 			
 			// parse the thresholds

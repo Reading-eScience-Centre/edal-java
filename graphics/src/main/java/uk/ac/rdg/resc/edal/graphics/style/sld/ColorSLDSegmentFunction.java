@@ -1,7 +1,5 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.sld.AbstractSLDSymbolizer.decodeColour;
-
 import java.awt.Color;
 import java.util.ArrayList;
 
@@ -10,6 +8,8 @@ import javax.xml.xpath.XPathConstants;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 
 public class ColorSLDSegmentFunction extends AbstractSLDSegmentFunction<Color> {
 
@@ -24,17 +24,17 @@ public class ColorSLDSegmentFunction extends AbstractSLDSegmentFunction<Color> {
 			if (values != null) {
 				valueList = new ArrayList<Color>();
 				for (int i = 0; i < values.getLength(); i++) {
-					valueList.add(decodeColour(values.item(i).getTextContent()));
+					valueList.add(GraphicsUtils.parseColour(values.item(i).getTextContent()));
 				}
 			}
 			
 			// get the below minimum and above maximum colours
 			String belowMinColourText = (String) xPath.evaluate(
 					"./resc:BelowMinValue", function, XPathConstants.STRING);
-			belowMinValue = decodeColour(belowMinColourText);
+			belowMinValue = GraphicsUtils.parseColour(belowMinColourText);
 			String aboveMaxColourText = (String) xPath.evaluate(
 					"./resc:AboveMaxValue", function, XPathConstants.STRING);
-			aboveMaxValue = decodeColour(aboveMaxColourText);
+			aboveMaxValue = GraphicsUtils.parseColour(aboveMaxColourText);
 			
 			// get the number of segments
 			parseNumberOfSegments();

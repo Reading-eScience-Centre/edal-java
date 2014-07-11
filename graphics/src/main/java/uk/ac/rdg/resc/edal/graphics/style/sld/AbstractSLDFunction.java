@@ -1,7 +1,5 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.sld.AbstractSLDSymbolizer.decodeColour;
-
 import java.awt.Color;
 
 import javax.xml.xpath.XPath;
@@ -9,6 +7,9 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Node;
+
+import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 
 public abstract class AbstractSLDFunction<T> implements SLDFunction<T> {
 
@@ -26,13 +27,13 @@ public abstract class AbstractSLDFunction<T> implements SLDFunction<T> {
 		return this.fallbackValue;
 	}
 
-	protected Color parseColorFallbackValue() throws XPathExpressionException {
+	protected Color parseColorFallbackValue() throws XPathExpressionException, EdalParseException {
 		// get fall back value
 		String fallbackValue = (String) xPath.evaluate(
 				"./@fallbackValue", function, XPathConstants.STRING);
 		Color noDataColour = null;
 		if (!(fallbackValue == null) && !(fallbackValue.equals(""))) {
-			noDataColour = decodeColour(fallbackValue);
+			noDataColour = GraphicsUtils.parseColour(fallbackValue);
 		}
 		return noDataColour;
 	}

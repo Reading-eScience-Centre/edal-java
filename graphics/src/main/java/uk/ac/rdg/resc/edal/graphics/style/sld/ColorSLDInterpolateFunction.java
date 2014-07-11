@@ -1,7 +1,5 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.sld.AbstractSLDSymbolizer.decodeColour;
-
 import java.awt.Color;
 import java.util.ArrayList;
 
@@ -12,6 +10,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import uk.ac.rdg.resc.edal.graphics.style.InterpolationPoint;
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 
 public class ColorSLDInterpolateFunction extends
 		AbstractSLDInterpolateFunction<Color> {
@@ -41,7 +40,7 @@ public class ColorSLDInterpolateFunction extends
 				}
 				interpolationPoints.add(new InterpolationPoint<Color>(
 						Float.parseFloat(dataNode.getTextContent()),
-						decodeColour(valueNode.getTextContent())));
+						GraphicsUtils.parseColour(valueNode.getTextContent())));
 			}
 		} catch(Exception e) {
 			throw new SLDException(e);
