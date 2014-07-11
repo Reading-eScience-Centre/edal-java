@@ -90,6 +90,15 @@ public class PaletteSelector implements PaletteSelectorIF {
     private OutOfRangeState aboveMaxState = OutOfRangeState.BLACK;
     private OutOfRangeState belowMinState = OutOfRangeState.BLACK;
 
+    /*
+     * If the server has specified a specific colour for out of range values,
+     * store it here
+     */
+    private String aboveMaxColourOverride = null;
+    private String belowMinColourOverride = null;
+
+    private String noDataColour = null;
+
     private final NumberFormat format = NumberFormat.getFormat("#0.000");
 
     private CellPanel mainPanel;
@@ -273,6 +282,9 @@ public class PaletteSelector implements PaletteSelectorIF {
             @Override
             public void onClick(ClickEvent event) {
                 switch (aboveMaxState) {
+                case OVERRIDE:
+                    aboveMaxState = OutOfRangeState.BLACK;
+                    break;
                 case BLACK:
                     aboveMaxState = OutOfRangeState.EXTEND;
                     break;
@@ -280,7 +292,11 @@ public class PaletteSelector implements PaletteSelectorIF {
                     aboveMaxState = OutOfRangeState.TRANSPARENT;
                     break;
                 case TRANSPARENT:
-                    aboveMaxState = OutOfRangeState.BLACK;
+                    if (aboveMaxColourOverride != null) {
+                        aboveMaxState = OutOfRangeState.OVERRIDE;
+                    } else {
+                        aboveMaxState = OutOfRangeState.BLACK;
+                    }
                     break;
                 default:
                     break;
@@ -299,6 +315,9 @@ public class PaletteSelector implements PaletteSelectorIF {
             @Override
             public void onClick(ClickEvent event) {
                 switch (belowMinState) {
+                case OVERRIDE:
+                    belowMinState = OutOfRangeState.BLACK;
+                    break;
                 case BLACK:
                     belowMinState = OutOfRangeState.EXTEND;
                     break;
@@ -306,7 +325,11 @@ public class PaletteSelector implements PaletteSelectorIF {
                     belowMinState = OutOfRangeState.TRANSPARENT;
                     break;
                 case TRANSPARENT:
-                    belowMinState = OutOfRangeState.BLACK;
+                    if (belowMinColourOverride != null) {
+                        belowMinState = OutOfRangeState.OVERRIDE;
+                    } else {
+                        belowMinState = OutOfRangeState.BLACK;
+                    }
                     break;
                 default:
                     break;
@@ -545,6 +568,8 @@ public class PaletteSelector implements PaletteSelectorIF {
             return "extend";
         case TRANSPARENT:
             return "transparent";
+        case OVERRIDE:
+            return aboveMaxColourOverride;
         case BLACK:
         default:
             return "0x000000";
@@ -557,12 +582,34 @@ public class PaletteSelector implements PaletteSelectorIF {
     }
 
     @Override
+    public void setExtraAboveMaxColour(String aboveMaxColour) {
+        if (aboveMaxColour == null) {
+            return;
+        } else if ("extend".equalsIgnoreCase(aboveMaxColour)) {
+            aboveMaxState = OutOfRangeState.EXTEND;
+        } else if ("transparent".equalsIgnoreCase(aboveMaxColour)) {
+            aboveMaxState = OutOfRangeState.TRANSPARENT;
+        } else if ("0x000000".equalsIgnoreCase(aboveMaxColour)
+                || "#000000".equalsIgnoreCase(aboveMaxColour)
+                || "0xff000000".equalsIgnoreCase(aboveMaxColour)
+                || "#ff000000".equalsIgnoreCase(aboveMaxColour)) {
+            aboveMaxState = OutOfRangeState.BLACK;
+        } else {
+            aboveMaxState = OutOfRangeState.OVERRIDE;
+            this.aboveMaxColourOverride = aboveMaxColour;
+        }
+        setOutOfRangeImages();
+    }
+
+    @Override
     public String getBelowMinString() {
         switch (belowMinState) {
         case EXTEND:
             return "extend";
         case TRANSPARENT:
             return "transparent";
+        case OVERRIDE:
+            return belowMinColourOverride;
         case BLACK:
         default:
             return "0x000000";
@@ -572,6 +619,36 @@ public class PaletteSelector implements PaletteSelectorIF {
     @Override
     public void setBelowMin(OutOfRangeState state) {
         belowMinState = state;
+    }
+
+    @Override
+    public void setExtraBelowMinColour(String belowMinColour) {
+        if (belowMinColour == null) {
+            return;
+        } else if ("extend".equalsIgnoreCase(belowMinColour)) {
+            belowMinState = OutOfRangeState.EXTEND;
+        } else if ("transparent".equalsIgnoreCase(belowMinColour)) {
+            belowMinState = OutOfRangeState.TRANSPARENT;
+        } else if ("0x000000".equalsIgnoreCase(belowMinColour)
+                || "#000000".equalsIgnoreCase(belowMinColour)
+                || "0xff000000".equalsIgnoreCase(belowMinColour)
+                || "#ff000000".equalsIgnoreCase(belowMinColour)) {
+            belowMinState = OutOfRangeState.BLACK;
+        } else {
+            belowMinState = OutOfRangeState.OVERRIDE;
+            this.belowMinColourOverride = belowMinColour;
+        }
+        setOutOfRangeImages();
+    }
+
+    @Override
+    public void setNoDataColour(String noDataColour) {
+        this.noDataColour = noDataColour;
+    }
+
+    @Override
+    public String getNoDataColour() {
+        return noDataColour;
     }
 
     @Override
@@ -596,6 +673,22 @@ public class PaletteSelector implements PaletteSelectorIF {
         Image belowImage = new Image();
 
         switch (aboveMaxState) {
+        case OVERRIDE:
+            aboveImage = new Image(GWT.getModuleBaseURL() + "img/extend_transparent.png");
+            if (vertical) {
+                aboveImage.setPixelSize(width, OOR_SIZE);
+            } else {
+                aboveImage.setPixelSize(OOR_SIZE, height);
+            }
+            String amc;
+            if (aboveMaxColourOverride.length() == 9) {
+                amc = "#" + aboveMaxColourOverride.substring(3);
+            } else {
+                amc = aboveMaxColourOverride;
+            }
+            aboveImage.getElement().getStyle().setProperty("backgroundColor", amc);
+            aboveMax.setTitle(aboveText + " server default (" + aboveMaxColourOverride + ")");
+            break;
         case EXTEND:
             aboveImage.setUrl(paletteImage.getUrl());
             if (vertical) {
@@ -627,7 +720,24 @@ public class PaletteSelector implements PaletteSelectorIF {
             break;
         }
 
+        belowMin.getElement().getStyle().setProperty("backgroundColor", belowMinColourOverride);
         switch (belowMinState) {
+        case OVERRIDE:
+            belowImage = new Image(GWT.getModuleBaseURL() + "img/extend_transparent.png");
+            if (vertical) {
+                belowImage.setPixelSize(width, OOR_SIZE);
+            } else {
+                belowImage.setPixelSize(OOR_SIZE, height);
+            }
+            String bmc;
+            if (belowMinColourOverride.length() == 9) {
+                bmc = "#" + belowMinColourOverride.substring(3);
+            } else {
+                bmc = belowMinColourOverride;
+            }
+            belowImage.getElement().getStyle().setProperty("backgroundColor", bmc);
+            belowMin.setTitle(belowText + " server default (" + belowMinColourOverride + ")");
+            break;
         case EXTEND:
             belowImage.setUrl(paletteImage.getUrl());
             if (vertical) {

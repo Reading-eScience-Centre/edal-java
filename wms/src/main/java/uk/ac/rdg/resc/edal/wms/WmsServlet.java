@@ -101,6 +101,7 @@ import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
+import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
@@ -870,6 +871,10 @@ public class WmsServlet extends HttpServlet {
 
         Set<String> supportedPalettes = ColourPalette.getPredefinedPalettes();
         String defaultPalette = layerMetadata.getPalette();
+        String aboveMaxColour = GraphicsUtils.colourToString(layerMetadata.getAboveMaxColour());
+        String belowMinColour = GraphicsUtils.colourToString(layerMetadata.getBelowMinColour());
+        String noDataColour = GraphicsUtils.colourToString(layerMetadata.getNoDataColour());
+                
         Boolean logScaling = layerMetadata.isLogScaling();
 
         /*
@@ -1191,6 +1196,9 @@ public class WmsServlet extends HttpServlet {
         }
         layerDetails.put("palettes", supportedPalettesJson);
         layerDetails.put("defaultPalette", defaultPalette);
+        layerDetails.put("aboveMaxColor", aboveMaxColour);
+        layerDetails.put("belowMinColor", belowMinColour);
+        layerDetails.put("noDataColor", noDataColour);
         layerDetails.put("logScaling", logScaling);
 
         return layerDetails.toString(4);

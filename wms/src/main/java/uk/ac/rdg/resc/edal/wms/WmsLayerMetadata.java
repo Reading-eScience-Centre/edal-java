@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
+import java.awt.Color;
+
 import uk.ac.rdg.resc.edal.domain.Extent;
 
 /**
@@ -64,9 +66,27 @@ public interface WmsLayerMetadata {
     /**
      * @return The default palette to use for this layer. This can be an
      *         existing palette name, or a palette definition in the form
-     *         #[aa]bbggrr,#[aa]bbggrr,#[aa]bbggrr...
+     *         #[aa]rrggbb,#[aa]rrggbb,#[aa]rrggbb..., where each element is a
+     *         hexadecimal value
      */
     public String getPalette();
+
+    /**
+     * @return The default colour to use for values which are higher the the
+     *         maximum scale value.
+     */
+    public Color getAboveMaxColour();
+
+    /**
+     * @return The default colour to use for values which are lower the the
+     *         minimum scale value.
+     */
+    public Color getBelowMinColour();
+
+    /**
+     * @return The default colour to use for values which have no data.
+     */
+    public Color getNoDataColour();
 
     /**
      * @return <code>true</code> if this variable is to use logarithmic scaling

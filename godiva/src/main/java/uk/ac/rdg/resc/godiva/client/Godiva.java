@@ -390,6 +390,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String currentPalette = widgetCollection.getPaletteSelector().getSelectedPalette();
         String aboveMaxString = widgetCollection.getPaletteSelector().getAboveMaxString();
         String belowMinString = widgetCollection.getPaletteSelector().getBelowMinString();
+        String noDataString = widgetCollection.getPaletteSelector().getNoDataColour();
+
         String currentStyle = widgetCollection.getPaletteSelector().getSelectedStyle();
         String currentScaleRange = widgetCollection.getPaletteSelector().getScaleRange();
         int nColourBands = widgetCollection.getPaletteSelector().getNumColorBands();
@@ -402,7 +404,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID,
                 layerSelector.getSelectedId(), currentTime, targetTime, currentElevation,
                 targetElevation, currentStyle, currentPalette, aboveMaxString, belowMinString,
-                currentScaleRange, nColourBands, logScale, profilesSupported, timeseriesSupported);
+                noDataString, currentScaleRange, nColourBands, logScale, profilesSupported,
+                timeseriesSupported);
 
         /*
          * Set the opacity after updating the map, otherwise it doesn't work
@@ -567,6 +570,18 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          */
         if (autoUpdate) {
             widgetCollection.getPaletteSelector().selectPalette(layerDetails.getSelectedPalette());
+            if (layerDetails.getAboveMaxColour() != null) {
+                widgetCollection.getPaletteSelector().setExtraAboveMaxColour(
+                        layerDetails.getAboveMaxColour());
+            }
+            if (layerDetails.getBelowMinColour() != null) {
+                widgetCollection.getPaletteSelector().setExtraBelowMinColour(
+                        layerDetails.getBelowMinColour());
+            }
+            if (layerDetails.getNoDataColour() != null) {
+                widgetCollection.getPaletteSelector().setNoDataColour(
+                        layerDetails.getNoDataColour());
+            }
         }
 
         if (permalinking) {
@@ -892,10 +907,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 widgetCollection.getElevationSelector(), widgetCollection.getPaletteSelector(),
                 kmzLink, permalink, email, screenshot, logo, mapArea, loadingImage, anim,
                 infoButton);
-//        return LayoutManager.getCompactGodiva3Layout(layerSelector,
-//                widgetCollection.getUnitsInfo(), widgetCollection.getTimeSelector(),
-//                widgetCollection.getElevationSelector(), widgetCollection.getPaletteSelector(),
-//                kmzLink, permalink, email, screenshot, logo, mapArea, loadingImage, anim,
-//                infoButton);
+        //        return LayoutManager.getCompactGodiva3Layout(layerSelector,
+        //                widgetCollection.getUnitsInfo(), widgetCollection.getTimeSelector(),
+        //                widgetCollection.getElevationSelector(), widgetCollection.getPaletteSelector(),
+        //                kmzLink, permalink, email, screenshot, logo, mapArea, loadingImage, anim,
+        //                infoButton);
     }
 }

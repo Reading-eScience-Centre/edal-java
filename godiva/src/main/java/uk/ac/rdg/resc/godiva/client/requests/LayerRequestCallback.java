@@ -173,6 +173,21 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 layerDetails.setSelectedPalette(defaultPaletteJson.isString().stringValue());
             }
         }
+        
+        JSONValue aboveMaxColourJson = parentObj.get("aboveMaxColor");
+        if (aboveMaxColourJson != null) {
+            layerDetails.setAboveMaxColour(aboveMaxColourJson.isString().stringValue());
+        }
+        
+        JSONValue belowMinColourJson = parentObj.get("belowMinColor");
+        if (belowMinColourJson != null) {
+            layerDetails.setBelowMinColour(belowMinColourJson.isString().stringValue());
+        }
+        
+        JSONValue noDataColourJson = parentObj.get("noDataColor");
+        if (noDataColourJson != null) {
+            layerDetails.setNoDataColour(noDataColourJson.isString().stringValue());
+        }
 
         /*
          * If we have different times, we may (will?) have a nearest time

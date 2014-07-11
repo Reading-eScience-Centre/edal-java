@@ -40,9 +40,9 @@ import com.google.gwt.user.client.ui.IsWidget;
  */
 public interface PaletteSelectorIF extends IsWidget {
     public enum OutOfRangeState {
-        BLACK, EXTEND, TRANSPARENT
+        OVERRIDE, BLACK, EXTEND, TRANSPARENT
     }
-    
+
     /**
      * Sets the layer ID which this palette selector is currently active on
      * 
@@ -74,22 +74,40 @@ public interface PaletteSelectorIF extends IsWidget {
      *         are above the maximum
      */
     public String getAboveMaxString();
-    
+
     /**
      * Sets the behaviour of values above the maximum
      */
     public void setAboveMax(OutOfRangeState state);
-    
+
+    /**
+     * Sets a colour to use in addition to black/extend/transparent for values
+     * above the maximum scale value
+     * 
+     * @param aboveMaxColour
+     *            The colour to display for values above the maximum scale range
+     */
+    public void setExtraAboveMaxColour(String aboveMaxColour);
+
     /**
      * @return The string representation of the colour to display when values
      *         are below the minimum
      */
     public String getBelowMinString();
-    
+
     /**
      * Sets the behaviour of values below the minimum
      */
     public void setBelowMin(OutOfRangeState state);
+
+    /**
+     * Sets a colour to use in addition to black/extend/transparent for values
+     * below the minimum scale value
+     * 
+     * @param belowMinColour
+     *            The colour to display for values below the minimum scale range
+     */
+    public void setExtraBelowMinColour(String belowMinColour);
 
     /**
      * Populates the list of available style names
@@ -171,4 +189,14 @@ public interface PaletteSelectorIF extends IsWidget {
      */
     public void setOpacity(float opacity);
 
+    /**
+     * @param noDataColour
+     *            The colour to display for missing data
+     */
+    public void setNoDataColour(String noDataColour);
+    
+    /**
+     * @return The colour to display for missing data
+     */
+    public String getNoDataColour();
 }

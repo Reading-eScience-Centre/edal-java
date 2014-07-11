@@ -328,8 +328,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     public void addLayer(String wmsUrl, String internalLayerId, String wmsLayerName, String time,
             String targetTime, String elevation, String targetElevation, String style,
-            String palette, String aboveMaxString, String belowMinString, String scaleRange,
-            int nColourBands, boolean logScale, boolean multipleElevations, boolean multipleTimes) {
+            String palette, String aboveMaxString, String belowMinString, String noDataString,
+            String scaleRange, int nColourBands, boolean logScale, boolean multipleElevations,
+            boolean multipleTimes) {
         WMSParams params = new WMSParams();
         params.setFormat("image/png");
         params.setTransparent(true);
@@ -358,6 +359,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
         if (belowMinString != null) {
             params.setParameter("BELOWMINCOLOR", belowMinString);
+        }
+        if (noDataString != null) {
+            params.setParameter("BGCOLOR", noDataString);
         }
         params.setParameter("LOGSCALE", logScale + "");
 

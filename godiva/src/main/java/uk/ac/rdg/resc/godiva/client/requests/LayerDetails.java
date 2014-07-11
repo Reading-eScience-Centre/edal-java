@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class LayerDetails {
     private final String id;
-    
+
     private String units = null;
     private String extents = "-180,-90,180,90";
     private String scaleRange = null;
@@ -54,10 +54,13 @@ public class LayerDetails {
     private String copyright = null;
     private List<String> availablePalettes = null;
     private String selectedPalette = null;
+    private String aboveMaxColour = null;
+    private String belowMinColour = null;
+    private String noDataColour = null;
     private List<String> availableDates = null;
     private String nearestTime = null;
     private String nearestDate = null;
-    
+
     private boolean continuousT = false;
     private String startTime = null;
     private String endTime = null;
@@ -69,12 +72,11 @@ public class LayerDetails {
     private boolean profilesSupported = false;
     private boolean transectsSupported = false;
 
-
     public LayerDetails(String layerId) {
         id = layerId;
     }
-    
-    public String getId(){
+
+    public String getId() {
         return id;
     }
 
@@ -130,10 +132,22 @@ public class LayerDetails {
         return selectedPalette;
     }
 
+    public String getAboveMaxColour() {
+        return aboveMaxColour;
+    }
+
+    public String getBelowMinColour() {
+        return belowMinColour;
+    }
+
+    public String getNoDataColour() {
+        return noDataColour;
+    }
+
     public List<String> getAvailableDates() {
         return availableDates;
     }
-    
+
     public String getNearestDateTime() {
         return nearestTime;
     }
@@ -141,7 +155,7 @@ public class LayerDetails {
     public String getNearestDate() {
         return nearestDate;
     }
-    
+
     public void setUnits(String units) {
         this.units = units;
     }
@@ -194,6 +208,18 @@ public class LayerDetails {
         this.selectedPalette = selectedPalette;
     }
 
+    public void setAboveMaxColour(String aboveMaxColour) {
+        this.aboveMaxColour = aboveMaxColour;
+    }
+
+    public void setBelowMinColour(String belowMinColour) {
+        this.belowMinColour = belowMinColour;
+    }
+
+    public void setNoDataColour(String noDataColour) {
+        this.noDataColour = noDataColour;
+    }
+
     public void setAvailableDates(List<String> availableDates) {
         this.availableDates = availableDates;
     }
@@ -225,11 +251,11 @@ public class LayerDetails {
     public String getEndTime() {
         return endTime;
     }
-    
+
     public boolean isContinuousZ() {
         return continuousZ;
     }
-    
+
     public void setContinuousZ(boolean continuousZ) {
         this.continuousZ = continuousZ;
     }

@@ -1,6 +1,5 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -38,36 +37,6 @@ import uk.ac.rdg.resc.edal.graphics.style.MapImage;
  * Encoding and parses the document to create a corresponding image.
  */
 public class StyleSLDParser {
-
-    public static class ColorAdapter extends XmlAdapter<String, Color> {
-        private ColorAdapter() {
-        }
-
-        @Override
-        public Color unmarshal(String s) {
-            if (s.length() == 7) {
-                return Color.decode(s);
-            } else if (s.length() == 9) {
-                Color color = Color.decode("#" + s.substring(3));
-                int alpha = Integer.parseInt(s.substring(1, 3), 16);
-                return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public String marshal(Color c) {
-            return "#" + String.format("%08X", c.getRGB());
-        }
-
-        private static ColorAdapter adapter = new ColorAdapter();
-
-        public static ColorAdapter getInstance() {
-            return adapter;
-        }
-    }
-
     public static class FlatOpacityAdapter extends XmlAdapter<String, FlatOpacity> {
         @Override
         public FlatOpacity unmarshal(String v) throws Exception {

@@ -30,6 +30,8 @@ package uk.ac.rdg.resc.edal.graphics.style.util;
 
 import java.awt.Color;
 
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 
 /**
@@ -68,7 +70,9 @@ public class GraphicsUtils {
         }
         if ("extend".equalsIgnoreCase(colourString)) {
             /*
-             * null represents extending the colour
+             * In the context of palette out-of-range values, null represents
+             * extending the colour. In other cases it doesn't represent a
+             * value, so null is not a disaster.
              */
             return null;
         }
@@ -100,9 +104,36 @@ public class GraphicsUtils {
     }
 
     public static String colourToString(Color colour) {
-        if(colour == null) {
+        if (colour == null) {
             return "extend";
+        } else if(colour.getAlpha() == 0) {
+            return "transparent";
         }
         return String.format("#%08X", colour.getRGB());
+    }
+
+    public static class ColorAdapter extends XmlAdapter<String, Color> {
+        private ColorAdapter() {
+        }
+
+        @Override
+        public Color unmarshal(String s) {
+            try {
+                return GraphicsUtils.parseColour(s);
+            } catch (EdalParseException e) {
+                return null;
+            }
+        }
+
+        @Override
+        public String marshal(Color c) {
+            return GraphicsUtils.colourToString(c);
+        }
+
+        private static ColorAdapter adapter = new ColorAdapter();
+
+        public static ColorAdapter getInstance() {
+            return adapter;
+        }
     }
 }
