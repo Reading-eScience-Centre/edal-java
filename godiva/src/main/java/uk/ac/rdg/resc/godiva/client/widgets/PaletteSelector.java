@@ -352,6 +352,7 @@ public class PaletteSelector implements PaletteSelectorIF {
      */
     private void initVertical() {
         mainPanel = new HorizontalPanel();
+        mainPanel.setSpacing(5);
 
         VerticalPanel palettePanel = new VerticalPanel();
         palettePanel.add(aboveMax);
@@ -367,15 +368,15 @@ public class PaletteSelector implements PaletteSelectorIF {
 
         VerticalPanel vp = new VerticalPanel();
         vp.setHeight(height + "px");
-        vp.setWidth((width + 40) + "px");
+        vp.setWidth((width + 45) + "px");
 
         HorizontalPanel buttonsPanel = new HorizontalPanel();
         buttonsPanel.add(autoButton);
         buttonsPanel.add(lockButton);
         buttonsPanel.setCellVerticalAlignment(autoButton, HasVerticalAlignment.ALIGN_TOP);
         buttonsPanel.setCellVerticalAlignment(lockButton, HasVerticalAlignment.ALIGN_TOP);
-        buttonsPanel.setCellHorizontalAlignment(autoButton, HasHorizontalAlignment.ALIGN_RIGHT);
-        buttonsPanel.setCellHorizontalAlignment(lockButton, HasHorizontalAlignment.ALIGN_LEFT);
+        buttonsPanel.setCellHorizontalAlignment(autoButton, HasHorizontalAlignment.ALIGN_CENTER);
+        buttonsPanel.setCellHorizontalAlignment(lockButton, HasHorizontalAlignment.ALIGN_CENTER);
 
         vp.add(maxScale);
         vp.setCellHeight(maxScale, "20px");
@@ -390,15 +391,20 @@ public class PaletteSelector implements PaletteSelectorIF {
 
         vp.add(styles);
         vp.setCellHeight(styles, "20px");
+        styles.setWidth("100%");
         vp.setCellVerticalAlignment(styles, HasVerticalAlignment.ALIGN_TOP);
         vp.add(opacity);
         vp.setCellHeight(opacity, "20px");
+        opacity.setWidth("100%");
         vp.setCellVerticalAlignment(styles, HasVerticalAlignment.ALIGN_TOP);
         vp.add(logScale);
         vp.setCellHeight(logScale, "20px");
+        logScale.setWidth("100%");
         vp.setCellVerticalAlignment(logScale, HasVerticalAlignment.ALIGN_TOP);
         vp.add(buttonsPanel);
+        buttonsPanel.setWidth("100%");
         vp.setCellHeight(buttonsPanel, "26px");
+        vp.setCellWidth(buttonsPanel, "100%");
         vp.setCellVerticalAlignment(buttonsPanel, HasVerticalAlignment.ALIGN_TOP);
 
         vp.add(mlLabel);
