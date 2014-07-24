@@ -271,7 +271,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * This is where we define the fact that we are working with a single
          * local server
          */
-        final String wmsUrl = "wms";
+        String path = Window.Location.getHost()+Window.Location.getPath();
+        path = path.substring(0, path.lastIndexOf("/"));
+        final String wmsUrl = "http://"+path+"/wms";
         final RequestBuilder getMenuRequest = new RequestBuilder(RequestBuilder.GET,
                 getUrlFromGetArgs(wmsUrl, "?request=GetMetadata&item=menu"));
         getMenuRequest.setCallback(new RequestCallback() {
@@ -823,7 +825,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             if (currentLayer != null) {
                 String datasetUrl = permalinkParamsMap.get("dataset");
                 if (datasetUrl == null || "".equals(datasetUrl)) {
-                    layerSelector.selectLayer(currentLayer, "wms", false);
+                    String path = Window.Location.getHost()+Window.Location.getPath();
+                    path = path.substring(0, path.lastIndexOf("/"));
+                    final String wmsUrl = "http://"+path+"/wms";
+                    layerSelector.selectLayer(currentLayer, wmsUrl, false);
                 } else {
                     String currentWms = URL.decode(datasetUrl);
                     layerSelector.selectLayer(currentLayer, currentWms, false);

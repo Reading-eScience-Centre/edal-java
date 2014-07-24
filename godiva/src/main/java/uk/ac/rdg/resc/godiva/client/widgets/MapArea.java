@@ -533,7 +533,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             + mapYClick + "&STYLES=default/default"
                             + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
                             + ((timeStr != null) ? ("&TIME=" + timeStr) : "") + "&VERSION=1.1.1";
-                    Anchor profilePlot = new Anchor("Vertical Profile Plot");
+                    Anchor profilePlot = new Anchor("Vertical Profile Plot (" + wmsUrl + ")");
                     profilePlot.addClickHandler(new ClickHandler() {
                         @Override
                         public void onClick(ClickEvent event) {
@@ -606,19 +606,16 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      * vertical profiles or time series plots
      * 
      * @param url
-     *            The URL of the image
+     *            The absolute URL of the image
      * @param title
      *            The title of the popup box
      */
     protected void displayImagePopup(String url, String title) {
         /*
-         * Window.open seems to take the root URL as the actual root URL +
-         * /modulename/.
-         * 
-         * This is very much an empirical result. Also known as
-         * "not documented anywhere". Still, the below code works...
+         * Window.open treats realtive URLs in a browser-dependent manner. So we
+         * have to use absolute ones here.
          */
-        Window.open("../" + url, title, null);
+        Window.open(url, title, null);
 
         /*
          * This is how we can display the image in a popup box.
@@ -806,13 +803,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     protected void addBaseLayers() {
-        WMS openLayers;
-        WMS demis;
-        WMS plurel;
-        WMS weather;
-        WMS srtmDem;
-        WMS northPole;
-        WMS southPole;
+        WMS naturalEarth;
+        WMS blueMarble;
+
+        WMS naturalEarthNP;
+        WMS naturalEarthSP;
+        WMS blueMarbleNP;
+        WMS blueMarbleSP;
+
+        String dexterUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?";
 
         WMSParams wmsParams;
         WMSOptions wmsOptions;
@@ -821,43 +820,24 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsOptions.setWrapDateLine(true);
         wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
         wmsParams = new WMSParams();
-        wmsParams.setLayers("basic");
-        openLayers = new WMS("OpenLayers WMS", "http://labs.metacarta.com/wms-c/Basic.py?",
-                wmsParams, wmsOptions);
-        openLayers.addLayerLoadStartListener(loadStartListener);
-        openLayers.addLayerLoadEndListener(loadEndListener);
-        openLayers.setIsBaseLayer(true);
-
-        wmsParams = new WMSParams();
-        wmsParams
-                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
-                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+        wmsParams.setLayers("naturalearth");
         wmsParams.setFormat("image/png");
-        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
-                wmsOptions);
-        demis.setIsBaseLayer(true);
+
+        naturalEarth = new WMS("NaturalEarth WMS", dexterUrl, wmsParams, wmsOptions);
+        naturalEarth.addLayerLoadStartListener(loadStartListener);
+        naturalEarth.addLayerLoadEndListener(loadEndListener);
+        naturalEarth.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
-        wmsParams.setLayers("0,2,3,4,5,8,9,10,40");
-        plurel = new WMS("PLUREL_WMS",
-                "http://plurel.jrc.ec.europa.eu/ArcGIS/services/worldwithEGM/mapserver/wmsserver?",
-                wmsParams, wmsOptions);
-        plurel.setIsBaseLayer(true);
+        wmsParams.setLayers("bluemarble");
+        wmsParams.setFormat("image/png");
 
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("base,global_ir_satellite_10km,radar_precip_mode");
-        weather = new WMS("Latest Clouds",
-                "http://maps.customweather.com/image?client=ucl_test&client_password=t3mp",
-                wmsParams, wmsOptions);
-        weather.setIsBaseLayer(true);
+        blueMarble = new WMS("BlueMarble WMS", dexterUrl, wmsParams, wmsOptions);
+        blueMarble.addLayerLoadStartListener(loadStartListener);
+        blueMarble.addLayerLoadEndListener(loadEndListener);
+        blueMarble.setIsBaseLayer(true);
 
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("bluemarble,srtm30");
-        srtmDem = new WMS("SRTM DEM", "http://iceds.ge.ucl.ac.uk/cgi-bin/icedswms?", wmsParams,
-                wmsOptions);
-        srtmDem.setIsBaseLayer(true);
-
-        Bounds polarMaxExtent = new Bounds(-10700000, -10700000, 14700000, 14700000);
+        Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
         double halfSideLength = (polarMaxExtent.getUpperRightY() - polarMaxExtent.getLowerLeftY())
                 / (4 * 2);
         double centre = ((polarMaxExtent.getUpperRightY() - polarMaxExtent.getLowerLeftY()) / 2)
@@ -869,32 +849,53 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         double windowHigh = centre + 2 * halfSideLength;
         Bounds polarBounds = new Bounds(windowLow, windowLow, windowHigh, windowHigh);
 
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("bluemarble_file");
-        wmsParams.setFormat("image/jpeg");
-
         wmsPolarOptions = new WMSOptions();
-        wmsPolarOptions.setProjection("EPSG:32661");
+        wmsPolarOptions.setProjection("EPSG:5041");
         wmsPolarOptions.setMaxExtent(polarBounds);
         wmsPolarOptions.setMaxResolution(polarMaxResolution);
         wmsPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
         wmsPolarOptions.setWrapDateLine(false);
-        northPole = new WMS("North polar stereographic", "http://wms-basemaps.appspot.com/wms",
-                wmsParams, wmsPolarOptions);
-        northPole.setIsBaseLayer(true);
 
-        wmsPolarOptions.setProjection("EPSG:32761");
-        southPole = new WMS("South polar stereographic", "http://wms-basemaps.appspot.com/wms",
-                wmsParams, wmsPolarOptions);
-        southPole.setIsBaseLayer(true);
+        wmsParams = new WMSParams();
+        wmsParams.setLayers("naturalearth-np");
+        wmsParams.setFormat("image/png");
 
-        map.addLayer(openLayers);
-        map.addLayer(demis);
-        map.addLayer(plurel);
-        map.addLayer(weather);
-        map.addLayer(srtmDem);
-        map.addLayer(northPole);
-        map.addLayer(southPole);
+        naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", dexterUrl, wmsParams,
+                wmsPolarOptions);
+        naturalEarthNP.setIsBaseLayer(true);
+
+        wmsParams = new WMSParams();
+        wmsParams.setLayers("bluemarble-np");
+        wmsParams.setFormat("image/png");
+
+        blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", dexterUrl, wmsParams,
+                wmsPolarOptions);
+        blueMarbleNP.setIsBaseLayer(true);
+
+        wmsPolarOptions.setProjection("EPSG:5042");
+
+        wmsParams = new WMSParams();
+        wmsParams.setLayers("naturalearth-sp");
+        wmsParams.setFormat("image/png");
+
+        naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", dexterUrl, wmsParams,
+                wmsPolarOptions);
+        naturalEarthSP.setIsBaseLayer(true);
+
+        wmsParams = new WMSParams();
+        wmsParams.setLayers("bluemarble-sp");
+        wmsParams.setFormat("image/png");
+
+        blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", dexterUrl, wmsParams,
+                wmsPolarOptions);
+        blueMarbleSP.setIsBaseLayer(true);
+
+        map.addLayer(naturalEarth);
+        map.addLayer(blueMarble);
+        map.addLayer(naturalEarthNP);
+        map.addLayer(naturalEarthSP);
+        map.addLayer(blueMarbleNP);
+        map.addLayer(blueMarbleSP);
 
         currentProjection = map.getProjection();
 
@@ -923,9 +924,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             }
         });
 
-        map.setBaseLayer(demis);
-        baseUrlForExport = "http://labs.metacarta.com/wms-c/Basic.py?";
-        layersForExport = "basic";
+        map.setBaseLayer(naturalEarth);
+        baseUrlForExport = dexterUrl;
+        layersForExport = "naturalEarth";
     }
 
     protected WMSOptions getOptionsForCurrentProjection() {

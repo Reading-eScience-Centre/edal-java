@@ -1,5 +1,14 @@
+# General
 target/
 .classpath
 .project
 .settings/
 *.log
+.h2/
+gwt-unitCache/
+
+# Module specific
+ncwms/src/main/webapp/godiva3/
+ncwms/src/main/webapp/WEB-INF/deploy/
+
+graphics/dependency-reduced-pom.xml
