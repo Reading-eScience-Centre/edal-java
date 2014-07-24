@@ -57,7 +57,7 @@
     <build>
         <plugins>
             <plugin>
-                <!-- Sets the source version to 1.6 -->
+                <!-- Sets the source version to 1.7 -->
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>1.7</source>
@@ -88,7 +88,8 @@
                 <configuration>
                     <!-- This is required for Java 8 until we make all javadoc 
                         W3C HTML 4.01 compliant -->
-                    <additionalparam>-Xdoclint:none</additionalparam>
+                        <!-- Commented out because it only works with Java 8 compiler -->
+                    <!--<additionalparam>-Xdoclint:none</additionalparam>-->
                 </configuration>
             </plugin>
             <plugin>
