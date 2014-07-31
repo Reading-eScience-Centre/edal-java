@@ -533,7 +533,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             + mapYClick + "&STYLES=default/default"
                             + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
                             + ((timeStr != null) ? ("&TIME=" + timeStr) : "") + "&VERSION=1.1.1";
-                    Anchor profilePlot = new Anchor("Vertical Profile Plot (" + wmsUrl + ")");
+                    Anchor profilePlot = new Anchor("Vertical Profile Plot");
                     profilePlot.addClickHandler(new ClickHandler() {
                         @Override
                         public void onClick(ClickEvent event) {
@@ -803,8 +803,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     protected void addBaseLayers() {
+
         WMS naturalEarth;
         WMS blueMarble;
+        WMS demis;
 
         WMS naturalEarthNP;
         WMS naturalEarthSP;
@@ -836,6 +838,18 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         blueMarble.addLayerLoadStartListener(loadStartListener);
         blueMarble.addLayerLoadEndListener(loadEndListener);
         blueMarble.setIsBaseLayer(true);
+
+        wmsParams = new WMSParams();
+        wmsParams
+                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
+                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+        wmsParams.setFormat("image/png");
+
+        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
+                wmsOptions);
+        demis.setIsBaseLayer(true);
+        demis.addLayerLoadStartListener(loadStartListener);
+        demis.addLayerLoadEndListener(loadEndListener);
 
         Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
         double halfSideLength = (polarMaxExtent.getUpperRightY() - polarMaxExtent.getLowerLeftY())
@@ -892,6 +906,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
         map.addLayer(naturalEarth);
         map.addLayer(blueMarble);
+        map.addLayer(demis);
         map.addLayer(naturalEarthNP);
         map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleNP);
@@ -931,7 +946,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     protected WMSOptions getOptionsForCurrentProjection() {
         if (currentProjection.equalsIgnoreCase("EPSG:32661")
-                || currentProjection.equalsIgnoreCase("EPSG:32761")) {
+                || currentProjection.equalsIgnoreCase("EPSG:32761")
+                || currentProjection.equalsIgnoreCase("EPSG:5041")
+                || currentProjection.equalsIgnoreCase("EPSG:5042")) {
             return wmsPolarOptions;
         } else {
             return wmsStandardOptions;
