@@ -37,19 +37,19 @@ import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 public class PlottingDomainParams {
-    private int width = 256;
-    private int height = 256;
+    final private int width;
+    final private int height;
 
-    private BoundingBox bbox;
-    private HorizontalPosition targetPos;
+    final private BoundingBox bbox;
+    final private HorizontalPosition targetPos;
     
-    private Extent<Double> zExtent;
-    private Double targetZ;
+    final private Extent<Double> zExtent;
+    final private Double targetZ;
 
-    private Extent<DateTime> tExtent;
-    private DateTime targetT;
+    final private Extent<DateTime> tExtent;
+    final private DateTime targetT;
     
-    private RegularGrid imageGrid = null;
+    private volatile RegularGrid imageGrid = null;
 
     public PlottingDomainParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
             Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ, DateTime targetT) {
@@ -117,5 +117,66 @@ public class PlottingDomainParams {
 
     public DateTime getTargetT() {
         return targetT;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((bbox == null) ? 0 : bbox.hashCode());
+        result = prime * result + height;
+        result = prime * result + ((tExtent == null) ? 0 : tExtent.hashCode());
+        result = prime * result + ((targetPos == null) ? 0 : targetPos.hashCode());
+        result = prime * result + ((targetT == null) ? 0 : targetT.hashCode());
+        result = prime * result + ((targetZ == null) ? 0 : targetZ.hashCode());
+        result = prime * result + width;
+        result = prime * result + ((zExtent == null) ? 0 : zExtent.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PlottingDomainParams other = (PlottingDomainParams) obj;
+        if (bbox == null) {
+            if (other.bbox != null)
+                return false;
+        } else if (!bbox.equals(other.bbox))
+            return false;
+        if (height != other.height)
+            return false;
+        if (tExtent == null) {
+            if (other.tExtent != null)
+                return false;
+        } else if (!tExtent.equals(other.tExtent))
+            return false;
+        if (targetPos == null) {
+            if (other.targetPos != null)
+                return false;
+        } else if (!targetPos.equals(other.targetPos))
+            return false;
+        if (targetT == null) {
+            if (other.targetT != null)
+                return false;
+        } else if (!targetT.equals(other.targetT))
+            return false;
+        if (targetZ == null) {
+            if (other.targetZ != null)
+                return false;
+        } else if (!targetZ.equals(other.targetZ))
+            return false;
+        if (width != other.width)
+            return false;
+        if (zExtent == null) {
+            if (other.zExtent != null)
+                return false;
+        } else if (!zExtent.equals(other.zExtent))
+            return false;
+        return true;
     }
 }
