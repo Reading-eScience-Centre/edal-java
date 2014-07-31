@@ -687,13 +687,14 @@ public final class GISUtils {
             ReferenceIdentifier crsId = bbox.getCoordinateReferenceSystem().getName();
 
             if ("EPSG".equalsIgnoreCase(crsId.getCodeSpace())) {
-                if ("32661".equals(crsId.getCode()) || crsId.getCode().contains("UPS North")) {
-                    System.out.println("NPS");
+                if ("5041".equals(crsId.getCode()) || "32661".equals(crsId.getCode())
+                        || crsId.getCode().contains("UPS North")) {
                     /*
                      * North polar stereographic
                      */
                     maxy = 90;
-                } else if ("32761".equals(crsId.getCode()) || crsId.getCode().contains("UPS South")) {
+                } else if ("5042".equals(crsId.getCode()) || "32761".equals(crsId.getCode())
+                        || crsId.getCode().contains("UPS South")) {
                     System.out.println("SPS");
                     /*
                      * South polar stereographic
