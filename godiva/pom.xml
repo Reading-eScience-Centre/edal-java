@@ -1,46 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- POM for core module -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<artifactId>edal</artifactId>
-		<groupId>uk.ac.rdg.resc</groupId>
-		<version>1.0-SNAPSHOT</version>
-		<relativePath>..</relativePath>
-	</parent>
-	<artifactId>edal-godiva</artifactId>
-	<packaging>jar</packaging>
-	<name>GWT Implementation of the Godiva Frontend to edal-ncwms</name>
-	<dependencies>
-		<dependency>
-			<groupId>org.gwtopenmaps.openlayers</groupId>
-			<artifactId>gwt-openlayers-client</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.gwt</groupId>
-			<artifactId>gwt-user</artifactId>
-			<version>2.6.1</version>
-		</dependency>
-	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>gwt-maven-plugin</artifactId>
-				<version>2.6.1</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>resources</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<inplace>true</inplace>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>edal</artifactId>
+        <groupId>uk.ac.rdg.resc</groupId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+    <artifactId>edal-godiva</artifactId>
+    <packaging>jar</packaging>
+    <name>GWT Implementation of the Godiva Frontend to edal-ncwms</name>
+    <dependencies>
+        <dependency>
+            <groupId>org.gwtopenmaps.openlayers</groupId>
+            <artifactId>gwt-openlayers-client</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-user</artifactId>
+            <version>2.6.1</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>gwt-maven-plugin</artifactId>
+                <version>2.6.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <inplace>true</inplace>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- Sets the source version to 1.6 for backwards compatibility. 
+                    None of the code in godiva requires 1.7 anyway -->
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
