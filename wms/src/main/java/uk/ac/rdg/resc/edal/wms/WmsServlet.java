@@ -1424,7 +1424,7 @@ public class WmsServlet extends HttpServlet {
     private String showAnimationTimesteps(RequestParams params) throws MetadataException {
         String layerName = params.getString("layerName");
         if (layerName == null) {
-            throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
+            throw new MetadataException("Must supply a LAYERNAME parameter to get animation timesteps");
         }
 
         Dataset dataset;
