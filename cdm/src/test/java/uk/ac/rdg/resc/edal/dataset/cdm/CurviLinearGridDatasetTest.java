@@ -1,3 +1,31 @@
+/*******************************************************************************
+ * Copyright (c) 2014 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -18,10 +46,12 @@ import org.junit.Test;
 import ucar.ma2.ArrayDouble;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
+import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
 import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
@@ -35,6 +65,14 @@ import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 
+/**
+ * These tests perform various operations on a test curvilinear dataset
+ * (originally generated from {@link CreateNetCDF}). These involve reading data
+ * from the NetCDF file and extracting features from the dataset. Then checking
+ * that the extracted values are those expected.
+ * 
+ * @author Nan Lin
+ */
 public class CurviLinearGridDatasetTest {
     // accuracy value set for assert equal method for comparison.
     private static final double delta = 1e-5;
@@ -45,8 +83,15 @@ public class CurviLinearGridDatasetTest {
     private int etaSize = 336;
     private int xiSize = 896;
 
+    /**
+     * @throws IOException
+     *             If there is a problem when open the file or create the
+     *             dataset.
+     * @throws EdalException
+     *             If there is a problem when create the dataset.
+     * */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException, EdalException {
         URL url = this.getClass().getResource("/output-curvilinear.nc");
         location = url.getPath();
         cdf = NetcdfFile.open(location);
@@ -55,8 +100,9 @@ public class CurviLinearGridDatasetTest {
     }
 
     /**
-     * Dateset contains only x and y data. When we try to extract data including
-     * T and Z info, the method should return UnupportedOperationException.
+     * Dateset contains only x and y data on the place. When we try to extract
+     * data including T and Z info, the method should return
+     * UnupportedOperationException.
      */
     @Test(expected = UnsupportedOperationException.class)
     public void testUnSupportedOperation() throws DataReadingException {
@@ -77,8 +123,13 @@ public class CurviLinearGridDatasetTest {
         assertEquals(0, profileFeature.size());
     }
 
+    /**
+     * @throws IOException
+     *             if there is a problem when read data in the netCDf file
+     * */
+
     @Test
-    public void testCurviLinearCoords() throws Exception {
+    public void testCurviLinearCoords() throws IOException {
         Variable lon_rho = cdf.findVariable("lon_rho");
         Variable lat_rho = cdf.findVariable("lat_rho");
 
@@ -106,7 +157,7 @@ public class CurviLinearGridDatasetTest {
         assertEquals(lon_data.getSize(), lon_values.size());
         assertEquals(etaSize, cCoords.getNi());
         assertEquals(xiSize, cCoords.getNj());
-
+        //pick up a horizontal position with id=15000
         int index = 15000;
         LonLatPosition expectedPos = new LonLatPosition(lon_data.getDouble(index),
                 lat_data.getDouble(index));
@@ -136,8 +187,12 @@ public class CurviLinearGridDatasetTest {
                 .getCoordinateReferenceSystem());
     }
 
+    /**
+     * @throws DataReadingException
+     *             If there is a problem when reading the data
+     * */
     @Test
-    public void testCurviLinearDataset() throws DataReadingException, IOException {
+    public void testCurviLinearDataset() throws DataReadingException {
         assertTrue(dataset instanceof AbstractGridDataset);
 
         assertEquals(dataset.getDatasetVerticalCrs(), null);
@@ -196,14 +251,13 @@ public class CurviLinearGridDatasetTest {
          * curvilinear grid so the data it can fetch is limited. Use readFeature
          * method to extract data instead of extractMapFeature method at moment.
          */
-        
-        /*Variable xU =cdf.findVariable("allx_u");
-        ArrayFloat uValues =(ArrayFloat) xU.read();
-        for (int m = 0; m < xiSize; m++) {
-            for (int n = 0; n < etaSize; n++) {
-                Number number = xUValues.get(m, n);
-                assertEquals(uValues.getFloat(n+m*etaSize), number.floatValue(), delta);
-            }
-        }*/
+
+        /*
+         * Variable xU =cdf.findVariable("allx_u"); ArrayFloat uValues
+         * =(ArrayFloat) xU.read(); for (int m = 0; m < xiSize; m++) { for (int
+         * n = 0; n < etaSize; n++) { Number number = xUValues.get(m, n);
+         * assertEquals(uValues.getFloat(n+m*etaSize), number.floatValue(),
+         * delta); } }
+         */
     }
 }
