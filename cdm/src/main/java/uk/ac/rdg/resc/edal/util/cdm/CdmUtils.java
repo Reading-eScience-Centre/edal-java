@@ -59,7 +59,6 @@ import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import ucar.nc2.time.CalendarDate;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
-import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
@@ -102,7 +101,12 @@ public final class CdmUtils {
     }
 
     /**
-     * Gets a GridDataset from the given NetcdfDataset
+     * @param ncDataset
+     *            The {@link NetcdfDataset} to get a {@link GridDataset} from
+     * @return A GridDataset from the given {@link NetcdfDataset}
+     * @throws IOException
+     *             If the given {@link NetcdfDataset} doesn't contain any
+     *             {@link GridDataset}s
      */
     public static GridDataset getGridDataset(NetcdfDataset ncDataset) throws IOException {
         FeatureDataset featureDS = FeatureDatasetFactoryManager.wrap(FeatureType.GRID, ncDataset,
@@ -116,6 +120,8 @@ public final class CdmUtils {
     }
 
     /**
+     * @param location
+     *            The location to test
      * @return true if the given location represents an NcML aggregation.
      *         dataset. This method simply checks to see if the location string
      *         ends with ".xml" or ".ncml", following the same procedure as the
@@ -149,14 +155,18 @@ public final class CdmUtils {
     }
 
     /**
-     * Creates a two-dimensional referenceable grid from the given grid
-     * coordinate system. Will return more specific subclasses (
-     * {@link RectilinearGrid} or {@link RegularGrid}) if appropriate for the
-     * passed-in coordinate system. The grid's coordinate system will be a WGS84
-     * longitude-latitude system.
      * 
-     * @todo May want to be careful about datum shifts - model data is often in
-     *       spherical coordinates, not strict WGS84
+     * @param coordSys
+     *            The {@link GridCoordSystem} to create a {@link HorizontalGrid}
+     *            from
+     * @return two-dimensional referenceable grid from the given grid coordinate
+     *         system. Will return more specific subclasses (
+     *         {@link RectilinearGrid} or {@link RegularGrid}) if appropriate
+     *         for the passed-in coordinate system. The grid's coordinate system
+     *         will be a WGS84 longitude-latitude system.
+     * 
+     *         TODO May want to be careful about datum shifts - model data is
+     *         often in spherical coordinates, not strict WGS84
      */
     public static HorizontalGrid createHorizontalGrid(GridCoordSystem coordSys) {
         CoordinateAxis xAxis = coordSys.getXHorizAxis();
@@ -225,11 +235,10 @@ public final class CdmUtils {
     }
 
     /**
-     * Creates a {@link VerticalAxis} from a given {@link GridCoordSystem}
-     * object.
-     * 
      * @param coordSys
-     * @return
+     *            the {@link GridCoordSystem} to create a {@link VerticalAxis}
+     *            from
+     * @return The resulting {@link VerticalAxis}
      */
     public static VerticalAxis createVerticalAxis(GridCoordSystem coordSys) {
         CoordinateAxis1D zAxis = coordSys.getVerticalAxis();
@@ -311,8 +320,13 @@ public final class CdmUtils {
 
     /**
      * Creates a {@link ReferenceableAxis} from the given
-     * {@link CoordinateAxis1D}. Creates a longitude axis if axis.getAxisType()
-     * == AxisType.Lon.
+     * {@link CoordinateAxis1D}. Creates a longitude axis if
+     * axis.getAxisType()==AxisType.Lon.
+     * 
+     * @param axis
+     *            The {@link CoordinateAxis1D} to convert to a
+     *            {@link ReferenceableAxis}
+     * @return An equivalent {@link ReferenceableAxis}
      */
     public static ReferenceableAxis<Double> createReferenceableAxis(CoordinateAxis1D axis) {
         return createReferenceableAxis(axis, axis.getAxisType() == AxisType.Lon);
@@ -322,9 +336,13 @@ public final class CdmUtils {
      * Creates a {@link ReferenceableAxis} from the given
      * {@link CoordinateAxis1D}.
      * 
+     * @param axis
+     *            The {@link CoordinateAxis1D} to convert to a
+     *            {@link ReferenceableAxis}
      * @param isLongitude
      *            true if this is a longitude axis ({@literal i.e.} wraps at 360
      *            degrees).
+     * @return The equivalent {@link ReferenceableAxis}
      */
     public static ReferenceableAxis<Double> createReferenceableAxis(CoordinateAxis1D axis,
             boolean isLongitude) {
@@ -365,7 +383,7 @@ public final class CdmUtils {
      * @throws IOException
      *             if there was an error reading from the data source.
      */
-    public static NetcdfDataset openDataset(String location) throws IOException, EdalException {
+    public static NetcdfDataset openDataset(String location) throws IOException {
         NetcdfDataset nc;
         if (isNcmlAggregation(location)) {
             /*
@@ -394,6 +412,8 @@ public final class CdmUtils {
      * 
      * @param nc
      *            The {@link NetcdfDataset} to close
+     * @throws IOException
+     *             if there is a problem closing the underlying dataset
      */
     public static void closeDataset(NetcdfDataset nc) throws IOException {
         if (nc == null)
@@ -406,6 +426,8 @@ public final class CdmUtils {
      * recursively searches directories, allowing for glob expressions like
      * {@code "c:\\data\\200[6-7]\\*\\1*\\A*.nc"}.
      * 
+     * @param globExpression
+     *            The expression to expand
      * @return a {@link List} of {@link File}s matching the given glob
      *         expression
      * @author Mike Grant, Plymouth Marine Labs
