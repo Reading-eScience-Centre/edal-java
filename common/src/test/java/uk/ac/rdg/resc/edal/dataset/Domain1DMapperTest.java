@@ -1,3 +1,30 @@
+/*******************************************************************************
+ * Copyright (c) 2014 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
 package uk.ac.rdg.resc.edal.dataset;
 
 import static org.junit.Assert.*;
@@ -20,8 +47,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * Test class for {@link Domain1DMapper} with its ancestor {@link DomainMapper}.
+ * 
+ * @author Nan
+ */
+
 public class Domain1DMapperTest {
-    // details about the grid
+    // details about the source grid
     private HorizontalGrid hGrid;
     private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
     private int xSize = 160;
@@ -29,11 +62,14 @@ public class Domain1DMapperTest {
     private double resolution = 1.0 / 4;
     private double leftLowXPos = 80.0;
     private double leftLowYPos = 0.0;
-    
-    // points are mapped onto a line, the line is defined as y=a*x+b
+
+    /*
+     * chose points in the grid. these points (x,y) are on the line, that is
+     * defined as y=a*x+b.
+     */
     private double a = -0.25;
     private double b = 40.0;
-    
+    // the container contains the points on the line.
     private List<HorizontalPosition> targetPositions;
     private long expectedTartgetPosNumber = 0;
 
@@ -45,12 +81,12 @@ public class Domain1DMapperTest {
     private Domain1DMapper mapper;
     /*
      * the container contains entries, each of them maps a (x,y) pair to points
-     * on the line
+     * id on the line
      */
     Map<Pair, ArrayList<Integer>> mappings = new TreeMap<>();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp(){
         ReferenceableAxis<Double> longAxis = new RegularAxisImpl("longitude", leftLowXPos
                 + resolution / 2.0, resolution, xSize, true);
         ReferenceableAxis<Double> latAxis = new RegularAxisImpl("latitude", leftLowYPos
@@ -58,7 +94,11 @@ public class Domain1DMapperTest {
         hGrid = new RectilinearGridImpl(longAxis, latAxis, crs);
 
         targetPositions = new ArrayList<>();
-        // x,y define the points on the line
+
+        /*
+         * (x,y) pair, the target point, is on the line. pick up those which are
+         * in the grid and them put them in the container.
+         */
         double x = 79.6;
         double y = 0.0;
         double xUpperBound = leftLowXPos + resolution * xSize;
@@ -69,20 +109,27 @@ public class Domain1DMapperTest {
                 targetPositions.add(hPos);
                 expectedTartgetPosNumber++;
             }
-            x += (resolution / 2.0);
+            x += resolution / 2.0;
         }
+
+        // the container contains the target ids
         ArrayList<Integer> targetIndices = new ArrayList<>();
         Pair p = null;
         boolean begin = true;
         int iPos = -1;
         int jPos = -1;
 
+        /*
+         * find the mapping from i,j pair to target id which starts from 0.
+         * meantime, find minI, maxI, the number of unique (i,j) pair etc.
+         */
         for (int i = 0; i < targetPositions.size(); i++) {
             HorizontalPosition hPos = targetPositions.get(i);
             double xValue = hPos.getX();
             double yValue = hPos.getY();
-            int iIndex = (new Double((xValue - leftLowXPos) / resolution)).intValue();
-            int jIndex = (new Double(yValue / resolution)).intValue();
+
+            int iIndex = (int) ((xValue - leftLowXPos) / resolution);
+            int jIndex = (int) (yValue / resolution);
 
             if (iIndex < expectedminI)
                 expectedminI = iIndex;
@@ -110,7 +157,7 @@ public class Domain1DMapperTest {
                 }
             }
         }
-        //add the last mapping
+        // add the last mapping
         mappings.put(p, targetIndices);
         mapper = Domain1DMapper.forList(hGrid, targetPositions);
     }
@@ -140,12 +187,12 @@ public class Domain1DMapperTest {
             assertEquals(mappings.get(new Pair(expectI, expectJ)), targets);
         }
     }
-    
+
     @Test
     public void testIsEmpty() {
         assertFalse(mapper.isEmpty());
     }
-    
+
     class Pair implements Comparable<Pair> {
         final int i;
         final int j;

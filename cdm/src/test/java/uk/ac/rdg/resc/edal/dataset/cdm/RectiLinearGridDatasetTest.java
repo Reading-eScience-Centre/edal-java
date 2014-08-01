@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -111,12 +112,18 @@ public class RectiLinearGridDatasetTest {
 
     /*
      * Not every cell in the grid be tested, only a few on the edges and near
-     * the centre are chosen.
+     * the centre are chosen and stored in an arraylist below.
      */
     private ArrayList<GridCell2D> samplePoints = new ArrayList<>();
 
+    /**
+     * @throws IOException
+     *             if there is a problem when create the dataset
+     * @throws EdalException
+     *             if there is a problem when create the dataset
+     * */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException, EdalException {
         URL url = this.getClass().getResource("/rectilinear_test_data.nc");
         String location = url.getPath();
         CdmGridDatasetFactory datasetFactory = new CdmGridDatasetFactory();
@@ -129,14 +136,14 @@ public class RectiLinearGridDatasetTest {
         rGrid = new RegularGridImpl(-185.0, -95.0, 175.0, 95.0, crs, xSize, ySize);
 
         /*
-         * Initialize the sampling points array. some points on the edges and
+         * Initialize the sampling points array. Some points on the edges and
          * one in the middle are chosen.
          */
         for (GridCell2D cell : rGrid.getDomainObjects()) {
             GridCoordinates2D gCoordinate = cell.getGridCoordinates();
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
-            // randomly choosing some point on the edges.
+            // choosing some point on the edges.
             if (xIndex == 0 || xIndex == 15 || xIndex == 35) {
                 if (yIndex == 0 || yIndex == 10 || yIndex == 19) {
                     samplePoints.add(cell);
@@ -156,6 +163,7 @@ public class RectiLinearGridDatasetTest {
             tAxisValues.add(new DateTime(2000, 01, 01 + i, 00, 00, chrnology));
             zAxisValues.add(10.0 * i);
         }
+        // add the last value of Z axis
         zAxisValues.add(100.0);
         tAxis = new TimeAxisImpl("time", tAxisValues);
         vAxis = new VerticalAxisImpl("depth", zAxisValues, vCrs);
@@ -172,8 +180,18 @@ public class RectiLinearGridDatasetTest {
      * behaviours.
      */
 
+    /**
+     * @throws DataReadingExcpetion
+     *             if there is a problem reading the underlying data
+     * @throws EdalException
+     *             if there is a problem adding the plugin or the plugin process
+     *             the metadata
+     * @throws UnsupportedOperationException
+     *             if not all of the requested variables have a time domain
+     */
     @Test
-    public void testVectorPlugin() throws EdalException {
+    public void testVectorPlugin() throws DataReadingException, EdalException,
+            UnsupportedOperationException {
         VectorPlugin vplugin = new VectorPlugin("vLon", "vLat", "Test Vector Field", true);
         VariableMetadata[] vdata = new VariableMetadata[] { dataset.getVariableMetadata("vLon"),
                 dataset.getVariableMetadata("vLat") };
@@ -181,7 +199,7 @@ public class RectiLinearGridDatasetTest {
 
         dataset.addVariablePlugin(vplugin);
 
-        // test on only one vertical position
+        // test on only one vertical position in order to save times
         double zPos = 20.0;
 
         for (int i = 0; i < samplePoints.size(); i++) {
@@ -226,7 +244,7 @@ public class RectiLinearGridDatasetTest {
      * evaluating the metadata of the test dataset.
      **/
     @Test
-    public void testMetadataInfo() throws DataReadingException {
+    public void testMetadataInfo() {
         assertEquals(chrnology, dataset.getDatasetChronology());
         assertEquals(vCrs, dataset.getDatasetVerticalCrs());
         assertEquals(MapFeature.class, dataset.getMapFeatureType("vLon"));
@@ -241,13 +259,20 @@ public class RectiLinearGridDatasetTest {
     }
 
     /*
-     * test if the extracted TimeSeriesFeatures result is empty when arguments
+     * test if the extracted TimeSeriesFeatures method return empty when arguments
      * in the constructor {@link PlottingDomainParams} are set out of the
      * domains of T and Z.
      */
 
+    /**
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
+     * @throws UnsupportedOperationException
+     *             If not all of the requested variables have a time domain
+     */
     @Test
-    public void testReturnEmptyTimeSerieFeatures() throws DataReadingException {
+    public void testReturnEmptyTimeSerieFeatures() throws DataReadingException,
+            UnsupportedOperationException {
         DateTime start = new DateTime(1990, 01, 01, 00, 00, chrnology);
         DateTime end = new DateTime(1998, 01, 01, 00, 00, chrnology);
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
@@ -342,6 +367,9 @@ public class RectiLinearGridDatasetTest {
      * General test {@link Dataset#extractMapFeatures} method. When the values
      * for para of the constructor {@link PlottingDomainParams} are set
      * properly, it returns expected results.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     @Test
     public void testMapFeatures() throws DataReadingException {
@@ -396,6 +424,9 @@ public class RectiLinearGridDatasetTest {
      * } method. When the
      * values for para of the constructor {@link PlottingDomainParams} are set
      * properly, it returns expected results.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     @Test
     public void testTimeSerieFeatures() throws DataReadingException {
@@ -460,6 +491,7 @@ public class RectiLinearGridDatasetTest {
      *            which is used as a para of the constructor of
      *            {@link PlottingDomainParams}in the calling method
      * @throws DataReadingException
+     *             If there is a problem reading the underlying data
      */
     private void getFeatureByZExtent(Extent<Double> zExtent) throws DataReadingException {
         for (int i = 0; i < samplePoints.size(); i++) {
@@ -535,6 +567,7 @@ public class RectiLinearGridDatasetTest {
      *            which is used as a para of PlottingDomainParams object in the
      *            calling method
      * @throws DataReadingException
+     *             If there is a problem reading the underlying data
      */
     private void getFeatureByTargetZ(double targetZ) throws DataReadingException {
         if (vAxis.contains(targetZ)) {
@@ -573,6 +606,9 @@ public class RectiLinearGridDatasetTest {
      * in this test, the para of zExtent and targetZ in the constructor
      * {@link PlottingDomainParams} are set to various values in order to
      * evaluating returned {@link TimeSeriesFeatures} objects.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
 
     @Test
@@ -609,6 +645,9 @@ public class RectiLinearGridDatasetTest {
      * in this test, the para of tExtent and targetT in the constructor
      * {@link PlottingDomainParams} are set to various values in order to
      * evaluating returned {@link TimeSeriesFeatures} objects.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     @Test
     public void testTimeSerieFeaturesPartofTExents() throws DataReadingException {
@@ -656,7 +695,8 @@ public class RectiLinearGridDatasetTest {
      * @param tExtent
      *            the para of tExtent in the constructor of
      *            {@link PlottingDomainParams} object
-     * @throws DataReadingException
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     private void extractTimeSeriesFeature(Extent<DateTime> tExtent) throws DataReadingException {
         for (int i = 0; i < samplePoints.size(); i++) {
@@ -684,6 +724,9 @@ public class RectiLinearGridDatasetTest {
     /**
      * General test to extract profile features by calling
      * {@link Dataset#extraceProfileFeatures} method.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     @Test
     public void testProfileFeatures() throws DataReadingException {
@@ -709,6 +752,9 @@ public class RectiLinearGridDatasetTest {
     /**
      * Test to extract features by setting the para of BoundingBox in
      * {@link Dataset} extraceXXXFeatures methods.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     @Test
     public void testFeaturesBBox() throws DataReadingException {
@@ -758,7 +804,8 @@ public class RectiLinearGridDatasetTest {
      * @param ystep
      *            the size of x side of every cell inside the bounding box of
      *            the dataset
-     * @throws DataReadingException
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     private void bboxTest(BoundingBox bbox, double xstep, double ystep) throws DataReadingException {
         PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, bbox, null, null,
@@ -827,7 +874,8 @@ public class RectiLinearGridDatasetTest {
      * @param zExtent
      *            the corresponding param of zExtent in PlottingDomainParams
      *            object
-     * @throws Exception
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     private void zExtentCaseForProfileFeatures(Extent<Double> zExtent) throws DataReadingException {
         for (int i = 0; i < samplePoints.size(); i++) {
@@ -857,6 +905,9 @@ public class RectiLinearGridDatasetTest {
     /**
      * test {@link Dataset#extractProfileFeatures} method by setting various
      * values for zExtent
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     @Test
     public void testProfileFeaturesPartOfZExtent() throws DataReadingException {
@@ -897,6 +948,9 @@ public class RectiLinearGridDatasetTest {
      * test {@link Dataset#extractProfileFeatures} method by setting various
      * values of tExtent and targetT for the constructor
      * {@link PlottingDomainParams}.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     @Test
     public void testProfileFeaturesPartOfTExtent() throws DataReadingException {
@@ -940,7 +994,8 @@ public class RectiLinearGridDatasetTest {
      *            the corresponding param tExtent in PlottingDomainParams
      * @param targetT
      *            the corresponding param targetT in PlottingDomainParams
-     * @throws Exception
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     private void tExentCaseForProfileFeatures(Extent<DateTime> tExtent, DateTime targetT)
             throws DataReadingException {
@@ -1029,6 +1084,9 @@ public class RectiLinearGridDatasetTest {
      * test {@link Dataset#extractProfileFeatures} method return empty when
      * values in the constructor of {@link PlottingDomainParams} are out of the
      * scopes of X, Y, Z, T domains.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
 
     @Test
@@ -1069,6 +1127,9 @@ public class RectiLinearGridDatasetTest {
 
     /**
      * test {@link Dataset#readFeature}method.
+     * 
+     * @throws DataReadingExcpetion
+     *             If there is a problem reading the underlying data
      */
     @Test
     public void readFeatureTest() throws DataReadingException {
