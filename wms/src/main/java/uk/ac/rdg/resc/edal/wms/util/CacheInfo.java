@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 The University of Reading
+ * Copyright (c) 2014 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -26,55 +26,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.ncwms.config;
+package uk.ac.rdg.resc.edal.wms.util;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
-import uk.ac.rdg.resc.edal.wms.util.CacheInfo;
-
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-public class NcwmsCacheInfo implements CacheInfo {
-    @XmlAttribute(name = "enabled")
-    private boolean enabled = false;
-    @XmlElement(name = "inMemorySizeMB")
-    private int inMemorySizeMB = 256;
-
-    NcwmsCacheInfo() {
-    }
-
-    public NcwmsCacheInfo(boolean enabled, int inMemorySizeMB) {
-        this.enabled = enabled;
-        this.inMemorySizeMB = inMemorySizeMB;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
+public interface CacheInfo {
+    /**
+     * @return Whether or not the cache is enabled
+     */
+    public boolean isEnabled();
 
     /**
-     * @param enabled
-     *            Whether this cache should be used or not
+     * @return The maximum size of the in-memory cache, in MB
      */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    @Override
-    public int getInMemorySizeMB() {
-        return inMemorySizeMB;
-    }
-
-    /**
-     * @param inMemorySizeMB
-     *            The maximum size of this cache in-memory
-     */
-    public void setInMemorySizeMB(int inMemorySizeMB) {
-        this.inMemorySizeMB = inMemorySizeMB;
-    }
+    public int getInMemorySizeMB();
 }
