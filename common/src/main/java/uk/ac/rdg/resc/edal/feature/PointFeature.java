@@ -54,7 +54,7 @@ public class PointFeature extends AbstractDiscreteFeature<GeoPosition, GeoPositi
 
     /**
      * Convenience method for returning the horizontal position. This is
-     * equivalent to calling {@link PointFeature()#getGeoPosition()} and
+     * equivalent to calling {@link PointFeature#getGeoPosition()} and
      * extracting the horizontal part of the position
      * 
      * @return The {@link HorizontalPosition} of this feature

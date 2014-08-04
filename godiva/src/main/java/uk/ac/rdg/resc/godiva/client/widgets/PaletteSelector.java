@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.godiva.client.widgets;
 
 import java.util.List;
 
-import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.PaletteSelectionHandler;
 import uk.ac.rdg.resc.godiva.client.state.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
@@ -138,9 +137,6 @@ public class PaletteSelector implements PaletteSelectorIF {
      * @param wmsUrlProvider
      *            A {@link LayerSelectorIF} which can be used to obtain the WMS
      *            URL for the current WMS layer
-     * @param opacitySelector
-     *            The {@link OpacitySelectionHandler} used for when the opacity
-     *            changes
      * @param localCentre
      *            A {@link CentrePosIF} to define the local centre (usually over
      *            the centre of the map)

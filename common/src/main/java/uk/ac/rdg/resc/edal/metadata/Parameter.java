@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
+import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.feature.Feature;
 
 /**

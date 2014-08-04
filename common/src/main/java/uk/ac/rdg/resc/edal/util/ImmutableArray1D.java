@@ -36,8 +36,6 @@ public class ImmutableArray1D<T> extends Array1D<T> {
     /**
      * Create a new in-memory array.
      * 
-     * @param clazz
-     *            The class of the objects which this {@link Array1D} will hold
      * @param values
      *            An array containing the data.
      */

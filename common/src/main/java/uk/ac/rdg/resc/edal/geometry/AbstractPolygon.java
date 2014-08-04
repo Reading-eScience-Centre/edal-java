@@ -59,7 +59,6 @@ public abstract class AbstractPolygon implements Polygon {
     }
 
     /**
-     * {@inheritDoc}
      * <p>
      * This default implementation constructs a {@link Path2D} consisting of the
      * vertices of the polygon, and uses this to test for containment.

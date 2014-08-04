@@ -796,7 +796,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     /**
      * Returns the layer name based on the dataset and variable ID
      * 
-     * @param dataset
+     * @param datasetId
      *            The ID of dataset containing the layer
      * @param variableId
      *            The ID of the variable within the dataset

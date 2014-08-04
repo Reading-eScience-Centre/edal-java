@@ -47,7 +47,7 @@ import uk.ac.rdg.resc.edal.util.TimeUtils;
  * class will ever be created, so this class contains no member variables to
  * ensure thread safety.
  * 
- * @todo Would this be better handled by a JSP?
+ * TODO Would this be better handled by a velocity template?
  * 
  * @author Jon Blower
  */

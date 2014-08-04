@@ -51,7 +51,7 @@ public class ColourPalette {
      * The name of the default palette that will be used if the user doesn't
      * request a specific palette.
      * 
-     * @see DEFAULT_PALETTE
+     * @see ColourPalette#DEFAULT_COLOURS
      */
     public static final String DEFAULT_PALETTE_NAME = "rainbow";
 
@@ -61,7 +61,7 @@ public class ColourPalette {
      * This is the palette that will be used if no specific palette has been
      * chosen. This palette is taken from the SGT graphics toolkit.
      * 
-     * @see DEFAULT_PALETTE_NAME
+     * @see ColourPalette#DEFAULT_PALETTE_NAME
      */
     private static final Color[] DEFAULT_COLOURS = new Color[] { new Color(0, 0, 143),
             new Color(0, 0, 159), new Color(0, 0, 175), new Color(0, 0, 191), new Color(0, 0, 207),
