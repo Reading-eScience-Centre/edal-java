@@ -85,6 +85,9 @@
                     </execution>
                 </executions>
                 <version>2.8.1</version>
+                <configuration>
+                    <docfilessubdirs>true</docfilessubdirs>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
