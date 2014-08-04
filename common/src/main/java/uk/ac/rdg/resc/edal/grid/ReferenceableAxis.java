@@ -35,9 +35,8 @@ import uk.ac.rdg.resc.edal.domain.Extent;
 
 /**
  * <p>
- * A one-dimensional axis of a referenceable Grid, which maps between integer
- * indices along the axis and real-world coordinates. It is in spirit a
- * one-dimensional special case of a {@link ReferenceableGrid}.
+ * A one-dimensional axis of a referenceable frid, which maps between integer
+ * indices along the axis and real-world coordinates.
  * </p>
  * <p>
  * ReferenceableAxes can be composed to form {@link RectilinearGrid}s.
@@ -50,6 +49,7 @@ import uk.ac.rdg.resc.edal.domain.Extent;
  * @param <P>
  *            The type of object used to identify positions on this axis
  * @author Jon Blower
+ * @author Guy Griffiths
  */
 public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
     /**
@@ -62,7 +62,7 @@ public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
      * 
      * @param index
      *            The index of the required position on the axis. Must be within
-     *            the axis' {@link #getAxisExtent() extent}.
+     *            the axis' {@link #size() extent}.
      * @return the coordinate value at the given index
      * @throws IndexOutOfBoundsException
      *             if the axis' extent does not contain this index.
@@ -106,7 +106,7 @@ public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
      * If this is a longitude axis, this method will handle the case of
      * longitude values wrapping, therefore values of -180 and +180 are treated
      * as equivalent by this method, irrespective of the values in
-     * {@link #getCoordinateValue(index)}.
+     * {@link #getCoordinateValue(int)}.
      * </p>
      * 
      * @param position
@@ -123,6 +123,10 @@ public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
      */
     public Extent<P> getCoordinateExtent();
 
+    /**
+     * @return The extent of this axis. Indices within this axis will run from 0
+     *         to {@link #size()} - 1
+     */
     public int size();
 
     @Override

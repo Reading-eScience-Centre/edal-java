@@ -113,7 +113,7 @@ public interface TimeSelectorIF extends IsWidget {
     /**
      * Choose a specified datetime
      * 
-     * @param dateString
+     * @param timeString
      *            The desired datetime
      * @return <code>true</code> if the operation was successfull
      */
@@ -157,10 +157,8 @@ public interface TimeSelectorIF extends IsWidget {
     public void selectRange(String currentRange);
 
     /**
-     * Gets the currently selected range (i.e. +/- how much) for a continuous
-     * axis
-     * 
-     * @return
+     * @return The currently selected range (i.e. +/- how much) for a continuous
+     *         axis
      */
     public String getRange();
 }

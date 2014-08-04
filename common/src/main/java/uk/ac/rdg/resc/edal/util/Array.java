@@ -36,9 +36,7 @@ import java.util.Iterator;
  * @param <E>
  *            the type of the values within the array
  * @author Jon Blower
- * @author Guy
- * 
- * @todo Would a toList() method be useful here?
+ * @author Guy Griffiths
  */
 public interface Array<E> extends Iterable<E> {
     /**
@@ -77,10 +75,10 @@ public interface Array<E> extends Iterable<E> {
      * Gets the number of values in the array.
      */
     public long size();
-    
+
     @Override
     public int hashCode();
-    
+
     @Override
     public boolean equals(Object obj);
 }

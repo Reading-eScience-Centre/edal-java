@@ -226,7 +226,8 @@ public final class CurvilinearCoords {
     /**
      * Gets the [i,j]th cell in this grid.
      * 
-     * @todo cache or precompute the cells?
+     * TODO cache or precompute the cells?
+     * 
      * @throws IllegalArgumentException
      *             if i,j is not a valid cell in this grid.
      */
@@ -361,11 +362,11 @@ public final class CurvilinearCoords {
             this.i = i;
             this.j = j;
         }
-        
+
         public int getI() {
             return i;
         }
-        
+
         public int getJ() {
             return j;
         }
@@ -541,7 +542,7 @@ public final class CurvilinearCoords {
          * Returns true if this cell's {@link #getBoundaryPath() boundary}
          * contains the given longitude-latitude point.
          * 
-         * @todo what happens if this cell is represented by NaNs?
+         * TODO what happens if this cell is represented by NaNs?
          */
         public boolean contains(double lon, double lat) {
             lon = harmonizeWithCentre(lon);

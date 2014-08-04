@@ -90,8 +90,9 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
  * A compromise strategy, which balances memory considerations against the
  * overhead of the low-level data extraction code, works as follows:
  * <ol>
- * <li>Iterate through each row (i.e. each j index) that is represented in the
- * {@link DomainMapper} using {@link DomainMapper#getJIndices}.</li>
+ * <li>Iterate through each row (i.e. each j index) using the
+ * {@link DomainMapper#scanlineIterator()} and
+ * {@link Scanline#getSourceGridJIndex()}.</li>
  * <li>For each j index, extract data from the minimum to the maximum i index in
  * this row (a "scanline") using {@link DomainMapperEntry#getSourceGridIIndex()}
  * for the first and last entries in the row, since entries are sorted by

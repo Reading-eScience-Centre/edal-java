@@ -95,7 +95,7 @@ public interface WmsLayerMetadata {
     public Boolean isLogScaling();
 
     /**
-     * @returns The default number of colour bands to use for this layer's
+     * @return The default number of colour bands to use for this layer's
      *          palette
      */
     public Integer getNumColorBands();

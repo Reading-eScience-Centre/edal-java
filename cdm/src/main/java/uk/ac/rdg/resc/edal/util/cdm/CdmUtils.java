@@ -87,8 +87,9 @@ import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
  * files, OPeNDAP servers and other data sources using the Unidata Common Data
  * Model.
  * 
- * @author Jon
- * @author Guy
+ * @author Jon Blower
+ * @author Guy Griffiths
+ * @author Mike Grant, Plymouth Marine Labs
  */
 public final class CdmUtils {
     private static final Logger log = LoggerFactory.getLogger(CdmUtils.class);
@@ -430,9 +431,6 @@ public final class CdmUtils {
      *            The expression to expand
      * @return a {@link List} of {@link File}s matching the given glob
      *         expression
-     * @author Mike Grant, Plymouth Marine Labs
-     * @author Jon Blower
-     * @author Guy Griffiths
      */
     public static List<File> expandGlobExpression(String globExpression) {
         /*

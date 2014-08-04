@@ -46,10 +46,20 @@ public final class GridCell2DImpl implements GridCell2D {
     private final HorizontalGrid parentGrid;
 
     /**
-     * @todo check that CRSs of centre, footprint and parentGrid all match?
+     * @param gridCoords
+     *            The indices of this cell within its parent grid
+     * @param centre
+     *            The centre {@link HorizontalPosition} of this grid cell
+     * @param footprint
+     *            A {@link Polygon} representing the bounding box of this grid
+     *            cell. Does not necessarily have to be a tight-bound around the
+     *            cell
+     * @param parentGrid
+     *            The {@link HorizontalGrid} which this {@link GridCell2D} is
+     *            part of
      */
-    public GridCell2DImpl(GridCoordinates2D gridCoords, HorizontalPosition centre, Polygon footprint,
-            HorizontalGrid parentGrid) {
+    public GridCell2DImpl(GridCoordinates2D gridCoords, HorizontalPosition centre,
+            Polygon footprint, HorizontalGrid parentGrid) {
         this.gridCoords = gridCoords;
         this.centre = centre;
         this.footprint = footprint;
