@@ -54,12 +54,15 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
  * 
  * <h3>Strategy 1: read data points one at a time</h3>
  * <p>
- * Read each data point individually by iterating through
- * {@link DomainMapper#getJIndices} and {@link DomainMapper#getIIndices}. This minimizes
- * the memory footprint as the minimum amount of data is read from disk.
- * However, in general this method is inefficient as it maximizes the overhead
- * of the low-level data extraction code by making a large number of small data
- * extractions. This is the {@link #PIXEL_BY_PIXEL pixel-by-pixel} strategy.
+ * Read each data point individually by using {@link DomainMapper#iterator()} to
+ * iterate over all {@link DomainMapperEntry}s and reading the appropriate
+ * indices from {@link DomainMapperEntry#getTargetIndices()}.
+ * 
+ * This minimizes the memory footprint as the minimum amount of data is read
+ * from disk. However, in general this method is inefficient as it maximizes the
+ * overhead of the low-level data extraction code by making a large number of
+ * small data extractions. This is the {@link #PIXEL_BY_PIXEL pixel-by-pixel}
+ * strategy.
  * </p>
  * 
  * <h3>Strategy 2: read all data points in one operation</h3>
@@ -88,12 +91,13 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
  * overhead of the low-level data extraction code, works as follows:
  * <ol>
  * <li>Iterate through each row (i.e. each j index) that is represented in the
- * PixelMap using {@link DomainMapper#getJIndices}.</li>
+ * {@link DomainMapper} using {@link DomainMapper#getJIndices}.</li>
  * <li>For each j index, extract data from the minimum to the maximum i index in
- * this row (a "scanline") using {@link DomainMapper#getMinIIndexInRow} and
- * {@link DomainMapper#getMaxIIndexInRow}. (This assumes that the data are stored
- * with the i dimension varying fastest, meaning that the scanline represents
- * contiguous data in the source files.)</li>
+ * this row (a "scanline") using {@link DomainMapperEntry#getSourceGridIIndex()}
+ * for the first and last entries in the row, since entries are sorted by
+ * i-index (This assumes that the data are stored with the i dimension varying
+ * fastest, meaning that the scanline represents contiguous data in the source
+ * files.)</li>
  * </ol>
  * Therefore if there are 25 distinct j indices in the PixelMap there will be 25
  * individual calls to the low-level data extraction code. This algorithm has
@@ -108,6 +112,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
  * <img src="doc-files/pixelmap_scanline.png">
  * 
  * @author Jon
+ * @author Guy Griffiths
  */
 public enum DataReadingStrategy {
     /**
@@ -119,11 +124,11 @@ public enum DataReadingStrategy {
     SCANLINE {
         @Override
         public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, Domain2DMapper pixelMap) throws IOException, DataReadingException {
-            Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
-                    pixelMap.getTargetXSize());
+                int zIndex, Domain2DMapper domainMapper) throws IOException, DataReadingException {
+            Array2D<Number> ret = new ValuesArray2D(domainMapper.getTargetYSize(),
+                    domainMapper.getTargetXSize());
 
-            Iterator<Scanline<int[]>> it = pixelMap.scanlineIterator();
+            Iterator<Scanline<int[]>> it = domainMapper.scanlineIterator();
             while (it.hasNext()) {
                 Scanline<int[]> scanline = it.next();
                 List<DomainMapperEntry<int[]>> entries = scanline.getPixelMapEntries();
@@ -155,19 +160,19 @@ public enum DataReadingStrategy {
     BOUNDING_BOX {
         @Override
         public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, Domain2DMapper pixelMap) throws IOException, DataReadingException {
-            Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
-                    pixelMap.getTargetXSize());
-            if(pixelMap.isEmpty()) {
+                int zIndex, Domain2DMapper domainMapper) throws IOException, DataReadingException {
+            Array2D<Number> ret = new ValuesArray2D(domainMapper.getTargetYSize(),
+                    domainMapper.getTargetXSize());
+            if (domainMapper.isEmpty()) {
                 return ret;
             }
-            int imin = pixelMap.getMinIIndex();
-            int imax = pixelMap.getMaxIIndex();
-            int jmin = pixelMap.getMinJIndex();
-            int jmax = pixelMap.getMaxJIndex();
-            Array4D<Number> data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, jmin, jmax,
-                    imin, imax);
-            for (DomainMapperEntry<int[]> pme : pixelMap) {
+            int imin = domainMapper.getMinIIndex();
+            int imax = domainMapper.getMaxIIndex();
+            int jmin = domainMapper.getMinJIndex();
+            int jmax = domainMapper.getMaxJIndex();
+            Array4D<Number> data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex, jmin,
+                    jmax, imin, imax);
+            for (DomainMapperEntry<int[]> pme : domainMapper) {
                 List<int[]> targetGridPoints = pme.getTargetIndices();
                 for (int[] targetPoint : targetGridPoints) {
                     ret.set(data.get(0, 0, pme.getSourceGridJIndex() - jmin,
@@ -186,10 +191,10 @@ public enum DataReadingStrategy {
     PIXEL_BY_PIXEL {
         @Override
         public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
-                int zIndex, Domain2DMapper pixelMap) throws IOException, DataReadingException {
-            Array2D<Number> ret = new ValuesArray2D(pixelMap.getTargetYSize(),
-                    pixelMap.getTargetXSize());
-            for (DomainMapperEntry<int[]> pme : pixelMap) {
+                int zIndex, Domain2DMapper domainMapper) throws IOException, DataReadingException {
+            Array2D<Number> ret = new ValuesArray2D(domainMapper.getTargetYSize(),
+                    domainMapper.getTargetXSize());
+            for (DomainMapperEntry<int[]> pme : domainMapper) {
                 Array4D<Number> data = dataSource.read(varId, tIndex, tIndex, zIndex, zIndex,
                         pme.getSourceGridJIndex(), pme.getSourceGridJIndex(),
                         pme.getSourceGridIIndex(), pme.getSourceGridIIndex());
@@ -202,6 +207,7 @@ public enum DataReadingStrategy {
         }
     };
 
-    abstract public Array2D<Number> readMapData(GridDataSource dataSource, String varId, int tIndex,
-            int zIndex, Domain2DMapper pixelMap) throws IOException, DataReadingException;
+    abstract public Array2D<Number> readMapData(GridDataSource dataSource, String varId,
+            int tIndex, int zIndex, Domain2DMapper domainMapper) throws IOException,
+            DataReadingException;
 }
