@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.wms.util;
 
-
 public interface CacheInfo {
     /**
      * @return Whether or not the cache is enabled
@@ -39,4 +38,10 @@ public interface CacheInfo {
      * @return The maximum size of the in-memory cache, in MB
      */
     public int getInMemorySizeMB();
+
+    /**
+     * @return The number of minutes each element will remain in the cache for.
+     *         If this is 0, no limit is set.
+     */
+    public float getElementLifetimeMinutes();
 }
