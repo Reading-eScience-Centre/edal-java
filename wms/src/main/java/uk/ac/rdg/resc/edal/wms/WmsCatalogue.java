@@ -259,10 +259,12 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      */
     public void setCache(CacheInfo cacheConfig) {
         int cacheSizeMB = cacheConfig.getInMemorySizeMB();
+        long lifetimeSeconds = (long) (cacheConfig.getElementLifetimeMinutes() * 60);
         if (featureCache != null
                 && cachingEnabled == cacheConfig.isEnabled()
                 && cacheSizeMB == featureCache.getCacheConfiguration().getMaxBytesLocalHeap()
-                        / (1024 * 1024)) {
+                        / (1024 * 1024)
+                && lifetimeSeconds == featureCache.getCacheConfiguration().getTimeToLiveSeconds()) {
             /*
              * We are not changing anything about the cache.
              */
@@ -283,8 +285,10 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
             /*
              * Configure cache
              */
-            CacheConfiguration config = new CacheConfiguration(CACHE_NAME, 0).eternal(true)
+            CacheConfiguration config = new CacheConfiguration(CACHE_NAME, 0)
+                    .eternal(lifetimeSeconds == 0)
                     .maxBytesLocalHeap(cacheSizeMB, MemoryUnit.MEGABYTES)
+                    .timeToLiveSeconds(lifetimeSeconds)
                     .memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU)
                     .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
                     .transactionalMode(TransactionalMode.OFF);
