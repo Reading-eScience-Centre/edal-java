@@ -40,6 +40,7 @@ import uk.ac.rdg.resc.edal.grid.RectilinearGridImpl;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -80,13 +81,18 @@ public class Domain1DMapperTest {
     private int expectedmaxJ = Integer.MIN_VALUE;
     private Domain1DMapper mapper;
     /*
-     * the container contains entries, each of them maps a (x,y) pair to points
-     * id on the line
+     * the container contains entries, each of them maps a grid coordinates to a
+     * point id on the line.
      */
-    Map<Pair, ArrayList<Integer>> mappings = new TreeMap<>();
+    Map<GridCoordinates2D, ArrayList<Integer>> mappings = new TreeMap<>();
 
+    /**
+     * Initialize the testing environment: a rectilinear grid, points which are
+     * on a line. Then map the grid coordinate of each point to its point id on
+     * the line. Finally a Domain1DMapper object is created.
+     */
     @Before
-    public void setUp(){
+    public void setUp() {
         ReferenceableAxis<Double> longAxis = new RegularAxisImpl("longitude", leftLowXPos
                 + resolution / 2.0, resolution, xSize, true);
         ReferenceableAxis<Double> latAxis = new RegularAxisImpl("latitude", leftLowYPos
@@ -114,14 +120,15 @@ public class Domain1DMapperTest {
 
         // the container contains the target ids
         ArrayList<Integer> targetIndices = new ArrayList<>();
-        Pair p = null;
+        GridCoordinates2D gCoord = null;
         boolean begin = true;
         int iPos = -1;
         int jPos = -1;
 
         /*
-         * find the mapping from i,j pair to target id which starts from 0.
-         * meantime, find minI, maxI, the number of unique (i,j) pair etc.
+         * find the mapping from a grid coordinate, to target id which starts
+         * from 0. meantime, find minI, maxI, the number of unique (i,j) pair
+         * etc.
          */
         for (int i = 0; i < targetPositions.size(); i++) {
             HorizontalPosition hPos = targetPositions.get(i);
@@ -146,22 +153,25 @@ public class Domain1DMapperTest {
                 jPos = jIndex;
                 expectedUniqueIJPair++;
                 if (begin) {
-                    p = new Pair(iIndex, jIndex);
+                    gCoord = new GridCoordinates2D(iIndex, jIndex);
                     targetIndices.add(i);
                     begin = false;
                 } else {
-                    mappings.put(p, targetIndices);
-                    p = new Pair(iIndex, jIndex);
+                    mappings.put(gCoord, targetIndices);
+                    gCoord = new GridCoordinates2D(iIndex, jIndex);
                     targetIndices = new ArrayList<>();
                     targetIndices.add(i);
                 }
             }
         }
         // add the last mapping
-        mappings.put(p, targetIndices);
+        mappings.put(gCoord, targetIndices);
         mapper = Domain1DMapper.forList(hGrid, targetPositions);
     }
 
+    /**
+     * Test get methods in {@link Domain1DMapper}.
+     */
     @Test
     public void testGetXXXmethods() {
         assertEquals(expectedUniqueIJPair, mapper.getNumUniqueIJPairs());
@@ -172,51 +182,30 @@ public class Domain1DMapperTest {
         assertEquals(expectedTartgetPosNumber, mapper.getTargetDomainSize());
     }
 
+    /**
+     * Test {@link Domain1DMapper#iterator} method.
+     */
     @Test
     public void testIterator() {
-        Pair[] keys = mappings.keySet().toArray(new Pair[0]);
+        GridCoordinates2D[] keys = mappings.keySet().toArray(new GridCoordinates2D[0]);
         Iterator<DomainMapperEntry<Integer>> iterator = mapper.iterator();
         int lastKeyPos = keys.length - 1;
         while (iterator.hasNext()) {
             DomainMapperEntry<Integer> entry = iterator.next();
             List<Integer> targets = entry.getTargetIndices();
-            int expectJ = keys[lastKeyPos].j;
-            int expectI = keys[lastKeyPos--].i;
+            int expectJ = keys[lastKeyPos].getY();
+            int expectI = keys[lastKeyPos--].getX();
             assertEquals(expectJ, entry.getSourceGridJIndex());
             assertEquals(expectI, entry.getSourceGridIIndex());
-            assertEquals(mappings.get(new Pair(expectI, expectJ)), targets);
+            assertEquals(mappings.get(new GridCoordinates2D(expectI, expectJ)), targets);
         }
     }
 
+    /**
+     * Test {@link Domain1DMapper#isEmpty} method.
+     */
     @Test
     public void testIsEmpty() {
         assertFalse(mapper.isEmpty());
-    }
-
-    class Pair implements Comparable<Pair> {
-        final int i;
-        final int j;
-
-        Pair(final int i, final int j) {
-            this.i = i;
-            this.j = j;
-        }
-
-        Pair() {
-            i = 0;
-            j = 0;
-        }
-
-        public int compareTo(Pair p) {
-            if (j < p.j) {
-                return 1;
-            } else if (j == p.j && i < p.i) {
-                return 1;
-            } else if (i == p.i && j == p.j) {
-                return 0;
-            } else {
-                return -1;
-            }
-        }
     }
 }
