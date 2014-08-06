@@ -172,7 +172,6 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
             node.addClickHandler(new ClickHandler() {
                 @Override
                 public void onClick(ClickEvent event) {
-                    System.out.println(item.getWmsUrl());
                     selectLayer(id, item.getWmsUrl(), true);
                 }
             });

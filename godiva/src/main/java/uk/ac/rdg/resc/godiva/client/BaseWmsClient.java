@@ -48,6 +48,7 @@ import uk.ac.rdg.resc.godiva.client.requests.LayerRequestCallback;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestCallback;
 import uk.ac.rdg.resc.godiva.client.state.GodivaStateInfo;
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 
@@ -930,6 +931,24 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         dateTimeDetailsLoaded = true;
         nearestTime = null;
         updateMapBase(layerId);
+    }
+
+    /**
+     * Allows the client to use different units to those specified on the server
+     * (e.g. convert celcius to kelvin)
+     * 
+     * @param layerId
+     *            The ID of the layer to convert units for
+     * @param converter
+     *            The {@link UnitConverter} to use for conversion
+     */
+    protected void setUnitConverter(String layerId, UnitConverter converter) {
+        /*
+         * Set the unit converter for all required components (palette selector
+         * for colour scales, and map area for GetFeatureInfo conversion)
+         */
+        getWidgetCollection(layerId).getPaletteSelector().setUnitConverter(converter);
+        mapArea.setUnitConverter(layerId, converter);
     }
 
     /*

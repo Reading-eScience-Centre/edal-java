@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.godiva.client.widgets;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
@@ -65,6 +66,7 @@ import org.gwtopenmaps.openlayers.client.util.JSObject;
 import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
@@ -148,6 +150,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     protected WMSGetFeatureInfo getFeatureInfo;
     protected EditingToolbar editingToolbar;
     protected String proxyUrl;
+    
+    /** Map of unit conversions to be applied to each layer */
+    protected java.util.Map<String, UnitConverter> converters;
 
     public MapArea(int width, int height, final GodivaActionsHandler godivaListener, String proxyUrl) {
         super(width + "px", height + "px", getDefaultMapOptions());
@@ -159,6 +164,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
 
         wmsLayers = new LinkedHashMap<String, WmsDetails>();
+        converters = new HashMap<String, UnitConverter>();
 
         /*
          * Define some listeners to handle layer start/end loading events
@@ -482,7 +488,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 final DialogBox pop = new DialogBoxWithCloseButton(MapArea.this);
                 pop.setPopupPosition(x, y);
                 try {
-                    featureInfo = processFeatureInfo(eventObject.getText());
+                    featureInfo = processFeatureInfo(eventObject.getText(), converters.get(layerId));
                 } catch (Exception e) {
                     e.printStackTrace();
                     /*
@@ -785,6 +791,19 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
     }
 
+    /**
+     * Sets a {@link UnitConverter} for a specified layer. This will allow
+     * GetFeatureInfo requests to display the correct value
+     * 
+     * @param layerId
+     *            The internal layer to apply the conversion to
+     * @param converter
+     *            The {@link UnitConverter} to use
+     */
+    public void setUnitConverter(String layerId, UnitConverter converter) {
+        converters.put(layerId, converter);
+    }
+
     public String getBaseLayerUrl() {
         return baseUrlForExport;
     }
@@ -966,7 +985,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
     }
 
-    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text) {
+    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text, UnitConverter converter) {
         Document featureInfo = XMLParser.parse(text);
         double lon = Double.parseDouble(featureInfo.getElementsByTagName("longitude").item(0)
                 .getChildNodes().item(0).getNodeValue());
@@ -1017,19 +1036,23 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             if (featureInfoNode != null) {
                 String id = null;
                 String time = null;
-                String value = null;
+                String valueStr = null;
                 for (int j = 0; j < featureInfoNode.getLength(); j++) {
                     Node child = featureInfoNode.item(j);
                     if (child.getNodeName().equalsIgnoreCase("time")) {
                         time = child.getFirstChild().getNodeValue();
                     } else if (child.getNodeName().equalsIgnoreCase("value")) {
-                        value = child.getFirstChild().getNodeValue();
+                        valueStr = child.getFirstChild().getNodeValue();
                         /*
                          * This is probably a number. Parse it as if it is, but
                          * ignore any errors
                          */
                         try {
-                            value = FORMATTER.format(Double.parseDouble(value));
+                            float value = Float.parseFloat(valueStr);
+                            if(converter != null) {
+                                value = converter.convertToDisplayUnit(value);
+                            }
+                            valueStr = FORMATTER.format(value);
                         } catch (Exception e) {
                             /*
                              * Ignore, we'll just use the string value as-is.
@@ -1039,15 +1062,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         id = child.getFirstChild().getNodeValue();
                     }
                 }
-                if (value != null) {
+                if (valueStr != null) {
                     if (id != null) {
                         html.append("<tr><td><b>Feature:</b></td><td>" + id);
                     }
                     if (time != null) {
                         html.append("<tr><td><b>Time:</b></td><td>" + time + "</td></tr>");
                     }
-                    value = value.replaceAll(";", "<br/>");
-                    html.append("<tr><td><b>Value:</b></td><td>" + value + "</td></tr>");
+                    valueStr = valueStr.replaceAll(";", "<br/>");
+                    html.append("<tr><td><b>Value:</b></td><td>" + valueStr + "</td></tr>");
                 }
                 /*
                  * Now process any arbitrary properties

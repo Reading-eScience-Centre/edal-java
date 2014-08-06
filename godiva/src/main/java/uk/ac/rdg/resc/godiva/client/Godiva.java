@@ -47,6 +47,7 @@ import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF.OutOfRangeState;
 import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.UnitsInfoIF;
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
@@ -271,9 +272,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * This is where we define the fact that we are working with a single
          * local server
          */
-        String path = Window.Location.getHost()+Window.Location.getPath();
+        String path = Window.Location.getHost() + Window.Location.getPath();
         path = path.substring(0, path.lastIndexOf("/"));
-        final String wmsUrl = "http://"+path+"/wms";
+        final String wmsUrl = "http://" + path + "/wms";
         final RequestBuilder getMenuRequest = new RequestBuilder(RequestBuilder.GET,
                 getUrlFromGetArgs(wmsUrl, "?request=GetMetadata&item=menu"));
         getMenuRequest.setCallback(new RequestCallback() {
@@ -677,6 +678,17 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      */
 
     /**
+     * Overrides the parent method using the single-WMS layer. Subclasses should
+     * use this to set a {@link UnitConverter}
+     * 
+     * @param converter
+     *            The {@link UnitConverter} to use for the WMS layer
+     */
+    protected void setUnitConverter(UnitConverter converter) {
+        super.setUnitConverter(WMS_LAYER_ID, converter);
+    }
+
+    /**
      * Updates the links (KMZ, screenshot, email, permalink...)
      */
     @Override
@@ -825,9 +837,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             if (currentLayer != null) {
                 String datasetUrl = permalinkParamsMap.get("dataset");
                 if (datasetUrl == null || "".equals(datasetUrl)) {
-                    String path = Window.Location.getHost()+Window.Location.getPath();
+                    String path = Window.Location.getHost() + Window.Location.getPath();
                     path = path.substring(0, path.lastIndexOf("/"));
-                    final String wmsUrl = "http://"+path+"/wms";
+                    final String wmsUrl = "http://" + path + "/wms";
                     layerSelector.selectLayer(currentLayer, wmsUrl, false);
                 } else {
                     String currentWms = URL.decode(datasetUrl);
