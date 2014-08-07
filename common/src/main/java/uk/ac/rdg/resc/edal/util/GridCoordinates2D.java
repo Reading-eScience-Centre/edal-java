@@ -34,7 +34,7 @@ package uk.ac.rdg.resc.edal.util;
  * 
  * @author Guy Griffiths
  */
-public final class GridCoordinates2D {
+public final class GridCoordinates2D implements Comparable<GridCoordinates2D>{
     private int x;
     private int y;
 
@@ -87,5 +87,17 @@ public final class GridCoordinates2D {
         if (y != other.y)
             return false;
         return true;
+    }
+    
+    public int compareTo(GridCoordinates2D p) {
+        if (y < p.y) {
+            return 1;
+        } else if (y == p.y && x < p.x) {
+            return 1;
+        } else if (x == p.x && y == p.y) {
+            return 0;
+        } else {
+            return -1;
+        }
     }
 }
