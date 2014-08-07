@@ -649,7 +649,8 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * 
      * @param datasetId
      *            The ID of the dataset
-     * @return The desired dataset
+     * @return The desired dataset, or <code>null</code> if it doesn't exist in
+     *         the catalogue
      */
     public abstract Dataset getDatasetFromId(String datasetId);
 

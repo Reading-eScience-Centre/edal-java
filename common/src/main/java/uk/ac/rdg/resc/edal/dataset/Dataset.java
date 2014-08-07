@@ -52,8 +52,8 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  * Provides access to data and metadata held in underlying storage,
  * {@literal e.g.} on disk, in a database or on a remote server.
  * 
- * @author Guy
- * @author Jon
+ * @author Guy Griffiths
+ * @author Jon Blower
  */
 public interface Dataset {
 

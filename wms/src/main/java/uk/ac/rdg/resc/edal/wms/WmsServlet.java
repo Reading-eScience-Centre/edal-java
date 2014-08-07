@@ -239,7 +239,7 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void dispatchWmsRequest(String request, RequestParams params,
+    protected void dispatchWmsRequest(String request, RequestParams params,
             HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
             throws Exception {
         if (request.equals("GetMap")) {

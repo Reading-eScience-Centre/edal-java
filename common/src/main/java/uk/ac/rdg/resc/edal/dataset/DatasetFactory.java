@@ -74,6 +74,24 @@ public abstract class DatasetFactory {
         DatasetFactory.workingDir = workingDir;
     }
 
+    /**
+     * Gets a {@link DatasetFactory} from the class name
+     * 
+     * @param clazz
+     *            The qualified name of the {@link DatasetFactory} class
+     * @return Either an instance of the requested class, or of the default
+     *         dataset factory class if <code>null</code> or an empty string is
+     *         supplied
+     * 
+     * @throws InstantiationException
+     *             If there is a problem instantiating the class (e.g it is an
+     *             abstract class or an interface)
+     * @throws IllegalAccessException
+     *             If the requested class has no public no-argument constructor
+     * @throws ClassNotFoundException
+     *             If the class is not found on the classpath, or if the default
+     *             has been requested but no default class has been set
+     */
     public synchronized static DatasetFactory forName(String clazz) throws InstantiationException,
             IllegalAccessException, ClassNotFoundException {
         if ((clazz == null || clazz.trim().equals(""))) {
