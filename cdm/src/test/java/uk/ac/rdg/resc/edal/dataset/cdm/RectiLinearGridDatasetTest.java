@@ -118,9 +118,9 @@ public class RectiLinearGridDatasetTest {
 
     /**
      * @throws IOException
-     *             if there is a problem when create the dataset
+     *             if there is a problem when creating the dataset
      * @throws EdalException
-     *             if there is a problem when create the dataset
+     *             if there is a problem when creating the dataset
      * */
     @Before
     public void setUp() throws IOException, EdalException {

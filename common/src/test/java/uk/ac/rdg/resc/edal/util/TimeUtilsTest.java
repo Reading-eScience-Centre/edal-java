@@ -1,3 +1,31 @@
+/*******************************************************************************
+ * Copyright (c) 2014 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
+
 package uk.ac.rdg.resc.edal.util;
 
 import static org.junit.Assert.assertEquals;
@@ -17,6 +45,12 @@ import org.junit.Test;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 
+/**
+ * Test class for {@link TimeUtils}.
+ * 
+ * @author Nan
+ * 
+ */
 public class TimeUtilsTest {
     private DateTime start = new DateTime(2000, 1, 1, 0, 0, DateTimeZone.UTC);
     private List<DateTime> datetimes = new ArrayList<DateTime>();
@@ -25,12 +59,18 @@ public class TimeUtilsTest {
     private final static long MILLIS_PER_HOUR = 60L * MILLIS_PER_MINUTE;
     private final static long MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR;
 
+    /**
+     * Initialising.
+     */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         for (int i = 0; i < 10; i++)
             datetimes.add(start.plusDays(i));
     }
 
+    /**
+     * Test the method of {@link TimeUtils#getPeriodString}.
+     */
     @Test
     public void testGetPeriodString() {
         long secondPeriod = 44 * MILLIS_PER_SECOND;
@@ -43,6 +83,9 @@ public class TimeUtilsTest {
         assertEquals("P3DT20H15M44S", TimeUtils.getPeriodString(dayPeriod));
     }
 
+    /**
+     * Test the method of {@link TimeUtils#getTimeStringForCapabilities}.
+     */
     @Test
     public void testGetTimeStringForCapabilities() {
         long period = 1L * MILLIS_PER_DAY;
@@ -80,6 +123,9 @@ public class TimeUtilsTest {
         assertEquals("", TimeUtils.getTimeStringForCapabilities(emptyList));
     }
 
+    /**
+     * Test the method of {@link TimeUtils#onSameDay}.
+     */
     @Test
     public void testOnSameDay() {
         DateTime dt1;
@@ -103,6 +149,9 @@ public class TimeUtilsTest {
         assertFalse(TimeUtils.onSameDay(dt1, dt2));
     }
 
+    /**
+     * Test the method of {@link TimeUtils#findTimeIndex}.
+     */
     @Test
     public void testFindTimeIndex() {
         DateTime dt = new DateTime(1999, 12, 1, 0, 0, DateTimeZone.UTC);
@@ -122,6 +171,9 @@ public class TimeUtilsTest {
         assertEquals(index, 3);
     }
 
+    /**
+     * Test the method of {@link TimeUtils#getTimeRangeForString}.
+     */
     @Test
     public void testGetTimeRangeForString() throws BadTimeFormatException {
         String timeString = "1990-12-30T12:00:00.000Z,1993-02-15T12:00:00.000Z,"
@@ -129,10 +181,12 @@ public class TimeUtilsTest {
         Chronology isoChronology = ISOChronology.getInstanceUTC();
         DateTime start = TimeUtils.iso8601ToDateTime("1990-12-30T12:00:00.000Z", isoChronology);
         DateTime end = TimeUtils.iso8601ToDateTime("2000-01-01T13:00:00.000Z", isoChronology);
-        assertEquals(TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()), Extents.newExtent(start, end));
-        
-        Extent<DateTime> tExent =Extents.newExtent((new DateTime(1990, 12, 30, 12, 0, isoChronology)), new DateTime(2000, 01, 01, 13,0, isoChronology));
-        assertEquals(TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()), tExent);
-    }
+        assertEquals(TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()),
+                Extents.newExtent(start, end));
 
+        Extent<DateTime> tExent = Extents.newExtent((new DateTime(1990, 12, 30, 12, 0,
+                isoChronology)), new DateTime(2000, 01, 01, 13, 0, isoChronology));
+        assertEquals(TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()),
+                tExent);
+    }
 }
