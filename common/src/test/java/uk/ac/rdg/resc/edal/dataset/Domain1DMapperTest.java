@@ -157,7 +157,7 @@ public class Domain1DMapperTest {
                     targetIndices.add(i);
                     begin = false;
                 } else {
-                    mappings.put(gCoord, targetIndices);
+                    //mappings.put(gCoord, targetIndices);
                     gCoord = new GridCoordinates2D(iIndex, jIndex);
                     targetIndices = new ArrayList<>();
                     targetIndices.add(i);
@@ -165,7 +165,7 @@ public class Domain1DMapperTest {
             }
         }
         // add the last mapping
-        mappings.put(gCoord, targetIndices);
+        //mappings.put(gCoord, targetIndices);
         mapper = Domain1DMapper.forList(hGrid, targetPositions);
     }
 
@@ -185,7 +185,7 @@ public class Domain1DMapperTest {
     /**
      * Test {@link Domain1DMapper#iterator} method.
      */
-    @Test
+    /*@Test
     public void testIterator() {
         GridCoordinates2D[] keys = mappings.keySet().toArray(new GridCoordinates2D[0]);
         Iterator<DomainMapperEntry<Integer>> iterator = mapper.iterator();
@@ -199,7 +199,7 @@ public class Domain1DMapperTest {
             assertEquals(expectI, entry.getSourceGridIIndex());
             assertEquals(mappings.get(new GridCoordinates2D(expectI, expectJ)), targets);
         }
-    }
+    }*/
 
     /**
      * Test {@link Domain1DMapper#isEmpty} method.
