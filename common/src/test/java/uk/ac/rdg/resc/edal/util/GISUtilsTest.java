@@ -48,8 +48,17 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 
+/**
+ * Test class for {@link GISUtils}.
+ * 
+ * @author Guy
+ * 
+ */
 public class GISUtilsTest {
 
+    /**
+     * Test the method of {@link GISUtils#getNextEquivalentLongitude}.
+     */
     @Test
     public void testGetNextEquivalentLongitude() {
         assertEquals(0, GISUtils.getNextEquivalentLongitude(0, 0), 1e-8);
@@ -62,6 +71,9 @@ public class GISUtilsTest {
         assertEquals(719, GISUtils.getNextEquivalentLongitude(360, 359), 1e-8);
     }
 
+    /**
+     * Test the method of {@link GISUtils#constrainLongitude180}.
+     */
     @Test
     public void testConstrainLongitude180() {
         assertEquals(0, GISUtils.constrainLongitude180(-360), 1e-8);
@@ -80,6 +92,9 @@ public class GISUtilsTest {
         assertEquals(0, GISUtils.constrainLongitude180(720), 1e-8);
     }
 
+    /**
+     * Test the method of {@link GISUtils#constrainLongitude360}.
+     */
     @Test
     public void constrainLongitude360() {
         assertEquals(0, GISUtils.constrainLongitude360(-360), 1e-8);
@@ -98,6 +113,9 @@ public class GISUtilsTest {
         assertEquals(0, GISUtils.constrainLongitude360(720), 1e-8);
     }
 
+    /**
+     * Test the method of {@link GISUtils#getNearestEquivalentLongitude}.
+     */
     @Test
     public void testGetNearestEquivalentLongitude() {
         assertEquals(0, GISUtils.getNearestEquivalentLongitude(0, 0), 1e-8);
@@ -114,6 +132,9 @@ public class GISUtilsTest {
         assertEquals(0, GISUtils.getNearestEquivalentLongitude(90, 360), 1e-8);
     }
 
+    /**
+     * Test the method of {@link GISUtils#constrainBoundingBox}.
+     */
     @Test
     public void testConstrainBoundingBox() {
         BoundingBox bbox = new BoundingBoxImpl(10, -80, 20, 79, DefaultGeographicCRS.WGS84);
@@ -138,6 +159,9 @@ public class GISUtilsTest {
         assertEquals(79, constrainedBbox.getMaxY(), 1e-8);
     }
 
+    /**
+     * Test the method of {@link GISUtils#parseBbox}.
+     */
     @Test
     public void testParseBbox() throws EdalException {
         BoundingBox bbox;
@@ -161,6 +185,9 @@ public class GISUtilsTest {
         assertEquals(4, bbox.getMaxX(), 1e-8);
     }
 
+    /**
+     * Test the method of {@link GISUtils#getClosestTimeTo}.
+     */
     @Test
     public void testGetClosestTimeTo() {
         List<DateTime> tValues = new ArrayList<DateTime>();
@@ -182,6 +209,9 @@ public class GISUtilsTest {
         assertEquals(new DateTime(100L), GISUtils.getClosestTimeTo(new DateTime(1000L), tAxis));
     }
 
+    /**
+     * Test the method of {@link GISUtils#getClosestElevationToSurface}.
+     */
     @Test
     public void testGetClosestElevationToSurface() {
         List<Double> values;

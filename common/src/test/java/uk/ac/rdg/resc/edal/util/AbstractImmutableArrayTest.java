@@ -37,6 +37,12 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Test class for {@link AbstractImmutableArray}.
+ * 
+ * @author Guy
+ * 
+ */
 public class AbstractImmutableArrayTest {
 
     private Array<Float> array;
@@ -44,8 +50,11 @@ public class AbstractImmutableArrayTest {
     private static final int XSIZE = 5;
     private static final int YSIZE = 7;
 
+    /**
+     * Initialising.
+     */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         array = new AbstractImmutableArray<Float>(YSIZE, XSIZE) {
             @Override
             public Float get(int... coords) {
@@ -57,6 +66,9 @@ public class AbstractImmutableArrayTest {
 
     }
 
+    /**
+     * Test the method of {@link AbstractImutableArray#Iterator}.
+     */
     @Test
     public void testIterator() {
         /*
@@ -77,7 +89,10 @@ public class AbstractImmutableArrayTest {
             index++;
         }
     }
-    
+
+    /**
+     * Test the method of {@link AbstractImutableArray#get}.
+     */
     @Test
     public void testGet() {
         /*

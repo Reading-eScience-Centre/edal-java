@@ -95,7 +95,7 @@ public class TimeAxisImplTest {
     }
 
     /**
-     * Test the get methods in {@link TimeAxisImpl#contains}.
+     * Test the get methods in {@link TimeAxisImpl}.
      */
     @Test
     public void testGetMethods() {
