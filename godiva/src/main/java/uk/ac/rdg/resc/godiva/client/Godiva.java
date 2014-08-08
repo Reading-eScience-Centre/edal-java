@@ -846,7 +846,17 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                     layerSelector.selectLayer(currentLayer, currentWms, false);
                 }
             }
-            mapArea.setBackgroundMap(permalinkParamsMap.get("bgmap"));
+            String bgMap = permalinkParamsMap.get("bgmap");
+            if (bgMap != null && !"".equals(bgMap)) {
+                try {
+                    mapArea.setBackgroundMap(permalinkParamsMap.get("bgmap"));
+                } catch (Exception e) {
+                    /*
+                     * It doesn't matter if we can't set the background map, so
+                     * ignore any exceptions
+                     */
+                }
+            }
         }
     }
 
