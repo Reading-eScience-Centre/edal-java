@@ -221,10 +221,10 @@ final public class Charting {
          */
         final String zAxisLabel;
         final boolean invertYAxis;
-        if (vCrs.isPositiveUpwards()) {
+        if (vCrs != null && vCrs.isPositiveUpwards()) {
             zAxisLabel = "Height";
             invertYAxis = false;
-        } else if (vCrs.isPressure()) {
+        } else if (vCrs != null && vCrs.isPressure()) {
             zAxisLabel = "Pressure";
             invertYAxis = true;
         } else {
@@ -232,7 +232,11 @@ final public class Charting {
             invertYAxis = true;
         }
 
-        NumberAxis zAxis = new NumberAxis(zAxisLabel + " (" + vCrs.getUnits() + ")");
+        String units = "";
+        if(vCrs != null) {
+            units = " ("+vCrs.getUnits()+")";
+        }
+        NumberAxis zAxis = new NumberAxis(zAxisLabel + units);
         zAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         zAxis.setInverted(invertYAxis);
 

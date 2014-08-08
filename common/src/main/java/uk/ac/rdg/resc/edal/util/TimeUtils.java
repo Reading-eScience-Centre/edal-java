@@ -55,20 +55,16 @@ import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
  * @author Jon Blower
  */
 public class TimeUtils {
-    private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime()
-            .withZone(DateTimeZone.UTC);
-    private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date().withZone(
-            DateTimeZone.UTC);
-    private static final DateTimeFormatter ISO_TIME_FORMATTER = ISODateTimeFormat.time().withZone(
-            DateTimeZone.UTC);
+    private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
+    private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date();
+    private static final DateTimeFormatter ISO_TIME_FORMATTER = ISODateTimeFormat.time();
     private static final DateTimeFormatter NICE_DATE_TIME_FORMATTER = (new DateTimeFormatterBuilder())
             .appendHourOfDay(2).appendLiteral(":").appendMinuteOfHour(2).appendLiteral(":")
             .appendSecondOfMinute(2).appendLiteral(" ").appendDayOfMonth(1).appendLiteral("-")
-            .appendMonthOfYearShortText().appendLiteral("-").appendYear(4, 4).toFormatter()
-            .withZone(DateTimeZone.UTC);
+            .appendMonthOfYearShortText().appendLiteral("-").appendYear(4, 4).toFormatter();
     private static final DateTimeFormatter UTC_TIME_FORMATTER = (new DateTimeFormatterBuilder())
             .appendHourOfDay(2).appendLiteral(":").appendMinuteOfHour(2).appendLiteral(":")
-            .appendSecondOfMinute(2).toFormatter().withZone(DateTimeZone.UTC);
+            .appendSecondOfMinute(2).toFormatter();
 
     /**
      * <p>
