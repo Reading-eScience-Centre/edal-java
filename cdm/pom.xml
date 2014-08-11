@@ -33,7 +33,7 @@
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>grib</artifactId>
-            <version>8.0.29</version>
+            <version>4.3.22</version>
             <optional>false</optional>
             <exclusions>
                 <exclusion>

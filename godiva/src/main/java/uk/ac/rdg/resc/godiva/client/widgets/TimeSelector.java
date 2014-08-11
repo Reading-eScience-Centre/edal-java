@@ -40,6 +40,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.ui.Label;
@@ -259,7 +260,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 	        } else {
     		    Collections.sort(availableDatetimes);
     			for(String item : availableDatetimes){
-    				dates.addItem(item);
+    				dates.addItem(item, URL.encodePathSegment(item));
     			}
     			dates.setEnabled(true);
     			label.removeStyleDependentName("inactive");
@@ -276,7 +277,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 	    } else {
 	        Collections.sort(availableTimes);
 	        for(String item : availableTimes){
-	            times.addItem(item);
+	            times.addItem(item, URL.encodePathSegment(item));
 	        }
 	        if(availableTimes.size() > 1){
 	            times.setEnabled(true);
