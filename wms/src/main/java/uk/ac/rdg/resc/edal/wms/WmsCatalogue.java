@@ -115,7 +115,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     protected static final String CACHE_NAME = "featureCache";
 
     private boolean cachingEnabled = false;
-    private final CacheManager cacheManager;
+    protected final CacheManager cacheManager;
     private Cache featureCache = null;
 
     private SortedMap<String, StyleDef> styleDefs = new TreeMap<String, StyleDef>(
