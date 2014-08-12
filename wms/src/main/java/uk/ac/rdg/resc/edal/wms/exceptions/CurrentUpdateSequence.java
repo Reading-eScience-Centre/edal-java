@@ -37,8 +37,8 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
  * @author Jon Blower
  */
 public class CurrentUpdateSequence extends EdalException {
-
     private static final long serialVersionUID = 1L;
+    private static final String CURRENT_UPDATE_SEQUENCE = "CurrentUpdateSequence";
 
     /**
      * Creates a new instance of CurrentUpdateSequence
@@ -48,7 +48,10 @@ public class CurrentUpdateSequence extends EdalException {
      */
     public CurrentUpdateSequence(String updateSequence) {
         super("The updatesequence value " + updateSequence + " is equal to the current value",
-                "CurrentUpdateSequence");
+                CURRENT_UPDATE_SEQUENCE);
     }
 
+    public CurrentUpdateSequence(String message, Throwable cause) {
+        super(message, CURRENT_UPDATE_SEQUENCE, cause);
+    }
 }

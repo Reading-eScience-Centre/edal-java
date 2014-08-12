@@ -91,7 +91,7 @@ public abstract class ImageFormat {
         ImageFormat format = formats.get(mimeType);
         if (format == null) {
             throw new InvalidFormatException("The image format " + mimeType
-                    + " is not supported by this server");
+                    + " is not supported");
         }
         return format;
     }

@@ -115,7 +115,9 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
+import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
+import uk.ac.rdg.resc.edal.wms.exceptions.LayerNotQueryableException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
@@ -343,7 +345,7 @@ public class WmsServlet extends HttpServlet {
         if (!getMapParams.isAnimation()) {
             frames = Arrays.asList(imageGenerator.drawImage(plottingParameters, catalogue));
         } else {
-            throw new UnsupportedOperationException("Animations are not yet supported");
+            throw new EdalUnsupportedOperationException("Animations are not yet supported");
         }
 
         ImageFormat imageFormat = getMapParams.getImageFormat();
@@ -518,6 +520,14 @@ public class WmsServlet extends HttpServlet {
          * Loop over all requested layers
          */
         for (String layerName : layerNames) {
+            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            if (layerMetadata.isDisabled()) {
+                throw new EdalLayerNotFoundException("The layer " + layerName
+                        + " is not enabled on this server");
+            }
+            if (!layerMetadata.isQueryable()) {
+                throw new LayerNotQueryableException("The layer " + layerName + " is not queryable");
+            }
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
             VariableMetadata metadata = catalogue.getVariableMetadataFromId(layerName);
@@ -800,6 +810,10 @@ public class WmsServlet extends HttpServlet {
         WmsLayerMetadata layerMetadata;
         try {
             layerMetadata = catalogue.getLayerMetadata(layerName);
+            if (layerMetadata.isDisabled()) {
+                throw new EdalLayerNotFoundException("The layer " + layerName
+                        + " is not enabled on this server");
+            }
         } catch (EdalLayerNotFoundException e1) {
             throw new MetadataException("Layer not found", e1);
         }
@@ -874,7 +888,7 @@ public class WmsServlet extends HttpServlet {
         String aboveMaxColour = GraphicsUtils.colourToString(layerMetadata.getAboveMaxColour());
         String belowMinColour = GraphicsUtils.colourToString(layerMetadata.getBelowMinColour());
         String noDataColour = GraphicsUtils.colourToString(layerMetadata.getNoDataColour());
-                
+
         Boolean logScaling = layerMetadata.isLogScaling();
 
         /*
@@ -1219,6 +1233,10 @@ public class WmsServlet extends HttpServlet {
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
             variableId = catalogue.getVariableFromId(layerName);
+            if (catalogue.getLayerMetadata(layerName).isDisabled()) {
+                throw new EdalLayerNotFoundException("The layer " + layerName
+                        + " is not enabled on this server");
+            }
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
         }
@@ -1280,6 +1298,10 @@ public class WmsServlet extends HttpServlet {
         try {
             variableMetadata = catalogue.getVariableMetadataFromId(layerNames[0]);
             datasetId = catalogue.getDatasetFromLayerName(layerNames[0]).getId();
+            if (catalogue.getLayerMetadata(layerNames[0]).isDisabled()) {
+                throw new EdalLayerNotFoundException("The layer " + layerNames[0]
+                        + " is not enabled on this server");
+            }
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("Layer " + layerNames[0] + " not found on this server", e);
         }
@@ -1424,7 +1446,8 @@ public class WmsServlet extends HttpServlet {
     private String showAnimationTimesteps(RequestParams params) throws MetadataException {
         String layerName = params.getString("layerName");
         if (layerName == null) {
-            throw new MetadataException("Must supply a LAYERNAME parameter to get animation timesteps");
+            throw new MetadataException(
+                    "Must supply a LAYERNAME parameter to get animation timesteps");
         }
 
         Dataset dataset;
@@ -1432,6 +1455,10 @@ public class WmsServlet extends HttpServlet {
         try {
             dataset = catalogue.getDatasetFromLayerName(layerName);
             variableId = catalogue.getVariableFromId(layerName);
+            if (catalogue.getLayerMetadata(layerName).isDisabled()) {
+                throw new EdalLayerNotFoundException("The layer " + layerName
+                        + " is not enabled on this server");
+            }
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
         }
@@ -1899,7 +1926,7 @@ public class WmsServlet extends HttpServlet {
      */
     void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
-        log.error("Wms Exception caught", exception);
+        log.warn("Wms Exception caught: " + exception.getMessage());
 
         VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();

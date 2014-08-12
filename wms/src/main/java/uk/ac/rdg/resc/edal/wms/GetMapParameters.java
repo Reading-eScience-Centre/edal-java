@@ -40,7 +40,6 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
-import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
@@ -134,11 +133,7 @@ public class GetMapParameters {
         if (imageFormatString == null) {
             throw new EdalException("Parameter FORMAT was not supplied");
         } else {
-            try {
-                return ImageFormat.get(imageFormatString);
-            } catch (InvalidFormatException e) {
-                throw new EdalException("Unsupported image format: " + imageFormatString);
-            }
+            return ImageFormat.get(imageFormatString);
         }
     }
 
@@ -160,15 +155,15 @@ public class GetMapParameters {
             }
         }
         DateTime startTime = null;
-        if(startTimeStr != null) {
+        if (startTimeStr != null) {
             startTime = TimeUtils.iso8601ToDateTime(startTimeStr, chronology);
         }
         DateTime endTime = null;
-        if(endTimeStr != null) {
+        if (endTimeStr != null) {
             endTime = TimeUtils.iso8601ToDateTime(endTimeStr, chronology);
         }
         Extent<DateTime> tExtent = null;
-        if(startTime != null && endTime != null) {
+        if (startTime != null && endTime != null) {
             tExtent = Extents.newExtent(startTime, endTime);
         }
 
@@ -177,7 +172,7 @@ public class GetMapParameters {
             targetTimeStr = endTimeStr;
         }
         DateTime targetTime = null;
-        if(targetTimeStr != null) {
+        if (targetTimeStr != null) {
             targetTime = TimeUtils.iso8601ToDateTime(targetTimeStr, chronology);
         }
 
