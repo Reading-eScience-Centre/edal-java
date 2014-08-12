@@ -496,8 +496,11 @@ public class TimeUtils {
     }
 
     /**
-     * Gets the length of the given unit in milliseconds. This accepts seconds,
-     * minutes, hours and days, and should be constant across calendar systems.
+     * @param unit
+     *            A string representing the unit. This accepts seconds, minutes,
+     *            hours and days, and should be constant across calendar
+     *            systems.
+     * @return The length of the given unit in seconds.
      */
     public static int getUnitLengthSeconds(String unit) {
         unit = unit.trim();
@@ -513,7 +516,7 @@ public class TimeUtils {
         } else if (unit.equals("days") || unit.equals("day") || unit.equals("d")) {
             return 60 * 60 * 24;
         } else {
-            throw new IllegalArgumentException("Unrecognized unit for time axis: " + unit);
+            throw new IllegalArgumentException("Unrecognized unit: " + unit);
         }
     }
 }
