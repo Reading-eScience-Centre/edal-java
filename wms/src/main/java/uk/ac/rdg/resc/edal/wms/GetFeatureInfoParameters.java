@@ -34,6 +34,7 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.wms.exceptions.InvalidPointException;
 
 public class GetFeatureInfoParameters extends GetMapParameters {
 
@@ -62,6 +63,13 @@ public class GetFeatureInfoParameters extends GetMapParameters {
 
         int i = params.getMandatoryPositiveInt("i");
         int j = getPlottingDomainParameters().getHeight() - 1 - params.getMandatoryPositiveInt("j");
+
+        if (i < 0 || i >= getPlottingDomainParameters().getWidth() || j < 0
+                || j >= getPlottingDomainParameters().getHeight()) {
+            throw new InvalidPointException("Point " + i + ", " + j + " is outside of image (size "
+                    + getPlottingDomainParameters().getWidth() + "x"
+                    + getPlottingDomainParameters().getHeight() + ")");
+        }
 
         featureCount = params.getPositiveInt("feature_count", 1);
         exceptionType = params.getString("exceptions", "XML");
@@ -101,8 +109,8 @@ public class GetFeatureInfoParameters extends GetMapParameters {
          * around the clicked point
          */
         plottingDomainParams = new PlottingDomainParams(9, 9, newBbox,
-                plottingDomainParams.getZExtent(), plottingDomainParams.getTExtent(),
-                clickedPos, plottingDomainParams.getTargetZ(), plottingDomainParams.getTargetT());
+                plottingDomainParams.getZExtent(), plottingDomainParams.getTExtent(), clickedPos,
+                plottingDomainParams.getTargetZ(), plottingDomainParams.getTargetT());
     }
 
     public String[] getLayerNames() {

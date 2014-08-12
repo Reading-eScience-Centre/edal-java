@@ -30,18 +30,21 @@ package uk.ac.rdg.resc.edal.wms.exceptions;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
+/**
+ * {@link EdalException} thrown when a WMS request is made for a layer which
+ * does not exist or is disabled.
+ *
+ * @author Guy Griffiths
+ */
 public class EdalLayerNotFoundException extends EdalException {
     private static final long serialVersionUID = 1L;
+    private static final String LAYER_NOT_DEFINED_CODE = "LayerNotDefined";
 
     public EdalLayerNotFoundException(String message) {
-        super(message);
-    }
-
-    public EdalLayerNotFoundException(String message, String code) {
-        super(message, code);
+        super(message, LAYER_NOT_DEFINED_CODE);
     }
 
     public EdalLayerNotFoundException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, LAYER_NOT_DEFINED_CODE, cause);
     }
 }

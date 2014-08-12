@@ -30,18 +30,21 @@ package uk.ac.rdg.resc.edal.wms.exceptions;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
+/**
+ * {@link EdalException} thrown when a user submits a WMS request with a style
+ * which is not supported by one of the requested layers
+ *
+ * @author Guy Griffiths
+ */
 public class StyleNotSupportedException extends EdalException {
     private static final long serialVersionUID = 1L;
+    private static final String STYLE_NOT_DEFINED = "StyleNotDefined";
 
     public StyleNotSupportedException(String message) {
-        super(message);
-    }
-
-    public StyleNotSupportedException(String message, String code) {
-        super(message, code);
+        super(message, STYLE_NOT_DEFINED);
     }
 
     public StyleNotSupportedException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, STYLE_NOT_DEFINED, cause);
     }
 }

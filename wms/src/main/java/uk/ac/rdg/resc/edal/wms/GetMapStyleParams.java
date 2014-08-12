@@ -47,6 +47,7 @@ import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 
@@ -70,7 +71,7 @@ public class GetMapStyleParams {
 
     private Extent<Float> colourScaleRange = null;
     /*
-     * true if we want to auto-scale the data 
+     * true if we want to auto-scale the data
      * 
      * TODO Not currently used
      */
@@ -236,6 +237,10 @@ public class GetMapStyleParams {
 
         String layerName = layers[0];
         WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+        if (layerMetadata.isDisabled()) {
+            throw new EdalLayerNotFoundException("The layer " + layerName
+                    + " is not enabled on this server");
+        }
 
         String style = "default/default";
 

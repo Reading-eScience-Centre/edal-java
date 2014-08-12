@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 The University of Reading
+ * Copyright (c) 2014 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -26,36 +26,25 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.exceptions;
+package uk.ac.rdg.resc.edal.wms.exceptions;
+
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
 /**
- * Exception specific to EDAL
- * 
- * @author Jon Blower
+ * {@link EdalException} thrown when a user calls GetFeatureInfo on a layer
+ * marked as non-queryable.
+ *
+ * @author Guy Griffiths
  */
-public class EdalException extends Exception {
+public class LayerNotQueryableException extends EdalException {
+    private static final String LAYER_NOT_QUERYABLE = "LayerNotQueryable";
     private static final long serialVersionUID = 1L;
-    private String code = null;
 
-    public EdalException(String message) {
-        super(message);
+    public LayerNotQueryableException(String message) {
+        super(message, LAYER_NOT_QUERYABLE);
     }
 
-    public EdalException(String message, String code) {
-        super(message);
-        this.code = code;
-    }
-
-    public EdalException(String message, String code, Throwable cause) {
-        super(message, cause);
-        this.code = code;
-    }
-    
-    public EdalException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public String getCode() {
-        return code;
+    public LayerNotQueryableException(String message, Throwable cause) {
+        super(message, LAYER_NOT_QUERYABLE, cause);
     }
 }
