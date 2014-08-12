@@ -40,7 +40,6 @@ public interface FeatureCatalogue {
         private Collection<? extends DiscreteFeature<?, ?>> features;
         private String member;
 
-        @SuppressWarnings("unchecked")
         public FeaturesAndMemberName(DiscreteFeature<?, ?> feature, String member) {
             super();
             this.features = CollectionUtils.setOf(feature);

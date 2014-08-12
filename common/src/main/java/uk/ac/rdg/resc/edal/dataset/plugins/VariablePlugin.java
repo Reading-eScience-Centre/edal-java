@@ -110,6 +110,14 @@ public abstract class VariablePlugin {
 
     /**
      * Convenience method for generating an {@link Array1D} from source
+     * 
+     * @param varId
+     *            The ID of the variable to generate
+     * @param positions
+     *            An {@link Array1D} of the positions of each value
+     * @param sourceArrays
+     *            An {@link Array1D} containing the source values
+     * @return An {@link Array1D} containing the generated values
      */
     public Array1D<Number> generateArray1D(final String varId,
             final Array1D<HorizontalPosition> positions, final Array1D<Number>... sourceArrays) {
@@ -140,6 +148,14 @@ public abstract class VariablePlugin {
 
     /**
      * Convenience method for generating an {@link Array2D} from source
+     * 
+     * @param varId
+     *            The ID of the variable to generate
+     * @param positions
+     *            An {@link Array2D} of the positions of each value
+     * @param sourceArrays
+     *            An {@link Array2D} containing the source values
+     * @return An {@link Array2D} containing the generated values
      */
     public Array2D<Number> generateArray2D(final String varId,
             final Array2D<HorizontalPosition> positions, final Array2D<Number>... sourceArrays) {
