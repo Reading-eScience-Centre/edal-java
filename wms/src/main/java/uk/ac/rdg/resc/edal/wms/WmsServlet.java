@@ -115,7 +115,6 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
-import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.LayerNotQueryableException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
@@ -345,7 +344,15 @@ public class WmsServlet extends HttpServlet {
         if (!getMapParams.isAnimation()) {
             frames = Arrays.asList(imageGenerator.drawImage(plottingParameters, catalogue));
         } else {
-            throw new EdalUnsupportedOperationException("Animations are not yet supported");
+            frames = new ArrayList<>();
+            for (DateTime timeStep : getMapParams.getAnimationTimesteps()) {
+                PlottingDomainParams timestepParameters = new PlottingDomainParams(
+                        plottingParameters.getWidth(), plottingParameters.getHeight(),
+                        plottingParameters.getBbox(), plottingParameters.getZExtent(), null,
+                        plottingParameters.getTargetHorizontalPosition(),
+                        plottingParameters.getTargetZ(), timeStep);
+                frames.add(imageGenerator.drawImage(timestepParameters, catalogue));
+            }
         }
 
         ImageFormat imageFormat = getMapParams.getImageFormat();
