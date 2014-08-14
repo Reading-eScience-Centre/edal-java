@@ -211,6 +211,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 unitsInfo, copyrightInfo, moreInfo, layerSelector);
 
         anim = new AnimationButton(mapArea, proxyUrl, layerSelector, timeSelector, this);
+        /* Start this disabled.  It gets enabled when layer details are loaded (if appropriate) */
+        anim.setEnabled(false);
 
         logo = getLogo();
 
@@ -538,6 +540,12 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     protected void layerDetailsLoaded(LayerDetails layerDetails, boolean autoUpdate) {
         super.layerDetailsLoaded(layerDetails, autoUpdate);
 
+        if(layerDetails.isContinuousT()) {
+            anim.setEnabled(false);
+        } else {
+            anim.setEnabled(true);
+        }
+        
         timeseriesSupported = layerDetails.supportsTimeseries();
         profilesSupported = layerDetails.supportsProfiles();
 

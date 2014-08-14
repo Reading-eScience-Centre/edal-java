@@ -178,10 +178,6 @@ public class AnimationButton extends ToggleButton {
     public void updateDetails(String layer, String currentElevation, String palette, String style,
             String scaleRange, String aboveMax, String belowMin, String noData, int nColorBands,
             boolean logScale) {
-        if (layer == null)
-            this.setEnabled(false);
-        else
-            this.setEnabled(true);
         this.animLayer = layer;
         this.currentElevation = currentElevation;
         this.palette = palette;
