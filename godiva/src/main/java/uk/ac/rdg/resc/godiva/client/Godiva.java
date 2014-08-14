@@ -699,12 +699,14 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
+        String aboveMax = URL.encodePathSegment(paletteSelector.getAboveMaxString());
+        String belowMin = URL.encodePathSegment(paletteSelector.getBelowMinString());
+        String noData = URL.encodePathSegment(paletteSelector.getNoDataColour());
         String urlParams = "dataset=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
                 + "&numColorBands=" + paletteSelector.getNumColorBands() + "&logScale="
                 + paletteSelector.isLogScale() + "&bbox=" + mapArea.getMap().getExtent()
-                + "&abovemaxcolor=" + URL.encodePathSegment(paletteSelector.getAboveMaxString())
-                + "&belowmincolor=" + URL.encodePathSegment(paletteSelector.getBelowMinString())
-                + "&nodatacolor=" + URL.encodePathSegment(paletteSelector.getNoDataColour());
+                + "&abovemaxcolor=" + aboveMax + "&belowmincolor=" + belowMin + "&nodatacolor="
+                + noData;
 
         TimeSelectorIF timeSelector = widgetCollection.getTimeSelector();
         ElevationSelectorIF elevationSelector = widgetCollection.getElevationSelector();
@@ -770,7 +772,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         urlParams += "&opacity=" + paletteSelector.getOpacity();
 
         anim.updateDetails(currentLayer, currentElevation, currentPalette, currentStyle,
-                scaleRange, nColorBands, logScale);
+                scaleRange, aboveMax, belowMin, noData, nColorBands, logScale);
 
         permalink.setHref(URL.encode(baseurl + urlParams));
         email.setHref("mailto:?subject=MyOcean Data Link&body="
