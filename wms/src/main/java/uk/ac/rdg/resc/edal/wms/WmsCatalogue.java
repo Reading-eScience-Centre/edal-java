@@ -246,7 +246,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
          * depth to 1,000,000 seems to suppress the vast majority of warnings,
          * and doesn't impact performance noticeably.
          */
-        cacheManager = CacheManager.create(new Configuration()
+        cacheManager = CacheManager.create(new Configuration().name("EDAL-WMS-CacheManager")
                 .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(1_000_000)));
     }
 
