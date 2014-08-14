@@ -43,10 +43,12 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Test class for {@link Domain1DMapper} with its ancestor {@link DomainMapper}.
@@ -65,7 +67,7 @@ public class Domain1DMapperTest {
     private double leftLowYPos = 0.0;
 
     /*
-     * chose points in the grid. these points (x,y) are on the line, that is
+     * Chose points in the grid. these points (x,y) are on the line, that is
      * defined as y=a*x+b.
      */
     private double a = -0.25;
@@ -81,10 +83,11 @@ public class Domain1DMapperTest {
     private int expectedmaxJ = Integer.MIN_VALUE;
     private Domain1DMapper mapper;
     /*
-     * the container contains entries, each of them maps a grid coordinates to a
-     * point id on the line.
+     * The container contains entries, each of them maps a grid coordinates to a
+     * point id on the line. Have to use HashMap as GridCoordinates2D not
+     * implement Comparable interface
      */
-    Map<GridCoordinates2D, ArrayList<Integer>> mappings = new TreeMap<>();
+    Map<GridCoordinates2D, ArrayList<Integer>> mappings = new HashMap<>();
 
     /**
      * Initialize the testing environment: a rectilinear grid, points which are
@@ -157,15 +160,15 @@ public class Domain1DMapperTest {
                     targetIndices.add(i);
                     begin = false;
                 } else {
-                    //mappings.put(gCoord, targetIndices);
+                    mappings.put(gCoord, targetIndices);
                     gCoord = new GridCoordinates2D(iIndex, jIndex);
                     targetIndices = new ArrayList<>();
                     targetIndices.add(i);
                 }
             }
         }
-        // add the last mapping
-        //mappings.put(gCoord, targetIndices);
+        // add the last mapping since the loop above doesn't do
+        mappings.put(gCoord, targetIndices);
         mapper = Domain1DMapper.forList(hGrid, targetPositions);
     }
 
@@ -185,21 +188,42 @@ public class Domain1DMapperTest {
     /**
      * Test {@link Domain1DMapper#iterator} method.
      */
-    /*@Test
+    @Test
     public void testIterator() {
         GridCoordinates2D[] keys = mappings.keySet().toArray(new GridCoordinates2D[0]);
+        // keys are stored without order, have to sort them according to a given
+        // order
+        Comparator<GridCoordinates2D> c = new Comparator<GridCoordinates2D>() {
+            public int compare(GridCoordinates2D g1, GridCoordinates2D g2) {
+                if (g1.getY() > g2.getY()) {
+                    return 1;
+                } else if (g1.getY() == g2.getY() && g1.getX() > g2.getX()) {
+                    return 1;
+                } else if (g1.getY() == g2.getY() && g1.getX() == g2.getX()) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+            }
+            // equals() method not implement as it isn't required in this test
+        };
+
+        Arrays.sort(keys, c);
+        // sort the key as the iterator of the Domain1DMapper is in an order.
+
         Iterator<DomainMapperEntry<Integer>> iterator = mapper.iterator();
-        int lastKeyPos = keys.length - 1;
+
+        int keyPos = 0;
         while (iterator.hasNext()) {
             DomainMapperEntry<Integer> entry = iterator.next();
             List<Integer> targets = entry.getTargetIndices();
-            int expectJ = keys[lastKeyPos].getY();
-            int expectI = keys[lastKeyPos--].getX();
+            int expectJ = keys[keyPos].getY();
+            int expectI = keys[keyPos++].getX();
             assertEquals(expectJ, entry.getSourceGridJIndex());
             assertEquals(expectI, entry.getSourceGridIIndex());
             assertEquals(mappings.get(new GridCoordinates2D(expectI, expectJ)), targets);
         }
-    }*/
+    }
 
     /**
      * Test {@link Domain1DMapper#isEmpty} method.
