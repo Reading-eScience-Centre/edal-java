@@ -135,7 +135,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     protected String transectLayer = null;
 
-    protected WMSOptions wmsPolarOptions;
+    protected WMSOptions wmsNorthPolarOptions;
+    protected WMSOptions wmsSouthPolarOptions;
     protected WMSOptions wmsStandardOptions;
 
     protected LayerLoadStartListener loadStartListener;
@@ -150,6 +151,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     protected WMSGetFeatureInfo getFeatureInfo;
     protected EditingToolbar editingToolbar;
     protected String proxyUrl;
+    
+    protected float opacity = 1.0f;
 
     /** Map of unit conversions to be applied to each layer */
     protected java.util.Map<String, UnitConverter> converters;
@@ -275,6 +278,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         animLayer.addLayerLoadEndListener(loadEndListener);
         animLayer.setIsBaseLayer(false);
         animLayer.setDisplayInLayerSwitcher(false);
+        animLayer.setOpacity(opacity);
 
         /*
          * Out of all visible layers, we choose the most transparent and set the
@@ -419,6 +423,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsLayer.addLayerLoadCancelListener(loadCancelListener);
         wmsLayer.addLayerLoadEndListener(loadEndListener);
         wmsLayer.setIsBaseLayer(false);
+        wmsLayer.setOpacity(opacity);
         map.addLayer(wmsLayer);
 
         WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, multipleElevations,
@@ -667,7 +672,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     public void zoomToExtents(String extents) throws Exception {
         if (currentProjection.equalsIgnoreCase("EPSG:32661")
-                || currentProjection.equalsIgnoreCase("EPSG:32761")) {
+                || currentProjection.equalsIgnoreCase("EPSG:32761")
+                || currentProjection.equalsIgnoreCase("EPSG:5041")
+                || currentProjection.equalsIgnoreCase("EPSG:5042")) {
             /*
              * If we have a polar projection, the extents will be wrong. In this
              * case, just ignore the zoom to extents.
@@ -795,6 +802,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     public void setOpacity(String layerId, float opacity) {
+        this.opacity = opacity;
         for (WmsDetails wmsDetails : wmsLayers.values()) {
             String layersStr = wmsDetails.params.getLayers();
             String[] layers = layersStr.split(",");
@@ -888,31 +896,26 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         demis.addLayerLoadStartListener(loadStartListener);
         demis.addLayerLoadEndListener(loadEndListener);
 
+        /*
+         * These are the bounds of the polar layers on the dexter server
+         */
         Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
-        double halfSideLength = (polarMaxExtent.getUpperRightY() - polarMaxExtent.getLowerLeftY())
-                / (4 * 2);
-        double centre = ((polarMaxExtent.getUpperRightY() - polarMaxExtent.getLowerLeftY()) / 2)
-                + polarMaxExtent.getLowerLeftY();
-        double low = centre - halfSideLength;
-        double high = centre + halfSideLength;
-        float polarMaxResolution = (float) ((high - low) / 256.0);
-        double windowLow = centre - 2 * halfSideLength;
-        double windowHigh = centre + 2 * halfSideLength;
-        Bounds polarBounds = new Bounds(windowLow, windowLow, windowHigh, windowHigh);
+        float polarMaxResolution = (float) ((polarMaxExtent.getUpperRightX() - polarMaxExtent
+                .getLowerLeftX()) / 512.0);
 
-        wmsPolarOptions = new WMSOptions();
-        wmsPolarOptions.setProjection("EPSG:5041");
-        wmsPolarOptions.setMaxExtent(polarBounds);
-        wmsPolarOptions.setMaxResolution(polarMaxResolution);
-        wmsPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
-        wmsPolarOptions.setWrapDateLine(false);
+        wmsNorthPolarOptions = new WMSOptions();
+        wmsNorthPolarOptions.setProjection("EPSG:5041");
+        wmsNorthPolarOptions.setMaxExtent(polarMaxExtent);
+        wmsNorthPolarOptions.setMaxResolution(polarMaxResolution);
+        wmsNorthPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
+        wmsNorthPolarOptions.setWrapDateLine(false);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("naturalearth-np");
         wmsParams.setFormat("image/png");
 
         naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", dexterUrl, wmsParams,
-                wmsPolarOptions);
+                wmsNorthPolarOptions);
         naturalEarthNP.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
@@ -920,17 +923,23 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setFormat("image/png");
 
         blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", dexterUrl, wmsParams,
-                wmsPolarOptions);
+                wmsNorthPolarOptions);
         blueMarbleNP.setIsBaseLayer(true);
+        blueMarbleNP.setSingleTile(true);
 
-        wmsPolarOptions.setProjection("EPSG:5042");
+        wmsSouthPolarOptions = new WMSOptions();
+        wmsSouthPolarOptions.setProjection("EPSG:5042");
+        wmsSouthPolarOptions.setMaxExtent(polarMaxExtent);
+        wmsSouthPolarOptions.setMaxResolution(polarMaxResolution);
+        wmsSouthPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
+        wmsSouthPolarOptions.setWrapDateLine(false);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("naturalearth-sp");
         wmsParams.setFormat("image/png");
 
         naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", dexterUrl, wmsParams,
-                wmsPolarOptions);
+                wmsSouthPolarOptions);
         naturalEarthSP.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
@@ -938,7 +947,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setFormat("image/png");
 
         blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", dexterUrl, wmsParams,
-                wmsPolarOptions);
+                wmsSouthPolarOptions);
         blueMarbleSP.setIsBaseLayer(true);
 
         map.addLayer(naturalEarth);
@@ -983,10 +992,11 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     protected WMSOptions getOptionsForCurrentProjection() {
         if (currentProjection.equalsIgnoreCase("EPSG:32661")
-                || currentProjection.equalsIgnoreCase("EPSG:32761")
-                || currentProjection.equalsIgnoreCase("EPSG:5041")
+                || currentProjection.equalsIgnoreCase("EPSG:5041")) {
+            return wmsNorthPolarOptions;
+        } else if (currentProjection.equalsIgnoreCase("EPSG:32761")
                 || currentProjection.equalsIgnoreCase("EPSG:5042")) {
-            return wmsPolarOptions;
+            return wmsSouthPolarOptions;
         } else {
             return wmsStandardOptions;
         }
