@@ -904,6 +904,8 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     @Override
     public void setEnabled(boolean enabled) {
+        aboveMax.setEnabled(enabled);
+        belowMin.setEnabled(enabled);
         minScale.setEnabled(enabled);
         maxScale.setEnabled(enabled);
         autoButton.setEnabled(enabled);
@@ -912,10 +914,14 @@ public class PaletteSelector implements PaletteSelectorIF {
         opacity.setEnabled(enabled);
         logScale.setEnabled(enabled);
         if (enabled) {
+            aboveMax.removeStyleDependentName("inactive");
+            belowMin.removeStyleDependentName("inactive");
             paletteImage.removeStyleDependentName("inactive");
             mlLabel.removeStyleDependentName("inactive");
             mhLabel.removeStyleDependentName("inactive");
         } else {
+            aboveMax.addStyleDependentName("inactive");
+            belowMin.addStyleDependentName("inactive");
             paletteImage.addStyleDependentName("inactive");
             mlLabel.addStyleDependentName("inactive");
             mhLabel.addStyleDependentName("inactive");
