@@ -33,7 +33,9 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Creates (possibly animated) GIFs. Only one instance of this class will ever
@@ -62,13 +64,22 @@ public class GifFormat extends SimpleFormat {
             }
         }
         boolean sizeSet = false;
-        IndexColorModel icm = getGeneralIndexedColorModelWithTransparency();
+        IndexColorModel icm = getBestColorModel(frames);
         byte[] rgbPalette = getRGBPalette(icm);
         for (BufferedImage frame : frames) {
-
             BufferedImage gifFrame = new BufferedImage(frame.getWidth(), frame.getHeight(),
                     BufferedImage.TYPE_BYTE_INDEXED, icm);
-            gifFrame.createGraphics().drawImage(frame, 0, 0, null);
+            /*
+             * Set each pixel individually. the createGraphics().drawImage()
+             * method uses dithering even though it's not necessary, but this
+             * seems to work properly.
+             */
+            for (int i = 0; i < frame.getWidth(); i++) {
+                for (int j = 0; j < frame.getHeight(); j++) {
+                    gifFrame.setRGB(i, j, frame.getRGB(i, j));
+                }
+            }
+
             if (!sizeSet) {
                 e.setSize(frame.getWidth(), frame.getHeight());
                 sizeSet = true;
@@ -80,6 +91,29 @@ public class GifFormat extends SimpleFormat {
             e.addFrame(rgbPalette, indices, icm.getTransparentPixel());
         }
         e.finish();
+    }
+
+    private static IndexColorModel getBestColorModel(List<BufferedImage> frames) {
+        Set<Integer> rgbs = new HashSet<>();
+        for (BufferedImage frame : frames) {
+            for (int i = 0; i < frame.getWidth(); i++) {
+                for (int j = 0; j < frame.getHeight(); j++) {
+                    int rgb = frame.getRGB(i, j);
+                    rgbs.add(rgb);
+                }
+            }
+        }
+        if (rgbs.size() < 254) {
+            Integer[] colours = rgbs.toArray(new Integer[0]);
+            int[] cmap = new int[256];
+            cmap[0] = 255 << 32 | (255 << 16) | (255 << 8) | (255);
+            for (int i = 1; i < colours.length + 1; i++) {
+                cmap[i] = colours[i - 1];
+            }
+            return new IndexColorModel(8, 256, cmap, 0, true, 0, DataBuffer.TYPE_BYTE);
+        } else {
+            return getGeneralIndexedColorModelWithTransparency();
+        }
     }
 
     private static IndexColorModel getGeneralIndexedColorModelWithTransparency() {

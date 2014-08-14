@@ -150,7 +150,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     protected WMSGetFeatureInfo getFeatureInfo;
     protected EditingToolbar editingToolbar;
     protected String proxyUrl;
-    
+
     /** Map of unit conversions to be applied to each layer */
     protected java.util.Map<String, UnitConverter> converters;
 
@@ -212,6 +212,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      *            The palette name
      * @param style
      *            The style name
+     * @param aboveMaxString
+     *            A string representing the colour for data above the max scale
+     *            range
+     * @param belowMinString
+     *            A string representing the colour for data below min scale
+     *            range
+     * @param noDataString
+     *            A string representing the colour when there is no data
      * @param scaleRange
      *            The scale range, of the form "[min],[max]"
      * @param nColorBands
@@ -223,7 +231,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     public void addAnimationLayer(String wmsUrl, String layerId, String timeList,
             String currentElevation, String palette, String style, String scaleRange,
-            int nColorBands, boolean logScale, String frameRate) {
+            String aboveMaxString, String belowMinString, String noDataString, int nColorBands,
+            boolean logScale, String frameRate) {
         StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.1.1");
         url.append("&format=image/gif" + "&transparent=true" + "&styles=" + style + "/" + palette
                 + "&layers=" + layerId + "&time=" + timeList + "&logscale=" + logScale + "&srs="
@@ -238,6 +247,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             url.append("&numcolorbands=" + nColorBands);
         if (frameRate != null)
             url.append("&frameRate=" + frameRate);
+        if (aboveMaxString != null) {
+            url.append("&ABOVEMAXCOLOR=" + aboveMaxString);
+        }
+        if (belowMinString != null) {
+            url.append("&BELOWMINCOLOR=" + belowMinString);
+        }
+        if (noDataString != null) {
+            url.append("&BGCOLOR=" + noDataString);
+        }
         ImageOptions opts = new ImageOptions();
         opts.setAlwaysInRange(true);
         /*
@@ -985,7 +1003,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
     }
 
-    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text, UnitConverter converter) {
+    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text,
+            UnitConverter converter) {
         Document featureInfo = XMLParser.parse(text);
         double lon = Double.parseDouble(featureInfo.getElementsByTagName("longitude").item(0)
                 .getChildNodes().item(0).getNodeValue());
@@ -1049,7 +1068,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                          */
                         try {
                             float value = Float.parseFloat(valueStr);
-                            if(converter != null) {
+                            if (converter != null) {
                                 value = converter.convertToDisplayUnit(value);
                             }
                             valueStr = FORMATTER.format(value);
