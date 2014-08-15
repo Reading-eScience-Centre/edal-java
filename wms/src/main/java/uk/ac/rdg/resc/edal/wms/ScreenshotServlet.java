@@ -37,9 +37,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -80,9 +82,8 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
  * line represents the child of the NEXT one and is rendered as such. For
  * example "TMP,FOAM one degree" will be similarly to:
  * 
- * FOAM one degree
- *  > TMP
- *  
+ * FOAM one degree > TMP
+ * 
  * elevation: A string representing the elevation
  * 
  * time: A string representing the time
@@ -140,7 +141,8 @@ public class ScreenshotServlet extends HttpServlet {
                  * TODO Handle this properly - maybe you should look at
                  * different Velocity template methods.
                  * 
-                 * Perhaps this should return an image explaining there is a problem?
+                 * Perhaps this should return an image explaining there is a
+                 * problem?
                  */
                 e.printStackTrace();
                 log.error("Problem with generating screenshot", e);
@@ -180,15 +182,17 @@ public class ScreenshotServlet extends HttpServlet {
          * TODO Replace these with a more reliable method (i.e. keep
          * geo-referenced images locally for this purpose...)
          */
-        if (crs.equalsIgnoreCase("EPSG:4326") || crs.equalsIgnoreCase("CRS:84")) {
-            baseLayerUrl = "http://www2.demis.nl/wms/wms.ashx?WMS=BlueMarble&LAYERS=Earth%20Image";
-        } else if (crs.equalsIgnoreCase("EPSG:32661") || crs.equalsIgnoreCase("EPSG:32761")) {
-            baseLayerUrl = "http://wms-basemaps.appspot.com/wms?LAYERS=bluemarble_file&FORMAT=image/jpeg";
+        if (crs.equalsIgnoreCase("EPSG:5041")) {
+            baseLayerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-np";
+        } else if (crs.equalsIgnoreCase("EPSG:5042")) {
+            baseLayerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-sp";
+        } else {
+            baseLayerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble";
         }
 
         int mapHeight = params.getPositiveInt("mapHeight", 384);
         int mapWidth = params.getPositiveInt("mapWidth", 512);
-        
+
         String time = params.getString("time");
 
         /*
@@ -196,8 +200,8 @@ public class ScreenshotServlet extends HttpServlet {
          * be
          */
         BufferedImage colorBar = null;
-        URL url = createWmsUrl(params, false, minLon, minLat, maxLon, maxLat, mapWidth,
-                mapHeight, servletUrl, time, true);
+        URL url = createWmsUrl(params, false, minLon, minLat, maxLon, maxLat, mapWidth, mapHeight,
+                servletUrl, time, true);
         if (url != null) {
             InputStream in = null;
             try {
@@ -375,7 +379,7 @@ public class ScreenshotServlet extends HttpServlet {
 
     private URL createWmsUrl(RequestParams params, boolean baseLayer, Float minLon, Float minLat,
             Float maxLon, Float maxLat, int width, int height, String baseWmsUrl, String time,
-            boolean colorbar) {
+            boolean colorbar) throws UnsupportedEncodingException {
         StringBuilder url = new StringBuilder();
         if (baseLayer) {
             Pattern p = Pattern.compile(" ");
@@ -394,7 +398,6 @@ public class ScreenshotServlet extends HttpServlet {
                  */
                 return null;
             }
-            url.append(baseWmsUrl);
             url.append(dataset + "?SERVICE=WMS&LAYERS=" + params.getString("layer"));
             String style = params.getString("style");
             String palette = params.getString("palette");
@@ -406,6 +409,15 @@ public class ScreenshotServlet extends HttpServlet {
             String scaleRange = params.getString("scaleRange");
             if (scaleRange != null)
                 url.append("&COLORSCALERANGE=" + scaleRange);
+            String aboveMaxColor = params.getString("aboveMaxColor");
+            if (aboveMaxColor != null)
+                url.append("&ABOVEMAXCOLOR=" + URLEncoder.encode(aboveMaxColor, "UTF-8"));
+            String belowMinColor = params.getString("belowMinColor");
+            if (belowMinColor != null)
+                url.append("&BELOWMINCOLOR=" + URLEncoder.encode(belowMinColor, "UTF-8"));
+            String noDataColor = params.getString("noDataColor");
+            if (noDataColor != null)
+                url.append("&BGCOLOR=" + URLEncoder.encode(noDataColor, "UTF-8"));
             String numColorBands = params.getString("numColorBands");
             if (numColorBands != null)
                 url.append("&NUMCOLORBANDS=" + numColorBands);
@@ -424,7 +436,7 @@ public class ScreenshotServlet extends HttpServlet {
 
         url.append("&TRANSPARENT=true");
         url.append("&VERSION=1.1.1&SERVICE=WMS&REQUEST=");
-        if(colorbar) {
+        if (colorbar) {
             url.append("GetLegendGraphic");
         } else {
             url.append("GetMap");
