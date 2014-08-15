@@ -64,6 +64,8 @@ public class RangeListTest {
     }
 
     /**
+     * Initialize a grid dataset.
+     * 
      * @throws IOException
      *             If there is a problem when open the netCDF file.
      * @throws EdalException
@@ -77,12 +79,15 @@ public class RangeListTest {
         gridDataset = CdmUtils.getGridDataset(nc);
     }
 
+    /** 
+     * Test {@link RangeList} get?AxisIndex and getRanges methods.
+     */
     @Test
     public void test() {
         List<GridDatatype> gridVarLists = gridDataset.getGrids();
         /*
-         * in tradition, the order of 4D data is first, T axis, second, Z axis,
-         * followed by y and x axis.
+         * The order of 4D test data is first, T axis, second, Z axis, followed
+         * by y and x axis.
          */
         for (GridDatatype gdt : gridVarLists) {
             RangesList gdtRange = new RangesList(gdt);
