@@ -54,6 +54,12 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
+/**
+ * Test class for {@link GridFeature}. 
+ * 
+ * @author Guy
+ */
+
 public class GridFeatureTest {
 
     private static final String VAR_ID = "onlyvar";
