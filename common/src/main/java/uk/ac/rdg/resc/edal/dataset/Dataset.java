@@ -152,7 +152,9 @@ public interface Dataset {
      * 
      * @param varIds
      *            The IDs of the variables to be extracted. If this is
-     *            <code>null</code> then all variable IDs will be plotted
+     *            <code>null</code> then all variable IDs will be plotted. Any
+     *            non-scalar parent variables will have all of their child
+     *            variables extracted.
      * @param params
      *            The {@link PlottingDomainParams} object describing the domain
      *            to be plotted. The exact manner these are interpreted may
@@ -169,7 +171,9 @@ public interface Dataset {
      * Extracts {@link ProfileFeature}(s) from the {@link Dataset}
      * 
      * @param varIds
-     *            The variable IDs to extract
+     *            The variable IDs to extract. If this is <code>null</code> then
+     *            all variable IDs will be plotted. Any non-scalar parent
+     *            variables will have all of their child variables extracted.
      * @param params
      *            The {@link PlottingDomainParams} describing the domain to be
      *            extracted:
@@ -258,7 +262,9 @@ public interface Dataset {
      * Extracts {@link PointSeriesFeature}(s) from the {@link Dataset}
      * 
      * @param varIds
-     *            The variable IDs to extract
+     *            The variable IDs to extract. If this is <code>null</code> then
+     *            all variable IDs will be plotted. Any non-scalar parent
+     *            variables will have all of their child variables extracted.
      * @param params
      *            The {@link PlottingDomainParams} describing the domain to be
      *            extracted:
@@ -287,10 +293,10 @@ public interface Dataset {
      *            by {@link PlottingDomainParams#getTargetZ()} will be
      *            extracted. In the case of a gridded dataset a depth is
      *            considered to match if the method
-     *            {@link VerticalAxis#contains(Double)} on its vertical axis returns
-     *            <code>true</code> for the target depth. For a non-gridded
-     *            dataset, the feature depth must exactly match the target
-     *            depth.</li>
+     *            {@link VerticalAxis#contains(Double)} on its vertical axis
+     *            returns <code>true</code> for the target depth. For a
+     *            non-gridded dataset, the feature depth must exactly match the
+     *            target depth.</li>
      * 
      *            <li>
      *            If {@link PlottingDomainParams#getTargetZ()} and
