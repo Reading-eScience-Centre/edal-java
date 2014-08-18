@@ -1596,14 +1596,18 @@ public class WmsServlet extends HttpServlet {
              * We're creating a legend with supporting text so we need to know
              * the colour scale range and the layer in question
              */
+            GetMapParameters getMapParameters;
             try {
-                GetMapParameters getMapParameters = new GetMapParameters(params, catalogue);
-                legend = getMapParameters.getStyleParameters().getImageGenerator(catalogue)
-                        .getLegend(200);
+                getMapParameters = new GetMapParameters(params, catalogue);
+            } catch (EdalLayerNotFoundException e) {
+                throw new MetadataException(
+                        "Requested layer is either not present, disabled, or not yet loaded.");
             } catch (Exception e) {
                 throw new MetadataException(
                         "A full set of GetMap parameters must be provided to generate a full legend.  You can set COLORBARONLY=true to just generate a colour bar");
             }
+            legend = getMapParameters.getStyleParameters().getImageGenerator(catalogue)
+                    .getLegend(200);
         }
         httpServletResponse.setContentType("image/png");
         try {
