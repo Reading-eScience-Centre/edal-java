@@ -34,7 +34,7 @@ import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -168,7 +168,7 @@ public class LegendDataGenerator {
      *         {@link LegendDataGenerator#getPlottingDomainParams()}
      */
     public FeatureCatalogue getFeatureCatalogue(NameAndRange xField, NameAndRange yField) {
-        final Set<DiscreteFeature<?, ?>> features = new HashSet<>();
+        final Set<DiscreteFeature<?, ?>> features = new LinkedHashSet<>();
         features.add(getMapFeature(xField, yField));
         features.addAll(getPointFeatures(xField, yField));
 
@@ -205,50 +205,50 @@ public class LegendDataGenerator {
         return feature;
     }
 
-    private Collection<? extends DiscreteFeature<?, ?>> getPointFeatures(NameAndRange xField,
-            NameAndRange yField) {
+    /**
+     * Generates {@link PointFeature}s spread across the given ranges
+     * 
+     * @param xField
+     *            The x-varying field
+     * @param yField
+     *            The y-varying field
+     * @return A {@link Collection} of randomly-distributed (but consistent -
+     *         i.e. not random...) {@link PointFeature}s whose values vary
+     *         linearly over the x and y ranges.
+     */
+    private Collection<PointFeature> getPointFeatures(NameAndRange xField, NameAndRange yField) {
         List<PointFeature> features = new ArrayList<>();
-        Random r = new Random();
+
+        Random r = new Random(35L);
 
         /*
-         * Add 100 points randomly which vary in the x-direction
-         * 
-         * TODO - needs out-of-range stuff and 2D testing
+         * Add 500 points "randomly" with values which vary in the required
+         * directions. The points are random, but the same seed is used each
+         * time so we get a consistent result.
          */
-        if (xField != null) {
-            for (int i = 0; i < 500; i++) {
-                int xIndex = r.nextInt(xAxis.size());
-                int yIndex = r.nextInt(yAxis.size());
+        for (int i = 0; i < 500; i++) {
+            int xIndex = r.nextInt(xAxis.size());
+            int yIndex = r.nextInt(yAxis.size());
 
-                Map<String, Array1D<Number>> values = new HashMap<>();
+            Map<String, Array1D<Number>> values = new HashMap<>();
+            if (xField != null) {
                 values.put(
                         xField.getFieldLabel(),
                         new ImmutableArray1D<>(new Number[] { getLinearInterpolatedValue(xIndex,
-                                xField.getScaleRange(), xAxis.size()) }));
-                PointFeature feature = new PointFeature("", "", "", new GeoPosition(domain
-                        .getDomainObjects().get(yIndex, xIndex).getCentre(), null, null), null,
-                        values);
-                features.add(feature);
+                                extendScaleRange(xField.getScaleRange(), fractionExtra),
+                                xAxis.size()) }));
             }
-        }
-        /*
-         * Add 100 points randomly which vary in the y-direction
-         */
-        if (yField != null) {
-            for (int i = 0; i < 500; i++) {
-                int xIndex = r.nextInt(xAxis.size());
-                int yIndex = r.nextInt(yAxis.size());
-
-                Map<String, Array1D<Number>> values = new HashMap<>();
+            if (yField != null) {
+                Extent<Float> extendScaleRange = extendScaleRange(yField.getScaleRange(),
+                        fractionExtra);
                 values.put(
                         yField.getFieldLabel(),
                         new ImmutableArray1D<>(new Number[] { getLinearInterpolatedValue(yIndex,
-                                yField.getScaleRange(), yAxis.size()) }));
-                PointFeature feature = new PointFeature("", "", "", new GeoPosition(domain
-                        .getDomainObjects().get(yIndex, xIndex).getCentre(), null, null), null,
-                        values);
-                features.add(feature);
+                                extendScaleRange, yAxis.size()) }));
             }
+            PointFeature feature = new PointFeature("", "", "", new GeoPosition(domain
+                    .getDomainObjects().get(yIndex, xIndex).getCentre(), null, null), null, values);
+            features.add(feature);
         }
         return features;
     }
@@ -274,9 +274,7 @@ public class LegendDataGenerator {
              * Expand scale range to include out-of-range data
              */
             if (scaleRange != null) {
-                Float width = scaleRange.getHigh() - scaleRange.getLow();
-                this.scaleRange = Extents.newExtent(scaleRange.getLow() - width * fractionExtra,
-                        scaleRange.getHigh() + width * fractionExtra);
+                this.scaleRange = extendScaleRange(scaleRange, fractionExtra);
             }
         }
 
@@ -302,6 +300,33 @@ public class LegendDataGenerator {
         }
     }
 
+    /**
+     * Extends a scale range by a specified amount
+     * 
+     * @param scaleRange
+     *            The scale range to extend
+     * @param fractionExtra
+     *            The fraction to extend it by on either end
+     * @return The resulting scale range
+     */
+    private static Extent<Float> extendScaleRange(Extent<Float> scaleRange, float fractionExtra) {
+        Float width = scaleRange.getHigh() - scaleRange.getLow();
+        return Extents.newExtent(scaleRange.getLow() - width * fractionExtra, scaleRange.getHigh()
+                + width * fractionExtra);
+    }
+
+    /**
+     * Linearly interpolates a value based on its index along an axis
+     * 
+     * @param value
+     *            The index within the axis
+     * @param scaleRange
+     *            The scale range to interpolate onto
+     * @param axisSize
+     *            The size of the axis
+     * @return A value which represents the supplied index within the given
+     *         scale range
+     */
     private static Number getLinearInterpolatedValue(int value, Extent<Float> scaleRange,
             int axisSize) {
         return scaleRange.getLow() + value * (scaleRange.getHigh() - scaleRange.getLow())
