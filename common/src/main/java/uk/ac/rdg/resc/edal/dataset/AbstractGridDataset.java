@@ -339,7 +339,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
 
-            for (String varId : variableIds) {
+            for(int i=0;i<variableIds.size();i++){String varId=variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read data for unplottable variables, but add any
@@ -695,7 +695,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * Read all of the data from non-plugin variables. This loops over
              * all variables, and then ignores those which are plugin-derived.
              */
-            for (String varId : variableIds) {
+            for (int i = 0; i < variableIds.size(); i++) {
+                String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read data for unplottable variables, but add any
@@ -1290,7 +1291,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * Read all of the data from non-plugin variables. This loops over
              * all variables, and then ignores those which are plugin-derived.
              */
-            for (String varId : variableIds) {
+            for(int i=0;i<variableIds.size();i++){String varId=variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read data for unplottable variables, but add any

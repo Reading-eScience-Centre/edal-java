@@ -239,7 +239,8 @@ public interface Dataset {
      *            the target position</li>
      *            </ul>
      * 
-     * @return A {@link Collection} of {@link ProfileFeature}s
+     * @return A {@link Collection} of {@link ProfileFeature}s, sorted by their
+     *         distance from the target horizontal position, if it exists.
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
      * @throws UnsupportedOperationException
@@ -331,7 +332,8 @@ public interface Dataset {
      *            the target position</li>
      *            </ul>
      * 
-     * @return A {@link Collection} of {@link PointSeriesFeature}s
+     * @return A {@link Collection} of {@link PointSeriesFeature}s, sorted by
+     *         their distance from the target horizontal position, if it exists.
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
      * @throws UnsupportedOperationException

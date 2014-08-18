@@ -202,6 +202,7 @@ public abstract class VariablePlugin {
         if (metadataProcessed) {
             throw new IllegalStateException("Metadata has already been processed for this plugin");
         }
+        metadataProcessed = true;
         if (metadata.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " metadata sources, but you have supplied " + metadata.length);
