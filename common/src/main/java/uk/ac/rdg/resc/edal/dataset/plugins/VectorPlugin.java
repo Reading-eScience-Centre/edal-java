@@ -86,18 +86,22 @@ public class VectorPlugin extends VariablePlugin {
      *            The ID of the variable representing the x-component
      * @param yComponentId
      *            The ID of the variable representing the y-component
-     * @param title
-     *            The title of the quantity which the components represent
+     * @param commonName
+     *            The common part of the standard name of the quantity which the
+     *            components represent. For example, for components with
+     *            standard names eastward_sea_water_velocity and
+     *            northward_sea_water_velocity this would most likely be
+     *            "sea_water_velocity"
      * @param eastNorthComps
      *            <code>true</code> if the components supplied are
      *            eastwards/northwards (which may not necessarily be x/y
      *            components in the native grid system)
      */
-    public VectorPlugin(String xComponentId, String yComponentId, String title,
+    public VectorPlugin(String xComponentId, String yComponentId, String commonName,
             boolean eastNorthComps) {
         super(new String[] { xComponentId, yComponentId },
                 new String[] { MAG_ROLE, DIR_ROLE, GROUP });
-        this.title = title;
+        this.title = commonName;
         this.eastNorthComps = eastNorthComps;
     }
 
@@ -115,16 +119,17 @@ public class VectorPlugin extends VariablePlugin {
          * Generate metadata for new components
          */
         VariableMetadata magMetadata = newVariableMetadataFromMetadata(getFullId(MAG_ROLE),
-                new Parameter(getFullId(MAG_ROLE), "Magnitude of " + title,
+                new Parameter(getFullId(MAG_ROLE), "Magnitude of " + title.replaceAll("_", " "),
                         "Magnitude of components:\n" + xMetadata.getParameter().getDescription()
                                 + " and\n" + yMetadata.getParameter().getDescription(), xMetadata
-                                .getParameter().getUnits(), xMetadata.getParameter()
-                                .getStandardName()), true, xMetadata, yMetadata);
+                                .getParameter().getUnits(), getMagnitudeStandardName(xMetadata
+                                .getParameter().getStandardName())), true, xMetadata, yMetadata);
         VariableMetadata dirMetadata = newVariableMetadataFromMetadata(getFullId(DIR_ROLE),
-                new Parameter(getFullId(DIR_ROLE), "Direction of " + title,
+                new Parameter(getFullId(DIR_ROLE), "Direction of " + title.replaceAll("_", " "),
                         "Direction of components:\n" + xMetadata.getParameter().getDescription()
                                 + " and\n" + yMetadata.getParameter().getDescription(), "degrees",
-                        xMetadata.getParameter().getStandardName()), true, xMetadata, yMetadata);
+                        getDirectionStandardName(xMetadata.getParameter().getStandardName())),
+                true, xMetadata, yMetadata);
 
         /*
          * Find the original parent which the x-component belongs to (and almost
@@ -229,6 +234,38 @@ public class VectorPlugin extends VariablePlugin {
          * Return the newly-added VariableMetadata objects, as required
          */
         return new VariableMetadata[] { containerMetadata, magMetadata, dirMetadata };
+    }
+
+    private String getMagnitudeStandardName(String xCompStandardName) {
+        if ("eastward_sea_water_velocity".equalsIgnoreCase(xCompStandardName)
+                || "x_sea_water_velocity".equalsIgnoreCase(xCompStandardName)
+                || "sea_water_x_velocity".equalsIgnoreCase(xCompStandardName)) {
+            return "sea_water_speed";
+        } else if ("eastward_wind".equalsIgnoreCase(xCompStandardName)
+                || "x_wind".equalsIgnoreCase(xCompStandardName)) {
+            return "wind_speed";
+        } else if ("eastward_sea_ice_velocity".equalsIgnoreCase(xCompStandardName)
+                || "x_sea_ice_velocity".equalsIgnoreCase(xCompStandardName)
+                || "sea_ice_x_velocity".equalsIgnoreCase(xCompStandardName)) {
+            return "sea_ice_speed";
+        }
+        return "magnitude_of_" + title;
+    }
+
+    private String getDirectionStandardName(String xCompStandardName) {
+        if ("eastward_sea_water_velocity".equalsIgnoreCase(xCompStandardName)
+                || "x_sea_water_velocity".equalsIgnoreCase(xCompStandardName)
+                || "sea_water_x_velocity".equalsIgnoreCase(xCompStandardName)) {
+            return "direction_of_sea_water_velocity";
+        } else if ("eastward_wind".equalsIgnoreCase(xCompStandardName)
+                || "x_wind".equalsIgnoreCase(xCompStandardName)) {
+            return "wind_to_direction";
+        } else if ("eastward_sea_ice_velocity".equalsIgnoreCase(xCompStandardName)
+                || "x_sea_ice_velocity".equalsIgnoreCase(xCompStandardName)
+                || "sea_ice_x_velocity".equalsIgnoreCase(xCompStandardName)) {
+            return "direction_of_sea_ice_velocity";
+        }
+        return "direction_of_" + title;
     }
 
     @Override

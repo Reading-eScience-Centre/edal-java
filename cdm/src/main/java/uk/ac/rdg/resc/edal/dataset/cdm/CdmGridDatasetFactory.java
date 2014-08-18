@@ -311,11 +311,11 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
             Dataset cdmGridDataset = new CdmGridDataset(id, location, vars,
                     CdmUtils.getOptimumDataReadingStrategy(nc), vCrs, chronology);
             for (Entry<String, String[]> componentData : xyComponentPairs.entrySet()) {
-                String title = componentData.getKey();
+                String commonName = componentData.getKey();
                 String[] comps = componentData.getValue();
                 if (comps[0] != null && comps[1] != null) {
-                    cdmGridDataset.addVariablePlugin(new VectorPlugin(comps[0], comps[1], title,
-                            xyNameToTrueEN.get(title)));
+                    cdmGridDataset.addVariablePlugin(new VectorPlugin(comps[0], comps[1], commonName,
+                            xyNameToTrueEN.get(commonName)));
                 }
             }
 

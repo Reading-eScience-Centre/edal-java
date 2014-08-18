@@ -76,6 +76,7 @@ import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
@@ -659,6 +660,13 @@ public class WmsServlet extends HttpServlet {
                 timeStr = TimeUtils.dateTimeToISO8601(pointFeature.getGeoPosition().getTime());
             }
         } else if (feature instanceof ProfileFeature) {
+            /*
+             * This shouldn't ever get called now that we are dealing with
+             * PointFeatures rather than ProfileFeatures (ProfileFeatures may be
+             * the underlying data type but they shouldn't be the map feature).
+             * 
+             * No harm leaving the code in for future reference.
+             */
             ProfileFeature profileFeature = (ProfileFeature) feature;
             int index = GISUtils.getIndexOfClosestElevationTo(plottingParameters.getTargetZ(),
                     profileFeature.getDomain());
@@ -670,6 +678,14 @@ public class WmsServlet extends HttpServlet {
                 }
             }
         } else if (feature instanceof PointSeriesFeature) {
+            /*
+             * This shouldn't ever get called now that we are dealing with
+             * PointFeatures rather than PointSeriesFeatures
+             * (PointSeriesFeatures may be the underlying data type but they
+             * shouldn't be the map feature).
+             * 
+             * No harm leaving the code in for future reference.
+             */
             PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) feature;
             int index = GISUtils.getIndexOfClosestTimeTo(plottingParameters.getTargetT(),
                     pointSeriesFeature.getDomain());
@@ -1637,23 +1653,37 @@ public class WmsServlet extends HttpServlet {
         /*
          * Loop over all requested layers
          */
-        List<PointSeriesFeature> pointSeriesFeatures = new ArrayList<PointSeriesFeature>();
+        List<PointSeriesFeature> timeseriesFeatures = new ArrayList<PointSeriesFeature>();
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
-            pointSeriesFeatures.addAll(dataset.extractTimeseriesFeatures(
-                    CollectionUtils.setOf(variableId), plottingParameters));
+            List<? extends PointSeriesFeature> extractedTimeseriesFeatures = dataset
+                    .extractTimeseriesFeatures(CollectionUtils.setOf(variableId),
+                            plottingParameters);
+            if (dataset instanceof AbstractGridDataset && extractedTimeseriesFeatures.size() > 0) {
+                /*
+                 * Because we parse the GetFeatureInfo request to define a
+                 * 9-pixel bounding box around the click point we can get
+                 * multiple timeseries returned
+                 * 
+                 * However, for gridded datasets we only want to display a
+                 * single timeseries feature per layer.
+                 */
+                timeseriesFeatures.add(extractedTimeseriesFeatures.get(0));
+            } else {
+                timeseriesFeatures.addAll(extractedTimeseriesFeatures);
+            }
         }
 
-        while (pointSeriesFeatures.size() > featureInfoParameters.getFeatureCount()) {
-            pointSeriesFeatures.remove(pointSeriesFeatures.size() - 1);
+        while (timeseriesFeatures.size() > featureInfoParameters.getFeatureCount()) {
+            timeseriesFeatures.remove(timeseriesFeatures.size() - 1);
         }
 
         int width = 700;
         int height = 600;
 
         /* Now create the vertical profile plot */
-        JFreeChart chart = Charting.createTimeSeriesPlot(pointSeriesFeatures, position);
+        JFreeChart chart = Charting.createTimeSeriesPlot(timeseriesFeatures, position);
 
         httpServletResponse.setContentType(outputFormat);
         try {
@@ -1893,8 +1923,21 @@ public class WmsServlet extends HttpServlet {
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
-            profileFeatures.addAll(dataset.extractProfileFeatures(
-                    CollectionUtils.setOf(variableId), plottingParameters));
+            List<? extends ProfileFeature> extractedProfileFeatures = dataset
+                    .extractProfileFeatures(CollectionUtils.setOf(variableId), plottingParameters);
+            if (dataset instanceof AbstractGridDataset && extractedProfileFeatures.size() > 0) {
+                /*
+                 * Because we parse the GetFeatureInfo request to define a
+                 * 9-pixel bounding box around the click point we can get
+                 * multiple profiles returned
+                 * 
+                 * However, for gridded datasets we only want to display a
+                 * single profile feature per layer.
+                 */
+                profileFeatures.add(extractedProfileFeatures.get(0));
+            } else {
+                profileFeatures.addAll(extractedProfileFeatures);
+            }
         }
 
         while (profileFeatures.size() > featureInfoParameters.getFeatureCount()) {
