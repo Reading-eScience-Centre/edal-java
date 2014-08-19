@@ -84,6 +84,8 @@ public class CurviLinearGridDatasetTest {
     private int xiSize = 896;
 
     /**
+     * Read data in and create a curvilinear dataset object.
+     * 
      * @throws IOException
      *             If there is a problem when open the file or create the
      *             dataset.
@@ -100,9 +102,12 @@ public class CurviLinearGridDatasetTest {
     }
 
     /**
-     * Dateset contains only x and y data on the place. When we try to extract
+     * Dateset contains only x and y data on the plane. When we try to extract
      * data including T and Z info, the method should return
      * UnupportedOperationException.
+     * 
+     * @throws DataReadingException
+     *             if there is a problem reading data.
      */
     @Test(expected = UnsupportedOperationException.class)
     public void testUnSupportedOperation() throws DataReadingException {
@@ -114,16 +119,19 @@ public class CurviLinearGridDatasetTest {
         BoundingBox bbox = hDomain.getBoundingBox();
         PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
                 null, null, null);
+
+        // two statements below UnsupportedOperationException
         Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                 .extractTimeseriesFeatures(null, params);
-        assertEquals(0, timeSeriesFeatures.size());
-
+        System.out.println("done");
         Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(null,
                 params);
-        assertEquals(0, profileFeature.size());
+        
     }
 
     /**
+     * Test {@link CurvilinearCoords}.
+     * 
      * @throws IOException
      *             if there is a problem when read data in the netCDf file
      * */
@@ -157,7 +165,7 @@ public class CurviLinearGridDatasetTest {
         assertEquals(lon_data.getSize(), lon_values.size());
         assertEquals(etaSize, cCoords.getNi());
         assertEquals(xiSize, cCoords.getNj());
-        //pick up a horizontal position with id=15000
+        // pick up a horizontal position with id=15000
         int index = 15000;
         LonLatPosition expectedPos = new LonLatPosition(lon_data.getDouble(index),
                 lat_data.getDouble(index));
@@ -175,9 +183,9 @@ public class CurviLinearGridDatasetTest {
         assertEquals(expectedPos.getCoordinateReferenceSystem(),
                 cCoords.getMidpoint(cCoords_i, cCoords_j).getCoordinateReferenceSystem());
 
-        List<Cell> celllist = cCoords.getCells();
+        List<Cell> cellList = cCoords.getCells();
         Cell cell = cCoords.getCell(cCoords_i, cCoords_j);
-        assertEquals(celllist.get(index), cell);
+        assertEquals(cellList.get(index), cell);
 
         assertEquals(cCoords_i, cell.getI());
         assertEquals(cCoords_j, cell.getJ());
@@ -188,6 +196,9 @@ public class CurviLinearGridDatasetTest {
     }
 
     /**
+     * Test the methods implemented in the abstract class
+     * {@link AbstractGridDataset}.
+     * 
      * @throws DataReadingException
      *             If there is a problem when reading the data
      * */
