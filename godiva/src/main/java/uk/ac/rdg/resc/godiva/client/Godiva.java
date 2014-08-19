@@ -139,6 +139,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     private boolean timeseriesSupported = false;
     private boolean profilesSupported = false;
 
+    /* The extents of the current layer */
+    private String currentLayerExtent;
+    protected PushButton zoomToLayerExtents;
+
     /*
      * Implemented from interfaces/abstract methods
      */
@@ -239,7 +243,18 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             }
         });
         infoButton.setEnabled(false);
-
+        infoButton.setTitle("More infomation about this dataset");
+        
+        zoomToLayerExtents = new PushButton(new Image(GWT.getModuleBaseURL() + "img/extents.png"));
+        zoomToLayerExtents.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                mapArea.zoomToExtent(currentLayerExtent);
+            }
+        });
+        zoomToLayerExtents.setEnabled(false);
+        zoomToLayerExtents.setTitle("Fit the map to this layer's extents");
+        
         /*
          * Now get the layout and add it to the main window
          */
@@ -539,6 +554,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     @Override
     protected void layerDetailsLoaded(LayerDetails layerDetails, boolean autoUpdate) {
         super.layerDetailsLoaded(layerDetails, autoUpdate);
+        
+        currentLayerExtent = layerDetails.getExtents();
+        zoomToLayerExtents.setEnabled(true);
 
         if(layerDetails.isContinuousT()) {
             anim.setEnabled(false);
@@ -932,7 +950,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 widgetCollection.getUnitsInfo(), widgetCollection.getTimeSelector(),
                 widgetCollection.getElevationSelector(), widgetCollection.getPaletteSelector(),
                 kmzLink, permalink, email, screenshot, logo, mapArea, loadingImage, anim,
-                infoButton);
+                infoButton, zoomToLayerExtents);
         //        return LayoutManager.getCompactGodiva3Layout(layerSelector,
         //                widgetCollection.getUnitsInfo(), widgetCollection.getTimeSelector(),
         //                widgetCollection.getElevationSelector(), widgetCollection.getPaletteSelector(),

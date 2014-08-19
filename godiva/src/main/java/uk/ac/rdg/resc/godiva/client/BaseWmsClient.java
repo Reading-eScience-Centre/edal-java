@@ -360,7 +360,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                      */
                     if (autoZoomAndPalette) {
                         try {
-                            mapArea.zoomToExtents(getLayerDetails().getExtents());
+                            mapArea.zoomToExtent(getLayerDetails().getExtents());
                         } catch (Exception e) {
                             handleError(e);
                         }

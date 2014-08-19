@@ -61,7 +61,8 @@ public class LayoutManager {
             UnitsInfoIF unitsInfo, TimeSelectorIF timeSelector,
             ElevationSelectorIF elevationSelector, PaletteSelectorIF paletteSelector,
             Anchor kmzLink, Anchor permalink, Anchor email, Anchor screenshot, Image rescLogo,
-            MapArea mapArea, Image loadingImage, AnimationButton anim, PushButton infoButton) {
+            MapArea mapArea, Image loadingImage, AnimationButton anim, PushButton infoButton,
+            PushButton zoomToLayerExtents) {
 
         kmzLink.setStylePrimaryName("linkStyle");
         permalink.setStylePrimaryName("linkStyle");
@@ -80,6 +81,8 @@ public class LayoutManager {
         bottomPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
         anim.setWidth("16px");
         bottomPanel.add(anim);
+        zoomToLayerExtents.setWidth("16px");
+        bottomPanel.add(zoomToLayerExtents);
         bottomPanel.setWidth("100%");
         bottomPanel.add(kmzLink);
         bottomPanel.add(permalink);
@@ -87,12 +90,6 @@ public class LayoutManager {
         bottomPanel.add(screenshot);
         infoButton.setWidth("16px");
         bottomPanel.add(infoButton);
-
-//        HorizontalPanel topPanel = new HorizontalPanel();
-
-//        topPanel.add(rescLogo);
-//        topPanel.add(selectors);
-//        topPanel.setCellVerticalAlignment(rescLogo, HasVerticalAlignment.ALIGN_MIDDLE);
 
         HorizontalPanel mapPalettePanel = new HorizontalPanel();
         mapPalettePanel.add(mapArea);
