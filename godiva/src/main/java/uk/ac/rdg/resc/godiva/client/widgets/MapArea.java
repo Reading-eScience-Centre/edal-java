@@ -641,7 +641,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     protected void displayImagePopup(String url, String title) {
         /*
-         * Window.open treats realtive URLs in a browser-dependent manner. So we
+         * Window.open treats relative URLs in a browser-dependent manner. So we
          * have to use absolute ones here.
          */
         Window.open(url, title, null);
@@ -1229,9 +1229,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     public void setAllowTransects(boolean allowTransects) {
         if (allowTransects) {
-            editingToolbar.deactivate();
-        } else {
             editingToolbar.activate();
+        } else {
+            editingToolbar.deactivate();
         }
     }
 
