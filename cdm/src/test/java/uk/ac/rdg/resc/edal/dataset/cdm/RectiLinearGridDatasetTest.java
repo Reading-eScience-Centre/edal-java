@@ -203,10 +203,6 @@ public class RectiLinearGridDatasetTest {
     public void testVectorPlugin() throws DataReadingException, EdalException,
             UnsupportedOperationException {
         VectorPlugin vplugin = new VectorPlugin("vLon", "vLat", "Test Vector Field", true);
-        VariableMetadata[] vdata = new VariableMetadata[] { dataset.getVariableMetadata("vLon"),
-                dataset.getVariableMetadata("vLat") };
-        VariableMetadata[] afterApplyPlugin = vplugin.processVariableMetadata(vdata);
-
         dataset.addVariablePlugin(vplugin);
 
         // test on only one vertical position in order to save times
@@ -225,11 +221,6 @@ public class RectiLinearGridDatasetTest {
             PointSeriesFeature data = timeSeriesFeatures.iterator().next();
             Array1D<Number> magValues = data.getValues("vLonvLat-mag");
             Array1D<Number> dirValues = data.getValues("vLonvLat-dir");
-
-            assertEquals(afterApplyPlugin[1].getParameter().toString(),
-                    data.getParameter("vLonvLat-mag").toString());
-            assertEquals(afterApplyPlugin[2].getParameter().toString(),
-                    data.getParameter("vLonvLat-dir").toString());
 
             // two values below are set by test dataset generator
             double expectedLon = 100.0f * xIndex / (xSize - 1);
