@@ -151,7 +151,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     protected WMSGetFeatureInfo getFeatureInfo;
     protected EditingToolbar editingToolbar;
     protected String proxyUrl;
-    
+
     protected float opacity = 1.0f;
 
     /** Map of unit conversions to be applied to each layer */
@@ -670,7 +670,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         // popup.center();
     }
 
-    public void zoomToExtents(String extents) throws Exception {
+    public void zoomToExtent(String extents) {
         if (currentProjection.equalsIgnoreCase("EPSG:32661")
                 || currentProjection.equalsIgnoreCase("EPSG:32761")
                 || currentProjection.equalsIgnoreCase("EPSG:5041")
@@ -684,16 +684,12 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
              */
             return;
         }
-        try {
-            String[] bboxStr = extents.split(",");
-            double lowerLeftX = Double.parseDouble(bboxStr[0]);
-            double lowerLeftY = Double.parseDouble(bboxStr[1]);
-            double upperRightX = Double.parseDouble(bboxStr[2]);
-            double upperRightY = Double.parseDouble(bboxStr[3]);
-            map.zoomToExtent(new Bounds(lowerLeftX, lowerLeftY, upperRightX, upperRightY));
-        } catch (Exception e) {
-            throw e;
-        }
+        String[] bboxStr = extents.split(",");
+        double lowerLeftX = Double.parseDouble(bboxStr[0]);
+        double lowerLeftY = Double.parseDouble(bboxStr[1]);
+        double upperRightX = Double.parseDouble(bboxStr[2]);
+        double upperRightY = Double.parseDouble(bboxStr[3]);
+        map.zoomToExtent(new Bounds(lowerLeftX, lowerLeftY, upperRightX, upperRightY));
     }
 
     /**
