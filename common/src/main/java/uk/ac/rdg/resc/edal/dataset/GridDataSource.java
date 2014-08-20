@@ -46,9 +46,42 @@ import uk.ac.rdg.resc.edal.util.Array4D;
  */
 public interface GridDataSource {
 
+    /**
+     * Read an {@link Array4D} of data from the underlying data source
+     * 
+     * @param variableId
+     *            The variable ID to read
+     * @param tmin
+     *            The minimum time index in the underlying data
+     * @param tmax
+     *            The maximum time index in the underlying data
+     * @param zmin
+     *            The minimum z index in the underlying data
+     * @param zmax
+     *            The maximum z index in the underlying data
+     * @param ymin
+     *            The minimum y index in the underlying data
+     * @param ymax
+     *            The maximum y index in the underlying data
+     * @param xmin
+     *            The minimum x index in the underlying data
+     * @param xmax
+     *            The maximum x index in the underlying data
+     * @return An {@link Array4D} containing the data which was read
+     * @throws IOException
+     *             If there is an IO problem accessing the data
+     * @throws DataReadingException
+     *             If there is another issue reading the data
+     */
     public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax,
             int ymin, int ymax, int xmin, int xmax) throws IOException, DataReadingException;
 
+    /**
+     * Close all resources associated with the underlying data.
+     * 
+     * @throws IOException
+     *             If the underlying data cannot be closed for some reason
+     */
     public void close() throws IOException;
 
 }
