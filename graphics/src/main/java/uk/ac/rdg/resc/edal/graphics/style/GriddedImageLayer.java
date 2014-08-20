@@ -85,13 +85,23 @@ public abstract class GriddedImageLayer extends ImageLayer {
                         params);
                 Collection<? extends DiscreteFeature<?, ?>> features = featureAndMemberName
                         .getFeatures();
-                if (features.size() != 1) {
-                    throw new EdalException("Expecting a single feature for the layer " + layerId);
+                MapFeature mapFeature = null;
+                for (DiscreteFeature<?, ?> testFeature : features) {
+                    if (testFeature instanceof MapFeature) {
+                        if (mapFeature != null) {
+                            throw new EdalException("Expecting a single gridded feature for the layer "
+                                    + layerId);
+                        } else {
+                            mapFeature = (MapFeature) testFeature;
+                        }
+                    }
                 }
-                if (!(features.iterator().next() instanceof MapFeature)) {
+                if (mapFeature == null) {
                     throw new EdalException("Expecting a gridded feature for the layer " + layerId);
                 }
-                extractedFeatures.put(layerId, featureAndMemberName);
+                FeaturesAndMemberName singleMapFeature = new FeaturesAndMemberName(mapFeature,
+                        featureAndMemberName.getMember());
+                extractedFeatures.put(layerId, singleMapFeature);
             }
             return extractedFeatures.get(layerId);
         }
