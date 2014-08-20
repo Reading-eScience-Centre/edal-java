@@ -850,6 +850,17 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         Window.setTitle(menuTree.getTitle());
 
         if (permalinking) {
+            String bgMap = permalinkParamsMap.get("bgmap");
+            if (bgMap != null && !"".equals(bgMap)) {
+                try {
+                    mapArea.setBackgroundMap(bgMap);
+                } catch (Exception e) {
+                    /*
+                     * It doesn't matter if we can't set the background map, so
+                     * ignore any exceptions
+                     */
+                }
+            }
             String currentLayer = permalinkParamsMap.get("layer");
             if (currentLayer != null) {
                 String datasetUrl = permalinkParamsMap.get("dataset");
@@ -861,17 +872,6 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 } else {
                     String currentWms = URL.decode(datasetUrl);
                     layerSelector.selectLayer(currentLayer, currentWms, false);
-                }
-            }
-            String bgMap = permalinkParamsMap.get("bgmap");
-            if (bgMap != null && !"".equals(bgMap)) {
-                try {
-                    mapArea.setBackgroundMap(permalinkParamsMap.get("bgmap"));
-                } catch (Exception e) {
-                    /*
-                     * It doesn't matter if we can't set the background map, so
-                     * ignore any exceptions
-                     */
                 }
             }
         }
