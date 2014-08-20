@@ -226,12 +226,6 @@ public class RectiLinearGridDatasetTest {
             double expectedLon = 100.0f * xIndex / (xSize - 1);
             double expectedLat = 100.0f * yIndex / (ySize - 1);
 
-            /*
-             * float expectedMag = (vplugin.getValue("vLonvLat-mag", hPos,
-             * values)).floatValue(); float expectedDir
-             * =(vplugin.getValue("vLonvLat-dir", hPos, values)).floatValue();
-             */
-
             float expectedMag = (float) Math.hypot(expectedLon, expectedLat);
             float expectedDir = (float) (Math.toDegrees(Math.atan2(expectedLon, expectedLat)));
             // only choose one date in the datasetTExtent.
@@ -248,8 +242,6 @@ public class RectiLinearGridDatasetTest {
      **/
     @Test
     public void testMetadataInfo() {
-        assertEquals(chrnology, dataset.getDatasetChronology());
-        assertEquals(vCrs, dataset.getDatasetVerticalCrs());
         assertEquals(MapFeature.class, dataset.getMapFeatureType("vLon"));
 
         VariableMetadata metadata = dataset.getVariableMetadata("vLon");

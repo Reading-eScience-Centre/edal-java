@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.joda.time.Chronology;
-
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
@@ -46,7 +44,6 @@ import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
@@ -54,7 +51,6 @@ import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
@@ -124,23 +120,6 @@ public class IntercomparisonDataset implements Dataset {
             }
         }
 
-        if (inSituDataset.getDatasetChronology() != null) {
-            if (!inSituDataset.getDatasetChronology().equals(gridDataset.getDatasetChronology())) {
-                throw new MismatchedCrsException(
-                        "Dataset chronologies must match for intercomparison");
-            }
-        } else if (gridDataset.getDatasetChronology() != null) {
-            throw new MismatchedCrsException("Dataset chronologies must match for intercomparison");
-        }
-
-        if (inSituDataset.getDatasetVerticalCrs() != null) {
-            if (!inSituDataset.getDatasetVerticalCrs().equals(gridDataset.getDatasetVerticalCrs())) {
-                throw new MismatchedCrsException(
-                        "Dataset vertical CRSs must match for intercomparison");
-            }
-        } else if (gridDataset.getDatasetVerticalCrs() != null) {
-            throw new MismatchedCrsException("Dataset vertical CRSs must match for intercomparison");
-        }
         calculateVariableRelationships();
     }
 
@@ -312,22 +291,6 @@ public class IntercomparisonDataset implements Dataset {
         inSituDataset.addVariablePlugin(plugin);
         gridDataset.addVariablePlugin(plugin);
         calculateVariableRelationships();
-    }
-
-    @Override
-    public Chronology getDatasetChronology() {
-        /*
-         * We have already checked they match so we can use either
-         */
-        return inSituDataset.getDatasetChronology();
-    }
-
-    @Override
-    public VerticalCrs getDatasetVerticalCrs() {
-        /*
-         * We have already checked they match so we can use either
-         */
-        return inSituDataset.getDatasetVerticalCrs();
     }
 
     @Override
