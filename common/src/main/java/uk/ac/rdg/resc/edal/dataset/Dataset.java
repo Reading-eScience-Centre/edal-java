@@ -32,8 +32,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.joda.time.Chronology;
-
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
@@ -45,7 +43,6 @@ import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
@@ -119,20 +116,6 @@ public interface Dataset {
      *             If there is a problem adding the plugin
      */
     public void addVariablePlugin(VariablePlugin plugin) throws EdalException;
-
-    /**
-     * @return The {@link Chronology} used for any times in this dataset. Can be
-     *         <code>null</code> if this dataset contains no features with time
-     *         information
-     */
-    public Chronology getDatasetChronology();
-
-    /**
-     * @return The {@link VerticalCrs} used for any vertical positions in this
-     *         dataset. Can be <code>null</code> if this dataset contains no
-     *         features with vertical information
-     */
-    public VerticalCrs getDatasetVerticalCrs();
 
     /**
      * Determines the type of feature returned by the

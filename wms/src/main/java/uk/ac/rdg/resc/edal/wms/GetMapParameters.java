@@ -35,7 +35,6 @@ import java.util.Set;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 
-import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
@@ -106,12 +105,13 @@ public class GetMapParameters {
                 .getFieldsWithScales();
         for (NameAndRange nameAndRange : fieldsWithScales) {
             String wmsLayerName = nameAndRange.getFieldLabel();
-            Dataset dataset = catalogue.getDatasetFromLayerName(wmsLayerName);
+            TemporalDomain temporalDomain = catalogue.getVariableMetadataFromId(wmsLayerName)
+                    .getTemporalDomain();
             if (chronology == null) {
-                chronology = dataset.getDatasetChronology();
+                chronology = temporalDomain.getChronology();
             } else {
-                if (dataset.getDatasetChronology() != null) {
-                    if (!chronology.equals(dataset.getDatasetChronology())) {
+                if (temporalDomain.getChronology() != null) {
+                    if (!chronology.equals(temporalDomain.getChronology())) {
                         throw new IncorrectDomainException(
                                 "All datasets referenced by a GetMap request must share the same chronology");
                     }
@@ -119,8 +119,9 @@ public class GetMapParameters {
             }
         }
         plottingDomainParams = parsePlottingParams(params, chronology, wmsVersion);
-        if(animation) {
-            animationTimesteps = parseAnimationTimesteps(params, chronology, catalogue, styleParameters);
+        if (animation) {
+            animationTimesteps = parseAnimationTimesteps(params, chronology, catalogue,
+                    styleParameters);
         }
     }
 
@@ -139,7 +140,7 @@ public class GetMapParameters {
     public boolean isAnimation() {
         return animation;
     }
-    
+
     public List<DateTime> getAnimationTimesteps() {
         return animationTimesteps;
     }

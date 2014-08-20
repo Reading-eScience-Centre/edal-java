@@ -218,8 +218,6 @@ public class RectiLinearGridDatasetTest {
      **/
     @Test
     public void testMetadataInfo() throws DataReadingException {
-        assertEquals(chrnology, dataset.getDatasetChronology());
-        assertEquals(vCrs, dataset.getDatasetVerticalCrs());
         assertEquals(MapFeature.class, dataset.getMapFeatureType("vLon"));
 
         VariableMetadata metadata = dataset.getVariableMetadata("vLon");

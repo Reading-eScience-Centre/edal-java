@@ -45,7 +45,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.format.DateTimeFormatter;
@@ -83,7 +82,6 @@ import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
@@ -107,11 +105,6 @@ public final class En3DatasetFactory extends DatasetFactory {
     /*
      * Static definitions of parameters found in the EN3 database
      */
-    // private static final Parameter TEMP_PARAMETER = new Parameter("TEMP",
-    // "Sea Water Temperature",
-    // "The measured temperature, in degrees celcius, of the sea water",
-    // "degrees_C",
-    // "sea_water_temperature");
     private static final Parameter POT_TEMP_PARAMETER = new Parameter("POTM_CORRECTED",
             "Sea Water Potential Temperature",
             "The potential temperature, in degrees celcius, of the sea water", "degrees_C",
@@ -124,7 +117,6 @@ public final class En3DatasetFactory extends DatasetFactory {
     private static final Map<String, Parameter> ALL_PARAMETERS = new HashMap<String, Parameter>();
 
     static {
-        // ALL_PARAMETERS.put(TEMP_PARAMETER.getId(), TEMP_PARAMETER);
         ALL_PARAMETERS.put(POT_TEMP_PARAMETER.getId(), POT_TEMP_PARAMETER);
         ALL_PARAMETERS.put(PSAL_PARAMETER.getId(), PSAL_PARAMETER);
     }
@@ -598,16 +590,6 @@ public final class En3DatasetFactory extends DatasetFactory {
         @Override
         protected Extent<DateTime> getDatasetTimeExtent() {
             return tExtent;
-        }
-
-        @Override
-        public Chronology getDatasetChronology() {
-            return ISOChronology.getInstance();
-        }
-
-        @Override
-        public VerticalCrs getDatasetVerticalCrs() {
-            return EN3_VERTICAL_CRS;
         }
 
         @Override
