@@ -274,7 +274,7 @@ public class AnimationButton extends ToggleButton {
                             for (int i = 0; i < timesArr.size(); i++) {
                                 JSONObject timeObj = timesArr.get(i).isObject();
                                 String title = timeObj.get("title").isString().stringValue();
-                                String value = timeObj.get("timeString").isString().stringValue();
+                                String value = URL.encodePathSegment(timeObj.get("timeString").isString().stringValue());
                                 granularitySelector.addItem(title, value);
                             }
                         }

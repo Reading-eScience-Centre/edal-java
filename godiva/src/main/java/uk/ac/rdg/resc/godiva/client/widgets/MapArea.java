@@ -72,6 +72,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
@@ -238,7 +239,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             boolean logScale, String frameRate) {
         StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.1.1");
         url.append("&format=image/gif" + "&transparent=true" + "&styles=" + style + "/" + palette
-                + "&layers=" + layerId + "&time=" + timeList + "&logscale=" + logScale + "&srs="
+                + "&layers=" + layerId + "&time=" + URL.encodePathSegment(timeList) + "&logscale=" + logScale + "&srs="
                 + currentProjection + "&bbox=" + map.getExtent().toBBox(6) + "&width="
                 + ((int) map.getSize().getWidth()) + "&height=" + ((int) map.getSize().getHeight())
                 + "&animation=true");
@@ -251,10 +252,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         if (frameRate != null)
             url.append("&frameRate=" + frameRate);
         if (aboveMaxString != null) {
-            url.append("&ABOVEMAXCOLOR=" + aboveMaxString);
+            url.append("&ABOVEMAXCOLOR=" + URL.encodePathSegment(aboveMaxString));
         }
         if (belowMinString != null) {
-            url.append("&BELOWMINCOLOR=" + belowMinString);
+            url.append("&BELOWMINCOLOR=" + URL.encodePathSegment(belowMinString));
         }
         if (noDataString != null) {
             url.append("&BGCOLOR=" + noDataString);
