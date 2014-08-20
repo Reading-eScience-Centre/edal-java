@@ -37,7 +37,6 @@ import java.util.Set;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
@@ -480,15 +479,21 @@ public class TimeUtils {
     }
 
     /**
+     * Tests if two {@link DateTime}s fall on the same day.
+     * 
+     * @param dt1
+     *            The first {@link DateTime}. The second {@link DateTime} will
+     *            be converted to have the same time zone as this one
+     * @param dt2
+     *            The second {@link DateTime}.
      * @return true if the two given DateTimes fall on the same day.
      */
     public static boolean onSameDay(DateTime dt1, DateTime dt2) {
         /*
-         * We must make sure that the DateTimes are both in UTC or the field
-         * comparisons will not do what we expect
+         * We must make sure that the DateTimes are both in the same time zone
+         * or the field comparisons will not do what we expect
          */
-        dt1 = dt1.withZone(DateTimeZone.UTC);
-        dt2 = dt2.withZone(DateTimeZone.UTC);
+        dt2 = dt2.withZone(dt1.getZone());
         boolean onSameDay = dt1.getYear() == dt2.getYear()
                 && dt1.getMonthOfYear() == dt2.getMonthOfYear()
                 && dt1.getDayOfMonth() == dt2.getDayOfMonth();
