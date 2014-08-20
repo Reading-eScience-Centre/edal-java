@@ -339,7 +339,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
 
-            for(int i=0;i<variableIds.size();i++){String varId=variableIds.get(i);
+            for (int i = 0; i < variableIds.size(); i++) {
+                String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read data for unplottable variables, but add any
@@ -1094,8 +1095,15 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     throw new IllegalArgumentException("The vertical CRS of the variable " + varId
                             + " must match that of the domain you are trying to read.");
                 }
-                int zMin = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
-                int zMax = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
+                int zMin;
+                int zMax;
+                if (zAxis.isAscending()) {
+                    zMin = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
+                    zMax = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
+                } else {
+                    zMin = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
+                    zMax = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
+                }
 
                 /*
                  * Read the data and move it to a 1D Array
@@ -1291,7 +1299,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * Read all of the data from non-plugin variables. This loops over
              * all variables, and then ignores those which are plugin-derived.
              */
-            for(int i=0;i<variableIds.size();i++){String varId=variableIds.get(i);
+            for (int i = 0; i < variableIds.size(); i++) {
+                String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
                      * Don't read data for unplottable variables, but add any
