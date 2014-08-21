@@ -117,6 +117,10 @@ public class RectiLinearGridDatasetTest {
     private ArrayList<GridCell2D> samplePoints = new ArrayList<>();
 
     /**
+     * Initialize the testing environment. First, read the data in. Then create
+     * a rectilinear grid object. Next pick up points in the grid as sampling
+     * points. Initialize values for T and Z axis.
+     * 
      * @throws IOException
      *             if there is a problem when creating the dataset
      * @throws EdalException
@@ -181,6 +185,8 @@ public class RectiLinearGridDatasetTest {
      */
 
     /**
+     * Test {@link VectorPlugin}.
+     * 
      * @throws DataReadingExcpetion
      *             if there is a problem reading the underlying data
      * @throws EdalException
@@ -259,9 +265,9 @@ public class RectiLinearGridDatasetTest {
     }
 
     /*
-     * test if the extracted TimeSeriesFeatures method return empty when arguments
-     * in the constructor {@link PlottingDomainParams} are set out of the
-     * domains of T and Z.
+     * test if the extracted TimeSeriesFeatures method return empty when
+     * arguments in the constructor {@link PlottingDomainParams} are set out of
+     * the domains of T and Z.
      */
 
     /**
@@ -280,9 +286,9 @@ public class RectiLinearGridDatasetTest {
         for (Double zPos = 0.0; zPos <= 100; zPos += 20.0) {
             for (int i = 0; i < samplePoints.size(); i++) {
                 GridCell2D cell = samplePoints.get(i);
-                BoundingBox bbox = (BoundingBox) cell.getFootprint();
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, null, tExtent,
-                        null, zPos, null);
+                HorizontalPosition hPos =cell.getCentre();
+                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null, tExtent,
+                        hPos, zPos, null);
                 Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                         .extractTimeseriesFeatures(null, params);
                 assertEquals(0, timeSeriesFeatures.size());
@@ -295,9 +301,9 @@ public class RectiLinearGridDatasetTest {
         for (Double zPos = 0.0; zPos <= 100; zPos += 30.0) {
             for (int i = 0; i < samplePoints.size(); i++) {
                 GridCell2D cell = samplePoints.get(i);
-                BoundingBox bbox = (BoundingBox) cell.getFootprint();
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, null, tExtent,
-                        null, zPos, null);
+                HorizontalPosition hPos =cell.getCentre();
+                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null, tExtent,
+                        hPos, zPos, null);
                 Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                         .extractTimeseriesFeatures(null, params);
                 assertEquals(0, timeSeriesFeatures.size());
@@ -310,9 +316,9 @@ public class RectiLinearGridDatasetTest {
         Extent<Double> zExtent = Extents.newExtent(200.0, 500.0);
         for (int i = 0; i < samplePoints.size(); i++) {
             GridCell2D cell = samplePoints.get(i);
-            BoundingBox bbox = (BoundingBox) cell.getFootprint();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, zExtent, tExtent,
-                    null, null, null);
+            HorizontalPosition hPos =cell.getCentre();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent, tExtent,
+                    hPos, null, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                     .extractTimeseriesFeatures(null, params);
             assertEquals(0, timeSeriesFeatures.size());
@@ -321,9 +327,9 @@ public class RectiLinearGridDatasetTest {
         zExtent = Extents.newExtent(-200.0, -100.0);
         for (int i = 0; i < samplePoints.size(); i++) {
             GridCell2D cell = samplePoints.get(i);
-            BoundingBox bbox = (BoundingBox) cell.getFootprint();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, zExtent, tExtent,
-                    null, null, null);
+            HorizontalPosition hPos =cell.getCentre();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent, tExtent,
+                    hPos, null, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                     .extractTimeseriesFeatures(null, params);
             assertEquals(0, timeSeriesFeatures.size());
@@ -331,36 +337,38 @@ public class RectiLinearGridDatasetTest {
     }
 
     /**
-     * test if it throws IllegalArgumentException when the constructor of
+     * Test if it throws IllegalArgumentException when the constructor of
      * {@link PlottingDomainParams} contains meaningless parameters.
      */
-    @Test(expected = IllegalArgumentException.class)
-    public void testMapFeaturesWithWrongParams() throws Exception {
+    @Test//(expected = NullPointerException.class)
+    public void testMapFeaturesWithWrongParams() throws DataReadingException {
         // data value is out bound of tAxis
         DateTime tValue = new DateTime(2000, 11, 02, 15, 00, chrnology);
         double zPos = 40.0;
-        for (int i = 0; i < samplePoints.size(); i++) {
-            GridCell2D cell = samplePoints.get(i);
-            BoundingBox bbox = (BoundingBox) cell.getFootprint();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
-                    datasetTExtent, null, zPos, tValue);
-            Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset.extractMapFeatures(
-                    null, params);
-            assertEquals(0, mapFeature.size());
-        }
 
+        // just pick up one sampling point as we expect an exception
+        int i = 5;
+
+        GridCell2D cell = samplePoints.get(i);
+        HorizontalPosition hPos = cell.getCentre();
+        BoundingBox bbox = (BoundingBox) cell.getFootprint();
+        PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
+                datasetTExtent, null, zPos, tValue);
+        // the statement below throws an IllegalArgumentException
+        Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset.extractMapFeatures(null,
+               params);
+        assertNull(mapFeature);
         // depth value is out bound of zAxis
         zPos = 140.0;
         tValue = new DateTime(2000, 01, 02, 15, 00, chrnology);
-        for (int i = 0; i < samplePoints.size(); i++) {
-            GridCell2D cell = samplePoints.get(i);
-            BoundingBox bbox = (BoundingBox) cell.getFootprint();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
-                    datasetTExtent, null, zPos, tValue);
-            Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset.extractMapFeatures(
-                    null, params);
-            assertEquals(0, mapFeature.size());
-        }
+        i = 3;
+        cell = samplePoints.get(i);
+        hPos = cell.getCentre();
+        bbox = (BoundingBox) cell.getFootprint();
+        params = new PlottingDomainParams(1, 1, null, datasetZExtent, datasetTExtent, hPos, zPos,
+                tValue);
+        // the statement below throws an IllegalArgumentException
+        mapFeature = dataset.extractMapFeatures(null, params);
     }
 
     /**
@@ -377,13 +385,13 @@ public class RectiLinearGridDatasetTest {
         for (Double zPos = 0.0; zPos <= 100; zPos += 20.0) {
             for (int i = 0; i < samplePoints.size(); i++) {
                 GridCell2D cell = samplePoints.get(i);
+                HorizontalPosition hPos = cell.getCentre();
                 GridCoordinates2D gCoordinate = cell.getGridCoordinates();
                 int xIndex = gCoordinate.getX();
                 int yIndex = gCoordinate.getY();
                 BoundingBox bbox = (BoundingBox) cell.getFootprint();
-
                 PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
-                        datasetTExtent, null, zPos, tValue);
+                        datasetTExtent, hPos, zPos, tValue);
                 Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset
                         .extractMapFeatures(null, params);
                 assertEquals(1, mapFeature.size());
@@ -401,12 +409,11 @@ public class RectiLinearGridDatasetTest {
                 assertArrayEquals(new int[] { 1, 1 }, depthValues.getShape());
                 assertArrayEquals(new int[] { 1, 1 }, timeValues.getShape());
 
-                float expectedDepth = (float) zPos.doubleValue();
-
                 /*
-                 * below three values are set when we generate the responding
-                 * values of the test dataset
+                 * below four expected values are set when we generate the
+                 * responding values of the test dataset
                  */
+                float expectedDepth = (float) zPos.doubleValue();
                 float expectedLat = 100.0f * yIndex / (ySize - 1);
                 float expectedTime = 100.0f * tAxis.findIndexOf(tValue) / (tSize - 1);
                 float expectedLon = 100.0f * xIndex / (xSize - 1);
@@ -439,12 +446,12 @@ public class RectiLinearGridDatasetTest {
 
         for (int i = 0; i < samplePoints.size(); i++) {
             GridCell2D cell = samplePoints.get(i);
+            HorizontalPosition hPos = cell.getCentre();
             GridCoordinates2D gCoordinate = cell.getGridCoordinates();
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
-            BoundingBox bbox = (BoundingBox) cell.getFootprint();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, null,
-                    datasetTExtent, null, zPos, null);
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
+                    datasetTExtent, hPos, zPos, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                     .extractTimeseriesFeatures(null, params);
             assertEquals(1, timeSeriesFeatures.size());
@@ -460,8 +467,8 @@ public class RectiLinearGridDatasetTest {
             assertArrayEquals(new int[] { tSize }, timeValues.getShape());
 
             /*
-             * below two values are used purposedly when we generate the
-             * responding values of the test dataset
+             * expectedLon and expectedLat are generated according to the
+             * formulas given below.
              */
             float expectedLon = 100.0f * xIndex / (xSize - 1);
             float expectedLat = 100.0f * yIndex / (ySize - 1);
@@ -469,8 +476,7 @@ public class RectiLinearGridDatasetTest {
 
             for (int k = 0; k < tSize; k += 2) {
                 /*
-                 * below the value is used purposedly when we generate the
-                 * responding value of the test dataset
+                 * expectedTime is defined as the formula below
                  */
                 float expectedTime = 100 * k / 9.0f;
 
@@ -505,7 +511,7 @@ public class RectiLinearGridDatasetTest {
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                     .extractTimeseriesFeatures(null, params);
             if (!zExtent.intersects(datasetZExtent)) {
-                assertEquals(0, timeSeriesFeatures.size());
+                assertNull(timeSeriesFeatures);
             } else {
                 PointSeriesFeature data = (PointSeriesFeature) timeSeriesFeatures.iterator().next();
                 verifyTimeSeriesFeature(data, data.getHorizontalPosition(), xIndex, yIndex);
@@ -613,27 +619,27 @@ public class RectiLinearGridDatasetTest {
 
     @Test
     public void testTimeSerieFeaturesPartofZExents() throws DataReadingException {
-        // a zExtent is inside of the zExtent of dataset.
+        // a zExtent is inside the zExtent of dataset.
         Extent<Double> zExtent = Extents.newExtent(18.6, 53.4);
         getFeatureByZExtent(zExtent);
 
-        // a zExtent is overlay of the zExtent of dataset.
+        // a zExtent is overlay the zExtent of dataset.
         zExtent = Extents.newExtent(20.0, 153.4);
         getFeatureByZExtent(zExtent);
 
-        // another zExtent is overlay of the zExtent of dataset.
+        // another zExtent is overlay the zExtent of dataset.
         zExtent = Extents.newExtent(-120.6, 47.18);
         getFeatureByZExtent(zExtent);
 
-        // a zExtent is outside of the zExtent of dataset.
+        // a zExtent is outside the zExtent of dataset.
         zExtent = Extents.newExtent(-18.6, -10.0);
         getFeatureByZExtent(zExtent);
 
-        // a targetZ value is inside of the zExtent of the dataset
+        // a targetZ value is inside the zExtent of the dataset
         double targetZ = 85.8;
         getFeatureByTargetZ(targetZ);
 
-        // a targetZ value is outside of the zExtent of the dataset
+        // a targetZ value is outside the zExtent of the dataset
         targetZ = 110.8; // vAxis.contains(targetZ) return false
         getFeatureByTargetZ(targetZ);
 
@@ -844,7 +850,9 @@ public class RectiLinearGridDatasetTest {
     }
 
     /**
-     * decide how many midpoints in a given distance extent
+     * This only works for lat/lon grid.
+     * 
+     * Decide how many midpoints in a given distance extent
      * 
      * @param low
      *            the low point of the given distance extent
@@ -1126,7 +1134,8 @@ public class RectiLinearGridDatasetTest {
     }
 
     /**
-     * test {@link Dataset#readFeature}method.
+     * By testing {@link Dataset#readFeature}, two classes {@link GridFeature}
+     * and {@link MapFeature} are tested.
      * 
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
