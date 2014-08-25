@@ -32,6 +32,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.joda.time.DateTime;
+import org.joda.time.chrono.ISOChronology;
 import org.junit.Test;
 
 import uk.ac.rdg.resc.edal.util.chronologies.*;
@@ -43,7 +44,10 @@ import uk.ac.rdg.resc.edal.util.chronologies.*;
  * @author Nan Lin
  */
 public class SimpleTemporaDomainTest {
-
+    /**
+     * Test {@link SimpleTemporaDomain#contains}. Use various Chronology and
+     * dates are inside or outside the temporal domains.
+     */
     @Test
     public void testContains() {
         NoLeapChronology nlc = NoLeapChronology.getInstanceUTC();
@@ -55,9 +59,13 @@ public class SimpleTemporaDomainTest {
         DateTime dt3 = new DateTime(2012, 2, 27, 12, 10, nlc);
         DateTime dt4 = new DateTime(2012, 5, 27, 12, 10);
 
+        assertFalse(std.contains(null));
+        // NoLeapChronology doesn't contain the date Feb. 29
         assertFalse(std.contains(dt1));
+        // dt2 is outside the temporal domain
         assertFalse(std.contains(dt2));
         assertTrue(std.contains(dt3));
+        // dt4 use ISOChronology
         assertFalse(std.contains(dt4));
         assertTrue(std.contains(start));
         assertTrue(std.contains(end));
@@ -74,7 +82,21 @@ public class SimpleTemporaDomainTest {
         assertTrue(std.contains(start));
         assertTrue(std.contains(end));
         assertTrue(std.contains(dt1));
+        // In ThreeSixtyDayChronology, March hasn't 31 days.
         assertFalse(std.contains(dt3));
         assertFalse(std.contains(dt4));
+
+        ISOChronology iso = ISOChronology.getInstance();
+        start = new DateTime(2012, 1, 1, 0, 0, iso);
+        end = new DateTime(2012, 12, 31, 23, 59, iso);
+        std = new SimpleTemporalDomain(start, end);
+        dt1 = new DateTime(2012, 2, 29, 12, 10);
+        dt2 = new DateTime(2011, 2, 27, 12, 10, nlc);
+        dt3 = new DateTime(2012, 12, 31, 23, 59, 36);
+        assertTrue(std.contains(dt1));
+        //dt2 uses different chronology
+        assertFalse(std.contains(dt2));
+        // dt3 now is outside this temporal domain though the gap is 36 seconds
+        assertFalse(std.contains(dt3));
     }
 }

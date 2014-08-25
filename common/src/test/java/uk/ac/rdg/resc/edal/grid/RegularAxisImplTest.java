@@ -64,6 +64,10 @@ public class RegularAxisImplTest {
      */
     @Test
     public void testGetCoordinateValue() {
+        /*
+         * the expected values are drawn from the definition of
+         * "CoordinateValue"
+         */
         for (int i = 0; i < LONGSIZE; i++) {
             double longPoint = longitudeAxis.getCoordinateValue(i);
             double expectedValue = 100.0 + i * SPACE;
@@ -81,6 +85,10 @@ public class RegularAxisImplTest {
      */
     @Test
     public void testGetCoordinateBounds() {
+        /*
+         * the expected values are drawn from the definition of
+         * "CoordinateBounds"
+         */
         for (int i = 0; i < LONGSIZE; i++) {
             Extent<Double> bound = longitudeAxis.getCoordinateBounds(i);
             Extent<Double> expectedBound = Extents.newExtent(100.0 + (i - 0.5) * SPACE, 100.0
@@ -105,6 +113,10 @@ public class RegularAxisImplTest {
     @Test
     public void testFindIndexOf() {
         int expectedIrregularValue = -1;
+        /*
+         * irregular values are out of the bounds of axis or special values like
+         * null
+         */
         assertEquals(expectedIrregularValue, longitudeAxis.findIndexOf(0.0));
         assertEquals(expectedIrregularValue, longitudeAxis.findIndexOf(105.0));
         assertEquals(expectedIrregularValue, longitudeAxis.findIndexOf(null));
@@ -116,9 +128,13 @@ public class RegularAxisImplTest {
         assertEquals(expectedIrregularValue, latitudeAxis.findIndexOf(Double.NaN));
 
         double step = 1 / 5.0;
-
+        /*
+         * a value is between two indices on the axis, the value's index is the
+         * one that the value is more closed to it.
+         */
         for (int i = 0; i < (int) LONGSIZE * SPACE / step; i++) {
-            int index = longitudeAxis.findIndexOf(100 + i * step);
+            double value = 100 + i * step;
+            int index = longitudeAxis.findIndexOf(value);
             int expectedIndex = (int) Math.round(i * step / SPACE);
             assertEquals(expectedIndex, index);
         }
@@ -147,7 +163,7 @@ public class RegularAxisImplTest {
     @Test
     public void testFindIndexOfUnconstrained() {
         double step = 1 / 5.0;
-        // maximum position points be tested
+        // maximum number of points are tested
         int maxPosNo = 101;
         for (int i = 0; i < maxPosNo; i++) {
             double position = -20.0 + i * step;
@@ -159,6 +175,7 @@ public class RegularAxisImplTest {
             int expectPos = (int) Math.round((position - 100.0) / SPACE);
             assertEquals(expectPos, longitudeAxis.findIndexOfUnconstrained(position));
         }
+        // longitude can be warped, remember -10 and 350 are identical position.
         for (int i = 0; i < maxPosNo; i++) {
             double position = 420.0 + i * step;
             int expectPos = (int) Math.round((position - 360.0 - 100.0) / SPACE);

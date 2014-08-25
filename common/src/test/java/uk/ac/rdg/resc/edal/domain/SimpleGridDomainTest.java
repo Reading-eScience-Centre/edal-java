@@ -68,8 +68,11 @@ public class SimpleGridDomainTest {
     private Chronology chronology = ISOChronology.getInstance();
     private DateTime start = new DateTime(1999, 12, 2, 0, 0, chronology);
 
+    /**
+     * Initialize the SimpleGridDomain
+     */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         double resolution = 1.0;
         ReferenceableAxis<Double> longAxis = new RegularAxisImpl("longitude", 65.5, resolution, 11,
                 true);
@@ -92,6 +95,10 @@ public class SimpleGridDomainTest {
         sgd = new SimpleGridDomain(hGrid, vAxis, tAxis);
     }
 
+    /**
+     * test {@link SimpleGridDomain#contains}. Pick up test positions inside or
+     * outside the X Y Z and T axis of the SimpleGridDomain.
+     */
     @Test
     public void testContains() {
         assertFalse(sgd.contains(null));

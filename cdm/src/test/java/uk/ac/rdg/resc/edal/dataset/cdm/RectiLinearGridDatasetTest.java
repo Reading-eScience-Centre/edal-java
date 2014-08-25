@@ -265,9 +265,15 @@ public class RectiLinearGridDatasetTest {
     }
 
     /*
+<<<<<<< HEAD
      * test if the extracted TimeSeriesFeatures method return empty when
      * arguments in the constructor {@link PlottingDomainParams} are set out of
      * the domains of T and Z.
+=======
+     * test if the extracted TimeSeriesFeatures method return empty when arguments
+     * in the constructor {@link PlottingDomainParams} are set out of the
+     * domains of T and Z.
+>>>>>>> 5acf8549d0cfe2c9218f1ee38fd49be4554d60dc
      */
 
     /**
@@ -1134,8 +1140,12 @@ public class RectiLinearGridDatasetTest {
     }
 
     /**
+<<<<<<< HEAD
      * By testing {@link Dataset#readFeature}, two classes {@link GridFeature}
      * and {@link MapFeature} are tested.
+=======
+     * test {@link Dataset#readFeature}method.
+>>>>>>> 5acf8549d0cfe2c9218f1ee38fd49be4554d60dc
      * 
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data

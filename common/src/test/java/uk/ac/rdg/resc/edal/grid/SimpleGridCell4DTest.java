@@ -50,6 +50,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
 
 /**
  * Test class for {@link SimpleGridCell4D}.
@@ -66,7 +67,8 @@ public class SimpleGridCell4DTest {
     private Chronology chronology = ISOChronology.getInstance();
 
     /**
-     * Initialise the testing environment.
+     * Initialise the testing environment: a simple grid domain with its X Y Z T
+     * axis values.
      */
     @Before
     public void setUp() {
@@ -103,6 +105,10 @@ public class SimpleGridCell4DTest {
      */
     @Test
     public void testContains() {
+        /*
+         * choose positions inside or outside of X Y Z T axis of the simple grid
+         * cell 4D. use various chronology.
+         */
         HorizontalPosition hPos = new HorizontalPosition(-6.5, 52.7, crs);
         VerticalPosition vPos = new VerticalPosition(100.9, depth);
         DateTime dt = new DateTime(2000, 1, 2, 12, 45, chronology);
@@ -116,7 +122,13 @@ public class SimpleGridCell4DTest {
         assertTrue(sgc.contains(gPos));
         assertFalse(sgc.contains(null));
 
+        Chronology noleap = NoLeapChronology.getInstanceUTC();
+        dt = new DateTime(2000, 1, 2, 12, 45, noleap);
+        gPos = new GeoPosition(hPos, vPos, dt);
+        assertFalse(sgc.contains(gPos));
+
         vPos = new VerticalPosition(1000.9, depth);
+        dt = new DateTime(2000, 1, 2, 12, 45, chronology);
         gPos = new GeoPosition(hPos, vPos, dt);
         assertFalse(sgc.contains(gPos));
 

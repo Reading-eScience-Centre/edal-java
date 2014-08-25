@@ -70,6 +70,7 @@ public class ReferenceableAxisImplTest {
      */
     @Test
     public void testFindIndexOf() {
+        // the following values are chosen out of long and lat axis.
         assertEquals(-1, latAxis.findIndexOf(15.0));
         assertEquals(-1, latAxis.findIndexOf(135.0));
         assertEquals(-1, longAxis.findIndexOf(45.0));
@@ -77,13 +78,27 @@ public class ReferenceableAxisImplTest {
         assertEquals(-1, longAxis.findIndexOf(null));
         assertEquals(-1, latAxis.findIndexOf(Double.NaN));
 
-        assertEquals(1, latAxis.findIndexOf(20.4));
-        assertEquals(0, latAxis.findIndexOf(20.2));
-        assertEquals(3, latAxis.findIndexOf(23.5));
+        /*
+         * the expected values are drawn by hand according to the index
+         * definition.
+         */
+        int expectedIndex = 1;
+        assertEquals(expectedIndex, latAxis.findIndexOf(20.4));
 
-        assertEquals(6, longAxis.findIndexOf(75.0));
-        assertEquals(1, longAxis.findIndexOf(51.3));
-        assertEquals(4, longAxis.findIndexOf(58.0));
+        expectedIndex = 0;
+        assertEquals(expectedIndex, latAxis.findIndexOf(20.2));
+
+        expectedIndex = 3;
+        assertEquals(expectedIndex, latAxis.findIndexOf(23.5));
+
+        expectedIndex = 6;
+        assertEquals(expectedIndex, longAxis.findIndexOf(75.0));
+
+        expectedIndex = 1;
+        assertEquals(expectedIndex, longAxis.findIndexOf(51.3));
+
+        expectedIndex = 4;
+        assertEquals(expectedIndex, longAxis.findIndexOf(58.0));
     }
 
     /**
@@ -98,32 +113,40 @@ public class ReferenceableAxisImplTest {
 
     // ExtendLastValue test is ignored as it's similar with this one.
     /**
-     * Test the method of {@link ReferenceableAxixImpl#extendFirstValue}.
+     * Test the method of {@link ReferenceableAxixImpl#extendFirstValue}. Test
+     * values are chosen some special ones like Double.NaN.
      */
     @Test
     public void testExtendFirstValue() {
         double first = 23.8;
         double next = 23.6;
-        assertEquals(first - (next - first) / 2.0, longAxis.extendFirstValue(first, next), delta);
+        // the value is drawn by its definition
+        double expectedExtendedValue = first - (next - first) / 2.0;
+        assertEquals(expectedExtendedValue, longAxis.extendFirstValue(first, next), delta);
 
         next = Double.POSITIVE_INFINITY;
-        assertEquals(first - (next - first) / 2.0, longAxis.extendFirstValue(first, next), delta);
+        expectedExtendedValue = first - (next - first) / 2.0;
+        assertEquals(expectedExtendedValue, longAxis.extendFirstValue(first, next), delta);
 
         first = Double.MAX_VALUE;
         next = 73.6;
-        assertEquals(first - (next - first) / 2.0, latAxis.extendFirstValue(first, next), delta);
+        expectedExtendedValue = first - (next - first) / 2.0;
+        assertEquals(expectedExtendedValue / 2.0, latAxis.extendFirstValue(first, next), delta);
 
         first = Double.NaN;
         next = 53.6;
-        assertEquals(first - (next - first) / 2.0, longAxis.extendFirstValue(first, next), delta);
+        expectedExtendedValue = first - (next - first) / 2.0;
+        assertEquals(expectedExtendedValue / 2.0, longAxis.extendFirstValue(first, next), delta);
     }
 
     /**
-     * Test the get methods in {@link ReferenceableAxixImpl}.
+     * Test the get methods in {@link ReferenceableAxixImpl}. The expected
+     * values are drawn via the corresponding definitions.
      */
     @Test
     public void testGetMethods() {
-        assertEquals(longValues[0], longAxis.getCoordinateValue(0), delta);
+        int index = 0;
+        assertEquals(longValues[index], longAxis.getCoordinateValue(index), delta);
 
         double spaceHead = longValues[3] - longValues[2];
         double spaceTail = longValues[4] - longValues[3];
@@ -133,6 +156,7 @@ public class ReferenceableAxisImplTest {
 
         double pos1 = 55.8;
         double pos2 = 65.9;
+        
         assertEquals((pos1 + pos2) / 2.0, latAxis.getMidpoint(pos1, pos2), delta);
         assertEquals(Double.NaN, latAxis.difference(25.0, Double.NaN), delta);
         assertEquals(latValues[latValues.length - 1], latAxis.getMaximumValue(), delta);
@@ -159,8 +183,10 @@ public class ReferenceableAxisImplTest {
      */
     @Test
     public void testGetSize() {
-        assertEquals(longValues.length, longAxis.size());
-        assertEquals(latValues.length, latAxis.size());
+        int expectedLongAxisSize = longValues.length;
+        int expectedLatAxisSize = latValues.length;
+        assertEquals(expectedLongAxisSize, longAxis.size());
+        assertEquals(expectedLatAxisSize, latAxis.size());
     }
 
     /**
@@ -168,6 +194,7 @@ public class ReferenceableAxisImplTest {
      */
     @Test
     public void testIsAscending() {
+        //according to the natural order of the axis.
         assertTrue(longAxis.isAscending());
         assertTrue(latAxis.isAscending());
     }

@@ -54,6 +54,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * Test class for {@link MapDomainImpl}.
+ * 
  * @author Nan Lin
  * */
 public class MapDoaminImplTest {
@@ -72,8 +73,12 @@ public class MapDoaminImplTest {
     double lowY = 51.0;
     private HorizontalGrid hGrid;
 
+    /**
+     * Initialize a map domain.
+     * 
+     */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         // a value for z axis
         double z = 100.0;
         // m stands for meter
@@ -89,7 +94,7 @@ public class MapDoaminImplTest {
     }
 
     /**
-     * Test get methods of {@link MapDomainImpl}.
+     * Test get methods in {@link MapDomainImpl}.
      * */
     @Test
     public void test() {

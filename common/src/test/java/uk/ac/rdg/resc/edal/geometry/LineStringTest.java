@@ -76,7 +76,7 @@ public class LineStringTest {
     }
 
     /**
-     * Test for {@link LineString#getPointsOnPath} method.
+     * Test for {@link LineString#getPointsOnPath} method. The expected lin
      * */
     @Test
     public void testGetPointsOnPath() {

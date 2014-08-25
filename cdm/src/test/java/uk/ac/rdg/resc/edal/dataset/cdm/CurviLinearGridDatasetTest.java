@@ -108,6 +108,9 @@ public class CurviLinearGridDatasetTest {
      * 
      * @throws DataReadingException
      *             if there is a problem reading data.
+     * Dateset contains only x and y data on the place. When we try to extract
+     * data including T and Z info, the method should return
+     * UnupportedOperationException.
      */
     @Test(expected = UnsupportedOperationException.class)
     public void testUnSupportedOperation() throws DataReadingException {
@@ -165,7 +168,10 @@ public class CurviLinearGridDatasetTest {
         assertEquals(lon_data.getSize(), lon_values.size());
         assertEquals(etaSize, cCoords.getNi());
         assertEquals(xiSize, cCoords.getNj());
+
+
         // pick up a horizontal position with id=15000
+
         int index = 15000;
         LonLatPosition expectedPos = new LonLatPosition(lon_data.getDouble(index),
                 lat_data.getDouble(index));
@@ -214,7 +220,7 @@ public class CurviLinearGridDatasetTest {
             vars.add(v.getFullName());
         }
         /*
-         * netcdt use variable but dataset use feature. Two different concepts.
+         * netCDF use variable but dataset use feature. Two different concepts.
          * How can I use another to get feature info?
          */
 

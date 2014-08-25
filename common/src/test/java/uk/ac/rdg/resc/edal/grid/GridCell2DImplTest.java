@@ -66,7 +66,8 @@ public class GridCell2DImplTest {
     }
 
     /**
-     * Test {@link GridCell2DImpl#contains}.
+     * Test {@link GridCell2DImpl#contains}. Pick up positions inside or outside
+     * of the cell, and a special value "null".
      */
     @Test
     public void testContains() {
@@ -85,16 +86,21 @@ public class GridCell2DImplTest {
     }
 
     /**
-     * Test {@link GridCell2DImpl#getFoorprint}.
+     * Test {@link GridCell2DImpl#getFootprint}.
      */
     @Test
-    public void testGetFoorprint() {
+    public void testGetFootprint() {
         Array<GridCell2D> cells = rGrid.getDomainObjects();
         GridCell2D cell = cells.get(1, 4);
+        // expectedBbox is drawn by hand
         BoundingBox expectedBbox = new BoundingBoxImpl(96.75, 33.25, 97.25, 33.75, crs);
         assertEquals(expectedBbox, cell.getFootprint());
 
         cell = cells.get(3, 4);
+        /*
+         * as we know the bbox of this cell, pick another bbox which is disjoint
+         * the expected one.
+         */
         expectedBbox = new BoundingBoxImpl(96.75, 33.6, 97.25, 33.98, crs);
         assertFalse(cell.getFootprint().equals(expectedBbox));
     }

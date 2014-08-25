@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
@@ -44,12 +43,19 @@ import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 public class SimpleVerticalCrsImplTest {
     private SimpleVerticalDomain svd;
 
+    /**
+     * Initialize a SimpleVerticalDomain.
+     */
     @Before
     public void setUp() {
         VerticalCrsImpl height = new VerticalCrsImpl("meter", false, false, true);
         svd = new SimpleVerticalDomain(100.0, 1000.0, height);
     }
 
+    /**
+     * Test {@link SimpleVerticalDomain#contains}. Pick up values in or out of
+     * the vertical domain with special values like null.
+     */
     @Test
     public void testContain() {
         assertTrue(svd.contains(500.0));

@@ -47,19 +47,26 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 public class BoundingBoxImplTest {
     private BoundingBoxImpl bbox;
 
+    /**
+     * Initialize a bounding box.
+     */
     @Before
-    public void setUp(){
+    public void setUp() {
         bbox = new BoundingBoxImpl(137.47, -20.0, 180.0, 60.0, DefaultGeographicCRS.WGS84);
     }
 
     /**
+     * Test {@link BoundingBox#contains}. Pick up positions inside, outside, or
+     * on the edges of the bounding box. The positions may use different
+     * CoordinateReferenceSystem from the bounding box.
+     * 
      * @throws InvalidCrsException
      *             if a wrong EPSG code is provided.
      * */
 
     @Test
     public void testContains() throws InvalidCrsException {
-        //pick up points on the edges of the grid
+        // pick up points on the edges of the grid
         HorizontalPosition hPos = new HorizontalPosition(160.0, -20.0, DefaultGeographicCRS.WGS84);
         assertTrue(bbox.contains(hPos));
 

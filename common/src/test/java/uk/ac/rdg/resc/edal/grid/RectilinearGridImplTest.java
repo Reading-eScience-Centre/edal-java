@@ -50,7 +50,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 /**
  * Test class for {@link RectilinearGridImpl}.
  * 
- * @author Nan Lin
+ * @author Nan
  * 
  */
 public class RectilinearGridImplTest {
@@ -58,12 +58,12 @@ public class RectilinearGridImplTest {
     private int xSize = 12;
     private int ySize = 16;
     private RectilinearGrid rGrid;
-    ReferenceableAxis<Double> longAxis;
-    ReferenceableAxis<Double> latAxis;
+    private ReferenceableAxis<Double> longAxis;
+    private ReferenceableAxis<Double> latAxis;
     private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
 
     /**
-     * Initialize the grid.
+     * Initialize the RectilinearGrid.
      */
     @Before
     public void setUp() {
@@ -84,12 +84,13 @@ public class RectilinearGridImplTest {
         assertEquals(longAxis, rGrid.getXAxis());
         assertEquals(latAxis, rGrid.getYAxis());
         assertEquals(crs, rGrid.getCoordinateReferenceSystem());
-        BoundingBox bbox = new BoundingBoxImpl(94.75, 32.75, 100.75, 40.75, crs);
-        assertEquals(bbox, rGrid.getBoundingBox());
-
-        DefaultGeographicBoundingBox gbbox = new DefaultGeographicBoundingBox(94.75, 100.75, 32.75,
-                40.75);
-        assertEquals(gbbox, rGrid.getGeographicBoundingBox());
+        // expectedBbox is drawn by hand
+        BoundingBox expectedBbox = new BoundingBoxImpl(94.75, 32.75, 100.75, 40.75, crs);
+        assertEquals(expectedBbox, rGrid.getBoundingBox());
+        // expectedBbox is drawn by hand
+        DefaultGeographicBoundingBox expectedGbbox = new DefaultGeographicBoundingBox(94.75,
+                100.75, 32.75, 40.75);
+        assertEquals(expectedGbbox, rGrid.getGeographicBoundingBox());
 
         // a container contain a series of horizontal positions.
         List<HorizontalPosition> hPoss = new ArrayList<>(xSize * ySize);
@@ -109,7 +110,8 @@ public class RectilinearGridImplTest {
     }
 
     /**
-     * Test {@link RectilinearGridImpl#contains}.
+     * Test {@link RectilinearGridImpl#contains}. Pick up positions inside or
+     * outside the grid.
      * 
      * @throws InvalidCrsException
      *             if a wrong epsg code is provided.
@@ -133,11 +135,13 @@ public class RectilinearGridImplTest {
     @Test
     public void testFindIndexOf() {
         HorizontalPosition position = new HorizontalPosition(95.3, 34.35, crs);
-        GridCoordinates2D coord = new GridCoordinates2D(1, 3);
-        assertEquals(coord, rGrid.findIndexOf(position));
+        // expectedCoord is drawn by hand.
+        GridCoordinates2D expectedCoord = new GridCoordinates2D(1, 3);
+        assertEquals(expectedCoord, rGrid.findIndexOf(position));
 
         position = new HorizontalPosition(100.4, 40.7, crs);
-        coord = new GridCoordinates2D(11, 15);
+        // pick up a coord which is different from the expected one
+        GridCoordinates2D coord = new GridCoordinates2D(11, 15);
         assertEquals(coord, rGrid.findIndexOf(position));
     }
 }

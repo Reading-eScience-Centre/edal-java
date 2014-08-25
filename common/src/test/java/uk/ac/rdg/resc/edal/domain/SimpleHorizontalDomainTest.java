@@ -47,6 +47,11 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 public class SimpleHorizontalDomainTest {
 
     /**
+     * Test {@link SimpleHorizontalDomain#contains}. Choose test positions
+     * inside or outside SimpeHorizontalDomain. In particular, some of these
+     * positions are on the edge of the domain; some use different from
+     * CoordinateReferenceSystem.
+     * 
      * @throws InvalidCrsException
      *             if a unknown epsg code is provide.
      * 

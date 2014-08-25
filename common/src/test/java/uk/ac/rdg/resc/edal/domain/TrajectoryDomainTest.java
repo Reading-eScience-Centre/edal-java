@@ -55,12 +55,17 @@ public class TrajectoryDomainTest {
     private DateTime beginDate;
     private TrajectoryDomain tDomain;
 
+    /**
+     * Initialize a TrajectoryDomain.
+     * 
+     * @throws MismatchedCrsException
+     */
     @Before
     public void setUp() throws MismatchedCrsException {
         crs = DefaultGeographicCRS.WGS84;
         height = new VerticalCrsImpl("meter", false, false, true);
         beginDate = new DateTime(1990, 5, 8, 0, 0);
-        //iniatialize a series of geo-positions
+        // iniatialize a series of geo-positions
         for (int i = 0; i < SIZE; i++) {
             HorizontalPosition hPos = new HorizontalPosition(10 + i * 0.1, 20 + i * 0.2, crs);
             VerticalPosition vPos = new VerticalPosition(100 + i * 10.0, height);
@@ -70,30 +75,37 @@ public class TrajectoryDomainTest {
         tDomain = new TrajectoryDomain(positions);
     }
 
+    /**
+     * Test {@link TrajectoryDomain#contains}. Pick up values in or out of the
+     * trajectory domain with a special value null.
+     */
     @Test
     public void testContains() {
         HorizontalPosition hPos = new HorizontalPosition(11.0, 22.0, crs);
         VerticalPosition vPos = new VerticalPosition(200.0, height);
         DateTime dt = beginDate.plusDays(10);
+        //Match the GeoPosition at the 10th date.
         assertTrue(tDomain.contains(new GeoPosition(hPos, vPos, dt)));
 
-        hPos = new HorizontalPosition(19.9, 39.8, crs);
-        dt = beginDate.plusDays(99);
-        vPos = new VerticalPosition(1090.0, height);
-        assertTrue(tDomain.contains(new GeoPosition(hPos, vPos, dt)));
 
         dt = beginDate.plusDays(11);
+        /*
+         * On this date, the testing GeoPosition's vPos not match the expected
+         * vPos.
+         */
         assertFalse(tDomain.contains(new GeoPosition(hPos, vPos, dt)));
 
         assertFalse(tDomain.contains(null));
 
         hPos = new HorizontalPosition(10.0, 20.0, crs);
         vPos = new VerticalPosition(100.0, height);
+        //Match the GeoPosition at the first date.
         assertTrue(tDomain.contains(new GeoPosition(hPos, vPos, beginDate)));
 
         hPos = new HorizontalPosition(19.9, 39.8, crs);
         dt = beginDate.plusDays(99);
         vPos = new VerticalPosition(1090.0, height);
+        //Match the GeoPosition at the last date.
         assertTrue(tDomain.contains(new GeoPosition(hPos, vPos, dt)));
     }
 }

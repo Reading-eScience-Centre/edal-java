@@ -143,6 +143,13 @@ public class VerticalAxisImplTest {
     @Test
     public void testIsAscending() {
         assertTrue(vAxis.isAscending());
+        
+        heightValues = new ArrayList<Double>();
+        for (int i = 0; i <= numberOfHeightValues; i++) {
+            heightValues.add(-i * heightStep);
+        }
+        vAxis = new VerticalAxisImpl(vAxisName, heightValues, height);
+        assertFalse(vAxis.isAscending());
     }
 
     /**
