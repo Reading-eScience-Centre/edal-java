@@ -346,7 +346,7 @@ public class RectiLinearGridDatasetTest {
      * Test if it throws IllegalArgumentException when the constructor of
      * {@link PlottingDomainParams} contains meaningless parameters.
      */
-    @Test//(expected = NullPointerException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testMapFeaturesWithWrongParams() throws DataReadingException {
         // data value is out bound of tAxis
         DateTime tValue = new DateTime(2000, 11, 02, 15, 00, chrnology);
@@ -517,7 +517,8 @@ public class RectiLinearGridDatasetTest {
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                     .extractTimeseriesFeatures(null, params);
             if (!zExtent.intersects(datasetZExtent)) {
-                assertNull(timeSeriesFeatures);
+                //timeSeriesFeature should contain nothing             
+                assertEquals(0, timeSeriesFeatures.size());
             } else {
                 PointSeriesFeature data = (PointSeriesFeature) timeSeriesFeatures.iterator().next();
                 verifyTimeSeriesFeature(data, data.getHorizontalPosition(), xIndex, yIndex);
