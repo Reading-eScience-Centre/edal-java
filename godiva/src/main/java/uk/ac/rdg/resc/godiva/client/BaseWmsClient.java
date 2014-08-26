@@ -359,11 +359,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                      * Zoom to extents and possible auto-adjust palette
                      */
                     if (autoZoomAndPalette) {
-                        try {
-                            mapArea.zoomToExtent(getLayerDetails().getExtents());
-                        } catch (Exception e) {
-                            handleError(e);
-                        }
+                        mapArea.zoomToExtent(getLayerDetails().getExtents());
                         /*
                          * We request an auto-range. Since force=false, this
                          * will only request the auto-range if the server-side

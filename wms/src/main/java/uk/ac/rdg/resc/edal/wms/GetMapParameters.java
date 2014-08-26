@@ -107,13 +107,15 @@ public class GetMapParameters {
             String wmsLayerName = nameAndRange.getFieldLabel();
             TemporalDomain temporalDomain = catalogue.getVariableMetadataFromId(wmsLayerName)
                     .getTemporalDomain();
-            if (chronology == null) {
-                chronology = temporalDomain.getChronology();
-            } else {
-                if (temporalDomain.getChronology() != null) {
-                    if (!chronology.equals(temporalDomain.getChronology())) {
-                        throw new IncorrectDomainException(
-                                "All datasets referenced by a GetMap request must share the same chronology");
+            if(temporalDomain != null) {
+                if (chronology == null) {
+                    chronology = temporalDomain.getChronology();
+                } else {
+                    if (temporalDomain.getChronology() != null) {
+                        if (!chronology.equals(temporalDomain.getChronology())) {
+                            throw new IncorrectDomainException(
+                                    "All datasets referenced by a GetMap request must share the same chronology");
+                        }
                     }
                 }
             }

@@ -1652,14 +1652,18 @@ public class WmsServlet extends HttpServlet {
 
     private void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
+        GetPlotParameters getPlotParameters = new GetPlotParameters(params,
                 catalogue);
-        PlottingDomainParams plottingParameters = featureInfoParameters
+        PlottingDomainParams plottingParameters = getPlotParameters
                 .getPlottingDomainParameters();
-        final HorizontalPosition position = featureInfoParameters.getClickedPosition();
+        plottingParameters = new PlottingDomainParams(plottingParameters.getWidth(),
+                plottingParameters.getHeight(), null, plottingParameters.getZExtent(),
+                plottingParameters.getTExtent(), plottingParameters.getTargetHorizontalPosition(),
+                plottingParameters.getTargetZ(), plottingParameters.getTargetT());
+        final HorizontalPosition position = getPlotParameters.getClickedPosition();
 
-        String[] layerNames = featureInfoParameters.getLayerNames();
-        String outputFormat = featureInfoParameters.getInfoFormat();
+        String[] layerNames = getPlotParameters.getLayerNames();
+        String outputFormat = getPlotParameters.getInfoFormat();
         if (!"image/png".equalsIgnoreCase(outputFormat)
                 && !"image/jpeg".equalsIgnoreCase(outputFormat)
                 && !"image/jpg".equalsIgnoreCase(outputFormat)) {
@@ -1691,7 +1695,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        while (timeseriesFeatures.size() > featureInfoParameters.getFeatureCount()) {
+        while (timeseriesFeatures.size() > getPlotParameters.getFeatureCount()) {
             timeseriesFeatures.remove(timeseriesFeatures.size() - 1);
         }
 
@@ -1813,8 +1817,8 @@ public class WmsServlet extends HttpServlet {
 
         if (verticalSection) {
             /*
-             * This can only be true if we have an AbstractGridDataset, so we can
-             * use our previous cast
+             * This can only be true if we have an AbstractGridDataset, so we
+             * can use our previous cast
              */
             String paletteName = params.getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
             int numColourBands = params.getPositiveInt("numcolorbands",
@@ -1869,14 +1873,14 @@ public class WmsServlet extends HttpServlet {
 
     private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
+        GetPlotParameters getPlotParameters = new GetPlotParameters(params,
                 catalogue);
-        PlottingDomainParams plottingParameters = featureInfoParameters
+        PlottingDomainParams plottingParameters = getPlotParameters
                 .getPlottingDomainParameters();
-        final HorizontalPosition position = featureInfoParameters.getClickedPosition();
+        final HorizontalPosition position = getPlotParameters.getClickedPosition();
 
-        String[] layerNames = featureInfoParameters.getLayerNames();
-        String outputFormat = featureInfoParameters.getInfoFormat();
+        String[] layerNames = getPlotParameters.getLayerNames();
+        String outputFormat = getPlotParameters.getInfoFormat();
         if (!"image/png".equalsIgnoreCase(outputFormat)
                 && !"image/jpeg".equalsIgnoreCase(outputFormat)
                 && !"image/jpg".equalsIgnoreCase(outputFormat)) {
@@ -1908,7 +1912,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        while (profileFeatures.size() > featureInfoParameters.getFeatureCount()) {
+        while (profileFeatures.size() > getPlotParameters.getFeatureCount()) {
             profileFeatures.remove(profileFeatures.size() - 1);
         }
 

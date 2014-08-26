@@ -89,12 +89,14 @@
 ##
 ##
 #macro(layer $dataset $variableMetadata $verboseTimes $children)
-#set($parent = $children.size() > 0)
+#set($parent = ($children && $children.size() > 0))
+#set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
+#set($plottable = ($supportedStyles && $supportedStyles.size() > 0))
 #set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
 #set($layerMetadata = $catalogue.getLayerMetadata($layerName))
 #if(!$layerMetadata.disabled)
     <Layer #if(!$parent && $layerMetadata.queryable)queryable="1"#end>
-#if($variableMetadata.plottable && $layerName && !$parent)
+#if($plottable && $layerName && !$parent)
         <Name>$layerName</Name>
 #end
 #set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
@@ -118,7 +120,15 @@
         <BoundingBox SRS="CRS:84" minx="$bbox.westBoundLongitude" maxx="$bbox.eastBoundLongitude" miny="$bbox.southBoundLatitude" maxy="$bbox.northBoundLatitude"/>
 #end
 #if($variableMetadata.temporalDomain)
+## We have a non-null temporal domain
         <Dimension name="time" units="$WmsUtils.getTimeAxisUnits($tDomain.chronology)"/>
+#end
+#if($variableMetadata.verticalDomain)
+## We have a non-null vertical domain
+        <Dimension name="elevation" units="$zDomain.verticalCrs.units"/>
+#end            
+    
+#if($variableMetadata.temporalDomain)
 ## We have a non-null temporal domain
 #set($tDomain = $variableMetadata.temporalDomain)
 #if($GISUtils.isTemporalDomainTimeAxis($tDomain))
@@ -142,7 +152,6 @@
 ##
 #if($variableMetadata.verticalDomain)
 ## We have a non-null vertical domain
-        <Dimension name="elevation" units="$zDomain.verticalCrs.units"/>
 #set($zDomain = $variableMetadata.verticalDomain)
 #if($GISUtils.isVerticalDomainVerticalAxis($zDomain))
 ## Discrete vertical domain

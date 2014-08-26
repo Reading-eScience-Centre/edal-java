@@ -62,6 +62,8 @@ public class LayerSelectorTree extends VerticalPanel implements LayerSelectorIF 
     public String firstTitle = null;
     private HTML titleLabel;
     private Tree tree;
+    
+    private boolean firstLayer = true;
 
     private LayerMenuItem selectedNode;
     private String wmsUrl;
@@ -147,7 +149,8 @@ public class LayerSelectorTree extends VerticalPanel implements LayerSelectorIF 
             node.addClickHandler(new ClickHandler() {
                 @Override
                 public void onClick(ClickEvent event) {
-                    selectLayer(id, item.getWmsUrl(), true);
+                    selectLayer(id, item.getWmsUrl(), firstLayer);
+                    firstLayer = false;
                 }
             });
         }

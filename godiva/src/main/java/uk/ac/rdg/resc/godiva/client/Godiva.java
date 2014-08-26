@@ -46,6 +46,7 @@ import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF.OutOfRangeState;
 import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.UnitsInfoIF;
+import uk.ac.rdg.resc.godiva.client.util.GodivaUtils;
 import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
@@ -215,7 +216,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 unitsInfo, copyrightInfo, moreInfo, layerSelector);
 
         anim = new AnimationButton(mapArea, proxyUrl, layerSelector, timeSelector, this);
-        /* Start this disabled.  It gets enabled when layer details are loaded (if appropriate) */
+        /*
+         * Start this disabled. It gets enabled when layer details are loaded
+         * (if appropriate)
+         */
         anim.setEnabled(false);
 
         logo = getLogo();
@@ -244,7 +248,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         });
         infoButton.setEnabled(false);
         infoButton.setTitle("More infomation about this dataset");
-        
+
         zoomToLayerExtents = new PushButton(new Image(GWT.getModuleBaseURL() + "img/extents.png"));
         zoomToLayerExtents.addClickHandler(new ClickHandler() {
             @Override
@@ -254,7 +258,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         });
         zoomToLayerExtents.setEnabled(false);
         zoomToLayerExtents.setTitle("Fit the map to this layer's extents");
-        
+
         /*
          * Now get the layout and add it to the main window
          */
@@ -554,16 +558,16 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     @Override
     protected void layerDetailsLoaded(LayerDetails layerDetails, boolean autoUpdate) {
         super.layerDetailsLoaded(layerDetails, autoUpdate);
-        
+
         currentLayerExtent = layerDetails.getExtents();
         zoomToLayerExtents.setEnabled(true);
 
-        if(layerDetails.isContinuousT()) {
+        if (layerDetails.isContinuousT()) {
             anim.setEnabled(false);
         } else {
             anim.setEnabled(true);
         }
-        
+
         timeseriesSupported = layerDetails.supportsTimeseries();
         profilesSupported = layerDetails.supportsProfiles();
 
@@ -578,7 +582,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * We populate our widgets here, but in a multi-layer system, we may
          * want to create new widgets here
          */
-        if (autoUpdate) {
+        if (autoUpdate && !widgetCollection.getPaletteSelector().isLocked()) {
             widgetCollection.getPaletteSelector().selectPalette(layerDetails.getSelectedPalette());
             if (layerDetails.getAboveMaxColour() != null) {
                 widgetCollection.getPaletteSelector().setExtraAboveMaxColour(
@@ -682,7 +686,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     protected void requestLayerDetails(String wmsUrl, String layerId, String currentTime,
             boolean autoZoomAndPalette) {
         if (permalinking) {
-            currentTime = URL.decode(permalinkParamsMap.get("time"));
+            currentTime = permalinkParamsMap.get("time");
         }
         super.requestLayerDetails(wmsUrl, layerId, currentTime, autoZoomAndPalette);
     }
@@ -725,9 +729,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
-        String aboveMax = URL.encodePathSegment(paletteSelector.getAboveMaxString());
-        String belowMin = URL.encodePathSegment(paletteSelector.getBelowMinString());
-        String noData = URL.encodePathSegment(paletteSelector.getNoDataColour());
+        String aboveMax = paletteSelector.getAboveMaxString();
+        String belowMin = paletteSelector.getBelowMinString();
+        String noData = paletteSelector.getNoDataColour();
         String urlParams = "dataset=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
                 + "&numColorBands=" + paletteSelector.getNumColorBands() + "&logScale="
                 + paletteSelector.isLogScale() + "&bbox=" + mapArea.getMap().getExtent()
@@ -800,9 +804,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         anim.updateDetails(currentLayer, currentElevation, currentPalette, currentStyle,
                 scaleRange, aboveMax, belowMin, noData, nColorBands, logScale);
 
+        /* Don't need to encode the query string, because we never decode it */
         permalink.setHref(URL.encode(baseurl + urlParams));
         email.setHref("mailto:?subject=MyOcean Data Link&body="
-                + URL.encodeQueryString(baseurl + urlParams));
+                + URL.encodeQueryString(baseurl + GodivaUtils.encodeQueryString(urlParams)));
 
         // Screenshot-only stuff
         urlParams += "&bbox=" + mapArea.getMap().getExtent().toBBox(6);
@@ -831,7 +836,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String godivaPath = Window.Location.getPath();
         screenshot.setHref("http://" + Window.Location.getHost() + "/"
                 + godivaPath.substring(0, godivaPath.lastIndexOf('/'))
-                + "/screenshots/createScreenshot?" + urlParams);
+                + "/screenshots/createScreenshot?" + GodivaUtils.encodeQueryString(urlParams));
     }
 
     /*
