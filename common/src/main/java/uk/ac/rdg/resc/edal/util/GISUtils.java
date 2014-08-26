@@ -671,14 +671,16 @@ public final class GISUtils {
      *         {@link BoundingBox}
      */
     public static GeographicBoundingBox toGeographicBoundingBox(BoundingBox bbox) {
+        double minx = Double.MAX_VALUE;
+        double maxx = -Double.MAX_VALUE;
+        double miny = Double.MAX_VALUE;
+        double maxy = -Double.MAX_VALUE;
         if (isWgs84LonLat(bbox.getCoordinateReferenceSystem())) {
-            return new DefaultGeographicBoundingBox(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(),
-                    bbox.getMaxY());
+            minx = bbox.getMinX();
+            maxx = bbox.getMaxX();
+            miny = bbox.getMinY();
+            maxy = bbox.getMaxY();
         } else {
-            double minx = Double.MAX_VALUE;
-            double maxx = -Double.MAX_VALUE;
-            double miny = Double.MAX_VALUE;
-            double maxy = -Double.MAX_VALUE;
 
             /*
              * Check for north/south polar stereographic - then we know that a
@@ -750,8 +752,24 @@ public final class GISUtils {
                 miny = Math.min(transformPosition.getY(), miny);
                 maxy = Math.max(transformPosition.getY(), maxy);
             }
-            return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
         }
+        /*
+         * Geographic bounding boxes cannot extend outside of the ranges
+         * -180,180;-90,90
+         */
+        if (minx < -180) {
+            minx = -180;
+        }
+        if (maxx > 180) {
+            maxx = 180;
+        }
+        if (miny < -90) {
+            miny = -90;
+        }
+        if (maxy > 90) {
+            maxy = 90;
+        }
+        return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
     }
 
     /**

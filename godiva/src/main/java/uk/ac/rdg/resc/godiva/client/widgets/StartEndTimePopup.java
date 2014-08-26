@@ -67,7 +67,6 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * 
  */
 public class StartEndTimePopup extends DialogBoxWithCloseButton {
-
     private final String layer;
     private String jsonProxyUrl;
     private String errorMessage;

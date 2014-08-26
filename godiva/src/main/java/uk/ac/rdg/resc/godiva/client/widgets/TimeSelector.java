@@ -42,6 +42,7 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
@@ -219,6 +220,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     @Override
     public void populateDates(List<String> availableDatetimes) {
         dates.clear();
+        times.clear();
         if (availableDatetimes == null || availableDatetimes.size() == 0) {
             dates.setEnabled(false);
             times.setEnabled(false);
@@ -295,9 +297,8 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     @Override
     public String getSelectedDate() {
         int i = dates.getSelectedIndex();
-        // TODO Look at this more carefully for case when no times are present
         if (i != -1) {
-            return dates.getValue(i);//+"T"+times.getValue(j);
+            return dates.getValue(i);
         } else {
             return null;
         }
@@ -337,7 +338,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
     }
 
     private String getRangeString(String datetime, String rangeStr) {
-        DateTimeFormat parser = DateTimeFormat.getFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        DateTimeFormat parser = DateTimeFormat.getFormat(PredefinedFormat.ISO_8601);
         Date centreDate = parser.parse(datetime);
         long range = Long.parseLong(rangeStr);
         Date startDate = new Date(centreDate.getTime() - range);
@@ -378,7 +379,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
             }
         }
         if (dateValid) {
-            String time = timeString.substring(11);
+            String time = URL.encodePathSegment(timeString.substring(11));
             for (int i = 0; i < times.getItemCount(); i++) {
                 if (times.getValue(i).equals(time)) {
                     times.setSelectedIndex(i);

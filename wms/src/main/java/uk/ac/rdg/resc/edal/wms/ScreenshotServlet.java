@@ -422,7 +422,8 @@ public class ScreenshotServlet extends HttpServlet {
             if (numColorBands != null)
                 url.append("&NUMCOLORBANDS=" + numColorBands);
             if (time != null)
-                url.append("&TIME=" + time);
+                /* Yuck.  But it seems to be necessary, otherwise "+" gets interpreted wrongly */
+                url.append("&TIME=" + URLEncoder.encode(URLEncoder.encode(time, "UTF-8"), "UTF-8"));
             String elevation = params.getString("elevation");
             if (elevation != null)
                 url.append("&ELEVATION=" + elevation);
@@ -431,7 +432,9 @@ public class ScreenshotServlet extends HttpServlet {
                 url.append("&TARGETELEVATION=" + targetElevation);
             String targetTime = params.getString("targettime");
             if (targetTime != null)
-                url.append("&TARGETTIME=" + targetTime);
+                /* Yuck.  But it seems to be necessary, otherwise "+" gets interpreted wrongly */
+                url.append("&TARGETTIME="
+                        + URLEncoder.encode(URLEncoder.encode(targetTime, "UTF-8"), "UTF-8"));
         }
 
         url.append("&TRANSPARENT=true");
