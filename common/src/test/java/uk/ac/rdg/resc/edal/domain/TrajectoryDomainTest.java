@@ -59,6 +59,8 @@ public class TrajectoryDomainTest {
      * Initialize a TrajectoryDomain.
      * 
      * @throws MismatchedCrsException
+     *             If horizontal CRSs do not match for all points in the
+     *             Trajectory Domain
      */
     @Before
     public void setUp() throws MismatchedCrsException {
@@ -84,9 +86,8 @@ public class TrajectoryDomainTest {
         HorizontalPosition hPos = new HorizontalPosition(11.0, 22.0, crs);
         VerticalPosition vPos = new VerticalPosition(200.0, height);
         DateTime dt = beginDate.plusDays(10);
-        //Match the GeoPosition at the 10th date.
+        // Match the GeoPosition at the 10th date.
         assertTrue(tDomain.contains(new GeoPosition(hPos, vPos, dt)));
-
 
         dt = beginDate.plusDays(11);
         /*
@@ -99,13 +100,13 @@ public class TrajectoryDomainTest {
 
         hPos = new HorizontalPosition(10.0, 20.0, crs);
         vPos = new VerticalPosition(100.0, height);
-        //Match the GeoPosition at the first date.
+        // Match the GeoPosition at the first date.
         assertTrue(tDomain.contains(new GeoPosition(hPos, vPos, beginDate)));
 
         hPos = new HorizontalPosition(19.9, 39.8, crs);
         dt = beginDate.plusDays(99);
         vPos = new VerticalPosition(1090.0, height);
-        //Match the GeoPosition at the last date.
+        // Match the GeoPosition at the last date.
         assertTrue(tDomain.contains(new GeoPosition(hPos, vPos, dt)));
     }
 }

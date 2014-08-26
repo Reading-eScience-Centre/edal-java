@@ -191,8 +191,11 @@ public class Domain1DMapperTest {
     @Test
     public void testIterator() {
         GridCoordinates2D[] keys = mappings.keySet().toArray(new GridCoordinates2D[0]);
-        // keys are stored without order, have to sort them according to a given
-        // order
+        /*
+         * keys are stored without order, have to sort them according to a given
+         * order
+         */
+
         Comparator<GridCoordinates2D> c = new Comparator<GridCoordinates2D>() {
             public int compare(GridCoordinates2D g1, GridCoordinates2D g2) {
                 if (g1.getY() > g2.getY()) {
@@ -207,9 +210,9 @@ public class Domain1DMapperTest {
             }
             // equals() method not implement as it isn't required in this test
         };
-
-        Arrays.sort(keys, c);
         // sort the key as the iterator of the Domain1DMapper is in an order.
+        Arrays.sort(keys, c);
+        
 
         Iterator<DomainMapperEntry<Integer>> iterator = mapper.iterator();
 

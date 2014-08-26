@@ -173,6 +173,10 @@ public class TimeUtilsTest {
 
     /**
      * Test the method of {@link TimeUtils#getTimeRangeForString}.
+     * 
+     * @throws BadTimeFormatException
+     *             If any of the individual times are incorrectly formatted for
+     *             ISO8601
      */
     @Test
     public void testGetTimeRangeForString() throws BadTimeFormatException {
@@ -181,12 +185,25 @@ public class TimeUtilsTest {
         Chronology isoChronology = ISOChronology.getInstanceUTC();
         DateTime start = TimeUtils.iso8601ToDateTime("1990-12-30T12:00:00.000Z", isoChronology);
         DateTime end = TimeUtils.iso8601ToDateTime("2000-01-01T13:00:00.000Z", isoChronology);
-        assertEquals(TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()),
+        assertEquals(TimeUtils.getTimeRangeForString(timeString, isoChronology),
                 Extents.newExtent(start, end));
-
         Extent<DateTime> tExent = Extents.newExtent((new DateTime(1990, 12, 30, 12, 0,
                 isoChronology)), new DateTime(2000, 01, 01, 13, 0, isoChronology));
         assertEquals(TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()),
                 tExent);
+
+        DateTime dt1 = new DateTime(1990, 2, 3, 14, 25, DateTimeZone.forOffsetHours(-2));
+        DateTime dt2 = new DateTime(1995, 12, 3, 23, 25, DateTimeZone.forOffsetHours(-4));
+        DateTime dt3 = new DateTime(2010, 1, 31, 12, 25, DateTimeZone.forOffsetHours(8));
+
+        String ts1 = TimeUtils.dateTimeToISO8601(dt1);
+        String ts2 = TimeUtils.dateTimeToISO8601(dt2);
+        String ts3 = TimeUtils.dateTimeToISO8601(dt3);
+        timeString = ts1 + "," + ts2 + "," + ts3;
+
+        assertEquals(
+                Extents.newExtent(dt1.toDateTime(DateTimeZone.UTC),
+                        dt3.toDateTime(DateTimeZone.UTC)),
+                TimeUtils.getTimeRangeForString(timeString, isoChronology));
     }
 }

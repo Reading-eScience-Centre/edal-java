@@ -40,7 +40,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.domain.Extent;
 
 /**
- * Test class for {@link ReferenceableAxixImpl} and its ancestor.
+ * Test class for {@link ReferenceableAxisImpl} and its ancestor.
  * 
  * @author Nan Lin
  * 
@@ -51,7 +51,7 @@ public class ReferenceableAxisImplTest {
     private ReferenceableAxisImpl latAxis;
     private double[] latValues = { 20.0, 20.5, 20.8, 23.0, 24.0, 24.2, 24.3, 30.0 };
     private double[] longValues = { 50.0, 51.3, 53.9, 55.4, 57.9, 66.9, 74.9, 80.4 };
-    // constant for comparing two doubles accuracy
+    // constant for assert equal comparing two doubles accuracy
     private static double delta = 1e-10;
 
     /**
@@ -66,7 +66,7 @@ public class ReferenceableAxisImplTest {
     }
 
     /**
-     * Test the method of {@link ReferenceableAxixImpl#findIndexOf}.
+     * Test the method of {@link ReferenceableAxisImpl#findIndexOf}.
      */
     @Test
     public void testFindIndexOf() {
@@ -102,7 +102,7 @@ public class ReferenceableAxisImplTest {
     }
 
     /**
-     * Test the method of {@link ReferenceableAxixImpl#contains}.
+     * Test the method of {@link ReferenceableAxisImpl#contains}.
      */
     @Test
     public void testContains() {
@@ -113,7 +113,7 @@ public class ReferenceableAxisImplTest {
 
     // ExtendLastValue test is ignored as it's similar with this one.
     /**
-     * Test the method of {@link ReferenceableAxixImpl#extendFirstValue}. Test
+     * Test the method of {@link ReferenceableAxisImpl#extendFirstValue}. Test
      * values are chosen some special ones like Double.NaN.
      */
     @Test
@@ -140,7 +140,7 @@ public class ReferenceableAxisImplTest {
     }
 
     /**
-     * Test the get methods in {@link ReferenceableAxixImpl}. The expected
+     * Test the get methods in {@link ReferenceableAxisImpl}. The expected
      * values are drawn via the corresponding definitions.
      */
     @Test
@@ -179,7 +179,7 @@ public class ReferenceableAxisImplTest {
     }
 
     /**
-     * Test the method of {@link ReferenceableAxixImpl#size}.
+     * Test the method of {@link ReferenceableAxisImpl#size}.
      */
     @Test
     public void testGetSize() {
@@ -190,12 +190,17 @@ public class ReferenceableAxisImplTest {
     }
 
     /**
-     * Test the method of {@link ReferenceableAxixImpl#isAscending}.
+     * Test the method of {@link ReferenceableAxisImpl#isAscending}.
      */
     @Test
     public void testIsAscending() {
         //according to the natural order of the axis.
         assertTrue(longAxis.isAscending());
         assertTrue(latAxis.isAscending());
+        
+        double[] values = { 20.0, 19.8, 18.8, 15.6 };
+        List<Double> lValues = CollectionUtils.listFromDoubleArray(values);
+        ReferenceableAxisImpl lAxis = new ReferenceableAxisImpl("latitude", lValues, false);
+        assertFalse(lAxis.isAscending());
     }
 }

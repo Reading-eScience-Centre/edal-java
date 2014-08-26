@@ -36,7 +36,7 @@ import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
- * Test class for {@link RegularAxixImpl} and its ancestor.
+ * Test class for {@link RegularAxisImpl} and its ancestor.
  * 
  * @author Nan
  * 
@@ -81,7 +81,7 @@ public class RegularAxisImplTest {
     }
 
     /**
-     * Test the method of {@link RegularAxis#getCoordinateBound}.
+     * Test the method of {@link RegularAxis#getCoordinateBounds}.
      */
     @Test
     public void testGetCoordinateBounds() {
@@ -152,7 +152,13 @@ public class RegularAxisImplTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testFindIndexOfUnconstrainedException() {
-        longitudeAxis.findIndexOfUnconstrained(null);
+        // the statement below catches illegalArgumentException
+        try {
+            longitudeAxis.findIndexOfUnconstrained(null);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+        // the statement below throws illegalArgumentException
         latitudeAxis.findIndexOfUnconstrained(Double.NaN);
     }
 

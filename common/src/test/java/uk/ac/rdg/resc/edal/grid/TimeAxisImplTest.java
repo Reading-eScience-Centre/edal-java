@@ -69,7 +69,6 @@ public class TimeAxisImplTest {
 
         datetimes = new ArrayList<DateTime>();
         for (int i = 0; i < numberOfDate + 1; i++) {
-            ;
             datetimes.add(start.plusDays(i));
         }
         tAxis = new TimeAxisImpl(tAxisName, datetimes);
@@ -101,11 +100,15 @@ public class TimeAxisImplTest {
     public void testGetMethods() {
         assertEquals(chronology, tAxis.getChronology());
         Extent<DateTime> dateExtent = tAxis.getCoordinateExtent();
-        // the date value start from the first date value minus half of the date
-        // step, which is 12 hours
+        /*
+         * the date value start from the first date value minus half of the date
+         * step, which is 12 hours
+         */
         DateTime from = start.minusHours(12);
-        // the date value end after the last date value plus half of the date
-        // step, which is 12 hours
+        /*
+         * the date value end after the last date value plus half of the date
+         * step, which is 12 hours
+         */
         DateTime to = start.plusDays(numberOfDate).plusHours(12);
         Extent<DateTime> expectedDateExtent = Extents.newExtent(from, to);
         assertEquals(expectedDateExtent, dateExtent);

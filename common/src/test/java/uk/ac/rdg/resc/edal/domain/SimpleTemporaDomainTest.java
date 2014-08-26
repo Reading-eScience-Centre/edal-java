@@ -38,14 +38,14 @@ import org.junit.Test;
 import uk.ac.rdg.resc.edal.util.chronologies.*;
 
 /**
- * Test class for {@link SimpleTemporaDomain}. Only
- * {@link SimpleTemporaDomain#contains} is tested.
+ * Test class for {@link SimpleTemporalDomain}. Only
+ * {@link SimpleTemporalDomain#contains} is tested.
  * 
- * @author Nan Lin
+ * @author Nan
  */
 public class SimpleTemporaDomainTest {
     /**
-     * Test {@link SimpleTemporaDomain#contains}. Use various Chronology and
+     * Test {@link SimpleTemporalDomain#contains}. Use various Chronology and
      * dates are inside or outside the temporal domains.
      */
     @Test
@@ -94,7 +94,7 @@ public class SimpleTemporaDomainTest {
         dt2 = new DateTime(2011, 2, 27, 12, 10, nlc);
         dt3 = new DateTime(2012, 12, 31, 23, 59, 36);
         assertTrue(std.contains(dt1));
-        //dt2 uses different chronology
+        // dt2 uses different chronology
         assertFalse(std.contains(dt2));
         // dt3 now is outside this temporal domain though the gap is 36 seconds
         assertFalse(std.contains(dt3));

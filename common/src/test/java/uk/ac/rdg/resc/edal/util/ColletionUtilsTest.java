@@ -52,7 +52,7 @@ public class ColletionUtilsTest {
     private Double[] doubleDataAsObject = new Double[SIZE];
     private Set<Double> doubleDataSet = new HashSet<Double>();
     private Set<Float> floatDataSet = new HashSet<Float>();
-    // double constant for comparing two doubles
+    // constant for assert equal comparing two doubles
     private double delta = 1e-6;
 
     /**
@@ -110,7 +110,13 @@ public class ColletionUtilsTest {
 
     @Test(expected = NullPointerException.class)
     public void testNull() {
-        CollectionUtils.listFromFloatArray(null);
+        //the statement below catches NullPointerException
+        try {
+            CollectionUtils.listFromFloatArray(null);
+        } catch (NullPointerException e) {
+            System.out.println(e.getMessage());
+        }
+        //the statement below throws NullPointerException
         CollectionUtils.listFromDoubleArray(null);
     }
 }

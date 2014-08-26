@@ -96,9 +96,10 @@ public class VerticalAxisImplTest {
         assertEquals(height, vAxis.getVerticalCrs());
         Extent<Double> heightExtent = vAxis.getCoordinateExtent();
 
-        // Values on the axis are mid-points, the extent of the axis should be
-        // extended half of the height step
-        // toward two directions
+        /*
+         * Values on the axis are mid-points, the extent of the axis should be
+         * extended half of the height step toward two directions.
+         */
         Double extentLow = heightValues.get(0) - heightStep / 2;
         Double extentHigh = heightValues.get(numberOfHeightValues) + heightStep / 2;
         Extent<Double> expectedHeightExtent = Extents.newExtent(extentLow, extentHigh);
@@ -143,7 +144,7 @@ public class VerticalAxisImplTest {
     @Test
     public void testIsAscending() {
         assertTrue(vAxis.isAscending());
-        
+
         heightValues = new ArrayList<Double>();
         for (int i = 0; i <= numberOfHeightValues; i++) {
             heightValues.add(-i * heightStep);
@@ -153,7 +154,7 @@ public class VerticalAxisImplTest {
     }
 
     /**
-     * Test the method of {@link VerticalAxisImpll#size}.
+     * Test the method of {@link VerticalAxisImpl#size}.
      */
     @Test
     public void testSize() {

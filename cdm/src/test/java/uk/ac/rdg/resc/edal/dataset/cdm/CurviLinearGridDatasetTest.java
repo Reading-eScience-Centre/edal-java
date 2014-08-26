@@ -91,7 +91,7 @@ public class CurviLinearGridDatasetTest {
      *             dataset.
      * @throws EdalException
      *             If there is a problem when create the dataset.
-     * */
+     */
     @Before
     public void setUp() throws IOException, EdalException {
         URL url = this.getClass().getResource("/output-curvilinear.nc");
@@ -108,9 +108,6 @@ public class CurviLinearGridDatasetTest {
      * 
      * @throws DataReadingException
      *             if there is a problem reading data.
-     * Dateset contains only x and y data on the place. When we try to extract
-     * data including T and Z info, the method should return
-     * UnupportedOperationException.
      */
     @Test(expected = UnsupportedOperationException.class)
     public void testUnSupportedOperation() throws DataReadingException {
@@ -122,14 +119,18 @@ public class CurviLinearGridDatasetTest {
         BoundingBox bbox = hDomain.getBoundingBox();
         PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
                 null, null, null);
+        Collection<? extends PointSeriesFeature> timeSeriesFeatures;
 
-        // two statements below UnsupportedOperationException
-        Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                .extractTimeseriesFeatures(null, params);
-        System.out.println("done");
+        //the statement below catches UnsupportedOperationException.
+        try {
+            timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
+        } catch (UnsupportedOperationException e) {
+            System.out.println(e.getMessage());
+        }
+        //the statement below throws UnsupportedOperationException.
         Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(null,
                 params);
-        
+
     }
 
     /**
@@ -168,7 +169,6 @@ public class CurviLinearGridDatasetTest {
         assertEquals(lon_data.getSize(), lon_values.size());
         assertEquals(etaSize, cCoords.getNi());
         assertEquals(xiSize, cCoords.getNj());
-
 
         // pick up a horizontal position with id=15000
 
@@ -237,7 +237,7 @@ public class CurviLinearGridDatasetTest {
                 float yUVale = allyUValues.getValues("ally_u").get(0, 0, m, n).floatValue();
                 float yVVale = allyVValues.getValues("ally_v").get(0, 0, m, n).floatValue();
 
-                // below four values are set by dataset generator
+                // below four values are set by test dataset
                 float expectedXU = m;
                 float expectedXV = 0.0f;
                 float expectedYU = 0.0f;

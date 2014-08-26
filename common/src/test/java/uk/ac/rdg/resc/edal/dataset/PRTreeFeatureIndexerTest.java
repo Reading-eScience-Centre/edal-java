@@ -28,7 +28,7 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 /**
- * Test class for {@link PRTreeFeatureIndexer}. For {@link PRTreeFeatureIndexer#getgetAllFeatureIds} and
+ * Test class for {@link PRTreeFeatureIndexer}. For {@link PRTreeFeatureIndexer#getAllFeatureIds} and
  * {@link PRTreeFeatureIndexer#findFeatureIds} methods only as others are
  * simple.
  * 
@@ -78,6 +78,9 @@ public class PRTreeFeatureIndexerTest {
     private ArrayList<FeatureIndexer.FeatureBounds> features = new ArrayList<>();
     private PRTreeFeatureIndexer featureindexer = new PRTreeFeatureIndexer();
 
+    /**
+     * Initialize the testing environment.
+     */
     @Before
     public void setUp() {
         // initialize the horizontal grid with depth and time extents
@@ -118,6 +121,9 @@ public class PRTreeFeatureIndexerTest {
         featureindexer.addFeatures(features);
     }
 
+    /**
+     * Test {@link PRTreeFeatureIndexer#getAllFeatureIds}.
+     */
     @Test
     public void testgetAllFeatureIds() {
         HashSet<String> expectedIDs = new HashSet<>();
@@ -131,6 +137,9 @@ public class PRTreeFeatureIndexerTest {
         assertEquals(expectedIDs, featureindexer.getAllFeatureIds());
     }
 
+    /**
+     * Test {@link PRTreeFeatureIndexer#findFeatureIds}.
+     */
     @Test
     public void testFindFeatureIds() {
         // variables that we are interested
@@ -153,8 +162,11 @@ public class PRTreeFeatureIndexerTest {
         // both verticalExtent and timeExtent set to null
         findFeatureIds(bbox, null, null, fIDs);
 
-        // a verticalExtent intersect with the verticalExtent of the test
-        // dataset
+        /*
+         * a verticalExtent intersect with the verticalExtent of the test
+         * dataset.
+         */
+
         Extent<Double> vExtent = Extents.newExtent(-20.4, 102.5);
 
         // a timeExtent intersect with the timeExtent of the test dataset
@@ -181,7 +193,8 @@ public class PRTreeFeatureIndexerTest {
      *            timeExtent of the feature that users are interested
      * @param variableIds
      *            names of the features that users are interested
-     * */
+     * 
+     */
     private void findFeatureIds(BoundingBox bbox, Extent<Double> verticalExtent,
             Extent<DateTime> timeExtent, Collection<String> variableIds) {
         Collection<String> results = featureindexer.findFeatureIds(bbox, verticalExtent,
