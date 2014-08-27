@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -53,7 +54,7 @@ public class ColourPalette {
      * 
      * @see ColourPalette#DEFAULT_COLOURS
      */
-    public static final String DEFAULT_PALETTE_NAME = "rainbow";
+    public static final String DEFAULT_PALETTE_NAME = "default";
 
     public static final int MAX_NUM_COLOURS = 250;
 
@@ -93,11 +94,10 @@ public class ColourPalette {
          * Make sure these are initialised here (more reliable than relying on
          * them being initialised in file order in case of future refactoring)
          */
-        loadedColourSets = new HashMap<String, Color[]>();
+        loadedColourSets = new TreeMap<String, Color[]>();
         cParser = ColorAdapter.getInstance();
 
-        loadedColourSets.put(DEFAULT_PALETTE_NAME.toLowerCase(), DEFAULT_COLOURS);
-        loadedColourSets.put("default", DEFAULT_COLOURS);
+        loadedColourSets.put(DEFAULT_PALETTE_NAME, DEFAULT_COLOURS);
 
         try {
             String[] paletteFileNames = getResourceListing(ColourPalette.class, "palettes/");
@@ -262,7 +262,7 @@ public class ColourPalette {
         if(paletteString == null || "".equals(paletteString)) {
             paletteString = DEFAULT_PALETTE_NAME;
         }
-        if (loadedColourSets.containsKey(paletteString.toLowerCase())) {
+        if (loadedColourSets.containsKey(paletteString)) {
             return new ColourPalette(loadedColourSets.get(paletteString), nColourBands);
         } else {
             try {
