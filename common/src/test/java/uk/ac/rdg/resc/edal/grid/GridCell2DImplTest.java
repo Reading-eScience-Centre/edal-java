@@ -66,8 +66,8 @@ public class GridCell2DImplTest {
     }
 
     /**
-     * Test {@link GridCell2DImpl#contains}. Pick up positions inside or outside
-     * of the cell, and a special value "null".
+     * Test {@link GridCell2DImpl#contains} and {@link GridCell2DImpl#getGrid}.
+     * Pick up positions inside or outside the cell, and a special value "null".
      */
     @Test
     public void testContains() {

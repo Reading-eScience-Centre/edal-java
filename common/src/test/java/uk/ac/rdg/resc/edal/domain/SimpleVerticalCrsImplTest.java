@@ -35,7 +35,7 @@ import org.junit.Before;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 
 /**
- * Test class for {@link SimpleVerticalCrsImpl}. Only
+ * Test class for {@link SimpleVerticalDomain}. Only
  * {@link SimpleVerticalDomain#contains} is tested.
  * 
  * @author Nan
@@ -58,9 +58,12 @@ public class SimpleVerticalCrsImplTest {
      */
     @Test
     public void testContain() {
+        // values are inside or on the edge of the vertical domain.
         assertTrue(svd.contains(500.0));
         assertTrue(svd.contains(100.0));
         assertTrue(svd.contains(1000.0));
+
+        // values are outside the vertical domain.
         assertFalse(svd.contains(-500.0));
         assertFalse(svd.contains(1500.0));
         assertFalse(svd.contains(Double.NaN));

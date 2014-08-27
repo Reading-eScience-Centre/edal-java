@@ -30,8 +30,11 @@ package uk.ac.rdg.resc.edal.util;
 
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Test;
+
 import uk.ac.rdg.resc.edal.domain.*;
+
 import java.util.*;
 
 /**
@@ -48,36 +51,56 @@ public class ExtentsTest {
     private static int SIZE = 10;
 
     /**
-     * Test the method of {@link Extents#findMinMax}.
+     * Initializing.
      */
-    @Test
-    public void testFindMinMax() {
+    @Before
+    public void setUp() {
         for (int i = 0; i < SIZE; i++) {
             intList.add(i);
             doubleList.add(i * 1.0);
             floatSet.add(i * 1.0f);
             longVector.add(i * 1L);
         }
-        Extent<Integer> intExtent = Extents.newExtent(0, 9);
-        Extent<Double> doubleExtent = Extents.newExtent(0.0, 9.0);
-        Extent<Float> floatExtent = Extents.newExtent(0.0f, 9.0f);
-        Extent<Long> longExtent = Extents.newExtent(0L, 9L);
-
-        assertEquals(intExtent, Extents.findMinMax(intList));
-        assertEquals(doubleExtent, Extents.findMinMax(doubleList));
-        assertEquals(floatExtent, Extents.findMinMax(floatSet));
-        assertEquals(longExtent, Extents.findMinMax(longVector));
     }
 
     /**
-     * Test the method of {@link Extents#contains}.
+     * Test the method of {@link Extents#findMinMax}.
+     */
+    @Test
+    public void testFindMinMax() {
+        /*
+         * the following expected extents are drawn from the initializing
+         * process.
+         */
+        Extent<Integer> expectedIntExtent = Extents.newExtent(0, 9);
+        Extent<Double> expectedDoubleExtent = Extents.newExtent(0.0, 9.0);
+        Extent<Float> expectedFloatExtent = Extents.newExtent(0.0f, 9.0f);
+        Extent<Long> expectedLongExtent = Extents.newExtent(0L, 9L);
+
+        assertEquals(expectedIntExtent, Extents.findMinMax(intList));
+        assertEquals(expectedDoubleExtent, Extents.findMinMax(doubleList));
+        assertEquals(expectedFloatExtent, Extents.findMinMax(floatSet));
+        assertEquals(expectedLongExtent, Extents.findMinMax(longVector));
+    }
+
+    /**
+     * Test the method of {@link Extents#contains}. Pick up special values like
+     * Double.NaN, or points on the border.
      */
     @Test
     public void testContains() {
-        Extent<Integer> intExtent = Extents.newExtent(0, 9);
+        Extent<Integer> intExtent = Extents.findMinMax(intList);
         assertFalse(intExtent.contains(null));
         assertFalse(intExtent.contains(30));
         assertTrue(intExtent.contains(0));
         assertTrue(intExtent.contains(9));
+
+        Extent<Double> doubleExtent = Extents.findMinMax(doubleList);
+        assertFalse(doubleExtent.contains(null));
+        assertFalse(doubleExtent.contains(Double.NaN));
+        assertFalse(doubleExtent.contains(30.0));
+        assertTrue(doubleExtent.contains(0.0));
+        assertFalse(doubleExtent.contains(-0.0));
+        assertTrue(doubleExtent.contains(9.0));
     }
 }

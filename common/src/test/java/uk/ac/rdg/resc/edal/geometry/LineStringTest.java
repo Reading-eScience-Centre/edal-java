@@ -59,7 +59,7 @@ public class LineStringTest {
      * @throws InvalidCrsException
      *             if a invalid EPSG is provided.
      * @throws InvalidLineStringException
-     *             the line string is not correctly specified.
+     *             if the line string is not correctly specified.
      * */
     @Before
     public void setUp() throws InvalidCrsException, InvalidLineStringException {
@@ -68,43 +68,93 @@ public class LineStringTest {
                 + "20 20";
         // the second line string contains 6 lines
         String lineStringSpecTwo = "10 20,11 21,12 20,13 21,14 20,15 21,16 20";
+
         // the third line string contains 6 lines
-        String lineStringSpecThree = "10 20,11 21,12 22,13 23,14 24,15 25,16 26";
+        String lineStringSpecThree = "10 20,11 21,12 22,13 23,14 24,16 26,20 30";
         lineStrings.add(new LineString(lineStringSpecOne, crs));
         lineStrings.add(new LineString(lineStringSpecTwo, crs));
         lineStrings.add(new LineString(lineStringSpecThree, crs));
     }
 
     /**
-     * Test for {@link LineString#getPointsOnPath} method. The expected lin
-     * */
+     * Test for {@link LineString#getPointsOnPath} method.
+     */
     @Test
     public void testGetPointsOnPath() {
-        // pick up points on the line string
+        // pick up five points on the line string one.
         int n = 5;
         List<HorizontalPosition> fivePoints = lineStrings.get(0).getPointsOnPath(n);
-        HorizontalPosition midPoint = fivePoints.get(1);
-        double xValue = midPoint.getX();
 
+        /*
+         * only consider x values as all y values are identical (they are on the
+         * line)
+         */
+        List<Double> fivePointsXValues = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            fivePointsXValues.add(fivePoints.get(i).getX());
+        }
         // the length of the first line string is 10
         double pathLength = 10.0;
-        double expectedMidPointXValue = fivePoints.get(0).getX() + pathLength / (n - 1);
-        assertEquals(expectedMidPointXValue, xValue, delta);
+        List<Double> expectedFivePointsXValues = new ArrayList<>();
 
+        // x value for the first control point
+        double firstControlPointXValue = lineStrings.get(0).getControlPoints().get(0).getX();
+        expectedFivePointsXValues.add(firstControlPointXValue);
+
+        for (int i = 1; i < n - 1; i++) {
+            expectedFivePointsXValues.add(firstControlPointXValue + i * pathLength / (n - 1));
+        }
+        // index for the last control point on the line string one
+        int lastOneIndex = 10;
+
+        // x value for the last control point is added
+        expectedFivePointsXValues.add(lineStrings.get(0).getControlPoints().get(lastOneIndex)
+                .getX());
+        assertEquals(expectedFivePointsXValues, fivePointsXValues);
+
+        // pick up three points on the line string two.
         n = 3;
-        List<HorizontalPosition> threePoints = lineStrings.get(1).getPointsOnPath(n);
-        midPoint = threePoints.get(1);
-        xValue = midPoint.getX();
-        // manually get the mid point x value of the second line string
-        expectedMidPointXValue = 13.0;
-        assertEquals(expectedMidPointXValue, xValue, delta);
+        List<HorizontalPosition> threePoints = lineStrings.get(1).getPointsOnPath(3);
 
-        threePoints = lineStrings.get(2).getPointsOnPath(3);
-        midPoint = threePoints.get(1);
-        xValue = midPoint.getX();
-        // manually get the mid point x value of the second line string
-        expectedMidPointXValue = 13.0;
-        assertEquals(expectedMidPointXValue, xValue, delta);
+        List<HorizontalPosition> expectedThreePoints = new ArrayList<>();
+        /*
+         * Add control points at the specified positions (0, 3, 6) according to
+         * manually calculation.
+         */
+        expectedThreePoints.add(lineStrings.get(1).getControlPoints().get(0));
+        expectedThreePoints.add(lineStrings.get(1).getControlPoints().get(3));
+        expectedThreePoints.add(lineStrings.get(1).getControlPoints().get(6));
+        assertEquals(expectedThreePoints, threePoints);
+
+        // pick up four points on the line string three.
+        n = 4;
+        List<HorizontalPosition> fourPoints = lineStrings.get(2).getPointsOnPath(4);
+
+        List<HorizontalPosition> expectedFourPoints = new ArrayList<>();
+        /*
+         * Notice, the points (x,y) on the third line string is defined by
+         * y=x+10. Apart from the first and last control point, we need to find
+         * another two points. These two points are at one third and two third
+         * position. By manual calculation, they are at (13.333, 23.333) and
+         * (16.667, 26.667). There's a break on the third line string.
+         */
+
+        // add the first control point
+        expectedFourPoints.add(new HorizontalPosition(10.0, 20.0, crs));
+
+        expectedFourPoints.add(new HorizontalPosition(13.0 + 1.0 / 3.0, 13.0 + 1.0 / 3.0 + 10.0,
+                crs));
+        expectedFourPoints.add(new HorizontalPosition(16.0 + 2.0 / 3.0, 16.0 + 2.0 / 3.0 + 10.0,
+                crs));
+
+        // add the last control point
+        expectedFourPoints.add(new HorizontalPosition(20.0, 30.0, crs));
+
+        // the type of fourPoints isn't ArrayList. Have to compare as below:
+        for (int i = 0; i < n; i++) {
+            assertEquals(expectedFourPoints.get(i).getX(), fourPoints.get(i).getX(), delta);
+            assertEquals(expectedFourPoints.get(i).getY(), fourPoints.get(i).getY(), delta);
+        }
     }
 
     /**
@@ -112,22 +162,29 @@ public class LineStringTest {
      * */
     @Test
     public void testgGetFractionalControlPointDistance() {
-        int n = 6;
+        /*
+         * the number should be less than the number of control points on the
+         * line string.
+         */
+        int n = 6; // 10 control points on the line string one.
         double fDistance = lineStrings.get(0).getFractionalControlPointDistance(n);
         // notice , the length of the first line string is 10
         double expectedFDistance = (double) n / 10;
         assertEquals(expectedFDistance, fDistance, delta);
 
-        n = 5;
+        n = 5; // 6 control points on the line string two.
         fDistance = lineStrings.get(1).getFractionalControlPointDistance(n);
-        // notice , 6 lines in the second line string
+        // notice , the length of the second line string is 6
         expectedFDistance = n / 6.0;
         assertEquals(expectedFDistance, fDistance, delta);
 
-        n = 3;
+        n = 3; // 7 control points on the line string three.
         fDistance = lineStrings.get(2).getFractionalControlPointDistance(n);
-        // notice , 6 lines in the third line string
-        expectedFDistance = n / 6.0;
+        /*
+         * The length of the third line string is 10 * sqrt(2). This control
+         * point's distance to the first one is 3*sqrt(2).
+         */
+        expectedFDistance = (n * Math.sqrt(2.0)) / (10.0 * Math.sqrt(2.0));
         assertEquals(expectedFDistance, fDistance, delta);
     }
 }

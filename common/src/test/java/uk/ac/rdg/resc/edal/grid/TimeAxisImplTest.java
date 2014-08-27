@@ -143,6 +143,7 @@ public class TimeAxisImplTest {
         DateTime fifthDate = tAxis.getCoordinateValue(expectedIndex);
         assertEquals(expectedIndex, tAxis.findIndexOf(fifthDate));
         int notFoundIndex = -1;
+        //a date is outside t axis.
         assertEquals(notFoundIndex, tAxis.findIndexOf(start.plusDays(25)));
     }
 
@@ -152,6 +153,13 @@ public class TimeAxisImplTest {
     @Test
     public void testIsAscending() {
         assertTrue(tAxis.isAscending());
+        
+        ArrayList<DateTime> dts = new ArrayList<>();
+        for (int i = 0; i < numberOfDate + 1; i++) {
+            dts.add(start.minusDays(i));
+        }
+        TimeAxis ta = new TimeAxisImpl(tAxisName, dts);
+        assertFalse(ta.isAscending());
     }
 
     /**

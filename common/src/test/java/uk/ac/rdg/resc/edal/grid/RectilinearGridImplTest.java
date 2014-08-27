@@ -92,7 +92,10 @@ public class RectilinearGridImplTest {
                 100.75, 32.75, 40.75);
         assertEquals(expectedGbbox, rGrid.getGeographicBoundingBox());
 
-        // a container contain a series of horizontal positions.
+        /*
+         * a container contain a series of horizontal positions which are the
+         * centres of cells.
+         */
         List<HorizontalPosition> hPoss = new ArrayList<>(xSize * ySize);
         for (int i = 0; i < ySize; i++) {
             for (int j = 0; j < xSize; j++) {
@@ -118,13 +121,18 @@ public class RectilinearGridImplTest {
      */
     @Test
     public void testContains() throws InvalidCrsException {
+        //points are inside grid. the test should return true.
         HorizontalPosition position = new HorizontalPosition(120, 30, crs);
         assertFalse(rGrid.contains(position));
         position = new HorizontalPosition(96.0, 34.6, crs);
         assertTrue(rGrid.contains(position));
         position = new HorizontalPosition(96.0, 40.7, crs);
         assertTrue(rGrid.contains(position));
+        
+        //give "null" as a special argument.
         assertFalse(rGrid.contains(null));
+        
+        //a point using different epsg code.
         CoordinateReferenceSystem japanArea = GISUtils.getCrs("EPSG:2450");
         assertFalse(rGrid.contains(new HorizontalPosition(17945.194292, 41625.344542, japanArea)));
     }

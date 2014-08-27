@@ -51,7 +51,7 @@ public class ValuesArray2DTest {
     private static final int YSIZE = 7;
 
     /**
-     * Initialising.
+     * Initialising the 2D values array.
      */
     @Before
     public void setUp() {
@@ -68,6 +68,7 @@ public class ValuesArray2DTest {
      */
     @Test
     public void testIterator() {
+        // Expected values are drawn via the initializing process.
         List<Number> expected = new ArrayList<Number>();
         for (int i = 0; i < YSIZE; i++) {
             for (int j = 0; j < XSIZE; j++) {
@@ -89,6 +90,11 @@ public class ValuesArray2DTest {
      */
     @Test
     public void testGetSet() {
+        /*
+         * Set values at given positions then compare two values. The type of
+         * values is Number, so we try all primary types like float, double,
+         * byte, short, etc.
+         */
         float f = 12.0f;
         data.set(f, 2, 3);
         assertEquals(f, data.get(2, 3).doubleValue(), 1e-6);
@@ -110,6 +116,10 @@ public class ValuesArray2DTest {
         assertEquals(b, data.get(1, 4));
 
         double d = 129.9998;
+        data.set(d, 2, 4);
+        assertEquals(d, data.get(2, 4).doubleValue(), 1e-6);
+        
+        d = Double.NaN;
         data.set(d, 2, 4);
         assertEquals(d, data.get(2, 4).doubleValue(), 1e-6);
 

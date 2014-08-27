@@ -107,6 +107,7 @@ public class SimpleGridDomainTest {
         GeoPosition gPosition = new GeoPosition(hPosition, vPosition, start);
         assertTrue(sgd.contains(gPosition));
 
+        // a vertical position isn't in the vertical domain
         vPosition = new VerticalPosition(950.0, height);
         gPosition = new GeoPosition(hPosition, vPosition, start);
         assertFalse(sgd.contains(gPosition));
@@ -133,6 +134,7 @@ public class SimpleGridDomainTest {
         gPosition = new GeoPosition(hPosition, vPosition, start.plusDays(21));
         assertTrue(sgd.contains(gPosition));
 
+        // the date is outside t axis
         gPosition = new GeoPosition(hPosition, vPosition, start.plusDays(30));
         assertFalse(sgd.contains(gPosition));
     }

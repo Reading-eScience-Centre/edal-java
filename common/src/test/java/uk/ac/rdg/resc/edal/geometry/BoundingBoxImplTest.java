@@ -83,14 +83,16 @@ public class BoundingBoxImplTest {
         assertTrue(bbox.contains(180.0, 30.0));
         assertTrue(bbox.contains(160.0, 60.0));
 
+        // points are outside the bounding box
         assertFalse(bbox.contains(190, 0.0));
         assertFalse(bbox.contains(Double.NaN, -30.0));
-
         assertFalse(bbox.contains(null));
 
+        // point using different EPSG code is inside the bounding box.
         CoordinateReferenceSystem japanArea = GISUtils.getCrs("EPSG:2450");
         assertTrue(bbox.contains(new HorizontalPosition(17945.194292, 41625.344542, japanArea)));
 
+        // point using different EPSG code is outside the bounding box.
         CoordinateReferenceSystem chinaArea = GISUtils.getCrs("EPSG:2426");
         assertFalse(bbox.contains(new HorizontalPosition(500000, 4261964.001513, chinaArea)));
     }

@@ -107,8 +107,11 @@ public class ReferenceableAxisImplTest {
     @Test
     public void testContains() {
         assertTrue(longAxis.contains(60.1));
+        assertFalse(longAxis.contains(20.5));
         assertFalse(latAxis.contains(40.2));
+        assertTrue(latAxis.contains(25.0));
         assertFalse(latAxis.contains(null));
+        assertFalse(longAxis.contains(null));
     }
 
     // ExtendLastValue test is ignored as it's similar with this one.
@@ -156,7 +159,7 @@ public class ReferenceableAxisImplTest {
 
         double pos1 = 55.8;
         double pos2 = 65.9;
-        
+
         assertEquals((pos1 + pos2) / 2.0, latAxis.getMidpoint(pos1, pos2), delta);
         assertEquals(Double.NaN, latAxis.difference(25.0, Double.NaN), delta);
         assertEquals(latValues[latValues.length - 1], latAxis.getMaximumValue(), delta);
@@ -194,10 +197,10 @@ public class ReferenceableAxisImplTest {
      */
     @Test
     public void testIsAscending() {
-        //according to the natural order of the axis.
+        // according to the natural order of the axis.
         assertTrue(longAxis.isAscending());
         assertTrue(latAxis.isAscending());
-        
+
         double[] values = { 20.0, 19.8, 18.8, 15.6 };
         List<Double> lValues = CollectionUtils.listFromDoubleArray(values);
         ReferenceableAxisImpl lAxis = new ReferenceableAxisImpl("latitude", lValues, false);

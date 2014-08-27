@@ -62,6 +62,7 @@ public class SimpleHorizontalDomainTest {
         HorizontalPosition position = new HorizontalPosition(125, 32, DefaultGeographicCRS.WGS84);
         assertTrue(sdm.contains(position));
 
+        // positions below are on the edge
         position = new HorizontalPosition(120, 30, DefaultGeographicCRS.WGS84);
         assertTrue(sdm.contains(position));
 
@@ -71,15 +72,17 @@ public class SimpleHorizontalDomainTest {
         position = new HorizontalPosition(150, 30, DefaultGeographicCRS.WGS84);
         assertTrue(sdm.contains(position));
 
-        position = new HorizontalPosition(130, 35, DefaultGeographicCRS.WGS84);
-        assertTrue(sdm.contains(position));
-
         position = new HorizontalPosition(150, 40, DefaultGeographicCRS.WGS84);
         assertTrue(sdm.contains(position));
 
         position = new HorizontalPosition(150, 35, DefaultGeographicCRS.WGS84);
         assertTrue(sdm.contains(position));
 
+        // position is inside domain
+        position = new HorizontalPosition(130, 35, DefaultGeographicCRS.WGS84);
+        assertTrue(sdm.contains(position));
+
+        // positions are outside domain
         position = new HorizontalPosition(125, 42, DefaultGeographicCRS.WGS84);
         assertFalse(sdm.contains(position));
 
@@ -92,9 +95,11 @@ public class SimpleHorizontalDomainTest {
         position = new HorizontalPosition(-60, 20.7, DefaultGeographicCRS.WGS84);
         assertFalse(sdm.contains(position));
 
+        // position using different epsg code is outside domain
         CoordinateReferenceSystem chinaArea = GISUtils.getCrs("EPSG:2426");
         assertFalse(sdm.contains(new HorizontalPosition(500000, 4261964.001513, chinaArea)));
 
+        // position using different epsg code is inside domain
         CoordinateReferenceSystem japanArea = GISUtils.getCrs("EPSG:2450");
         assertTrue(sdm.contains(new HorizontalPosition(17945.194292, 41625.344542, japanArea)));
     }

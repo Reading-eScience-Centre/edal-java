@@ -67,7 +67,6 @@ public class ColletionUtilsTest {
             doubleDataAsObject[i] = 1.0 * i + 1.0;
             floatDataSet.add(1.0f * i + 1.0f);
             doubleDataSet.add(1.0 * i + 1.0);
-
         }
         floatDataSet.add(null);
         doubleDataSet.add(null);
@@ -80,6 +79,10 @@ public class ColletionUtilsTest {
     public void testListFromFloatArray() {
         List<Float> floatDataAsList = CollectionUtils.listFromFloatArray(floatData);
         assertEquals(floatData.length, floatDataAsList.size());
+        /*
+         * the array and the list should map to each other according to the
+         * index.
+         */
         for (int i = 0; i < floatData.length; i++) {
             assertEquals(floatData[i], floatDataAsList.get(i), delta);
         }
@@ -110,13 +113,13 @@ public class ColletionUtilsTest {
 
     @Test(expected = NullPointerException.class)
     public void testNull() {
-        //the statement below catches NullPointerException
+        // the statement below catches NullPointerException
         try {
             CollectionUtils.listFromFloatArray(null);
         } catch (NullPointerException e) {
             System.out.println(e.getMessage());
         }
-        //the statement below throws NullPointerException
+        // the statement below throws NullPointerException
         CollectionUtils.listFromDoubleArray(null);
     }
 }

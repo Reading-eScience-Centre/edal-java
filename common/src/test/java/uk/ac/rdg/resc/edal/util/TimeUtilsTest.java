@@ -42,7 +42,6 @@ import org.joda.time.chrono.ISOChronology;
 import org.junit.Before;
 import org.junit.Test;
 
-import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 
 /**
@@ -73,6 +72,7 @@ public class TimeUtilsTest {
      */
     @Test
     public void testGetPeriodString() {
+        // expected values are drawn from the definition
         long secondPeriod = 44 * MILLIS_PER_SECOND;
         assertEquals("PT44S", TimeUtils.getPeriodString(secondPeriod));
         long minutePeriod = 15 * MILLIS_PER_MINUTE + secondPeriod;
@@ -91,6 +91,9 @@ public class TimeUtilsTest {
         long period = 1L * MILLIS_PER_DAY;
         String oneDayPeriod = TimeUtils.getPeriodString(period);
         DateTime lastDate = datetimes.get(datetimes.size() - 1);
+
+        // expected values are drawn from the definition
+
         String expected = TimeUtils.dateTimeToISO8601(start) + "/"
                 + TimeUtils.dateTimeToISO8601(lastDate) + "/" + oneDayPeriod;
         assertEquals(expected, TimeUtils.getTimeStringForCapabilities(datetimes));
@@ -100,25 +103,29 @@ public class TimeUtilsTest {
         expected = expected + "," + TimeUtils.dateTimeToISO8601(lastDate);
         assertEquals(expected, TimeUtils.getTimeStringForCapabilities(datetimes));
 
-        datetimes.add(lastDate.plusDays(3));
-        lastDate = datetimes.get(datetimes.size() - 1);
-        expected = expected + "," + TimeUtils.dateTimeToISO8601(lastDate);
-        assertEquals(expected, TimeUtils.getTimeStringForCapabilities(datetimes));
-
         List<DateTime> secondPeriod = new ArrayList<DateTime>();
+        // this period has 20 days interval
         for (int i = 1; i < 5; i++)
             secondPeriod.add(start.plusDays(20 * i));
         datetimes.addAll(secondPeriod);
         String twentyDayPeriod = TimeUtils.getPeriodString(20L * period);
+
+        /*
+         * There are two periods in this capability string, use "," to separate
+         * them.
+         */
         expected = expected + "," + TimeUtils.dateTimeToISO8601(secondPeriod.get(0)) + "/"
                 + TimeUtils.dateTimeToISO8601(secondPeriod.get(secondPeriod.size() - 1)) + "/"
                 + twentyDayPeriod;
         assertEquals(expected, TimeUtils.getTimeStringForCapabilities(datetimes));
+
         datetimes.add(start.plusDays(180));
+        //Add a new period.
         expected = expected + ","
                 + TimeUtils.dateTimeToISO8601(datetimes.get(datetimes.size() - 1));
         assertEquals(expected, TimeUtils.getTimeStringForCapabilities(datetimes));
 
+        // an empty string example
         List<DateTime> emptyList = new ArrayList<DateTime>();
         assertEquals("", TimeUtils.getTimeStringForCapabilities(emptyList));
     }
@@ -128,6 +135,7 @@ public class TimeUtilsTest {
      */
     @Test
     public void testOnSameDay() {
+        // two dates with different time zones.
         DateTime dt1;
         dt1 = new DateTime(2013, 2, 27, 14, 34, DateTimeZone.UTC);
         DateTime dt2;
@@ -140,6 +148,7 @@ public class TimeUtilsTest {
         dt2 = new DateTime(2013, 2, 27, 23, 34, DateTimeZone.forOffsetHours(-2));
         assertFalse(TimeUtils.onSameDay(dt1, dt2));
 
+        // two dates with same time zone
         dt1 = new DateTime(2013, 2, 28, 14, 34);
         dt2 = new DateTime(2013, 2, 28, 10, 34);
         assertTrue(TimeUtils.onSameDay(dt1, dt2));
@@ -154,21 +163,26 @@ public class TimeUtilsTest {
      */
     @Test
     public void testFindTimeIndex() {
+        /*
+         * The expected values are drawn according to the java doc {@link
+         * TimeUtils#findTimeIndex}.
+         */
         DateTime dt = new DateTime(1999, 12, 1, 0, 0, DateTimeZone.UTC);
         int index = TimeUtils.findTimeIndex(datetimes, dt);
-        assertEquals(index, -1);
+        assertEquals(-1, index);
 
         dt = new DateTime(2000, 1, 4, 10, 0, DateTimeZone.UTC);
         index = TimeUtils.findTimeIndex(datetimes, dt);
-        assertEquals(index, -5);
+        assertEquals(-5, index);
 
         dt = new DateTime(2000, 1, 19, 10, 0, DateTimeZone.UTC);
         index = TimeUtils.findTimeIndex(datetimes, dt);
-        assertEquals(index, -11);
+        assertEquals(-11, index);
 
+        // this date can be found in the list.
         dt = new DateTime(2000, 1, 4, 0, 0, DateTimeZone.UTC);
         index = TimeUtils.findTimeIndex(datetimes, dt);
-        assertEquals(index, 3);
+        assertEquals(3, index);
     }
 
     /**
@@ -183,14 +197,12 @@ public class TimeUtilsTest {
         String timeString = "1990-12-30T12:00:00.000Z,1993-02-15T12:00:00.000Z,"
                 + "1998-08-30T12:00:00.000Z,2000-01-01T13:00:00.000Z";
         Chronology isoChronology = ISOChronology.getInstanceUTC();
+        // the value is drawn from the first time in the time string.
         DateTime start = TimeUtils.iso8601ToDateTime("1990-12-30T12:00:00.000Z", isoChronology);
+        // the value is drawn from the last time in the time string.
         DateTime end = TimeUtils.iso8601ToDateTime("2000-01-01T13:00:00.000Z", isoChronology);
-        assertEquals(TimeUtils.getTimeRangeForString(timeString, isoChronology),
-                Extents.newExtent(start, end));
-        Extent<DateTime> tExent = Extents.newExtent((new DateTime(1990, 12, 30, 12, 0,
-                isoChronology)), new DateTime(2000, 01, 01, 13, 0, isoChronology));
-        assertEquals(TimeUtils.getTimeRangeForString(timeString, ISOChronology.getInstanceUTC()),
-                tExent);
+        assertEquals(Extents.newExtent(start, end),
+                TimeUtils.getTimeRangeForString(timeString, isoChronology));
 
         DateTime dt1 = new DateTime(1990, 2, 3, 14, 25, DateTimeZone.forOffsetHours(-2));
         DateTime dt2 = new DateTime(1995, 12, 3, 23, 25, DateTimeZone.forOffsetHours(-4));
@@ -199,6 +211,7 @@ public class TimeUtilsTest {
         String ts1 = TimeUtils.dateTimeToISO8601(dt1);
         String ts2 = TimeUtils.dateTimeToISO8601(dt2);
         String ts3 = TimeUtils.dateTimeToISO8601(dt3);
+        // a non-UTC time string.
         timeString = ts1 + "," + ts2 + "," + ts3;
 
         assertEquals(

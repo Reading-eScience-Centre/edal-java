@@ -93,8 +93,10 @@ public class RegularAxisImplTest {
             Extent<Double> bound = longitudeAxis.getCoordinateBounds(i);
             Extent<Double> expectedBound = Extents.newExtent(100.0 + (i - 0.5) * SPACE, 100.0
                     + (i + 0.5) * SPACE);
-            // Extent class not implement equals method, have to compare them as
-            // below
+            /*
+             * Extent class not implement equals method, have to compare them as
+             * below.
+             */
             assertEquals(expectedBound.getLow(), bound.getLow(), delta);
             assertEquals(expectedBound.getHigh(), bound.getHigh(), delta);
         }
