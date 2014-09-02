@@ -51,6 +51,7 @@ import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
+import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 public class GetMapStyleParams {
 
@@ -77,7 +78,7 @@ public class GetMapStyleParams {
      * TODO Not currently used
      */
 //    private boolean autoScale = false;
-    
+
     /* true if we are using an XML style specification */
     private boolean xmlSpecified = false;
 
@@ -431,6 +432,11 @@ public class GetMapStyleParams {
          */
         VelocityContext context = new VelocityContext();
         context.put("paletteName", paletteName);
+        if (colourScaleRange == null) {
+            colourScaleRange = WmsUtils.estimateValueRange(
+                    catalogue.getDatasetFromLayerName(layerName),
+                    catalogue.getVariableFromId(layerName));
+        }
         context.put("scaleMin", colourScaleRange.getLow());
         context.put("scaleMax", colourScaleRange.getHigh());
         context.put("logarithmic", logarithmic ? "logarithmic" : "linear");
