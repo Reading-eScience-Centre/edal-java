@@ -55,7 +55,7 @@ import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 
 /**
- * Test class for {@link GridFeature}. 
+ * Test class for {@link GridFeature}.
  * 
  * @author Guy
  */
@@ -167,21 +167,5 @@ public class GridFeatureTest {
         v /= 1e3;
         int t = (int) (v % 1000);
         return new int[] { t, z, y, x };
-    }
-
-    public static void main(String[] args) {
-        for (int x = 0; x < 100; x++) {
-            for (int y = 0; y < 100; y++) {
-                for (int z = 0; z < 4; z++) {
-                    for (int t = 0; t < 32; t++) {
-                        Number number = numberFromCoords(t, z, y, x);
-                        int[] c = coordsFromNumber(number);
-                        System.out.println(c[0] + "," + c[1] + "," + c[2] + "," + c[3]);
-                        System.out.println(t + "," + z + "," + y + "," + x);
-                        System.out.println();
-                    }
-                }
-            }
-        }
     }
 }

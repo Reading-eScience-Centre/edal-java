@@ -42,6 +42,7 @@ import org.joda.time.chrono.ISOChronology;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 
 /**
@@ -120,7 +121,7 @@ public class TimeUtilsTest {
         assertEquals(expected, TimeUtils.getTimeStringForCapabilities(datetimes));
 
         datetimes.add(start.plusDays(180));
-        //Add a new period.
+        // Add a new period.
         expected = expected + ","
                 + TimeUtils.dateTimeToISO8601(datetimes.get(datetimes.size() - 1));
         assertEquals(expected, TimeUtils.getTimeStringForCapabilities(datetimes));
@@ -214,9 +215,28 @@ public class TimeUtilsTest {
         // a non-UTC time string.
         timeString = ts1 + "," + ts2 + "," + ts3;
 
-        assertEquals(
-                Extents.newExtent(dt1.toDateTime(DateTimeZone.UTC),
-                        dt3.toDateTime(DateTimeZone.UTC)),
-                TimeUtils.getTimeRangeForString(timeString, isoChronology));
+        // among 3 dates, we know the min one is dt1, the max one is dt3
+        Extent<DateTime> expectedDateRange = Extents.newExtent(dt1.toDateTime(DateTimeZone.UTC),
+                dt3.toDateTime(DateTimeZone.UTC));
+
+        assertEquals(expectedDateRange, TimeUtils.getTimeRangeForString(timeString, isoChronology));
+
+        DateTime dt4 = new DateTime(1884, 11, 2, 12, 25, DateTimeZone.forOffsetHours(10));
+        String ts4 = TimeUtils.dateTimeToISO8601(dt4);
+
+        // this non-UTC time string has no order
+        timeString = ts2 + "," + ts1 + "," + ts4 + "," + ts3;
+
+        // among 4 dates, we know the min one is dt4, the max one is dt3
+        expectedDateRange = Extents.newExtent(dt4.toDateTime(DateTimeZone.UTC),
+                dt3.toDateTime(DateTimeZone.UTC));
+        assertEquals(expectedDateRange, TimeUtils.getTimeRangeForString(timeString, isoChronology));
+
+        // a time string with key word 'current'
+        timeString = ts2 + ",current," + ts1 + "," + ts4 + "," + ts3;
+
+        // among 5 dates, we know the min one is dt4, the max one is NOw current
+        expectedDateRange = Extents.newExtent(dt4.toDateTime(DateTimeZone.UTC), new DateTime());
+        assertEquals(expectedDateRange, TimeUtils.getTimeRangeForString(timeString, isoChronology));
     }
 }

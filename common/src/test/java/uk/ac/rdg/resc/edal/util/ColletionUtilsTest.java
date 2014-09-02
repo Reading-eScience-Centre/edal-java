@@ -113,12 +113,14 @@ public class ColletionUtilsTest {
 
     @Test(expected = NullPointerException.class)
     public void testNull() {
+        Exception caughtEx =null;
         // the statement below catches NullPointerException
         try {
             CollectionUtils.listFromFloatArray(null);
         } catch (NullPointerException e) {
-            System.out.println(e.getMessage());
+            caughtEx =e;
         }
+        assertNotNull(caughtEx);
         // the statement below throws NullPointerException
         CollectionUtils.listFromDoubleArray(null);
     }

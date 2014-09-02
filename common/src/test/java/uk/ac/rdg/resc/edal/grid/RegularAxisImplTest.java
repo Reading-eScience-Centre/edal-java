@@ -155,11 +155,13 @@ public class RegularAxisImplTest {
     @Test(expected = IllegalArgumentException.class)
     public void testFindIndexOfUnconstrainedException() {
         // the statement below catches illegalArgumentException
+        Exception caughtEx = null;
         try {
             longitudeAxis.findIndexOfUnconstrained(null);
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            caughtEx = e;
         }
+        assertNotNull(caughtEx);
         // the statement below throws illegalArgumentException
         latitudeAxis.findIndexOfUnconstrained(Double.NaN);
     }

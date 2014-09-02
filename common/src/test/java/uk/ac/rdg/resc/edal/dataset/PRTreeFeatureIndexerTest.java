@@ -27,13 +27,6 @@
  ******************************************************************************/
 package uk.ac.rdg.resc.edal.dataset;
 
-/**
- * Test class for {@link PRTreeFeatureIndexer}. For {@link PRTreeFeatureIndexer#getAllFeatureIds} and
- * {@link PRTreeFeatureIndexer#findFeatureIds} methods only as others are
- * simple.
- * 
- * @author Nan Lin
- */
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -56,6 +49,14 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
+/**
+ * Test class for {@link PRTreeFeatureIndexer}. For
+ * {@link PRTreeFeatureIndexer#getAllFeatureIds} and
+ * {@link PRTreeFeatureIndexer#findFeatureIds} methods only as others are
+ * simple.
+ * 
+ * @author Nan Lin
+ */
 public class PRTreeFeatureIndexerTest {
     // points number on the longitude side
     private static final int xSize = 350;

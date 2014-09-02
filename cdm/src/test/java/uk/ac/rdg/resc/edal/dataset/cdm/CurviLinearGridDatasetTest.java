@@ -32,6 +32,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.net.URL;
@@ -55,8 +56,6 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
-import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -119,18 +118,17 @@ public class CurviLinearGridDatasetTest {
         BoundingBox bbox = hDomain.getBoundingBox();
         PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
                 null, null, null);
-        Collection<? extends PointSeriesFeature> timeSeriesFeatures;
 
-        //the statement below catches UnsupportedOperationException.
+        Exception caughtEx = null;
+        // the statement below catches UnsupportedOperationException.
         try {
-            timeSeriesFeatures = dataset.extractTimeseriesFeatures(null, params);
+            dataset.extractTimeseriesFeatures(null, params);
         } catch (UnsupportedOperationException e) {
-            System.out.println(e.getMessage());
+            caughtEx = e;
         }
-        //the statement below throws UnsupportedOperationException.
-        Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(null,
-                params);
-
+        assertNotNull(caughtEx);
+        // the statement below throws UnsupportedOperationException.
+        dataset.extractProfileFeatures(null, params);
     }
 
     /**
@@ -142,39 +140,41 @@ public class CurviLinearGridDatasetTest {
 
     @Test
     public void testCurviLinearCoords() throws IOException {
-        Variable lon_rho = cdf.findVariable("lon_rho");
-        Variable lat_rho = cdf.findVariable("lat_rho");
+        Variable varLonRho = cdf.findVariable("lon_rho");
+        Variable varLatRho = cdf.findVariable("lat_rho");
 
-        ArrayDouble lon_data = (ArrayDouble) lon_rho.read();
-        ArrayDouble lat_data = (ArrayDouble) lat_rho.read();
+        ArrayDouble longitudeData = (ArrayDouble) varLonRho.read();
+        ArrayDouble latitudeData = (ArrayDouble) varLatRho.read();
 
-        ValuesArray2D lon_values = new ValuesArray2D(xiSize, etaSize);
-        ValuesArray2D lat_values = new ValuesArray2D(xiSize, etaSize);
-        for (int i = 0; i < lon_data.getSize(); i++) {
+        ValuesArray2D longitudeValues = new ValuesArray2D(xiSize, etaSize);
+        ValuesArray2D latitudeValues = new ValuesArray2D(xiSize, etaSize);
+        for (int i = 0; i < longitudeData.getSize(); i++) {
             int m = i % etaSize;
             int n = i / etaSize;
             int[] coords = new int[] { n, m };
-            lon_values.set(lon_data.getDouble(i), coords);
-            lat_values.set(lat_data.getDouble(i), coords);
+            longitudeValues.set(longitudeData.getDouble(i), coords);
+            latitudeValues.set(latitudeData.getDouble(i), coords);
         }
-        assertEquals(lon_data.getDouble(etaSize), lon_values.get(1, 0).doubleValue(), delta);
-        assertEquals(lat_data.getDouble(etaSize * 2), lat_values.get(2, 0).doubleValue(), delta);
+        assertEquals(longitudeData.getDouble(etaSize), longitudeValues.get(1, 0).doubleValue(),
+                delta);
+        assertEquals(latitudeData.getDouble(etaSize * 2), latitudeValues.get(2, 0).doubleValue(),
+                delta);
 
-        CurvilinearCoords cCoords = new CurvilinearCoords(lon_values, lat_values);
+        CurvilinearCoords cCoords = new CurvilinearCoords(longitudeValues, latitudeValues);
 
         BoundingBox expectedBbox = dataset.getVariableMetadata("allx_u").getHorizontalDomain()
                 .getBoundingBox();
 
         assertEquals(expectedBbox, cCoords.getBoundingBox());
-        assertEquals(lon_data.getSize(), lon_values.size());
+        assertEquals(longitudeData.getSize(), longitudeValues.size());
         assertEquals(etaSize, cCoords.getNi());
         assertEquals(xiSize, cCoords.getNj());
 
         // pick up a horizontal position with id=15000
 
         int index = 15000;
-        LonLatPosition expectedPos = new LonLatPosition(lon_data.getDouble(index),
-                lat_data.getDouble(index));
+        LonLatPosition expectedPos = new LonLatPosition(longitudeData.getDouble(index),
+                latitudeData.getDouble(index));
         int cCoords_i = index % etaSize;
         int cCoords_j = index / etaSize;
 

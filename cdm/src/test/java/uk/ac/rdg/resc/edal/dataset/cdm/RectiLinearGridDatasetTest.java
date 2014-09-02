@@ -28,7 +28,11 @@
 
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.net.URL;
@@ -359,14 +363,14 @@ public class RectiLinearGridDatasetTest {
         // have to use bbox. replace it with null throw NullPointerExcpetion,
         PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
                 datasetTExtent, hPos, zPos, tValue);
-        Collection<? extends DiscreteFeature<?, ?>> mapFeature;
+        Exception caughtEx =null;
         // the statement below catches an IllegalArgumentException
         try {
-            mapFeature = dataset.extractMapFeatures(null, params);
+            dataset.extractMapFeatures(null, params);
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            caughtEx =e;
         }
-
+        assertNotNull(caughtEx);
         // depth value is out bound of zAxis
         zPos = 140.0;
         tValue = new DateTime(2000, 01, 02, 15, 00, chrnology);
@@ -377,7 +381,7 @@ public class RectiLinearGridDatasetTest {
         params = new PlottingDomainParams(1, 1, bbox, datasetZExtent, datasetTExtent, hPos, zPos,
                 tValue);
         // the statement below throws an IllegalArgumentException
-        mapFeature = dataset.extractMapFeatures(null, params);
+        dataset.extractMapFeatures(null, params);
     }
 
     /**
@@ -513,9 +517,9 @@ public class RectiLinearGridDatasetTest {
             GridCoordinates2D gCoordinate = cell.getGridCoordinates();
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
-            BoundingBox bbox = (BoundingBox) cell.getFootprint();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, zExtent,
-                    datasetTExtent, null, null, null);
+            HorizontalPosition hPos =cell.getCentre();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent,
+                    datasetTExtent, hPos, null, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                     .extractTimeseriesFeatures(null, params);
             /*
@@ -592,9 +596,9 @@ public class RectiLinearGridDatasetTest {
         if (vAxis.contains(targetZ)) {
             int zIndex = vAxis.findIndexOf(targetZ);
             for (GridCell2D cell : samplePoints) {
-                BoundingBox bbox = (BoundingBox) cell.getFootprint();
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, null,
-                        datasetTExtent, null, targetZ, null);
+                HorizontalPosition hPos =cell.getCentre();
+                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
+                        datasetTExtent, hPos, targetZ, null);
                 Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                         .extractTimeseriesFeatures(null, params);
                 for (PointSeriesFeature data : timeSeriesFeatures) {
@@ -609,9 +613,9 @@ public class RectiLinearGridDatasetTest {
             }
         } else {
             for (GridCell2D cell : samplePoints) {
-                BoundingBox bbox = (BoundingBox) cell.getFootprint();
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, null,
-                        datasetTExtent, null, targetZ, null);
+                HorizontalPosition hPos =cell.getCentre();
+                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
+                        datasetTExtent, hPos, targetZ, null);
                 Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                         .extractTimeseriesFeatures(null, params);
                 // targetZ is out bound of zExtent, it returns an empty feature
@@ -721,15 +725,14 @@ public class RectiLinearGridDatasetTest {
             GridCoordinates2D gCoordinate = cell.getGridCoordinates();
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
-            BoundingBox bbox = (BoundingBox) cell.getFootprint();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
-                    tExtent, null, null, null);
+            HorizontalPosition hPos =cell.getCentre();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, datasetZExtent,
+                    tExtent, hPos, null, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                     .extractTimeseriesFeatures(null, params);
             if (tExtent == null || tExtent.intersects(datasetTExtent)) {
                 assertEquals(zSize, timeSeriesFeatures.size());
                 for (PointSeriesFeature feature : timeSeriesFeatures) {
-                    HorizontalPosition hPos = feature.getHorizontalPosition();
                     verifyTimeSeriesFeature(feature, hPos, xIndex, yIndex);
                 }
             } else {
@@ -1017,22 +1020,20 @@ public class RectiLinearGridDatasetTest {
             GridCoordinates2D gCoordinate = cell.getGridCoordinates();
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
-            BoundingBox bbox = (BoundingBox) cell.getFootprint();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
-                    tExtent, null, null, targetT);
+            HorizontalPosition hPos =cell.getCentre();
+            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, datasetZExtent,
+                    tExtent, hPos, null, targetT);
             Collection<? extends ProfileFeature> profileFeatures = dataset.extractProfileFeatures(
                     null, params);
             if (tExtent == null && targetT == null) {
                 assertEquals(tSize, profileFeatures.size());
                 for (ProfileFeature feature : profileFeatures) {
-                    HorizontalPosition hPos = feature.getHorizontalPosition();
                     verifyProfileFeature(feature, hPos, xIndex, yIndex);
                 }
             } else if (tExtent == null && targetT != null) {
                 if (tAxis.contains(targetT)) {
                     assertEquals(1, profileFeatures.size());
                     for (ProfileFeature feature : profileFeatures) {
-                        HorizontalPosition hPos = feature.getHorizontalPosition();
                         verifyProfileFeature(feature, hPos, xIndex, yIndex);
                     }
                 } else {
@@ -1040,7 +1041,6 @@ public class RectiLinearGridDatasetTest {
                 }
             } else if (tExtent != null && tExtent.intersects(datasetTExtent)) {
                 for (ProfileFeature feature : profileFeatures) {
-                    HorizontalPosition hPos = feature.getHorizontalPosition();
                     verifyProfileFeature(feature, hPos, xIndex, yIndex);
                 }
             } else if (tExtent != null && !tExtent.intersects(datasetTExtent)) {
