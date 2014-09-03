@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="EDAL : ncWMS and the Environmental Data Abstraction Layer libraries.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>EDAL</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Reading-eScience-Centre/edal-java">View on GitHub</a>
+
+          <h1 id="project_title">EDAL</h1>
+          <h2 id="project_tagline">ncWMS and the Environmental Data Abstraction Layer libraries.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/Reading-eScience-Centre/edal-java/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/Reading-eScience-Centre/edal-java/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>
+<a name="what-is-ncwms" class="anchor" href="#what-is-ncwms"><span class="octicon octicon-link"></span></a>What is ncWMS?</h2>
+
+<p>ncWMS is a <a href="http://en.wikipedia.org/wiki/Web_Map_Service">Web Map Service</a> for displaying environmental data</p>
+
+<h2>
+<a name="what-is-edal" class="anchor" href="#what-is-edal"><span class="octicon octicon-link"></span></a>What is EDAL?</h2>
+
+<p>EDAL is the Environmental Data Abstraction Layer - a set of libraries which provide a data model for dealing with environmental datatypes, and numerous utility routines for reading, manipulating, and plotting this data, as well as serving it over a WMS.</p>
+
+<h2>
+<a name="getting-started-with-ncwms" class="anchor" href="#getting-started-with-ncwms"><span class="octicon octicon-link"></span></a>Getting started with ncWMS</h2>
+
+<p>ncWMS is designed to run in a servlet container such as <a href="http://tomcat.apache.org/">Tomcat</a> or <a href="https://glassfish.java.net/">Glassfish</a>.  However, we do provide a standalone version which uses an embedded <a href="http://winstone.sourceforge.net/">Winstone</a> servlet container to allow users to quickly try it out.</p>
+
+<h3>
+<a name="standalone-version" class="anchor" href="#standalone-version"><span class="octicon octicon-link"></span></a>Standalone version</h3>
+
+<p>TODO Add a download link.
+TODO Highlight the lack of security in the standalone version
+The standalone version can be run from the command line using the command:</p>
+
+<pre><code>java -jar ncWMS-2.0-standalone.jar
+</code></pre>
+
+<p>This will run the embedded servlet container with ncWMS.  You can access the web interface to ncWMS at <a href="http://localhost:8080/">http://localhost:8080/</a></p>
+
+<h3>
+<a name="servlet-container-version" class="anchor" href="#servlet-container-version"><span class="octicon octicon-link"></span></a>Servlet container version</h3>
+
+<p>TODO Add a download link
+TODO Explain security config</p>
+
+<h3>
+<a name="adding-data" class="anchor" href="#adding-data"><span class="octicon octicon-link"></span></a>Adding data</h3>
+
+<p>TODO Explain admin interface briefly
+TODO Gridded CF (NetCDF/GRIB) data by default
+TODO Non-default data reader (with link to dev guide/cookbook)</p>
+
+<h3>
+<a name="using-the-godiva-3-interface" class="anchor" href="#using-the-godiva-3-interface"><span class="octicon octicon-link"></span></a>Using the Godiva 3 interface</h3>
+
+<p>TODO image(?) showing overview
+TODO Link to Godiva 3 quickstart guide.</p>
+
+<h3>
+<a name="developing-ncwms" class="anchor" href="#developing-ncwms"><span class="octicon octicon-link"></span></a>Developing ncWMS</h3>
+
+<p>ncWMS can be extended in a number of ways for custom behaviour.  These include:</p>
+
+<ul>
+<li>Adding new colour palettes</li>
+<li>Precisely defining new styles using custom <a href="http://en.wikipedia.org/wiki/Styled_Layer_Descriptor">SLDs</a>
+</li>
+<li>Adding readers for new data formats</li>
+<li>Adding plugins to perform on-the-fly manipulation of existing data layers</li>
+</ul><p>TODO add link to dev cookbook for how to do these</p>
+
+<h2>
+<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h2>
+
+<p><a href="https://github.com/jonblower" class="user-mention">@jonblower</a>, <a href="https://github.com/guygriffiths" class="user-mention">@guygriffiths</a>, <a href="https://github.com/N-Lin" class="user-mention">@N-Lin</a>, <a href="https://github.com/purplecat" class="user-mention">@purplecat</a></p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">EDAL maintained by <a href="https://github.com/Reading-eScience-Centre">Reading-eScience-Centre</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
