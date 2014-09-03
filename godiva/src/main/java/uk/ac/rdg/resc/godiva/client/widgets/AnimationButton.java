@@ -51,7 +51,6 @@ import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
@@ -76,6 +75,9 @@ public class AnimationButton extends ToggleButton {
     private String currentElevation;
     private String palette;
     private String scaleRange;
+    private String aboveMax;
+    private String belowMin;
+    private String noData;
     private int nColorBands;
     private boolean logScale;
     private Button goButton;
@@ -174,16 +176,16 @@ public class AnimationButton extends ToggleButton {
      *            Whether the palette should be logarithmic
      */
     public void updateDetails(String layer, String currentElevation, String palette, String style,
-            String scaleRange, int nColorBands, boolean logScale) {
-        if (layer == null)
-            this.setEnabled(false);
-        else
-            this.setEnabled(true);
+            String scaleRange, String aboveMax, String belowMin, String noData, int nColorBands,
+            boolean logScale) {
         this.animLayer = layer;
         this.currentElevation = currentElevation;
         this.palette = palette;
         this.style = style;
         this.scaleRange = scaleRange;
+        this.aboveMax = aboveMax;
+        this.belowMin = belowMin;
+        this.noData = noData;
         this.nColorBands = nColorBands;
         this.logScale = logScale;
     }
@@ -194,12 +196,14 @@ public class AnimationButton extends ToggleButton {
     private void startAnimation(String times, String frameRate, boolean overlay) {
         if (overlay) {
             map.addAnimationLayer(wmsUrlProvider.getWmsUrl(), animLayer, times, currentElevation,
-                    palette, style, scaleRange, nColorBands, logScale, frameRate);
+                    palette, style, scaleRange, aboveMax, belowMin, noData, nColorBands, logScale,
+                    frameRate);
             this.setTitle("Stop animation");
             aviExporter.animationStarted(times, frameRate);
         } else {
             /*
-             * If we want to open an AVI, we also don't need the button selected any more
+             * If we want to open an AVI, we also don't need the button selected
+             * any more
              */
             Window.open(aviExporter.getAviUrl(times, frameRate), null, null);
             this.setDown(false);
@@ -212,7 +216,7 @@ public class AnimationButton extends ToggleButton {
     }
 
     /*
-     * Gets the wizard for selecting animation parameters    
+     * Gets the wizard for selecting animation parameters
      */
     private StartEndTimePopup getWizard() {
         /*
@@ -270,7 +274,7 @@ public class AnimationButton extends ToggleButton {
                             for (int i = 0; i < timesArr.size(); i++) {
                                 JSONObject timeObj = timesArr.get(i).isObject();
                                 String title = timeObj.get("title").isString().stringValue();
-                                String value = timeObj.get("timeString").isString().stringValue();
+                                String value = URL.encodePathSegment(timeObj.get("timeString").isString().stringValue());
                                 granularitySelector.addItem(title, value);
                             }
                         }
@@ -305,7 +309,7 @@ public class AnimationButton extends ToggleButton {
                 "The more frames you choose the longer your animation will take to load."
                         + " Please choose the smallest number you think you need!");
         detailsSelectionPanel.add(infoLabel);
-    
+
         HorizontalPanel granPan = new HorizontalPanel();
         Label granLabel = new Label("Granularity:");
         granPan.add(granLabel);
@@ -315,18 +319,18 @@ public class AnimationButton extends ToggleButton {
         granPan.setCellHorizontalAlignment(granularitySelector, HasHorizontalAlignment.ALIGN_LEFT);
         granPan.setWidth("100%");
         detailsSelectionPanel.add(granPan);
-    
-        HorizontalPanel formatPan = new HorizontalPanel();
-        Label formatLabel = new Label("Type of animation:");
-        formatPan.add(formatLabel);
-        formatPan.add(formatSelector);
-        formatPan.setCellWidth(formatLabel, "40%");
-        formatPan.setCellVerticalAlignment(formatLabel, HasVerticalAlignment.ALIGN_MIDDLE);
-        formatPan.setCellHorizontalAlignment(formatLabel, HasHorizontalAlignment.ALIGN_RIGHT);
-        formatPan.setCellHorizontalAlignment(formatSelector, HasHorizontalAlignment.ALIGN_LEFT);
-        formatPan.setWidth("100%");
-        detailsSelectionPanel.add(formatPan);
-    
+
+//        HorizontalPanel formatPan = new HorizontalPanel();
+//        Label formatLabel = new Label("Type of animation:");
+//        formatPan.add(formatLabel);
+//        formatPan.add(formatSelector);
+//        formatPan.setCellWidth(formatLabel, "40%");
+//        formatPan.setCellVerticalAlignment(formatLabel, HasVerticalAlignment.ALIGN_MIDDLE);
+//        formatPan.setCellHorizontalAlignment(formatLabel, HasHorizontalAlignment.ALIGN_RIGHT);
+//        formatPan.setCellHorizontalAlignment(formatSelector, HasHorizontalAlignment.ALIGN_LEFT);
+//        formatPan.setWidth("100%");
+//        detailsSelectionPanel.add(formatPan);
+
         HorizontalPanel fpsPan = new HorizontalPanel();
         Label fpsLabel = new Label("Frame Rate:");
         fpsPan.add(fpsLabel);
@@ -336,7 +340,7 @@ public class AnimationButton extends ToggleButton {
         fpsPan.setCellHorizontalAlignment(fpsSelector, HasHorizontalAlignment.ALIGN_LEFT);
         fpsPan.setWidth("100%");
         detailsSelectionPanel.add(fpsPan);
-    
+
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.add(getCancelButton());
         buttonPanel.add(getGoButton());

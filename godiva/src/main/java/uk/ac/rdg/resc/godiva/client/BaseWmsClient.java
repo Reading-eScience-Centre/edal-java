@@ -48,6 +48,7 @@ import uk.ac.rdg.resc.godiva.client.requests.LayerRequestCallback;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestBuilder;
 import uk.ac.rdg.resc.godiva.client.requests.TimeRequestCallback;
 import uk.ac.rdg.resc.godiva.client.state.GodivaStateInfo;
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 
@@ -188,8 +189,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            The path where OpenLayers images are stored
      */
     private static native void setImagePath(String imagepath)/*-{
-		$wnd.OpenLayers.ImgPath = imagepath;
-    }-*/;
+                                                             $wnd.OpenLayers.ImgPath = imagepath;
+                                                             }-*/;
 
     /**
      * This is called after all other parameters have been received from a
@@ -246,7 +247,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          */
         requestAndPopulateMenu();
     }
-    
+
     /**
      * @return A new {@link MapArea}. This will be called once. Subclasses can
      *         override this method to use specialised subclasses of
@@ -336,7 +337,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         layerDetailsLoaded = false;
         dateTimeDetailsLoaded = false;
         minMaxDetailsLoaded = false;
-        
+
         final LayerRequestBuilder getLayerDetailsRequest = new LayerRequestBuilder(layerId,
                 proxyUrl + wmsUrl, currentTime);
 
@@ -358,11 +359,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                      * Zoom to extents and possible auto-adjust palette
                      */
                     if (autoZoomAndPalette) {
-                        try {
-                            mapArea.zoomToExtents(getLayerDetails().getExtents());
-                        } catch (Exception e) {
-                            handleError(e);
-                        }
+                        mapArea.zoomToExtent(getLayerDetails().getExtents());
                         /*
                          * We request an auto-range. Since force=false, this
                          * will only request the auto-range if the server-side
@@ -465,9 +462,9 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          */
         parameters.put("item", "minmax");
         parameters.put("layers", layerId);
-        
+
         parameters.put("styles", widgetCollection.getPaletteSelector().getSelectedStyle());
-        
+
         /*
          * We use 1.1.1 here, because if getMap().getProjection() returns
          * EPSG:4326, getMap().getExtent().toBBox(4) will still return in
@@ -559,7 +556,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         JSONObject parentObj = jsonMap.isObject();
                         JSONNumber minNum = parentObj.get("min").isNumber();
                         JSONNumber maxNum = parentObj.get("max").isNumber();
-                        
+
                         double min = minNum == null ? -50 : minNum.doubleValue();
                         double max = maxNum == null ? 50 : maxNum.doubleValue();
                         /*
@@ -704,11 +701,13 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
 
         if (layerDetails.isContinuousT()) {
             /*
-             * Set all options which depend on this being a layer with a continuous t-axis
+             * Set all options which depend on this being a layer with a
+             * continuous t-axis
              */
             if (layerDetails.getStartTime().equals(layerDetails.getEndTime())) {
                 /*
-                 * We have a continuous axis with one value.  We can treat it as non-continuous...
+                 * We have a continuous axis with one value. We can treat it as
+                 * non-continuous...
                  */
                 widgetCollection.getTimeSelector().setContinuous(false);
                 String[] split = layerDetails.getStartTime().split("T");
@@ -745,9 +744,10 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         }
         if (layerDetails.isContinuousZ()) {
             /*
-             * Set all options which depend on this being a layer with a continuous z-axis
+             * Set all options which depend on this being a layer with a
+             * continuous z-axis
              */
-            if(layerDetails.getStartZ() != null && layerDetails.getEndZ() != null) {
+            if (layerDetails.getStartZ() != null && layerDetails.getEndZ() != null) {
                 if (layerDetails.getStartZ().equals(layerDetails.getEndZ())) {
                     widgetCollection.getElevationSelector().populateElevations(null);
                 } else {
@@ -756,8 +756,9 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     startEndZs.add(layerDetails.getEndZ());
                     widgetCollection.getElevationSelector().populateElevations(startEndZs);
                 }
-            } else if(layerDetails.getAvailableZs() != null) {
-                widgetCollection.getElevationSelector().populateElevations(layerDetails.getAvailableZs());
+            } else if (layerDetails.getAvailableZs() != null) {
+                widgetCollection.getElevationSelector().populateElevations(
+                        layerDetails.getAvailableZs());
             } else {
                 /*
                  * We have either the start or end z being null
@@ -792,9 +793,10 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * 
      * @param e
      *            The exception which was caught
+     * @param response
+     *            The message text
      * @param url
      *            The URL which caused the exception
-     * @param string 
      */
     protected void invalidJson(Exception e, String response, String url) {
         e.printStackTrace();
@@ -871,11 +873,10 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         maybeRequestAutoRange(layerId, true);
     }
 
-    
     /*
      * Methods from TimeDateSelectionHandler
      */
-    
+
     @Override
     public void dateSelected(final String layerId, String selectedDate) {
         if (selectedDate == null) {
@@ -928,6 +929,24 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         updateMapBase(layerId);
     }
 
+    /**
+     * Allows the client to use different units to those specified on the server
+     * (e.g. convert celcius to kelvin)
+     * 
+     * @param layerId
+     *            The ID of the layer to convert units for
+     * @param converter
+     *            The {@link UnitConverter} to use for conversion
+     */
+    protected void setUnitConverter(String layerId, UnitConverter converter) {
+        /*
+         * Set the unit converter for all required components (palette selector
+         * for colour scales, and map area for GetFeatureInfo conversion)
+         */
+        getWidgetCollection(layerId).getPaletteSelector().setUnitConverter(converter);
+        mapArea.setUnitConverter(layerId, converter);
+    }
+
     /*
      * Methods from GodivaActionsHandler (others are delegated to subclasses)
      */
@@ -950,7 +969,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             }
         }
     }
-    
+
     @Override
     public void onMapMove(MapMoveEvent eventObject) {
         /*
@@ -970,7 +989,6 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * don't *have* to bother with implementing and registering the callback
          */
     }
-
 
     /*
      * Method from ErrorHandler

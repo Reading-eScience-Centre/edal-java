@@ -72,7 +72,6 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 
 /**
  * A class containing static methods which are useful for GIS operations.
@@ -428,12 +427,12 @@ public final class GISUtils {
     }
 
     /**
-     * Returns the closest time within a time axis to the given time.
+     * Returns the closest time within a temporal domain to the given time.
      * 
      * @param targetTime
      *            The target time
-     * @param tValues
-     *            The time values to check
+     * @param tDomain
+     *            The {@link TemporalDomain} to check
      * @return Either the closest time within that axis, or the closest to the
      *         current time if the target is <code>null</code>, or
      *         <code>null</code> if the list of times is <code>null</code>
@@ -600,16 +599,16 @@ public final class GISUtils {
      * of points to sample a layer's source grid of data. That is to say,
      * creating a HorizontalDomain at higher resolution would not result in
      * sampling significantly more points in the layer's source grid.
-     * 
-     * @param feature
-     *            The feature for which the transect will be generated
+     *
+     * @param hGrid
+     *            The {@link HorizontalGrid} to find transect point on
      * @param transect
      *            The transect as specified in the request
      * @return a HorizontalDomain that contains (near) the minimum necessary
      *         number of points to sample a layer's source grid of data.
      */
     public static List<HorizontalPosition> getOptimalTransectPoints(HorizontalGrid hGrid,
-            LineString transect, VerticalPosition zPos, DateTime time, int dataGridPoints) {
+            LineString transect) {
         /*
          * We need to work out how many points we need to include in order to
          * completely sample the data grid (i.e. we need the resolution of the
@@ -619,6 +618,7 @@ public final class GISUtils {
          * working out how many grid points will be sampled.
          */
         int lastNumUniqueGridPointsSampled = -1;
+        int dataGridPoints = (int) (hGrid.getXSize() * 1.5);
         int dataGridIncrease = dataGridPoints;
         List<HorizontalPosition> pointList = null;
         while (true) {
@@ -671,14 +671,16 @@ public final class GISUtils {
      *         {@link BoundingBox}
      */
     public static GeographicBoundingBox toGeographicBoundingBox(BoundingBox bbox) {
+        double minx = Double.MAX_VALUE;
+        double maxx = -Double.MAX_VALUE;
+        double miny = Double.MAX_VALUE;
+        double maxy = -Double.MAX_VALUE;
         if (isWgs84LonLat(bbox.getCoordinateReferenceSystem())) {
-            return new DefaultGeographicBoundingBox(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(),
-                    bbox.getMaxY());
+            minx = bbox.getMinX();
+            maxx = bbox.getMaxX();
+            miny = bbox.getMinY();
+            maxy = bbox.getMaxY();
         } else {
-            double minx = Double.MAX_VALUE;
-            double maxx = -Double.MAX_VALUE;
-            double miny = Double.MAX_VALUE;
-            double maxy = -Double.MAX_VALUE;
 
             /*
              * Check for north/south polar stereographic - then we know that a
@@ -687,13 +689,14 @@ public final class GISUtils {
             ReferenceIdentifier crsId = bbox.getCoordinateReferenceSystem().getName();
 
             if ("EPSG".equalsIgnoreCase(crsId.getCodeSpace())) {
-                if ("32661".equals(crsId.getCode()) || crsId.getCode().contains("UPS North")) {
-                    System.out.println("NPS");
+                if ("5041".equals(crsId.getCode()) || "32661".equals(crsId.getCode())
+                        || crsId.getCode().contains("UPS North")) {
                     /*
                      * North polar stereographic
                      */
                     maxy = 90;
-                } else if ("32761".equals(crsId.getCode()) || crsId.getCode().contains("UPS South")) {
+                } else if ("5042".equals(crsId.getCode()) || "32761".equals(crsId.getCode())
+                        || crsId.getCode().contains("UPS South")) {
                     System.out.println("SPS");
                     /*
                      * South polar stereographic
@@ -749,8 +752,24 @@ public final class GISUtils {
                 miny = Math.min(transformPosition.getY(), miny);
                 maxy = Math.max(transformPosition.getY(), maxy);
             }
-            return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
         }
+        /*
+         * Geographic bounding boxes cannot extend outside of the ranges
+         * -180,180;-90,90
+         */
+        if (minx < -180) {
+            minx = -180;
+        }
+        if (maxx > 180) {
+            maxx = 180;
+        }
+        if (miny < -90) {
+            miny = -90;
+        }
+        if (maxy > 90) {
+            maxy = 90;
+        }
+        return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
     }
 
     /**

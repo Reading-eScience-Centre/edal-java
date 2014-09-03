@@ -147,10 +147,10 @@ public class MapImage extends Drawable {
             /*
              * Get the data for the colourbar and draw it.
              */
-            LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales, width1d,
+            LegendDataGenerator dataGenerator = new LegendDataGenerator(width1d,
                     componentSize, null, extraAmountOutOfRange);
-            BufferedImage colourbar = drawImage(dataGenerator.getGlobalParams(),
-                    dataGenerator.getFeatureCatalogue(null, nameAndRange.getFieldLabel()));
+            BufferedImage colourbar = drawImage(dataGenerator.getPlottingDomainParams(),
+                    dataGenerator.getFeatureCatalogue(null, nameAndRange));
             Graphics2D graphics = colourbar.createGraphics();
             graphics.setColor(textColour);
             graphics.drawRect(0, 0, colourbar.getWidth() - 1, colourbar.getHeight() - 1);
@@ -159,8 +159,8 @@ public class MapImage extends Drawable {
             /*
              * Now generate the labels for this legend
              */
-            BufferedImage labels = getLegendLabels(nameAndRange, extraAmountOutOfRange, componentSize,
-                    textColour, layerNameLabels);
+            BufferedImage labels = getLegendLabels(nameAndRange, extraAmountOutOfRange,
+                    componentSize, textColour, layerNameLabels);
 
             /*
              * Now create the correctly-sized final image...
@@ -218,15 +218,13 @@ public class MapImage extends Drawable {
                 e.printStackTrace();
             }
             for (int i = 0; i < fields.size(); i++) {
-                String yName = fields.get(i).getFieldLabel();
                 int yStart = 2 + (i * (componentSize + borderSize));
                 for (int j = i + 1; j < fields.size(); j++) {
                     int xStart = 2 + ((j - i - 1) * (componentSize + borderSize));
-                    String xName = fields.get(j).getFieldLabel();
-                    LegendDataGenerator dataGenerator = new LegendDataGenerator(fieldsWithScales,
-                            componentSize, componentSize, bgMask, 0.1f);
-                    BufferedImage colourbar2d = drawImage(dataGenerator.getGlobalParams(),
-                            dataGenerator.getFeatureCatalogue(xName, yName));
+                    LegendDataGenerator dataGenerator = new LegendDataGenerator(componentSize,
+                            componentSize, bgMask, 0.1f);
+                    BufferedImage colourbar2d = drawImage(dataGenerator.getPlottingDomainParams(),
+                            dataGenerator.getFeatureCatalogue(fields.get(j), fields.get(i)));
                     if (bg != null) {
                         graphics.drawImage(bg, xStart, yStart, componentSize, componentSize, null);
                     }

@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -51,9 +52,9 @@ public class ColourPalette {
      * The name of the default palette that will be used if the user doesn't
      * request a specific palette.
      * 
-     * @see DEFAULT_PALETTE
+     * @see ColourPalette#DEFAULT_COLOURS
      */
-    public static final String DEFAULT_PALETTE_NAME = "rainbow";
+    public static final String DEFAULT_PALETTE_NAME = "default";
 
     public static final int MAX_NUM_COLOURS = 250;
 
@@ -61,29 +62,10 @@ public class ColourPalette {
      * This is the palette that will be used if no specific palette has been
      * chosen. This palette is taken from the SGT graphics toolkit.
      * 
-     * @see DEFAULT_PALETTE_NAME
+     * @see ColourPalette#DEFAULT_PALETTE_NAME
      */
-    private static final Color[] DEFAULT_COLOURS = new Color[] { new Color(0, 0, 143),
-            new Color(0, 0, 159), new Color(0, 0, 175), new Color(0, 0, 191), new Color(0, 0, 207),
-            new Color(0, 0, 223), new Color(0, 0, 239), new Color(0, 0, 255),
-            new Color(0, 11, 255), new Color(0, 27, 255), new Color(0, 43, 255),
-            new Color(0, 59, 255), new Color(0, 75, 255), new Color(0, 91, 255),
-            new Color(0, 107, 255), new Color(0, 123, 255), new Color(0, 139, 255),
-            new Color(0, 155, 255), new Color(0, 171, 255), new Color(0, 187, 255),
-            new Color(0, 203, 255), new Color(0, 219, 255), new Color(0, 235, 255),
-            new Color(0, 251, 255), new Color(7, 255, 247), new Color(23, 255, 231),
-            new Color(39, 255, 215), new Color(55, 255, 199), new Color(71, 255, 183),
-            new Color(87, 255, 167), new Color(103, 255, 151), new Color(119, 255, 135),
-            new Color(135, 255, 119), new Color(151, 255, 103), new Color(167, 255, 87),
-            new Color(183, 255, 71), new Color(199, 255, 55), new Color(215, 255, 39),
-            new Color(231, 255, 23), new Color(247, 255, 7), new Color(255, 247, 0),
-            new Color(255, 231, 0), new Color(255, 215, 0), new Color(255, 199, 0),
-            new Color(255, 183, 0), new Color(255, 167, 0), new Color(255, 151, 0),
-            new Color(255, 135, 0), new Color(255, 119, 0), new Color(255, 103, 0),
-            new Color(255, 87, 0), new Color(255, 71, 0), new Color(255, 55, 0),
-            new Color(255, 39, 0), new Color(255, 23, 0), new Color(255, 7, 0),
-            new Color(246, 0, 0), new Color(228, 0, 0), new Color(211, 0, 0), new Color(193, 0, 0),
-            new Color(175, 0, 0), new Color(158, 0, 0), new Color(140, 0, 0) };
+    private static final Color[] DEFAULT_COLOURS = new Color[] { new Color(8, 29, 88),
+            new Color(65, 182, 196), new Color(255, 255, 217) };
 
     private static Map<String, Color[]> loadedColourSets = new HashMap<String, Color[]>();
     private static ColorAdapter cParser;
@@ -93,11 +75,10 @@ public class ColourPalette {
          * Make sure these are initialised here (more reliable than relying on
          * them being initialised in file order in case of future refactoring)
          */
-        loadedColourSets = new HashMap<String, Color[]>();
+        loadedColourSets = new TreeMap<String, Color[]>();
         cParser = ColorAdapter.getInstance();
 
-        loadedColourSets.put(DEFAULT_PALETTE_NAME.toLowerCase(), DEFAULT_COLOURS);
-        loadedColourSets.put("default", DEFAULT_COLOURS);
+        loadedColourSets.put(DEFAULT_PALETTE_NAME, DEFAULT_COLOURS);
 
         try {
             String[] paletteFileNames = getResourceListing(ColourPalette.class, "palettes/");
@@ -259,10 +240,10 @@ public class ColourPalette {
     }
 
     public static ColourPalette fromString(String paletteString, int nColourBands) {
-        if(paletteString == null || "".equals(paletteString)) {
+        if (paletteString == null || "".equals(paletteString)) {
             paletteString = DEFAULT_PALETTE_NAME;
         }
-        if (loadedColourSets.containsKey(paletteString.toLowerCase())) {
+        if (loadedColourSets.containsKey(paletteString)) {
             return new ColourPalette(loadedColourSets.get(paletteString), nColourBands);
         } else {
             try {

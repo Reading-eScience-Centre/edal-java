@@ -46,6 +46,11 @@ public class EdalException extends Exception {
         this.code = code;
     }
 
+    public EdalException(String message, String code, Throwable cause) {
+        super(message, cause);
+        this.code = code;
+    }
+    
     public EdalException(String message, Throwable cause) {
         super(message, cause);
     }

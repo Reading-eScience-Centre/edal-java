@@ -28,12 +28,14 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
+import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.wms.exceptions.InvalidPointException;
 
 public class GetFeatureInfoParameters extends GetMapParameters {
 
@@ -43,6 +45,7 @@ public class GetFeatureInfoParameters extends GetMapParameters {
     private int featureCount;
     private String exceptionType;
     private HorizontalPosition clickedPos;
+    protected boolean continuousDomainPresent;
 
     /**
      * Parses the parameters needed for a GetFeatureInfo request
@@ -63,46 +66,80 @@ public class GetFeatureInfoParameters extends GetMapParameters {
         int i = params.getMandatoryPositiveInt("i");
         int j = getPlottingDomainParameters().getHeight() - 1 - params.getMandatoryPositiveInt("j");
 
+        if (i < 0 || i >= getPlottingDomainParameters().getWidth() || j < 0
+                || j >= getPlottingDomainParameters().getHeight()) {
+            throw new InvalidPointException("Point " + i + ", " + j + " is outside of image (size "
+                    + getPlottingDomainParameters().getWidth() + "x"
+                    + getPlottingDomainParameters().getHeight() + ")");
+        }
+
         featureCount = params.getPositiveInt("feature_count", 1);
         exceptionType = params.getString("exceptions", "XML");
 
         GridCell2D clickedGridCell = plottingDomainParams.getImageGrid().getDomainObjects()
                 .get(j, i);
         clickedPos = clickedGridCell.getCentre();
+
         /*
          * We have parsed the URL parameters and created a PlottingDomainParams
          * object in the super-constructor.
          * 
-         * However for FeatureInfo, we only want a very small area centred on
-         * the clicked point.
+         * However for FeatureInfo, if we have a non-gridded field we want a
+         * very small area centred on the clicked point.
          * 
          * We can adjust this using the i, j, and grid parameters and create a
          * new PlottingDomainParams object
          */
 
-        /*
-         * Find the positions of a 9 pixel box surrounding the clicked point
-         */
-        GridCell2D llGridCell = plottingDomainParams.getImageGrid().getDomainObjects()
-                .get(j - 4, i - 4);
-        GridCell2D urGridCell = plottingDomainParams.getImageGrid().getDomainObjects()
-                .get(j + 4, i + 4);
-        HorizontalPosition llPos = llGridCell.getCentre();
-        HorizontalPosition urPos = urGridCell.getCentre();
+        continuousDomainPresent = false;
+        for (String layerName : layers) {
+            if (!(catalogue.getDatasetFromLayerName(layerName) instanceof AbstractGridDataset)) {
+                continuousDomainPresent = true;
+                break;
+            }
+        }
 
-        /*
-         * Create a new bounding box
-         */
-        BoundingBox newBbox = new BoundingBoxImpl(llPos.getX(), llPos.getY(), urPos.getX(),
-                urPos.getY(), plottingDomainParams.getBbox().getCoordinateReferenceSystem());
+        if (continuousDomainPresent) {
+            /*
+             * We have a continuous domain so we create a 9 pixel bounding box
+             * for target points. Note that if we have a mixed domain this will
+             * only find feature info for grid cells whose centre is within 5
+             * pixels of the clicked position
+             * 
+             * Find the positions of a 9 pixel box surrounding the clicked point
+             */
+            GridCell2D llGridCell = plottingDomainParams.getImageGrid().getDomainObjects()
+                    .get(j - 4, i - 4);
+            GridCell2D urGridCell = plottingDomainParams.getImageGrid().getDomainObjects()
+                    .get(j + 4, i + 4);
+            HorizontalPosition llPos = llGridCell.getCentre();
+            HorizontalPosition urPos = urGridCell.getCentre();
 
-        /*
-         * Create new PlottingDomainParams which represent a 9-pixel box centred
-         * around the clicked point
-         */
-        plottingDomainParams = new PlottingDomainParams(9, 9, newBbox,
-                plottingDomainParams.getZExtent(), plottingDomainParams.getTExtent(),
-                clickedPos, plottingDomainParams.getTargetZ(), plottingDomainParams.getTargetT());
+            /*
+             * Create a new bounding box
+             */
+            BoundingBox newBbox = new BoundingBoxImpl(llPos.getX(), llPos.getY(), urPos.getX(),
+                    urPos.getY(), plottingDomainParams.getBbox().getCoordinateReferenceSystem());
+
+            /*
+             * Create new PlottingDomainParams which represent a 9-pixel box
+             * centred around the clicked point
+             */
+            plottingDomainParams = new PlottingDomainParams(9, 9, newBbox,
+                    plottingDomainParams.getZExtent(), plottingDomainParams.getTExtent(),
+                    clickedPos, plottingDomainParams.getTargetZ(),
+                    plottingDomainParams.getTargetT());
+        } else {
+            /*
+             * We have a gridded domain for every requested layer, so we want to
+             * set the target position to the clicked position.
+             */
+            plottingDomainParams = new PlottingDomainParams(plottingDomainParams.getWidth(),
+                    plottingDomainParams.getHeight(), plottingDomainParams.getBbox(),
+                    plottingDomainParams.getZExtent(), plottingDomainParams.getTExtent(),
+                    clickedPos, plottingDomainParams.getTargetZ(),
+                    plottingDomainParams.getTargetT());
+        }
     }
 
     public String[] getLayerNames() {

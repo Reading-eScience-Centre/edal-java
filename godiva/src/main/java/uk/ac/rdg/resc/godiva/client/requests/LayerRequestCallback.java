@@ -72,7 +72,6 @@ public abstract class LayerRequestCallback implements RequestCallback {
 
     @Override
     public void onResponseReceived(Request request, Response response) {
-        long t1 = System.currentTimeMillis();
         JSONValue jsonMap = JSONParser.parseLenient(response.getText());
         JSONObject parentObj = jsonMap.isObject();
 
@@ -311,8 +310,6 @@ public abstract class LayerRequestCallback implements RequestCallback {
             supportsTransects = supportsTransectsJson.isBoolean().booleanValue();
         }
         layerDetails.setTransectsSupported(supportsTransects);
-        long t2 = System.currentTimeMillis();
-        System.out.println("Time to parse details: " + (t2 - t1));
     }
 
 }

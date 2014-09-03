@@ -37,7 +37,6 @@ import java.util.Set;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
@@ -55,20 +54,16 @@ import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
  * @author Jon Blower
  */
 public class TimeUtils {
-    private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime()
-            .withZone(DateTimeZone.UTC);
-    private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date().withZone(
-            DateTimeZone.UTC);
-    private static final DateTimeFormatter ISO_TIME_FORMATTER = ISODateTimeFormat.time().withZone(
-            DateTimeZone.UTC);
+    private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
+    private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date();
+    private static final DateTimeFormatter ISO_TIME_FORMATTER = ISODateTimeFormat.time();
     private static final DateTimeFormatter NICE_DATE_TIME_FORMATTER = (new DateTimeFormatterBuilder())
             .appendHourOfDay(2).appendLiteral(":").appendMinuteOfHour(2).appendLiteral(":")
             .appendSecondOfMinute(2).appendLiteral(" ").appendDayOfMonth(1).appendLiteral("-")
-            .appendMonthOfYearShortText().appendLiteral("-").appendYear(4, 4).toFormatter()
-            .withZone(DateTimeZone.UTC);
+            .appendMonthOfYearShortText().appendLiteral("-").appendYear(4, 4).toFormatter();
     private static final DateTimeFormatter UTC_TIME_FORMATTER = (new DateTimeFormatterBuilder())
             .appendHourOfDay(2).appendLiteral(":").appendMinuteOfHour(2).appendLiteral(":")
-            .appendSecondOfMinute(2).toFormatter().withZone(DateTimeZone.UTC);
+            .appendSecondOfMinute(2).toFormatter();
 
     /**
      * <p>
@@ -484,15 +479,21 @@ public class TimeUtils {
     }
 
     /**
+     * Tests if two {@link DateTime}s fall on the same day.
+     * 
+     * @param dt1
+     *            The first {@link DateTime}. The second {@link DateTime} will
+     *            be converted to have the same time zone as this one
+     * @param dt2
+     *            The second {@link DateTime}.
      * @return true if the two given DateTimes fall on the same day.
      */
     public static boolean onSameDay(DateTime dt1, DateTime dt2) {
         /*
-         * We must make sure that the DateTimes are both in UTC or the field
-         * comparisons will not do what we expect
+         * We must make sure that the DateTimes are both in the same time zone
+         * or the field comparisons will not do what we expect
          */
-        dt1 = dt1.withZone(DateTimeZone.UTC);
-        dt2 = dt2.withZone(DateTimeZone.UTC);
+        dt2 = dt2.withZone(dt1.getZone());
         boolean onSameDay = dt1.getYear() == dt2.getYear()
                 && dt1.getMonthOfYear() == dt2.getMonthOfYear()
                 && dt1.getDayOfMonth() == dt2.getDayOfMonth();
@@ -500,8 +501,11 @@ public class TimeUtils {
     }
 
     /**
-     * Gets the length of the given unit in milliseconds. This accepts seconds,
-     * minutes, hours and days, and should be constant across calendar systems.
+     * @param unit
+     *            A string representing the unit. This accepts seconds, minutes,
+     *            hours and days, and should be constant across calendar
+     *            systems.
+     * @return The length of the given unit in seconds.
      */
     public static int getUnitLengthSeconds(String unit) {
         unit = unit.trim();
@@ -517,7 +521,7 @@ public class TimeUtils {
         } else if (unit.equals("days") || unit.equals("day") || unit.equals("d")) {
             return 60 * 60 * 24;
         } else {
-            throw new IllegalArgumentException("Unrecognized unit for time axis: " + unit);
+            throw new IllegalArgumentException("Unrecognized unit: " + unit);
         }
     }
 }

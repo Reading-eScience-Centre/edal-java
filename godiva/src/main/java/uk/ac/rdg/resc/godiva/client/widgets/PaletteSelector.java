@@ -30,10 +30,10 @@ package uk.ac.rdg.resc.godiva.client.widgets;
 
 import java.util.List;
 
-import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.PaletteSelectionHandler;
 import uk.ac.rdg.resc.godiva.client.state.LayerSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
@@ -124,6 +124,8 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     private String wmsLayerId;
 
+    private UnitConverter converter = null;
+
     /**
      * Instantiates a new {@link PaletteSelector}
      * 
@@ -138,9 +140,6 @@ public class PaletteSelector implements PaletteSelectorIF {
      * @param wmsUrlProvider
      *            A {@link LayerSelectorIF} which can be used to obtain the WMS
      *            URL for the current WMS layer
-     * @param opacitySelector
-     *            The {@link OpacitySelectionHandler} used for when the opacity
-     *            changes
      * @param localCentre
      *            A {@link CentrePosIF} to define the local centre (usually over
      *            the centre of the map)
@@ -525,10 +524,15 @@ public class PaletteSelector implements PaletteSelectorIF {
             palettesPanel = new HorizontalPanel();
         }
         palettesPanel.clear();
+        /*
+         * 750px for the entire width should fit in almost any browser. Smaller
+         * than that will be having to scroll for other things anyway
+         */
+        int width = 750 / availablePalettes.size();
         for (final String palette : availablePalettes) {
             Image pImage = new Image(getImageUrl(palette, 200, 1));
             pImage.setHeight("200px");
-            pImage.setWidth("30px");
+            pImage.setWidth(width + "px");
             pImage.addClickHandler(new ClickHandler() {
                 @Override
                 public void onClick(ClickEvent event) {
@@ -799,6 +803,12 @@ public class PaletteSelector implements PaletteSelectorIF {
              */
             setEnabled(false);
             return false;
+        } else if (vals.length != 2) {
+            /*
+             * Invalid string. Keep the palette enabled with the previous
+             * values.
+             */
+            return false;
         }
         if (isLogScale == null) {
             isLogScale = isLogScale();
@@ -808,12 +818,19 @@ public class PaletteSelector implements PaletteSelectorIF {
             ErrorBox.popupErrorMessage("Cannot use a negative or zero value for logarithmic scale");
             return false;
         }
+        float maxVal = Float.parseFloat(vals[1]);
+
+        if (converter != null) {
+            minVal = converter.convertToDisplayUnit(minVal);
+            maxVal = converter.convertToDisplayUnit(maxVal);
+        }
+
         /*
          * We don't format the output, in case the user has entered something
          * more precise
          */
         minScale.setValue(minVal + "");
-        maxScale.setValue(Float.parseFloat(vals[1]) + "");
+        maxScale.setValue(maxVal + "");
         setLogScale(isLogScale);
         setScaleLabels();
         return true;
@@ -834,7 +851,15 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     @Override
     public String getScaleRange() {
-        return minScale.getValue() + "," + maxScale.getValue();
+        if (converter != null) {
+            /*
+             * Convert the values if required
+             */
+            return converter.convertFromDisplayUnit(Float.parseFloat(minScale.getValue())) + ","
+                    + converter.convertFromDisplayUnit(Float.parseFloat(maxScale.getValue()));
+        } else {
+            return minScale.getValue() + "," + maxScale.getValue();
+        }
     }
 
     @Override
@@ -884,6 +909,8 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     @Override
     public void setEnabled(boolean enabled) {
+        aboveMax.setEnabled(enabled);
+        belowMin.setEnabled(enabled);
         minScale.setEnabled(enabled);
         maxScale.setEnabled(enabled);
         autoButton.setEnabled(enabled);
@@ -892,10 +919,14 @@ public class PaletteSelector implements PaletteSelectorIF {
         opacity.setEnabled(enabled);
         logScale.setEnabled(enabled);
         if (enabled) {
+            aboveMax.removeStyleDependentName("inactive");
+            belowMin.removeStyleDependentName("inactive");
             paletteImage.removeStyleDependentName("inactive");
             mlLabel.removeStyleDependentName("inactive");
             mhLabel.removeStyleDependentName("inactive");
         } else {
+            aboveMax.addStyleDependentName("inactive");
+            belowMin.addStyleDependentName("inactive");
             paletteImage.addStyleDependentName("inactive");
             mlLabel.addStyleDependentName("inactive");
             mhLabel.addStyleDependentName("inactive");
@@ -965,5 +996,9 @@ public class PaletteSelector implements PaletteSelectorIF {
             }
         }
         paletteHandler.setOpacity(PaletteSelector.this.wmsLayerId, opacityValue);
+    }
+
+    public void setUnitConverter(UnitConverter converter) {
+        this.converter = converter;
     }
 }

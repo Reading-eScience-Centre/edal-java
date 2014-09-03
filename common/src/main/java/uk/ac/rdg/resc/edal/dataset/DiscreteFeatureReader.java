@@ -36,8 +36,9 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 
 /**
  * Defines an interface for reading {@link DiscreteFeature}s. This is used for
- * reading features from a collection (usually a {@link ContinuousDomainDataset}
- * ) where the primary method of referencing them is by their ID.
+ * reading features from a collection (usually an
+ * {@link AbstractContinuousDomainDataset}) where the primary method of
+ * referencing them is by their ID.
  * 
  * @author Guy Griffiths
  * 

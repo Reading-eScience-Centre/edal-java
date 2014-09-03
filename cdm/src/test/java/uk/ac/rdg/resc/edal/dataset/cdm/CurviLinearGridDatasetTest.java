@@ -140,8 +140,6 @@ public class CurviLinearGridDatasetTest {
     public void testCurviLinearDataset() throws DataReadingException, IOException {
         assertTrue(dataset instanceof AbstractGridDataset);
 
-        assertEquals(dataset.getDatasetVerticalCrs(), null);
-
         List<Variable> variables = cdf.getVariables();
         Set<String> vars = new HashSet<>();
         for (Variable v : variables) {

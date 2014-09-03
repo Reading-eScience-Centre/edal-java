@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.godiva.client.widgets;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
@@ -65,6 +66,8 @@ import org.gwtopenmaps.openlayers.client.util.JSObject;
 import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
+import uk.ac.rdg.resc.godiva.client.util.GodivaUtils;
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
@@ -133,7 +136,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     protected String transectLayer = null;
 
-    protected WMSOptions wmsPolarOptions;
+    protected WMSOptions wmsNorthPolarOptions;
+    protected WMSOptions wmsSouthPolarOptions;
     protected WMSOptions wmsStandardOptions;
 
     protected LayerLoadStartListener loadStartListener;
@@ -149,6 +153,11 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     protected EditingToolbar editingToolbar;
     protected String proxyUrl;
 
+    protected float opacity = 1.0f;
+
+    /** Map of unit conversions to be applied to each layer */
+    protected java.util.Map<String, UnitConverter> converters;
+
     public MapArea(int width, int height, final GodivaActionsHandler godivaListener, String proxyUrl) {
         super(width + "px", height + "px", getDefaultMapOptions());
 
@@ -159,6 +168,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
 
         wmsLayers = new LinkedHashMap<String, WmsDetails>();
+        converters = new HashMap<String, UnitConverter>();
 
         /*
          * Define some listeners to handle layer start/end loading events
@@ -206,6 +216,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      *            The palette name
      * @param style
      *            The style name
+     * @param aboveMaxString
+     *            A string representing the colour for data above the max scale
+     *            range
+     * @param belowMinString
+     *            A string representing the colour for data below min scale
+     *            range
+     * @param noDataString
+     *            A string representing the colour when there is no data
      * @param scaleRange
      *            The scale range, of the form "[min],[max]"
      * @param nColorBands
@@ -217,8 +235,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     public void addAnimationLayer(String wmsUrl, String layerId, String timeList,
             String currentElevation, String palette, String style, String scaleRange,
-            int nColorBands, boolean logScale, String frameRate) {
-        StringBuilder url = new StringBuilder(wmsUrl + "?service=WMS&request=GetMap&version=1.1.1");
+            String aboveMaxString, String belowMinString, String noDataString, int nColorBands,
+            boolean logScale, String frameRate) {
+        StringBuilder url = new StringBuilder("service=WMS&request=GetMap&version=1.1.1");
         url.append("&format=image/gif" + "&transparent=true" + "&styles=" + style + "/" + palette
                 + "&layers=" + layerId + "&time=" + timeList + "&logscale=" + logScale + "&srs="
                 + currentProjection + "&bbox=" + map.getExtent().toBBox(6) + "&width="
@@ -232,13 +251,23 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             url.append("&numcolorbands=" + nColorBands);
         if (frameRate != null)
             url.append("&frameRate=" + frameRate);
+        if (aboveMaxString != null) {
+            url.append("&ABOVEMAXCOLOR=" + aboveMaxString);
+        }
+        if (belowMinString != null) {
+            url.append("&BELOWMINCOLOR=" + belowMinString);
+        }
+        if (noDataString != null) {
+            url.append("&BGCOLOR=" + noDataString);
+        }
         ImageOptions opts = new ImageOptions();
         opts.setAlwaysInRange(true);
         /*
          * Because the animation is just an animated GIF, we use Image for our
          * OpenLayers layer
          */
-        animLayer = new Image("Animation Layer", url.toString(), map.getExtent(), map.getSize(),
+        animLayer = new Image("Animation Layer", wmsUrl + "?"
+                + GodivaUtils.encodeQueryString(url.toString()), map.getExtent(), map.getSize(),
                 opts);
         animLayer.addLayerLoadStartListener(loadStartListener);
         animLayer.addLayerLoadCancelListener(new LayerLoadCancelListener() {
@@ -251,6 +280,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         animLayer.addLayerLoadEndListener(loadEndListener);
         animLayer.setIsBaseLayer(false);
         animLayer.setDisplayInLayerSwitcher(false);
+        animLayer.setOpacity(opacity);
 
         /*
          * Out of all visible layers, we choose the most transparent and set the
@@ -395,6 +425,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsLayer.addLayerLoadCancelListener(loadCancelListener);
         wmsLayer.addLayerLoadEndListener(loadEndListener);
         wmsLayer.setIsBaseLayer(false);
+        wmsLayer.setOpacity(opacity);
         map.addLayer(wmsLayer);
 
         WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, multipleElevations,
@@ -482,7 +513,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 final DialogBox pop = new DialogBoxWithCloseButton(MapArea.this);
                 pop.setPopupPosition(x, y);
                 try {
-                    featureInfo = processFeatureInfo(eventObject.getText());
+                    featureInfo = processFeatureInfo(eventObject.getText(), converters.get(layerId));
                 } catch (Exception e) {
                     e.printStackTrace();
                     /*
@@ -524,20 +555,23 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                      * If we have multiple depths, we can plot a vertical
                      * profile here
                      */
-                    final String link = proxyUrl + wmsUrl + "?REQUEST=GetVerticalProfile"
-                            + "&LAYERS=" + layer + "&QUERY_LAYERS=" + layer + "&BBOX="
-                            + map.getExtent().toBBox(4) + "&SRS=" + currentProjection
-                            + "&FEATURE_COUNT=5" + "&INFO_FORMAT=image/png" + "&HEIGHT="
+                    final String parameters = "REQUEST=GetVerticalProfile" + "&LAYERS=" + layer
+                            + "&QUERY_LAYERS=" + layer + "&BBOX=" + map.getExtent().toBBox(4)
+                            + "&SRS=" + currentProjection + "&FEATURE_COUNT=5"
+                            + "&INFO_FORMAT=image/png" + "&HEIGHT="
                             + ((int) map.getSize().getHeight()) + "&WIDTH="
                             + ((int) map.getSize().getWidth()) + "&I=" + mapXClick + "&J="
                             + mapYClick + "&STYLES=default/default"
                             + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
                             + ((timeStr != null) ? ("&TIME=" + timeStr) : "") + "&VERSION=1.1.1";
-                    Anchor profilePlot = new Anchor("Vertical Profile Plot (" + wmsUrl + ")");
+                    Anchor profilePlot = new Anchor("Vertical Profile Plot");
                     profilePlot.addClickHandler(new ClickHandler() {
                         @Override
                         public void onClick(ClickEvent event) {
-                            displayImagePopup(link, "Vertical Profile");
+                            displayImagePopup(
+                                    proxyUrl + wmsUrl + "?"
+                                            + GodivaUtils.encodeQueryString(parameters),
+                                    "Vertical Profile");
                             pop.hide();
                         }
                     });
@@ -567,9 +601,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                     if (targetElevationStr != null) {
                                         eS = targetElevationStr;
                                     }
-                                    final String link = proxyUrl + wmsUrl
-                                            + "?REQUEST=GetTimeseries" + "&LAYERS=" + layer
-                                            + "&QUERY_LAYERS=" + layer + "&BBOX="
+                                    final String parameters = "REQUEST=GetTimeseries" + "&LAYERS="
+                                            + layer + "&QUERY_LAYERS=" + layer + "&BBOX="
                                             + map.getExtent().toBBox(4) + "&SRS="
                                             + currentProjection + "&FEATURE_COUNT=5"
                                             + "&INFO_FORMAT=image/png" + "&HEIGHT="
@@ -579,7 +612,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                             + ((eS != null) ? ("&ELEVATION=" + eS) : "") + "&TIME="
                                             + startDateTime + "/" + endDateTime + "&VERSION=1.1.1";
 
-                                    displayImagePopup(link, "Time series");
+                                    displayImagePopup(
+                                            proxyUrl + wmsUrl + "?"
+                                                    + GodivaUtils.encodeQueryString(parameters),
+                                            "Time series");
                                     timeSelector.hide();
                                 }
                             });
@@ -612,7 +648,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     protected void displayImagePopup(String url, String title) {
         /*
-         * Window.open treats realtive URLs in a browser-dependent manner. So we
+         * Window.open treats relative URLs in a browser-dependent manner. So we
          * have to use absolute ones here.
          */
         Window.open(url, title, null);
@@ -641,9 +677,11 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         // popup.center();
     }
 
-    public void zoomToExtents(String extents) throws Exception {
+    public void zoomToExtent(String extents) {
         if (currentProjection.equalsIgnoreCase("EPSG:32661")
-                || currentProjection.equalsIgnoreCase("EPSG:32761")) {
+                || currentProjection.equalsIgnoreCase("EPSG:32761")
+                || currentProjection.equalsIgnoreCase("EPSG:5041")
+                || currentProjection.equalsIgnoreCase("EPSG:5042")) {
             /*
              * If we have a polar projection, the extents will be wrong. In this
              * case, just ignore the zoom to extents.
@@ -659,9 +697,25 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             double lowerLeftY = Double.parseDouble(bboxStr[1]);
             double upperRightX = Double.parseDouble(bboxStr[2]);
             double upperRightY = Double.parseDouble(bboxStr[3]);
-            map.zoomToExtent(new Bounds(lowerLeftX, lowerLeftY, upperRightX, upperRightY));
+            Bounds bounds = new Bounds(lowerLeftX, lowerLeftY, upperRightX, upperRightY);
+            /*
+             * For some reason, the first time we do this with the bounds
+             * -180,-90,180,90 it actually zooms to
+             * -165.46,-129.26,165.46,129.26.
+             * 
+             * The second time it zooms out properly. This is using
+             * OpenLayers-2.11 and gwt-openlayers 1.0. If those versions have
+             * changed and you're reading this, try removing one of the calls
+             * and seeing if it works. Otherwise keep them both in.
+             */
+            map.zoomToExtent(bounds);
+            map.zoomToExtent(bounds);
         } catch (Exception e) {
-            throw e;
+            /*
+             * Ignore this - it most likely means that badly formatted bounds
+             * were specified, but it's preferable to ignore it rather than
+             * giving the user a message
+             */
         }
     }
 
@@ -679,7 +733,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             } else {
                 url = wmsAndParams.wms.getFullRequestString(wmsAndParams.params, null);
                 url = url + "&height=1024&width=1024";
-                if (currentProjection.equals("EPSG:32661")) {
+                if (currentProjection.equals("EPSG:5041")) {
                     /*
                      * North polar stereographic.
                      * 
@@ -691,17 +745,17 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     Point lowerLeft = new Point(extent.getLowerLeftX(), extent.getLowerLeftY());
                     Point upperRight = new Point(extent.getUpperRightX(), extent.getUpperRightY());
 
-                    lowerLeft.transform(new Projection("EPSG:32661"), new Projection("CRS:84"));
-                    upperRight.transform(new Projection("EPSG:32661"), new Projection("CRS:84"));
+                    lowerLeft.transform(new Projection("EPSG:5041"), new Projection("CRS:84"));
+                    upperRight.transform(new Projection("EPSG:5041"), new Projection("CRS:84"));
 
                     double lowLat = lowerLeft.getY() < upperRight.getY() ? lowerLeft.getY()
                             : upperRight.getY();
 
                     url = url + "&bbox=-180," + lowLat + ",180,90";
 
-                    url = url.replaceAll("EPSG:32661", "CRS:84");
-                    url = url.replaceAll("EPSG%3A32661", "CRS%3A84");
-                } else if (currentProjection.equals("EPSG:32761")) {
+                    url = url.replaceAll("EPSG:5041", "CRS:84");
+                    url = url.replaceAll("EPSG%3A5041", "CRS%3A84");
+                } else if (currentProjection.equals("EPSG:5042")) {
                     /*
                      * South polar stereographic.
                      * 
@@ -713,18 +767,29 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     Point lowerLeft = new Point(extent.getLowerLeftX(), extent.getLowerLeftY());
                     Point upperRight = new Point(extent.getUpperRightX(), extent.getUpperRightY());
 
-                    lowerLeft.transform(new Projection("EPSG:32761"), new Projection("CRS:84"));
-                    upperRight.transform(new Projection("EPSG:32761"), new Projection("CRS:84"));
+                    lowerLeft.transform(new Projection("EPSG:5042"), new Projection("CRS:84"));
+                    upperRight.transform(new Projection("EPSG:5042"), new Projection("CRS:84"));
 
                     double highLat = lowerLeft.getY() > upperRight.getY() ? lowerLeft.getY()
                             : upperRight.getY();
 
                     url = url + "&bbox=-180,-90,180," + highLat;
 
-                    url = url.replaceAll("EPSG:32761", "CRS:84");
-                    url = url.replaceAll("EPSG%3A32761", "CRS%3A84");
+                    url = url.replaceAll("EPSG:5042", "CRS:84");
+                    url = url.replaceAll("EPSG%3A5042", "CRS%3A84");
                 } else {
-                    url = url + "&bbox=" + map.getExtent().toBBox(6);
+                    Bounds extent = map.getExtent();
+                    double yMin = extent.getLowerLeftY();
+                    if (yMin < -90) {
+                        yMin = -90;
+                    }
+                    double yMax = extent.getUpperRightY();
+                    if (yMax > 90) {
+                        yMax = 90;
+                    }
+
+                    url = url + "&bbox=" + extent.getLowerLeftX() + "," + yMin + ","
+                            + extent.getUpperRightX() + "," + yMax;
                     url = url.replaceAll("EPSG:4326", "CRS:84");
                     url = url.replaceAll("EPSG%3A4326", "CRS%3A84");
                     /*
@@ -771,6 +836,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     public void setOpacity(String layerId, float opacity) {
+        this.opacity = opacity;
         for (WmsDetails wmsDetails : wmsLayers.values()) {
             String layersStr = wmsDetails.params.getLayers();
             String[] layers = layersStr.split(",");
@@ -783,6 +849,19 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         if (animLayer != null) {
             animLayer.setOpacity(opacity);
         }
+    }
+
+    /**
+     * Sets a {@link UnitConverter} for a specified layer. This will allow
+     * GetFeatureInfo requests to display the correct value
+     * 
+     * @param layerId
+     *            The internal layer to apply the conversion to
+     * @param converter
+     *            The {@link UnitConverter} to use
+     */
+    public void setUnitConverter(String layerId, UnitConverter converter) {
+        converters.put(layerId, converter);
     }
 
     public String getBaseLayerUrl() {
@@ -798,13 +877,24 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     public void setBackgroundMap(String layerName) {
-        Layer layer = map.getLayerByName(layerName);
+        /*
+         * map.getLayerByName() doesn't appear to actually work...
+         */
+        Layer layer = null;
+        for (Layer l : map.getLayers()) {
+            if (l.getName().equals(layerName)) {
+                layer = l;
+                break;
+            }
+        }
         map.setBaseLayer(layer);
+        baseLayerChanged(layer);
     }
 
     protected void addBaseLayers() {
         WMS naturalEarth;
         WMS blueMarble;
+        WMS demis;
 
         WMS naturalEarthNP;
         WMS naturalEarthSP;
@@ -837,31 +927,38 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         blueMarble.addLayerLoadEndListener(loadEndListener);
         blueMarble.setIsBaseLayer(true);
 
-        Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
-        double halfSideLength = (polarMaxExtent.getUpperRightY() - polarMaxExtent.getLowerLeftY())
-                / (4 * 2);
-        double centre = ((polarMaxExtent.getUpperRightY() - polarMaxExtent.getLowerLeftY()) / 2)
-                + polarMaxExtent.getLowerLeftY();
-        double low = centre - halfSideLength;
-        double high = centre + halfSideLength;
-        float polarMaxResolution = (float) ((high - low) / 256.0);
-        double windowLow = centre - 2 * halfSideLength;
-        double windowHigh = centre + 2 * halfSideLength;
-        Bounds polarBounds = new Bounds(windowLow, windowLow, windowHigh, windowHigh);
+        wmsParams = new WMSParams();
+        wmsParams
+                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
+                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+        wmsParams.setFormat("image/png");
 
-        wmsPolarOptions = new WMSOptions();
-        wmsPolarOptions.setProjection("EPSG:5041");
-        wmsPolarOptions.setMaxExtent(polarBounds);
-        wmsPolarOptions.setMaxResolution(polarMaxResolution);
-        wmsPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
-        wmsPolarOptions.setWrapDateLine(false);
+        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
+                wmsOptions);
+        demis.setIsBaseLayer(true);
+        demis.addLayerLoadStartListener(loadStartListener);
+        demis.addLayerLoadEndListener(loadEndListener);
+
+        /*
+         * These are the bounds of the polar layers on the dexter server
+         */
+        Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
+        float polarMaxResolution = (float) ((polarMaxExtent.getUpperRightX() - polarMaxExtent
+                .getLowerLeftX()) / 512.0);
+
+        wmsNorthPolarOptions = new WMSOptions();
+        wmsNorthPolarOptions.setProjection("EPSG:5041");
+        wmsNorthPolarOptions.setMaxExtent(polarMaxExtent);
+        wmsNorthPolarOptions.setMaxResolution(polarMaxResolution);
+        wmsNorthPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
+        wmsNorthPolarOptions.setWrapDateLine(false);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("naturalearth-np");
         wmsParams.setFormat("image/png");
 
         naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", dexterUrl, wmsParams,
-                wmsPolarOptions);
+                wmsNorthPolarOptions);
         naturalEarthNP.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
@@ -869,17 +966,23 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setFormat("image/png");
 
         blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", dexterUrl, wmsParams,
-                wmsPolarOptions);
+                wmsNorthPolarOptions);
         blueMarbleNP.setIsBaseLayer(true);
+        blueMarbleNP.setSingleTile(true);
 
-        wmsPolarOptions.setProjection("EPSG:5042");
+        wmsSouthPolarOptions = new WMSOptions();
+        wmsSouthPolarOptions.setProjection("EPSG:5042");
+        wmsSouthPolarOptions.setMaxExtent(polarMaxExtent);
+        wmsSouthPolarOptions.setMaxResolution(polarMaxResolution);
+        wmsSouthPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
+        wmsSouthPolarOptions.setWrapDateLine(false);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("naturalearth-sp");
         wmsParams.setFormat("image/png");
 
         naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", dexterUrl, wmsParams,
-                wmsPolarOptions);
+                wmsSouthPolarOptions);
         naturalEarthSP.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
@@ -887,11 +990,12 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setFormat("image/png");
 
         blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", dexterUrl, wmsParams,
-                wmsPolarOptions);
+                wmsSouthPolarOptions);
         blueMarbleSP.setIsBaseLayer(true);
 
         map.addLayer(naturalEarth);
         map.addLayer(blueMarble);
+        map.addLayer(demis);
         map.addLayer(naturalEarthNP);
         map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleNP);
@@ -902,25 +1006,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.addMapBaseLayerChangedListener(new MapBaseLayerChangedListener() {
             @Override
             public void onBaseLayerChanged(MapBaseLayerChangedEvent eventObject) {
-                String url = eventObject.getLayer().getJSObject().getPropertyAsString("url");
-                String layers = eventObject.getLayer().getJSObject().getPropertyAsArray("params")[0]
-                        .getPropertyAsString("LAYERS");
-                baseUrlForExport = url + (url.contains("?") ? "&" : "?");
-                layersForExport = layers;
-                if (!map.getProjection().equals(currentProjection)) {
-                    currentProjection = map.getProjection();
-                    for (String internalLayerId : wmsLayers.keySet()) {
-                        WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
-                        if (wmsAndParams != null) {
-                            removeLayer(internalLayerId);
-                            doAddingOfLayer(wmsAndParams.wmsUrl, internalLayerId,
-                                    wmsAndParams.params, getOptionsForCurrentProjection(),
-                                    wmsAndParams.multipleElevations, wmsAndParams.multipleTimes);
-                        }
-                    }
-                    map.zoomToMaxExtent();
-                }
-                widgetDisabler.updateLinksEtc();
+                baseLayerChanged(eventObject.getLayer());
             }
         });
 
@@ -929,10 +1015,35 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         layersForExport = "naturalEarth";
     }
 
+    private void baseLayerChanged(Layer layer) {
+        String url = layer.getJSObject().getPropertyAsString("url");
+        String layers = layer.getJSObject().getPropertyAsArray("params")[0]
+                .getPropertyAsString("LAYERS");
+        baseUrlForExport = url + (url.contains("?") ? "&" : "?");
+        layersForExport = layers;
+        if (!map.getProjection().equals(currentProjection)) {
+            currentProjection = map.getProjection();
+            for (String internalLayerId : wmsLayers.keySet()) {
+                WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
+                if (wmsAndParams != null) {
+                    removeLayer(internalLayerId);
+                    doAddingOfLayer(wmsAndParams.wmsUrl, internalLayerId, wmsAndParams.params,
+                            getOptionsForCurrentProjection(), wmsAndParams.multipleElevations,
+                            wmsAndParams.multipleTimes);
+                }
+            }
+            map.zoomToMaxExtent();
+        }
+        widgetDisabler.updateLinksEtc();
+    }
+
     protected WMSOptions getOptionsForCurrentProjection() {
         if (currentProjection.equalsIgnoreCase("EPSG:32661")
-                || currentProjection.equalsIgnoreCase("EPSG:32761")) {
-            return wmsPolarOptions;
+                || currentProjection.equalsIgnoreCase("EPSG:5041")) {
+            return wmsNorthPolarOptions;
+        } else if (currentProjection.equalsIgnoreCase("EPSG:32761")
+                || currentProjection.equalsIgnoreCase("EPSG:5042")) {
+            return wmsSouthPolarOptions;
         } else {
             return wmsStandardOptions;
         }
@@ -949,7 +1060,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
     }
 
-    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text) {
+    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text,
+            UnitConverter converter) {
         Document featureInfo = XMLParser.parse(text);
         double lon = Double.parseDouble(featureInfo.getElementsByTagName("longitude").item(0)
                 .getChildNodes().item(0).getNodeValue());
@@ -1000,19 +1112,23 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             if (featureInfoNode != null) {
                 String id = null;
                 String time = null;
-                String value = null;
+                String valueStr = null;
                 for (int j = 0; j < featureInfoNode.getLength(); j++) {
                     Node child = featureInfoNode.item(j);
                     if (child.getNodeName().equalsIgnoreCase("time")) {
                         time = child.getFirstChild().getNodeValue();
                     } else if (child.getNodeName().equalsIgnoreCase("value")) {
-                        value = child.getFirstChild().getNodeValue();
+                        valueStr = child.getFirstChild().getNodeValue();
                         /*
                          * This is probably a number. Parse it as if it is, but
                          * ignore any errors
                          */
                         try {
-                            value = FORMATTER.format(Double.parseDouble(value));
+                            float value = Float.parseFloat(valueStr);
+                            if (converter != null) {
+                                value = converter.convertToDisplayUnit(value);
+                            }
+                            valueStr = FORMATTER.format(value);
                         } catch (Exception e) {
                             /*
                              * Ignore, we'll just use the string value as-is.
@@ -1022,15 +1138,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         id = child.getFirstChild().getNodeValue();
                     }
                 }
-                if (value != null) {
+                if (valueStr != null) {
                     if (id != null) {
                         html.append("<tr><td><b>Feature:</b></td><td>" + id);
                     }
                     if (time != null) {
                         html.append("<tr><td><b>Time:</b></td><td>" + time + "</td></tr>");
                     }
-                    value = value.replaceAll(";", "<br/>");
-                    html.append("<tr><td><b>Value:</b></td><td>" + value + "</td></tr>");
+                    valueStr = valueStr.replaceAll(";", "<br/>");
+                    html.append("<tr><td><b>Value:</b></td><td>" + valueStr + "</td></tr>");
                 }
                 /*
                  * Now process any arbitrary properties
@@ -1079,20 +1195,20 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                          */
                         projection = "CRS:84";
                     }
-                    String transectUrl = wmsAndParams.wmsUrl + "?REQUEST=GetTransect" + "&LAYERS="
+                    String transectParams = "REQUEST=GetTransect" + "&LAYERS="
                             + wmsLayer.getParams().getLayers() + "&CRS=" + projection
                             + "&LINESTRING=" + lineStringBuilder + "&FORMAT=image/png";
 
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "ELEVATION");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "TARGETELEVATION");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "TIME");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "TARGETTIME");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "COLORSCALERANGE");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "NUMCOLORBANDS");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "LOGSCALE");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "ABOVEMAXCOLOR");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "BELOWMINCOLOR");
-                    transectUrl = addParameterValue(wmsLayer, transectUrl, "BGCOLOR");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "ELEVATION");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "TARGETELEVATION");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "TIME");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "TARGETTIME");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "COLORSCALERANGE");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "NUMCOLORBANDS");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "LOGSCALE");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "ABOVEMAXCOLOR");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "BELOWMINCOLOR");
+                    transectParams = addParameterValue(wmsLayer, transectParams, "BGCOLOR");
 
                     String stylesStr = wmsLayer.getParams().getStyles();
                     if (stylesStr != null && !stylesStr.equals("")) {
@@ -1103,7 +1219,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             palette = styleParts[1];
                         }
                         if (palette != null) {
-                            transectUrl += "&PALETTE=" + palette;
+                            transectParams += "&PALETTE=" + palette;
                         }
                     }
                     /*
@@ -1119,7 +1235,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         getFeatureInfo.deactivate();
                         getFeatureInfo.activate();
                     }
-                    displayImagePopup(transectUrl, "Transect");
+                    displayImagePopup(
+                            wmsAndParams.wmsUrl + "?"
+                                    + GodivaUtils.encodeQueryString(transectParams), "Transect");
                 }
             }
 
@@ -1160,9 +1278,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     public void setAllowTransects(boolean allowTransects) {
         if (allowTransects) {
-            editingToolbar.deactivate();
-        } else {
             editingToolbar.activate();
+        } else {
+            editingToolbar.deactivate();
         }
     }
 

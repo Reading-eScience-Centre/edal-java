@@ -67,7 +67,6 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * 
  */
 public class StartEndTimePopup extends DialogBoxWithCloseButton {
-
     private final String layer;
     private String jsonProxyUrl;
     private String errorMessage;
@@ -93,7 +92,7 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
         this.layer = layer;
 
         this.currentTime = currentTimeSelector;
-        
+
         init();
 
         LayerRequestBuilder getLayerDetails = new LayerRequestBuilder(layer, jsonProxyUrl, null);
@@ -109,7 +108,7 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                 LayerDetails layerDetails = getLayerDetails();
                 continuousT = layerDetails.isContinuousT();
 
-                if(continuousT){
+                if (continuousT) {
                     availableDates = TimeSelector.getDatesInRange(layerDetails.getStartTime(),
                             layerDetails.getEndTime());
                 } else {
@@ -119,21 +118,21 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                     handleNoMultipleTimes();
                     return;
                 }
-                
+
                 availableTimes = new LinkedHashMap<String, List<String>>();
                 for (final String date : availableDates) {
-                    if(continuousT) {
+                    if (continuousT) {
                         availableTimes.put(date, Arrays.asList(TimeSelector.allTimes));
                     }
                 }
-                
+
                 /*
-                 * These need to be in date order. They should already be,
-                 * but sort to be safe
+                 * These need to be in date order. They should already be, but
+                 * sort to be safe
                  */
                 Collections.sort(availableDates);
                 startTimeSelector.populateDates(availableDates);
-                
+
                 if (currentTime != null
                         && !currentTime.getSelectedDate().equals(
                                 availableDates.get(availableDates.size() - 1))) {
@@ -145,13 +144,17 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                 /*
                  * Pick a date 5 day-steps ahead.
                  */
-                
-                if(defaultDateStepsBetweenStartAndEnd > 0 && availableDates.size() > defaultDateStepsBetweenStartAndEnd) {
-                    endTimeSelector.selectDate(availableDates.get(defaultDateStepsBetweenStartAndEnd));
+
+                if (defaultDateStepsBetweenStartAndEnd > 0
+                        && availableDates.size() > defaultDateStepsBetweenStartAndEnd
+                                + startTimeSelector.getSelectedDateIndex()) {
+                    endTimeSelector.selectDate(availableDates
+                            .get(defaultDateStepsBetweenStartAndEnd
+                                    + startTimeSelector.getSelectedDateIndex()));
                 } else {
                     endTimeSelector.selectDate(availableDates.get(availableDates.size() - 1));
                 }
-                
+
                 setTimeSelector();
             }
         });
@@ -260,12 +263,13 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
             }
         });
     }
-    
+
     /*
-     * This just disables the next button if the start time is later than the end time
+     * This just disables the next button if the start time is later than the
+     * end time
      */
-    private void checkOrder(){
-        if(nextButton == null) {
+    private void checkOrder() {
+        if (nextButton == null) {
             return;
         }
         if ((startTimeSelector == null && endTimeSelector == null)

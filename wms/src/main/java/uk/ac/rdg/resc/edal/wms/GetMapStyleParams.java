@@ -47,8 +47,11 @@ import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
+import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
+import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 public class GetMapStyleParams {
 
@@ -70,12 +73,13 @@ public class GetMapStyleParams {
 
     private Extent<Float> colourScaleRange = null;
     /*
-     * true if we want to auto-scale the data 
+     * true if we want to auto-scale the data
      * 
      * TODO Not currently used
      */
 //    private boolean autoScale = false;
-    /* true if we are using an XML/JSON style specification */
+
+    /* true if we are using an XML style specification */
     private boolean xmlSpecified = false;
 
     /* Velocity templating engine used for reading fixed styles */
@@ -86,7 +90,6 @@ public class GetMapStyleParams {
     }
 
     public GetMapStyleParams(RequestParams params) throws EdalException {
-
         String layersStr = params.getString("layers");
         if (layersStr == null || layersStr.trim().isEmpty()) {
             layers = null;
@@ -104,17 +107,6 @@ public class GetMapStyleParams {
         }
 
         xmlStyle = params.getString("SLD_BODY");
-
-        //        String jsonStyle = params.getString("JSON_STYLE");
-        //        if (jsonStyle != null && xmlStyle == null) {
-        //            try {
-        //                xmlStyle = StyleJSONParser.JSONtoXMLString(jsonStyle);
-        //            } catch (JSONException e) {
-        //                e.printStackTrace();
-        //                throw new EdalException(
-        //                        "Problem parsing JSON style to XML style.  Check logs for stack trace");
-        //            }
-        //        }
 
         if (xmlStyle == null) {
             xmlSpecified = false;
@@ -231,11 +223,15 @@ public class GetMapStyleParams {
         }
 
         if (layers.length > 1) {
-            throw new EdalException("Only 1 layer may be requested");
+            throw new EdalUnsupportedOperationException("Only 1 layer may be requested");
         }
 
         String layerName = layers[0];
         WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+        if (layerMetadata.isDisabled()) {
+            throw new EdalLayerNotFoundException("The layer " + layerName
+                    + " is not enabled on this server");
+        }
 
         String style = "default/default";
 
@@ -436,6 +432,11 @@ public class GetMapStyleParams {
          */
         VelocityContext context = new VelocityContext();
         context.put("paletteName", paletteName);
+        if (colourScaleRange == null) {
+            colourScaleRange = WmsUtils.estimateValueRange(
+                    catalogue.getDatasetFromLayerName(layerName),
+                    catalogue.getVariableFromId(layerName));
+        }
         context.put("scaleMin", colourScaleRange.getLow());
         context.put("scaleMax", colourScaleRange.getHigh());
         context.put("logarithmic", logarithmic ? "logarithmic" : "linear");

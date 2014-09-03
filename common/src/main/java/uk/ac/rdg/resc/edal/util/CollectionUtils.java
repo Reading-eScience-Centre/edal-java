@@ -98,6 +98,21 @@ public final class CollectionUtils {
         };
     }
 
+    /*
+     * We can suppress this varargs warning. If this method is used, it can only
+     * be assigned to a Set containing the common ancestor of all supplied types.
+     * 
+     * So:
+     * 
+     * Set<String> set = setOf("This", "will", "fail", new Integer(1))
+     * 
+     * will already fail.
+     * 
+     * Set<? extends Object> set = setOf("This", "will", "fail", new Integer(1))
+     * 
+     * is fine.
+     */
+    @SafeVarargs
     /**
      * Returns a new Set containing the given values
      */

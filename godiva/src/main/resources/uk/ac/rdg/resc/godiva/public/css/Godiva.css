@@ -37,6 +37,10 @@
 	overflow: hidden;
 }
 
+.paletteOutOfRangeButton-inactive {
+	opacity: 0.3;
+}
+
 /* This is used for the labels on the time/elevation/variable selectors */
 .labelStyle {
 	font-size: 1.2em;

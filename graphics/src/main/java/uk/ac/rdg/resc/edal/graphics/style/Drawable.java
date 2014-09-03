@@ -55,9 +55,9 @@ public abstract class Drawable {
             return scaleRange;
         }
     }
-    
+
     private OpacityTransform opacityTransform;
-    
+
     public OpacityTransform getOpacityTransform() {
         return opacityTransform;
     }
@@ -68,17 +68,15 @@ public abstract class Drawable {
 
     public abstract BufferedImage drawImage(PlottingDomainParams params,
             FeatureCatalogue featureCatalogue) throws EdalException;
-    
+
     /**
-     * This should return a list of all the fields used in this image layer, and
-     * their appropriate scale ranges. If there is NO scale range there can be
-     * NO data field and vice versa - i.e. a {@link NameAndRange} object must
-     * have all non-null fields. If the layer doesn't depend on any data, this
-     * should return an empty set.
+     * @return A list of all the fields used in this image layer, and their
+     *         appropriate scale ranges. If there is NO scale range there can be
+     *         NO data field and vice versa - i.e. a {@link NameAndRange} object
+     *         must have all non-null fields. If the layer doesn't depend on any
+     *         data, this should return an empty set.
      * 
-     * It should never return <code>null</code>.
-     * 
-     * @return
+     *         It should never return <code>null</code>.
      */
     public abstract Set<NameAndRange> getFieldsWithScales();
 }

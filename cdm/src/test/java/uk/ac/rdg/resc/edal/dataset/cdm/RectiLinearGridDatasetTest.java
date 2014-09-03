@@ -175,10 +175,6 @@ public class RectiLinearGridDatasetTest {
     @Test
     public void testVectorPlugin() throws EdalException {
         VectorPlugin vplugin = new VectorPlugin("vLon", "vLat", "Test Vector Field", true);
-        VariableMetadata[] vdata = new VariableMetadata[] { dataset.getVariableMetadata("vLon"),
-                dataset.getVariableMetadata("vLat") };
-        VariableMetadata[] afterApplyPlugin = vplugin.processVariableMetadata(vdata);
-
         dataset.addVariablePlugin(vplugin);
 
         // test on only one vertical position
@@ -199,11 +195,6 @@ public class RectiLinearGridDatasetTest {
             PointSeriesFeature data = timeSeriesFeatures.iterator().next();
             Array1D<Number> magValues = data.getValues("vLonvLat-mag");
             Array1D<Number> dirValues = data.getValues("vLonvLat-dir");
-
-            assertEquals(afterApplyPlugin[1].getParameter().toString(),
-                    data.getParameter("vLonvLat-mag").toString());
-            assertEquals(afterApplyPlugin[2].getParameter().toString(),
-                    data.getParameter("vLonvLat-dir").toString());
 
             // two values below are set by test dataset generator
             float expectedLon = 100.0f * xIndex / (xSize - 1);
@@ -227,8 +218,6 @@ public class RectiLinearGridDatasetTest {
      **/
     @Test
     public void testMetadataInfo() throws DataReadingException {
-        assertEquals(chrnology, dataset.getDatasetChronology());
-        assertEquals(vCrs, dataset.getDatasetVerticalCrs());
         assertEquals(MapFeature.class, dataset.getMapFeatureType("vLon"));
 
         VariableMetadata metadata = dataset.getVariableMetadata("vLon");

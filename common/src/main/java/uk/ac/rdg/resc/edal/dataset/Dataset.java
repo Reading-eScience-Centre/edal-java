@@ -32,8 +32,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.joda.time.Chronology;
-
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
@@ -45,15 +43,14 @@ import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * Provides access to data and metadata held in underlying storage,
  * {@literal e.g.} on disk, in a database or on a remote server.
  * 
- * @author Guy
- * @author Jon
+ * @author Guy Griffiths
+ * @author Jon Blower
  */
 public interface Dataset {
 
@@ -63,7 +60,7 @@ public interface Dataset {
     public String getId();
 
     /**
-     * Returns the IDs of features which are present in this Dataset
+     * @return the IDs of features which are present in this Dataset
      */
     public Set<String> getFeatureIds();
 
@@ -81,12 +78,16 @@ public interface Dataset {
 
     /**
      * Reads an entire feature from underlying storage
+     * 
+     * @param featureId
+     *            The ID of the feature to read
+     * @return The resulting {@link Feature}
      */
     public Feature<?> readFeature(String featureId) throws DataReadingException;
 
     /**
-     * Returns the IDs of variables in this {@link Dataset}. Generally the term
-     * "variable" refers to a measured physical quantity
+     * @return the IDs of variables in this {@link Dataset}. Generally the term
+     *         "variable" refers to a measured physical quantity
      */
     public Set<String> getVariableIds();
 
@@ -101,7 +102,7 @@ public interface Dataset {
     public VariableMetadata getVariableMetadata(String variableId);
 
     /**
-     * Returns the variables at the top level of the hierarchy.
+     * @return the variables at the top level of the hierarchy.
      */
     public Set<VariableMetadata> getTopLevelVariables();
 
@@ -115,20 +116,6 @@ public interface Dataset {
      *             If there is a problem adding the plugin
      */
     public void addVariablePlugin(VariablePlugin plugin) throws EdalException;
-
-    /**
-     * @return The {@link Chronology} used for any times in this dataset. Can be
-     *         <code>null</code> if this dataset contains no features with time
-     *         information
-     */
-    public Chronology getDatasetChronology();
-
-    /**
-     * @return The {@link VerticalCrs} used for any vertical positions in this
-     *         dataset. Can be <code>null</code> if this dataset contains no
-     *         features with vertical information
-     */
-    public VerticalCrs getDatasetVerticalCrs();
 
     /**
      * Determines the type of feature returned by the
@@ -148,7 +135,9 @@ public interface Dataset {
      * 
      * @param varIds
      *            The IDs of the variables to be extracted. If this is
-     *            <code>null</code> then all variable IDs will be plotted
+     *            <code>null</code> then all variable IDs will be plotted. Any
+     *            non-scalar parent variables will have all of their child
+     *            variables extracted.
      * @param params
      *            The {@link PlottingDomainParams} object describing the domain
      *            to be plotted. The exact manner these are interpreted may
@@ -165,28 +154,31 @@ public interface Dataset {
      * Extracts {@link ProfileFeature}(s) from the {@link Dataset}
      * 
      * @param varIds
-     *            The variable IDs to extract
+     *            The variable IDs to extract. If this is <code>null</code> then
+     *            all variable IDs will be plotted. Any non-scalar parent
+     *            variables will have all of their child variables extracted.
      * @param params
      *            The {@link PlottingDomainParams} describing the domain to be
      *            extracted:
      * 
-     *            <li>{@link PlottingDomainParams#getTargetZ()} is ignored.
+     *            <ul>
+     *            <li>{@link PlottingDomainParams#getTargetZ()} is ignored.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is non-
      *            <code>null</code>, all {@link ProfileFeature}s whose domains
      *            have any intersection with this vertical extent will be
      *            extracted. The domains of the extracted {@link ProfileFeature}
      *            s will be the entire available domains, not just the
-     *            intersection.
+     *            intersection.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is
      *            <code>null</code>, no constraint will be placed on the
-     *            vertical domain of the {@link ProfileFeature}s to extract.
+     *            vertical domain of the {@link ProfileFeature}s to extract.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is non-
      *            <code>null</code>, all measurements which fall entirely within
      *            the extent given by {@link PlottingDomainParams#getTExtent()}
-     *            will be extracted
+     *            will be extracted</li>
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is
      *            <code>null</code> only profiles matching the time specified by
@@ -196,16 +188,16 @@ public interface Dataset {
      *            {@link TimeAxis#contains(org.joda.time.DateTime)} on its time
      *            axis returns <code>true</code> for the target time. For a
      *            non-gridded dataset, the feature time must exactly match the
-     *            target time.
+     *            target time.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getTargetT()} and
      *            {@link PlottingDomainParams#getTExtent()} are both
      *            <code>null</code>, {@link ProfileFeature}s for all available
-     *            time values will be extracted.
+     *            time values will be extracted.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getBbox()} is non-
      *            <code>null</code>, all measurements falling within
-     *            {@link PlottingDomainParams#getBbox()} will be returned.
+     *            {@link PlottingDomainParams#getBbox()} will be returned.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getBbox()} is
      *            <code>null</code>, only measurements which match the
@@ -214,22 +206,24 @@ public interface Dataset {
      *            will be extracted. In the case of a gridded feature, this will
      *            be the profile of the grid cell which the position falls into,
      *            but for a dataset with a continuous {@link HorizontalDomain}
-     *            only exact matches will be extracted
+     *            only exact matches will be extracted</li>
      * 
      *            <li>If both
      *            {@link PlottingDomainParams#getTargetHorizontalPosition()} and
      *            {@link PlottingDomainParams#getBbox()} are <code>null</code>
      *            no constraint is placed on horizontal positions - e.g. for a
      *            gridded field a profile will be returned for every horizontal
-     *            grid point.
+     *            grid point.</li>
      * 
      *            <li>If a
      *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
      *            non-<code>null</code>, the resulting {@link Collection} will
      *            be sorted according to distance (in co-ordinate units) from
-     *            the target position
+     *            the target position</li>
+     *            </ul>
      * 
-     * @return A {@link Collection} of {@link ProfileFeature}s
+     * @return A {@link Collection} of {@link ProfileFeature}s, sorted by their
+     *         distance from the target horizontal position, if it exists.
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
      * @throws UnsupportedOperationException
@@ -252,28 +246,31 @@ public interface Dataset {
      * Extracts {@link PointSeriesFeature}(s) from the {@link Dataset}
      * 
      * @param varIds
-     *            The variable IDs to extract
+     *            The variable IDs to extract. If this is <code>null</code> then
+     *            all variable IDs will be plotted. Any non-scalar parent
+     *            variables will have all of their child variables extracted.
      * @param params
      *            The {@link PlottingDomainParams} describing the domain to be
      *            extracted:
      * 
-     *            <li>{@link PlottingDomainParams#getTargetT()} is ignored.
+     *            <ul>
+     *            <li>{@link PlottingDomainParams#getTargetT()} is ignored.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is non-
      *            <code>null</code>, all {@link PointSeriesFeature}s whose
      *            domains have any intersection with this vertical extent will
      *            be extracted. The domains of the extracted
      *            {@link PointSeriesFeature}s will be the entire available
-     *            domains, not just the intersection.
+     *            domains, not just the intersection.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getTExtent()} is
      *            <code>null</code>, no constraint will be placed on the
-     *            temporal domain of the {@link PointSeriesFeature}s to extract
+     *            temporal domain of the {@link PointSeriesFeature}s to extract</li>
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is non-
      *            <code>null</code> , all measurements which fall entirely
      *            within the extent given by
-     *            {@link PlottingDomainParams#getZExtent()} will be extracted
+     *            {@link PlottingDomainParams#getZExtent()} will be extracted</li>
      * 
      *            <li>If {@link PlottingDomainParams#getZExtent()} is
      *            <code>null</code> only profiles matching the depth specified
@@ -283,17 +280,17 @@ public interface Dataset {
      *            {@link VerticalAxis#contains(Double)} on its vertical axis
      *            returns <code>true</code> for the target depth. For a
      *            non-gridded dataset, the feature depth must exactly match the
-     *            target depth.
+     *            target depth.</li>
      * 
      *            <li>
      *            If {@link PlottingDomainParams#getTargetZ()} and
      *            {@link PlottingDomainParams#getZExtent()} are both
      *            <code>null</code>, {@link PointSeriesFeature}s for all
-     *            available elevations will be extracted.
+     *            available elevations will be extracted.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getBbox()} is non-
      *            <code>null</code>, all measurements falling within
-     *            {@link PlottingDomainParams#getBbox()} will be returned.
+     *            {@link PlottingDomainParams#getBbox()} will be returned.</li>
      * 
      *            <li>If {@link PlottingDomainParams#getBbox()} is
      *            <code>null</code>, only measurements which match the
@@ -302,22 +299,24 @@ public interface Dataset {
      *            will be extracted. In the case of a gridded feature, this will
      *            be the timeseries of the grid cell which the position falls
      *            into, but for a dataset with a continuous
-     *            {@link HorizontalDomain} only exact matches will be extracted
+     *            {@link HorizontalDomain} only exact matches will be extracted</li>
      * 
      *            <li>If both
      *            {@link PlottingDomainParams#getTargetHorizontalPosition()} and
      *            {@link PlottingDomainParams#getBbox()} are <code>null</code>
      *            no constraint is placed on horizontal positions - e.g. for a
      *            gridded field a timeseries will be returned for every
-     *            horizontal grid point.
+     *            horizontal grid point.</li>
      * 
      *            <li>If a
      *            {@link PlottingDomainParams#getTargetHorizontalPosition()} is
      *            non-<code>null</code>, the resulting {@link Collection} will
      *            be sorted according to distance (in co-ordinate units) from
-     *            the target position
+     *            the target position</li>
+     *            </ul>
      * 
-     * @return A {@link Collection} of {@link PointSeriesFeature}s
+     * @return A {@link Collection} of {@link PointSeriesFeature}s, sorted by
+     *         their distance from the target horizontal position, if it exists.
      * @throws DataReadingException
      *             if there is a problem reading the underlying data
      * @throws UnsupportedOperationException

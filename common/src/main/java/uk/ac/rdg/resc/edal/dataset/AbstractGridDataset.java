@@ -299,9 +299,11 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         if (varIds == null) {
             varIds = getVariableIds();
         }
+
         /*
          * Create a list so that we can add to it whilst looping over the
-         * elements (to add required child members)
+         * elements (to add required child members). The supplied Set may be
+         * abstract, so this is the safest way.
          */
         List<String> variableIds = new ArrayList<String>(varIds);
 
@@ -341,7 +343,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
-                     * Don't read map data for unplottable variables
+                     * Don't read data for unplottable variables, but add any
+                     * children
                      */
                     Set<VariableMetadata> children = getVariableMetadata(varId).getChildren();
                     for (VariableMetadata childMetadata : children) {
@@ -458,7 +461,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     private Array2D<Number> readHorizontalData(String varId, HorizontalGrid targetGrid,
-            Double zPos, DateTime time, GridDataSource dataSource) throws IOException, DataReadingException {
+            Double zPos, DateTime time, GridDataSource dataSource) throws IOException,
+            DataReadingException {
         /*
          * This cast will always work, because we only ever call this method for
          * non-derived variables - i.e. those whose metadata was provided in the
@@ -608,6 +612,13 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
 
         /*
+         * Create a list so that we can add to it whilst looping over the
+         * elements (to add required child members). The supplied Set may be
+         * abstract, so this is the safest way.
+         */
+        List<String> variableIds = new ArrayList<String>(varIds);
+
+        /*
          * Find a common z-axis
          */
         VerticalAxis zAxis;
@@ -685,14 +696,21 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * Read all of the data from non-plugin variables. This loops over
              * all variables, and then ignores those which are plugin-derived.
              */
-            for (String varId : varIds) {
+            for (int i = 0; i < variableIds.size(); i++) {
+                String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
-                     * Don't read profile data for unplottable variables
+                     * Don't read data for unplottable variables, but add any
+                     * children
                      */
+                    Set<VariableMetadata> children = getVariableMetadata(varId).getChildren();
+                    for (VariableMetadata childMetadata : children) {
+                        if (!variableIds.contains(childMetadata.getId())) {
+                            variableIds.add(childMetadata.getId());
+                        }
+                    }
                     continue;
                 }
-
                 id.append(varId);
                 description.append(varId + "\n");
 
@@ -1077,8 +1095,15 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     throw new IllegalArgumentException("The vertical CRS of the variable " + varId
                             + " must match that of the domain you are trying to read.");
                 }
-                int zMin = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
-                int zMax = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
+                int zMin;
+                int zMax;
+                if (zAxis.isAscending()) {
+                    zMin = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
+                    zMax = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
+                } else {
+                    zMin = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
+                    zMax = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
+                }
 
                 /*
                  * Read the data and move it to a 1D Array
@@ -1191,6 +1216,13 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
 
         /*
+         * Create a list so that we can add to it whilst looping over the
+         * elements (to add required child members). The supplied Set may be
+         * abstract, so this is the safest way.
+         */
+        List<String> variableIds = new ArrayList<String>(varIds);
+
+        /*
          * Find a common time-axis
          */
         TimeAxis tAxis;
@@ -1267,11 +1299,19 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * Read all of the data from non-plugin variables. This loops over
              * all variables, and then ignores those which are plugin-derived.
              */
-            for (String varId : varIds) {
+            for (int i = 0; i < variableIds.size(); i++) {
+                String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
                     /*
-                     * Don't read profile data for unplottable variables
+                     * Don't read data for unplottable variables, but add any
+                     * children
                      */
+                    Set<VariableMetadata> children = getVariableMetadata(varId).getChildren();
+                    for (VariableMetadata childMetadata : children) {
+                        if (!variableIds.contains(childMetadata.getId())) {
+                            variableIds.add(childMetadata.getId());
+                        }
+                    }
                     continue;
                 }
 

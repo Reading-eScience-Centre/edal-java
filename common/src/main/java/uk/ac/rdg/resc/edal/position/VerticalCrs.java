@@ -71,7 +71,9 @@ public interface VerticalCrs extends Serializable {
      * what to do.
      * </p>
      * 
-     * @see http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.5/cf-conventions.html#dimensionless-v-coord
+     * @see <a
+     *      href="http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.5/cf-conventions.html#dimensionless-v-coord">CF
+     *      conventions</a>
      */
     public boolean isDimensionless();
 
@@ -79,10 +81,10 @@ public interface VerticalCrs extends Serializable {
      * Indicates whether coordinate values increase upward or downward.
      */
     public boolean isPositiveUpwards();
-    
+
     @Override
     public int hashCode();
-    
+
     @Override
     public boolean equals(Object obj);
 }

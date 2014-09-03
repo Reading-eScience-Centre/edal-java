@@ -28,6 +28,7 @@
             <groupId>uk.ac.rdg.resc</groupId>
             <artifactId>edal-godiva</artifactId>
             <version>${project.parent.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>uk.ac.rdg.resc</groupId>
@@ -49,6 +50,11 @@
             <groupId>com.thetransactioncompany</groupId>
             <artifactId>cors-filter</artifactId>
             <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.winstone</groupId>
+            <artifactId>winstone</artifactId>
+            <version>0.9.10</version>
         </dependency>
     </dependencies>
     <build>
@@ -73,6 +79,29 @@
                 <version>2.2</version>
                 <configuration>
                     <attachClasses>true</attachClasses>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>net.sf.alchim</groupId>
+                <artifactId>winstone-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>embed</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <cmdLineOptions>
+                        <property>
+                            <!-- This gives no-password access to the admin 
+                                interface, which is what we want when running as a local standalone application -->
+                            <name>realmClassName</name>
+                            <value>uk.ac.rdg.resc.edal.ncwms.StandaloneAuthentication</value>
+                        </property>
+                    </cmdLineOptions>
                 </configuration>
             </plugin>
         </plugins>

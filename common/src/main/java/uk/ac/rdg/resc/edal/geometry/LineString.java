@@ -90,8 +90,8 @@ public final class LineString {
                 throw new InvalidLineStringException("Coordinates format error");
             }
             try {
-                ctlPoints.add(new HorizontalPosition(Double.parseDouble(coords[0].trim()),
-                        Double.parseDouble(coords[1].trim()), crs));
+                ctlPoints.add(new HorizontalPosition(Double.parseDouble(coords[0].trim()), Double
+                        .parseDouble(coords[1].trim()), crs));
             } catch (NumberFormatException nfe) {
                 throw new InvalidLineStringException("Coordinates format error");
             }
@@ -129,8 +129,9 @@ public final class LineString {
      * Returns the fractional distance along the line string to the control
      * point with the given index.
      * 
-     * @index The index of the control point. An index of zero represents the
-     *        start of the line string.
+     * @param index
+     *            The index of the control point. An index of zero represents
+     *            the start of the line string.
      * @return the fractional distance along the whole line string to the
      *         control point
      * @throws IndexOutOfBoundsException
@@ -150,12 +151,14 @@ public final class LineString {
      * interpolated between the control points. Note that it is not guaranteed
      * that the intermediate control points will be contained in this list.
      * 
-     * @param numPoints
+     * TODO Add the control points to this list, in the correct location.
+     * 
+     * @param n
      *            The number of points to return
      * @return an unmodifiable list of {@code n} points that lie on this path.
      * @throws IllegalArgumentException
      *             if {@code numPoints < 2}
-     * @todo Add the control points to this list, in the correct location.
+     * 
      */
     public List<HorizontalPosition> getPointsOnPath(int n) {
         if (n < 2) {

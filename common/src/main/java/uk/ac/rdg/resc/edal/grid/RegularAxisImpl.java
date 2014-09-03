@@ -102,7 +102,11 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
     @Override
     public Extent<Double> getCoordinateBounds(int index) {
         double centre = getCoordinateValue(index);
-        return Extents.newExtent(centre - 0.5 * spacing, centre + 0.5 * spacing);
+        if(isAscending()) {
+            return Extents.newExtent(centre - 0.5 * spacing, centre + 0.5 * spacing);
+        } else {
+            return Extents.newExtent(centre + 0.5 * spacing, centre - 0.5 * spacing);
+        }
     }
 
     @Override

@@ -131,7 +131,6 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
         };
         return ret;
     }
-    
 
     @Override
     public Array<Extent<T>> getDomainObjects() {
@@ -145,11 +144,11 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
             }
         };
     }
-    
+
     @Override
     public boolean contains(T position) {
-        for(Extent<T> extent : getDomainObjects()) {
-            if(extent.contains(position)) {
+        for (Extent<T> extent : getDomainObjects()) {
+            if (extent.contains(position)) {
                 return true;
             }
         }
@@ -163,8 +162,10 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
      * firstVal - (nextVal-firstVal)/2
      * 
      * @param firstVal
+     *            The first value of the axis
      * @param nextVal
-     * @return
+     *            The second value of the axis
+     * @return The lower bound of the first axis value
      */
     protected abstract T extendFirstValue(T firstVal, T nextVal);
 
@@ -174,9 +175,11 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
      * <p>
      * lastVal + (lastVal-secondLastVal)/2
      * 
-     * @param firstVal
-     * @param nextVal
-     * @return
+     * @param lastVal
+     *            The last value of the axis
+     * @param secondLastVal
+     *            The next-to-last value of the axis
+     * @return The upper bound of the the final axis value
      */
     protected abstract T extendLastValue(T lastVal, T secondLastVal);
 

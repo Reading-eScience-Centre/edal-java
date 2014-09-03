@@ -28,24 +28,29 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 
-import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
-import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
+import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
+import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
@@ -59,6 +64,7 @@ public class GetMapParameters {
     private String wmsVersion;
     private String imageFormatString;
     private boolean animation;
+    private List<DateTime> animationTimesteps = new ArrayList<>();
 
     protected PlottingDomainParams plottingDomainParams;
     private GetMapStyleParams styleParameters;
@@ -99,19 +105,26 @@ public class GetMapParameters {
                 .getFieldsWithScales();
         for (NameAndRange nameAndRange : fieldsWithScales) {
             String wmsLayerName = nameAndRange.getFieldLabel();
-            Dataset dataset = catalogue.getDatasetFromLayerName(wmsLayerName);
-            if (chronology == null) {
-                chronology = dataset.getDatasetChronology();
-            } else {
-                if (dataset.getDatasetChronology() != null) {
-                    if (!chronology.equals(dataset.getDatasetChronology())) {
-                        throw new IncorrectDomainException(
-                                "All datasets referenced by a GetMap request must share the same chronology");
+            TemporalDomain temporalDomain = catalogue.getVariableMetadataFromId(wmsLayerName)
+                    .getTemporalDomain();
+            if(temporalDomain != null) {
+                if (chronology == null) {
+                    chronology = temporalDomain.getChronology();
+                } else {
+                    if (temporalDomain.getChronology() != null) {
+                        if (!chronology.equals(temporalDomain.getChronology())) {
+                            throw new IncorrectDomainException(
+                                    "All datasets referenced by a GetMap request must share the same chronology");
+                        }
                     }
                 }
             }
         }
-        plottingDomainParams = parsePlottingParams(params, chronology);
+        plottingDomainParams = parsePlottingParams(params, chronology, wmsVersion);
+        if (animation) {
+            animationTimesteps = parseAnimationTimesteps(params, chronology, catalogue,
+                    styleParameters);
+        }
     }
 
     public PlottingDomainParams getPlottingDomainParameters() {
@@ -130,54 +143,64 @@ public class GetMapParameters {
         return animation;
     }
 
+    public List<DateTime> getAnimationTimesteps() {
+        return animationTimesteps;
+    }
+
     public ImageFormat getImageFormat() throws EdalException {
         if (imageFormatString == null) {
             throw new EdalException("Parameter FORMAT was not supplied");
         } else {
-            try {
-                return ImageFormat.get(imageFormatString);
-            } catch (InvalidFormatException e) {
-                throw new EdalException("Unsupported image format: " + imageFormatString);
-            }
+            return ImageFormat.get(imageFormatString);
         }
     }
 
-    private PlottingDomainParams parsePlottingParams(RequestParams params, Chronology chronology)
-            throws EdalException {
-        String startTimeStr = null;
-        String endTimeStr = null;
+    private static PlottingDomainParams parsePlottingParams(RequestParams params,
+            Chronology chronology, String wmsVersion) throws EdalException {
         String timeString = params.getString("time");
+        DateTime startTime = null;
+        DateTime endTime = null;
         if (timeString != null && !timeString.trim().equals("")) {
-            String[] timeStrings = timeString.split("/");
+            String[] timeStrings = timeString.split(",");
             if (timeStrings.length == 1) {
-                startTimeStr = timeStrings[0];
-                endTimeStr = timeStrings[0];
-            } else if (timeStrings.length == 2) {
-                startTimeStr = timeStrings[0];
-                endTimeStr = timeStrings[1];
-            } else {
-                throw new BadTimeFormatException("Time can either be a single value or a range");
+                /*
+                 * We have a single time(range) - i.e. not an animation, so we
+                 * interpret this as a time extent
+                 */
+                String[] timeRangeParts = timeStrings[0].split("/");
+                String startTimeStr;
+                String endTimeStr;
+
+                if (timeRangeParts.length == 1) {
+                    startTimeStr = timeRangeParts[0];
+                    endTimeStr = timeRangeParts[0];
+                } else if (timeRangeParts.length == 2 || timeRangeParts.length == 3) {
+                    /*
+                     * This covers either a straight range, or a range including
+                     * a timestep period
+                     */
+                    startTimeStr = timeRangeParts[0];
+                    endTimeStr = timeRangeParts[1];
+                } else {
+                    throw new BadTimeFormatException("Time can either be a single value or a range");
+                }
+                startTime = TimeUtils.iso8601ToDateTime(startTimeStr, chronology);
+                endTime = TimeUtils.iso8601ToDateTime(endTimeStr, chronology);
             }
         }
-        DateTime startTime = null;
-        if(startTimeStr != null) {
-            startTime = TimeUtils.iso8601ToDateTime(startTimeStr, chronology);
-        }
-        DateTime endTime = null;
-        if(endTimeStr != null) {
-            endTime = TimeUtils.iso8601ToDateTime(endTimeStr, chronology);
-        }
+
         Extent<DateTime> tExtent = null;
-        if(startTime != null && endTime != null) {
+        if (startTime != null && endTime != null) {
             tExtent = Extents.newExtent(startTime, endTime);
         }
 
         String targetTimeStr = params.getString("targettime");
-        if (targetTimeStr == null && endTimeStr != null) {
-            targetTimeStr = endTimeStr;
-        }
         DateTime targetTime = null;
-        if(targetTimeStr != null) {
+        if (targetTimeStr == null) {
+            if (tExtent != null) {
+                targetTime = tExtent.getHigh();
+            }
+        } else {
             targetTime = TimeUtils.iso8601ToDateTime(targetTimeStr, chronology);
         }
 
@@ -241,4 +264,74 @@ public class GetMapParameters {
                 targetDepth, targetTime);
     }
 
+    private List<DateTime> parseAnimationTimesteps(RequestParams params, Chronology chronology,
+            WmsCatalogue catalogue, GetMapStyleParams styleParameters)
+            throws EdalLayerNotFoundException, BadTimeFormatException,
+            EdalUnsupportedOperationException {
+        String timeString = params.getString("time");
+        List<DateTime> ret = new ArrayList<>();
+        if (timeString != null && !timeString.trim().equals("")) {
+            if (styleParameters.getNumLayers() != 1) {
+                /*
+                 * More than one layer has been requested. This is currently
+                 * unsupported.
+                 * 
+                 * TODO log this
+                 */
+                return ret;
+            }
+            VariableMetadata metadata = catalogue.getVariableMetadataFromId(styleParameters
+                    .getLayerNames()[0]);
+            TemporalDomain temporalDomain = metadata.getTemporalDomain();
+            if (!(temporalDomain instanceof TimeAxis)) {
+                /*
+                 * We currently only support animations for discrete axes. No
+                 * need to throw an exception - just don't define any animation
+                 * timesteps
+                 */
+                return ret;
+            }
+            TimeAxis tAxis = (TimeAxis) temporalDomain;
+
+            String[] timeStrings = timeString.split(",");
+            for (String timestepStr : timeStrings) {
+                String[] timestepStrings = timestepStr.split("/");
+
+                if (timestepStrings.length == 1) {
+                    /*
+                     * A single time. Add it to the list of timesteps if it's on
+                     * the axis
+                     */
+                    DateTime time = TimeUtils.iso8601ToDateTime(timestepStrings[0], chronology);
+                    if (tAxis.contains(time)) {
+                        ret.add(time);
+                    }
+                } else if (timestepStrings.length == 2) {
+                    /*
+                     * A time range. Add all times on the time axis within this
+                     * range
+                     */
+                    DateTime startTime = TimeUtils
+                            .iso8601ToDateTime(timestepStrings[0], chronology);
+                    DateTime endTime = TimeUtils.iso8601ToDateTime(timestepStrings[1], chronology);
+                    for (DateTime time : tAxis.getCoordinateValues()) {
+                        if ((time.isAfter(startTime) || time.equals(startTime))
+                                && (time.isBefore(endTime) || time.equals(endTime))) {
+                            ret.add(time);
+                        }
+                    }
+                } else if (timestepStrings.length == 3) {
+                    /*
+                     * Start, end, period. Not yet supported
+                     */
+                    throw new EdalUnsupportedOperationException(
+                            "Currently only lists of time(range)s are supported for animations");
+                } else {
+                    throw new BadTimeFormatException(
+                            "Time can either be a single value or a range (with an optional period)");
+                }
+            }
+        }
+        return ret;
+    }
 }

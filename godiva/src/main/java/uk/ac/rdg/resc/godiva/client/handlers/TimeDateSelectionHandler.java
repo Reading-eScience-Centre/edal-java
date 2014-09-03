@@ -44,7 +44,7 @@ public interface TimeDateSelectionHandler {
      * 
      * @param layerId
      *            The layer on which a time has been chosen
-     * @param selectedTime
+     * @param selectedDatetime
      *            A string representing the selected datetime
      */
     public void datetimeSelected(String layerId, String selectedDatetime);
