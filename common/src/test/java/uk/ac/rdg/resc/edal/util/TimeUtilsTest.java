@@ -195,48 +195,65 @@ public class TimeUtilsTest {
      */
     @Test
     public void testGetTimeRangeForString() throws BadTimeFormatException {
-        String timeString = "1990-12-30T12:00:00.000Z,1993-02-15T12:00:00.000Z,"
+        // a UCT time string, the min one at first and max one the last
+        String utcTimeString = "1990-12-30T12:00:00.000Z,1993-02-15T12:00:00.000Z,"
                 + "1998-08-30T12:00:00.000Z,2000-01-01T13:00:00.000Z";
         Chronology isoChronology = ISOChronology.getInstanceUTC();
-        // the value is drawn from the first time in the time string.
-        DateTime start = TimeUtils.iso8601ToDateTime("1990-12-30T12:00:00.000Z", isoChronology);
-        // the value is drawn from the last time in the time string.
-        DateTime end = TimeUtils.iso8601ToDateTime("2000-01-01T13:00:00.000Z", isoChronology);
-        assertEquals(Extents.newExtent(start, end),
-                TimeUtils.getTimeRangeForString(timeString, isoChronology));
 
-        DateTime dt1 = new DateTime(1990, 2, 3, 14, 25, DateTimeZone.forOffsetHours(-2));
-        DateTime dt2 = new DateTime(1995, 12, 3, 23, 25, DateTimeZone.forOffsetHours(-4));
-        DateTime dt3 = new DateTime(2010, 1, 31, 12, 25, DateTimeZone.forOffsetHours(8));
+        /*
+         * The value is drawn from the first time in the utc time string. In the
+         * constructor must provide chronology argument.
+         */
+        DateTime start = new DateTime("1990-12-30T12:00:00.000Z", isoChronology);
+        // the value is drawn from the last time in the utc time string.
+        DateTime end = new DateTime("2000-01-01T13:00:00.000Z", isoChronology);
+        Extent<DateTime> expectedDateRange = Extents.newExtent(start, end);
+        // assertEquals(expectedDateRange,
+        // TimeUtils.getTimeRangeForString(utcTimeString, isoChronology));
 
-        String ts1 = TimeUtils.dateTimeToISO8601(dt1);
-        String ts2 = TimeUtils.dateTimeToISO8601(dt2);
-        String ts3 = TimeUtils.dateTimeToISO8601(dt3);
-        // a non-UTC time string.
-        timeString = ts1 + "," + ts2 + "," + ts3;
+        // two non UTC time strings, their UTC times are identical
+        String nonUTC1 = "1990-02-03T15:25:00.000-01:30";
+        String nonUTC2 = "1990-02-03T13:55:00.000-03:00";
+        String nonUTCTimeString = nonUTC1 + "," + nonUTC2;
+        expectedDateRange = Extents.newExtent((new DateTime(nonUTC1)).toDateTime(DateTimeZone.UTC),
+                (new DateTime(nonUTC1)).toDateTime(DateTimeZone.UTC));
+        assertEquals(expectedDateRange,
+                TimeUtils.getTimeRangeForString(nonUTCTimeString, isoChronology));
 
-        // among 3 dates, we know the min one is dt1, the max one is dt3
-        Extent<DateTime> expectedDateRange = Extents.newExtent(dt1.toDateTime(DateTimeZone.UTC),
-                dt3.toDateTime(DateTimeZone.UTC));
+        String nonUTC3 = "1975-12-03T13:55:00.000-08:00";
+        String nonUTC4 = "2014-06-03T13:55:00.000+10:00";
+        // a non UTC time string without order
+        nonUTCTimeString = nonUTC1 + "," + nonUTC3 + "," + nonUTC2 + "," + nonUTC4;
+        expectedDateRange = Extents.newExtent((new DateTime(nonUTC3)).toDateTime(DateTimeZone.UTC),
+                (new DateTime(nonUTC4)).toDateTime(DateTimeZone.UTC));
+        assertEquals(expectedDateRange,
+                TimeUtils.getTimeRangeForString(nonUTCTimeString, isoChronology));
 
-        assertEquals(expectedDateRange, TimeUtils.getTimeRangeForString(timeString, isoChronology));
+        String mixedTimeString = utcTimeString + "," + nonUTCTimeString;
+        assertEquals(expectedDateRange,
+                TimeUtils.getTimeRangeForString(mixedTimeString, isoChronology));
 
-        DateTime dt4 = new DateTime(1884, 11, 2, 12, 25, DateTimeZone.forOffsetHours(10));
-        String ts4 = TimeUtils.dateTimeToISO8601(dt4);
+        // a time string with key word current
+        mixedTimeString = mixedTimeString + ",current";
 
-        // this non-UTC time string has no order
-        timeString = ts2 + "," + ts1 + "," + ts4 + "," + ts3;
+        /*
+         * If the current time is the max one in the time string, we need to
+         * save the current value used in the time string. Otherwise, the
+         * current value may change at line 250.
+         */
+        DateTime current = new DateTime();
+        String snapShotOfMixedTimeString = mixedTimeString.replace("current", current.toString());
 
-        // among 4 dates, we know the min one is dt4, the max one is dt3
-        expectedDateRange = Extents.newExtent(dt4.toDateTime(DateTimeZone.UTC),
-                dt3.toDateTime(DateTimeZone.UTC));
-        assertEquals(expectedDateRange, TimeUtils.getTimeRangeForString(timeString, isoChronology));
+        expectedDateRange = Extents.newExtent((new DateTime(nonUTC3)).toDateTime(DateTimeZone.UTC),
+                current.toDateTime(DateTimeZone.UTC));
+        assertEquals(expectedDateRange,
+                TimeUtils.getTimeRangeForString(snapShotOfMixedTimeString, isoChronology));
 
-        // a time string with key word 'current'
-        timeString = ts2 + ",current," + ts1 + "," + ts4 + "," + ts3;
-
-        // among 5 dates, we know the min one is dt4, the max one is NOw current
-        expectedDateRange = Extents.newExtent(dt4.toDateTime(DateTimeZone.UTC), new DateTime());
-        assertEquals(expectedDateRange, TimeUtils.getTimeRangeForString(timeString, isoChronology));
+        String nonUTC5 = "2014-11-03T12:22:00.000+02:00";
+        mixedTimeString = mixedTimeString + "," + nonUTC5;
+        expectedDateRange = Extents.newExtent((new DateTime(nonUTC3)).toDateTime(DateTimeZone.UTC),
+                new DateTime(nonUTC5).toDateTime(DateTimeZone.UTC));
+        assertEquals(expectedDateRange,
+                TimeUtils.getTimeRangeForString(mixedTimeString, isoChronology));
     }
 }

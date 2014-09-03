@@ -146,27 +146,28 @@ public class CurviLinearGridDatasetTest {
         ArrayDouble longitudeData = (ArrayDouble) varLonRho.read();
         ArrayDouble latitudeData = (ArrayDouble) varLatRho.read();
 
-        ValuesArray2D longitudeValues = new ValuesArray2D(xiSize, etaSize);
-        ValuesArray2D latitudeValues = new ValuesArray2D(xiSize, etaSize);
+        ValuesArray2D longitudeValuesInEDALFormat = new ValuesArray2D(xiSize, etaSize);
+        ValuesArray2D latitudeValuesInEDALFormat = new ValuesArray2D(xiSize, etaSize);
         for (int i = 0; i < longitudeData.getSize(); i++) {
             int m = i % etaSize;
             int n = i / etaSize;
             int[] coords = new int[] { n, m };
-            longitudeValues.set(longitudeData.getDouble(i), coords);
-            latitudeValues.set(latitudeData.getDouble(i), coords);
+            longitudeValuesInEDALFormat.set(longitudeData.getDouble(i), coords);
+            latitudeValuesInEDALFormat.set(latitudeData.getDouble(i), coords);
         }
-        assertEquals(longitudeData.getDouble(etaSize), longitudeValues.get(1, 0).doubleValue(),
-                delta);
-        assertEquals(latitudeData.getDouble(etaSize * 2), latitudeValues.get(2, 0).doubleValue(),
-                delta);
+        assertEquals(longitudeData.getDouble(etaSize), longitudeValuesInEDALFormat.get(1, 0)
+                .doubleValue(), delta);
+        assertEquals(latitudeData.getDouble(etaSize * 2), latitudeValuesInEDALFormat.get(2, 0)
+                .doubleValue(), delta);
 
-        CurvilinearCoords cCoords = new CurvilinearCoords(longitudeValues, latitudeValues);
+        CurvilinearCoords cCoords = new CurvilinearCoords(longitudeValuesInEDALFormat,
+                latitudeValuesInEDALFormat);
 
         BoundingBox expectedBbox = dataset.getVariableMetadata("allx_u").getHorizontalDomain()
                 .getBoundingBox();
 
         assertEquals(expectedBbox, cCoords.getBoundingBox());
-        assertEquals(longitudeData.getSize(), longitudeValues.size());
+        assertEquals(longitudeData.getSize(), longitudeValuesInEDALFormat.size());
         assertEquals(etaSize, cCoords.getNi());
         assertEquals(xiSize, cCoords.getNj());
 
