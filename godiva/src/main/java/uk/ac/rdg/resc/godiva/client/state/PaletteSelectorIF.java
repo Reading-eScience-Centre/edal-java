@@ -30,6 +30,8 @@ package uk.ac.rdg.resc.godiva.client.state;
 
 import java.util.List;
 
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
+
 import com.google.gwt.user.client.ui.IsWidget;
 
 /**
@@ -194,9 +196,22 @@ public interface PaletteSelectorIF extends IsWidget {
      *            The colour to display for missing data
      */
     public void setNoDataColour(String noDataColour);
-    
+
     /**
      * @return The colour to display for missing data
      */
     public String getNoDataColour();
+
+    /**
+     * Setting this allows the {@link PaletteSelectorIF} to work in different
+     * units to those used by the server. For example a client may always want
+     * to treat temperatures as degrees Celcius regardless of what the WMS
+     * server says.
+     * 
+     * @param converter
+     *            The {@link UnitConverter} to use for converting display units
+     *            to the underlying units used on the WMS server. Set to
+     *            <code>null</code> to use the WMS native units
+     */
+    public void setUnitConverter(UnitConverter converter);
 }

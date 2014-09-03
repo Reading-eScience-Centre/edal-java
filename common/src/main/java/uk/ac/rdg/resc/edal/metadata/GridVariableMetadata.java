@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
+import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -35,7 +36,7 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 /**
  * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
  * This is used to ensure that {@link VariableMetadata} supplied to
- * {@link GridDataset}s have gridded domains, but it will not be used to
+ * {@link AbstractGridDataset}s have gridded domains, but it will not be used to
  * constrain any return types (which are all just {@link VariableMetadata})
  * 
  * @author Guy

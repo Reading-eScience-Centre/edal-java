@@ -34,7 +34,7 @@ package uk.ac.rdg.resc.edal.util;
  * 
  * @author Guy Griffiths
  */
-public final class GridCoordinates2D {
+public final class GridCoordinates2D{
     private int x;
     private int y;
 

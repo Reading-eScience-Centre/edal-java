@@ -125,9 +125,9 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     private transient Array<GridCell2D> domainObjs = null;
 
     /**
-     * The GridCoordSystem must have one-dimensional x and y coordinate axes
-     * 
      * @param coordSys
+     *            This {@link GridCoordSystem} must have one-dimensional x and y
+     *            coordinate axes
      */
     public CdmTransformedGrid(GridCoordSystem coordSys) {
         proj = coordSys.getProjection();

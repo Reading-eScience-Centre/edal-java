@@ -210,7 +210,7 @@ public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> ext
     /**
      * Returns the difference between the supplied values. This is so that
      * certain methods can be abstracted without worrying about non-trivial
-     * difference calculation (e.g. {@link TimePosition}s)
+     * difference calculation (e.g. {@link DateTime}s)
      * 
      * @param pos1
      *            the first value

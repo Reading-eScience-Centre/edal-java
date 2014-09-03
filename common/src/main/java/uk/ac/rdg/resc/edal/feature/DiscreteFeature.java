@@ -54,7 +54,7 @@ public interface DiscreteFeature<P, DO> extends Feature<P> {
      * (from {@link DiscreteDomain#getDomainObjects()}).
      * 
      * @param paramId
-     *            The identifier from the {@link #getParameterIds()  set of 
+     *            The identifier from the {@link #getParameterIds()}  set of 
      *            parameter IDs.
      * @return the list of values for the requested member
      */

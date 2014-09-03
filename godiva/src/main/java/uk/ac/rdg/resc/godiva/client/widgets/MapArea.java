@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.godiva.client.widgets;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
@@ -65,6 +66,7 @@ import org.gwtopenmaps.openlayers.client.util.JSObject;
 import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
@@ -148,6 +150,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     protected WMSGetFeatureInfo getFeatureInfo;
     protected EditingToolbar editingToolbar;
     protected String proxyUrl;
+    
+    /** Map of unit conversions to be applied to each layer */
+    protected java.util.Map<String, UnitConverter> converters;
 
     public MapArea(int width, int height, final GodivaActionsHandler godivaListener, String proxyUrl) {
         super(width + "px", height + "px", getDefaultMapOptions());
@@ -159,6 +164,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
 
         wmsLayers = new LinkedHashMap<String, WmsDetails>();
+        converters = new HashMap<String, UnitConverter>();
 
         /*
          * Define some listeners to handle layer start/end loading events
@@ -482,7 +488,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 final DialogBox pop = new DialogBoxWithCloseButton(MapArea.this);
                 pop.setPopupPosition(x, y);
                 try {
-                    featureInfo = processFeatureInfo(eventObject.getText());
+                    featureInfo = processFeatureInfo(eventObject.getText(), converters.get(layerId));
                 } catch (Exception e) {
                     e.printStackTrace();
                     /*
@@ -533,7 +539,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             + mapYClick + "&STYLES=default/default"
                             + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
                             + ((timeStr != null) ? ("&TIME=" + timeStr) : "") + "&VERSION=1.1.1";
-                    Anchor profilePlot = new Anchor("Vertical Profile Plot (" + wmsUrl + ")");
+                    Anchor profilePlot = new Anchor("Vertical Profile Plot");
                     profilePlot.addClickHandler(new ClickHandler() {
                         @Override
                         public void onClick(ClickEvent event) {
@@ -785,6 +791,19 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
     }
 
+    /**
+     * Sets a {@link UnitConverter} for a specified layer. This will allow
+     * GetFeatureInfo requests to display the correct value
+     * 
+     * @param layerId
+     *            The internal layer to apply the conversion to
+     * @param converter
+     *            The {@link UnitConverter} to use
+     */
+    public void setUnitConverter(String layerId, UnitConverter converter) {
+        converters.put(layerId, converter);
+    }
+
     public String getBaseLayerUrl() {
         return baseUrlForExport;
     }
@@ -803,8 +822,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     protected void addBaseLayers() {
+
         WMS naturalEarth;
         WMS blueMarble;
+        WMS demis;
 
         WMS naturalEarthNP;
         WMS naturalEarthSP;
@@ -836,6 +857,18 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         blueMarble.addLayerLoadStartListener(loadStartListener);
         blueMarble.addLayerLoadEndListener(loadEndListener);
         blueMarble.setIsBaseLayer(true);
+
+        wmsParams = new WMSParams();
+        wmsParams
+                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
+                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+        wmsParams.setFormat("image/png");
+
+        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
+                wmsOptions);
+        demis.setIsBaseLayer(true);
+        demis.addLayerLoadStartListener(loadStartListener);
+        demis.addLayerLoadEndListener(loadEndListener);
 
         Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
         double halfSideLength = (polarMaxExtent.getUpperRightY() - polarMaxExtent.getLowerLeftY())
@@ -892,6 +925,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
         map.addLayer(naturalEarth);
         map.addLayer(blueMarble);
+        map.addLayer(demis);
         map.addLayer(naturalEarthNP);
         map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleNP);
@@ -931,7 +965,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     protected WMSOptions getOptionsForCurrentProjection() {
         if (currentProjection.equalsIgnoreCase("EPSG:32661")
-                || currentProjection.equalsIgnoreCase("EPSG:32761")) {
+                || currentProjection.equalsIgnoreCase("EPSG:32761")
+                || currentProjection.equalsIgnoreCase("EPSG:5041")
+                || currentProjection.equalsIgnoreCase("EPSG:5042")) {
             return wmsPolarOptions;
         } else {
             return wmsStandardOptions;
@@ -949,7 +985,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         }
     }
 
-    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text) {
+    protected FeatureInfoMessageAndFeatureIds processFeatureInfo(String text, UnitConverter converter) {
         Document featureInfo = XMLParser.parse(text);
         double lon = Double.parseDouble(featureInfo.getElementsByTagName("longitude").item(0)
                 .getChildNodes().item(0).getNodeValue());
@@ -1000,19 +1036,23 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             if (featureInfoNode != null) {
                 String id = null;
                 String time = null;
-                String value = null;
+                String valueStr = null;
                 for (int j = 0; j < featureInfoNode.getLength(); j++) {
                     Node child = featureInfoNode.item(j);
                     if (child.getNodeName().equalsIgnoreCase("time")) {
                         time = child.getFirstChild().getNodeValue();
                     } else if (child.getNodeName().equalsIgnoreCase("value")) {
-                        value = child.getFirstChild().getNodeValue();
+                        valueStr = child.getFirstChild().getNodeValue();
                         /*
                          * This is probably a number. Parse it as if it is, but
                          * ignore any errors
                          */
                         try {
-                            value = FORMATTER.format(Double.parseDouble(value));
+                            float value = Float.parseFloat(valueStr);
+                            if(converter != null) {
+                                value = converter.convertToDisplayUnit(value);
+                            }
+                            valueStr = FORMATTER.format(value);
                         } catch (Exception e) {
                             /*
                              * Ignore, we'll just use the string value as-is.
@@ -1022,15 +1062,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         id = child.getFirstChild().getNodeValue();
                     }
                 }
-                if (value != null) {
+                if (valueStr != null) {
                     if (id != null) {
                         html.append("<tr><td><b>Feature:</b></td><td>" + id);
                     }
                     if (time != null) {
                         html.append("<tr><td><b>Time:</b></td><td>" + time + "</td></tr>");
                     }
-                    value = value.replaceAll(";", "<br/>");
-                    html.append("<tr><td><b>Value:</b></td><td>" + value + "</td></tr>");
+                    valueStr = valueStr.replaceAll(";", "<br/>");
+                    html.append("<tr><td><b>Value:</b></td><td>" + valueStr + "</td></tr>");
                 }
                 /*
                  * Now process any arbitrary properties

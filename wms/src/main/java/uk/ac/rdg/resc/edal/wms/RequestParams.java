@@ -32,6 +32,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.servlet.http.HttpServletRequest;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 
@@ -40,7 +43,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
  * not case sensitive.
  * 
  * @author Jon Blower
- * @author Guy
+ * @author Guy Griffiths
  */
 public class RequestParams {
     private Map<String, String> paramMap = new HashMap<String, String>();
@@ -50,6 +53,12 @@ public class RequestParams {
      * and values (normally gained from HttpServletRequest.getParameterMap()).
      * The Map matches parameter names (Strings) to parameter values (String
      * arrays).
+     * 
+     * @param httpRequestParamMap
+     *            The {@link Map} to generate request values from. This is
+     *            unparameterised, since it most often comes from
+     *            {@link HttpServletRequest#getParameterMap()}, which is
+     *            unparameterised
      */
     public RequestParams(Map<?, ?> httpRequestParamMap) {
         @SuppressWarnings("unchecked")
@@ -68,12 +77,42 @@ public class RequestParams {
             }
         }
     }
+    
+    private RequestParams() {}
+
+    /**
+     * Create a new {@link RequestParams} from this one, merging in new values
+     * 
+     * @param mergeParameters
+     *            The new values to merge in
+     * @return A new instance of {@link RequestParams} containing these
+     *         parameters plus the required new ones. In the case of a name
+     *         conflict existing parameters will be overwritten by the merged
+     *         ones.
+     */
+    public RequestParams mergeParameters(Map<String, String> mergeParameters) {
+        RequestParams ret = new RequestParams();
+        ret.paramMap = paramMap;
+        
+        for (String name : mergeParameters.keySet()) {
+            String value = mergeParameters.get(name);
+            try {
+                String key = URLDecoder.decode(name.trim(), "UTF-8").toLowerCase();
+                value = URLDecoder.decode(value.trim(), "UTF-8");
+                ret.paramMap.put(key, value);
+            } catch (UnsupportedEncodingException uee) {
+                /* Shouldn't happen: UTF-8 should always be supported */
+                throw new AssertionError(uee);
+            }
+        }
+        return ret;
+    }
 
     /**
      * Returns the value of the parameter with the given name as a String, or
-     * null if the parameter does not have a value. This method is not sensitive
-     * to the case of the parameter name. Use getWmsVersion() to get the
-     * requested WMS version.
+     * <code>null</code> if the parameter does not have a value. This method is
+     * not sensitive to the case of the parameter name. Use getWmsVersion() to
+     * get the requested WMS version.
      */
     public String getString(String paramName) {
         return paramMap.get(paramName.toLowerCase());
@@ -216,6 +255,15 @@ public class RequestParams {
             throw new EdalException("Parameter " + paramName.toUpperCase()
                     + " must be a valid floating-point number");
         }
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder("Request Parameters:\n");
+        for(Entry<String, String> param : paramMap.entrySet()) {
+            ret.append("\t"+param.getKey()+": "+param.getValue()+"\n");
+        }
+        return ret.toString();
     }
 
 }

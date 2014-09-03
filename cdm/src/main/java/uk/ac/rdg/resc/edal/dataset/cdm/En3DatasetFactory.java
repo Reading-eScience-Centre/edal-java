@@ -779,8 +779,6 @@ public final class En3DatasetFactory extends DatasetFactory {
                     throw new DataReadingException("Problem reading EN3 profile data", e);
                 } catch (InvalidRangeException e) {
                     throw new DataReadingException("Problem reading EN3 profile data", e);
-                } catch (EdalException e) {
-                    throw new DataReadingException("Problem reading EN3 profile data", e);
                 } finally {
                     if (nc != null) {
                         try {

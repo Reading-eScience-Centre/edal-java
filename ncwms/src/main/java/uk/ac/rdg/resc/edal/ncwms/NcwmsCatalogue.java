@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.ncwms;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,9 +41,13 @@ import javax.xml.bind.JAXBException;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.ncwms.config.NcwmsConfig;
 import uk.ac.rdg.resc.edal.ncwms.config.NcwmsConfig.DatasetStorage;
 import uk.ac.rdg.resc.edal.ncwms.config.NcwmsDataset;
+import uk.ac.rdg.resc.edal.ncwms.config.NcwmsDynamicService;
 import uk.ac.rdg.resc.edal.ncwms.config.NcwmsVariable;
 import uk.ac.rdg.resc.edal.wms.WmsCatalogue;
 import uk.ac.rdg.resc.edal.wms.WmsLayerMetadata;
@@ -68,6 +73,8 @@ public class NcwmsCatalogue extends WmsCatalogue implements DatasetStorage {
         this.config = config;
         this.config.setDatasetLoadedHandler(this);
         this.config.loadDatasets();
+        
+        setCache(config.getCacheSettings());
     }
 
     /**
@@ -184,27 +191,72 @@ public class NcwmsCatalogue extends WmsCatalogue implements DatasetStorage {
 
     @Override
     public Dataset getDatasetFromId(String datasetId) {
-        return datasets.get(datasetId);
+        if (datasets.containsKey(datasetId)) {
+            return datasets.get(datasetId);
+        } else {
+            /*
+             * Check to see if we have a dynamic service defined which this dataset ID can map to
+             */
+            NcwmsDynamicService dynamicService = getDynamicServiceFromLayerName(datasetId);
+            if (dynamicService == null || dynamicService.isDisabled()) {
+                return null;
+            }
+            String datasetPath = datasetId.substring(dynamicService.getAlias().length());
+
+            /*
+             * Check if we allow this path or if it is disallowed by the dynamic
+             * dataset regex
+             */
+            if (!dynamicService.getIdMatchPattern().matcher(datasetPath).matches()) {
+                return null;
+            }
+
+            String datasetUrl = dynamicService.getServicePath() + datasetPath;
+
+            String title = datasetId;
+            while (title.startsWith("/") && title.length() > 0)
+                title = title.substring(1);
+
+            try {
+                DatasetFactory datasetFactory = DatasetFactory.forName(dynamicService
+                        .getDataReaderClass());
+                Dataset dynamicDataset = datasetFactory.createDataset("dynamic", datasetUrl);
+                return dynamicDataset;
+            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException
+                    | IOException | EdalException e) {
+                /*
+                 * TODO log error
+                 */
+                return null;
+            }
+
+        }
     }
 
     @Override
     public Dataset getDatasetFromLayerName(String layerName) throws EdalLayerNotFoundException {
-        String[] layerParts = layerName.split("/");
-        if (layerParts.length != 2) {
+        int finalSlashIndex = layerName.lastIndexOf("/");
+        if (finalSlashIndex < 0) {
             throw new EdalLayerNotFoundException(
                     "The WMS layer name is malformed.  It should be of the form \"dataset/variable\"");
         }
-        return datasets.get(layerParts[0]);
+        String datasetId = layerName.substring(0, finalSlashIndex);
+        Dataset dataset = getDatasetFromId(datasetId);
+        if (dataset == null) {
+            throw new EdalLayerNotFoundException("The dataset given in the layer name " + layerName
+                    + " does not exist");
+        }
+        return dataset;
     }
 
     @Override
     public String getVariableFromId(String layerName) throws EdalLayerNotFoundException {
-        String[] layerParts = layerName.split("/");
-        if (layerParts.length != 2) {
+        int finalSlashIndex = layerName.lastIndexOf("/");
+        if (finalSlashIndex < 0) {
             throw new EdalLayerNotFoundException(
                     "The WMS layer name is malformed.  It should be of the form \"dataset/variable\"");
         }
-        return layerParts[1];
+        return layerName.substring(finalSlashIndex+1);
     }
 
     @Override
@@ -215,9 +267,34 @@ public class NcwmsCatalogue extends WmsCatalogue implements DatasetStorage {
     @Override
     public WmsLayerMetadata getLayerMetadata(final String layerName)
             throws EdalLayerNotFoundException {
-        if (!layerMetadata.containsKey(layerName)) {
-            throw new EdalLayerNotFoundException("The layer: " + layerName + " doesn't exist");
+        if (layerMetadata.containsKey(layerName)) {
+            return layerMetadata.get(layerName);
+        } else {
+            /*
+             * We don't have any stored metadata, but there may be a dynamic
+             * dataset.
+             */
+            NcwmsDynamicService dynamicService = getDynamicServiceFromLayerName(layerName);
+            if (dynamicService == null) {
+                throw new EdalLayerNotFoundException("The layer: " + layerName + " doesn't exist");
+            }
+            /*
+             * We have a dynamic dataset. Return sensible defaults
+             */
+            NcwmsVariable metadata = new NcwmsVariable(layerName.substring(layerName
+                    .lastIndexOf("/")), null, ColourPalette.DEFAULT_PALETTE_NAME, null, null,
+                    new Color(0, true), "linear", 250);
+            return metadata;
         }
-        return layerMetadata.get(layerName);
+    }
+
+    private NcwmsDynamicService getDynamicServiceFromLayerName(String layerName) {
+        NcwmsDynamicService dynamicService = null;
+        for (NcwmsDynamicService testDynamicService : config.getDynamicServices()) {
+            if (layerName.startsWith(testDynamicService.getAlias())) {
+                dynamicService = testDynamicService;
+            }
+        }
+        return dynamicService;
     }
 }

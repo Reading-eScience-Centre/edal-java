@@ -1,11 +1,32 @@
+/*******************************************************************************
+ * Copyright (c) 2014 The University of Reading
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University of Reading, nor the names of the
+ *    authors or contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
 package uk.ac.rdg.resc.edal.dataset;
 
-/**
- * Test Class for {@link PRTreeFeatureIndexer}.
- * Only for {@link PRTreeFeatureIndexer#getgetAllFeatureIds} and
- * {@link PRTreeFeatureIndexer#findFeatureIds} methods as others are
- * simple.
- */
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -28,6 +49,14 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
+/**
+ * Test class for {@link PRTreeFeatureIndexer}. For
+ * {@link PRTreeFeatureIndexer#getAllFeatureIds} and
+ * {@link PRTreeFeatureIndexer#findFeatureIds} methods only as others are
+ * simple.
+ * 
+ * @author Nan Lin
+ */
 public class PRTreeFeatureIndexerTest {
     // points number on the longitude side
     private static final int xSize = 350;
@@ -50,6 +79,9 @@ public class PRTreeFeatureIndexerTest {
     private ArrayList<FeatureIndexer.FeatureBounds> features = new ArrayList<>();
     private PRTreeFeatureIndexer featureindexer = new PRTreeFeatureIndexer();
 
+    /**
+     * Initialize the testing environment.
+     */
     @Before
     public void setUp() {
         // initialize the horizontal grid with depth and time extents
@@ -90,6 +122,9 @@ public class PRTreeFeatureIndexerTest {
         featureindexer.addFeatures(features);
     }
 
+    /**
+     * Test {@link PRTreeFeatureIndexer#getAllFeatureIds}.
+     */
     @Test
     public void testgetAllFeatureIds() {
         HashSet<String> expectedIDs = new HashSet<>();
@@ -103,6 +138,9 @@ public class PRTreeFeatureIndexerTest {
         assertEquals(expectedIDs, featureindexer.getAllFeatureIds());
     }
 
+    /**
+     * Test {@link PRTreeFeatureIndexer#findFeatureIds}.
+     */
     @Test
     public void testFindFeatureIds() {
         // variables that we are interested
@@ -125,8 +163,11 @@ public class PRTreeFeatureIndexerTest {
         // both verticalExtent and timeExtent set to null
         findFeatureIds(bbox, null, null, fIDs);
 
-        // a verticalExtent intersect with the verticalExtent of the test
-        // dataset
+        /*
+         * a verticalExtent intersect with the verticalExtent of the test
+         * dataset.
+         */
+
         Extent<Double> vExtent = Extents.newExtent(-20.4, 102.5);
 
         // a timeExtent intersect with the timeExtent of the test dataset
@@ -153,7 +194,8 @@ public class PRTreeFeatureIndexerTest {
      *            timeExtent of the feature that users are interested
      * @param variableIds
      *            names of the features that users are interested
-     * */
+     * 
+     */
     private void findFeatureIds(BoundingBox bbox, Extent<Double> verticalExtent,
             Extent<DateTime> timeExtent, Collection<String> variableIds) {
         Collection<String> results = featureindexer.findFeatureIds(bbox, verticalExtent,

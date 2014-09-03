@@ -3,6 +3,7 @@ target/
 .classpath
 .project
 .settings/
+.metadata/
 *.log
 .h2/
 gwt-unitCache/
@@ -12,3 +13,5 @@ ncwms/src/main/webapp/godiva3/
 ncwms/src/main/webapp/WEB-INF/deploy/
 
 graphics/dependency-reduced-pom.xml
+/pom-backup.xml
+/pom.xml.bak

@@ -48,15 +48,17 @@ import org.joda.time.DurationField;
  * "weekyear" (the year that "owns" a given week) is not implemented.
  * </p>
  * <p>
- * Instances of this class can only be created in {@link DateTimeZone#UTC}.
- * (Support for time zones makes little sense in this chronology).
+ * Instances of this class can only be created in UTC. (Support for time zones
+ * makes little sense in this chronology).
  * </p>
  * <p>
  * Instances of this class are immutable.
  * </p>
  * 
  * @author Jon
- * @see http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.4/cf-conventions.html#calendar
+ * @see <a
+ *      href="http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.4/cf-conventions.html#calendar">CF
+ *      conventions</a>
  */
 public class FixedYearVariableMonthChronology extends FixedYearLengthChronology {
 

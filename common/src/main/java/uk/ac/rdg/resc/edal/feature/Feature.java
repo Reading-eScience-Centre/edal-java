@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Domain;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 
@@ -48,9 +49,8 @@ import uk.ac.rdg.resc.edal.metadata.Parameter;
  */
 public interface Feature<P> {
     /**
-     * @return an identifier that is unique within the
-     *         {@link #getFeatureCollection() feature collection to which this
-     *         feature belongs}. Must never be null.
+     * @return an identifier that is unique within the {@link Dataset} to which
+     *         this feature belongs. Must never be <code>null</code>.
      */
     public String getId();
 

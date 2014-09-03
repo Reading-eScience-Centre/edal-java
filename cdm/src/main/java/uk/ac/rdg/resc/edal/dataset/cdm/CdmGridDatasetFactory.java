@@ -416,131 +416,144 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
      */
     private NetcdfDataset openAndAggregateDataset(String location) throws IOException,
             EdalException {
-        List<File> files = null;
-        try {
-            files = CdmUtils.expandGlobExpression(location);
-        } catch (NullPointerException e) {
-            System.out.println("NPE processing location: " + location);
-            throw e;
-        }
         NetcdfDataset nc;
-        if (files.size() == 0) {
-            throw new EdalException("The location " + location
-                    + " doesn't refer to any existing files.");
-        }
-        if (files.size() == 1) {
-            location = files.get(0).getAbsolutePath();
+        if (location.startsWith("dods://") || location.startsWith("http://")) {
+            /*
+             * We have a remote dataset
+             */
             nc = CdmUtils.openDataset(location);
         } else {
             /*
-             * We have multiple files in a glob expression. We write some NcML
-             * and use the NetCDF aggregation libs to parse this into an
-             * aggregated dataset.
-             * 
-             * If we have already generated the ncML on a previous call, just
-             * use that.
+             * We have a local dataset
              */
-            if (ncmlString == null) {
-                /*
-                 * Find the name of the time dimension
-                 */
-                NetcdfDataset first = openAndAggregateDataset(files.get(0).getAbsolutePath());
-                String timeDimName = null;
-                for (Variable var : first.getVariables()) {
-                    if (var.isCoordinateVariable()) {
-                        for (Attribute attr : var.getAttributes()) {
-                            if (attr.getFullName().equalsIgnoreCase("units")
-                                    && attr.getStringValue().contains(" since ")) {
-                                /*
-                                 * This is the time dimension. Since this is a
-                                 * co-ordinate variable, there is only 1
-                                 * dimension
-                                 */
-                                Dimension timeDimension = var.getDimension(0);
-                                timeDimName = timeDimension.getFullName();
-                            }
-                        }
-                    }
-                }
-                first.close();
-                if (timeDimName == null) {
-                    throw new EdalException("Cannot join multiple files without time dimensions");
-                }
-                /*
-                 * We can't assume that the glob expression will have returned
-                 * the files in time order.
-                 * 
-                 * We could assume that alphabetical == time ordered (and for
-                 * properly named files it will - but let's not rely on our
-                 * users having sensible naming conventions...
-                 * 
-                 * Sort the list using a comparator which opens the file and
-                 * gets the first value of the time dimension
-                 */
-                final String aggDimName = timeDimName;
-                Collections.sort(files, new Comparator<File>() {
-                    @Override
-                    public int compare(File ncFile1, File ncFile2) {
-                        NetcdfFile nc1 = null;
-                        NetcdfFile nc2 = null;
-                        try {
-                            nc1 = NetcdfFile.open(ncFile1.getAbsolutePath());
-                            nc2 = NetcdfFile.open(ncFile2.getAbsolutePath());
-                            Variable timeVar1 = nc1.findVariable(aggDimName);
-                            Variable timeVar2 = nc2.findVariable(aggDimName);
-                            long time1 = timeVar1.read().getLong(0);
-                            long time2 = timeVar2.read().getLong(0);
-                            return Long.compare(time1, time2);
-                        } catch (Exception e) {
-                            /*
-                             * There was a problem reading the data. Sort
-                             * alphanumerically by filename and hope for the
-                             * best...
-                             * 
-                             * This catches all exceptions because however it
-                             * fails this is still our best option.
-                             * 
-                             * If the error is a genuine problem, it'll show up
-                             * as soon as we try and aggregate.
-                             */
-                            return ncFile1.getAbsolutePath().compareTo(ncFile2.getAbsolutePath());
-                        } finally {
-                            if (nc1 != null) {
-                                try {
-                                    nc1.close();
-                                } catch (IOException e) {
-                                    log.error("Problem closing netcdf file", e);
-                                }
-                            }
-                            if (nc2 != null) {
-                                try {
-                                    nc2.close();
-                                } catch (IOException e) {
-                                    log.error("Problem closing netcdf file", e);
-                                }
-                            }
-                        }
-                    }
-                });
-
-                /*
-                 * Now create the NcML string and use it to create an aggregated
-                 * dataset
-                 */
-                StringBuffer ncmlStringBuffer = new StringBuffer();
-                ncmlStringBuffer
-                        .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
-                ncmlStringBuffer
-                        .append("<aggregation dimName=\"" + timeDimName + "\" type=\"joinExisting\">");
-                for (File file : files) {
-                    ncmlStringBuffer.append("<netcdf location=\"" + file.getAbsolutePath() + "\"/>");
-                }
-                ncmlStringBuffer.append("</aggregation>");
-                ncmlStringBuffer.append("</netcdf>");
-                
-                ncmlString = ncmlStringBuffer.toString();
+            List<File> files = null;
+            try {
+                files = CdmUtils.expandGlobExpression(location);
+            } catch (NullPointerException e) {
+                System.out.println("NPE processing location: " + location);
+                throw e;
             }
-            nc = NcMLReader.readNcML(new StringReader(ncmlString), null);
+            if (files.size() == 0) {
+                throw new EdalException("The location " + location
+                        + " doesn't refer to any existing files.");
+            }
+            if (files.size() == 1) {
+                location = files.get(0).getAbsolutePath();
+                nc = CdmUtils.openDataset(location);
+            } else {
+                /*
+                 * We have multiple files in a glob expression. We write some
+                 * NcML and use the NetCDF aggregation libs to parse this into
+                 * an aggregated dataset.
+                 * 
+                 * If we have already generated the ncML on a previous call,
+                 * just use that.
+                 */
+                if (ncmlString == null) {
+                    /*
+                     * Find the name of the time dimension
+                     */
+                    NetcdfDataset first = openAndAggregateDataset(files.get(0).getAbsolutePath());
+                    String timeDimName = null;
+                    for (Variable var : first.getVariables()) {
+                        if (var.isCoordinateVariable()) {
+                            for (Attribute attr : var.getAttributes()) {
+                                if (attr.getFullName().equalsIgnoreCase("units")
+                                        && attr.getStringValue().contains(" since ")) {
+                                    /*
+                                     * This is the time dimension. Since this is
+                                     * a co-ordinate variable, there is only 1
+                                     * dimension
+                                     */
+                                    Dimension timeDimension = var.getDimension(0);
+                                    timeDimName = timeDimension.getFullName();
+                                }
+                            }
+                        }
+                    }
+                    first.close();
+                    if (timeDimName == null) {
+                        throw new EdalException(
+                                "Cannot join multiple files without time dimensions");
+                    }
+                    /*
+                     * We can't assume that the glob expression will have
+                     * returned the files in time order.
+                     * 
+                     * We could assume that alphabetical == time ordered (and
+                     * for properly named files it will - but let's not rely on
+                     * our users having sensible naming conventions...
+                     * 
+                     * Sort the list using a comparator which opens the file and
+                     * gets the first value of the time dimension
+                     */
+                    final String aggDimName = timeDimName;
+                    Collections.sort(files, new Comparator<File>() {
+                        @Override
+                        public int compare(File ncFile1, File ncFile2) {
+                            NetcdfFile nc1 = null;
+                            NetcdfFile nc2 = null;
+                            try {
+                                nc1 = NetcdfFile.open(ncFile1.getAbsolutePath());
+                                nc2 = NetcdfFile.open(ncFile2.getAbsolutePath());
+                                Variable timeVar1 = nc1.findVariable(aggDimName);
+                                Variable timeVar2 = nc2.findVariable(aggDimName);
+                                long time1 = timeVar1.read().getLong(0);
+                                long time2 = timeVar2.read().getLong(0);
+                                return Long.compare(time1, time2);
+                            } catch (Exception e) {
+                                /*
+                                 * There was a problem reading the data. Sort
+                                 * alphanumerically by filename and hope for the
+                                 * best...
+                                 * 
+                                 * This catches all exceptions because however
+                                 * it fails this is still our best option.
+                                 * 
+                                 * If the error is a genuine problem, it'll show
+                                 * up as soon as we try and aggregate.
+                                 */
+                                return ncFile1.getAbsolutePath().compareTo(
+                                        ncFile2.getAbsolutePath());
+                            } finally {
+                                if (nc1 != null) {
+                                    try {
+                                        nc1.close();
+                                    } catch (IOException e) {
+                                        log.error("Problem closing netcdf file", e);
+                                    }
+                                }
+                                if (nc2 != null) {
+                                    try {
+                                        nc2.close();
+                                    } catch (IOException e) {
+                                        log.error("Problem closing netcdf file", e);
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    /*
+                     * Now create the NcML string and use it to create an
+                     * aggregated dataset
+                     */
+                    StringBuffer ncmlStringBuffer = new StringBuffer();
+                    ncmlStringBuffer
+                            .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
+                    ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName
+                            + "\" type=\"joinExisting\">");
+                    for (File file : files) {
+                        ncmlStringBuffer.append("<netcdf location=\"" + file.getAbsolutePath()
+                                + "\"/>");
+                    }
+                    ncmlStringBuffer.append("</aggregation>");
+                    ncmlStringBuffer.append("</netcdf>");
+
+                    ncmlString = ncmlStringBuffer.toString();
+                }
+                nc = NcMLReader.readNcML(new StringReader(ncmlString), null);
+            }
         }
 
         return nc;

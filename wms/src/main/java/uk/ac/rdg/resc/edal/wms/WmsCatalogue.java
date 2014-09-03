@@ -53,6 +53,18 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
+import net.sf.ehcache.config.Configuration;
+import net.sf.ehcache.config.MemoryUnit;
+import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
+import net.sf.ehcache.config.SizeOfPolicyConfiguration;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -77,6 +89,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
+import uk.ac.rdg.resc.edal.wms.util.CacheInfo;
 import uk.ac.rdg.resc.edal.wms.util.ContactInfo;
 import uk.ac.rdg.resc.edal.wms.util.ServerInfo;
 import uk.ac.rdg.resc.edal.wms.util.StyleDef;
@@ -99,6 +112,11 @@ import uk.ac.rdg.resc.edal.wms.util.StyleDef;
  */
 public abstract class WmsCatalogue implements FeatureCatalogue {
     private static final Logger log = LoggerFactory.getLogger(WmsCatalogue.class);
+    protected static final String CACHE_NAME = "featureCache";
+
+    private boolean cachingEnabled = false;
+    private final CacheManager cacheManager;
+    private Cache featureCache = null;
 
     private SortedMap<String, StyleDef> styleDefs = new TreeMap<String, StyleDef>(
             new Comparator<String>() {
@@ -202,15 +220,117 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
         } catch (Exception e) {
             log.error("Problem processing styles on classpath", e);
         }
+
+        /*
+         * We are using an in-memory cache with a configured memory size (as
+         * opposed to a configured number of items in memory). This has the
+         * advantage that we will get a hard limit on the amount of memory the
+         * cache consumes. The disadvantage is that the size of each object
+         * needs to be calculated prior to inserting it into the cache.
+         * 
+         * The maxDepth property specified the maximum number of object
+         * references to count before a warning is given (we could also
+         * configure it to stop counting once the limit is reached, but this
+         * kind of defeats the whole point).
+         * 
+         * Now, we are generally caching 2 things:
+         * 
+         * 1) Gridded map features which will generally have 256*256 ~= 65,000
+         * values, but could easily be bigger
+         * 
+         * 2) Collections of point features. A year's worth of EN3 data could
+         * typically contain >15,000 features, each with a number of properties
+         * 
+         * These can need to count a very large number of object references.
+         * However, this calculation is actually pretty quick. Setting the max
+         * depth to 1,000,000 seems to suppress the vast majority of warnings,
+         * and doesn't impact performance noticeably.
+         */
+        cacheManager = CacheManager.create(new Configuration()
+                .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(1_000_000)));
+    }
+
+    /**
+     * Configures the cache used to store features
+     * 
+     * @param cacheConfig
+     *            The (new) configuration to use for the cache. Must not be
+     *            <code>null</code>
+     */
+    public void setCache(CacheInfo cacheConfig) {
+        int cacheSizeMB = cacheConfig.getInMemorySizeMB();
+        long lifetimeSeconds = (long) (cacheConfig.getElementLifetimeMinutes() * 60);
+        if (featureCache != null
+                && cachingEnabled == cacheConfig.isEnabled()
+                && cacheSizeMB == featureCache.getCacheConfiguration().getMaxBytesLocalHeap()
+                        / (1024 * 1024)
+                && lifetimeSeconds == featureCache.getCacheConfiguration().getTimeToLiveSeconds()) {
+            /*
+             * We are not changing anything about the cache.
+             */
+            return;
+        }
+
+        cachingEnabled = cacheConfig.isEnabled();
+
+        /*
+         * We are either disabling the cache or changing its size, so remove any
+         * existing one.
+         */
+        if (cacheManager.cacheExists(CACHE_NAME)) {
+            cacheManager.removeCache(CACHE_NAME);
+        }
+
+        if (cachingEnabled) {
+            /*
+             * Configure cache
+             */
+            CacheConfiguration config = new CacheConfiguration(CACHE_NAME, 0)
+                    .eternal(lifetimeSeconds == 0)
+                    .maxBytesLocalHeap(cacheSizeMB, MemoryUnit.MEGABYTES)
+                    .timeToLiveSeconds(lifetimeSeconds)
+                    .memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU)
+                    .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
+                    .transactionalMode(TransactionalMode.OFF);
+
+            /*
+             * If we already have a cache, we can assume that the configuration
+             * has changed, so we remove and re-add it.
+             */
+            featureCache = new Cache(config);
+            cacheManager.addCache(featureCache);
+        } else {
+            /*
+             * Nullify any existing cache to free up memory
+             */
+            featureCache = null;
+        }
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params)
             throws EdalException {
-        Dataset dataset = getDatasetFromLayerName(id);
         String variable = getVariableFromId(id);
-        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(
-                CollectionUtils.setOf(variable), params);
+        Collection<? extends DiscreteFeature<?, ?>> mapFeatures;
+        if (cachingEnabled) {
+            CacheKey key = new CacheKey(id, params);
+            Element element = featureCache.get(key);
+            if (element != null && element.getObjectValue() != null) {
+                /*
+                 * This is why we added the SuppressWarnings("unchecked").
+                 */
+                mapFeatures = (Collection<? extends DiscreteFeature<?, ?>>) element
+                        .getObjectValue();
+            } else {
+                Dataset dataset = getDatasetFromLayerName(id);
+                mapFeatures = dataset.extractMapFeatures(CollectionUtils.setOf(variable), params);
+                featureCache.put(new Element(key, mapFeatures));
+            }
+        } else {
+            Dataset dataset = getDatasetFromLayerName(id);
+            mapFeatures = dataset.extractMapFeatures(CollectionUtils.setOf(variable), params);
+        }
         return new FeaturesAndMemberName(mapFeatures, variable);
     }
 
@@ -649,7 +769,8 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      * 
      * @param datasetId
      *            The ID of the dataset
-     * @return The desired dataset
+     * @return The desired dataset, or <code>null</code> if it doesn't exist in
+     *         the catalogue
      */
     public abstract Dataset getDatasetFromId(String datasetId);
 
@@ -675,7 +796,7 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     /**
      * Returns the layer name based on the dataset and variable ID
      * 
-     * @param dataset
+     * @param datasetId
      *            The ID of dataset containing the layer
      * @param variableId
      *            The ID of the variable within the dataset
@@ -692,6 +813,48 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
      */
     public abstract WmsLayerMetadata getLayerMetadata(String layerName)
             throws EdalLayerNotFoundException;
+
+    private static class CacheKey {
+        final String id;
+        final PlottingDomainParams params;
+
+        public CacheKey(String id, PlottingDomainParams params) {
+            super();
+            this.id = id;
+            this.params = params;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((id == null) ? 0 : id.hashCode());
+            result = prime * result + ((params == null) ? 0 : params.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            CacheKey other = (CacheKey) obj;
+            if (id == null) {
+                if (other.id != null)
+                    return false;
+            } else if (!id.equals(other.id))
+                return false;
+            if (params == null) {
+                if (other.params != null)
+                    return false;
+            } else if (!params.equals(other.params))
+                return false;
+            return true;
+        }
+    }
 
     /**
      * This is an {@link ZipInputStream} which only gets closed once it's been

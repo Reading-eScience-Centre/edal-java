@@ -81,9 +81,7 @@ public interface LayerSelectorIF extends IsWidget {
     public List<String> getTitleElements();
 
     /**
-     * Gets the WMS URL of the currently selected layer
-     * 
-     * @return
+     * @return The WMS URL of the currently selected layer
      */
     public String getWmsUrl();
 }

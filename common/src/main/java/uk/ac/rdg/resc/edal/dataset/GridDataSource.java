@@ -37,9 +37,10 @@ import uk.ac.rdg.resc.edal.util.Array4D;
  * Low-level interface to multidimensional grids, used by
  * {@link DataReadingStrategy}.
  * 
- * @todo axis order issues: should we define that the returned Array must have
- *       the x axis varying fastest, irrespective of the ordering of the
- *       underlying data grid?  GG: Yes, probably...
+ * TODO axis order issues: should we define that the returned Array must have
+ * the x axis varying fastest, irrespective of the ordering of the underlying
+ * data grid? GG: Yes, probably...
+ * 
  * @author Jon
  * @author Guy
  */

@@ -60,7 +60,9 @@ import org.joda.time.field.PreciseDurationField;
  * </p>
  * 
  * @author Jon Blower
- * @see http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.4/cf-conventions.html#calendar
+ * @see <a
+ *      href="http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.4/cf-conventions.html#calendar">CF
+ *      conventions</a>
  */
 public final class ThreeSixtyDayChronology extends FixedYearLengthChronology {
 
