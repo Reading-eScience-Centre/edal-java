@@ -72,7 +72,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
  * 
  * @author Nan Lin
  */
-public class CurviLinearGridDatasetTest {
+public class CurvilinearGridDatasetTest {
     // accuracy value set for assert equal method for comparison.
     private static final double delta = 1e-5;
     private Dataset dataset;

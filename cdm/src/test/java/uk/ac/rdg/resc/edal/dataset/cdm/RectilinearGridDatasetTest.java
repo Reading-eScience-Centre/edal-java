@@ -90,7 +90,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  * 
  * @author Nan Lin
  * */
-public class RectiLinearGridDatasetTest {
+public class RectilinearGridDatasetTest {
     // the comparison accuracy parameter used by assert equal statement
     private static final double delta = 1e-5;
 

@@ -57,7 +57,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * 
  * @author Nan Lin
  * */
-public class MapDoaminImplTest {
+public class MapDomainTest {
     private MapDomain mapdomain;
     private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
 

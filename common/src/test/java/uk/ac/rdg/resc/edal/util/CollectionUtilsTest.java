@@ -44,7 +44,7 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
  * @author Nan
  * 
  */
-public class ColletionUtilsTest {
+public class CollectionUtilsTest {
     private static int SIZE = 100;
     private float[] floatData = new float[SIZE];
     private Float[] floatDataAsObject = new Float[SIZE];
