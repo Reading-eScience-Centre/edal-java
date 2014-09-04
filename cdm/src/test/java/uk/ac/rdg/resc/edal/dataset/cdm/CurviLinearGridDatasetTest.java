@@ -155,10 +155,6 @@ public class CurviLinearGridDatasetTest {
             longitudeValuesInEDALFormat.set(longitudeData.getDouble(i), coords);
             latitudeValuesInEDALFormat.set(latitudeData.getDouble(i), coords);
         }
-        assertEquals(longitudeData.getDouble(etaSize), longitudeValuesInEDALFormat.get(1, 0)
-                .doubleValue(), delta);
-        assertEquals(latitudeData.getDouble(etaSize * 2), latitudeValuesInEDALFormat.get(2, 0)
-                .doubleValue(), delta);
 
         CurvilinearCoords cCoords = new CurvilinearCoords(longitudeValuesInEDALFormat,
                 latitudeValuesInEDALFormat);
@@ -167,7 +163,6 @@ public class CurviLinearGridDatasetTest {
                 .getBoundingBox();
 
         assertEquals(expectedBbox, cCoords.getBoundingBox());
-        assertEquals(longitudeData.getSize(), longitudeValuesInEDALFormat.size());
         assertEquals(etaSize, cCoords.getNi());
         assertEquals(xiSize, cCoords.getNj());
 
