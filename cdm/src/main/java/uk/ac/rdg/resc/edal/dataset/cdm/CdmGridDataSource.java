@@ -194,14 +194,14 @@ final class CdmGridDataSource implements GridDataSource {
             if (xAxisIndex >= 0)
                 index.setDim(xAxisIndex, x);
 
-            float val = arr.getFloat(index);
+            double val = arr.getFloat(index);
             if (needsEnhance) {
-                val = (float) var.convertScaleOffsetMissing(val);
+                val = var.convertScaleOffsetMissing(val);
             }
             if (var.isMissing(val)) {
                 return null;
             }else{
-                return val;
+                return (float)  val;
             }
         }
 
