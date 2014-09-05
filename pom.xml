@@ -2,12 +2,6 @@
 <!-- Top-level POM for Java-CSML library -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <!-- We inherit from oss-parent so we can deploy to sonatype.org -->
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>uk.ac.rdg.resc</groupId>
     <version>1.0-SNAPSHOT</version>
@@ -22,7 +16,7 @@
     </properties>
 
     <packaging>pom</packaging>
-    <url>http://code.google.com/p/edal-java/</url>
+    <url>http://Reading-eScience-Centre.github.io/edal-java/</url>
     <inceptionYear>2010</inceptionYear>
     <description>EDAL (Environmental Data Abstraction Library) is a set of Java libararies that provide a consistent means for accessing and manipulating environmental data. The core concepts are based on the standards-compliant data model of the Climate Science Modelling Language.</description>
     <organization>
@@ -31,7 +25,7 @@
     </organization>
     <licenses>
         <license>
-            <url>http://edal-java.googlecode.com/hg/licence.txt</url>
+            <url>https://raw.githubusercontent.com/Reading-eScience-Centre/edal-java/master/licence.txt</url>
             <name>Modified BSD licence</name>
             <comments>Permits redistribution and use in source and binary form
             provided that the copyright notice is retained (see licence for
@@ -66,41 +60,15 @@
                 <version>2.5.1</version>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.2</version>
+                <extensions>true</extensions>
                 <configuration>
-                    <mavenExecutorId>forked-path</mavenExecutorId>
-                    <useReleaseProfile>true</useReleaseProfile>
+                    <serverId>edal-java-release</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <version>2.8.1</version>
-                <configuration>
-                    <docfilessubdirs>true</docfilessubdirs>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <version>2.2.1</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -110,21 +78,6 @@
                     <downloadJavadocs>true</downloadJavadocs>
                 </configuration>
                 <version>2.9</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.3</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.wagon</groupId>
-                        <artifactId>wagon-ssh</artifactId>
-                        <version>1.0</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <inputDirectory>${project.reporting.outputDirectory}/apidocs</inputDirectory>
-                </configuration>
             </plugin>
         </plugins>
         <pluginManagement>
@@ -158,19 +111,42 @@
     </build>
     <profiles>
         <profile>
-            <id>release-sign-artifacts</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <version>2.9.1</version>
+                        <configuration>
+                            <docfilessubdirs>true</docfilessubdirs>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <version>2.2.1</version>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.1</version>
+                        <version>1.5</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -203,8 +179,8 @@
         </profile>
     </profiles>
     <issueManagement>
-        <system>Google Code</system>
-        <url>http://code.google.com/p/edal-java/issues</url>
+        <system>Trac</system>
+        <url>http://www.resc.reading.ac.uk/trac/edal</url>
     </issueManagement>
     <reporting>
         <plugins>
