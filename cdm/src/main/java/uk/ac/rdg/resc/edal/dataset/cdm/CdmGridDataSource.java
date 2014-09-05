@@ -130,7 +130,7 @@ final class CdmGridDataSource implements GridDataSource {
         int[] shape = new int[] { (tmax - tmin + 1), (zmax - zmin + 1), (ymax - ymin + 1),
                 (xmax - xmin + 1) };
         WrappedArray wrappedArray = new WrappedArray(var, arr, needsEnhance, shape, rangesList);
-        
+
         return wrappedArray;
     }
 
@@ -149,13 +149,14 @@ final class CdmGridDataSource implements GridDataSource {
         private final int zAxisIndex;
         private final int tAxisIndex;
 
-        public WrappedArray(VariableDS var, Array arr, boolean needsEnhance, int[] shape, RangesList rangesList) {
+        public WrappedArray(VariableDS var, Array arr, boolean needsEnhance, int[] shape,
+                RangesList rangesList) {
             super(shape[0], shape[1], shape[2], shape[3]);
             this.var = var;
             this.arr = arr;
             this.needsEnhance = needsEnhance;
             this.shape = shape;
-            
+
             xAxisIndex = rangesList.getXAxisIndex();
             yAxisIndex = rangesList.getYAxisIndex();
             zAxisIndex = rangesList.getZAxisIndex();
@@ -176,7 +177,6 @@ final class CdmGridDataSource implements GridDataSource {
             int y = coords[2];
             int z = coords[1];
             int t = coords[0];
-            
 
             /*
              * Create a new index
@@ -198,10 +198,15 @@ final class CdmGridDataSource implements GridDataSource {
             if (needsEnhance) {
                 val = var.convertScaleOffsetMissing(val);
             }
-            if (var.isMissing(val)) {
+            if (isMissing(val)) {
+                /*
+                 * In NcML aggregations, there is a double/float overflow issue
+                 * which means that isMissing can return true in cases where it
+                 * should be false.
+                 */
                 return null;
-            }else{
-                return (float)  val;
+            } else {
+                return (float) val;
             }
         }
 
@@ -218,6 +223,46 @@ final class CdmGridDataSource implements GridDataSource {
         @Override
         public long size() {
             return shape[0] * shape[1] * shape[2] * shape[3];
+        }
+
+        /**
+         * Performs the same checks as {@link VariableDS#isMissing(double)}, but
+         * allows a tolerance of 1e-7 on the maximum and minimum values. This is
+         * because when using aggregations we have no underlying original
+         * variable. In these cases, the valid min/max get automatically
+         * enhanced as doubles, but the value gets enhanced as its underlying
+         * data type. If this is a float, then rounding errors can occur.
+         * 
+         * e.g. the valid max may be 1.0f, but 0.9999999776482582. The valid max
+         * is represented in the double form, but the value is represented in
+         * the floating point form is 1.0, which is greater than the valid max,
+         * even if in the underlying data they are equal.
+         * 
+         * @param val
+         *            The value to check
+         * @return Whether or not this should be considered missing data
+         */
+        private boolean isMissing(double val) {
+            if (Double.isNaN(val)) {
+                return true;
+            }
+            if (var.hasMissingValue() && var.isMissingValue(val)) {
+                return true;
+            } else if (var.hasFillValue() && var.isFillValue(val)) {
+                return true;
+            } else if (var.hasInvalidData()) {
+                if (var.getValidMax() != -Double.MAX_VALUE) {
+                    if (val > var.getValidMax() && (val - var.getValidMax()) > 1e-7) {
+                        return true;
+                    }
+                }
+                if (var.getValidMin() != Double.MAX_VALUE) {
+                    if (val < var.getValidMin() && (var.getValidMin() - val) > 1e-7) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }
