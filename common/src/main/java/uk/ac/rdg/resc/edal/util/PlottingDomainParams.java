@@ -42,13 +42,13 @@ public class PlottingDomainParams {
 
     final private BoundingBox bbox;
     final private HorizontalPosition targetPos;
-    
+
     final private Extent<Double> zExtent;
     final private Double targetZ;
 
     final private Extent<DateTime> tExtent;
     final private DateTime targetT;
-    
+
     private volatile RegularGrid imageGrid = null;
 
     public PlottingDomainParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
@@ -57,6 +57,32 @@ public class PlottingDomainParams {
         this.width = width;
         this.height = height;
         this.bbox = bbox;
+        this.targetPos = targetPos;
+        this.zExtent = zExtent;
+        this.targetZ = targetZ;
+        this.tExtent = tExtent;
+        this.targetT = targetT;
+
+        if (zExtent == null && targetZ != null) {
+            zExtent = Extents.newExtent(targetZ, targetZ);
+        }
+
+        if (tExtent == null) {
+            if (targetT != null) {
+                tExtent = Extents.newExtent(targetT, targetT);
+            } else {
+                tExtent = Extents.emptyExtent(DateTime.class);
+            }
+        }
+    }
+
+    public PlottingDomainParams(RegularGrid imageGrid, Extent<Double> zExtent,
+            Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ, DateTime targetT) {
+        super();
+        this.imageGrid = imageGrid;
+        this.width = imageGrid.getXSize();
+        this.height = imageGrid.getYSize();
+        this.bbox = imageGrid.getBoundingBox();
         this.targetPos = targetPos;
         this.zExtent = zExtent;
         this.targetZ = targetZ;
@@ -97,7 +123,7 @@ public class PlottingDomainParams {
      * {@link BoundingBox} of these parameters
      */
     public RegularGrid getImageGrid() {
-        if(imageGrid == null) {
+        if (imageGrid == null) {
             imageGrid = new RegularGridImpl(bbox, width, height);
         }
         return imageGrid;
