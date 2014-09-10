@@ -84,7 +84,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
      */
     private String startTime;
     private String endTime;
-    private static final DateTimeFormat datePrinter = DateTimeFormat.getFormat("yyyy-MM-dd");;
+    private static final DateTimeFormat datePrinter = DateTimeFormat.getFormat("yyyy-MM-dd");
 
     public TimeSelector(String id, final TimeDateSelectionHandler handler) {
         this(id, "Time", handler);
@@ -343,7 +343,8 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         long range = Long.parseLong(rangeStr);
         Date startDate = new Date(centreDate.getTime() - range);
         Date endDate = new Date(centreDate.getTime() + range);
-        return parser.format(startDate) + "/" + parser.format(endDate);
+        return URL.encodePathSegment(parser.format(startDate)) + "/"
+                + URL.encodePathSegment(parser.format(endDate));
     }
 
     @Override
