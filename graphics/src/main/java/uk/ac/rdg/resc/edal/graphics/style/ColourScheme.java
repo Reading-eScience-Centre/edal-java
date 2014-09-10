@@ -64,7 +64,7 @@ public abstract class ColourScheme {
         if (labels) {
             legendLabels = MapImage.getLegendLabels(
                     new NameAndRange("", Extents.newExtent(getScaleMin(), getScaleMax())),
-                    fracOutOfRange, componentSize, textColor, false);
+                    fracOutOfRange, componentSize, textColor, false, 0);
         }
         BufferedImage scaleBar = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 

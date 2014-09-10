@@ -29,8 +29,8 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
@@ -74,7 +74,7 @@ public class Raster2DLayer extends GriddedImageLayer {
 
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
-        Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
+        Set<NameAndRange> ret = new LinkedHashSet<Drawable.NameAndRange>();
         ret.add(new NameAndRange(xDataFieldName, Extents.newExtent(colourScheme.getScaleMin(1),
                 colourScheme.getScaleMax(1))));
         ret.add(new NameAndRange(yDataFieldName, Extents.newExtent(colourScheme.getScaleMin(2),

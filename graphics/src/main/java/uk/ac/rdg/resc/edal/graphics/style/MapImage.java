@@ -79,8 +79,6 @@ public class MapImage extends Drawable {
         return finalImage;
     }
 
-    private static final int COLOURBAR_WIDTH = 50;
-
     /**
      * Generate a legend for this {@link MapImage}.
      * 
@@ -93,14 +91,68 @@ public class MapImage extends Drawable {
      *         {@link MapImage}
      */
     public BufferedImage getLegend(int componentSize) throws EdalException {
-        return getLegend(componentSize, Color.black, Color.white, true, COLOURBAR_WIDTH);
+        return getLegend(componentSize, componentSize, Color.black, Color.white, true);
+    }
+    
+    /**
+     * Generate a legend for this {@link MapImage}.
+     * 
+     * @param componentWidth
+     *            A single integer specifying the width of each component of the
+     *            legend. The final image size will depend upon this number as
+     *            well as the number of unique data fields which this
+     *            {@link MapImage} depends upon
+     * @param componentHeight
+     *            A single integer specifying the height of each component of the
+     *            legend. The final image size will depend upon this number as
+     *            well as the number of unique data fields which this
+     *            {@link MapImage} depends upon
+     * @return An {@link BufferedImage} representing the legend for this
+     *         {@link MapImage}
+     */
+    public BufferedImage getLegend(int componentWidth, int componentHeight) throws EdalException {
+        return getLegend(componentWidth, componentHeight, Color.black, Color.white, true);
+    }
+
+    
+    /**
+     * Generate a legend for this {@link MapImage}.
+     * 
+     * @param componentWidth
+     *            A single integer specifying the width of each component of the
+     *            legend. The final image size will depend upon this number as
+     *            well as the number of unique data fields which this
+     *            {@link MapImage} depends upon
+     * @param componentHeight
+     *            A single integer specifying the height of each component of the
+     *            legend. The final image size will depend upon this number as
+     *            well as the number of unique data fields which this
+     *            {@link MapImage} depends upon
+     * @param textColour
+     *            The {@link Color} of the text
+     * @param bgColour
+     *            The {@link Color} of the background
+     * @param layerNameLabels
+     *            Whether or not to plot the ID of the layers on the legend
+     * @return An {@link BufferedImage} representing the legend for this
+     *         {@link MapImage}
+     */
+    public BufferedImage getLegend(int componentWidth, int componentHeight, Color textColour,
+            Color bgColour, boolean layerNameLabels) throws EdalException {
+        return getLegend(componentWidth, componentHeight, textColour, bgColour, layerNameLabels,
+                true, 0.1f, 0.1f);
     }
 
     /**
      * Generate a legend for this {@link MapImage}.
      * 
-     * @param componentSize
-     *            A single integer specifying the size of each component of the
+     * @param componentWidth
+     *            A single integer specifying the width of each component of the
+     *            legend. The final image size will depend upon this number as
+     *            well as the number of unique data fields which this
+     *            {@link MapImage} depends upon
+     * @param componentHeight
+     *            A single integer specifying the height of each component of the
      *            legend. The final image size will depend upon this number as
      *            well as the number of unique data fields which this
      *            {@link MapImage} depends upon
@@ -112,26 +164,35 @@ public class MapImage extends Drawable {
      *            Whether or not to plot the ID of the layers on the legend
      * @param width1d
      *            The width of a 1D colourbar
+     * @param background
+     *            Whether to draw a background map image for 2D legends
+     * @param extraAmountOutOfRange
+     *            This is the fraction of the colourbar which *gets added* as
+     *            out-of-range data.
+     * 
+     *            i.e. if it's 1, the result would be 1/3 below min, 1/3 in
+     *            range, 1/3 above max.
+     * @param fontProportion
+     *            The proportion of the largest dimension of the main component
+     *            which the font height should take up
      * @return An {@link BufferedImage} representing the legend for this
      *         {@link MapImage}
      */
-    public BufferedImage getLegend(int componentSize, Color textColour, Color bgColour,
-            boolean layerNameLabels, int width1d) throws EdalException {
+    public BufferedImage getLegend(int componentWidth, int componentHeight, Color textColour,
+            Color bgColour, boolean layerNameLabels, boolean background,
+            float extraAmountOutOfRange, float fontProportion) throws EdalException {
         BufferedImage finalImage;
         Set<NameAndRange> fieldsWithScales = getFieldsWithScales();
         int noOfIndependentFields = fieldsWithScales.size();
+
         /*
-         * This is the fraction of the colourbar which *gets added* as
-         * out-of-range data.
-         * 
-         * i.e. if it's 1, the result would be 1/3 below min, 1/3 in range, 1/3
-         * above max.
+         * The desired height of the font in pixels
          */
-        float extraAmountOutOfRange = 0.1f;
+        int fontSize = (int) (fontProportion * Math.max(componentWidth, componentHeight));
 
         if (noOfIndependentFields == 0) {
             /*
-             * TODO Return an empty image - we have no data fields
+             * Return an empty image - we have no data fields
              */
             return null;
         } else if (noOfIndependentFields == 1) {
@@ -147,8 +208,8 @@ public class MapImage extends Drawable {
             /*
              * Get the data for the colourbar and draw it.
              */
-            LegendDataGenerator dataGenerator = new LegendDataGenerator(width1d,
-                    componentSize, null, extraAmountOutOfRange);
+            LegendDataGenerator dataGenerator = new LegendDataGenerator(componentWidth,
+                    componentHeight, null, extraAmountOutOfRange);
             BufferedImage colourbar = drawImage(dataGenerator.getPlottingDomainParams(),
                     dataGenerator.getFeatureCatalogue(null, nameAndRange));
             Graphics2D graphics = colourbar.createGraphics();
@@ -160,12 +221,12 @@ public class MapImage extends Drawable {
              * Now generate the labels for this legend
              */
             BufferedImage labels = getLegendLabels(nameAndRange, extraAmountOutOfRange,
-                    componentSize, textColour, layerNameLabels);
+                    componentHeight, textColour, layerNameLabels, fontSize);
 
             /*
              * Now create the correctly-sized final image...
              */
-            finalImage = new BufferedImage(width1d + labels.getWidth(), componentSize,
+            finalImage = new BufferedImage(componentWidth + labels.getWidth(), componentHeight,
                     BufferedImage.TYPE_INT_ARGB);
             /*
              * ...and draw everything into it
@@ -174,7 +235,7 @@ public class MapImage extends Drawable {
             graphics.setColor(bgColour);
             graphics.fill(new Rectangle(finalImage.getWidth(), finalImage.getHeight()));
             graphics.drawImage(colourbar, 0, 0, null);
-            graphics.drawImage(labels, width1d, 0, null);
+            graphics.drawImage(labels, componentWidth, 0, null);
         } else {
             /*
              * General case, where we need to generate each possible combination
@@ -188,45 +249,48 @@ public class MapImage extends Drawable {
              * room to leave for the labels. We can do this by generating all
              * the labels up front
              */
-            BufferedImage[] labels = new BufferedImage[fields.size()];
             int borderSize = 0;
             for (int i = 0; i < fields.size(); i++) {
-                labels[i] = getLegendLabels(fields.get(i), extraAmountOutOfRange, componentSize,
-                        textColour, layerNameLabels);
-                if (labels[i].getWidth() > borderSize) {
-                    borderSize = labels[i].getWidth() + 8;
+                BufferedImage label = getLegendLabels(fields.get(i), extraAmountOutOfRange,
+                        componentWidth, textColour, layerNameLabels, fontSize);
+                if (label.getWidth() > borderSize) {
+                    borderSize = label.getWidth() + 8;
                 }
             }
 
-            int totalImageSize = (componentSize + borderSize) * numberOfImagesInOneDirection;
+            int totalImageWidth = (componentWidth + borderSize) * numberOfImagesInOneDirection;
+            int totalImageHeight = (componentHeight + borderSize) * numberOfImagesInOneDirection;
 
-            finalImage = new BufferedImage(totalImageSize, totalImageSize,
+            finalImage = new BufferedImage(totalImageWidth, totalImageHeight,
                     BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = finalImage.createGraphics();
             graphics.setColor(bgColour);
-            graphics.fillRect(0, 0, totalImageSize, totalImageSize);
+            graphics.fillRect(0, 0, totalImageWidth, totalImageHeight);
 
             /*
              * Load the background image and the data mask
              */
             BufferedImage bg = null;
             BufferedImage bgMask = null;
-            try {
-                bg = ImageIO.read(MapImage.class.getResource("/img/map_bg_200.png"));
-                bgMask = ImageIO.read(MapImage.class.getResource("/img/map_bg_200_mask.png"));
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (background) {
+                try {
+                    bg = ImageIO.read(MapImage.class.getResource("/img/map_bg_200.png"));
+                    bgMask = ImageIO.read(MapImage.class.getResource("/img/map_bg_200_mask.png"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             for (int i = 0; i < fields.size(); i++) {
-                int yStart = 2 + (i * (componentSize + borderSize));
+                int yStart = 2 + (i * (componentHeight + borderSize));
                 for (int j = i + 1; j < fields.size(); j++) {
-                    int xStart = 2 + ((j - i - 1) * (componentSize + borderSize));
-                    LegendDataGenerator dataGenerator = new LegendDataGenerator(componentSize,
-                            componentSize, bgMask, 0.1f);
+                    int xStart = 2 + ((j - i - 1) * (componentWidth + borderSize));
+                    LegendDataGenerator dataGenerator = new LegendDataGenerator(componentWidth,
+                            componentHeight, bgMask, extraAmountOutOfRange);
                     BufferedImage colourbar2d = drawImage(dataGenerator.getPlottingDomainParams(),
                             dataGenerator.getFeatureCatalogue(fields.get(j), fields.get(i)));
                     if (bg != null) {
-                        graphics.drawImage(bg, xStart, yStart, componentSize, componentSize, null);
+                        graphics.drawImage(bg, xStart, yStart, componentWidth, componentHeight,
+                                null);
                     }
                     /*
                      * Draw the 2d legend and outline it
@@ -243,10 +307,16 @@ public class MapImage extends Drawable {
                      * Now draw the labels
                      */
                     AffineTransform at = new AffineTransform();
-                    at.translate(xStart + componentSize, yStart + componentSize);
+                    at.translate(xStart + componentWidth, yStart + componentHeight);
                     at.rotate(Math.PI / 2);
-                    graphics.drawImage(labels[j], at, null);
-                    graphics.drawImage(labels[i], xStart + componentSize, yStart, null);
+
+                    BufferedImage xLabel = getLegendLabels(fields.get(j), extraAmountOutOfRange,
+                            componentWidth, textColour, layerNameLabels, fontSize);
+                    BufferedImage yLabel = getLegendLabels(fields.get(i), extraAmountOutOfRange,
+                            componentHeight, textColour, layerNameLabels, fontSize);
+
+                    graphics.drawImage(xLabel, at, null);
+                    graphics.drawImage(yLabel, xStart + componentWidth, yStart, null);
                 }
             }
         }
@@ -260,17 +330,14 @@ public class MapImage extends Drawable {
      * @param nameAndRange
      * @param extraAmountOutOfRange
      * @param componentSize
+     * @param textColor
      * @param layerNameLabels
      * @return
      */
-    static BufferedImage getLegendLabels(NameAndRange nameAndRange, float extraAmountOutOfRange,
-            int componentSize, Color textColor, boolean layerNameLabels) {
+    public static BufferedImage getLegendLabels(NameAndRange nameAndRange,
+            float extraAmountOutOfRange, int componentSize, Color textColor,
+            boolean layerNameLabels, int fontHeight) {
         String fieldName = nameAndRange.getFieldLabel();
-
-        Font textFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
-        AffineTransform at = new AffineTransform();
-        at.rotate(-Math.PI / 2.0);
-        Font sidewaysFont = textFont.deriveFont(at);
 
         int textBorder = 4;
 
@@ -315,6 +382,29 @@ public class MapImage extends Drawable {
          */
         BufferedImage tempImage = new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_BINARY);
         Graphics2D graphics = tempImage.createGraphics();
+
+        /*
+         * Calculate the font size which will fit the font into the given
+         * height.
+         * 
+         * A minimum font size of 6 is set which is just about readable
+         */
+        int fontSize = 6;
+        Font textFont;
+        int height = 0;
+        while (height < fontHeight) {
+            textFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize++);
+            height = graphics.getFontMetrics(textFont).getHeight();
+        }
+        textFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize - 1);
+
+        /*
+         * Rotate the font for the labels
+         */
+        AffineTransform at = new AffineTransform();
+        at.rotate(-Math.PI / 2.0);
+        Font sidewaysFont = textFont.deriveFont(at);
+
         FontMetrics fontMetrics = graphics.getFontMetrics(textFont);
         /*
          * The height of a line of text
@@ -329,7 +419,7 @@ public class MapImage extends Drawable {
          * This is how much of an offset we need so that the high/low scale
          * labels are in the right place
          */
-        int outOfRangeOffset = (int) (componentSize * extraAmountOutOfRange / (1 + 2 * extraAmountOutOfRange));
+        int outOfRangeOffset = (int) ((componentSize * extraAmountOutOfRange) / (1 + 2 * extraAmountOutOfRange));
 
         int lowYPos = componentSize - outOfRangeOffset + textHeightOffset;
         int highYPos = outOfRangeOffset + textHeightOffset;

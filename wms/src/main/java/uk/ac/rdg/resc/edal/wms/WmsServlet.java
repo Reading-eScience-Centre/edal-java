@@ -400,7 +400,7 @@ public class WmsServlet extends HttpServlet {
                 String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters
                         .getTargetZ().toString();
                 List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT());
-                BufferedImage legend = imageGenerator.getLegend(200);
+                BufferedImage legend = imageGenerator.getLegend(50, 200);
                 GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters
                         .getBbox());
                 imageFormat.writeImage(frames, outputStream, name, description, gbbox, tValues,
@@ -1639,7 +1639,7 @@ public class WmsServlet extends HttpServlet {
                         "A full set of GetMap parameters must be provided to generate a full legend.  You can set COLORBARONLY=true to just generate a colour bar");
             }
             legend = getMapParameters.getStyleParameters().getImageGenerator(catalogue)
-                    .getLegend(200);
+                    .getLegend(50, 200);
         }
         httpServletResponse.setContentType("image/png");
         try {

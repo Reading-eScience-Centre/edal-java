@@ -29,6 +29,9 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -40,7 +43,8 @@ import java.util.Map.Entry;
  */
 public class MappedSegmentColorScheme2D extends ColourScheme2D {
 
-    private Map<Number, SegmentColourScheme> colorSchemeMap;
+    private Map<Float, SegmentColourScheme> colorSchemeMap;
+    private List<Float> keys;
     private Color nonMappedColor;
 
     private Float xmin = Float.MAX_VALUE;
@@ -48,32 +52,47 @@ public class MappedSegmentColorScheme2D extends ColourScheme2D {
     private Float ymin = Float.MAX_VALUE;
     private Float ymax = -Float.MAX_VALUE;
 
-    public MappedSegmentColorScheme2D(Map<Number, SegmentColourScheme> colorSchemeMap,
+    public MappedSegmentColorScheme2D(Map<Float, SegmentColourScheme> colorSchemeMap,
             Color nonMappedColor) {
         this.colorSchemeMap = colorSchemeMap;
+        this.keys = new ArrayList<>();
+        for(Float key : colorSchemeMap.keySet()) {
+            this.keys.add(key);
+        }
+        Collections.sort(keys);
         this.nonMappedColor = nonMappedColor;
 
-        for (Entry<Number, SegmentColourScheme> entry : colorSchemeMap.entrySet()) {
-            xmin = Math.min(xmin, entry.getKey().floatValue());
-            xmax = Math.min(xmax, entry.getKey().floatValue());
+        for (Entry<Float, SegmentColourScheme> entry : colorSchemeMap.entrySet()) {
+            xmin = Math.min(xmin, entry.getKey());
+            xmax = Math.max(xmax, entry.getKey());
 
             ymin = Math.min(ymin, entry.getValue().getScaleMin());
-            ymax = Math.min(ymax, entry.getValue().getScaleMax());
+            ymax = Math.max(ymax, entry.getValue().getScaleMax());
         }
     }
 
     @Override
     public Color getColor(Number xValue, Number yValue) {
-        if (colorSchemeMap.containsKey(xValue)) {
-            return colorSchemeMap.get(xValue).getColor(yValue);
-        } else {
+        if(xValue.floatValue() < xmin || xValue.floatValue() > xmax) {
             return nonMappedColor;
         }
+        int keyIndex = Collections.binarySearch(keys, xValue.floatValue());
+        if (keyIndex < 0) {
+            /*
+             * We can calculate the insertion point
+             */
+            keyIndex = -(keyIndex + 1);
+            if(keyIndex == keys.size()) {
+                keyIndex--;
+            }
+        }
+        
+        return colorSchemeMap.get(keys.get(keyIndex)).getColor(yValue);
     }
 
     @Override
     public Float getScaleMin(int dimension) {
-        if (dimension == 0) {
+        if (dimension == 1) {
             return xmin;
         } else {
             return ymin;
@@ -82,7 +101,7 @@ public class MappedSegmentColorScheme2D extends ColourScheme2D {
 
     @Override
     public Float getScaleMax(int dimension) {
-        if (dimension == 0) {
+        if (dimension == 1) {
             return xmax;
         } else {
             return ymax;
