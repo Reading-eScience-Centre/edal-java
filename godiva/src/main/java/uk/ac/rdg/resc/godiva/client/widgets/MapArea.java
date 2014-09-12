@@ -419,7 +419,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             map.removeLayer(wmsLayers.get(internalLayerId).wms);
         }
 
-        params.setParameter("VERSION", "1.3.0");
         wmsLayer = new WMS("WMS Layer", wmsUrl, params, options);
         wmsLayer.addLayerLoadStartListener(loadStartListener);
         wmsLayer.addLayerLoadCancelListener(loadCancelListener);

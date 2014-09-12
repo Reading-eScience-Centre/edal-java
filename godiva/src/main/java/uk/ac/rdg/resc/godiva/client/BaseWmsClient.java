@@ -146,11 +146,12 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     mapHeight = Integer.parseInt(parentObj.get("mapHeight").isString()
                             .stringValue());
                     mapWidth = Integer.parseInt(parentObj.get("mapWidth").isString().stringValue());
-                    initBaseWms();
                     /*
                      * Handle any user-specific configuration parameters
                      */
                     handleCustomParams(parentObj);
+                    
+                    initBaseWms();
                 } catch (Exception e) {
                     /*
                      * Catching a plain Exception - not something that should

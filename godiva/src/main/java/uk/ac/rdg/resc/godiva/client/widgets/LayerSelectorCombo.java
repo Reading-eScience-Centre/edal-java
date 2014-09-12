@@ -170,9 +170,10 @@ public class LayerSelectorCombo extends Button implements LayerSelectorIF {
          */
         if (item.isPlottable()) {
             node.addClickHandler(new ClickHandler() {
+
                 @Override
                 public void onClick(ClickEvent event) {
-                    selectLayer(id, item.getWmsUrl(), true);
+                    selectLayer(id, item.getWmsUrl(), false);
                 }
             });
         }
