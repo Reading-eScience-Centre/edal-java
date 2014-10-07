@@ -73,13 +73,13 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  */
 public class LegendDataGenerator {
 
-    private RegularAxisImpl xAxis;
-    private RegularAxisImpl yAxis;
-    private MapDomain domain;
-    private boolean[][] missingBits;
+    protected RegularAxisImpl xAxis;
+    protected RegularAxisImpl yAxis;
+    protected MapDomain domain;
+    protected boolean[][] missingBits;
 
-    private float fractionExtraX;
-    private float fractionExtraY;
+    protected float fractionExtraX;
+    protected float fractionExtraY;
 
     /**
      * Instantiate a new {@link LegendDataGenerator}
@@ -236,7 +236,7 @@ public class LegendDataGenerator {
      * @return A {@link MapFeature} containing the correctly named variable with
      *         the correct linearly-varying data
      */
-    private MapFeature getMapFeature(NameAndRange field, MatrixType type) {
+    protected MapFeature getMapFeature(NameAndRange field, MatrixType type) {
         Map<String, Array2D<Number>> values = new HashMap<String, Array2D<Number>>();
 
         if (field != null) {
@@ -260,7 +260,7 @@ public class LegendDataGenerator {
      *         i.e. not random...) {@link PointFeature}s whose values vary
      *         linearly over the given direction
      */
-    private Collection<PointFeature> getPointFeatures(NameAndRange field, MatrixType type) {
+    protected Collection<PointFeature> getPointFeatures(NameAndRange field, MatrixType type) {
         List<PointFeature> features = new ArrayList<>();
 
         Random r = new Random(35L);
@@ -301,7 +301,7 @@ public class LegendDataGenerator {
         return features;
     }
 
-    private enum MatrixType {
+    protected enum MatrixType {
         X, Y, NAN
     };
 
@@ -311,7 +311,7 @@ public class LegendDataGenerator {
      *
      * @author Guy Griffiths
      */
-    private class XYNan extends Array2D<Number> {
+    protected class XYNan extends Array2D<Number> {
         private MatrixType type;
         private Extent<Float> scaleRange = null;
 
@@ -366,7 +366,7 @@ public class LegendDataGenerator {
      *            The fraction to extend it by on either end
      * @return The resulting scale range
      */
-    private static Extent<Float> extendScaleRange(Extent<Float> scaleRange, float fractionExtra) {
+    protected static Extent<Float> extendScaleRange(Extent<Float> scaleRange, float fractionExtra) {
         if (scaleRange == null) {
             return null;
         }
@@ -387,7 +387,7 @@ public class LegendDataGenerator {
      * @return A value which represents the supplied index within the given
      *         scale range
      */
-    private static Number getLinearInterpolatedValue(int value, Extent<Float> scaleRange,
+    protected static Number getLinearInterpolatedValue(int value, Extent<Float> scaleRange,
             int axisSize) {
         return scaleRange.getLow() + value * (scaleRange.getHigh() - scaleRange.getLow())
                 / axisSize;
