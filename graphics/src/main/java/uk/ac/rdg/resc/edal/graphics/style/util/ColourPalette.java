@@ -62,6 +62,8 @@ public class ColourPalette {
      * This is the palette that will be used if no specific palette has been
      * chosen. This palette is taken from the SGT graphics toolkit.
      * 
+     * Equivalent to the string #081D58,#41B6C4,#FFFFD9
+     * 
      * @see ColourPalette#DEFAULT_PALETTE_NAME
      */
     private static final Color[] DEFAULT_COLOURS = new Color[] { new Color(8, 29, 88),

@@ -225,7 +225,7 @@ public final class GISUtils {
          * should incur no large penalty for multiple invocations
          */
         try {
-            MathTransform transform = CRS.findMathTransform(sourceCrs, targetCrs);
+            MathTransform transform = CRS.findMathTransform(sourceCrs, targetCrs, true);
             if (transform.isIdentity())
                 return pos;
             double[] point = new double[] { pos.getX(), pos.getY() };
