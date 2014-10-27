@@ -74,6 +74,9 @@
 						</goals>
 					</execution>
 				</executions>
+                <configuration>
+                      <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
 				<version>2.8.1</version>
 			</plugin>
 			<plugin>

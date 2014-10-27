@@ -20,7 +20,7 @@
 		<dependency>
 			<groupId>edu.ucar</groupId>
 			<artifactId>netcdf</artifactId>
-			<version>4.2.20</version>
+			<version>4.3.20</version>
 			<optional>false</optional>
 			<exclusions>
 				<exclusion>
@@ -53,5 +53,12 @@
 			<version>4.0.92</version>
 		</dependency>
 	</dependencies>
-</project>
 
+    <repositories>
+        <repository>
+            <id>unidata-releases</id>
+            <url>https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/</url>
+        </repository>
+    </repositories>
+
+</project>

@@ -147,31 +147,37 @@ public abstract class LayerRequestCallback implements RequestCallback {
         layerDetails.setMultiFeature(multiFeature);
 
         if (multiFeature) {
-            JSONValue startTimeJson = parentObj.get("startTime");
-            if (startTimeJson != null) {
-                layerDetails.setStartTime(startTimeJson.isString().stringValue());
+            JSONValue zvalsJson = parentObj.get("zaxis");
+            if (zvalsJson != null) {
+                JSONObject zvalsObj = zvalsJson.isObject();
+                
+                JSONValue startTimeJson = zvalsObj.get("startTime");
+                if (startTimeJson != null) {
+                    layerDetails.setStartTime(startTimeJson.isString().stringValue());
+                }
+                JSONValue endTimeJson = zvalsObj.get("endTime");
+                if (endTimeJson != null) {
+                    layerDetails.setEndTime(endTimeJson.isString().stringValue());
+                }
+                
+                JSONValue startZJson = zvalsObj.get("startZ");
+                if (startZJson != null) {
+                    layerDetails.setStartZ(startZJson.isString().stringValue());
+                }
+                JSONValue endZJson = zvalsObj.get("endZ");
+                if (endZJson != null) {
+                    layerDetails.setEndZ(endZJson.isString().stringValue());
+                }
+                JSONValue zUnitsJson = zvalsObj.get("zUnits");
+                if (zUnitsJson != null) {
+                    layerDetails.setZUnits(zUnitsJson.isString().stringValue());
+                }
+                JSONValue zPositiveJson = zvalsObj.get("zPositive");
+                if (zPositiveJson != null) {
+                    layerDetails.setZPositive(zPositiveJson.isBoolean().booleanValue());
+                }
             }
-            JSONValue endTimeJson = parentObj.get("endTime");
-            if (endTimeJson != null) {
-                layerDetails.setEndTime(endTimeJson.isString().stringValue());
-            }
-
-            JSONValue startZJson = parentObj.get("startZ");
-            if (startZJson != null) {
-                layerDetails.setStartZ(startZJson.isString().stringValue());
-            }
-            JSONValue endZJson = parentObj.get("endZ");
-            if (endZJson != null) {
-                layerDetails.setEndZ(endZJson.isString().stringValue());
-            }
-            JSONValue zUnitsJson = parentObj.get("zUnits");
-            if (zUnitsJson != null) {
-                layerDetails.setZUnits(zUnitsJson.isString().stringValue());
-            }
-            JSONValue zPositiveJson = parentObj.get("zPositive");
-            if (zPositiveJson != null) {
-                layerDetails.setZPositive(zPositiveJson.isBoolean().booleanValue());
-            }
+            
         } else {
             JSONValue datesJson = parentObj.get("datesWithData");
             if (datesJson != null) {

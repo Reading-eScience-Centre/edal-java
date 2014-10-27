@@ -24,7 +24,7 @@ public class MapStyleDescriptor {
     private int opacity = 100;
     private int numColourBands = 254;
     private boolean logarithmic = false;
-    private Color bgColor = Color.black;
+    private Color bgColor = Color.white;
     private Map<String, ColourableIcon> icons;
     /*
      * The length of arrows in pixels, only used for vector plots
@@ -39,8 +39,8 @@ public class MapStyleDescriptor {
      * We cache this for speed
      */
     private IndexColorModel indexColorModel = null;
-    private Color belowColour = Color.black;
-    private Color aboveColour = Color.black;
+    private Color belowColour = Color.white;
+    private Color aboveColour = Color.white;
 
     public MapStyleDescriptor() throws InstantiationException {
         icons = new HashMap<String, ColourableIcon>();
