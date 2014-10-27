@@ -858,8 +858,13 @@ public class PaletteSelector implements PaletteSelectorIF {
             return converter.convertFromDisplayUnit(Float.parseFloat(minScale.getValue())) + ","
                     + converter.convertFromDisplayUnit(Float.parseFloat(maxScale.getValue()));
         } else {
-            return minScale.getValue() + "," + maxScale.getValue();
+            return getDisplayScaleRange();
         }
+    }
+    
+    @Override
+    public String getDisplayScaleRange() {
+        return minScale.getValue() + "," + maxScale.getValue();
     }
 
     @Override

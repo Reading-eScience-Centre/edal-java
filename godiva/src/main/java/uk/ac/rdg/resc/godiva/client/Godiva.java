@@ -95,7 +95,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      * internal reference for each WMS layer. Since this client only handles a
      * single layer anyway, this can be any static string
      */
-    private static final String WMS_LAYER_ID = "singleLayer";
+    protected static final String WMS_LAYER_ID = "singleLayer";
 
     /*
      * State information holders. The LayerSelectorIF is not part of
@@ -137,11 +137,11 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     /*
      * Use to store whether timeseries and vertical profiles are supported
      */
-    private boolean timeseriesSupported = false;
-    private boolean profilesSupported = false;
+    protected boolean timeseriesSupported = false;
+    protected boolean profilesSupported = false;
 
     /* The extents of the current layer */
-    private String currentLayerExtent;
+    protected String currentLayerExtent;
     protected PushButton zoomToLayerExtents;
 
     /*
@@ -748,6 +748,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String currentPalette = null;
         String currentStyle = null;
         String scaleRange = null;
+        String displayScaleRange = null;
         int nColorBands = 0;
         boolean logScale = false;
 
@@ -798,6 +799,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         if (paletteSelector.getScaleRange() != null) {
             scaleRange = paletteSelector.getScaleRange();
             urlParams += "&scaleRange=" + scaleRange;
+            displayScaleRange = paletteSelector.getDisplayScaleRange();
+            urlParams += "&displayScaleRange=" + displayScaleRange;
         }
         urlParams += "&opacity=" + paletteSelector.getOpacity();
 

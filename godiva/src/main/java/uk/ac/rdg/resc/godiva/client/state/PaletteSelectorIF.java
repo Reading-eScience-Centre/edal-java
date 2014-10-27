@@ -149,6 +149,14 @@ public interface PaletteSelectorIF extends IsWidget {
     public String getScaleRange();
 
     /**
+     * @return A {@link String} of the form "[min],[max]" which represents the
+     *         current scale range displayed. If there is no unit converter set,
+     *         this will be equivalent to
+     *         {@link PaletteSelectorIF#getScaleRange()}.
+     */
+    public String getDisplayScaleRange();
+
+    /**
      * @return The number of colour bands in the currently selected palette
      */
     public int getNumColorBands();
