@@ -147,18 +147,18 @@ public abstract class LayerRequestCallback implements RequestCallback {
         layerDetails.setMultiFeature(multiFeature);
 
         if (multiFeature) {
+            JSONValue startTimeJson = parentObj.get("startTime");
+            if (startTimeJson != null) {
+                layerDetails.setStartTime(startTimeJson.isString().stringValue());
+            }
+            JSONValue endTimeJson = parentObj.get("endTime");
+            if (endTimeJson != null) {
+                layerDetails.setEndTime(endTimeJson.isString().stringValue());
+            }
+            
             JSONValue zvalsJson = parentObj.get("zaxis");
             if (zvalsJson != null) {
                 JSONObject zvalsObj = zvalsJson.isObject();
-                
-                JSONValue startTimeJson = zvalsObj.get("startTime");
-                if (startTimeJson != null) {
-                    layerDetails.setStartTime(startTimeJson.isString().stringValue());
-                }
-                JSONValue endTimeJson = zvalsObj.get("endTime");
-                if (endTimeJson != null) {
-                    layerDetails.setEndTime(endTimeJson.isString().stringValue());
-                }
                 
                 JSONValue startZJson = zvalsObj.get("startZ");
                 if (startZJson != null) {
@@ -168,11 +168,11 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 if (endZJson != null) {
                     layerDetails.setEndZ(endZJson.isString().stringValue());
                 }
-                JSONValue zUnitsJson = zvalsObj.get("zUnits");
+                JSONValue zUnitsJson = zvalsObj.get("units");
                 if (zUnitsJson != null) {
                     layerDetails.setZUnits(zUnitsJson.isString().stringValue());
                 }
-                JSONValue zPositiveJson = zvalsObj.get("zPositive");
+                JSONValue zPositiveJson = zvalsObj.get("positive");
                 if (zPositiveJson != null) {
                     layerDetails.setZPositive(zPositiveJson.isBoolean().booleanValue());
                 }

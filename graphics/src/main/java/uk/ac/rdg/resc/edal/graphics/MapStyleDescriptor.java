@@ -24,7 +24,7 @@ public class MapStyleDescriptor {
     private int opacity = 100;
     private int numColourBands = 254;
     private boolean logarithmic = false;
-    private Color bgColor = Color.white;
+    private Color bgColor = Color.black;
     private Map<String, ColourableIcon> icons;
     /*
      * The length of arrows in pixels, only used for vector plots
@@ -39,8 +39,8 @@ public class MapStyleDescriptor {
      * We cache this for speed
      */
     private IndexColorModel indexColorModel = null;
-    private Color belowColour = Color.white;
-    private Color aboveColour = Color.white;
+    private Color belowColour = Color.black;
+    private Color aboveColour = Color.black;
 
     public MapStyleDescriptor() throws InstantiationException {
         icons = new HashMap<String, ColourableIcon>();
@@ -141,8 +141,8 @@ public class MapStyleDescriptor {
     }
 
     public Color getColorForValue(Number value) {
-        if (value == null) {
-            return Color.white;
+        if (value == null || Double.isNaN(value.doubleValue())) {
+            return bgColor;
         }
         return new Color(getColorModel().getRGB(getColourIndex(value)));
     }

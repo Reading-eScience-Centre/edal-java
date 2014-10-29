@@ -113,6 +113,9 @@ public class Frame {
                 frameImage = drawVectorArrows(frameData, style);
                 break;
             case TRAJECTORY:
+                style.setBgColor(Color.white);
+                style.setAboveMaxColour(Color.red);
+                style.setBelowMinColour(Color.green);
                 frameImage = drawTrajectory(frameData, style);
                 break;
             case POINT:
