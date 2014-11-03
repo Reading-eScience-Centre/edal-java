@@ -61,7 +61,7 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  * @author Guy Griffiths
  */
 public class GetMapParameters {
-    private String wmsVersion;
+    protected String wmsVersion;
     private String imageFormatString;
     private boolean animation;
     private List<DateTime> animationTimesteps = new ArrayList<>();

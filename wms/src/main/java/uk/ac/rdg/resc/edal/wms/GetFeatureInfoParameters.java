@@ -63,8 +63,15 @@ public class GetFeatureInfoParameters extends GetMapParameters {
         layers = params.getMandatoryString("query_layers").split(",");
         infoFormat = params.getString("info_format", "text/xml");
 
-        int i = params.getMandatoryPositiveInt("i");
-        int j = getPlottingDomainParameters().getHeight() - 1 - params.getMandatoryPositiveInt("j");
+        int i;
+        int j;
+        if ("1.3.0".equals(wmsVersion)) {
+            i = params.getMandatoryPositiveInt("i");
+            j = getPlottingDomainParameters().getHeight() - 1 - params.getMandatoryPositiveInt("j");
+        } else {
+            i = params.getMandatoryPositiveInt("x");
+            j = getPlottingDomainParameters().getHeight() - 1 - params.getMandatoryPositiveInt("y");
+        }
 
         if (i < 0 || i >= getPlottingDomainParameters().getWidth() || j < 0
                 || j >= getPlottingDomainParameters().getHeight()) {
