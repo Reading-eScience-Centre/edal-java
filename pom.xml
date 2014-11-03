@@ -214,12 +214,12 @@
 		</dependency>
 	</dependencies>
 	<scm>
-		<connection>scm:hg:https://edal-java.googlecode.com/hg/</connection>
-		<developerConnection>scm:hg:https://edal-java.googlecode.com/hg/</developerConnection>
-		<url>http://code.google.com/p/edal-java/source/browse/</url>
-	</scm>
-	<distributionManagement>
-		<!-- use the following if you're not using a snapshot version. -->
+        <connection>scm:git:ssh://github.com/Reading-eScience-Centre/edal-java</connection>
+        <developerConnection>scm:git:ssh://github.com/Reading-eScience-Centre/edal-java</developerConnection>
+        <url>https://github.com/Reading-eScience-Centre/edal-java</url>
+    </scm>
+    <distributionManagement>
+            <!-- use the following if you're not using a snapshot version. -->
 		<repository>
 			<id>edal-java-release</id>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
