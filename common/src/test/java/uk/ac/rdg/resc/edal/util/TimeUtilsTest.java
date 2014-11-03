@@ -233,26 +233,13 @@ public class TimeUtilsTest {
         assertEquals(expectedDateRange,
                 TimeUtils.getTimeRangeForString(mixedTimeString, isoChronology));
 
-        // a time string with key word current
-        mixedTimeString = mixedTimeString + ",current";
-
-        /*
-         * If the current time is the max one in the time string, we need to
-         * save the current value used in the time string. Otherwise, the
-         * current value may change at line 250.
-         */
-        DateTime current = new DateTime();
-        String snapShotOfMixedTimeString = mixedTimeString.replace("current", current.toString());
-
-        expectedDateRange = Extents.newExtent((new DateTime(nonUTC3)).toDateTime(DateTimeZone.UTC),
-                current.toDateTime(DateTimeZone.UTC));
-        assertEquals(expectedDateRange,
-                TimeUtils.getTimeRangeForString(snapShotOfMixedTimeString, isoChronology));
-
         String nonUTC5 = "2014-11-03T12:22:00.000+02:00";
         mixedTimeString = mixedTimeString + "," + nonUTC5;
         expectedDateRange = Extents.newExtent((new DateTime(nonUTC3)).toDateTime(DateTimeZone.UTC),
                 new DateTime(nonUTC5).toDateTime(DateTimeZone.UTC));
+        System.out.println(nonUTC5+"  ->  " + new DateTime(nonUTC5).toDateTime(DateTimeZone.UTC));
+        System.out.println(mixedTimeString);
+        System.out.println(TimeUtils.getTimeRangeForString(mixedTimeString, isoChronology));
         assertEquals(expectedDateRange,
                 TimeUtils.getTimeRangeForString(mixedTimeString, isoChronology));
     }
