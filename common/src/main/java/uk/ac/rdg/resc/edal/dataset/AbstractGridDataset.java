@@ -333,12 +333,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             StringBuilder name = new StringBuilder("Map of ");
             StringBuilder description = new StringBuilder("Map feature from variables:\n");
 
-            /*
-             * Keep a list of variable IDs which we need to generate data for
-             * from a plugin
-             */
-            Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
-
             for (int i = 0; i < variableIds.size(); i++) {
                 String varId = variableIds.get(i);
                 if (!getVariableMetadata(varId).isScalar()) {
@@ -360,21 +354,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 description.append(varId + "\n");
 
                 /*
-                 * We defer plugin-generated variables until after all other
-                 * required variables have been read. This way, if any of the
-                 * plugin-generated variables require data which we will read
-                 * anyway, we don't have to read it twice.
-                 */
-                VariablePlugin derivingPlugin = isDerivedVariable(varId);
-                if (derivingPlugin != null) {
-                    /*
-                     * Save the variable ID and continue on the outer loop
-                     */
-                    varsToGenerate.put(varId, derivingPlugin);
-                    continue;
-                }
-
-                /*
                  * Do the actual data reading
                  */
                 Array2D<Number> data = readHorizontalData(varId, targetGrid, zPos, time, dataSource);
@@ -385,47 +364,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                  * same.
                  */
                 parameters.put(varId, getVariableMetadata(varId).getParameter());
-            }
-
-            for (String derivedVarId : varsToGenerate.keySet()) {
-                VariablePlugin plugin = varsToGenerate.get(derivedVarId);
-                @SuppressWarnings("unchecked")
-                Array2D<Number>[] pluginSourceData = new Array2D[plugin.usesVariables().length];
-                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin
-                        .usesVariables().length];
-                /*
-                 * Loop through the variable IDs required by this plugin,
-                 * getting data and metadata
-                 * 
-                 * If we have already read the data, add it to the array,
-                 * otherwise read the data first.
-                 */
-                for (int i = 0; i < pluginSourceData.length; i++) {
-                    String pluginSourceVarId = plugin.usesVariables()[i];
-                    if (values.containsKey(pluginSourceVarId)) {
-                        pluginSourceData[i] = values.get(pluginSourceVarId);
-                    } else {
-                        pluginSourceData[i] = readHorizontalData(pluginSourceVarId, targetGrid,
-                                zPos, time, dataSource);
-                    }
-                    pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
-                }
-
-                values.put(derivedVarId, plugin.generateArray2D(
-                        derivedVarId,
-                        new Array2D<HorizontalPosition>(targetGrid.getYSize(), targetGrid
-                                .getXSize()) {
-                            @Override
-                            public HorizontalPosition get(int... coords) {
-                                return targetGrid.getDomainObjects().get(coords).getCentre();
-                            }
-
-                            @Override
-                            public void set(HorizontalPosition value, int... coords) {
-                                throw new UnsupportedOperationException("This array is immutable");
-                            }
-                        }, pluginSourceData));
-                parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
             }
 
             /*
@@ -460,7 +398,85 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
     }
 
-    private Array2D<Number> readHorizontalData(String varId, HorizontalGrid targetGrid,
+    /**
+     * Reads horizontal data for a variable, regardless of whether it is derived
+     * or not
+     * 
+     * @param varId
+     *            The ID of the variable to read
+     * @param targetGrid
+     *            The {@link HorizontalGrid} on which to read data
+     * @param zPos
+     *            The z-position to read at
+     * @param time
+     *            The time to read at
+     * @param dataSource
+     *            The {@link GridDataSource} to read data from
+     * @return
+     * @throws IOException
+     *             If there is a problem opening the {@link GridDataSource}
+     * @throws DataReadingException
+     *             If there is a problem reading the data
+     */
+    private Array2D<Number> readHorizontalData(String varId, final HorizontalGrid targetGrid,
+            Double zPos, DateTime time, GridDataSource dataSource) throws IOException,
+            DataReadingException {
+        VariablePlugin plugin = isDerivedVariable(varId);
+        if (plugin == null) {
+            return readUnderlyingHorizontalData(varId, targetGrid, zPos, time, dataSource);
+        } else {
+            @SuppressWarnings("unchecked")
+            Array2D<Number>[] pluginSourceData = new Array2D[plugin.usesVariables().length];
+            VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+            /*
+             * Loop through the variable IDs required by this plugin, getting
+             * data and metadata
+             * 
+             * If we have already read the data, add it to the array, otherwise
+             * read the data first.
+             */
+            for (int i = 0; i < pluginSourceData.length; i++) {
+                String pluginSourceVarId = plugin.usesVariables()[i];
+                pluginSourceData[i] = readHorizontalData(pluginSourceVarId, targetGrid, zPos, time,
+                        dataSource);
+                pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
+            }
+
+            return plugin.generateArray2D(varId,
+                    new Array2D<HorizontalPosition>(targetGrid.getYSize(), targetGrid.getXSize()) {
+                        @Override
+                        public HorizontalPosition get(int... coords) {
+                            return targetGrid.getDomainObjects().get(coords).getCentre();
+                        }
+
+                        @Override
+                        public void set(HorizontalPosition value, int... coords) {
+                            throw new UnsupportedOperationException("This array is immutable");
+                        }
+                    }, pluginSourceData);
+        }
+    }
+
+    /**
+     * Reads horizontal data for a non-derived variable
+     * 
+     * @param varId
+     *            The ID of the variable to read
+     * @param targetGrid
+     *            The {@link HorizontalGrid} on which to read data
+     * @param zPos
+     *            The z-position to read at
+     * @param time
+     *            The time to read at
+     * @param dataSource
+     *            The {@link GridDataSource} to read data from
+     * @return
+     * @throws IOException
+     *             If there is a problem opening the {@link GridDataSource}
+     * @throws DataReadingException
+     *             If there is a problem reading the data
+     */
+    private Array2D<Number> readUnderlyingHorizontalData(String varId, HorizontalGrid targetGrid,
             Double zPos, DateTime time, GridDataSource dataSource) throws IOException,
             DataReadingException {
         /*
@@ -682,12 +698,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             StringBuilder description = new StringBuilder("Profile feature from variables:\n");
 
             /*
-             * Keep a list of variable IDs which we need to generate data for
-             * from a plugin
-             */
-            Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
-
-            /*
              * Store a map of unique profile locations to a variable IDs/values
              */
             Map<String, Map<ProfileLocation, Array1D<Number>>> allVariablesData = new HashMap<>();
@@ -715,21 +725,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 description.append(varId + "\n");
 
                 /*
-                 * We defer plugin-generated variables until after all other
-                 * required variables have been read. This way, if any of the
-                 * plugin-generated variables require data which we will read
-                 * anyway, we don't have to read it twice.
-                 */
-                VariablePlugin derivingPlugin = isDerivedVariable(varId);
-                if (derivingPlugin != null) {
-                    /*
-                     * Save the variable ID and continue on the outer loop
-                     */
-                    varsToGenerate.put(varId, derivingPlugin);
-                    continue;
-                }
-
-                /*
                  * We now know that this is not a derived variable, and hence
                  * will have GridVariableMetadata
                  */
@@ -752,91 +747,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                  * same.
                  */
                 parameters.put(varId, getVariableMetadata(varId).getParameter());
-            }
-
-            /*
-             * Now read the plugin-derived variables
-             */
-            for (String derivedVarId : varsToGenerate.keySet()) {
-                VariablePlugin plugin = varsToGenerate.get(derivedVarId);
-                List<Map<ProfileLocation, Array1D<Number>>> pluginSourceData = new ArrayList<>();
-                int nSourceVars = plugin.usesVariables().length;
-                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin
-                        .usesVariables().length];
-                /*
-                 * Loop through the variable IDs required by this plugin,
-                 * getting data and metadata
-                 * 
-                 * If we have already read the data, add it to the array,
-                 * otherwise read the data first.
-                 */
-                for (int i = 0; i < nSourceVars; i++) {
-                    String pluginSourceVarId = plugin.usesVariables()[i];
-                    if (allVariablesData.containsKey(pluginSourceVarId)) {
-                        pluginSourceData.add(allVariablesData.get(pluginSourceVarId));
-                    } else {
-                        /*
-                         * This cast should be OK, but there may be issues if we
-                         * have multiple nesting of plugins
-                         * 
-                         * TODO Either fix is or disallow multiple-plugin
-                         * nesting
-                         */
-                        GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(pluginSourceVarId);
-                        try {
-                            pluginSourceData.add(readVerticalData(variableMetadata, zAxis, bbox,
-                                    params.getTargetT(), params.getTExtent(), dataSource));
-                        } catch (IOException e) {
-                            log.error("Problem reading data", e);
-                            throw new DataReadingException(
-                                    "Problem reading data to generate a plugin variable", e);
-                        }
-                    }
-                    pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
-                }
-
-                /*
-                 * Check that all plugin source variables share the same profile
-                 * locations
-                 */
-                Set<ProfileLocation> profileLocations = new HashSet<>();
-                for (int i = 0; i < nSourceVars; i++) {
-                    profileLocations = pluginSourceData.get(i).keySet();
-                    for (int j = i; j < nSourceVars; j++) {
-                        Set<ProfileLocation> otherSourceValueLocations = pluginSourceData.get(j)
-                                .keySet();
-                        if (!profileLocations.equals(otherSourceValueLocations)) {
-                            throw new DataReadingException(
-                                    "Cannot extract plugin-derived profiles for variables which have different spatio-temporal locations");
-                        }
-                    }
-                }
-
-                Map<ProfileLocation, Array1D<Number>> locationsToValues = new HashMap<>();
-                for (final ProfileLocation location : profileLocations) {
-                    @SuppressWarnings("unchecked")
-                    Array1D<Number>[] pluginSource = new Array1D[nSourceVars];
-                    for (int i = 0; i < nSourceVars; i++) {
-                        pluginSource[i] = pluginSourceData.get(i).get(location);
-                    }
-                    Array1D<Number> values = plugin.generateArray1D(derivedVarId,
-                            new Array1D<HorizontalPosition>(nSourceVars) {
-                                @Override
-                                public HorizontalPosition get(int... coords) {
-                                    return location.hPos;
-                                }
-
-                                @Override
-                                public void set(HorizontalPosition value, int... coords) {
-                                    throw new UnsupportedOperationException(
-                                            "This array is immutable");
-                                }
-                            }, pluginSource);
-                    locationsToValues.put(location, values);
-                }
-
-                allVariablesData.put(derivedVarId, locationsToValues);
-                parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
             }
 
             /*
@@ -992,6 +902,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *            The desired vertical axis of the data
      * @param bbox
      *            The {@link BoundingBox} within which to read profiles
+     * @param targetT
+     *            The target time at which to read profiles
      * @param tExtent
      *            The time {@link Extent} within which to read profiles
      * @param dataSource
@@ -1001,9 +913,109 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *             If there was a problem reading data from the
      *             {@link GridDataSource}
      */
-    private Map<ProfileLocation, Array1D<Number>> readVerticalData(GridVariableMetadata metadata,
+    private Map<ProfileLocation, Array1D<Number>> readVerticalData(VariableMetadata metadata,
             VerticalAxis zAxis, BoundingBox bbox, DateTime targetT, Extent<DateTime> tExtent,
             GridDataSource dataSource) throws IOException, DataReadingException {
+        VariablePlugin plugin = isDerivedVariable(metadata.getId());
+        if (plugin == null) {
+            /*
+             * Cast to GridVariableMetadata is fine because all
+             * non-plugin-derived variables are gridded
+             */
+            return readUnderlyingVerticalData((GridVariableMetadata) metadata, zAxis, bbox,
+                    targetT, tExtent, dataSource);
+        } else {
+            List<Map<ProfileLocation, Array1D<Number>>> pluginSourceData = new ArrayList<>();
+            int nSourceVars = plugin.usesVariables().length;
+            VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+            /*
+             * Loop through the variable IDs required by this plugin, getting
+             * data and metadata
+             * 
+             * If we have already read the data, add it to the array, otherwise
+             * read the data first.
+             */
+            for (int i = 0; i < nSourceVars; i++) {
+                String pluginSourceVarId = plugin.usesVariables()[i];
+                VariableMetadata variableMetadata = getVariableMetadata(pluginSourceVarId);
+                try {
+                    pluginSourceData.add(readVerticalData(variableMetadata, zAxis, bbox, targetT,
+                            tExtent, dataSource));
+                } catch (IOException e) {
+                    log.error("Problem reading data", e);
+                    throw new DataReadingException(
+                            "Problem reading data to generate a plugin variable", e);
+                }
+                pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
+            }
+
+            /*
+             * Check that all plugin source variables share the same profile
+             * locations
+             */
+            Set<ProfileLocation> profileLocations = new HashSet<>();
+            for (int i = 0; i < nSourceVars; i++) {
+                profileLocations = pluginSourceData.get(i).keySet();
+                for (int j = i; j < nSourceVars; j++) {
+                    Set<ProfileLocation> otherSourceValueLocations = pluginSourceData.get(j)
+                            .keySet();
+                    if (!profileLocations.equals(otherSourceValueLocations)) {
+                        throw new DataReadingException(
+                                "Cannot extract plugin-derived profiles for variables which have different spatio-temporal locations");
+                    }
+                }
+            }
+
+            Map<ProfileLocation, Array1D<Number>> locationsToValues = new HashMap<>();
+            for (final ProfileLocation location : profileLocations) {
+                @SuppressWarnings("unchecked")
+                Array1D<Number>[] pluginSource = new Array1D[nSourceVars];
+                for (int i = 0; i < nSourceVars; i++) {
+                    pluginSource[i] = pluginSourceData.get(i).get(location);
+                }
+                Array1D<Number> values = plugin.generateArray1D(metadata.getId(),
+                        new Array1D<HorizontalPosition>(nSourceVars) {
+                            @Override
+                            public HorizontalPosition get(int... coords) {
+                                return location.hPos;
+                            }
+
+                            @Override
+                            public void set(HorizontalPosition value, int... coords) {
+                                throw new UnsupportedOperationException("This array is immutable");
+                            }
+                        }, pluginSource);
+                locationsToValues.put(location, values);
+            }
+
+            return locationsToValues;
+        }
+    }
+
+    /**
+     * Reads profile data for a given non-derived variable
+     * 
+     * @param metadata
+     *            The {@link GridVariableMetadata} representing the variable
+     * @param zAxis
+     *            The desired vertical axis of the data
+     * @param bbox
+     *            The {@link BoundingBox} within which to read profiles
+     * @param targetT
+     *            The target time at which to read profiles            
+     * @param tExtent
+     *            The time {@link Extent} within which to read profiles
+     * @param dataSource
+     *            The {@link GridDataSource} to read from
+     * @return A {@link Map} of unique profile locations to data for each
+     * @throws IOException
+     *             If there was a problem reading data from the
+     *             {@link GridDataSource}
+     */
+    private Map<ProfileLocation, Array1D<Number>> readUnderlyingVerticalData(
+            GridVariableMetadata metadata, VerticalAxis zAxis, BoundingBox bbox, DateTime targetT,
+            Extent<DateTime> tExtent, GridDataSource dataSource) throws IOException,
+            DataReadingException {
         String varId = metadata.getId();
 
         /*
@@ -1122,9 +1134,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                                 + " which was requested.");
                     }
                     data.set(data4d.get(new int[] { 0, zIndex - zMin, 0, 0 }), new int[] { i });
-                    /*
-                     * TODO we need to test this
-                     */
                 }
 
                 ret.put(location, data);
@@ -1285,12 +1294,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             StringBuilder description = new StringBuilder("Point series feature from variables:\n");
 
             /*
-             * Keep a list of variable IDs which we need to generate data for
-             * from a plugin
-             */
-            Map<String, VariablePlugin> varsToGenerate = new HashMap<String, VariablePlugin>();
-
-            /*
              * Store a map of unique profile locations to a variable IDs/values
              */
             Map<String, Map<PointSeriesLocation, Array1D<Number>>> allVariablesData = new HashMap<>();
@@ -1319,21 +1322,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 description.append(varId + "\n");
 
                 /*
-                 * We defer plugin-generated variables until after all other
-                 * required variables have been read. This way, if any of the
-                 * plugin-generated variables require data which we will read
-                 * anyway, we don't have to read it twice.
-                 */
-                VariablePlugin derivingPlugin = isDerivedVariable(varId);
-                if (derivingPlugin != null) {
-                    /*
-                     * Save the variable ID and continue on the outer loop
-                     */
-                    varsToGenerate.put(varId, derivingPlugin);
-                    continue;
-                }
-
-                /*
                  * We now know that this is not a derived variable, and hence
                  * will have GridVariableMetadata
                  */
@@ -1360,95 +1348,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                  * same.
                  */
                 parameters.put(varId, getVariableMetadata(varId).getParameter());
-            }
-
-            /*
-             * Now read the plugin-derived variables
-             */
-            for (String derivedVarId : varsToGenerate.keySet()) {
-                VariablePlugin plugin = varsToGenerate.get(derivedVarId);
-                List<Map<PointSeriesLocation, Array1D<Number>>> pluginSourceData = new ArrayList<>();
-                int nSourceVars = plugin.usesVariables().length;
-                VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin
-                        .usesVariables().length];
-                /*
-                 * Loop through the variable IDs required by this plugin,
-                 * getting data and metadata
-                 * 
-                 * If we have already read the data, add it to the array,
-                 * otherwise read the data first.
-                 */
-                for (int i = 0; i < nSourceVars; i++) {
-                    String pluginSourceVarId = plugin.usesVariables()[i];
-                    if (allVariablesData.containsKey(pluginSourceVarId)) {
-                        pluginSourceData.add(allVariablesData.get(pluginSourceVarId));
-                    } else {
-                        /*
-                         * This cast should be OK, but there may be issues if we
-                         * have multiple nesting of plugins
-                         * 
-                         * TODO Either fix is or disallow multiple-plugin
-                         * nesting
-                         */
-                        GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(pluginSourceVarId);
-                        try {
-                            pluginSourceData.add(readTemporalData(variableMetadata, tAxis, bbox,
-                                    params.getTargetZ(), params.getZExtent(), dataSource));
-                        } catch (IOException e) {
-                            log.error("Problem reading data", e);
-                            throw new DataReadingException(
-                                    "Problem reading data to generate a plugin variable", e);
-                        } catch (MismatchedCrsException e) {
-                            log.error("Problem reading data", e);
-                            throw new DataReadingException(
-                                    "Problem reading data to generate a plugin variable", e);
-                        }
-                    }
-                    pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
-                }
-
-                /*
-                 * Check that all plugin source variables share the same
-                 * timeseries locations
-                 */
-                Set<PointSeriesLocation> timeseriesLocations = new HashSet<>();
-                for (int i = 0; i < nSourceVars; i++) {
-                    timeseriesLocations = pluginSourceData.get(i).keySet();
-                    for (int j = i; j < nSourceVars; j++) {
-                        Set<PointSeriesLocation> otherSourceValueLocations = pluginSourceData
-                                .get(j).keySet();
-                        if (!timeseriesLocations.equals(otherSourceValueLocations)) {
-                            throw new DataReadingException(
-                                    "Cannot extract plugin-derived profiles for variables which have different spatio-temporal locations");
-                        }
-                    }
-                }
-
-                Map<PointSeriesLocation, Array1D<Number>> locationsToValues = new HashMap<>();
-                for (final PointSeriesLocation location : timeseriesLocations) {
-                    @SuppressWarnings("unchecked")
-                    Array1D<Number>[] pluginSource = new Array1D[nSourceVars];
-                    for (int i = 0; i < nSourceVars; i++) {
-                        pluginSource[i] = pluginSourceData.get(i).get(location);
-                    }
-                    Array1D<Number> values = plugin.generateArray1D(derivedVarId,
-                            new Array1D<HorizontalPosition>(nSourceVars) {
-                                @Override
-                                public HorizontalPosition get(int... coords) {
-                                    return location.hPos;
-                                }
-
-                                @Override
-                                public void set(HorizontalPosition value, int... coords) {
-                                    throw new UnsupportedOperationException(
-                                            "This array is immutable");
-                                }
-                            }, pluginSource);
-                    locationsToValues.put(location, values);
-                }
-
-                allVariablesData.put(derivedVarId, locationsToValues);
-                parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
             }
 
             /*
@@ -1602,7 +1501,131 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
     }
 
-    private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(
+    /**
+     * Reads timeseries data for a given variable
+     * 
+     * @param metadata
+     *            The {@link GridVariableMetadata} representing the variable
+     * @param tAxis
+     *            The desired time axis of the data
+     * @param bbox
+     *            The {@link BoundingBox} within which to read timeseries
+     * @param targetZ
+     *            The target depth to read timeseries at
+     * @param zExtent
+     *            The vertical {@link Extent} within which to read timeseries
+     * @param dataSource
+     *            The {@link GridDataSource} to read from
+     * @return A {@link Map} of unique profile locations to data for each
+     * @throws IOException
+     *             If there was a problem reading data from the
+     *             {@link GridDataSource}
+     */
+    private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(VariableMetadata metadata,
+            TimeAxis tAxis, BoundingBox bbox, Double targetZ, Extent<Double> zExtent,
+            GridDataSource dataSource) throws IOException, MismatchedCrsException,
+            DataReadingException {
+        VariablePlugin plugin = isDerivedVariable(metadata.getId());
+        if (plugin == null) {
+            /*
+             * Cast to GridVariableMetadata is fine because all
+             * non-plugin-derived variables are gridded
+             */
+            return readUnderlyingTemporalData((GridVariableMetadata) metadata, tAxis, bbox,
+                    targetZ, zExtent, dataSource);
+        } else {
+            List<Map<PointSeriesLocation, Array1D<Number>>> pluginSourceData = new ArrayList<>();
+            int nSourceVars = plugin.usesVariables().length;
+            VariableMetadata[] pluginSourceMetadata = new VariableMetadata[plugin.usesVariables().length];
+            /*
+             * Loop through the variable IDs required by this plugin, getting
+             * data and metadata
+             * 
+             * If we have already read the data, add it to the array, otherwise
+             * read the data first.
+             */
+            for (int i = 0; i < nSourceVars; i++) {
+                String pluginSourceVarId = plugin.usesVariables()[i];
+                VariableMetadata variableMetadata = getVariableMetadata(pluginSourceVarId);
+                try {
+                    pluginSourceData.add(readTemporalData(variableMetadata, tAxis, bbox, targetZ,
+                            zExtent, dataSource));
+                } catch (IOException e) {
+                    log.error("Problem reading data", e);
+                    throw new DataReadingException(
+                            "Problem reading data to generate a plugin variable", e);
+                } catch (MismatchedCrsException e) {
+                    log.error("Problem reading data", e);
+                    throw new DataReadingException(
+                            "Problem reading data to generate a plugin variable", e);
+                }
+                pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
+            }
+
+            /*
+             * Check that all plugin source variables share the same timeseries
+             * locations
+             */
+            Set<PointSeriesLocation> timeseriesLocations = new HashSet<>();
+            for (int i = 0; i < nSourceVars; i++) {
+                timeseriesLocations = pluginSourceData.get(i).keySet();
+                for (int j = i; j < nSourceVars; j++) {
+                    Set<PointSeriesLocation> otherSourceValueLocations = pluginSourceData.get(j)
+                            .keySet();
+                    if (!timeseriesLocations.equals(otherSourceValueLocations)) {
+                        throw new DataReadingException(
+                                "Cannot extract plugin-derived profiles for variables which have different spatio-temporal locations");
+                    }
+                }
+            }
+
+            Map<PointSeriesLocation, Array1D<Number>> locationsToValues = new HashMap<>();
+            for (final PointSeriesLocation location : timeseriesLocations) {
+                @SuppressWarnings("unchecked")
+                Array1D<Number>[] pluginSource = new Array1D[nSourceVars];
+                for (int i = 0; i < nSourceVars; i++) {
+                    pluginSource[i] = pluginSourceData.get(i).get(location);
+                }
+                Array1D<Number> values = plugin.generateArray1D(metadata.getId(),
+                        new Array1D<HorizontalPosition>(nSourceVars) {
+                            @Override
+                            public HorizontalPosition get(int... coords) {
+                                return location.hPos;
+                            }
+
+                            @Override
+                            public void set(HorizontalPosition value, int... coords) {
+                                throw new UnsupportedOperationException("This array is immutable");
+                            }
+                        }, pluginSource);
+                locationsToValues.put(location, values);
+            }
+
+            return locationsToValues;
+        }
+    }
+
+    /**
+     * Reads timeseries data for a given non-derived variable
+     * 
+     * @param metadata
+     *            The {@link GridVariableMetadata} representing the variable
+     * @param tAxis
+     *            The desired time axis of the data
+     * @param bbox
+     *            The {@link BoundingBox} within which to read timeseries
+     * @param targetZ
+     *            The target depth to read timeseries at
+     * @param zExtent
+     *            The vertical {@link Extent} within which to read timeseries
+     * @param dataSource
+     *            The {@link GridDataSource} to read from
+     * @return A {@link Map} of unique profile locations to data for each
+     * @throws IOException
+     *             If there was a problem reading data from the
+     *             {@link GridDataSource}
+     */
+    private Map<PointSeriesLocation, Array1D<Number>> readUnderlyingTemporalData(
             GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox, Double targetZ,
             Extent<Double> zExtent, GridDataSource dataSource) throws IOException,
             MismatchedCrsException, DataReadingException {
@@ -1948,7 +1971,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                  */
                 GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(variableId);
                 GridCoordinates2D xy = variableMetadata.getHorizontalDomain().findIndexOf(position);
-                if(xy == null) {
+                if (xy == null) {
                     return null;
                 }
 
