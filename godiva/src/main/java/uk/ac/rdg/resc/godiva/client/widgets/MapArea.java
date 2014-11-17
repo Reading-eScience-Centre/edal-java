@@ -559,7 +559,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             + "&SRS=" + currentProjection + "&FEATURE_COUNT=5"
                             + "&INFO_FORMAT=image/png" + "&HEIGHT="
                             + ((int) map.getSize().getHeight()) + "&WIDTH="
-                            + ((int) map.getSize().getWidth()) + "&I=" + mapXClick + "&J="
+                            + ((int) map.getSize().getWidth()) + "&X=" + mapXClick + "&Y="
                             + mapYClick + "&STYLES=default/default"
                             + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
                             + ((timeStr != null) ? ("&TIME=" + timeStr) : "") + "&VERSION=1.1.1";
@@ -606,8 +606,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                             + currentProjection + "&FEATURE_COUNT=5"
                                             + "&INFO_FORMAT=image/png" + "&HEIGHT="
                                             + ((int) map.getSize().getHeight()) + "&WIDTH="
-                                            + ((int) map.getSize().getWidth()) + "&I=" + mapXClick
-                                            + "&J=" + mapYClick + "&STYLES=default/default"
+                                            + ((int) map.getSize().getWidth()) + "&X=" + mapXClick
+                                            + "&Y=" + mapYClick + "&STYLES=default/default"
                                             + ((eS != null) ? ("&ELEVATION=" + eS) : "") + "&TIME="
                                             + startDateTime + "/" + endDateTime + "&VERSION=1.1.1";
 

@@ -36,26 +36,20 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
     <UserStyle>
       <se:CoverageStyle>
         <se:Rule>
-          <se:RasterSymbolizer>
+          <resc:ContourSymbolizer>
             <se:Opacity>1.0</se:Opacity>
-            <se:ColorMap>
-              <resc:Segment fallbackValue="$bgColor">
-                <se:LookupValue>Rasterdata</se:LookupValue>
-                <resc:BelowMinValue>#00000000</resc:BelowMinValue>
-                <resc:ValueList>
-                  <se:Value>#00000000</se:Value>
-                  <se:Value>#FF000000</se:Value>
-                </resc:ValueList>
-                <resc:AboveMaxValue>#FF000000</resc:AboveMaxValue>
-                <resc:Range>
-                  <resc:Minimum>0</resc:Minimum>
-                  <resc:Maximum>5</resc:Maximum>
-                  <resc:Spacing>$logarithmic</resc:Spacing>
-                </resc:Range>
-                <resc:NumberOfSegments>$numColorBands</resc:NumberOfSegments>
-              </resc:Segment>
-            </se:ColorMap>
-          </se:RasterSymbolizer>
+            <resc:NumberOfContours>10</resc:NumberOfContours>
+            <resc:ContourLineColour>#FF000000</resc:ContourLineColour>
+            <resc:ContourLineWidth>1</resc:ContourLineWidth>
+            <resc:ContourLineStyle>DASHED</resc:ContourLineStyle>
+            <resc:LabelEnabled>true</resc:LabelEnabled>
+            <resc:Range>
+              <resc:Minimum>0</resc:Minimum>
+              <resc:Maximum>5</resc:Maximum>
+              <resc:Spacing>$logarithmic</resc:Spacing>
+            </resc:Range>
+            <resc:AutoRangeEnabled>false</resc:AutoRangeEnabled>
+          </resc:ContourSymbolizer>
         </se:Rule>
       </se:CoverageStyle>
     </UserStyle>

@@ -803,19 +803,50 @@ public final class GISUtils {
      *         represents the area where valid values can be found in all the
      *         supplied {@link HorizontalDomain}s. The
      *         {@link CoordinateReferenceSystem} of the returned
-     *         {@link HorizontalDomain} will be WGS84
+     *         {@link HorizontalDomain} will be the same as the supplied
+     *         {@link HorizontalDomain}s if they match, otherwise it will be
+     *         WGS84. If all of the supplied {@link HorizontalDomain}s have a
+     *         <code>null</code> CRS, they are assumed to have the same
+     *         (undefined) CRS. If there is a mixture of <code>null</code> and
+     *         non-<code>null</code> CRSes, there is no intersection.
      */
     public static HorizontalDomain getIntersectionOfHorizontalDomains(HorizontalDomain... domains) {
         if (domains.length == 0) {
             throw new IllegalArgumentException("Must provide multiple domains to get a union");
         }
-        double minLat = Double.MAX_VALUE;
-        double maxLat = -Double.MAX_VALUE;
-        double minLon = Double.MAX_VALUE;
-        double maxLon = -Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+        double minX = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE;
+
+        boolean sameCrs = true;
+        HorizontalDomain comparison = domains[0];
+        for (int i = 1; i < domains.length; i++) {
+            HorizontalDomain domain = domains[i];
+            if (comparison.getCoordinateReferenceSystem() == null) {
+                /*
+                 * If our comparison CRS is null, then all others must be too,
+                 * otherwise we cannot find an intersection.
+                 */
+                if (domain.getCoordinateReferenceSystem() != null) {
+                    return null;
+                }
+            } else {
+                /*
+                 * If we have a null CRS, we cannot find an intersection, since
+                 * our comparison CRS is non-null
+                 */
+                if (domain.getCoordinateReferenceSystem() == null) {
+                    return null;
+                }
+                if (!comparison.getCoordinateReferenceSystem().equals(
+                        domain.getCoordinateReferenceSystem())) {
+                    sameCrs = false;
+                }
+            }
+        }
 
         boolean allEqual = true;
-        HorizontalDomain comparison = domains[0];
         for (HorizontalDomain domain : domains) {
             /*
              * If one of the domains is null, their intersection is null
@@ -826,24 +857,42 @@ public final class GISUtils {
             if (!domain.equals(comparison)) {
                 allEqual = false;
             }
-            GeographicBoundingBox gbbox = domain.getGeographicBoundingBox();
-            if (gbbox.getEastBoundLongitude() > maxLon) {
-                maxLon = gbbox.getEastBoundLongitude();
-            }
-            if (gbbox.getWestBoundLongitude() < minLon) {
-                minLon = gbbox.getWestBoundLongitude();
-            }
-            if (gbbox.getNorthBoundLatitude() > maxLat) {
-                maxLat = gbbox.getNorthBoundLatitude();
-            }
-            if (gbbox.getSouthBoundLatitude() < minLat) {
-                minLat = gbbox.getSouthBoundLatitude();
+            if (sameCrs) {
+                BoundingBox bbox = domain.getBoundingBox();
+                if (bbox.getMaxX() > maxX) {
+                    maxX = bbox.getMaxX();
+                }
+                if (bbox.getMinX() < minX) {
+                    minX = bbox.getMinX();
+                }
+                if (bbox.getMaxY() > maxY) {
+                    maxY = bbox.getMaxY();
+                }
+                if (bbox.getMinY() < minY) {
+                    minY = bbox.getMinY();
+                }
+            } else {
+                GeographicBoundingBox gbbox = domain.getGeographicBoundingBox();
+                if (gbbox.getEastBoundLongitude() > maxX) {
+                    maxX = gbbox.getEastBoundLongitude();
+                }
+                if (gbbox.getWestBoundLongitude() < minX) {
+                    minX = gbbox.getWestBoundLongitude();
+                }
+                if (gbbox.getNorthBoundLatitude() > maxY) {
+                    maxY = gbbox.getNorthBoundLatitude();
+                }
+                if (gbbox.getSouthBoundLatitude() < minY) {
+                    minY = gbbox.getSouthBoundLatitude();
+                }
             }
         }
         if (allEqual) {
             return comparison;
         }
-        return new SimpleHorizontalDomain(minLon, minLat, maxLon, maxLat);
+        CoordinateReferenceSystem crs = sameCrs ? comparison.getCoordinateReferenceSystem()
+                : DefaultGeographicCRS.WGS84;
+        return new SimpleHorizontalDomain(minX, minY, maxX, maxY, crs);
     }
 
     /**

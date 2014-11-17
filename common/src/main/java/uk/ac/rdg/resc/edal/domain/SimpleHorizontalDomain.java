@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.domain;
 
 import java.io.Serializable;
 
-import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -38,10 +37,10 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
- * A simple implementation of a {@link HorizontalDomain} where all co-ordinates
- * are in the WGS84 CRS
+ * A simple implementation of a {@link HorizontalDomain}
  * 
  * @author Guy Griffiths
  */
@@ -65,6 +64,25 @@ public class SimpleHorizontalDomain implements HorizontalDomain, Serializable {
         bbox = new BoundingBoxImpl(minLon, minLat, maxLon, maxLat, DefaultGeographicCRS.WGS84);
     }
 
+    /**
+     * Create a {@link HorizontalDomain}
+     * 
+     * @param minX
+     *            The minimum x value
+     * @param minY
+     *            The minimum y value
+     * @param maxX
+     *            The maximum x value
+     * @param maxY
+     *            The maximum y value
+     * @param crs
+     *            The {@link CoordinateReferenceSystem} of the domain
+     */
+    public SimpleHorizontalDomain(double minX, double minY, double maxX, double maxY,
+            CoordinateReferenceSystem crs) {
+        bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, crs);
+    }
+
     @Override
     public boolean contains(HorizontalPosition position) {
         return bbox.contains(position);
@@ -77,13 +95,12 @@ public class SimpleHorizontalDomain implements HorizontalDomain, Serializable {
 
     @Override
     public GeographicBoundingBox getGeographicBoundingBox() {
-        return new DefaultGeographicBoundingBox(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(),
-                bbox.getMaxY());
+        return GISUtils.toGeographicBoundingBox(bbox);
     }
 
     @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return DefaultGeographicCRS.WGS84;
+        return bbox.getCoordinateReferenceSystem();
     }
 
     @Override

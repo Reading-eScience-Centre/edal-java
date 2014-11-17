@@ -225,6 +225,13 @@ public class ColourPalette {
                 Math.round(fracFromC1 * c1.getAlpha() + fracFromC2 * c2.getAlpha()));
     }
 
+    /**
+     * Gets the colour corresponding to a fractional point along the palette
+     * 
+     * @param value
+     *            The fraction along the palette of the colour
+     * @return The desired colour
+     */
     public Color getColor(float value) {
         if (value < 0.0f || value > 1.0f) {
             throw new IllegalArgumentException("value must be between 0 and 1");

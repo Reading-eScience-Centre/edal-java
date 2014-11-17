@@ -62,7 +62,9 @@ public class SegmentColourScheme extends ColourScheme {
         this.scaleRange = scaleRange;
         this.belowMinColour = belowMinColour;
         this.aboveMaxColour = aboveMaxColour;
-        this.noDataColour = noDataColour;
+        if(noDataColour != null) {
+            this.noDataColour = noDataColour;
+        }
         this.nColourBands = nColourBands;
         this.palette = new ColourPalette(palette, nColourBands);
     }
@@ -73,7 +75,9 @@ public class SegmentColourScheme extends ColourScheme {
         this.scaleRange = scaleRange;
         this.belowMinColour = belowMinColour;
         this.aboveMaxColour = aboveMaxColour;
-        this.noDataColour = noDataColour;
+        if(noDataColour != null) {
+            this.noDataColour = noDataColour;
+        }
         this.nColourBands = nColourBands;
         this.paletteString = paletteString;
     }

@@ -78,8 +78,8 @@ public class MeanSDPlugin extends VariablePlugin {
         /*
          * Create a new container metadata object
          */
-        VariableMetadata containerMetadata = newVariableMetadataFromMetadata(getFullId(GROUP),
-                new Parameter(getFullId(GROUP), title, "Statistics for " + title, null, null), false,
+        VariableMetadata containerMetadata = newVariableMetadataFromMetadata(new Parameter(
+                getFullId(GROUP), title, "Statistics for " + title, null, null), false,
                 meanMetadata, sdMetadata);
 
         /*

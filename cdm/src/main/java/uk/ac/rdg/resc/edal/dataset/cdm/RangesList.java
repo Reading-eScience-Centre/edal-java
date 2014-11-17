@@ -30,8 +30,10 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.Dimension;
@@ -204,5 +206,42 @@ final class RangesList {
         Range xRange = getRange(xAxisIndex);
         return String.format("tRange(%d): %s, zRange(%d): %s, yRange(%d): %s, xRange(%d): %s",
                 tAxisIndex, tRange, zAxisIndex, zRange, yAxisIndex, yRange, xAxisIndex, xRange);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((ranges == null) ? 0 : ranges.hashCode());
+        result = prime * result + tAxisIndex;
+        result = prime * result + xAxisIndex;
+        result = prime * result + yAxisIndex;
+        result = prime * result + zAxisIndex;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RangesList other = (RangesList) obj;
+        if (ranges == null) {
+            if (other.ranges != null)
+                return false;
+        } else if (!ranges.equals(other.ranges))
+            return false;
+        if (tAxisIndex != other.tAxisIndex)
+            return false;
+        if (xAxisIndex != other.xAxisIndex)
+            return false;
+        if (yAxisIndex != other.yAxisIndex)
+            return false;
+        if (zAxisIndex != other.zAxisIndex)
+            return false;
+        return true;
     }
 }

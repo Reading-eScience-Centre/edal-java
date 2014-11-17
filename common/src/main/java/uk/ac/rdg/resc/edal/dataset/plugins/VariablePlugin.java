@@ -339,8 +339,6 @@ public abstract class VariablePlugin {
      * {@link VariableMetadata} from several other {@link VariableMetadata}
      * objects.
      * 
-     * @param id
-     *            The ID of the variable
      * @param parameter
      *            The {@link Parameter} describing the variable
      * @param scalar
@@ -354,7 +352,7 @@ public abstract class VariablePlugin {
      *         supplied domains. If appropriate, this will be a
      *         {@link GridVariableMetadata} object.
      */
-    protected VariableMetadata newVariableMetadataFromMetadata(String id, Parameter parameter,
+    protected VariableMetadata newVariableMetadataFromMetadata(Parameter parameter,
             boolean scalar, VariableMetadata... metadata) {
         HorizontalDomain[] hDomains = new HorizontalDomain[metadata.length];
         VerticalDomain[] vDomains = new VerticalDomain[metadata.length];
@@ -364,7 +362,7 @@ public abstract class VariablePlugin {
             vDomains[i] = metadata[i].getVerticalDomain();
             tDomains[i] = metadata[i].getTemporalDomain();
         }
-        return newVariableMetadataFromDomains(id, parameter, scalar, hDomains, vDomains, tDomains);
+        return newVariableMetadataFromDomains(parameter, scalar, hDomains, vDomains, tDomains);
     }
 
     /**
@@ -376,8 +374,6 @@ public abstract class VariablePlugin {
      * {@link VariableMetadata} from several other {@link VariableMetadata}
      * objects.
      * 
-     * @param id
-     *            The ID of the variable
      * @param parameter
      *            The {@link Parameter} describing the variable
      * @param scalar
@@ -394,7 +390,7 @@ public abstract class VariablePlugin {
      *         supplied domains. If appropriate, this will be a
      *         {@link GridVariableMetadata} object.
      */
-    protected VariableMetadata newVariableMetadataFromDomains(String id, Parameter parameter,
+    protected VariableMetadata newVariableMetadataFromDomains(Parameter parameter,
             boolean scalar, HorizontalDomain[] hDomains, VerticalDomain[] zDomains,
             TemporalDomain[] tDomains) {
         HorizontalDomain hDomain = GISUtils.getIntersectionOfHorizontalDomains(hDomains);
@@ -403,10 +399,10 @@ public abstract class VariablePlugin {
         if (hDomain instanceof HorizontalGrid
                 && (vDomain instanceof VerticalAxis || vDomain == null)
                 && (tDomain instanceof TimeAxis || tDomain == null)) {
-            return new GridVariableMetadata(id, parameter, (HorizontalGrid) hDomain,
+            return new GridVariableMetadata(parameter.getId(), parameter, (HorizontalGrid) hDomain,
                     (VerticalAxis) vDomain, (TimeAxis) tDomain, scalar);
         } else {
-            return new VariableMetadata(id, parameter, hDomain, vDomain, tDomain, scalar);
+            return new VariableMetadata(parameter.getId(), parameter, hDomain, vDomain, tDomain, scalar);
         }
     }
 }

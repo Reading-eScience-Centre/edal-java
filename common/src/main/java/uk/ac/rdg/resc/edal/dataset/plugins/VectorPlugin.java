@@ -118,18 +118,18 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Generate metadata for new components
          */
-        VariableMetadata magMetadata = newVariableMetadataFromMetadata(getFullId(MAG_ROLE),
-                new Parameter(getFullId(MAG_ROLE), "Magnitude of " + title.replaceAll("_", " "),
-                        "Magnitude of components:\n" + xMetadata.getParameter().getDescription()
-                                + " and\n" + yMetadata.getParameter().getDescription(), xMetadata
-                                .getParameter().getUnits(), getMagnitudeStandardName(xMetadata
-                                .getParameter().getStandardName())), true, xMetadata, yMetadata);
-        VariableMetadata dirMetadata = newVariableMetadataFromMetadata(getFullId(DIR_ROLE),
-                new Parameter(getFullId(DIR_ROLE), "Direction of " + title.replaceAll("_", " "),
-                        "Direction of components:\n" + xMetadata.getParameter().getDescription()
-                                + " and\n" + yMetadata.getParameter().getDescription(), "degrees",
-                        getDirectionStandardName(xMetadata.getParameter().getStandardName())),
-                true, xMetadata, yMetadata);
+        VariableMetadata magMetadata = newVariableMetadataFromMetadata(new Parameter(
+                getFullId(MAG_ROLE), "Magnitude of " + title.replaceAll("_", " "),
+                "Magnitude of components:\n" + xMetadata.getParameter().getDescription() + " and\n"
+                        + yMetadata.getParameter().getDescription(), xMetadata.getParameter()
+                        .getUnits(), getMagnitudeStandardName(xMetadata.getParameter()
+                        .getStandardName())), true, xMetadata, yMetadata);
+        VariableMetadata dirMetadata = newVariableMetadataFromMetadata(new Parameter(
+                getFullId(DIR_ROLE), "Direction of " + title.replaceAll("_", " "),
+                "Direction of components:\n" + xMetadata.getParameter().getDescription() + " and\n"
+                        + yMetadata.getParameter().getDescription(), "degrees",
+                getDirectionStandardName(xMetadata.getParameter().getStandardName())), true,
+                xMetadata, yMetadata);
 
         /*
          * Find the original parent which the x-component belongs to (and almost
@@ -140,9 +140,9 @@ public class VectorPlugin extends VariablePlugin {
         /*
          * Create a new container metadata object
          */
-        VariableMetadata containerMetadata = newVariableMetadataFromMetadata(getFullId(GROUP),
-                new Parameter(getFullId(GROUP), title, "Vector fields for " + title, null, null),
-                false, xMetadata, yMetadata);
+        VariableMetadata containerMetadata = newVariableMetadataFromMetadata(new Parameter(
+                getFullId(GROUP), title, "Vector fields for " + title, null, null), false,
+                xMetadata, yMetadata);
 
         /*
          * Set all components to have a new parent

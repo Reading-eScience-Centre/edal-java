@@ -81,7 +81,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
     private String ncmlString = null;
 
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public AbstractGridDataset createDataset(String id, String location) throws IOException, EdalException {
         NetcdfDataset nc = null;
         try {
             /*
@@ -281,7 +281,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                 }
             }
 
-            Dataset cdmGridDataset = new CdmGridDataset(id, location, vars,
+            CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
                     CdmUtils.getOptimumDataReadingStrategy(nc));
             for (Entry<String, String[]> componentData : xyComponentPairs.entrySet()) {
                 String commonName = componentData.getKey();
