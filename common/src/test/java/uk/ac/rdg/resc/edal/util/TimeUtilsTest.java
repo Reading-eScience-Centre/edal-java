@@ -237,9 +237,6 @@ public class TimeUtilsTest {
         mixedTimeString = mixedTimeString + "," + nonUTC5;
         expectedDateRange = Extents.newExtent((new DateTime(nonUTC3)).toDateTime(DateTimeZone.UTC),
                 new DateTime(nonUTC5).toDateTime(DateTimeZone.UTC));
-        System.out.println(nonUTC5+"  ->  " + new DateTime(nonUTC5).toDateTime(DateTimeZone.UTC));
-        System.out.println(mixedTimeString);
-        System.out.println(TimeUtils.getTimeRangeForString(mixedTimeString, isoChronology));
         assertEquals(expectedDateRange,
                 TimeUtils.getTimeRangeForString(mixedTimeString, isoChronology));
     }
