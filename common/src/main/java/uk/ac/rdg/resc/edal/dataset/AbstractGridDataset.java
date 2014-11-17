@@ -1948,6 +1948,9 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                  */
                 GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(variableId);
                 GridCoordinates2D xy = variableMetadata.getHorizontalDomain().findIndexOf(position);
+                if(xy == null) {
+                    return null;
+                }
 
                 VerticalAxis verticalDomain = variableMetadata.getVerticalDomain();
                 int z = getVerticalIndex(zVal, verticalDomain, variableId);
