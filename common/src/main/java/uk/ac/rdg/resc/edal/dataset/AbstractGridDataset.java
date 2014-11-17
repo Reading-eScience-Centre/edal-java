@@ -58,6 +58,7 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
@@ -114,7 +115,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     @Override
-    public GridFeature readFeature(String featureId) throws DataReadingException {
+    public GridFeature readFeature(String featureId) throws DataReadingException,
+            VariableNotFoundException {
         VariableMetadata variableMetadata = getVariableMetadata(featureId);
         if (!(variableMetadata instanceof GridVariableMetadata)) {
             /*
@@ -200,9 +202,12 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      * @throws DataReadingException
      *             If the source variables' domains do not match the domain for
      *             a derived variable
+     * @throws VariableNotFoundException
+     *             If the requested variable is not found
      */
     private Array4D<Number> read4dData(final String varId, GridDataSource gridDataSource,
-            final GridVariableMetadata metadata) throws IOException, DataReadingException {
+            final GridVariableMetadata metadata) throws IOException, DataReadingException,
+            VariableNotFoundException {
         final VariablePlugin plugin = isDerivedVariable(varId);
         if (plugin == null) {
             /*
@@ -291,7 +296,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
 
     @Override
     public final List<MapFeature> extractMapFeatures(Set<String> varIds, PlottingDomainParams params)
-            throws DataReadingException {
+            throws DataReadingException, VariableNotFoundException {
         /*
          * If the user has passed in null for the variable IDs, they want all
          * variables returned
@@ -417,10 +422,11 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *             If there is a problem opening the {@link GridDataSource}
      * @throws DataReadingException
      *             If there is a problem reading the data
+     * @throws VariableNotFoundException 
      */
     private Array2D<Number> readHorizontalData(String varId, final HorizontalGrid targetGrid,
             Double zPos, DateTime time, GridDataSource dataSource) throws IOException,
-            DataReadingException {
+            DataReadingException, VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(varId);
         if (plugin == null) {
             return readUnderlyingHorizontalData(varId, targetGrid, zPos, time, dataSource);
@@ -475,10 +481,11 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *             If there is a problem opening the {@link GridDataSource}
      * @throws DataReadingException
      *             If there is a problem reading the data
+     * @throws VariableNotFoundException 
      */
     private Array2D<Number> readUnderlyingHorizontalData(String varId, HorizontalGrid targetGrid,
             Double zPos, DateTime time, GridDataSource dataSource) throws IOException,
-            DataReadingException {
+            DataReadingException, VariableNotFoundException {
         /*
          * This cast will always work, because we only ever call this method for
          * non-derived variables - i.e. those whose metadata was provided in the
@@ -617,7 +624,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
 
     @Override
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
+            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException {
         List<ProfileFeature> features = new ArrayList<>();
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -805,7 +812,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return features;
     }
 
-    private VerticalAxis getVerticalAxis(Set<String> varIds) throws IncorrectDomainException {
+    private VerticalAxis getVerticalAxis(Set<String> varIds) throws IncorrectDomainException,
+            VariableNotFoundException {
         VerticalAxis retAxis = null;
         Extent<Double> zExtent = null;
         VerticalCrs verticalCrs = null;
@@ -912,10 +920,11 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      * @throws IOException
      *             If there was a problem reading data from the
      *             {@link GridDataSource}
+     * @throws VariableNotFoundException 
      */
     private Map<ProfileLocation, Array1D<Number>> readVerticalData(VariableMetadata metadata,
             VerticalAxis zAxis, BoundingBox bbox, DateTime targetT, Extent<DateTime> tExtent,
-            GridDataSource dataSource) throws IOException, DataReadingException {
+            GridDataSource dataSource) throws IOException, DataReadingException, VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(metadata.getId());
         if (plugin == null) {
             /*
@@ -1002,7 +1011,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      * @param bbox
      *            The {@link BoundingBox} within which to read profiles
      * @param targetT
-     *            The target time at which to read profiles            
+     *            The target time at which to read profiles
      * @param tExtent
      *            The time {@link Extent} within which to read profiles
      * @param dataSource
@@ -1214,7 +1223,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
 
     @Override
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
+            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException {
         List<PointSeriesFeature> features = new ArrayList<>();
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -1406,7 +1415,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return features;
     }
 
-    private TimeAxis getTimeAxis(Set<String> varIds) throws IncorrectDomainException {
+    private TimeAxis getTimeAxis(Set<String> varIds) throws IncorrectDomainException, VariableNotFoundException {
         /*
          * TODO Test?
          */
@@ -1520,11 +1529,12 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      * @throws IOException
      *             If there was a problem reading data from the
      *             {@link GridDataSource}
+     * @throws VariableNotFoundException 
      */
     private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(VariableMetadata metadata,
             TimeAxis tAxis, BoundingBox bbox, Double targetZ, Extent<Double> zExtent,
             GridDataSource dataSource) throws IOException, MismatchedCrsException,
-            DataReadingException {
+            DataReadingException, VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(metadata.getId());
         if (plugin == null) {
             /*
@@ -1760,7 +1770,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      * method. Depends what we want to do with transects.
      */
     public TrajectoryFeature readTrajectoryData(Set<String> varIds, final TrajectoryDomain domain)
-            throws DataReadingException {
+            throws DataReadingException, VariableNotFoundException {
         GridDataSource dataSource = null;
         try {
             /*
@@ -1904,7 +1914,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      * best use it?
      */
     public final Number readSinglePoint(String variableId, HorizontalPosition position,
-            Double zVal, DateTime time) throws DataReadingException {
+            Double zVal, DateTime time) throws DataReadingException, VariableNotFoundException {
         GridDataSource gridDataSource = null;
         try {
             gridDataSource = openGridDataSource();
@@ -1923,7 +1933,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     private final Array1D<Number> readMultiplePointData(String variableId, TrajectoryDomain domain,
-            GridDataSource dataSource) throws DataReadingException {
+            GridDataSource dataSource) throws DataReadingException, VariableNotFoundException {
         Array1D<Number> data = new ValuesArray1D(domain.size());
         Array<GeoPosition> domainObjects = domain.getDomainObjects();
         for (int i = 0; i < domain.size(); i++) {
@@ -1940,7 +1950,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     private Number readPointData(String variableId, HorizontalPosition position, Double zVal,
-            DateTime time, GridDataSource gridDataSource) throws DataReadingException {
+            DateTime time, GridDataSource gridDataSource) throws DataReadingException, VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(variableId);
         if (plugin != null) {
             /*

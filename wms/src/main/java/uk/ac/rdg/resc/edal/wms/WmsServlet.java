@@ -89,6 +89,7 @@ import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
@@ -848,15 +849,20 @@ public class WmsServlet extends HttpServlet {
                 throw new EdalLayerNotFoundException("The layer " + layerName
                         + " is not enabled on this server");
             }
-        } catch (EdalLayerNotFoundException e1) {
-            throw new MetadataException("Layer not found", e1);
+        } catch (EdalLayerNotFoundException e) {
+            throw new MetadataException("Layer not found", e);
         }
         if (dataset == null || variableId == null || layerMetadata == null) {
             log.error("Layer " + layerName + " doesn't exist - can't get layer details");
             throw new MetadataException("Must supply a valid LAYERNAME to get layer details");
         }
 
-        VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
+        VariableMetadata variableMetadata;
+        try {
+            variableMetadata = dataset.getVariableMetadata(variableId);
+        } catch (VariableNotFoundException e) {
+            throw new MetadataException("Layer not found", e);
+        }
 
         /*
          * Now create local variables containing the relevant details needed
@@ -1013,6 +1019,8 @@ public class WmsServlet extends HttpServlet {
                                     depthValues.addAll(feature.getDomain().getCoordinateValues());
                                 }
                             } catch (DataReadingException e) {
+                                log.error("Problem reading profile feature to test depth levels", e);
+                            } catch (VariableNotFoundException e) {
                                 log.error("Problem reading profile feature to test depth levels", e);
                             }
                         } else {
@@ -1221,7 +1229,7 @@ public class WmsServlet extends HttpServlet {
             if (verticalDomain != null) {
                 profiles = true;
             }
-            if (dataset.getVariableMetadata(variableId).isScalar()) {
+            if (variableMetadata.isScalar()) {
                 /*
                  * Only support transects for scalar layers
                  */
@@ -1279,7 +1287,12 @@ public class WmsServlet extends HttpServlet {
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
         }
-        VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
+        VariableMetadata variableMetadata;
+        try {
+            variableMetadata = dataset.getVariableMetadata(variableId);
+        } catch (VariableNotFoundException e) {
+            throw new MetadataException("The layer " + layerName + " does not exist", e);
+        }
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
 
         JSONObject response = new JSONObject();
@@ -1501,7 +1514,12 @@ public class WmsServlet extends HttpServlet {
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
         }
-        VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
+        VariableMetadata variableMetadata;
+        try {
+            variableMetadata = dataset.getVariableMetadata(variableId);
+        } catch (VariableNotFoundException e) {
+            throw new MetadataException("The layer " + layerName + " does not exist", e);
+        }
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
 
         String startStr = params.getString("start");

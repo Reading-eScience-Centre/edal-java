@@ -49,6 +49,7 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
@@ -108,7 +109,7 @@ public class CdmGridDatasetFactoryTest {
     }
 
     @Test
-    public void testCorrectData() throws DataReadingException {
+    public void testCorrectData() throws DataReadingException, VariableNotFoundException {
         /*- 
          * This test covers:
          * Reading the data from the location
@@ -175,7 +176,7 @@ public class CdmGridDatasetFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testThrowsExceptionForInvalidZ() throws DataReadingException {
+    public void testThrowsExceptionForInvalidZ() throws DataReadingException, VariableNotFoundException {
         /*
          * The z-value is invalid
          */
@@ -187,7 +188,7 @@ public class CdmGridDatasetFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testThrowsExceptionForInvalidTime() throws DataReadingException {
+    public void testThrowsExceptionForInvalidTime() throws DataReadingException, VariableNotFoundException {
         /*
          * The time-value is invalid
          */

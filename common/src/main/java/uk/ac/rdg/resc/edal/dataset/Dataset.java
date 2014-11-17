@@ -36,6 +36,7 @@ import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
@@ -82,8 +83,11 @@ public interface Dataset {
      * @param featureId
      *            The ID of the feature to read
      * @return The resulting {@link Feature}
+     * @throws VariableNotFoundException
+     *             If the requested feature is not found
      */
-    public Feature<?> readFeature(String featureId) throws DataReadingException;
+    public Feature<?> readFeature(String featureId) throws DataReadingException,
+            VariableNotFoundException;
 
     /**
      * @return the IDs of variables in this {@link Dataset}. Generally the term
@@ -98,8 +102,10 @@ public interface Dataset {
      * @param variableId
      *            The variable ID to search for
      * @return The desired {@link VariableMetadata}
+     * @throws VariableNotFoundException
+     *             If the requested variable is not available
      */
-    public VariableMetadata getVariableMetadata(String variableId);
+    public VariableMetadata getVariableMetadata(String variableId) throws VariableNotFoundException;
 
     /**
      * @return the variables at the top level of the hierarchy.
@@ -146,9 +152,10 @@ public interface Dataset {
      *         plotted
      * @throws DataReadingException
      *             If there is a problem reading the underlying data
+     * @throws VariableNotFoundException
      */
     public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException;
+            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException;
 
     /**
      * Extracts {@link ProfileFeature}(s) from the {@link Dataset}
@@ -228,9 +235,11 @@ public interface Dataset {
      *             if there is a problem reading the underlying data
      * @throws UnsupportedOperationException
      *             if not all of the requested variables have a vertical domain
+     * @throws VariableNotFoundException
      */
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException, UnsupportedOperationException;
+            PlottingDomainParams params) throws DataReadingException,
+            UnsupportedOperationException, VariableNotFoundException;
 
     /**
      * @param varId
@@ -321,9 +330,11 @@ public interface Dataset {
      *             if there is a problem reading the underlying data
      * @throws UnsupportedOperationException
      *             if not all of the requested variables have a time domain
+     * @throws VariableNotFoundException
      */
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException, UnsupportedOperationException;
+            PlottingDomainParams params) throws DataReadingException,
+            UnsupportedOperationException, VariableNotFoundException;
 
     /**
      * @param varId

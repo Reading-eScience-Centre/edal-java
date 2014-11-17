@@ -76,6 +76,7 @@ import org.xml.sax.SAXException;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable;
@@ -348,7 +349,12 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
         Dataset dataset = getDatasetFromLayerName(layerName);
         String variableFromId = getVariableFromId(layerName);
         if (dataset != null && variableFromId != null) {
-            return dataset.getVariableMetadata(variableFromId);
+            try {
+                return dataset.getVariableMetadata(variableFromId);
+            } catch (VariableNotFoundException e) {
+                throw new EdalLayerNotFoundException("The layer name " + layerName
+                        + " doesn't map to a variable");
+            }
         } else {
             throw new EdalLayerNotFoundException("The layer name " + layerName
                     + " doesn't map to a variable");

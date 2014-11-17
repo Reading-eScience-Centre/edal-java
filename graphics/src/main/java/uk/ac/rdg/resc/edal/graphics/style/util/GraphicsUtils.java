@@ -29,7 +29,6 @@
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.util.Collection;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
@@ -42,6 +41,7 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array;
@@ -56,6 +56,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  */
 public class GraphicsUtils {
     private static final Logger log = LoggerFactory.getLogger(GraphicsUtils.class);
+
     /**
      * Parses a string to obtain a {@link Color}.
      * 
@@ -122,12 +123,11 @@ public class GraphicsUtils {
     public static String colourToString(Color colour) {
         if (colour == null) {
             return "extend";
-        } else if(colour.getAlpha() == 0) {
+        } else if (colour.getAlpha() == 0) {
             return "transparent";
         }
         return String.format("#%08X", colour.getRGB());
     }
-    
 
     /**
      * Estimate the range of values in this layer by reading a sample of data
@@ -138,12 +138,11 @@ public class GraphicsUtils {
      * @param varId
      *            The ID of the variable to estimate
      * @return An approximate value range
-     * @throws DataReadingException
-     * @throws IOException
-     *             if there was an error reading from the source data
+     * @throws VariableNotFoundException
+     *             If the requested variable is not found
      */
-    public static Extent<Float> estimateValueRange(Dataset dataset, String varId) {
-
+    public static Extent<Float> estimateValueRange(Dataset dataset, String varId)
+            throws VariableNotFoundException {
         VariableMetadata variableMetadata = dataset.getVariableMetadata(varId);
         if (!variableMetadata.isScalar()) {
             return Extents.newExtent(0f, 100f);

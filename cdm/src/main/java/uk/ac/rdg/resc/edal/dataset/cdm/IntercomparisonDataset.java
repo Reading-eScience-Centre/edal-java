@@ -44,6 +44,7 @@ import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
@@ -123,7 +124,7 @@ public class IntercomparisonDataset implements Dataset {
         calculateVariableRelationships();
     }
 
-    private void calculateVariableRelationships() {
+    private void calculateVariableRelationships() throws VariableNotFoundException {
         /*
          * Calculate the variable metadata tree here and reshape it according to
          * shared variables...
@@ -137,8 +138,7 @@ public class IntercomparisonDataset implements Dataset {
             varId2DatasetAndId.put(gridVarId, new DatasetAndId(gridDataset, gridVarId));
         }
         for (String inSituVarId : inSituDataset.getVariableIds()) {
-            varId2DatasetAndId.put(inSituVarId, new DatasetAndId(inSituDataset,
-                    inSituVarId));
+            varId2DatasetAndId.put(inSituVarId, new DatasetAndId(inSituDataset, inSituVarId));
         }
 
         for (String gridVarId : gridDataset.getVariableIds()) {
@@ -241,9 +241,10 @@ public class IntercomparisonDataset implements Dataset {
         DatasetAndId datasetAndId = varId2DatasetAndId.get(variableId);
         return datasetAndId.dataset.getFeatureType(datasetAndId.variableId);
     }
-    
+
     @Override
-    public Feature<?> readFeature(String featureId) throws DataReadingException {
+    public Feature<?> readFeature(String featureId) throws DataReadingException,
+            VariableNotFoundException {
         if (!featureIdsInGrid.containsKey(featureId)) {
             throw new DataReadingException("Feature " + featureId
                     + " doesn't exist in this dataset");
@@ -261,16 +262,16 @@ public class IntercomparisonDataset implements Dataset {
     }
 
     @Override
-    public VariableMetadata getVariableMetadata(String variableId) {
+    public VariableMetadata getVariableMetadata(String variableId) throws VariableNotFoundException {
         if (!varId2DatasetAndId.containsKey(variableId)) {
             throw new IllegalArgumentException(
                     "This dataset does not contain the specified variable (" + variableId + ")");
         }
         DatasetAndId datasetAndId = varId2DatasetAndId.get(variableId);
-        if(datasetAndId.dataset == this) {
+        if (datasetAndId.dataset == this) {
             return ownMetadata.get(datasetAndId.variableId);
         }
-        
+
         return datasetAndId.dataset.getVariableMetadata(datasetAndId.variableId);
     }
 
@@ -278,9 +279,18 @@ public class IntercomparisonDataset implements Dataset {
     public Set<VariableMetadata> getTopLevelVariables() {
         Set<VariableMetadata> ret = new LinkedHashSet<VariableMetadata>();
         for (String metadataId : varId2DatasetAndId.keySet()) {
-            VariableMetadata metadata = getVariableMetadata(metadataId);
-            if (metadata.getParent() == null) {
-                ret.add(metadata);
+            VariableMetadata metadata;
+            try {
+                metadata = getVariableMetadata(metadataId);
+                if (metadata.getParent() == null) {
+                    ret.add(metadata);
+                }
+            } catch (VariableNotFoundException e) {
+                /*
+                 * Shouldn't happen since we're looping through existing
+                 * variables
+                 */
+                assert false;
             }
         }
         return ret;
@@ -305,10 +315,10 @@ public class IntercomparisonDataset implements Dataset {
 
     @Override
     public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
+            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException {
         List<DiscreteFeature<?, ?>> ret = new ArrayList<DiscreteFeature<?, ?>>();
         List<String> variableIds = new ArrayList<String>(varIds);
-        for(int i=0;i<variableIds.size();i++) {
+        for (int i = 0; i < variableIds.size(); i++) {
             String varId = variableIds.get(i);
             DatasetAndId datasetAndId = varId2DatasetAndId.get(varId);
 //            if(datasetAndId == null) {
@@ -321,16 +331,17 @@ public class IntercomparisonDataset implements Dataset {
                  * Don't read map data for unplottable variables
                  */
                 Set<VariableMetadata> children = getVariableMetadata(varId).getChildren();
-                for(VariableMetadata childMetadata : children) {
-                    if(!variableIds.contains(childMetadata.getId())) {
+                for (VariableMetadata childMetadata : children) {
+                    if (!variableIds.contains(childMetadata.getId())) {
                         variableIds.add(childMetadata.getId());
                     }
                 }
                 continue;
             }
-            
-            if(datasetAndId.dataset == this) {
-                System.out.println("extracting a map feature for a parent intercomparison layer...");
+
+            if (datasetAndId.dataset == this) {
+                System.out
+                        .println("extracting a map feature for a parent intercomparison layer...");
                 continue;
             }
             /*
@@ -348,10 +359,11 @@ public class IntercomparisonDataset implements Dataset {
         DatasetAndId datasetAndId = varId2DatasetAndId.get(varId);
         return datasetAndId.dataset.supportsProfileFeatureExtraction(datasetAndId.variableId);
     }
-    
+
     @Override
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
+            PlottingDomainParams params) throws DataReadingException,
+            UnsupportedOperationException, VariableNotFoundException {
         List<ProfileFeature> ret = new ArrayList<ProfileFeature>();
         for (String varId : varIds) {
             DatasetAndId datasetAndId = varId2DatasetAndId.get(varId);
@@ -359,7 +371,7 @@ public class IntercomparisonDataset implements Dataset {
              * TODO This can be made more efficient by collecting variables
              * needing to be read from each dataset first
              */
-            if(datasetAndId.dataset == this) {
+            if (datasetAndId.dataset == this) {
                 return ret;
             }
             ret.addAll(datasetAndId.dataset.extractProfileFeatures(
@@ -367,7 +379,7 @@ public class IntercomparisonDataset implements Dataset {
         }
         return ret;
     }
-    
+
     @Override
     public boolean supportsTimeseriesExtraction(String varId) {
         DatasetAndId datasetAndId = varId2DatasetAndId.get(varId);
@@ -376,7 +388,8 @@ public class IntercomparisonDataset implements Dataset {
 
     @Override
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
+            PlottingDomainParams params) throws DataReadingException,
+            UnsupportedOperationException, VariableNotFoundException {
         List<PointSeriesFeature> ret = new ArrayList<PointSeriesFeature>();
         for (String varId : varIds) {
             DatasetAndId datasetAndId = varId2DatasetAndId.get(varId);
@@ -384,7 +397,7 @@ public class IntercomparisonDataset implements Dataset {
              * TODO This can be made more efficient by collecting variables
              * needing to be read from each dataset first
              */
-            if(datasetAndId.dataset == this) {
+            if (datasetAndId.dataset == this) {
                 return ret;
             }
             ret.addAll(datasetAndId.dataset.extractTimeseriesFeatures(

@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 public abstract class AbstractDataset implements Dataset {
@@ -74,12 +75,11 @@ public abstract class AbstractDataset implements Dataset {
     }
 
     @Override
-    public VariableMetadata getVariableMetadata(String variableId) {
+    public VariableMetadata getVariableMetadata(String variableId) throws VariableNotFoundException {
         if (!vars.containsKey(variableId)) {
             log.error("Requested variable metadata for ID: " + variableId
                     + ", but this doesn't exist");
-            throw new IllegalArgumentException(
-                    "This dataset does not contain the specified variable (" + variableId + ")");
+            throw new VariableNotFoundException(variableId);
         }
         return vars.get(variableId);
     }

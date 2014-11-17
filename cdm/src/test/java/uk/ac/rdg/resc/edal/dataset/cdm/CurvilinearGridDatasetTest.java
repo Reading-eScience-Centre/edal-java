@@ -53,6 +53,7 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
@@ -107,9 +108,10 @@ public class CurvilinearGridDatasetTest {
      * 
      * @throws DataReadingException
      *             if there is a problem reading data.
+     * @throws VariableNotFoundException 
      */
     @Test(expected = UnsupportedOperationException.class)
-    public void testUnSupportedOperation() throws DataReadingException {
+    public void testUnSupportedOperation() throws DataReadingException, VariableNotFoundException {
         assertFalse(dataset.supportsProfileFeatureExtraction("allx_u"));
         assertFalse(dataset.supportsTimeseriesExtraction("allx_u"));
 
@@ -136,10 +138,11 @@ public class CurvilinearGridDatasetTest {
      * 
      * @throws IOException
      *             if there is a problem when read data in the netCDf file
+     * @throws VariableNotFoundException 
      * */
 
     @Test
-    public void testCurviLinearCoords() throws IOException {
+    public void testCurviLinearCoords() throws IOException, VariableNotFoundException {
         Variable varLonRho = cdf.findVariable("lon_rho");
         Variable varLatRho = cdf.findVariable("lat_rho");
 
@@ -203,9 +206,10 @@ public class CurvilinearGridDatasetTest {
      * 
      * @throws DataReadingException
      *             If there is a problem when reading the data
+     * @throws VariableNotFoundException 
      * */
     @Test
-    public void testCurviLinearDataset() throws DataReadingException {
+    public void testCurviLinearDataset() throws DataReadingException, VariableNotFoundException {
         assertTrue(dataset instanceof AbstractGridDataset);
 
         List<Variable> variables = cdf.getVariables();
