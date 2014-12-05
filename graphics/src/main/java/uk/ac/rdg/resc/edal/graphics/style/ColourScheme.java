@@ -59,18 +59,48 @@ public abstract class ColourScheme {
      */
     public BufferedImage getScaleBar(int width, int height, float fracOutOfRange, boolean vertical,
             boolean labels, Color textColor, Color bgColor) {
+        return getScaleBar(width, height, fracOutOfRange, fracOutOfRange, vertical, labels,
+                textColor, bgColor);
+    }
+
+    /**
+     * Gets a scale bar for this {@link ColourScheme}
+     * 
+     * @param width
+     *            The desired width of the scale bar
+     * @param height
+     *            The desired height of the scale bar
+     * @param fracOutOfRangeLow
+     *            The amount below the minimum to show as a fraction of the
+     *            coloured part
+     * @param fracOutOfRangeHigh
+     *            The amount above the maximum to show as a fraction of the
+     *            coloured part
+     * @param vertical
+     *            Whether or not the scale bar should be vertical
+     * @param labels
+     *            Whether to show numerical labels
+     * @param textColor
+     *            The colour of the text labels
+     * @param bgColor
+     *            The background colour for the text labels
+     * @return The scale bar image
+     */
+    public BufferedImage getScaleBar(int width, int height, float fracOutOfRangeLow,
+            float fracOutOfRangeHigh, boolean vertical, boolean labels, Color textColor,
+            Color bgColor) {
         int componentSize = vertical ? height : width;
         BufferedImage legendLabels = null;
         if (labels) {
             legendLabels = MapImage.getLegendLabels(
                     new NameAndRange("", Extents.newExtent(getScaleMin(), getScaleMax())),
-                    fracOutOfRange, componentSize, textColor, false, 0);
+                    fracOutOfRangeLow, fracOutOfRangeHigh, componentSize, textColor, false, 0);
         }
         BufferedImage scaleBar = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
         float range = getScaleMax() - getScaleMin();
-        float newLow = getScaleMin() - range * fracOutOfRange;
-        float newHigh = getScaleMax() + range * fracOutOfRange;
+        float newLow = getScaleMin() - range * fracOutOfRangeLow;
+        float newHigh = getScaleMax() + range * fracOutOfRangeHigh;
         range = newHigh - newLow;
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {

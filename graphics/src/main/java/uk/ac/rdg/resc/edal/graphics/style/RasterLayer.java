@@ -53,6 +53,10 @@ public class RasterLayer extends GriddedImageLayer {
     public ColourScheme getColourScheme() {
         return colourScheme;
     }
+    
+    public void setColourScheme(ColourScheme colourScheme) {
+        this.colourScheme = colourScheme;
+    }
 
     @Override
     protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {

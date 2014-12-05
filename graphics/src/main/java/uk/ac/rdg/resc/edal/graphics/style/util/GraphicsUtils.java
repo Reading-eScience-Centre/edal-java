@@ -133,17 +133,24 @@ public class GraphicsUtils {
      * Estimate the range of values in this layer by reading a sample of data
      * from the default time and elevation.
      * 
+     * If the given variable is found, a default range of 0-100 is returned
+     * 
      * @param dataset
      *            The dataset containing the variable to estimate
      * @param varId
      *            The ID of the variable to estimate
      * @return An approximate value range
-     * @throws VariableNotFoundException
-     *             If the requested variable is not found
      */
-    public static Extent<Float> estimateValueRange(Dataset dataset, String varId)
-            throws VariableNotFoundException {
-        VariableMetadata variableMetadata = dataset.getVariableMetadata(varId);
+    public static Extent<Float> estimateValueRange(Dataset dataset, String varId) {
+        VariableMetadata variableMetadata;
+        try {
+            variableMetadata = dataset.getVariableMetadata(varId);
+        } catch (VariableNotFoundException e1) {
+            /*
+             * Variable doesn't exist, any range is fine
+             */
+            return Extents.newExtent(0f, 100f);
+        }
         if (!variableMetadata.isScalar()) {
             return Extents.newExtent(0f, 100f);
             /*
@@ -199,7 +206,7 @@ public class GraphicsUtils {
                     }
                 }
             }
-        } catch (DataReadingException e) {
+        } catch (DataReadingException | VariableNotFoundException e) {
             log.error(
                     "Problem reading data whilst estimating scale range.  A default value will be used.",
                     e);

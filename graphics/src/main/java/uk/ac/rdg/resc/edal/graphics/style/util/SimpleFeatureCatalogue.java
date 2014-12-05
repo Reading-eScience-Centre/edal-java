@@ -41,19 +41,19 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
-public class SimpleFeatureCatalogue implements FeatureCatalogue {
-    private boolean cacheEnabled = false;
-    private Map<CacheKey, List<? extends DiscreteFeature<?, ?>>> features = null;
-    private Dataset dataset;
+public class SimpleFeatureCatalogue<D extends Dataset> implements FeatureCatalogue {
+    protected boolean cacheEnabled = false;
+    private Map<String, Map<PlottingDomainParams, List<? extends DiscreteFeature<?, ?>>>> features = null;
+    private D dataset;
 
-    public SimpleFeatureCatalogue(Dataset dataset, boolean cacheEnabled) throws IOException,
+    public SimpleFeatureCatalogue(D dataset, boolean cacheEnabled) throws IOException,
             EdalException {
         this.dataset = dataset;
         this.cacheEnabled = cacheEnabled;
         features = new HashMap<>();
     }
 
-    public Dataset getDataset() {
+    public D getDataset() {
         return dataset;
     }
 
@@ -63,68 +63,35 @@ public class SimpleFeatureCatalogue implements FeatureCatalogue {
         return new FeaturesAndMemberName(getMapFeature(params, id, cacheEnabled), id);
     }
 
-    private List<? extends DiscreteFeature<?, ?>> getMapFeature(PlottingDomainParams params,
+    public void expireFromCache(String varId) {
+        if (features.containsKey(varId)) {
+            features.remove(varId);
+        }
+    }
+
+    protected List<? extends DiscreteFeature<?, ?>> getMapFeature(PlottingDomainParams params,
             String varId, boolean cache) throws DataReadingException, VariableNotFoundException {
-        CacheKey key = new CacheKey(params, varId);
-        if (features.containsKey(key)) {
-            return features.get(key);
+        /*
+         * We do caching first by variable ID and then by plotting parameters.
+         * This allows us to expire certain variables from the cache on demand
+         */
+        Map<PlottingDomainParams, List<? extends DiscreteFeature<?, ?>>> varCache;
+        if (features.containsKey(varId)) {
+            varCache = features.get(varId);
+        } else {
+            varCache = new HashMap<>();
+            features.put(varId, varCache);
+        }
+
+        if (varCache.containsKey(params)) {
+            return varCache.get(params);
         } else {
             List<? extends DiscreteFeature<?, ?>> extractedFeatures = dataset.extractMapFeatures(
                     CollectionUtils.setOf(varId), params);
             if (cache) {
-                features.put(key, extractedFeatures);
+                varCache.put(params, extractedFeatures);
             }
             return extractedFeatures;
         }
     }
-
-    private class CacheKey {
-        private PlottingDomainParams plottingParams;
-        private String varId;
-
-        public CacheKey(PlottingDomainParams plottingParams, String varId) {
-            super();
-            this.plottingParams = plottingParams;
-            this.varId = varId;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + getOuterType().hashCode();
-            result = prime * result + ((plottingParams == null) ? 0 : plottingParams.hashCode());
-            result = prime * result + ((varId == null) ? 0 : varId.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            CacheKey other = (CacheKey) obj;
-            if (!getOuterType().equals(other.getOuterType()))
-                return false;
-            if (plottingParams == null) {
-                if (other.plottingParams != null)
-                    return false;
-            } else if (!plottingParams.equals(other.plottingParams))
-                return false;
-            if (varId == null) {
-                if (other.varId != null)
-                    return false;
-            } else if (!varId.equals(other.varId))
-                return false;
-            return true;
-        }
-
-        private SimpleFeatureCatalogue getOuterType() {
-            return SimpleFeatureCatalogue.this;
-        }
-    }
-
 }

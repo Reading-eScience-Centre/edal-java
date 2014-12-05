@@ -59,6 +59,8 @@ public class VariableMetadata {
     private Set<VariableMetadata> children;
     private boolean scalar;
 
+    private Map<String, Object> variableProperties = new HashMap<>();
+
     /*
      * A Map containing arbitrary roles of child VariableMetadata objects in
      * relation to this one. This can be used to specify e.g. a certain child
@@ -249,9 +251,10 @@ public class VariableMetadata {
              * have this as a child any more.
              */
             this.parent.children.remove(this);
-            
-            Iterator<Entry<String, VariableMetadata>> iterator = this.parent.childrenWithRoles.entrySet().iterator();
-            while(iterator.hasNext()) {
+
+            Iterator<Entry<String, VariableMetadata>> iterator = this.parent.childrenWithRoles
+                    .entrySet().iterator();
+            while (iterator.hasNext()) {
                 Entry<String, VariableMetadata> children = iterator.next();
                 if (children.getValue().equals(this)) {
                     iterator.remove();
@@ -264,7 +267,7 @@ public class VariableMetadata {
              * We only add this as a child if it is not the tree root
              */
             this.parent.children.add(this);
-            if(relationshipToParent != null) {
+            if (relationshipToParent != null) {
                 this.parent.childrenWithRoles.put(relationshipToParent.trim(), this);
             }
             dataset = parent.getDataset();
@@ -280,7 +283,7 @@ public class VariableMetadata {
      *         <code>null</code> if there are none
      */
     public VariableMetadata getChildWithRole(String role) {
-        if(role == null) {
+        if (role == null) {
             return null;
         }
         return childrenWithRoles.get(role.trim());
@@ -293,5 +296,14 @@ public class VariableMetadata {
      */
     public boolean isScalar() {
         return scalar;
+    }
+
+    /**
+     * @return A {@link Map} of arbitrary properties which this variable has
+     *         associated with it. This can be used to record any additional
+     *         required information about the variable.
+     */
+    public Map<String, Object> getVariableProperties() {
+        return variableProperties;
     }
 }

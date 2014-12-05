@@ -66,7 +66,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  */
 public abstract class VariablePlugin {
 
-    private String[] uses;
+    protected String[] uses;
     private String[] provides;
     private int prefixLength;
 
@@ -86,7 +86,7 @@ public abstract class VariablePlugin {
         }
         uses = usesVariables;
         provides = new String[providesSuffixes.length];
-        combineIds(usesVariables);
+        combinedName = combineIds(usesVariables);
         prefixLength = combinedName.length() + 1;
         for (int i = 0; i < providesSuffixes.length; i++) {
             provides[i] = getFullId(providesSuffixes[i]);
@@ -231,9 +231,6 @@ public abstract class VariablePlugin {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " metadata sources, but you have supplied " + values.length);
         }
-        if (values[0] == null || values[1] == null) {
-            return null;
-        }
         return generateValue(varId.substring(prefixLength), pos, values);
     }
 
@@ -352,8 +349,8 @@ public abstract class VariablePlugin {
      *         supplied domains. If appropriate, this will be a
      *         {@link GridVariableMetadata} object.
      */
-    protected VariableMetadata newVariableMetadataFromMetadata(Parameter parameter,
-            boolean scalar, VariableMetadata... metadata) {
+    protected VariableMetadata newVariableMetadataFromMetadata(Parameter parameter, boolean scalar,
+            VariableMetadata... metadata) {
         HorizontalDomain[] hDomains = new HorizontalDomain[metadata.length];
         VerticalDomain[] vDomains = new VerticalDomain[metadata.length];
         TemporalDomain[] tDomains = new TemporalDomain[metadata.length];
@@ -390,9 +387,8 @@ public abstract class VariablePlugin {
      *         supplied domains. If appropriate, this will be a
      *         {@link GridVariableMetadata} object.
      */
-    protected VariableMetadata newVariableMetadataFromDomains(Parameter parameter,
-            boolean scalar, HorizontalDomain[] hDomains, VerticalDomain[] zDomains,
-            TemporalDomain[] tDomains) {
+    protected VariableMetadata newVariableMetadataFromDomains(Parameter parameter, boolean scalar,
+            HorizontalDomain[] hDomains, VerticalDomain[] zDomains, TemporalDomain[] tDomains) {
         HorizontalDomain hDomain = GISUtils.getIntersectionOfHorizontalDomains(hDomains);
         VerticalDomain vDomain = GISUtils.getIntersectionOfVerticalDomains(zDomains);
         TemporalDomain tDomain = GISUtils.getIntersectionOfTemporalDomains(tDomains);
@@ -402,7 +398,8 @@ public abstract class VariablePlugin {
             return new GridVariableMetadata(parameter.getId(), parameter, (HorizontalGrid) hDomain,
                     (VerticalAxis) vDomain, (TimeAxis) tDomain, scalar);
         } else {
-            return new VariableMetadata(parameter.getId(), parameter, hDomain, vDomain, tDomain, scalar);
+            return new VariableMetadata(parameter.getId(), parameter, hDomain, vDomain, tDomain,
+                    scalar);
         }
     }
 }

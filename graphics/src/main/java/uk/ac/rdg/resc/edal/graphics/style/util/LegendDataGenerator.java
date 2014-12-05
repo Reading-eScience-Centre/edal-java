@@ -78,8 +78,10 @@ public class LegendDataGenerator {
     protected MapDomain domain;
     protected boolean[][] missingBits;
 
-    protected float fractionExtraX;
-    protected float fractionExtraY;
+    protected float fractionExtraXLow;
+    protected float fractionExtraXHigh;
+    protected float fractionExtraYLow;
+    protected float fractionExtraYHigh;
 
     /**
      * Instantiate a new {@link LegendDataGenerator}
@@ -128,6 +130,39 @@ public class LegendDataGenerator {
      */
     public LegendDataGenerator(int width, int height, BufferedImage backgroundMask,
             float fractionExtraX, float fractionExtraY) {
+        this(width, height, backgroundMask, fractionExtraX, fractionExtraX, fractionExtraY,
+                fractionExtraY);
+    }
+
+    /**
+     * Instantiate a new {@link LegendDataGenerator}
+     * 
+     * @param width
+     *            The width of the domain (which will translate to the final
+     *            image width in pixels)
+     * @param height
+     *            The height of the domain (which will translate to the final
+     *            image height in pixels)
+     * @param backgroundMask
+     *            An image to use as a background mask - i.e. where the missing
+     *            data should be generated. Pixels with value 0 (usually black)
+     *            are interpreted as missing data
+     * @param fractionExtraXLow
+     *            The fraction of the total data which should be counted as out
+     *            of range data in the x-direction below the minimum
+     * @param fractionExtraXHigh
+     *            The fraction of the total data which should be counted as out
+     *            of range data in the x-direction above the maximum
+     * @param fractionExtraYLow
+     *            The fraction of the total data which should be counted as out
+     *            of range data in the y-direction below the minimum
+     * @param fractionExtraYHigh
+     *            The fraction of the total data which should be counted as out
+     *            of range data in the y-direction above the maximum
+     */
+    public LegendDataGenerator(int width, int height, BufferedImage backgroundMask,
+            float fractionExtraXLow, float fractionExtraXHigh, float fractionExtraYLow,
+            float fractionExtraYHigh) {
         /*
          * We use 0.001 as the spacing. Since we're working in WGS84 (for
          * convenience - it doesn't matter what CRS we use, but we need to work
@@ -141,8 +176,10 @@ public class LegendDataGenerator {
         HorizontalGrid hGrid = new RegularGridImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84);
         domain = new MapDomainImpl(hGrid, null, null, null);
 
-        this.fractionExtraX = fractionExtraX;
-        this.fractionExtraY = fractionExtraY;
+        this.fractionExtraXLow = fractionExtraXLow;
+        this.fractionExtraXHigh = fractionExtraXHigh;
+        this.fractionExtraYLow = fractionExtraYLow;
+        this.fractionExtraYHigh = fractionExtraYHigh;
 
         missingBits = new boolean[width][height];
         if (backgroundMask != null) {
@@ -283,14 +320,16 @@ public class LegendDataGenerator {
                     values.put(
                             field.getFieldLabel(),
                             new ImmutableArray1D<>(new Number[] { getLinearInterpolatedValue(
-                                    xIndex, extendScaleRange(field.getScaleRange(), fractionExtraX),
-                                    xAxis.size()) }));
+                                    xIndex,
+                                    extendScaleRange(field.getScaleRange(), fractionExtraXLow,
+                                            fractionExtraXHigh), xAxis.size()) }));
                 } else if (type == MatrixType.Y) {
                     values.put(
                             field.getFieldLabel(),
                             new ImmutableArray1D<>(new Number[] { getLinearInterpolatedValue(
-                                    yIndex, extendScaleRange(field.getScaleRange(), fractionExtraY),
-                                    yAxis.size()) }));
+                                    yIndex,
+                                    extendScaleRange(field.getScaleRange(), fractionExtraYLow,
+                                            fractionExtraYHigh), yAxis.size()) }));
                 }
                 PointFeature feature = new PointFeature("", "", "", new GeoPosition(domain
                         .getDomainObjects().get(yIndex, xIndex).getCentre(), null, null), null,
@@ -322,16 +361,19 @@ public class LegendDataGenerator {
              * Expand scale range to include out-of-range data
              */
             if (scaleRange != null) {
-                float fractionExtra;
-                if(type == MatrixType.X) {
-                    fractionExtra = fractionExtraX;
+                float fractionExtraLow;
+                float fractionExtraHigh;
+                if (type == MatrixType.X) {
+                    fractionExtraLow = fractionExtraXLow;
+                    fractionExtraHigh = fractionExtraXHigh;
                 } else {
                     /*
                      * NAN type fractionExtra is ignored
                      */
-                    fractionExtra = fractionExtraY;
+                    fractionExtraLow = fractionExtraYLow;
+                    fractionExtraHigh = fractionExtraYHigh;
                 }
-                this.scaleRange = extendScaleRange(scaleRange, fractionExtra);
+                this.scaleRange = extendScaleRange(scaleRange, fractionExtraLow, fractionExtraHigh);
             }
         }
 
@@ -362,17 +404,20 @@ public class LegendDataGenerator {
      * 
      * @param scaleRange
      *            The scale range to extend
-     * @param fractionExtra
-     *            The fraction to extend it by on either end
+     * @param fractionExtraLow
+     *            The fraction to extend it by on the low end
+     * @param fractionExtraHigh
+     *            The fraction to extend it by on the high end
      * @return The resulting scale range
      */
-    protected static Extent<Float> extendScaleRange(Extent<Float> scaleRange, float fractionExtra) {
+    protected static Extent<Float> extendScaleRange(Extent<Float> scaleRange,
+            float fractionExtraLow, float fractionExtraHigh) {
         if (scaleRange == null) {
             return null;
         }
         Float width = scaleRange.getHigh() - scaleRange.getLow();
-        return Extents.newExtent(scaleRange.getLow() - width * fractionExtra, scaleRange.getHigh()
-                + width * fractionExtra);
+        return Extents.newExtent(scaleRange.getLow() - width * fractionExtraLow,
+                scaleRange.getHigh() + width * fractionExtraHigh);
     }
 
     /**
