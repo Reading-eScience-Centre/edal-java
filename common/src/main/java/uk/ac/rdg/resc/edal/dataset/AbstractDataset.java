@@ -47,9 +47,9 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 public abstract class AbstractDataset implements Dataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
-    private String id;
-    private Map<String, VariableMetadata> vars;
-    private List<VariablePlugin> plugins;
+    protected final String id;
+    protected Map<String, VariableMetadata> vars;
+    protected List<VariablePlugin> plugins;
 
     /**
      * @param id
@@ -149,11 +149,13 @@ public abstract class AbstractDataset implements Dataset {
         VariableMetadata[] sourceMetadata = new VariableMetadata[plugin.usesVariables().length];
         int index = 0;
         for (String requiredId : plugin.usesVariables()) {
-            if (!vars.keySet().contains(requiredId)) {
+            try {
+                VariableMetadata variableMetadata = getVariableMetadata(requiredId);
+                sourceMetadata[index++] = variableMetadata;
+            } catch (VariableNotFoundException e) {
                 throw new IllegalArgumentException("This plugin needs the variable " + requiredId
-                        + ", but this dataset does not supply it.");
+                        + ", but this dataset does not supply it.", e);
             }
-            sourceMetadata[index++] = vars.get(requiredId);
         }
 
         plugins.add(plugin);

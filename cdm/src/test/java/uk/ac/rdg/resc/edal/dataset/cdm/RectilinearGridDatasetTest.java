@@ -220,8 +220,8 @@ public class RectilinearGridDatasetTest {
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
                     .extractTimeseriesFeatures(null, params);
             PointSeriesFeature data = timeSeriesFeatures.iterator().next();
-            Array1D<Number> magValues = data.getValues("vLonvLat-mag");
-            Array1D<Number> dirValues = data.getValues("vLonvLat-dir");
+            Array1D<Number> magValues = data.getValues("vLon:vLat-mag");
+            Array1D<Number> dirValues = data.getValues("vLon:vLat-dir");
 
             // two values below are set by test dataset generator
             double expectedLon = 100.0f * xIndex / (xSize - 1);

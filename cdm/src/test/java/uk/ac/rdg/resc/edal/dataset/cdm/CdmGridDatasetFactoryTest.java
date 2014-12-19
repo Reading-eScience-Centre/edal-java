@@ -137,8 +137,8 @@ public class CdmGridDatasetFactoryTest {
                 Array2D<Number> timeValues = mapData.getValues("vTime");
 
                 /* Derived vars */
-                Array2D<Number> magValues = mapData.getValues("vLonvLat-mag");
-                Array2D<Number> dirValues = mapData.getValues("vLonvLat-dir");
+                Array2D<Number> magValues = mapData.getValues("vLon:vLat-mag");
+                Array2D<Number> dirValues = mapData.getValues("vLon:vLat-dir");
 
                 assertArrayEquals(lonValues.getShape(), new int[] { ySize, xSize });
                 assertArrayEquals(latValues.getShape(), new int[] { ySize, xSize });
@@ -220,7 +220,7 @@ public class CdmGridDatasetFactoryTest {
             if (topMetadata.getId().equals("vTime")) {
                 timeMetadata = topMetadata;
             }
-            if (topMetadata.getId().equals("vLonvLat-group")) {
+            if (topMetadata.getId().equals("vLon:vLat-group")) {
                 lonLatGroupMetadata = topMetadata;
             }
         }
@@ -244,10 +244,10 @@ public class CdmGridDatasetFactoryTest {
             if (childMetadata.getId().equals("vLat")) {
                 latMetadata = childMetadata;
             }
-            if (childMetadata.getId().equals("vLonvLat-mag")) {
+            if (childMetadata.getId().equals("vLon:vLat-mag")) {
                 magMetadata = childMetadata;
             }
-            if (childMetadata.getId().equals("vLonvLat-dir")) {
+            if (childMetadata.getId().equals("vLon:vLat-dir")) {
                 dirMetadata = childMetadata;
             }
         }

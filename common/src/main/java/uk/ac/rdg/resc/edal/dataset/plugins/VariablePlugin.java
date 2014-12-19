@@ -68,7 +68,7 @@ public abstract class VariablePlugin {
 
     protected String[] uses;
     private String[] provides;
-    private int prefixLength;
+    protected int prefixLength;
 
     /**
      * Instantiate a plugin
@@ -136,9 +136,6 @@ public abstract class VariablePlugin {
                 Number[] sourceValues = new Number[sourceArrays.length];
                 for (int i = 0; i < sourceValues.length; i++) {
                     sourceValues[i] = sourceArrays[i].get(coords);
-                    if (sourceValues[i] == null) {
-                        return null;
-                    }
                 }
                 return generateValue(varId.substring(prefixLength), positions.get(coords),
                         sourceValues);
@@ -174,9 +171,6 @@ public abstract class VariablePlugin {
                 Number[] sourceValues = new Number[sourceArrays.length];
                 for (int i = 0; i < sourceValues.length; i++) {
                     sourceValues[i] = sourceArrays[i].get(coords);
-                    if (sourceValues[i] == null) {
-                        return null;
-                    }
                 }
                 return generateValue(varId.substring(prefixLength), positions.get(coords),
                         sourceValues);
@@ -300,9 +294,9 @@ public abstract class VariablePlugin {
              */
             StringBuilder ret = new StringBuilder();
             for (int i = 0; i < partsToUse.length; i++) {
-                ret.append(partsToUse[i]);
+                ret.append(partsToUse[i]+":");
             }
-            combinedName = ret.toString();
+            combinedName = ret.substring(0, ret.length()-1);
         }
         return combinedName;
     }
