@@ -618,7 +618,7 @@ public final class GISUtils {
          * working out how many grid points will be sampled.
          */
         int lastNumUniqueGridPointsSampled = -1;
-        int dataGridPoints = (int) (hGrid.getXSize() * 1.5);
+        int dataGridPoints = 64;
         int dataGridIncrease = dataGridPoints;
         List<HorizontalPosition> pointList = null;
         while (true) {
