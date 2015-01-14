@@ -13,6 +13,7 @@
         <!-- Enables auto-insertion of licence in new source code files. 
             Could be extracted to a separate settings file, as per http://mevenide.codehaus.org/m2-site/mevenide2-netbeans/customizations.html -->
         <netbeans.hint.license>bsd-3clause</netbeans.hint.license>
+        <gwtversion>2.6.1</gwtversion>
     </properties>
 
     <packaging>pom</packaging>
@@ -117,6 +118,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.10.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -125,7 +127,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                        <version>2.9.1</version>
                         <configuration>
                             <docfilessubdirs>true</docfilessubdirs>
                         </configuration>
