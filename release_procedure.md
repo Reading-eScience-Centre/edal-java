@@ -70,13 +70,14 @@ git tag edal-VERSION
 ```
 mvn deploy -P release
 ```
-Upon successful completion of this stage, log into [sonatype](http://oss.sonatype.org) with the username "resc", click the "Staging Repositories" link on the left, and scroll down to find the uk.ac.rdg.resc entry.  Select it and then click the "Close" button on the top bar and add a brief comment (e.g. "Closing for VERSION release").  This will perform all necessary checks that the release is suitable to be uploaded to the central Maven repository.  Once this step is completed, an automated email will be sent to the ReSC account, and the staging repository will be marked as closed (you may need to hit the refresh button at the top of the page).  Finally, click the "Release" button and enter a short comment.  This will allow the releases to be synchronised to Maven central, and again an automated email will be sent once the process is complete.
+Upon successful completion of this stage, log into [sonatype](http://oss.sonatype.org) with the username "resc", click the "Staging Repositories" link on the left, and scroll down to find the uk.ac.rdg.resc entry.  Select it and then click the "Release" button and enter a short comment.  This will allow the releases to be synchronised to Maven central, and an automated email will be sent once the process is complete.
 
 ### Merge the release branch into master:
 ```
 git checkout master
 git rebase release-VERSION
 git push origin master
+git push --tags
 ```
 
 ### Create a release on github:
@@ -104,6 +105,11 @@ mvn versions:set
 cd ncwms
 mvn versions:set
 cd ..
+```
+
+### Remove the backup files created by setting versions:
+```
+find ./ -iname "*.versionsBackup" | xargs rm
 ```
 
 ### Commit:
