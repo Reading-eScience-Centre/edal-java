@@ -63,13 +63,19 @@ import java.util.Properties;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
-import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.util.Array;
 
 /**
- * An implementation of a {@link Feature} whose domain is a {@link GridDomain}
+ * A partial implementation of a {@link Feature} containing common functionality
  * 
+ * @param <P>
+ *            The type of object used to identify positions within the feature's
+ *            domain. This may be a spatial, temporal, or combined
+ *            spatiotemporal position.
+ * @param <DO>
+ *            The type of domain object
+ *            
  * @author Guy
  */
 public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<P, DO> {

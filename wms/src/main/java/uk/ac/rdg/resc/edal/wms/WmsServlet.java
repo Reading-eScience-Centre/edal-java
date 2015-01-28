@@ -32,7 +32,6 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -78,12 +77,12 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.PointCollectionDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
-import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
@@ -93,10 +92,10 @@ import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.LineString;
 import uk.ac.rdg.resc.edal.graphics.Charting;
@@ -115,7 +114,6 @@ import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
@@ -1670,10 +1668,8 @@ public class WmsServlet extends HttpServlet {
 
     private void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        GetPlotParameters getPlotParameters = new GetPlotParameters(params,
-                catalogue);
-        PlottingDomainParams plottingParameters = getPlotParameters
-                .getPlottingDomainParameters();
+        GetPlotParameters getPlotParameters = new GetPlotParameters(params, catalogue);
+        PlottingDomainParams plottingParameters = getPlotParameters.getPlottingDomainParameters();
         plottingParameters = new PlottingDomainParams(plottingParameters.getWidth(),
                 plottingParameters.getHeight(), null, plottingParameters.getZExtent(),
                 plottingParameters.getTExtent(), plottingParameters.getTargetHorizontalPosition(),
@@ -1698,7 +1694,7 @@ public class WmsServlet extends HttpServlet {
             List<? extends PointSeriesFeature> extractedTimeseriesFeatures = dataset
                     .extractTimeseriesFeatures(CollectionUtils.setOf(variableId),
                             plottingParameters);
-            if (dataset instanceof AbstractGridDataset && extractedTimeseriesFeatures.size() > 0) {
+            if (dataset instanceof GriddedDataset && extractedTimeseriesFeatures.size() > 0) {
                 /*
                  * Because we parse the GetFeatureInfo request to define a
                  * 9-pixel bounding box around the click point we can get
@@ -1758,16 +1754,16 @@ public class WmsServlet extends HttpServlet {
             zValue = Double.parseDouble(elevationStr);
         }
         StringBuilder copyright = new StringBuilder();
-        List<TrajectoryFeature> trajectoryFeatures = new ArrayList<TrajectoryFeature>();
+        List<PointCollectionFeature> pointCollectionFeatures = new ArrayList<PointCollectionFeature>();
         /* Do we also want to plot a vertical section plot? */
         boolean verticalSection = false;
         List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
-        AbstractGridDataset gridDataset = null;
+        GriddedDataset gridDataset = null;
         String varId = null;
         for (String layerName : layers) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
-            if (dataset instanceof AbstractGridDataset) {
-                gridDataset = (AbstractGridDataset) dataset;
+            if (dataset instanceof GriddedDataset) {
+                gridDataset = (GriddedDataset) dataset;
                 varId = catalogue.getVariableFromId(layerName);
                 String layerCopyright = catalogue.getLayerMetadata(layerName).getCopyright();
                 if (layerCopyright != null && !"".equals(layerCopyright)) {
@@ -1805,22 +1801,13 @@ public class WmsServlet extends HttpServlet {
                 if (verticalSection) {
                     verticalSectionHorizontalPositions = transectPoints;
                 }
-                TrajectoryDomain trajectoryDomain = new TrajectoryDomain(
-                        new AbstractList<GeoPosition>() {
-                            @Override
-                            public GeoPosition get(int index) {
-                                return new GeoPosition(transectPoints.get(index), zPos, time);
-                            }
 
-                            @Override
-                            public int size() {
-                                return transectPoints.size();
-                            }
-                        });
+                PointCollectionDomain pointCollectionDomain = new PointCollectionDomain(
+                        transectPoints, zPos, time);
 
-                TrajectoryFeature feature = gridDataset.readTrajectoryData(
-                        CollectionUtils.setOf(varId), trajectoryDomain);
-                trajectoryFeatures.add(feature);
+                PointCollectionFeature feature = gridDataset.extractPointCollection(
+                        CollectionUtils.setOf(varId), pointCollectionDomain);
+                pointCollectionFeatures.add(feature);
             } else {
                 throw new EdalUnsupportedOperationException(
                         "Only gridded datasets are supported for transect plots");
@@ -1830,7 +1817,7 @@ public class WmsServlet extends HttpServlet {
         if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
-        JFreeChart chart = Charting.createTransectPlot(trajectoryFeatures, lineString, false,
+        JFreeChart chart = Charting.createTransectPlot(pointCollectionFeatures, lineString, false,
                 copyright.toString());
 
         if (verticalSection) {
@@ -1891,10 +1878,8 @@ public class WmsServlet extends HttpServlet {
 
     private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
-        GetPlotParameters getPlotParameters = new GetPlotParameters(params,
-                catalogue);
-        PlottingDomainParams plottingParameters = getPlotParameters
-                .getPlottingDomainParameters();
+        GetPlotParameters getPlotParameters = new GetPlotParameters(params, catalogue);
+        PlottingDomainParams plottingParameters = getPlotParameters.getPlottingDomainParameters();
         final HorizontalPosition position = getPlotParameters.getClickedPosition();
 
         String[] layerNames = getPlotParameters.getLayerNames();
@@ -1915,7 +1900,7 @@ public class WmsServlet extends HttpServlet {
             String variableId = catalogue.getVariableFromId(layerName);
             List<? extends ProfileFeature> extractedProfileFeatures = dataset
                     .extractProfileFeatures(CollectionUtils.setOf(variableId), plottingParameters);
-            if (dataset instanceof AbstractGridDataset && extractedProfileFeatures.size() > 0) {
+            if (dataset instanceof GriddedDataset && extractedProfileFeatures.size() > 0) {
                 /*
                  * Because we parse the GetFeatureInfo request to define a
                  * 9-pixel bounding box around the click point we can get

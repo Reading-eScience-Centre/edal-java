@@ -53,7 +53,7 @@ import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset.Gridset;
 import ucar.nc2.dt.GridDatatype;
 import ucar.nc2.ncml.NcMLReader;
-import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
+import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
@@ -81,7 +81,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
     private String ncmlString = null;
 
     @Override
-    public AbstractGridDataset createDataset(String id, String location) throws IOException, EdalException {
+    public GriddedDataset createDataset(String id, String location) throws IOException, EdalException {
         NetcdfDataset nc = null;
         try {
             /*
@@ -322,7 +322,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         }
     }
 
-    private final class CdmGridDataset extends AbstractGridDataset {
+    private final class CdmGridDataset extends GriddedDataset {
         private final String location;
         private final DataReadingStrategy dataReadingStrategy;
 

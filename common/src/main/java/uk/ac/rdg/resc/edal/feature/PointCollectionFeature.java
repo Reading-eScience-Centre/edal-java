@@ -26,53 +26,38 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.metadata;
+package uk.ac.rdg.resc.edal.feature;
 
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import java.util.Map;
+
+import uk.ac.rdg.resc.edal.domain.PointCollectionDomain;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Array1D;
 
 /**
- * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
- * This is used to ensure that {@link VariableMetadata} supplied to
- * {@link GriddedDataset}s have gridded domains, but it will not be used to
- * constrain any return types (which are all just {@link VariableMetadata})
+ * A feature consisting of measurements at a series of
+ * {@link HorizontalPosition}s fixed vertically and temporally (i.e. on a
+ * {@link PointCollectionDomain})
  * 
- * @author Guy
+ * @author Guy Griffiths
  */
-public class GridVariableMetadata extends VariableMetadata {
+public class PointCollectionFeature extends
+        AbstractDiscreteFeature<HorizontalPosition, HorizontalPosition> {
 
-    public GridVariableMetadata(String id, Parameter parameter, HorizontalGrid hDomain,
-            VerticalAxis zDomain, TimeAxis tDomain, boolean scalar) {
-        super(id, parameter, hDomain, zDomain, tDomain, scalar);
-        if (hDomain == null) {
-            throw new IllegalArgumentException(
-                    "GridVariableMetadata must contain a horizontal domain");
-        }
+    public PointCollectionFeature(String id, String name, String description,
+            PointCollectionDomain domain, Map<String, Parameter> parameters,
+            Map<String, Array1D<Number>> values) {
+        super(id, name, description, domain, parameters, values);
     }
 
-    /**
-     * Returns the {@link HorizontalGrid} of the variable.
-     */
     @Override
-    public HorizontalGrid getHorizontalDomain() {
-        return (HorizontalGrid) super.getHorizontalDomain();
+    public PointCollectionDomain getDomain() {
+        return (PointCollectionDomain) super.getDomain();
     }
 
-    /**
-     * Returns the {@link VerticalAxis} of the variable
-     */
     @Override
-    public VerticalAxis getVerticalDomain() {
-        return (VerticalAxis) super.getVerticalDomain();
-    }
-
-    /**
-     * Returns the {@link TimeAxis} of the variable
-     */
-    @Override
-    public TimeAxis getTemporalDomain() {
-        return (TimeAxis) super.getTemporalDomain();
+    public Array1D<Number> getValues(String paramId) {
+        return (Array1D<Number>) super.getValues(paramId);
     }
 }

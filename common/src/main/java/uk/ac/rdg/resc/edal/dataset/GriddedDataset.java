@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,6 +52,7 @@ import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
+import uk.ac.rdg.resc.edal.domain.PointCollectionDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
@@ -61,6 +63,7 @@ import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
@@ -79,7 +82,6 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
@@ -96,12 +98,12 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  * @author Jon
  * @author Guy
  */
-public abstract class AbstractGridDataset extends AbstractDataset {
-    private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
+public abstract class GriddedDataset extends AbstractDataset {
+    private static final Logger log = LoggerFactory.getLogger(GriddedDataset.class);
     private static final String NO_Z_AXIS_CODE = "NO_Z_AXIS";
     private static final String NO_T_AXIS_CODE = "NO_T_AXIS";
 
-    public AbstractGridDataset(String id, Collection<GridVariableMetadata> vars) {
+    public GriddedDataset(String id, Collection<GridVariableMetadata> vars) {
         super(id, vars);
     }
 
@@ -325,18 +327,13 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             dataSource = openGridDataSource();
 
             Map<String, Array2D<Number>> values = new HashMap<String, Array2D<Number>>();
-            Map<String, Parameter> parameters = new HashMap<String, Parameter>();
 
             /*
              * We need a vertical CRS. This should be the same for all variables
              * in this dataset, so we can set it from any one of them
              */
             VerticalCrs vCrs = null;
-            StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
-            id.append(System.currentTimeMillis());
-            id.append(":");
             StringBuilder name = new StringBuilder("Map of ");
-            StringBuilder description = new StringBuilder("Map feature from variables:\n");
 
             for (int i = 0; i < variableIds.size(); i++) {
                 String varId = variableIds.get(i);
@@ -354,9 +351,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     continue;
                 }
 
-                id.append(varId);
                 name.append(varId + ", ");
-                description.append(varId + "\n");
 
                 /*
                  * Do the actual data reading
@@ -364,11 +359,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 Array2D<Number> data = readHorizontalData(varId, targetGrid, zPos, time, dataSource);
 
                 values.put(varId, data);
-                /*
-                 * We just use the existing parameter data, as it will be the
-                 * same.
-                 */
-                parameters.put(varId, getVariableMetadata(varId).getParameter());
             }
 
             /*
@@ -377,16 +367,17 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             MapDomain domain = new MapDomainImpl(targetGrid, zPos, vCrs, time);
             name.delete(name.length() - 2, name.length() - 1);
+
+            String description = generateDescription("Map of variables:", varIds);
             if (time != null) {
-                description.append("Time: " + time + "\n");
+                description += "Time: " + time + "\n";
             }
             if (zPos != null) {
-                description.append("Elevation: " + zPos);
+                description += "Elevation: " + zPos;
             }
 
-            MapFeature mapFeature = new MapFeature(UUID.nameUUIDFromBytes(id.toString().getBytes())
-                    .toString(), name.toString(), description.toString(), domain, parameters,
-                    values);
+            MapFeature mapFeature = new MapFeature(generateId(varIds), name.toString(),
+                    description, domain, getParameters(varIds), values);
 
             return Collections.singletonList(mapFeature);
         } catch (IOException e) {
@@ -401,6 +392,34 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 }
             }
         }
+    }
+
+    private String generateId(Set<String> varIds) {
+        StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
+        id.append(getId() + System.currentTimeMillis());
+        id.append(":");
+        for (String varId : varIds) {
+            id.append(varId);
+        }
+        return UUID.nameUUIDFromBytes(id.toString().getBytes()).toString();
+    }
+
+    private Map<String, Parameter> getParameters(Set<String> varIds)
+            throws VariableNotFoundException {
+        Map<String, Parameter> parameters = new HashMap<String, Parameter>();
+        for (String varId : varIds) {
+            parameters.put(varId, getVariableMetadata(varId).getParameter());
+        }
+        return parameters;
+    }
+
+    private String generateDescription(String featureType, Set<String> varIds) {
+        StringBuilder description = new StringBuilder(featureType + " from variables:\n");
+        for (String varId : varIds) {
+            description.append(varId + "\n");
+        }
+
+        return description.toString();
     }
 
     /**
@@ -422,7 +441,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *             If there is a problem opening the {@link GridDataSource}
      * @throws DataReadingException
      *             If there is a problem reading the data
-     * @throws VariableNotFoundException 
+     * @throws VariableNotFoundException
      */
     private Array2D<Number> readHorizontalData(String varId, final HorizontalGrid targetGrid,
             Double zPos, DateTime time, GridDataSource dataSource) throws IOException,
@@ -481,7 +500,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      *             If there is a problem opening the {@link GridDataSource}
      * @throws DataReadingException
      *             If there is a problem reading the data
-     * @throws VariableNotFoundException 
+     * @throws VariableNotFoundException
      */
     private Array2D<Number> readUnderlyingHorizontalData(String varId, HorizontalGrid targetGrid,
             Double zPos, DateTime time, GridDataSource dataSource) throws IOException,
@@ -597,8 +616,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             return true;
         }
 
-        private AbstractGridDataset getOuterType() {
-            return AbstractGridDataset.this;
+        private GriddedDataset getOuterType() {
+            return GriddedDataset.this;
         }
     };
 
@@ -612,12 +631,9 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * If there is a problem getting the metadata, assume that profiles
              * are not supported (most likely cause is that the variable ID is
              * not found)
-             * 
-             * TODO Make getVariableMetadata throw a VarNotFoundException or
-             * somethign
              */
             return getVariableMetadata(varId).getVerticalDomain() != null;
-        } catch (Exception e) {
+        } catch (VariableNotFoundException e) {
             return false;
         }
     }
@@ -697,13 +713,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             dataSource = openGridDataSource();
 
-            Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-
-            StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
-            id.append(System.currentTimeMillis());
-            id.append(":");
-            StringBuilder description = new StringBuilder("Profile feature from variables:\n");
-
             /*
              * Store a map of unique profile locations to a variable IDs/values
              */
@@ -728,8 +737,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     }
                     continue;
                 }
-                id.append(varId);
-                description.append(varId + "\n");
 
                 /*
                  * We now know that this is not a derived variable, and hence
@@ -748,12 +755,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     throw new DataReadingException("Problem reading profile feature", e);
                 }
                 allVariablesData.put(varId, data);
-
-                /*
-                 * We just use the existing parameter data, as it will be the
-                 * same.
-                 */
-                parameters.put(varId, getVariableMetadata(varId).getParameter());
             }
 
             /*
@@ -780,10 +781,10 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             for (ProfileLocation location : location2Var2Values.keySet()) {
                 Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
-                ProfileFeature feature = new ProfileFeature(UUID.nameUUIDFromBytes(
-                        id.toString().getBytes()).toString(), "Extracted Profile Feature",
-                        description.toString(), zAxis, location.hPos, location.time, parameters,
-                        var2Values);
+                ProfileFeature feature = new ProfileFeature(generateId(varIds),
+                        "Extracted Profile Feature",
+                        generateDescription("Profile feature", varIds), zAxis, location.hPos,
+                        location.time, getParameters(varIds), var2Values);
                 features.add(feature);
             }
 
@@ -920,11 +921,12 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      * @throws IOException
      *             If there was a problem reading data from the
      *             {@link GridDataSource}
-     * @throws VariableNotFoundException 
+     * @throws VariableNotFoundException
      */
     private Map<ProfileLocation, Array1D<Number>> readVerticalData(VariableMetadata metadata,
             VerticalAxis zAxis, BoundingBox bbox, DateTime targetT, Extent<DateTime> tExtent,
-            GridDataSource dataSource) throws IOException, DataReadingException, VariableNotFoundException {
+            GridDataSource dataSource) throws IOException, DataReadingException,
+            VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(metadata.getId());
         if (plugin == null) {
             /*
@@ -1196,8 +1198,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             return true;
         }
 
-        private AbstractGridDataset getOuterType() {
-            return AbstractGridDataset.this;
+        private GriddedDataset getOuterType() {
+            return GriddedDataset.this;
         }
     }
 
@@ -1211,12 +1213,9 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              * If there is a problem getting the metadata, assume that
              * timeseries are not supported (most likely cause is that the
              * variable ID is not found)
-             * 
-             * TODO Make getVariableMetadata throw a VarNotFoundException or
-             * somethign
              */
             return getVariableMetadata(varId).getTemporalDomain() != null;
-        } catch (Exception e) {
+        } catch (VariableNotFoundException e) {
             return false;
         }
     }
@@ -1295,15 +1294,9 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         try {
             dataSource = openGridDataSource();
 
-            Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-
-            StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
-            id.append(System.currentTimeMillis());
-            id.append(":");
-            StringBuilder description = new StringBuilder("Point series feature from variables:\n");
-
             /*
-             * Store a map of unique profile locations to a variable IDs/values
+             * Store a map of unique point series locations to a variable
+             * IDs/values
              */
             Map<String, Map<PointSeriesLocation, Array1D<Number>>> allVariablesData = new HashMap<>();
 
@@ -1327,9 +1320,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     continue;
                 }
 
-                id.append(varId);
-                description.append(varId + "\n");
-
                 /*
                  * We now know that this is not a derived variable, and hence
                  * will have GridVariableMetadata
@@ -1351,12 +1341,6 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     throw new DataReadingException("Problem reading timeseries feature", e);
                 }
                 allVariablesData.put(varId, data);
-
-                /*
-                 * We just use the existing parameter data, as it will be the
-                 * same.
-                 */
-                parameters.put(varId, getVariableMetadata(varId).getParameter());
             }
 
             /*
@@ -1378,15 +1362,14 @@ public abstract class AbstractGridDataset extends AbstractDataset {
             }
 
             /*
-             * Now for each location we can create a profile feature with all
-             * available variables in
+             * Now for each location we can create a point series feature with
+             * all available variables in
              */
             for (PointSeriesLocation location : location2Var2Values.keySet()) {
                 Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
-                PointSeriesFeature feature = new PointSeriesFeature(UUID.nameUUIDFromBytes(
-                        id.toString().getBytes()).toString(), "Extracted Profile Feature",
-                        description.toString(), tAxis, location.hPos, location.elevation,
-                        parameters, var2Values);
+                PointSeriesFeature feature = new PointSeriesFeature(generateId(varIds),
+                        "Extracted Profile Feature", generateDescription("Point series", varIds),
+                        tAxis, location.hPos, location.elevation, getParameters(varIds), var2Values);
                 features.add(feature);
             }
 
@@ -1415,7 +1398,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return features;
     }
 
-    private TimeAxis getTimeAxis(Set<String> varIds) throws IncorrectDomainException, VariableNotFoundException {
+    private TimeAxis getTimeAxis(Set<String> varIds) throws IncorrectDomainException,
+            VariableNotFoundException {
         /*
          * TODO Test?
          */
@@ -1529,7 +1513,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
      * @throws IOException
      *             If there was a problem reading data from the
      *             {@link GridDataSource}
-     * @throws VariableNotFoundException 
+     * @throws VariableNotFoundException
      */
     private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(VariableMetadata metadata,
             TimeAxis tAxis, BoundingBox bbox, Double targetZ, Extent<Double> zExtent,
@@ -1764,13 +1748,91 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         return ret;
     }
 
+    /**
+     * Extracts a {@link PointCollectionFeature} containing data from the given
+     * variable IDs
+     * 
+     * @param varIds
+     *            The variables to extract data from. If <code>null</code>, all
+     *            available variables will be present in the returned
+     *            {@link PointCollectionFeature}
+     * @param domain
+     *            The {@link PointCollectionDomain} over which to extract data
+     * @return A {@link PointCollectionFeature} containing the extracted data
+     * @throws DataReadingException
+     *             If there is a problem reading the underlying data
+     * @throws VariableNotFoundException
+     *             If one or more of the supplied variable IDs is not present in
+     *             this {@link GriddedDataset}
+     */
+    public PointCollectionFeature extractPointCollection(Set<String> varIds,
+            final PointCollectionDomain domain) throws DataReadingException,
+            VariableNotFoundException {
+        final Array1D<HorizontalPosition> domainObjects = domain.getDomainObjects();
+        Map<String, Array1D<Number>> values = readMultiplePoints(varIds,
+                new AbstractList<GeoPosition>() {
+                    @Override
+                    public GeoPosition get(int index) {
+                        HorizontalPosition horizontalPosition = domainObjects.get(index);
+                        return new GeoPosition(horizontalPosition, domain.getVerticalPosition(),
+                                domain.getTime());
+                    }
+
+                    @Override
+                    public int size() {
+                        return (int) domainObjects.size();
+                    }
+                });
+        return new PointCollectionFeature(generateId(varIds), "Extracted point collection",
+                generateDescription("Point collection feature", varIds), domain,
+                getParameters(varIds), values);
+    }
+
+    /**
+     * Extracts a {@link TrajectoryFeature} containing data from the given
+     * variable IDs
+     * 
+     * @param varIds
+     *            The variables to extract data from. If <code>null</code>, all
+     *            available variables will be present in the returned
+     *            {@link TrajectoryFeature}
+     * @param domain
+     *            The {@link TrajectoryDomain} over which to extract data
+     * @return A {@link TrajectoryFeature} containing the extracted data
+     * @throws DataReadingException
+     *             If there is a problem reading the underlying data
+     * @throws VariableNotFoundException
+     *             If one or more of the supplied variable IDs is not present in
+     *             this {@link GriddedDataset}
+     */
+    public TrajectoryFeature extractTrajectoryFeature(Set<String> varIds,
+            final TrajectoryDomain domain) throws DataReadingException, VariableNotFoundException {
+        final Array1D<GeoPosition> domainObjects = domain.getDomainObjects();
+        Map<String, Array1D<Number>> values = readMultiplePoints(varIds,
+                new AbstractList<GeoPosition>() {
+                    @Override
+                    public GeoPosition get(int index) {
+                        return domainObjects.get(index);
+                    }
+
+                    @Override
+                    public int size() {
+                        return (int) domainObjects.size();
+                    }
+                });
+        return new TrajectoryFeature(generateId(varIds), "Extracted point collection",
+                generateDescription("Point collection feature", varIds), domain,
+                getParameters(varIds), values);
+    }
+
     /*
      * TODO This is OK, and is possible a method of only AbstractGridDataset, or
      * maybe we can re-introduce a minimal GridDataset type which has this
      * method. Depends what we want to do with transects.
      */
-    public TrajectoryFeature readTrajectoryData(Set<String> varIds, final TrajectoryDomain domain)
-            throws DataReadingException, VariableNotFoundException {
+    private Map<String, Array1D<Number>> readMultiplePoints(Set<String> varIds,
+            final List<GeoPosition> positions) throws DataReadingException,
+            VariableNotFoundException {
         GridDataSource dataSource = null;
         try {
             /*
@@ -1829,7 +1891,7 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                 /*
                  * Do the actual data reading
                  */
-                Array1D<Number> data = readMultiplePointData(varId, domain, dataSource);
+                Array1D<Number> data = readMultiplePointData(varId, positions, dataSource);
 
                 values.put(varId, data);
                 /*
@@ -1857,28 +1919,24 @@ public abstract class AbstractGridDataset extends AbstractDataset {
                     if (values.containsKey(pluginSourceVarId)) {
                         pluginSourceData[i] = values.get(pluginSourceVarId);
                     } else {
-                        pluginSourceData[i] = readMultiplePointData(pluginSourceVarId, domain,
+                        pluginSourceData[i] = readMultiplePointData(pluginSourceVarId, positions,
                                 dataSource);
                     }
                     pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
                 }
 
-                values.put(
-                        derivedVarId,
-                        plugin.generateArray1D(derivedVarId,
-                                new Array1D<HorizontalPosition>(domain.size()) {
-                                    @Override
-                                    public HorizontalPosition get(int... coords) {
-                                        return domain.getDomainObjects().get(coords)
-                                                .getHorizontalPosition();
-                                    }
+                values.put(derivedVarId, plugin.generateArray1D(derivedVarId,
+                        new Array1D<HorizontalPosition>(positions.size()) {
+                            @Override
+                            public HorizontalPosition get(int... coords) {
+                                return positions.get(coords[0]).getHorizontalPosition();
+                            }
 
-                                    @Override
-                                    public void set(HorizontalPosition value, int... coords) {
-                                        throw new UnsupportedOperationException(
-                                                "This array is immutable");
-                                    }
-                                }, pluginSourceData));
+                            @Override
+                            public void set(HorizontalPosition value, int... coords) {
+                                throw new UnsupportedOperationException("This array is immutable");
+                            }
+                        }, pluginSourceData));
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
             }
 
@@ -1887,17 +1945,9 @@ public abstract class AbstractGridDataset extends AbstractDataset {
              */
             dataSource.close();
 
-            /*
-             * Construct the TrajectoryFeature from the t and z values, the
-             * horizontal grid and the VariableMetadata objects
-             */
-            TrajectoryFeature trajectoryFeature = new TrajectoryFeature(UUID.nameUUIDFromBytes(
-                    id.toString().getBytes()).toString(), "Extracted Trajectory Feature",
-                    description.toString(), domain, parameters, values);
-
-            return trajectoryFeature;
+            return values;
         } catch (IOException e) {
-            throw new DataReadingException("Problem reading trajectory feature", e);
+            throw new DataReadingException("Problem reading multiple points", e);
         } finally {
             if (dataSource != null) {
                 try {
@@ -1932,12 +1982,12 @@ public abstract class AbstractGridDataset extends AbstractDataset {
         }
     }
 
-    private final Array1D<Number> readMultiplePointData(String variableId, TrajectoryDomain domain,
-            GridDataSource dataSource) throws DataReadingException, VariableNotFoundException {
-        Array1D<Number> data = new ValuesArray1D(domain.size());
-        Array<GeoPosition> domainObjects = domain.getDomainObjects();
-        for (int i = 0; i < domain.size(); i++) {
-            GeoPosition position = domainObjects.get(i);
+    private final Array1D<Number> readMultiplePointData(String variableId,
+            List<GeoPosition> positions, GridDataSource dataSource) throws DataReadingException,
+            VariableNotFoundException {
+        Array1D<Number> data = new ValuesArray1D(positions.size());
+        for (int i = 0; i < positions.size(); i++) {
+            GeoPosition position = positions.get(i);
             Double z = null;
             if (position.getVerticalPosition() != null) {
                 z = position.getVerticalPosition().getZ();
@@ -1950,7 +2000,8 @@ public abstract class AbstractGridDataset extends AbstractDataset {
     }
 
     private Number readPointData(String variableId, HorizontalPosition position, Double zVal,
-            DateTime time, GridDataSource gridDataSource) throws DataReadingException, VariableNotFoundException {
+            DateTime time, GridDataSource gridDataSource) throws DataReadingException,
+            VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(variableId);
         if (plugin != null) {
             /*

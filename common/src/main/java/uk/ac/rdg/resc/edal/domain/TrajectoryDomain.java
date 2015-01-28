@@ -35,6 +35,7 @@ import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
@@ -49,8 +50,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
 
 /**
- * The domain of a {@link TrajectoryFeature}: a set of positions in space and
- * time.
+ * The domain of a {@link TrajectoryFeature}: a set of {@link GeoPosition}s
+ * which are ordered in time.
  * 
  * @author Guy Griffiths
  * @author Jon Blower
@@ -67,7 +68,7 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
     private final VerticalCrs vCrs;
     private final Chronology chronology;
 
-    public TrajectoryDomain(List<GeoPosition> positions) throws MismatchedCrsException {
+    public TrajectoryDomain(List<GeoPosition> positions) throws MismatchedCrsException, IncorrectDomainException {
         this.positions = new ImmutableArray1D<GeoPosition>(positions.toArray(new GeoPosition[0]));
         CoordinateReferenceSystem commonCrs = null;
         VerticalCrs commonVCrs = null;
@@ -79,13 +80,16 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
         double maxy = -Double.MAX_VALUE;
         double minz = Double.MAX_VALUE;
         double maxz = -Double.MAX_VALUE;
-        long mint = Long.MAX_VALUE;
-        long maxt = -Long.MAX_VALUE;
-
+        long lastTime = -Long.MAX_VALUE;
+        
         for (GeoPosition position : positions) {
             HorizontalPosition hPos = position.getHorizontalPosition();
             VerticalPosition zPos = position.getVerticalPosition();
             DateTime time = position.getTime();
+            if(time == null) {
+                throw new IncorrectDomainException("All positions in a trajectory must have a time value");
+            }
+            
             if (commonCrs == null) {
                 commonCrs = hPos.getCoordinateReferenceSystem();
             } else {
@@ -107,19 +111,19 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
                     maxz = Math.max(maxz, zPos.getZ());
                 }
             }
-            if (time != null) {
-                if (commonChronology == null) {
-                    commonChronology = time.getChronology();
-                } else {
-                    if (!commonChronology.equals(time.getChronology())) {
-                        throw new MismatchedCrsException(
-                                "Chronologies must match for all points in a Trajectory Domain");
-                    }
+            if (commonChronology == null) {
+                commonChronology = time.getChronology();
+            } else {
+                if (!commonChronology.equals(time.getChronology())) {
+                    throw new MismatchedCrsException(
+                            "Chronologies must match for all points in a Trajectory Domain");
                 }
-                mint = Math.min(mint, time.getMillis());
-                maxt = Math.max(maxt, time.getMillis());
             }
-
+            if(time.getMillis() < lastTime) {
+                throw new IncorrectDomainException("All points in a TrajectoryDomain must be in time order");
+            }
+            lastTime = time.getMillis();
+            
             if (!Double.isNaN(hPos.getX())) {
                 minx = Math.min(minx, hPos.getX());
                 maxx = Math.max(maxx, hPos.getX());
@@ -144,15 +148,7 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
              */
             zExtent = Extents.emptyExtent(Double.class);
         }
-        if (mint != Long.MAX_VALUE) {
-            tExtent = Extents.newExtent(new DateTime(mint), new DateTime(maxt));
-        } else {
-            /*
-             * The minimum time hasn't changed, so we don't have a time-axis for
-             * any of the positions in this domain
-             */
-            tExtent = Extents.emptyExtent(DateTime.class);
-        }
+        tExtent = Extents.newExtent(positions.get(0).getTime(), positions.get(positions.size() - 1).getTime());
     }
 
     /**

@@ -81,6 +81,7 @@ import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
@@ -377,7 +378,7 @@ final public class Charting {
      *            A copyright notice to display under the graph
      * @return The plot
      */
-    public static JFreeChart createTransectPlot(List<TrajectoryFeature> features,
+    public static JFreeChart createTransectPlot(List<PointCollectionFeature> features,
             LineString transectDomain, boolean hasVerticalAxis, String copyrightStatement) {
         JFreeChart chart;
         XYPlot plot;
@@ -391,7 +392,7 @@ final public class Charting {
         if (features.size() > 1) {
             multiplePlots = true;
         }
-        for (TrajectoryFeature feature : features) {
+        for (PointCollectionFeature feature : features) {
             if (feature.getParameterIds().size() > 1) {
                 multiplePlots = true;
             }

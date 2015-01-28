@@ -61,9 +61,10 @@ public class TrajectoryDomainTest {
      * @throws MismatchedCrsException
      *             If horizontal CRSs do not match for all points in the
      *             Trajectory Domain
+     * @throws IncorrectDomainException 
      */
     @Before
-    public void setUp() throws MismatchedCrsException {
+    public void setUp() throws MismatchedCrsException, IncorrectDomainException {
         crs = DefaultGeographicCRS.WGS84;
         height = new VerticalCrsImpl("meter", false, false, true);
         beginDate = new DateTime(1990, 5, 8, 0, 0);

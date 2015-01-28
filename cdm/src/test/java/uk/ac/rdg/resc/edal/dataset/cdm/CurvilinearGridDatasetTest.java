@@ -48,7 +48,7 @@ import ucar.ma2.ArrayDouble;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
-import uk.ac.rdg.resc.edal.dataset.AbstractGridDataset;
+import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
@@ -202,7 +202,7 @@ public class CurvilinearGridDatasetTest {
 
     /**
      * Test the methods implemented in the abstract class
-     * {@link AbstractGridDataset}.
+     * {@link GriddedDataset}.
      * 
      * @throws DataReadingException
      *             If there is a problem when reading the data
@@ -210,7 +210,7 @@ public class CurvilinearGridDatasetTest {
      * */
     @Test
     public void testCurviLinearDataset() throws DataReadingException, VariableNotFoundException {
-        assertTrue(dataset instanceof AbstractGridDataset);
+        assertTrue(dataset instanceof GriddedDataset);
 
         List<Variable> variables = cdf.getVariables();
         Set<String> vars = new HashSet<>();
@@ -223,10 +223,10 @@ public class CurvilinearGridDatasetTest {
          */
 
         // assertEquals(vars, dataset.getFeatureIds());
-        GridFeature allxUValues = ((AbstractGridDataset) dataset).readFeature("allx_u");
-        GridFeature allxVValues = ((AbstractGridDataset) dataset).readFeature("allx_v");
-        GridFeature allyUValues = ((AbstractGridDataset) dataset).readFeature("ally_u");
-        GridFeature allyVValues = ((AbstractGridDataset) dataset).readFeature("ally_v");
+        GridFeature allxUValues = ((GriddedDataset) dataset).readFeature("allx_u");
+        GridFeature allxVValues = ((GriddedDataset) dataset).readFeature("allx_v");
+        GridFeature allyUValues = ((GriddedDataset) dataset).readFeature("ally_u");
+        GridFeature allyVValues = ((GriddedDataset) dataset).readFeature("ally_v");
 
         for (int n = 0; n < xiSize; n++) {
             for (int m = 0; m < etaSize; m++) {

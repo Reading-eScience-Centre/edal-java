@@ -46,7 +46,7 @@ import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 public abstract class AbstractDataset implements Dataset {
-    private static final Logger log = LoggerFactory.getLogger(AbstractGridDataset.class);
+    private static final Logger log = LoggerFactory.getLogger(GriddedDataset.class);
     protected final String id;
     protected Map<String, VariableMetadata> vars;
     protected List<VariablePlugin> plugins;
