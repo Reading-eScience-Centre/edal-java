@@ -1181,7 +1181,12 @@ public final class GISUtils {
         try {
             Class.forName("org.h2.Driver");
             JdbcDataSource dataSource = new JdbcDataSource();
-            dataSource.setURL("jdbc:h2:.h2/epsg.db");
+            /*
+             * AUTO_SERVER=TRUE means that this DB will run in embedded mode on
+             * the first JVM. However, if a second JVM tries to access it, it
+             * will then start server mode.
+             */
+            dataSource.setURL("jdbc:h2:.h2/epsg.db;AUTO_SERVER=TRUE");
             Connection conn = dataSource.getConnection();
             conn.setAutoCommit(true);
             Hints.putSystemDefault(Hints.EPSG_DATA_SOURCE, dataSource);
@@ -1191,7 +1196,16 @@ public final class GISUtils {
                 i.call();
             }
         } catch (FactoryException e) {
-            e.printStackTrace();
+            if (!e.getMessage().contains("Schema \"EPSG\" already exists")) {
+                /*
+                 * For some reason the i.exists() method fails to detect an
+                 * existing database if we are using server mode.
+                 * 
+                 * This causes an exception, but there is no real problem - it's
+                 * just that the i.exists() method should have returned true
+                 */
+                e.printStackTrace();
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
