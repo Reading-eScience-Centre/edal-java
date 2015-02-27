@@ -247,4 +247,10 @@
 		<!--module>test</module-->
 		<module>ncwms-based-webapp-archetype</module>
 	</modules>
+    <repositories>
+        <repository>
+          <id>Geotoolkit</id>
+          <url>http://maven.geotoolkit.org/</url>
+        </repository>
+    </repositories>
 </project>

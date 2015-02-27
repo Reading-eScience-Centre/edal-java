@@ -22,7 +22,7 @@
         <dependency>
             <groupId>org.geotoolkit</groupId>
             <artifactId>geotk-referencing</artifactId>
-            <version>3.20-geoapi-3.0</version>
+            <version>3.21</version>
         </dependency>
         <dependency>
 			<groupId>joda-time</groupId>
