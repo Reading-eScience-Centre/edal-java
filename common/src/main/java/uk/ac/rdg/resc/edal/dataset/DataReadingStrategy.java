@@ -175,9 +175,10 @@ public enum DataReadingStrategy {
                     jmax, imin, imax);
             for (DomainMapperEntry<int[]> pme : domainMapper) {
                 List<int[]> targetGridPoints = pme.getTargetIndices();
+                Number value = data.get(0, 0, pme.getSourceGridJIndex() - jmin,
+                        pme.getSourceGridIIndex() - imin);
                 for (int[] targetPoint : targetGridPoints) {
-                    ret.set(data.get(0, 0, pme.getSourceGridJIndex() - jmin,
-                            pme.getSourceGridIIndex() - imin), new int[] { targetPoint[1],
+                    ret.set(value, new int[] { targetPoint[1],
                             targetPoint[0] });
                 }
             }

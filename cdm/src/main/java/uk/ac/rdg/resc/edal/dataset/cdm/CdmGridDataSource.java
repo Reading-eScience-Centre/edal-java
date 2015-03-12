@@ -29,7 +29,9 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import ucar.ma2.Array;
@@ -56,6 +58,7 @@ final class CdmGridDataSource implements GridDataSource {
      * Note that this is the CDM GridDataset, not the EDAL one
      */
     private final GridDataset gridDataset;
+    private Map<String, RangesList> rangeListCache = new HashMap<>();
 
     public CdmGridDataSource(GridDataset gridDataset) {
         this.gridDataset = gridDataset;
@@ -64,7 +67,6 @@ final class CdmGridDataSource implements GridDataSource {
     @Override
     public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax,
             int ymin, int ymax, int xmin, int xmax) throws IOException, DataReadingException {
-
         /*
          * Get hold of the variable from which we want to read data
          */
@@ -74,12 +76,19 @@ final class CdmGridDataSource implements GridDataSource {
         /*
          * Create RangesList object from GridDatatype object This will lead to
          * many RangesList objects being created during data extraction for
-         * PIXEL_BY_PIXEL and SCANLINE strategies. Should profile to make sure
-         * this won't be a problem.
+         * PIXEL_BY_PIXEL and SCANLINE strategies.
          * 
-         * TODO test overhead and cache if required
+         * Therefore we cache it - it doesn't give a huge increase in speed, but
+         * it is noticeable
          */
-        RangesList rangesList = new RangesList(gridDatatype);
+        RangesList rangesList;
+        if (rangeListCache.containsKey(variableId)) {
+            rangesList = rangeListCache.get(variableId);
+        } else {
+            rangesList = new RangesList(gridDatatype);
+            rangeListCache.put(variableId, rangesList);
+        }
+
         /*
          * Set the ranges for t,z,y and x. This can be done without raising
          * exceptions even if some axes are missing.
@@ -136,7 +145,14 @@ final class CdmGridDataSource implements GridDataSource {
 
     @Override
     public void close() throws IOException {
-        gridDataset.close();
+        /*
+         * We do not close this DataSource. The CdmGridDatasetFactory keeps a
+         * cache of NetcdfDataset objects and will close them when the cache
+         * becomes full.
+         * 
+         * This is a big speed improvement when the same dataset is accessed
+         * multiple times in quick succession
+         */
     }
 
     private static final class WrappedArray extends Array4D<Number> {

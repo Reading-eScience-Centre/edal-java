@@ -429,14 +429,13 @@ abstract class DomainMapper<T> implements Iterable<DomainMapper.DomainMapperEntr
                  * Now find all the other entries that use the same source grid
                  * index
                  */
-                boolean done = false;
-                while (!done && hasNext()) {
+                while (hasNext()) {
                     long newSourceIndex = sourceGridIndices.getLong(index);
                     if (newSourceIndex == entrySourceIndex) {
                         entryTargetIndices.add(targetGridIndices.getInt(index));
                         index++;
                     } else {
-                        done = true;
+                        break;
                     }
                 }
 

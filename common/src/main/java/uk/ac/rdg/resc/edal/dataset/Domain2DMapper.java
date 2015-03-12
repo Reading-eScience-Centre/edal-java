@@ -30,6 +30,15 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.util.List;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
+import net.sf.ehcache.config.Configuration;
+import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
@@ -50,15 +59,18 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * 
  * It also includes a static method
  * {@link Domain2DMapper#forGrid(HorizontalGrid, HorizontalGrid)} which
- * generates a {@link Domain2DMapper} from a source and a target grid.
+ * generates a {@link Domain2DMapper} from a source and a target grid, which
+ * uses cache of recent grids - creating a {@link Domain2DMapper} is not a
+ * particularly efficient operation and generally gets called very regularly for
+ * identical grids, particularly in a tiled WMS setting
  * 
- * @author Guy
+ * @author Guy Griffiths
  */
 public class Domain2DMapper extends DomainMapper<int[]> {
     private int targetXSize;
     private int targetYSize;
 
-    protected Domain2DMapper(HorizontalGrid sourceGrid, int targetXSize, int targetYSize) {
+    private Domain2DMapper(HorizontalGrid sourceGrid, int targetXSize, int targetYSize) {
         super(sourceGrid, targetXSize * targetYSize);
         this.targetXSize = targetXSize;
         this.targetYSize = targetYSize;
@@ -102,6 +114,11 @@ public class Domain2DMapper extends DomainMapper<int[]> {
      * @return A {@link Domain2DMapper} performing the mapping
      */
     public static Domain2DMapper forGrid(HorizontalGrid sourceGrid, final HorizontalGrid targetGrid) {
+        Domain2DMapperCacheKey key = new Domain2DMapperCacheKey(sourceGrid, targetGrid);
+        if (domainMapperCache.isKeyInCache(key)) {
+            return (Domain2DMapper) domainMapperCache.get(key).getObjectValue();
+        }
+        Domain2DMapper ret;
         if (sourceGrid instanceof RectilinearGrid
                 && targetGrid instanceof RectilinearGrid
                 && GISUtils.crsMatch(sourceGrid.getCoordinateReferenceSystem(),
@@ -117,13 +134,15 @@ public class Domain2DMapper extends DomainMapper<int[]> {
              * source data file (e.g. NetCDF) TODO: implemented - test that it
              * works when it should!
              */
-            return forMatchingCrsGrids((RectilinearGrid) sourceGrid, (RectilinearGrid) targetGrid);
+            ret = forMatchingCrsGrids((RectilinearGrid) sourceGrid, (RectilinearGrid) targetGrid);
         } else {
             /*
              * We can't gain efficiency, so we just initialise for general grids
              */
-            return forGeneralGrids(sourceGrid, targetGrid);
+            ret = forGeneralGrids(sourceGrid, targetGrid);
         }
+        domainMapperCache.put(new Element(key, ret));
+        return ret;
     }
 
     /*-
@@ -188,10 +207,11 @@ public class Domain2DMapper extends DomainMapper<int[]> {
         for (int j = 0; j < targetGrid.getYSize(); j++) {
             for (int i = 0; i < targetGrid.getXSize(); i++) {
                 targetGrid.getDomainObjects().get(j, i).getCentre();
-                HorizontalPosition transformedPosition = GISUtils.transformPosition(targetDomainObjects.get(j,i).getCentre(), sourceGrid
-                        .getCoordinateReferenceSystem());
+                HorizontalPosition transformedPosition = GISUtils.transformPosition(
+                        targetDomainObjects.get(j, i).getCentre(),
+                        sourceGrid.getCoordinateReferenceSystem());
                 GridCoordinates2D indices = sourceGrid.findIndexOf(transformedPosition);
-                if(indices != null) {
+                if (indices != null) {
                     mapper.put(indices.getX(), indices.getY(), mapper.convertCoordsToIndex(i, j));
                 }
             }
@@ -199,5 +219,74 @@ public class Domain2DMapper extends DomainMapper<int[]> {
 
         mapper.sortIndices();
         return mapper;
+    }
+
+    /*
+     * Cache management
+     */
+
+    protected static final CacheManager cacheManager = CacheManager.create(new Configuration()
+            .name("EDAL-Common-CacheManager"));
+    private static Cache domainMapperCache;
+
+    static {
+        /*
+         * Configure cache - keep 100 Domain2DMappers in memory before starting
+         * to evict them
+         */
+        CacheConfiguration config = new CacheConfiguration("domainMapperCache", 100).eternal(true)
+                .memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU)
+                .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
+                .transactionalMode(TransactionalMode.OFF);
+
+        /*
+         * If we already have a cache, we can assume that the configuration has
+         * changed, so we remove and re-add it.
+         */
+        domainMapperCache = new Cache(config);
+        cacheManager.addCache(domainMapperCache);
+    }
+
+    public static class Domain2DMapperCacheKey {
+        private HorizontalGrid source;
+        private HorizontalGrid target;
+
+        public Domain2DMapperCacheKey(HorizontalGrid source, HorizontalGrid target) {
+            super();
+            this.source = source;
+            this.target = target;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((source == null) ? 0 : source.hashCode());
+            result = prime * result + ((target == null) ? 0 : target.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            Domain2DMapperCacheKey other = (Domain2DMapperCacheKey) obj;
+            if (source == null) {
+                if (other.source != null)
+                    return false;
+            } else if (!source.equals(other.source))
+                return false;
+            if (target == null) {
+                if (other.target != null)
+                    return false;
+            } else if (!target.equals(other.target))
+                return false;
+            return true;
+        }
+
     }
 }
