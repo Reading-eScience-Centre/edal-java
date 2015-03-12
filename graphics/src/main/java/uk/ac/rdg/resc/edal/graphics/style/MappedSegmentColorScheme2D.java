@@ -29,11 +29,8 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+
+import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 
 /**
  * A class representing a colour scheme where each x value is mapped to a
@@ -42,52 +39,49 @@ import java.util.Map.Entry;
  * @author Guy Griffiths
  */
 public class MappedSegmentColorScheme2D extends ColourScheme2D {
-
-    private Map<Float, SegmentColourScheme> colorSchemeMap;
-    private List<Float> keys;
     private Color nonMappedColor;
 
-    private Float xmin = Float.MAX_VALUE;
-    private Float xmax = -Float.MAX_VALUE;
+    private Float xmin;
+    private Float xmax;
     private Float ymin = Float.MAX_VALUE;
     private Float ymax = -Float.MAX_VALUE;
+    private ReferenceableAxis<Double> xAxis;
+    private SegmentColourScheme[] schemes;
 
-    public MappedSegmentColorScheme2D(Map<Float, SegmentColourScheme> colorSchemeMap,
-            Color nonMappedColor) {
-        this.colorSchemeMap = colorSchemeMap;
-        this.keys = new ArrayList<>();
-        for(Float key : colorSchemeMap.keySet()) {
-            this.keys.add(key);
+    public MappedSegmentColorScheme2D(ReferenceableAxis<Double> xAxis,
+            SegmentColourScheme[] schemes, Color nonMappedColor) {
+        if (xAxis.size() != schemes.length) {
+            throw new IllegalArgumentException(
+                    "Must have exactly one SegmentColourScheme per axis value");
         }
-        Collections.sort(keys);
+        this.xAxis = xAxis;
+        this.schemes = schemes;
         this.nonMappedColor = nonMappedColor;
 
-        for (Entry<Float, SegmentColourScheme> entry : colorSchemeMap.entrySet()) {
-            xmin = Math.min(xmin, entry.getKey());
-            xmax = Math.max(xmax, entry.getKey());
-
-            ymin = Math.min(ymin, entry.getValue().getScaleMin());
-            ymax = Math.max(ymax, entry.getValue().getScaleMax());
+        xmin = xAxis.getCoordinateExtent().getLow().floatValue();
+        xmax = xAxis.getCoordinateExtent().getHigh().floatValue();
+        for (SegmentColourScheme scheme : schemes) {
+            Float yMinTest = scheme.getScaleMin();
+            Float yMaxTest = scheme.getScaleMax();
+            if (yMinTest != null && !Float.isNaN(yMinTest)) {
+                ymin = Math.min(ymin, yMinTest);
+            }
+            if (yMaxTest != null && !Float.isNaN(yMaxTest)) {
+                ymax = Math.max(ymax, yMaxTest);
+            }
         }
     }
 
     @Override
     public Color getColor(Number xValue, Number yValue) {
-        if(xValue.floatValue() < xmin || xValue.floatValue() > xmax) {
+        if(xValue == null || yValue == null) {
             return nonMappedColor;
         }
-        int keyIndex = Collections.binarySearch(keys, xValue.floatValue());
-        if (keyIndex < 0) {
-            /*
-             * We can calculate the insertion point
-             */
-            keyIndex = -(keyIndex + 1);
-            if(keyIndex == keys.size()) {
-                keyIndex--;
-            }
+        int xIndex = xAxis.findIndexOf(xValue.doubleValue());
+        if(xIndex < 0) {
+            return nonMappedColor;
         }
-        
-        return colorSchemeMap.get(keys.get(keyIndex)).getColor(yValue);
+        return schemes[xIndex].getColor(yValue);
     }
 
     @Override

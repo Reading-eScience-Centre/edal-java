@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.RangeMeaning;
@@ -49,13 +50,13 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  */
 public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBox {
     private static final long serialVersionUID = 1L;
-    
+
     private final double minx;
     private final double miny;
     private final double maxx;
     private final double maxy;
     private final CoordinateReferenceSystem crs;
-    
+
     public static BoundingBoxImpl global() {
         return new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84);
     }
@@ -88,6 +89,19 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
         this.miny = yExtent.getLow();
         this.maxy = yExtent.getHigh();
         this.crs = crs;
+    }
+
+    /**
+     * Creates a {@link BoundingBox} from an existing
+     * {@link GeographicBoundingBox}
+     * 
+     * @param gbb
+     *            The {@link GeographicBoundingBox} defining this
+     *            {@link BoundingBox}
+     */
+    public BoundingBoxImpl(GeographicBoundingBox gbb) {
+        this(gbb.getWestBoundLongitude(), gbb.getSouthBoundLatitude(), gbb.getEastBoundLongitude(),
+                gbb.getNorthBoundLatitude(), DefaultGeographicCRS.WGS84);
     }
 
     @Override

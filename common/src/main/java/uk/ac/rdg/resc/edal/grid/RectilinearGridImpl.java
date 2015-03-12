@@ -142,8 +142,16 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
 
     @Override
     public GridCoordinates2D findIndexOf(HorizontalPosition position) {
-        int x = xAxis.findIndexOf(position.getX());
-        int y = yAxis.findIndexOf(position.getY());
+        int x;
+        int y;
+        if(GISUtils.crsMatch(position.getCoordinateReferenceSystem(), crs)) {
+            x = xAxis.findIndexOf(position.getX());
+            y = yAxis.findIndexOf(position.getY());
+        } else {
+            HorizontalPosition gridPos = GISUtils.transformPosition(position, crs);
+            x = xAxis.findIndexOf(gridPos.getX());
+            y = yAxis.findIndexOf(gridPos.getY());
+        }
         if (x >= 0 && y >= 0) {
             return new GridCoordinates2D(x, y);
         } else {

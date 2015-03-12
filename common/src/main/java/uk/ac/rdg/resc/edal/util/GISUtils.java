@@ -462,7 +462,6 @@ public final class GISUtils {
                 return tDomain.getExtent().getHigh();
             }
         }
-
     }
 
     public static int getIndexOfClosestTimeTo(DateTime targetTime, TimeAxis timeAxis) {
@@ -554,6 +553,46 @@ public final class GISUtils {
                 } else {
                     return vDomain.getExtent().getLow();
                 }
+            }
+        }
+    }
+
+    /**
+     * Returns the closest elevation within a vertical domain to the given
+     * elevation.
+     * 
+     * @param targetZ
+     *            The target elevation
+     * @param zDomain
+     *            The {@link VerticalDomain} to check
+     * @return Either the closest elevation within that axis, or the closest to
+     *         the surface if the target is <code>null</code>, or
+     *         <code>null</code> if the {@link VerticalDomain} is
+     *         <code>null</code>
+     */
+    public static Double getClosestElevationTo(Double targetZ, VerticalDomain zDomain) {
+        if (zDomain == null) {
+            return null;
+        }
+        if (targetZ == null) {
+            return getClosestElevationToSurface(zDomain);
+        }
+        if (zDomain instanceof VerticalAxis) {
+            VerticalAxis zAxis = (VerticalAxis) zDomain;
+            int index = getIndexOfClosestElevationTo(targetZ, zAxis);
+            return zAxis.getCoordinateValue(index);
+        } else {
+            /*
+             * We just have a domain representing an extent. If it contains the
+             * target elevation, return the target elevation, otherwise return either the
+             * upper or lower bound, as appropriate.
+             */
+            if (zDomain.contains(targetZ)) {
+                return targetZ;
+            } else if (targetZ < (zDomain.getExtent().getLow())) {
+                return zDomain.getExtent().getLow();
+            } else {
+                return zDomain.getExtent().getHigh();
             }
         }
     }
