@@ -1,0 +1,34 @@
+<!-- An example of using a threshold colour scheme in a raster layer -->
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<StyledLayerDescriptor version="1.1.0" xsi:schemaLocation="http://www.opengis.net/sld
+StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc"
+xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
+  <NamedLayer>
+    <se:Name>$layerName</se:Name>
+    <UserStyle>
+      <se:CoverageStyle>
+        <se:Rule>
+          <se:RasterSymbolizer>
+            <se:Opacity>1.0</se:Opacity>
+            <se:ColorMap>
+              <se:Categorize fallbackValue="$bgColor">
+                <se:Value>#FF0000FF</se:Value>
+                <se:Threshold>275.0</se:Threshold>
+                <se:Value>#FF00FFFF</se:Value>
+                <se:Threshold>280.0</se:Threshold>
+                <se:Value>#FF00FF00</se:Value>
+                <se:Threshold>285.0</se:Threshold>
+                <se:Value>#FFFF00FF</se:Value>
+                <se:Threshold>295.0</se:Threshold>
+                <se:Value>#FFFF0000</se:Value>
+                <se:Threshold>300.0</se:Threshold>
+                <se:Value>#aaffff00</se:Value>
+              </se:Categorize>
+            </se:ColorMap>
+          </se:RasterSymbolizer>
+        </se:Rule>
+      </se:CoverageStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>
