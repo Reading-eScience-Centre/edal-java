@@ -172,17 +172,17 @@ public abstract class LayerRequestCallback implements RequestCallback {
                 layerDetails.setSelectedPalette(defaultPaletteJson.isString().stringValue());
             }
         }
-        
+
         JSONValue aboveMaxColourJson = parentObj.get("aboveMaxColor");
         if (aboveMaxColourJson != null) {
             layerDetails.setAboveMaxColour(aboveMaxColourJson.isString().stringValue());
         }
-        
+
         JSONValue belowMinColourJson = parentObj.get("belowMinColor");
         if (belowMinColourJson != null) {
             layerDetails.setBelowMinColour(belowMinColourJson.isString().stringValue());
         }
-        
+
         JSONValue noDataColourJson = parentObj.get("noDataColor");
         if (noDataColourJson != null) {
             layerDetails.setNoDataColour(noDataColourJson.isString().stringValue());
@@ -221,7 +221,7 @@ public abstract class LayerRequestCallback implements RequestCallback {
          * t as multifeature.
          */
         JSONValue multiFeatureJson = parentObj.get("multiFeature");
-        if(multiFeatureJson != null) {
+        if (multiFeatureJson != null) {
             layerDetails.setContinuousZ(true);
             layerDetails.setContinuousT(true);
         }
@@ -259,34 +259,46 @@ public abstract class LayerRequestCallback implements RequestCallback {
             }
         }
 
-        JSONValue zvalsJson = parentObj.get("zaxis");
-        if (zvalsJson != null) {
-            JSONObject zvalsObj = zvalsJson.isObject();
+        JSONValue zAxisJson = parentObj.get("zaxis");
+        if (zAxisJson != null) {
+            JSONObject zvalsObj = zAxisJson.isObject();
             layerDetails.setZUnits(zvalsObj.get("units").isString().stringValue());
             layerDetails.setZPositive(zvalsObj.get("positive").isBoolean().booleanValue());
 
             /*
              * We expect either startZ and endZ or values. The first usually
-             * corresponds to a continuous domain, but we may want to determine
-             * sensible values depending on the data distribution, so we parse
-             * both for both continuous and discrete z.
+             * corresponds to a continuous domain, but values may have been
+             * returned for a continuous domain depending on the data
+             * distribution, so we parse both for both continuous and discrete
+             * z.
              */
             JSONValue startZJson = zvalsObj.get("startZ");
             if (startZJson != null) {
-                layerDetails.setStartZ(startZJson.isNumber().toString());
+                if (startZJson.isNumber() != null) {
+                    layerDetails.setStartZ(startZJson.isNumber().toString());
+                } else if (startZJson.isString() != null) {
+                    layerDetails.setStartZ(startZJson.isString().stringValue());
+                }
             }
             JSONValue endZJson = zvalsObj.get("endZ");
             if (endZJson != null) {
-                layerDetails.setEndZ(endZJson.isNumber().toString());
+                if (endZJson.isNumber() != null) {
+                    layerDetails.setEndZ(endZJson.isNumber().toString());
+                } else if (endZJson.isString() != null) {
+                    layerDetails.setEndZ(endZJson.isString().stringValue());
+                }
             }
 
-            JSONArray zvalsArr = zvalsObj.get("values").isArray();
-            if (zvalsArr != null) {
-                List<String> availableZs = new ArrayList<String>();
-                for (int i = 0; i < zvalsArr.size(); i++) {
-                    availableZs.add(zvalsArr.get(i).isNumber().toString());
+            JSONValue zvalsJson = zvalsObj.get("values");
+            if (zvalsJson != null) {
+                JSONArray zvalsArr = zvalsJson.isArray();
+                if (zvalsArr != null) {
+                    List<String> availableZs = new ArrayList<String>();
+                    for (int i = 0; i < zvalsArr.size(); i++) {
+                        availableZs.add(zvalsArr.get(i).isNumber().toString());
+                    }
+                    layerDetails.setAvailableZs(availableZs);
                 }
-                layerDetails.setAvailableZs(availableZs);
             }
         }
 
