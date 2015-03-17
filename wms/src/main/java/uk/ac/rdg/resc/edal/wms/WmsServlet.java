@@ -754,11 +754,25 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private String showMenu(RequestParams params) {
+    private String showMenu(RequestParams params) throws MetadataException {
         JSONObject menu = new JSONObject();
         menu.put("label", catalogue.getServerInfo().getName());
+
+        Collection<Dataset> datasets;
+        String datasetStr = params.getString("dataset");
+        if (datasetStr != null) {
+            Dataset dataset = catalogue.getDatasetFromId(datasetStr);
+            if (dataset == null) {
+                throw new MetadataException("Requested menu for dataset: " + datasetStr
+                        + " which does not exist on this server");
+            }
+            datasets = Arrays.asList(new Dataset[] { dataset });
+        } else {
+            datasets = catalogue.getAllDatasets();
+        }
+
         JSONArray children = new JSONArray();
-        for (Dataset dataset : catalogue.getAllDatasets()) {
+        for (Dataset dataset : datasets) {
             String datasetId = dataset.getId();
 
             Set<VariableMetadata> topLevelVariables = dataset.getTopLevelVariables();
