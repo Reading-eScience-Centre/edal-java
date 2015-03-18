@@ -15,7 +15,7 @@
         <dependency>
             <groupId>org.opengis</groupId>
             <artifactId>geoapi</artifactId>
-            <version>3.0.0</version>
+            <version>3.1-M04</version>
         </dependency>
     </dependencies>
 </project>
