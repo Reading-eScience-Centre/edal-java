@@ -286,15 +286,25 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      */
     @Override
     protected void requestAndPopulateMenu() {
-        /*
-         * This is where we define the fact that we are working with a single
-         * local server
-         */
-        String path = Window.Location.getHost() + Window.Location.getPath();
-        path = path.substring(0, path.lastIndexOf("/"));
-        final String wmsUrl = "http://" + path + "/wms";
+        final String wmsUrl;
+
+        String wmsPath = Window.Location.getParameter("dataset");
+        if (wmsPath == null) {
+            wmsPath = Window.Location.getParameter("DATASET");
+        }
+        if (wmsPath == null) {
+            /*
+             * This is where we define the fact that we are working with a
+             * single local server
+             */
+            String path = Window.Location.getHost() + Window.Location.getPath();
+            path = path.substring(0, path.lastIndexOf("/"));
+            wmsUrl = "http://" + path + "/wms";
+        } else {
+            wmsUrl = wmsPath;
+        }
         final RequestBuilder getMenuRequest = new RequestBuilder(RequestBuilder.GET,
-                getUrlFromGetArgs(wmsUrl, "?request=GetMetadata&item=menu"));
+                getUrlFromGetArgs(wmsPath, "request=GetMetadata", "item=menu"));
         getMenuRequest.setCallback(new RequestCallback() {
             @Override
             public void onResponseReceived(Request req, Response response) {

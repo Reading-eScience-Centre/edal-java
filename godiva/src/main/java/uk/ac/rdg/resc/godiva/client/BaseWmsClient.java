@@ -150,7 +150,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                      * Handle any user-specific configuration parameters
                      */
                     handleCustomParams(parentObj);
-                    
+
                     initBaseWms();
                 } catch (Exception e) {
                     /*
@@ -268,23 +268,36 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * @return the URL of the request
      */
     protected String getWmsRequestUrl(String wmsUrl, String request, Map<String, String> parameters) {
-        StringBuilder url = new StringBuilder();
-        url.append("?request=" + request);
+        String[] params = new String[parameters.size()+1];
+        params[0] = "request="+request;
+        int i=1;
         for (String key : parameters.keySet()) {
-            url.append("&" + key + "=" + parameters.get(key));
+            params[i++] = key+"="+parameters.get(key);
         }
-        return getUrlFromGetArgs(wmsUrl, url.toString());
+        return getUrlFromGetArgs(wmsUrl, params);
     }
 
     /**
      * Encodes the URL, including proxy and base WMS URL
      * 
-     * @param url
-     *            the part of the URL representing the GET arguments
+     * @param baseUrl
+     *            The base URL to encode
+     * @param params
+     *            A series of key=value arguments to append as GET parameters
      * @return the encoded URL
      */
-    protected String getUrlFromGetArgs(String wmsUrl, String url) {
-        return URL.encode(proxyUrl + wmsUrl + url);
+    protected String getUrlFromGetArgs(String baseUrl, String... params) {
+        StringBuilder argPart = new StringBuilder();
+        /*
+         * If the baseUrl already contains a "?", we need to append with "&"
+         */
+        argPart.append(baseUrl.contains("?") ? "&" : "?");
+        for(String param : params) {
+            argPart.append(param+"&");
+        }
+        argPart.deleteCharAt(argPart.length()-1);
+        
+        return URL.encode(proxyUrl + baseUrl + argPart.toString());
     }
 
     /**
