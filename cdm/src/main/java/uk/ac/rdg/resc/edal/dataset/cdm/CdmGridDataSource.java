@@ -50,8 +50,8 @@ import uk.ac.rdg.resc.edal.util.Array4D;
  * Implementation of {@link GridDataSource} using the Unidata Common Data Model
  * for NetCDF
  * 
+ * @author Guy Griffiths
  * @author Jon
- * @author Guy
  */
 final class CdmGridDataSource implements GridDataSource {
     /*
@@ -59,6 +59,33 @@ final class CdmGridDataSource implements GridDataSource {
      */
     private final GridDataset gridDataset;
     private Map<String, RangesList> rangeListCache = new HashMap<>();
+
+    /*
+     * This is used to synchronize the actual reading. This is necessary because
+     * we have the following model:
+     * 
+     * There is a single NetcdfDataset object per dataset, which gets cached,
+     * and closed when the cache becomes full. This is because the overhead of
+     * creating a NetcdfDataset is high.
+     * 
+     * Each time CdmGridDataset.openGridDataSource() is called, a *new*
+     * CdmGridDataSource is created. We can't keep the individual
+     * CdmGridDataSource objects in memory because it's not predictable as to
+     * when the underlying NetcdfDataset will be closed. The overhead of
+     * creating a new CdmGridDataSource is very low compared to the creation of
+     * a NetcdfDataset.
+     * 
+     * When read() is called on separate instances of CdmGridDataSource which
+     * refer to the same location, something happens which causes the array
+     * indices to be set incorrectly, and we get an
+     * ArrayIndexOutOfBoundsException. We can't synchronize on a non-static
+     * object, because these are all separate instances.
+     * 
+     * This could also have been solved by removing NetcdfDataset caching. I
+     * think that this would have a bigger effect on the speed, although that
+     * may depend on the use case.
+     */
+    private static Object syncObj = new Object();
 
     public CdmGridDataSource(GridDataset gridDataset) {
         this.gridDataset = gridDataset;
@@ -102,18 +129,32 @@ final class CdmGridDataSource implements GridDataSource {
         Variable origVar = var.getOriginalVariable();
 
         try {
+            /*
+             * See definition of syncObj for explanation of synchronization
+             */
             if (origVar == null) {
-                /* We read from the enhanced variable */
-                arr = var.read(rangesList.getRanges());
+                synchronized (syncObj) {
+                    /* We read from the enhanced variable */
+                    arr = var.read(rangesList.getRanges());
+                }
             } else {
-                /*
-                 * We read from the original variable to avoid enhancing data
-                 * values that we won't use
-                 */
-                arr = origVar.read(rangesList.getRanges());
+                synchronized (syncObj) {
+                    /*
+                     * We read from the original variable to avoid enhancing
+                     * data values that we won't use
+                     */
+                    arr = origVar.read(rangesList.getRanges());
+                }
             }
         } catch (InvalidRangeException ire) {
             throw new DataReadingException("Cannot read data - invalid range specified", ire);
+        } catch (ArrayIndexOutOfBoundsException e) {
+//            System.out.println(xmin+" -> "+xmax);
+//            System.out.println(ymin+" -> "+ymax);
+//            System.out.println(zmin+" -> "+zmax);
+//            System.out.println(ymin+" -> "+tmax);
+            System.out.println(this + " caused out of bounds");
+            throw e;
         }
 
         /*
@@ -139,7 +180,6 @@ final class CdmGridDataSource implements GridDataSource {
         int[] shape = new int[] { (tmax - tmin + 1), (zmax - zmin + 1), (ymax - ymin + 1),
                 (xmax - xmin + 1) };
         WrappedArray wrappedArray = new WrappedArray(var, arr, needsEnhance, shape, rangesList);
-
         return wrappedArray;
     }
 

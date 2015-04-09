@@ -357,11 +357,6 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
     private final class CdmGridDataset extends GriddedDataset {
         private final String location;
         private final DataReadingStrategy dataReadingStrategy;
-        /*
-         * We cache a CdmGridDataSource and keep it open for a set amount of
-         * time.
-         */
-        private CdmGridDataSource dataSource = null;
 
         public CdmGridDataset(String id, String location, Collection<GridVariableMetadata> vars,
                 DataReadingStrategy dataReadingStrategy) {
@@ -384,9 +379,8 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                  * object, we can get a ConcurrentModificationException, so we
                  * synchronise this action to avoid the issue.
                  */
-                dataSource = new CdmGridDataSource(CdmUtils.getGridDataset(nc));
+                return new CdmGridDataSource(CdmUtils.getGridDataset(nc));
             }
-            return dataSource;
         }
 
         @Override
