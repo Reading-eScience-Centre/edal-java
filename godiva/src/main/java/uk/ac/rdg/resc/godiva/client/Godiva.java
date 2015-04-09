@@ -304,7 +304,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             wmsUrl = wmsPath;
         }
         final RequestBuilder getMenuRequest = new RequestBuilder(RequestBuilder.GET,
-                getUrlFromGetArgs(wmsPath, "request=GetMetadata", "item=menu"));
+                getUrlFromGetArgs(wmsUrl, "request=GetMetadata", "item=menu"));
         getMenuRequest.setCallback(new RequestCallback() {
             @Override
             public void onResponseReceived(Request req, Response response) {
