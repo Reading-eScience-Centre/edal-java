@@ -372,25 +372,20 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
 
         @Override
         protected GridDataSource openGridDataSource() throws IOException {
-            /*
-             * 
-             */
-//            if (dataSource == null || dataSource.isClosed()) {
             NetcdfDataset nc;
             try {
                 nc = openAndAggregateDataset(location);
             } catch (EdalException e) {
                 throw new IOException("Problem aggregating datasets", e);
             }
-            dataSource = new CdmGridDataSource(CdmUtils.getGridDataset(nc));
-//            } else {
-//                /*
-//                 * Data source is non-null and is still open. Cancel the
-//                 * scheduled closing (it will get retriggered once we use it
-//                 * again)
-//                 */
-//                dataSource.cancelClose();
-//            }
+            synchronized (this) {
+                /*
+                 * If the getGridDataset method runs concurrently on the same
+                 * object, we can get a ConcurrentModificationException, so we
+                 * synchronise this action to avoid the issue.
+                 */
+                dataSource = new CdmGridDataSource(CdmUtils.getGridDataset(nc));
+            }
             return dataSource;
         }
 
