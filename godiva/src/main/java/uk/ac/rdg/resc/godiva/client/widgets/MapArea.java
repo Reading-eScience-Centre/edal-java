@@ -623,6 +623,53 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         }
                     });
                     panel.add(timeseriesPlot);
+
+                    /*
+                     * If we have multiple times, we can download a time series
+                     * here
+                     */
+                    Anchor timeseriesDownload = new Anchor("Time Series Download");
+                    timeseriesDownload.addClickHandler(new ClickHandler() {
+                        @Override
+                        public void onClick(ClickEvent event) {
+                            String wmsLayer = wmsLayers.get(layerId).wms.getParams().getLayers()
+                                    .split(",")[0];
+                            final StartEndTimePopup timeSelector = new StartEndTimePopup(wmsLayer,
+                                    proxyUrl + wmsUrl, null, MapArea.this, -1);
+                            timeSelector.setButtonLabel("Download");
+                            timeSelector
+                                    .setErrorMessage("You can only download a time series when you have multiple times available");
+                            timeSelector.setHTML("Select range for time series");
+                            timeSelector.setTimeSelectionHandler(new StartEndTimeHandler() {
+                                @Override
+                                public void timesReceived(String startDateTime, String endDateTime) {
+                                    String eS = elevationStr;
+                                    if (targetElevationStr != null) {
+                                        eS = targetElevationStr;
+                                    }
+                                    final String parameters = "REQUEST=GetTimeseries" + "&LAYERS="
+                                            + layer + "&QUERY_LAYERS=" + layer + "&BBOX="
+                                            + map.getExtent().toBBox(4) + "&SRS="
+                                            + currentProjection + "&FEATURE_COUNT=5"
+                                            + "&INFO_FORMAT=text/csv" + "&HEIGHT="
+                                            + ((int) map.getSize().getHeight()) + "&WIDTH="
+                                            + ((int) map.getSize().getWidth()) + "&X=" + mapXClick
+                                            + "&Y=" + mapYClick + "&STYLES=default/default"
+                                            + ((eS != null) ? ("&ELEVATION=" + eS) : "") + "&TIME="
+                                            + startDateTime + "/" + endDateTime + "&VERSION=1.1.1";
+
+                                    displayImagePopup(
+                                            proxyUrl + wmsUrl + "?"
+                                                    + GodivaUtils.encodeQueryString(parameters),
+                                            "Time series");
+                                    timeSelector.hide();
+                                }
+                            });
+                            pop.hide();
+                            timeSelector.center();
+                        }
+                    });
+                    panel.add(timeseriesDownload);
                 }
                 pop.add(panel);
                 pop.setPopupPosition(x, y);
