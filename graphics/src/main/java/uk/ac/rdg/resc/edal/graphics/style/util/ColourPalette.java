@@ -45,6 +45,8 @@ import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils.ColorAdapter;
 
 public class ColourPalette {
@@ -57,6 +59,8 @@ public class ColourPalette {
     public static final String DEFAULT_PALETTE_NAME = "default";
 
     public static final int MAX_NUM_COLOURS = 250;
+
+    public static final String INVERSE_SUFFIX = "-inv";
 
     /**
      * This is the palette that will be used if no specific palette has been
@@ -254,6 +258,14 @@ public class ColourPalette {
         }
         if (loadedColourSets.containsKey(paletteString)) {
             return new ColourPalette(loadedColourSets.get(paletteString), nColourBands);
+        } else if (paletteString.endsWith(INVERSE_SUFFIX)
+                && loadedColourSets.containsKey(paletteString.substring(0, paletteString.length()
+                        - INVERSE_SUFFIX.length()))) {
+            Color[] colourSet = loadedColourSets.get(paletteString.substring(0, paletteString.length()
+                        - INVERSE_SUFFIX.length()));
+            Color[] invColourSet = (Color[]) ArrayUtils.clone(colourSet);
+            ArrayUtils.reverse(invColourSet);
+            return new ColourPalette(invColourSet, nColourBands);
         } else {
             try {
                 Color[] colours = colourSetFromString(paletteString);
