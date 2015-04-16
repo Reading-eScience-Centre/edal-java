@@ -29,12 +29,16 @@
 package uk.ac.rdg.resc.edal.wms;
 
 import java.awt.Color;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -106,12 +110,36 @@ public class GetMapStyleParams {
             styles = stylesStr.split(",");
         }
 
-        xmlStyle = params.getString("SLD_BODY");
+        String xmlLoc = params.getString("sld");
+        if (xmlLoc != null) {
+            /*
+             * We have the SLD parameter, which points to the location of the
+             * XML style definition. We should download it
+             */
+            URL url;
+            try {
+                url = new URL(xmlLoc);
+                InputStream is = url.openStream();
+                StringWriter writer = new StringWriter();
+                IOUtils.copy(is, writer);
+                xmlStyle = writer.toString();
+            } catch (IOException e) {
+                throw new EdalException(
+                        "SLD argument specified, but SLD could not be read from URL: " + xmlLoc, e);
+            }
+        } else {
+            /*
+             * No location has been specified for the SLD document, so we check
+             * to see if the body of the SLD is included in the request string
+             */
+            xmlStyle = params.getString("sld_body");
+        }
 
         if (xmlStyle == null) {
             xmlSpecified = false;
-            if (layers == null) {
-                throw new EdalException("You must specify either SLD_BODY or LAYERS and STYLES");
+            if (layers == null || styles == null) {
+                throw new EdalException(
+                        "You must specify either SLD, SLD_BODY or LAYERS and STYLES");
             }
             if (styles != null && styles.length != layers.length && styles.length != 0) {
                 throw new EdalException("You must request exactly one STYLE per layer, "

@@ -93,8 +93,8 @@ public class GraphicsUtils {
              */
             return null;
         }
-        if (!colourString.startsWith("0x") && !colourString.startsWith("#")) {
-            throw new EdalParseException("Invalid format for colour");
+        if (!colourString.toLowerCase().startsWith("0x") && !colourString.startsWith("#")) {
+            throw new EdalParseException("Invalid format for colour: "+colourString);
         }
         if (colourString.length() == 7 || colourString.length() == 8) {
             /*
