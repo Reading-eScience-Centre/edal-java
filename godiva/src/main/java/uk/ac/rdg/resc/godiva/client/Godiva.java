@@ -566,8 +566,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     }
 
     @Override
-    protected void layerDetailsLoaded(LayerDetails layerDetails, boolean autoUpdate) {
-        super.layerDetailsLoaded(layerDetails, autoUpdate);
+    protected void layerDetailsLoaded(LayerDetails layerDetails) {
+        super.layerDetailsLoaded(layerDetails);
 
         currentLayerExtent = layerDetails.getExtents();
         zoomToLayerExtents.setEnabled(true);
@@ -592,8 +592,11 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * We populate our widgets here, but in a multi-layer system, we may
          * want to create new widgets here
          */
-        if (autoUpdate && !widgetCollection.getPaletteSelector().isLocked()) {
-            widgetCollection.getPaletteSelector().selectPalette(layerDetails.getSelectedPalette());
+        if (!widgetCollection.getPaletteSelector().isLocked()) {
+            if (layerDetails.getSelectedPalette() != null) {
+                widgetCollection.getPaletteSelector().selectPalette(
+                        layerDetails.getSelectedPalette());
+            }
             if (layerDetails.getAboveMaxColour() != null) {
                 widgetCollection.getPaletteSelector().setExtraAboveMaxColour(
                         layerDetails.getAboveMaxColour());

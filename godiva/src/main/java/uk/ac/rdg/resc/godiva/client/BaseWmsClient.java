@@ -367,7 +367,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                      * This will make a call to populateWidgets, and may create
                      * extra widgets if needed (e.g. for multi-layer clients)
                      */
-                    layerDetailsLoaded(getLayerDetails(), autoZoomAndPalette);
+                    layerDetailsLoaded(getLayerDetails());
 
                     /*
                      * Zoom to extents and possible auto-adjust palette
@@ -640,10 +640,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * 
      * @param layerDetails
      *            the details received from the server
-     * @param autoUpdate
-     *            whether or not we want to auto update palette and zoom
      */
-    protected void layerDetailsLoaded(LayerDetails layerDetails, boolean autoUpdate) {
+    protected void layerDetailsLoaded(LayerDetails layerDetails) {
         /*
          * We want to populate the widgets associated with this layer. Any other
          * actions which are needed should be implemented by the subclass
