@@ -68,6 +68,9 @@ public class LayerDetails {
     private String startZ = null;
     private String endZ = null;
 
+    private boolean queryable = true;
+    private boolean downloadable = false;
+    
     private boolean timeseriesSupported = false;
     private boolean profilesSupported = false;
     private boolean transectsSupported = false;
@@ -280,6 +283,22 @@ public class LayerDetails {
         this.endZ = endZ;
     }
 
+    public boolean isQueryable() {
+        return queryable;
+    }
+    
+    public void setQueryable(boolean queryable) {
+        this.queryable = queryable;
+    }
+    
+    public boolean isDownloadable() {
+        return downloadable;
+    }
+    
+    public void setDownloadable(boolean downloadable) {
+        this.downloadable = downloadable;
+    }
+    
     public boolean supportsTimeseries() {
         return timeseriesSupported;
     }

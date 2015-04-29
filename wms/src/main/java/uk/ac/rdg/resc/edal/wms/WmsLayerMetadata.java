@@ -96,7 +96,7 @@ public interface WmsLayerMetadata {
 
     /**
      * @return The default number of colour bands to use for this layer's
-     *          palette
+     *         palette
      */
     public Integer getNumColorBands();
 
@@ -109,6 +109,12 @@ public interface WmsLayerMetadata {
      * @return More information about this layer to be displayed be clients
      */
     public String getMoreInfo();
+
+    /**
+     * @return Whether or not this layer can be downloaded in bulk (e.g. through
+     *         a timeseries/profile request for CSV/XML/etc)
+     */
+    public boolean isDownloadable();
 
     /**
      * @return Whether or not this layer can be queried with GetFeatureInfo

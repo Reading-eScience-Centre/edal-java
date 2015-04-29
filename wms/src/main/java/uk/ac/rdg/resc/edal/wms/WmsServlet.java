@@ -30,7 +30,9 @@ package uk.ac.rdg.resc.edal.wms;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,6 +89,7 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -969,6 +972,9 @@ public class WmsServlet extends HttpServlet {
             supportedStylesJson.add(supportedStyle.getStyleName());
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
+        
+        layerDetails.put("queryable", layerMetadata.isQueryable());
+        layerDetails.put("downloadable", layerMetadata.isDownloadable());
 
         if (verticalDomain != null) {
             layerDetails.put("continuousZ", !discreteZ);
@@ -1684,17 +1690,14 @@ public class WmsServlet extends HttpServlet {
             throws EdalException {
         GetPlotParameters getPlotParameters = new GetPlotParameters(params, catalogue);
         PlottingDomainParams plottingParameters = getPlotParameters.getPlottingDomainParameters();
-        plottingParameters = new PlottingDomainParams(plottingParameters.getWidth(),
-                plottingParameters.getHeight(), null, plottingParameters.getZExtent(),
-                plottingParameters.getTExtent(), plottingParameters.getTargetHorizontalPosition(),
-                plottingParameters.getTargetZ(), plottingParameters.getTargetT());
         final HorizontalPosition position = getPlotParameters.getClickedPosition();
 
         String[] layerNames = getPlotParameters.getLayerNames();
         String outputFormat = getPlotParameters.getInfoFormat();
         if (!"image/png".equalsIgnoreCase(outputFormat)
                 && !"image/jpeg".equalsIgnoreCase(outputFormat)
-                && !"image/jpg".equalsIgnoreCase(outputFormat)) {
+                && !"image/jpg".equalsIgnoreCase(outputFormat)
+                && !"text/csv".equalsIgnoreCase(outputFormat)) {
             throw new InvalidFormatException(outputFormat
                     + " is not a valid output format for a profile plot");
         }
@@ -1705,47 +1708,70 @@ public class WmsServlet extends HttpServlet {
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
+            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !layerMetadata.isDownloadable()) {
+                throw new LayerNotQueryableException("The layer: " + layerName
+                        + " cannot be downloaded as CSV");
+            }
             List<? extends PointSeriesFeature> extractedTimeseriesFeatures = dataset
                     .extractTimeseriesFeatures(CollectionUtils.setOf(variableId),
                             plottingParameters);
-            if (dataset instanceof GriddedDataset && extractedTimeseriesFeatures.size() > 0) {
-                /*
-                 * Because we parse the GetFeatureInfo request to define a
-                 * 9-pixel bounding box around the click point we can get
-                 * multiple timeseries returned
-                 * 
-                 * However, for gridded datasets we only want to display a
-                 * single timeseries feature per layer.
-                 */
-                timeseriesFeatures.add(extractedTimeseriesFeatures.get(0));
-            } else {
-                timeseriesFeatures.addAll(extractedTimeseriesFeatures);
-            }
+            timeseriesFeatures.addAll(extractedTimeseriesFeatures);
         }
 
         while (timeseriesFeatures.size() > getPlotParameters.getFeatureCount()) {
             timeseriesFeatures.remove(timeseriesFeatures.size() - 1);
         }
 
-        int width = 700;
-        int height = 600;
-
-        /* Now create the vertical profile plot */
-        JFreeChart chart = Charting.createTimeSeriesPlot(timeseriesFeatures, position);
-
         httpServletResponse.setContentType(outputFormat);
-        try {
-            if ("image/png".equals(outputFormat)) {
-                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
-                        height);
-            } else {
-                /* Must be a JPEG */
-                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
-                        width, height);
+
+        if ("text/csv".equalsIgnoreCase(outputFormat)) {
+            if (timeseriesFeatures.size() > 1) {
+                throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }
-        } catch (IOException e) {
-            log.error("Cannot write to output stream", e);
-            throw new EdalException("Problem writing data to output stream", e);
+            try {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+                        httpServletResponse.getOutputStream()));
+                PointSeriesFeature feature = timeseriesFeatures.get(0);
+                Set<String> parameterIds = feature.getParameterIds();
+                StringBuilder headerLine = new StringBuilder("Time,");
+                for (String parameterId : parameterIds) {
+                    headerLine.append(parameterId + ",");
+                }
+                writer.write(headerLine.substring(0, headerLine.length() - 1) + "\n");
+                TimeAxis axis = feature.getDomain();
+                for (int i = 0; i < axis.size(); i++) {
+                    StringBuilder dataLine = new StringBuilder(TimeUtils.dateTimeToISO8601(axis
+                            .getCoordinateValues().get(i)) + ",");
+                    for (String parameterId : parameterIds) {
+                        dataLine.append(feature.getValues(parameterId).get(i) + ",");
+                    }
+                    writer.write(dataLine.substring(0, dataLine.length() - 1) + "\n");
+                }
+                writer.close();
+            } catch (IOException e) {
+                log.error("Cannot write to output stream", e);
+                throw new EdalException("Problem writing data to output stream", e);
+            }
+        } else {
+            int width = 700;
+            int height = 600;
+
+            /* Now create the vertical profile plot */
+            JFreeChart chart = Charting.createTimeSeriesPlot(timeseriesFeatures, position);
+            try {
+                if ("image/png".equals(outputFormat)) {
+                    ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart,
+                            width, height);
+                } else {
+                    /* Must be a JPEG */
+                    ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
+                            width, height);
+                }
+            } catch (IOException e) {
+                log.error("Cannot write to output stream", e);
+                throw new EdalException("Problem writing data to output stream", e);
+            }
         }
     }
 
@@ -1900,7 +1926,8 @@ public class WmsServlet extends HttpServlet {
         String outputFormat = getPlotParameters.getInfoFormat();
         if (!"image/png".equalsIgnoreCase(outputFormat)
                 && !"image/jpeg".equalsIgnoreCase(outputFormat)
-                && !"image/jpg".equalsIgnoreCase(outputFormat)) {
+                && !"image/jpg".equalsIgnoreCase(outputFormat)
+                && !"text/csv".equalsIgnoreCase(outputFormat)) {
             throw new InvalidFormatException(outputFormat
                     + " is not a valid output format for a profile plot");
         }
@@ -1912,46 +1939,70 @@ public class WmsServlet extends HttpServlet {
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
+            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !layerMetadata.isDownloadable()) {
+                throw new LayerNotQueryableException("The layer: " + layerName
+                        + " cannot be downloaded as CSV");
+            }
             List<? extends ProfileFeature> extractedProfileFeatures = dataset
                     .extractProfileFeatures(CollectionUtils.setOf(variableId), plottingParameters);
-            if (dataset instanceof GriddedDataset && extractedProfileFeatures.size() > 0) {
-                /*
-                 * Because we parse the GetFeatureInfo request to define a
-                 * 9-pixel bounding box around the click point we can get
-                 * multiple profiles returned
-                 * 
-                 * However, for gridded datasets we only want to display a
-                 * single profile feature per layer.
-                 */
-                profileFeatures.add(extractedProfileFeatures.get(0));
-            } else {
-                profileFeatures.addAll(extractedProfileFeatures);
-            }
+            profileFeatures.addAll(extractedProfileFeatures);
         }
 
         while (profileFeatures.size() > getPlotParameters.getFeatureCount()) {
             profileFeatures.remove(profileFeatures.size() - 1);
         }
 
-        int width = 700;
-        int height = 600;
-
-        /* Now create the vertical profile plot */
-        JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, position);
-
         httpServletResponse.setContentType(outputFormat);
-        try {
-            if ("image/png".equals(outputFormat)) {
-                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
-                        height);
-            } else {
-                /* Must be a JPEG */
-                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
-                        width, height);
+
+        if ("text/csv".equalsIgnoreCase(outputFormat)) {
+            if (profileFeatures.size() > 1) {
+                throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }
-        } catch (IOException e) {
-            log.error("Cannot write to output stream", e);
-            throw new EdalException("Problem writing data to output stream", e);
+            try {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+                        httpServletResponse.getOutputStream()));
+                ProfileFeature feature = profileFeatures.get(0);
+                Set<String> parameterIds = feature.getParameterIds();
+                StringBuilder headerLine = new StringBuilder("Z,");
+                for (String parameterId : parameterIds) {
+                    headerLine.append(parameterId + ",");
+                }
+                writer.write(headerLine.substring(0, headerLine.length() - 1) + "\n");
+                VerticalAxis axis = feature.getDomain();
+                for (int i = 0; i < axis.size(); i++) {
+                    StringBuilder dataLine = new StringBuilder(axis.getCoordinateValues().get(i)
+                            + ",");
+                    for (String parameterId : parameterIds) {
+                        dataLine.append(feature.getValues(parameterId).get(i) + ",");
+                    }
+                    writer.write(dataLine.substring(0, dataLine.length() - 1) + "\n");
+                }
+                writer.close();
+            } catch (IOException e) {
+                log.error("Cannot write to output stream", e);
+                throw new EdalException("Problem writing data to output stream", e);
+            }
+        } else {
+            int width = 700;
+            int height = 600;
+
+            /* Now create the vertical profile plot */
+            JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, position);
+
+            try {
+                if ("image/png".equals(outputFormat)) {
+                    ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart,
+                            width, height);
+                } else {
+                    /* Must be a JPEG */
+                    ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
+                            width, height);
+                }
+            } catch (IOException e) {
+                log.error("Cannot write to output stream", e);
+                throw new EdalException("Problem writing data to output stream", e);
+            }
         }
     }
 
