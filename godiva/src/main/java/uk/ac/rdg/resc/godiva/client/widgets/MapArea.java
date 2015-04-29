@@ -106,16 +106,20 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         public String wmsUrl;
         public final WMS wms;
         public final WMSParams params;
+        public final boolean queryable;
+        public final boolean downloadable;
         public final boolean multipleElevations;
         public final boolean multipleTimes;
 
-        public WmsDetails(String wmsUrl, WMS wms, WMSParams wmsParameters,
-                boolean multipleElevations, boolean multipleTimes) {
+        public WmsDetails(String wmsUrl, WMS wms, WMSParams wmsParameters, boolean queryable,
+                boolean downloadable, boolean multipleElevations, boolean multipleTimes) {
             if (wms == null || wmsParameters == null || wmsUrl == null)
                 throw new IllegalArgumentException("Cannot provide null parameters");
             this.wmsUrl = wmsUrl;
             this.wms = wms;
             this.params = wmsParameters;
+            this.queryable = queryable;
+            this.downloadable = downloadable;
             this.multipleElevations = multipleElevations;
             this.multipleTimes = multipleTimes;
         }
@@ -359,8 +363,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     public void addLayer(String wmsUrl, String internalLayerId, String wmsLayerName, String time,
             String targetTime, String elevation, String targetElevation, String style,
             String palette, String aboveMaxString, String belowMinString, String noDataString,
-            String scaleRange, int nColourBands, boolean logScale, boolean multipleElevations,
-            boolean multipleTimes) {
+            String scaleRange, int nColourBands, boolean logScale, boolean queryable,
+            boolean downloadable, boolean multipleElevations, boolean multipleTimes) {
         WMSParams params = new WMSParams();
         params.setFormat("image/png");
         params.setTransparent(true);
@@ -397,14 +401,16 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
         WMSOptions options = getOptionsForCurrentProjection();
 
-        doAddingOfLayer(wmsUrl, internalLayerId, params, options, multipleElevations, multipleTimes);
+        doAddingOfLayer(wmsUrl, internalLayerId, params, options, queryable, downloadable,
+                multipleElevations, multipleTimes);
     }
 
     /*
      * Does the work of actually adding the layer to the map
      */
     protected void doAddingOfLayer(String wmsUrl, String internalLayerId, WMSParams params,
-            WMSOptions options, boolean multipleElevations, boolean multipleTimes) {
+            WMSOptions options, boolean queryable, boolean downloadable,
+            boolean multipleElevations, boolean multipleTimes) {
         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
         WMS wmsLayer;
 
@@ -427,10 +433,25 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsLayer.setOpacity(opacity);
         map.addLayer(wmsLayer);
 
-        WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, multipleElevations,
-                multipleTimes);
+        WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, queryable,
+                downloadable, multipleElevations, multipleTimes);
         wmsLayers.put(internalLayerId, newWmsAndParams);
-        setGetFeatureInfoDetails(wmsUrl, multipleElevations, multipleTimes, internalLayerId);
+        
+        /*
+         * This is a little weird and should be unnecessary. However, it's not
+         * unnecessary.
+         * 
+         * Take it out and try if you really want.
+         */
+        if (getFeatureInfo != null) {
+            getFeatureInfo.deactivate();
+            map.removeControl(getFeatureInfo);
+            getFeatureInfo = null;
+        }
+        if (queryable) {
+            setGetFeatureInfoDetails(wmsUrl, multipleElevations, multipleTimes, downloadable,
+                    internalLayerId);
+        }
         if (animLayer != null) {
             animLayer.setIsVisible(false);
         }
@@ -447,7 +468,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      * Sets the GetFeatureInfo details and what to do when we receive GFI data
      */
     protected void setGetFeatureInfoDetails(final String wmsUrl, final boolean multipleElevations,
-            final boolean multipleTimes, final String layerId) {
+            final boolean multipleTimes, final boolean downloadable, final String layerId) {
         WMSGetFeatureInfoOptions getFeatureInfoOptions = new WMSGetFeatureInfoOptions();
         getFeatureInfoOptions.setQueryVisible(true);
         getFeatureInfoOptions.setInfoFormat("text/xml");
@@ -484,17 +505,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             vendorParams.setProperty("TARGETELEVATION", targetElevationStr);
         }
 
-        /*
-         * This is a little weird and should be unnecessary. However, it's not
-         * unnecessary.
-         * 
-         * Take it out and try if you really want.
-         */
-        if (getFeatureInfo != null) {
-            getFeatureInfo.deactivate();
-            map.removeControl(getFeatureInfo);
-            getFeatureInfo = null;
-        }
         getFeatureInfo = new WMSGetFeatureInfo(getFeatureInfoOptions);
 
         getFeatureInfo.addGetFeatureListener(new GetFeatureInfoListener() {
@@ -556,8 +566,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                      */
                     final String parameters = "REQUEST=GetVerticalProfile" + "&LAYERS=" + layer
                             + "&QUERY_LAYERS=" + layer + "&BBOX=" + map.getExtent().toBBox(4)
-                            + "&SRS=" + currentProjection + "&FEATURE_COUNT=5"
-                            + "&INFO_FORMAT=image/png" + "&HEIGHT="
+                            + "&SRS=" + currentProjection + "&FEATURE_COUNT=5" + "&HEIGHT="
                             + ((int) map.getSize().getHeight()) + "&WIDTH="
                             + ((int) map.getSize().getWidth()) + "&X=" + mapXClick + "&Y="
                             + mapYClick + "&STYLES=default/default"
@@ -568,19 +577,50 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         @Override
                         public void onClick(ClickEvent event) {
                             displayImagePopup(
-                                    proxyUrl + wmsUrl + "?"
-                                            + GodivaUtils.encodeQueryString(parameters),
-                                    "Vertical Profile");
+                                    proxyUrl
+                                            + wmsUrl
+                                            + "?"
+                                            + GodivaUtils.encodeQueryString(parameters
+                                                    + "&INFO_FORMAT=image/png"), "Vertical Profile");
                             pop.hide();
                         }
                     });
                     panel.add(profilePlot);
+
+                    if (downloadable) {
+                        Anchor profileDownload = new Anchor("Vertical Profile Download");
+                        profileDownload.addClickHandler(new ClickHandler() {
+                            @Override
+                            public void onClick(ClickEvent event) {
+                                Window.open(
+                                        proxyUrl
+                                                + wmsUrl
+                                                + "?"
+                                                + GodivaUtils.encodeQueryString(parameters
+                                                        + "&INFO_FORMAT=text/csv"),
+                                        "Vertical Profile Data", null);
+                                pop.hide();
+                            }
+                        });
+                        panel.add(profileDownload);
+                    }
                 }
 
                 if (multipleTimes && layerNames.length() > 0) {
                     /*
                      * If we have multiple times, we can plot a time series here
                      */
+                    String eS = elevationStr;
+                    if (targetElevationStr != null) {
+                        eS = targetElevationStr;
+                    }
+                    final String parameters = "REQUEST=GetTimeseries" + "&LAYERS=" + layer
+                            + "&QUERY_LAYERS=" + layer + "&BBOX=" + map.getExtent().toBBox(4)
+                            + "&SRS=" + currentProjection + "&FEATURE_COUNT=5" + "&HEIGHT="
+                            + ((int) map.getSize().getHeight()) + "&WIDTH="
+                            + ((int) map.getSize().getWidth()) + "&X=" + mapXClick + "&Y="
+                            + mapYClick + "&STYLES=default/default"
+                            + ((eS != null) ? ("&ELEVATION=" + eS) : "") + "&VERSION=1.1.1";
                     Anchor timeseriesPlot = new Anchor("Time Series Plot");
                     timeseriesPlot.addClickHandler(new ClickHandler() {
                         @Override
@@ -596,24 +636,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             timeSelector.setTimeSelectionHandler(new StartEndTimeHandler() {
                                 @Override
                                 public void timesReceived(String startDateTime, String endDateTime) {
-                                    String eS = elevationStr;
-                                    if (targetElevationStr != null) {
-                                        eS = targetElevationStr;
-                                    }
-                                    final String parameters = "REQUEST=GetTimeseries" + "&LAYERS="
-                                            + layer + "&QUERY_LAYERS=" + layer + "&BBOX="
-                                            + map.getExtent().toBBox(4) + "&SRS="
-                                            + currentProjection + "&FEATURE_COUNT=5"
-                                            + "&INFO_FORMAT=image/png" + "&HEIGHT="
-                                            + ((int) map.getSize().getHeight()) + "&WIDTH="
-                                            + ((int) map.getSize().getWidth()) + "&X=" + mapXClick
-                                            + "&Y=" + mapYClick + "&STYLES=default/default"
-                                            + ((eS != null) ? ("&ELEVATION=" + eS) : "") + "&TIME="
-                                            + startDateTime + "/" + endDateTime + "&VERSION=1.1.1";
-
                                     displayImagePopup(
-                                            proxyUrl + wmsUrl + "?"
-                                                    + GodivaUtils.encodeQueryString(parameters),
+                                            proxyUrl
+                                                    + wmsUrl
+                                                    + "?"
+                                                    + GodivaUtils.encodeQueryString(parameters
+                                                            + "&TIME=" + startDateTime + "/"
+                                                            + endDateTime
+                                                            + "&INFO_FORMAT=image/png"),
                                             "Time series");
                                     timeSelector.hide();
                                 }
@@ -624,52 +654,45 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     });
                     panel.add(timeseriesPlot);
 
-                    /*
-                     * If we have multiple times, we can download a time series
-                     * here
-                     */
-                    Anchor timeseriesDownload = new Anchor("Time Series Download");
-                    timeseriesDownload.addClickHandler(new ClickHandler() {
-                        @Override
-                        public void onClick(ClickEvent event) {
-                            String wmsLayer = wmsLayers.get(layerId).wms.getParams().getLayers()
-                                    .split(",")[0];
-                            final StartEndTimePopup timeSelector = new StartEndTimePopup(wmsLayer,
-                                    proxyUrl + wmsUrl, null, MapArea.this, -1);
-                            timeSelector.setButtonLabel("Download");
-                            timeSelector
-                                    .setErrorMessage("You can only download a time series when you have multiple times available");
-                            timeSelector.setHTML("Select range for time series");
-                            timeSelector.setTimeSelectionHandler(new StartEndTimeHandler() {
-                                @Override
-                                public void timesReceived(String startDateTime, String endDateTime) {
-                                    String eS = elevationStr;
-                                    if (targetElevationStr != null) {
-                                        eS = targetElevationStr;
+                    if (downloadable) {
+                        /*
+                         * If we have multiple times, we can download a time
+                         * series here
+                         */
+                        Anchor timeseriesDownload = new Anchor("Time Series Download");
+                        timeseriesDownload.addClickHandler(new ClickHandler() {
+                            @Override
+                            public void onClick(ClickEvent event) {
+                                String wmsLayer = wmsLayers.get(layerId).wms.getParams()
+                                        .getLayers().split(",")[0];
+                                final StartEndTimePopup timeSelector = new StartEndTimePopup(
+                                        wmsLayer, proxyUrl + wmsUrl, null, MapArea.this, -1);
+                                timeSelector.setButtonLabel("Download");
+                                timeSelector
+                                        .setErrorMessage("You can only download a time series when you have multiple times available");
+                                timeSelector.setHTML("Select range for time series");
+                                timeSelector.setTimeSelectionHandler(new StartEndTimeHandler() {
+                                    @Override
+                                    public void timesReceived(String startDateTime,
+                                            String endDateTime) {
+                                        Window.open(
+                                                proxyUrl
+                                                        + wmsUrl
+                                                        + "?"
+                                                        + GodivaUtils.encodeQueryString(parameters
+                                                                + "&TIME=" + startDateTime + "/"
+                                                                + endDateTime
+                                                                + "&INFO_FORMAT=text/csv"),
+                                                "Time series data", null);
+                                        timeSelector.hide();
                                     }
-                                    final String parameters = "REQUEST=GetTimeseries" + "&LAYERS="
-                                            + layer + "&QUERY_LAYERS=" + layer + "&BBOX="
-                                            + map.getExtent().toBBox(4) + "&SRS="
-                                            + currentProjection + "&FEATURE_COUNT=5"
-                                            + "&INFO_FORMAT=text/csv" + "&HEIGHT="
-                                            + ((int) map.getSize().getHeight()) + "&WIDTH="
-                                            + ((int) map.getSize().getWidth()) + "&X=" + mapXClick
-                                            + "&Y=" + mapYClick + "&STYLES=default/default"
-                                            + ((eS != null) ? ("&ELEVATION=" + eS) : "") + "&TIME="
-                                            + startDateTime + "/" + endDateTime + "&VERSION=1.1.1";
-
-                                    displayImagePopup(
-                                            proxyUrl + wmsUrl + "?"
-                                                    + GodivaUtils.encodeQueryString(parameters),
-                                            "Time series");
-                                    timeSelector.hide();
-                                }
-                            });
-                            pop.hide();
-                            timeSelector.center();
-                        }
-                    });
-                    panel.add(timeseriesDownload);
+                                });
+                                pop.hide();
+                                timeSelector.center();
+                            }
+                        });
+                        panel.add(timeseriesDownload);
+                    }
                 }
                 pop.add(panel);
                 pop.setPopupPosition(x, y);
@@ -1074,7 +1097,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 if (wmsAndParams != null) {
                     removeLayer(internalLayerId);
                     doAddingOfLayer(wmsAndParams.wmsUrl, internalLayerId, wmsAndParams.params,
-                            getOptionsForCurrentProjection(), wmsAndParams.multipleElevations,
+                            getOptionsForCurrentProjection(), wmsAndParams.queryable,
+                            wmsAndParams.downloadable, wmsAndParams.multipleElevations,
                             wmsAndParams.multipleTimes);
                 }
             }

@@ -302,26 +302,30 @@ public abstract class LayerRequestCallback implements RequestCallback {
             }
         }
 
-        boolean supportsTimeseries = false;
+        JSONValue isQueryableJson = parentObj.get("queryable");
+        if (isQueryableJson != null && isQueryableJson.isBoolean() != null) {
+            layerDetails.setQueryable(isQueryableJson.isBoolean().booleanValue());
+        }
+
+        JSONValue isDownloadableJson = parentObj.get("downloadable");
+        if (isDownloadableJson != null && isDownloadableJson.isBoolean() != null) {
+            layerDetails.setDownloadable(isDownloadableJson.isBoolean().booleanValue());
+        }
+
         JSONValue supportsTimeseriesJson = parentObj.get("supportsTimeseries");
-        if (supportsTimeseriesJson != null) {
-            supportsTimeseries = supportsTimeseriesJson.isBoolean().booleanValue();
+        if (supportsTimeseriesJson != null && supportsTimeseriesJson.isBoolean() != null) {
+            layerDetails.setTimeseriesSupported(supportsTimeseriesJson.isBoolean().booleanValue());
         }
-        layerDetails.setTimeseriesSupported(supportsTimeseries);
 
-        boolean supportsProfiles = false;
         JSONValue supportsProfilesJson = parentObj.get("supportsProfiles");
-        if (supportsProfilesJson != null) {
-            supportsProfiles = supportsProfilesJson.isBoolean().booleanValue();
+        if (supportsProfilesJson != null && supportsProfilesJson.isBoolean() != null) {
+            layerDetails.setProfilesSupported(supportsProfilesJson.isBoolean().booleanValue());
         }
-        layerDetails.setProfilesSupported(supportsProfiles);
 
-        boolean supportsTransects = false;
         JSONValue supportsTransectsJson = parentObj.get("supportsTransects");
-        if (supportsTransectsJson != null) {
-            supportsTransects = supportsTransectsJson.isBoolean().booleanValue();
+        if (supportsTransectsJson != null && supportsTransectsJson.isBoolean() != null) {
+            layerDetails.setTransectsSupported(supportsTransectsJson.isBoolean().booleanValue());
         }
-        layerDetails.setTransectsSupported(supportsTransects);
     }
 
 }

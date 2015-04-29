@@ -972,6 +972,9 @@ public class WmsServlet extends HttpServlet {
             supportedStylesJson.add(supportedStyle.getStyleName());
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
+        
+        layerDetails.put("queryable", layerMetadata.isQueryable());
+        layerDetails.put("downloadable", layerMetadata.isDownloadable());
 
         if (verticalDomain != null) {
             layerDetails.put("continuousZ", !discreteZ);
@@ -1705,6 +1708,11 @@ public class WmsServlet extends HttpServlet {
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
+            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !layerMetadata.isDownloadable()) {
+                throw new LayerNotQueryableException("The layer: " + layerName
+                        + " cannot be downloaded as CSV");
+            }
             List<? extends PointSeriesFeature> extractedTimeseriesFeatures = dataset
                     .extractTimeseriesFeatures(CollectionUtils.setOf(variableId),
                             plottingParameters);
@@ -1727,17 +1735,18 @@ public class WmsServlet extends HttpServlet {
                 PointSeriesFeature feature = timeseriesFeatures.get(0);
                 Set<String> parameterIds = feature.getParameterIds();
                 StringBuilder headerLine = new StringBuilder("Time,");
-                for(String parameterId : parameterIds) {
-                    headerLine.append(parameterId+",");
+                for (String parameterId : parameterIds) {
+                    headerLine.append(parameterId + ",");
                 }
-                writer.write(headerLine.substring(0, headerLine.length()-1)+"\n");
+                writer.write(headerLine.substring(0, headerLine.length() - 1) + "\n");
                 TimeAxis axis = feature.getDomain();
                 for (int i = 0; i < axis.size(); i++) {
-                    StringBuilder dataLine = new StringBuilder(TimeUtils.dateTimeToISO8601(axis.getCoordinateValues().get(i))+",");
-                    for(String parameterId : parameterIds) {
-                        dataLine.append(feature.getValues(parameterId).get(i)+",");
+                    StringBuilder dataLine = new StringBuilder(TimeUtils.dateTimeToISO8601(axis
+                            .getCoordinateValues().get(i)) + ",");
+                    for (String parameterId : parameterIds) {
+                        dataLine.append(feature.getValues(parameterId).get(i) + ",");
                     }
-                    writer.write(dataLine.substring(0, dataLine.length()-1)+"\n");
+                    writer.write(dataLine.substring(0, dataLine.length() - 1) + "\n");
                 }
                 writer.close();
             } catch (IOException e) {
@@ -1917,7 +1926,8 @@ public class WmsServlet extends HttpServlet {
         String outputFormat = getPlotParameters.getInfoFormat();
         if (!"image/png".equalsIgnoreCase(outputFormat)
                 && !"image/jpeg".equalsIgnoreCase(outputFormat)
-                && !"image/jpg".equalsIgnoreCase(outputFormat)) {
+                && !"image/jpg".equalsIgnoreCase(outputFormat)
+                && !"text/csv".equalsIgnoreCase(outputFormat)) {
             throw new InvalidFormatException(outputFormat
                     + " is not a valid output format for a profile plot");
         }
@@ -1929,6 +1939,11 @@ public class WmsServlet extends HttpServlet {
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
+            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !layerMetadata.isDownloadable()) {
+                throw new LayerNotQueryableException("The layer: " + layerName
+                        + " cannot be downloaded as CSV");
+            }
             List<? extends ProfileFeature> extractedProfileFeatures = dataset
                     .extractProfileFeatures(CollectionUtils.setOf(variableId), plottingParameters);
             profileFeatures.addAll(extractedProfileFeatures);
@@ -1938,25 +1953,56 @@ public class WmsServlet extends HttpServlet {
             profileFeatures.remove(profileFeatures.size() - 1);
         }
 
-        int width = 700;
-        int height = 600;
-
-        /* Now create the vertical profile plot */
-        JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, position);
-
         httpServletResponse.setContentType(outputFormat);
-        try {
-            if ("image/png".equals(outputFormat)) {
-                ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart, width,
-                        height);
-            } else {
-                /* Must be a JPEG */
-                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
-                        width, height);
+
+        if ("text/csv".equalsIgnoreCase(outputFormat)) {
+            if (profileFeatures.size() > 1) {
+                throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }
-        } catch (IOException e) {
-            log.error("Cannot write to output stream", e);
-            throw new EdalException("Problem writing data to output stream", e);
+            try {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+                        httpServletResponse.getOutputStream()));
+                ProfileFeature feature = profileFeatures.get(0);
+                Set<String> parameterIds = feature.getParameterIds();
+                StringBuilder headerLine = new StringBuilder("Z,");
+                for (String parameterId : parameterIds) {
+                    headerLine.append(parameterId + ",");
+                }
+                writer.write(headerLine.substring(0, headerLine.length() - 1) + "\n");
+                VerticalAxis axis = feature.getDomain();
+                for (int i = 0; i < axis.size(); i++) {
+                    StringBuilder dataLine = new StringBuilder(axis.getCoordinateValues().get(i)
+                            + ",");
+                    for (String parameterId : parameterIds) {
+                        dataLine.append(feature.getValues(parameterId).get(i) + ",");
+                    }
+                    writer.write(dataLine.substring(0, dataLine.length() - 1) + "\n");
+                }
+                writer.close();
+            } catch (IOException e) {
+                log.error("Cannot write to output stream", e);
+                throw new EdalException("Problem writing data to output stream", e);
+            }
+        } else {
+            int width = 700;
+            int height = 600;
+
+            /* Now create the vertical profile plot */
+            JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, position);
+
+            try {
+                if ("image/png".equals(outputFormat)) {
+                    ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart,
+                            width, height);
+                } else {
+                    /* Must be a JPEG */
+                    ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
+                            width, height);
+                }
+            } catch (IOException e) {
+                log.error("Cannot write to output stream", e);
+                throw new EdalException("Problem writing data to output stream", e);
+            }
         }
     }
 

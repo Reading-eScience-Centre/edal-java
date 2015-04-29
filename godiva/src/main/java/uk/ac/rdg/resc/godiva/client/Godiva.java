@@ -135,8 +135,11 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     protected AnimationButton anim;
 
     /*
-     * Use to store whether timeseries and vertical profiles are supported
+     * Used to store properties of the current layer which do not get stored in
+     * widgets
      */
+    protected boolean queryable = false;
+    protected boolean downloadable = false;
     protected boolean timeseriesSupported = false;
     protected boolean profilesSupported = false;
 
@@ -420,8 +423,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         mapArea.addLayer(widgetCollection.getWmsUrlProvider().getWmsUrl(), WMS_LAYER_ID,
                 layerSelector.getSelectedId(), currentTime, targetTime, currentElevation,
                 targetElevation, currentStyle, currentPalette, aboveMaxString, belowMinString,
-                noDataString, currentScaleRange, nColourBands, logScale, profilesSupported,
-                timeseriesSupported);
+                noDataString, currentScaleRange, nColourBands, logScale, queryable, downloadable,
+                profilesSupported, timeseriesSupported);
 
         /*
          * Set the opacity after updating the map, otherwise it doesn't work
@@ -578,6 +581,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             anim.setEnabled(true);
         }
 
+        queryable = layerDetails.isQueryable();
+        downloadable = layerDetails.isDownloadable();
         timeseriesSupported = layerDetails.supportsTimeseries();
         profilesSupported = layerDetails.supportsProfiles();
 
@@ -587,7 +592,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         } else {
             infoButton.setEnabled(false);
         }
-
+        
         /*
          * We populate our widgets here, but in a multi-layer system, we may
          * want to create new widgets here
