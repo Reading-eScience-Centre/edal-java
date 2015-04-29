@@ -475,7 +475,6 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             }
                         }
                     }
-                    first.close();
                     if (timeDimName == null) {
                         throw new EdalException(
                                 "Cannot join multiple files without time dimensions");
