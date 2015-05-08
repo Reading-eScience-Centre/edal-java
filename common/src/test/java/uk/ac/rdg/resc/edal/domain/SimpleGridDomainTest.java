@@ -132,7 +132,7 @@ public class SimpleGridDomainTest {
         assertTrue(sgd.contains(gPosition));
 
         gPosition = new GeoPosition(hPosition, vPosition, start.plusDays(21));
-        assertTrue(sgd.contains(gPosition));
+        assertFalse(sgd.contains(gPosition));
 
         // the date is outside t axis
         gPosition = new GeoPosition(hPosition, vPosition, start.plusDays(30));

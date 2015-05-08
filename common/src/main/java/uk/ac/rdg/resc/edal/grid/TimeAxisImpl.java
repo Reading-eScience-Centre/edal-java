@@ -53,17 +53,18 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implemen
     }
 
     @Override
+    public boolean contains(DateTime position) {
+        return getCoordinateExtent().contains(position);
+    }
+    
+    @Override
     protected DateTime extendFirstValue(DateTime firstVal, DateTime nextVal) {
-        long tVal = (long) (firstVal.getMillis() - 0.5 * (nextVal.getMillis() - firstVal
-                .getMillis()));
-        return new DateTime(tVal);
+        return firstVal;
     }
 
     @Override
     protected DateTime extendLastValue(DateTime lastVal, DateTime secondLastVal) {
-        long tVal = (long) (lastVal.getMillis() + 0.5 * (lastVal.getMillis() - secondLastVal
-                .getMillis()));
-        return new DateTime(tVal, chronology);
+        return lastVal;
     }
 
     @Override
@@ -84,6 +85,12 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implemen
     @Override
     public Chronology getChronology() {
         return chronology;
+    }
+
+    @Override
+    public Extent<DateTime> getCoordinateBounds(int index) {
+        DateTime time = getCoordinateValue(index);
+        return Extents.newExtent(time, time);
     }
 
     @Override
