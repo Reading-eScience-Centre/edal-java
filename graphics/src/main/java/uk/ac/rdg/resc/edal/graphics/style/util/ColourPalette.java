@@ -270,7 +270,7 @@ public class ColourPalette {
     }
 
     private static Color[] colourSetFromString(String paletteString) {
-        String[] colourStrings = paletteString.split("[,\n]");
+        String[] colourStrings = paletteString.split("[,\n:]");
         Color[] colours = new Color[colourStrings.length];
         for (int i = 0; i < colourStrings.length; i++) {
             try {
