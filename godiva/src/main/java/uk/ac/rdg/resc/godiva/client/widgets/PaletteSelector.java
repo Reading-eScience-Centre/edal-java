@@ -48,6 +48,7 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.NumberFormat;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CellPanel;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
@@ -125,6 +126,9 @@ public class PaletteSelector implements PaletteSelectorIF {
     private String wmsLayerId;
 
     private UnitConverter converter = null;
+
+    /** Whether to use normal or inverted palettes */
+    private boolean inverted = false;
 
     /**
      * Instantiates a new {@link PaletteSelector}
@@ -497,6 +501,15 @@ public class PaletteSelector implements PaletteSelectorIF {
         HorizontalPanel nCBPanel = new HorizontalPanel();
         nCBPanel.add(new Label("Colour bands:"));
         nCBPanel.add(nColorBands);
+        Button invert = new Button("Flip");
+        invert.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                inverted = !inverted;
+                populatePaletteSelector();
+            }
+        });
+        nCBPanel.add(invert);
         popupPanel.add(nCBPanel);
         popupPanel.setCellHorizontalAlignment(nCBPanel, HasHorizontalAlignment.ALIGN_CENTER);
         popupPanel.add(palettesPanel);
@@ -526,21 +539,29 @@ public class PaletteSelector implements PaletteSelectorIF {
         palettesPanel.clear();
         /*
          * 750px for the entire width should fit in almost any browser. Smaller
-         * than that will be having to scroll for other things anyway
+         * than that will be having to scroll for other things anyway.
+         * 
+         * Divide by 2 because we will generally have 2 of each palette - normal
+         * and inverted
          */
-        int width = 750 / availablePalettes.size();
-        for (final String palette : availablePalettes) {
-            Image pImage = new Image(getImageUrl(palette, 200, 1));
+        int width = 750 / (availablePalettes.size() / 2);
+        for (final String paletteName : availablePalettes) {
+            if (inverted && !paletteName.endsWith("-inv")) {
+                continue;
+            } else if (!inverted && paletteName.endsWith("inv")) {
+                continue;
+            }
+            Image pImage = new Image(getImageUrl(paletteName, 200, 1));
             pImage.setHeight("200px");
             pImage.setWidth(width + "px");
             pImage.addClickHandler(new ClickHandler() {
                 @Override
                 public void onClick(ClickEvent event) {
-                    selectPalette(palette);
+                    selectPalette(paletteName);
                     popup.hide();
                 }
             });
-            pImage.setTitle(palette);
+            pImage.setTitle(paletteName);
             palettesPanel.add(pImage);
         }
     }
@@ -861,7 +882,7 @@ public class PaletteSelector implements PaletteSelectorIF {
             return getDisplayScaleRange();
         }
     }
-    
+
     @Override
     public String getDisplayScaleRange() {
         return minScale.getValue() + "," + maxScale.getValue();

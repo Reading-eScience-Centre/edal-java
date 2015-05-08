@@ -45,6 +45,8 @@ import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils.ColorAdapter;
 
 public class ColourPalette {
@@ -57,6 +59,8 @@ public class ColourPalette {
     public static final String DEFAULT_PALETTE_NAME = "default";
 
     public static final int MAX_NUM_COLOURS = 250;
+
+    public static final String INVERSE_SUFFIX = "-inv";
 
     /**
      * This is the palette that will be used if no specific palette has been
@@ -81,6 +85,9 @@ public class ColourPalette {
         cParser = ColorAdapter.getInstance();
 
         loadedColourSets.put(DEFAULT_PALETTE_NAME, DEFAULT_COLOURS);
+        Color[] invColourSet = (Color[]) ArrayUtils.clone(DEFAULT_COLOURS);
+        ArrayUtils.reverse(invColourSet);
+        loadedColourSets.put(DEFAULT_PALETTE_NAME+INVERSE_SUFFIX, invColourSet);
 
         try {
             String[] paletteFileNames = getResourceListing(ColourPalette.class, "palettes/");
@@ -103,6 +110,9 @@ public class ColourPalette {
                         paletteString.deleteCharAt(paletteString.length() - 1);
                         Color[] colourSet = colourSetFromString(paletteString.toString());
                         loadedColourSets.put(paletteName, colourSet);
+                        invColourSet = (Color[]) ArrayUtils.clone(colourSet);
+                        ArrayUtils.reverse(invColourSet);
+                        loadedColourSets.put(paletteName+INVERSE_SUFFIX, invColourSet);
                     } catch (IOException e) {
                         /*
                          * If we can't add this palette, don't add it
