@@ -85,6 +85,9 @@ public class ColourPalette {
         cParser = ColorAdapter.getInstance();
 
         loadedColourSets.put(DEFAULT_PALETTE_NAME, DEFAULT_COLOURS);
+        Color[] invColourSet = (Color[]) ArrayUtils.clone(DEFAULT_COLOURS);
+        ArrayUtils.reverse(invColourSet);
+        loadedColourSets.put(DEFAULT_PALETTE_NAME+INVERSE_SUFFIX, invColourSet);
 
         try {
             String[] paletteFileNames = getResourceListing(ColourPalette.class, "palettes/");
@@ -107,6 +110,9 @@ public class ColourPalette {
                         paletteString.deleteCharAt(paletteString.length() - 1);
                         Color[] colourSet = colourSetFromString(paletteString.toString());
                         loadedColourSets.put(paletteName, colourSet);
+                        invColourSet = (Color[]) ArrayUtils.clone(colourSet);
+                        ArrayUtils.reverse(invColourSet);
+                        loadedColourSets.put(paletteName+INVERSE_SUFFIX, invColourSet);
                     } catch (IOException e) {
                         /*
                          * If we can't add this palette, don't add it
@@ -258,14 +264,6 @@ public class ColourPalette {
         }
         if (loadedColourSets.containsKey(paletteString)) {
             return new ColourPalette(loadedColourSets.get(paletteString), nColourBands);
-        } else if (paletteString.endsWith(INVERSE_SUFFIX)
-                && loadedColourSets.containsKey(paletteString.substring(0, paletteString.length()
-                        - INVERSE_SUFFIX.length()))) {
-            Color[] colourSet = loadedColourSets.get(paletteString.substring(0, paletteString.length()
-                        - INVERSE_SUFFIX.length()));
-            Color[] invColourSet = (Color[]) ArrayUtils.clone(colourSet);
-            ArrayUtils.reverse(invColourSet);
-            return new ColourPalette(invColourSet, nColourBands);
         } else {
             try {
                 Color[] colours = colourSetFromString(paletteString);
