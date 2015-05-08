@@ -68,6 +68,7 @@ import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.RuntimeConstants;
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.joda.time.DateTime;
@@ -621,7 +622,7 @@ public class WmsServlet extends HttpServlet {
          */
         Template template = velocityEngine.getTemplate("templates/featureInfo.vm");
         VelocityContext context = new VelocityContext();
-        context.put("position", position);
+        context.put("position", GISUtils.transformPosition(position, DefaultGeographicCRS.WGS84));
         context.put("featureInfo", featureInfos);
         try {
             template.merge(context, httpServletResponse.getWriter());
@@ -972,7 +973,7 @@ public class WmsServlet extends HttpServlet {
             supportedStylesJson.add(supportedStyle.getStyleName());
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
-        
+
         layerDetails.put("queryable", layerMetadata.isQueryable());
         layerDetails.put("downloadable", layerMetadata.isDownloadable());
 
