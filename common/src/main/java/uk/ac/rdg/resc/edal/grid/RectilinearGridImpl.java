@@ -173,7 +173,6 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((domainObjects == null) ? 0 : domainObjects.hashCode());
         result = prime * result + ((xAxis == null) ? 0 : xAxis.hashCode());
         result = prime * result + ((yAxis == null) ? 0 : yAxis.hashCode());
         return result;
@@ -188,11 +187,6 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
         if (getClass() != obj.getClass())
             return false;
         RectilinearGridImpl other = (RectilinearGridImpl) obj;
-        if (domainObjects == null) {
-            if (other.domainObjects != null)
-                return false;
-        } else if (!domainObjects.equals(other.domainObjects))
-            return false;
         if (xAxis == null) {
             if (other.xAxis != null)
                 return false;
