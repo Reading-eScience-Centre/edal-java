@@ -30,6 +30,8 @@ package uk.ac.rdg.resc.edal.grid;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import uk.ac.rdg.resc.edal.util.GISUtils;
+
 public abstract class AbstractHorizontalGrid implements HorizontalGrid {
 
     protected CoordinateReferenceSystem crs;
@@ -42,4 +44,30 @@ public abstract class AbstractHorizontalGrid implements HorizontalGrid {
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return crs;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((crs == null) ? 0 : crs.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AbstractHorizontalGrid other = (AbstractHorizontalGrid) obj;
+        if (crs == null) {
+            if (other.crs != null)
+                return false;
+        } else if (!GISUtils.crsMatch(crs, other.crs))
+            return false;
+        return true;
+    }
+
 }
