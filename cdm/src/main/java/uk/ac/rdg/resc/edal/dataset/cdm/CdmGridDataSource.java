@@ -272,11 +272,6 @@ final class CdmGridDataSource implements GridDataSource {
         }
 
         @Override
-        public Iterator<Number> iterator() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
         public long size() {
             return shape[0] * shape[1] * shape[2] * shape[3];
         }
