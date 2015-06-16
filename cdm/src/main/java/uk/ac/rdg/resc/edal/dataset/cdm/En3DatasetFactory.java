@@ -537,9 +537,9 @@ public final class En3DatasetFactory extends DatasetFactory {
         // metadata.add(new VariableMetadata(TEMP_PARAMETER.getId(),
         // TEMP_PARAMETER, hDomain, zDomain,
         // tDomain));
-        metadata.add(new VariableMetadata(POT_TEMP_PARAMETER.getId(), POT_TEMP_PARAMETER, hDomain,
+        metadata.add(new VariableMetadata(POT_TEMP_PARAMETER, hDomain,
                 zDomain, tDomain));
-        metadata.add(new VariableMetadata(PSAL_PARAMETER.getId(), PSAL_PARAMETER, hDomain, zDomain,
+        metadata.add(new VariableMetadata(PSAL_PARAMETER, hDomain, zDomain,
                 tDomain));
 
         long t2 = System.currentTimeMillis();

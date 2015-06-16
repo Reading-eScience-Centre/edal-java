@@ -53,13 +53,13 @@ public class VariableMetadataTest {
          * any real values. Parameters of a VariableMetadata object cannot be
          * null though (tested below)
          */
-        metadata1 = new VariableMetadata("metadata1", new Parameter(null, null, null, null, null), null,
+        metadata1 = new VariableMetadata(new Parameter("metadata1", null, null, null, null), null,
                 null, null);
-        metadata2 = new VariableMetadata("metadata2", new Parameter(null, null, null, null, null), null,
+        metadata2 = new VariableMetadata(new Parameter("metadata2", null, null, null, null), null,
                 null, null);
-        metadata3 = new VariableMetadata("metadata3", new Parameter(null, null, null, null, null), null,
+        metadata3 = new VariableMetadata(new Parameter("metadata3", null, null, null, null), null,
                 null, null);
-        metadata4 = new VariableMetadata("metadata4", new Parameter(null, null, null, null, null), null,
+        metadata4 = new VariableMetadata(new Parameter("metadata4", null, null, null, null), null,
                 null, null);
     }
 
@@ -138,6 +138,6 @@ public class VariableMetadataTest {
 
     @Test(expected = NullPointerException.class)
     public void testNullParameter() {
-        new VariableMetadata("", null, null, null, null);
+        new VariableMetadata(null, null, null, null);
     }
 }

@@ -389,10 +389,10 @@ public abstract class VariablePlugin {
         if (hDomain instanceof HorizontalGrid
                 && (vDomain instanceof VerticalAxis || vDomain == null)
                 && (tDomain instanceof TimeAxis || tDomain == null)) {
-            return new GridVariableMetadata(parameter.getId(), parameter, (HorizontalGrid) hDomain,
+            return new GridVariableMetadata(parameter, (HorizontalGrid) hDomain,
                     (VerticalAxis) vDomain, (TimeAxis) tDomain, scalar);
         } else {
-            return new VariableMetadata(parameter.getId(), parameter, hDomain, vDomain, tDomain,
+            return new VariableMetadata(parameter, hDomain, vDomain, tDomain,
                     scalar);
         }
     }

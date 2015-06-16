@@ -43,9 +43,9 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
  */
 public class GridVariableMetadata extends VariableMetadata {
 
-    public GridVariableMetadata(String id, Parameter parameter, HorizontalGrid hDomain,
+    public GridVariableMetadata(Parameter parameter, HorizontalGrid hDomain,
             VerticalAxis zDomain, TimeAxis tDomain, boolean scalar) {
-        super(id, parameter, hDomain, zDomain, tDomain, scalar);
+        super(parameter, hDomain, zDomain, tDomain, scalar);
         if (hDomain == null) {
             throw new IllegalArgumentException(
                     "GridVariableMetadata must contain a horizontal domain");

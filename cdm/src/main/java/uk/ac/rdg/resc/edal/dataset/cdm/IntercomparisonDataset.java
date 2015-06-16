@@ -203,12 +203,11 @@ public class IntercomparisonDataset implements Dataset {
                              */
                         }
 
-                        String parentId = "COMP:" + gridMetadata.getParameter().getStandardName();
-                        VariableMetadata parentMetadata = new VariableMetadata(parentId, parameter,
+                        VariableMetadata parentMetadata = new VariableMetadata(parameter,
                                 hDomain, zDomain, tDomain, false);
                         parentMetadata.setDataset(this);
-                        varId2DatasetAndId.put(parentId, new DatasetAndId(this, parentId));
-                        ownMetadata.put(parentId, parentMetadata);
+                        varId2DatasetAndId.put(parameter.getId(), new DatasetAndId(this, parameter.getId()));
+                        ownMetadata.put(parameter.getId(), parentMetadata);
                         gridMetadata.setParent(parentMetadata, "grid");
                         inSituMetadata.setParent(parentMetadata, "insitu");
                         gridMetadata.setDataset(gridDataset);

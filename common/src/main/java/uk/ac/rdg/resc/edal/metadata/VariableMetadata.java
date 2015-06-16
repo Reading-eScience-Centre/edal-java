@@ -79,11 +79,10 @@ public class VariableMetadata {
      * {@link VariableMetadata#setDataset(Dataset)} method
      * </p>
      * 
-     * @param id
-     *            The ID of the variable. This must be unique amongst its
-     *            siblings
      * @param parameter
-     *            The {@link Parameter} which the variable is measuring
+     *            The {@link Parameter} which the variable is measuring - the ID
+     *            is used as the variable ID and must be unique amongst its
+     *            siblings
      * @param hDomain
      *            The {@link HorizontalDomain} on which the variable is measured
      * @param zDomain
@@ -91,9 +90,9 @@ public class VariableMetadata {
      * @param tDomain
      *            The {@link TemporalDomain} on which the variable is measured
      */
-    public VariableMetadata(String id, Parameter parameter, HorizontalDomain hDomain,
-            VerticalDomain zDomain, TemporalDomain tDomain) {
-        this(id, parameter, hDomain, zDomain, tDomain, true);
+    public VariableMetadata(Parameter parameter, HorizontalDomain hDomain, VerticalDomain zDomain,
+            TemporalDomain tDomain) {
+        this(parameter, hDomain, zDomain, tDomain, true);
     }
 
     /**
@@ -107,11 +106,10 @@ public class VariableMetadata {
      * {@link VariableMetadata#setDataset(Dataset)} method
      * </p>
      * 
-     * @param id
-     *            The ID of the variable. This must be unique amongst its
-     *            siblings
      * @param parameter
-     *            The {@link Parameter} which the variable is measuring
+     *            The {@link Parameter} which the variable is measuring - the ID
+     *            is used as the variable ID and must be unique amongst its
+     *            siblings
      * @param hDomain
      *            The {@link HorizontalDomain} on which the variable is measured
      * @param zDomain
@@ -122,12 +120,12 @@ public class VariableMetadata {
      *            Whether or not this {@link VariableMetadata} can be read as a
      *            scalar quantity
      */
-    public VariableMetadata(String id, Parameter parameter, HorizontalDomain hDomain,
+    public VariableMetadata(Parameter parameter, HorizontalDomain hDomain,
             VerticalDomain zDomain, TemporalDomain tDomain, boolean scalar) {
         if (parameter == null) {
             throw new NullPointerException("Parameter cannot be null");
         }
-        this.id = id;
+        this.id = parameter.getId();
         this.parameter = parameter;
         this.hDomain = hDomain;
         this.zDomain = zDomain;
