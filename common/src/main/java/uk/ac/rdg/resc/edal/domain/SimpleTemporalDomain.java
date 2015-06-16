@@ -50,7 +50,7 @@ public class SimpleTemporalDomain implements TemporalDomain, Serializable {
     public SimpleTemporalDomain(DateTime min, DateTime max) {
         if(min == null || max == null) {
             chronology = ISOChronology.getInstanceUTC();
-            extent = Extents.emptyExtent(DateTime.class);
+            extent = Extents.emptyExtent();
         } else {
             chronology = min.getChronology();
             extent = Extents.newExtent(min, max);

@@ -146,7 +146,7 @@ public class TrajectoryDomain implements DiscretePointDomain<GeoPosition> {
              * The minimum z-value hasn't changed, so we don't have a z-axis for
              * any of the positions in this domain
              */
-            zExtent = Extents.emptyExtent(Double.class);
+            zExtent = Extents.emptyExtent();
         }
         tExtent = Extents.newExtent(positions.get(0).getTime(), positions.get(positions.size() - 1).getTime());
     }
