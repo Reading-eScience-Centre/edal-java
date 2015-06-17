@@ -36,7 +36,7 @@ import java.io.Serializable;
  * value (inclusively) between these values is considered part of the domain. A
  * null value for "low" or "high" indicates that the extent is unbounded at that
  * end. If both values are null and the Extent is not empty (i.e.
- * {@link Extent#isEmpty()} returns <code>true</code>), then the Extent includes
+ * {@link Extent#isEmpty()} returns <code>false</code>), then the Extent includes
  * all possible values of P, with the exception of NaN values where P is
  * numerical.
  * </p>

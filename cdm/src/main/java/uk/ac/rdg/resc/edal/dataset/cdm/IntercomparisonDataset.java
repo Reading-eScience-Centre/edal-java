@@ -206,8 +206,8 @@ public class IntercomparisonDataset implements Dataset {
                         VariableMetadata parentMetadata = new VariableMetadata(parameter,
                                 hDomain, zDomain, tDomain, false);
                         parentMetadata.setDataset(this);
-                        varId2DatasetAndId.put(parameter.getId(), new DatasetAndId(this, parameter.getId()));
-                        ownMetadata.put(parameter.getId(), parentMetadata);
+                        varId2DatasetAndId.put(parameter.getVariableId(), new DatasetAndId(this, parameter.getVariableId()));
+                        ownMetadata.put(parameter.getVariableId(), parentMetadata);
                         gridMetadata.setParent(parentMetadata, "grid");
                         inSituMetadata.setParent(parentMetadata, "insitu");
                         gridMetadata.setDataset(gridDataset);

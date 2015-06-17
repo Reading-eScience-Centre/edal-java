@@ -117,8 +117,8 @@ public final class En3DatasetFactory extends DatasetFactory {
     private static final Map<String, Parameter> ALL_PARAMETERS = new HashMap<String, Parameter>();
 
     static {
-        ALL_PARAMETERS.put(POT_TEMP_PARAMETER.getId(), POT_TEMP_PARAMETER);
-        ALL_PARAMETERS.put(PSAL_PARAMETER.getId(), PSAL_PARAMETER);
+        ALL_PARAMETERS.put(POT_TEMP_PARAMETER.getVariableId(), POT_TEMP_PARAMETER);
+        ALL_PARAMETERS.put(PSAL_PARAMETER.getVariableId(), PSAL_PARAMETER);
     }
 
     /*
@@ -448,8 +448,8 @@ public final class En3DatasetFactory extends DatasetFactory {
                      * indexer
                      */
                     featureBounds.add(new FeatureBounds(profileId, horizontalPosition, zExtent,
-                            tExtent, CollectionUtils.setOf(POT_TEMP_PARAMETER.getId(),
-                                    PSAL_PARAMETER.getId())));
+                            tExtent, CollectionUtils.setOf(POT_TEMP_PARAMETER.getVariableId(),
+                                    PSAL_PARAMETER.getVariableId())));
 
                     /*
                      * Update entire dataset extents
@@ -964,7 +964,7 @@ public final class En3DatasetFactory extends DatasetFactory {
             }
             props.put(key, value);
 
-            if (variableIds.contains(POT_TEMP_PARAMETER.getId())) {
+            if (variableIds.contains(POT_TEMP_PARAMETER.getVariableId())) {
                 key = "Potential temperature QC";
                 if (qcPotmCorrected.getChar(profNum) == '1') {
                     value = "Accept";
@@ -978,7 +978,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 props.put(key, value);
             }
 
-            if (variableIds.contains(PSAL_PARAMETER.getId())) {
+            if (variableIds.contains(PSAL_PARAMETER.getVariableId())) {
                 key = "Practical salinity QC";
                 if (qcPsalCorrected.getChar(profNum) == '1') {
                     value = "Accept";

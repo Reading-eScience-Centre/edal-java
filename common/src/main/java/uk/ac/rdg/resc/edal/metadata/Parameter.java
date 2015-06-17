@@ -35,11 +35,11 @@ import uk.ac.rdg.resc.edal.feature.Feature;
  * Describes what is being measured by a {@link Feature} or {@link Dataset}.
  * 
  * @author Jon
- * @author Guy
+ * @author Guy Griffiths
  */
 public class Parameter {
 
-    private String id;
+    private String varId;
     private String title;
     private String description;
     /* TODO: This will probably end up as something more complex than a string */
@@ -47,8 +47,8 @@ public class Parameter {
     private String standardName;
 
     /**
-     * @param id
-     *            The ID of the parameter
+     * @param varId
+     *            The ID of the variable which this parameter describes
      * @param title
      *            A human-readable title for the quantity being measured
      * @param description
@@ -56,9 +56,10 @@ public class Parameter {
      * @param units
      *            The units of the measured quantity
      */
-    public Parameter(String id, String title, String description, String units, String standardName) {
+    public Parameter(String varId, String title, String description, String units,
+            String standardName) {
         super();
-        this.id = id;
+        this.varId = varId;
         this.title = title;
         this.description = description;
         this.units = units == null ? "" : units;
@@ -66,11 +67,12 @@ public class Parameter {
     }
 
     /**
-     * @return An identifier that is unique within the context ({@literal e.g.} within
-     * the Feature or Dataset).
+     * @return The identifier of the variable this {@link Parameter} describes.
+     *         This is unique within the context ({@literal e.g.} within the
+     *         {@link Feature} or {@link Dataset}).
      */
-    public String getId() {
-        return id;
+    public String getVariableId() {
+        return varId;
     }
 
     /**
@@ -97,7 +99,8 @@ public class Parameter {
     /**
      * @return The standard name of the phenomena which this represents
      * 
-     * TODO This should allow multiple standard names and have scope for different vocabularies
+     *         TODO This should allow multiple standard names and have scope for
+     *         different vocabularies
      */
     public String getStandardName() {
         return standardName;
@@ -105,7 +108,7 @@ public class Parameter {
 
     @Override
     public String toString() {
-        return id + ": " + title + " (" + description + ")" + " Units: " + units;
+        return varId + ": " + title + " (" + description + ")" + " Units: " + units;
     }
 
     @Override

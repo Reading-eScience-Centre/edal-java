@@ -125,7 +125,7 @@ public class VariableMetadata {
         if (parameter == null) {
             throw new NullPointerException("Parameter cannot be null");
         }
-        this.id = parameter.getId();
+        this.id = parameter.getVariableId();
         this.parameter = parameter;
         this.hDomain = hDomain;
         this.zDomain = zDomain;
