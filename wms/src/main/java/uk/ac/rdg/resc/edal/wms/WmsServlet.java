@@ -1324,7 +1324,7 @@ public class WmsServlet extends HttpServlet {
         }
         DateTime day;
         try {
-            day = TimeUtils.iso8601ToDate(dayStr, temporalDomain.getChronology());
+            day = TimeUtils.iso8601ToDateTime(dayStr, temporalDomain.getChronology());
         } catch (BadTimeFormatException e) {
             throw new MetadataException("\"day\" parameter must be an ISO-formatted date");
         }

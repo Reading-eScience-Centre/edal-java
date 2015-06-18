@@ -50,10 +50,11 @@ import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
  * time-related types.
  * </p>
  * 
- * @author Guy
+ * @author Guy Griffiths
  * @author Jon Blower
  */
 public class TimeUtils {
+    private static final DateTimeFormatter ISO_PARSER = ISODateTimeFormat.dateOptionalTimeParser();
     private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
     private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date();
     private static final DateTimeFormatter ISO_TIME_FORMATTER = ISODateTimeFormat.time();
@@ -114,27 +115,17 @@ public class TimeUtils {
      * Converts an ISO8601-formatted String into a {@link DateTime} object
      * 
      * @throws BadTimeFormatException
-     *             if the string is not a valid ISO date-time, or if it is not
-     *             valid within the Chronology (e.g. 31st July in a 360-day
-     *             calendar).
+     *             if the string is not a valid ISO8601 date (with optional
+     *             time), or if it is not valid within the Chronology (e.g. 31st
+     *             July in a 360-day calendar).
      */
     public static DateTime iso8601ToDateTime(String isoDateTime, Chronology chronology)
             throws BadTimeFormatException {
         try {
-            return ISO_DATE_TIME_FORMATTER.withChronology(chronology).parseDateTime(isoDateTime);
+            return ISO_PARSER.withChronology(chronology).parseDateTime(isoDateTime);
         } catch (IllegalArgumentException e) {
             throw new BadTimeFormatException("The string " + isoDateTime
                     + " does not represent an ISO8601 datetime", e);
-        }
-    }
-
-    public static DateTime iso8601ToDate(String isoDate, Chronology chronology)
-            throws BadTimeFormatException {
-        try {
-            return ISO_DATE_FORMATTER.withChronology(chronology).parseDateTime(isoDate);
-        } catch (IllegalArgumentException e) {
-            throw new BadTimeFormatException("The string " + isoDate
-                    + " does not represent an ISO8601 date", e);
         }
     }
 
