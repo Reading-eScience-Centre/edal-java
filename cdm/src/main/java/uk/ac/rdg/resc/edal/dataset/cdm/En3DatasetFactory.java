@@ -241,7 +241,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                      */
                     readExistingSpatialIndex = true;
                 }
-            } catch (ClassNotFoundException | IOException e) {
+            } catch (ClassNotFoundException | IOException | ClassCastException e) {
                 /*
                  * Log this error, but otherwise ignore it - we will just
                  * recreate the spatial index, so it's not a big problem.
@@ -274,7 +274,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 indexer = (PRTreeFeatureIndexer) in.readObject();
 
                 log.debug("Successfully read spatial index from file");
-            } catch (ClassNotFoundException | IOException e) {
+            } catch (ClassNotFoundException | IOException | ClassCastException e) {
                 /*
                  * Problem reading spatial index/domain from file. Set the flag
                  * to regenerate it.
