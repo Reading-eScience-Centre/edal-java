@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -406,7 +407,7 @@ public abstract class GriddedDataset extends AbstractDataset {
 
     private Map<String, Parameter> getParameters(Set<String> varIds)
             throws VariableNotFoundException {
-        Map<String, Parameter> parameters = new HashMap<String, Parameter>();
+        Map<String, Parameter> parameters = new LinkedHashMap<String, Parameter>();
         for (String varId : varIds) {
             parameters.put(varId, getVariableMetadata(varId).getParameter());
         }
@@ -1282,8 +1283,6 @@ public abstract class GriddedDataset extends AbstractDataset {
             if (pos != null) {
                 bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
                         pos.getCoordinateReferenceSystem());
-            } else {
-                bbox = null;
             }
         }
 
@@ -1298,7 +1297,7 @@ public abstract class GriddedDataset extends AbstractDataset {
              * Store a map of unique point series locations to a variable
              * IDs/values
              */
-            Map<String, Map<PointSeriesLocation, Array1D<Number>>> allVariablesData = new HashMap<>();
+            Map<String, Map<PointSeriesLocation, Array1D<Number>>> allVariablesData = new LinkedHashMap<>();
 
             /*
              * Read all of the data from non-plugin variables. This loops over
@@ -1354,7 +1353,7 @@ public abstract class GriddedDataset extends AbstractDataset {
                 Map<PointSeriesLocation, Array1D<Number>> varData = entry.getValue();
                 for (PointSeriesLocation location : varData.keySet()) {
                     if (!location2Var2Values.containsKey(location)) {
-                        location2Var2Values.put(location, new HashMap<String, Array1D<Number>>());
+                        location2Var2Values.put(location, new LinkedHashMap<String, Array1D<Number>>());
                     }
                     Map<String, Array1D<Number>> map = location2Var2Values.get(location);
                     map.put(entry.getKey(), varData.get(location));
