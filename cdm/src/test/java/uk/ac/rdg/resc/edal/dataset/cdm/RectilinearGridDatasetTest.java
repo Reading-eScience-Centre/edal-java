@@ -891,83 +891,83 @@ public class RectilinearGridDatasetTest {
     }
 
     // remember for profile features, targetZ is ignored.
-    /**
-     * A helper method is to evaluate returned ProfileFeature objects based on
-     * given zExtent values.
-     * 
-     * @param zExtent
-     *            the corresponding param of zExtent in PlottingDomainParams
-     *            object
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     * @throws DataReadingExcpetion
-     *             If there is a problem reading the underlying data
-     */
-    private void zExtentCaseForProfileFeatures(Extent<Double> zExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        for (GridCell2D cell : samplePoints) {
-            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
-            int xIndex = gCoordinate.getX();
-            int yIndex = gCoordinate.getY();
-            HorizontalPosition hPos = cell.getCentre();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent, null, hPos,
-                    null, null);
-            Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(
-                    null, params);
-            if (zExtent == null || zExtent.intersects(datasetZExtent)) {
-                assertEquals(tSize, profileFeature.size());
-
-                for (ProfileFeature feature : profileFeature) {
-                    verifyProfileFeature(feature, hPos, xIndex, yIndex);
-                }
-            } else {
-                assertEquals(0, profileFeature.size());
-            }
-        }
-    }
-
-    /**
-     * Test {@link Dataset#extractProfileFeatures} method by setting various
-     * values for zExtent
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     * 
-     * @throws DataReadingExcpetion
-     *             If there is a problem reading the underlying data
-     */
-    @Test
-    public void testProfileFeaturesPartOfZExtent() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        // test case 1
-        Extent<Double> zExtent = Extents.newExtent(1220.0, 4401.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        /*
-         * test case 2, the given zExtent intersect with the one of the data set
-         * it should return all profile features the data set contains.
-         */
-
-        zExtent = Extents.newExtent(25.0, 300.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        /*
-         * test case 3: a given zExtent is in the range of of the zExtent of the
-         * dataset, all profile features return.
-         */
-        zExtent = Extents.newExtent(38.0, 55.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        /*
-         * test case 4: another example a given zExtent intersects with the
-         * zExtent of the data set.
-         */
-        zExtent = Extents.newExtent(-100.0, 95.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        zExtent = Extents.newExtent(-100.0, -5.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        zExtentCaseForProfileFeatures(null);
-        zExtentCaseForProfileFeatures(zExtent);
-    }
+//    /**
+//     * A helper method is to evaluate returned ProfileFeature objects based on
+//     * given zExtent values.
+//     * 
+//     * @param zExtent
+//     *            the corresponding param of zExtent in PlottingDomainParams
+//     *            object
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     * @throws DataReadingExcpetion
+//     *             If there is a problem reading the underlying data
+//     */
+//    private void zExtentCaseForProfileFeatures(Extent<Double> zExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        for (GridCell2D cell : samplePoints) {
+//            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+//            int xIndex = gCoordinate.getX();
+//            int yIndex = gCoordinate.getY();
+//            HorizontalPosition hPos = cell.getCentre();
+//            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent, null, hPos,
+//                    null, null);
+//            Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(
+//                    null, params);
+//            if (zExtent == null || zExtent.intersects(datasetZExtent)) {
+//                assertEquals(tSize, profileFeature.size());
+//
+//                for (ProfileFeature feature : profileFeature) {
+//                    verifyProfileFeature(feature, hPos, xIndex, yIndex);
+//                }
+//            } else {
+//                assertEquals(0, profileFeature.size());
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Test {@link Dataset#extractProfileFeatures} method by setting various
+//     * values for zExtent
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     * 
+//     * @throws DataReadingExcpetion
+//     *             If there is a problem reading the underlying data
+//     */
+//    @Test
+//    public void testProfileFeaturesPartOfZExtent() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        // test case 1
+//        Extent<Double> zExtent = Extents.newExtent(1220.0, 4401.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        /*
+//         * test case 2, the given zExtent intersect with the one of the data set
+//         * it should return all profile features the data set contains.
+//         */
+//
+//        zExtent = Extents.newExtent(25.0, 300.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        /*
+//         * test case 3: a given zExtent is in the range of of the zExtent of the
+//         * dataset, all profile features return.
+//         */
+//        zExtent = Extents.newExtent(38.0, 55.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        /*
+//         * test case 4: another example a given zExtent intersects with the
+//         * zExtent of the data set.
+//         */
+//        zExtent = Extents.newExtent(-100.0, 95.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        zExtent = Extents.newExtent(-100.0, -5.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        zExtentCaseForProfileFeatures(null);
+//        zExtentCaseForProfileFeatures(zExtent);
+//    }
 
     /**
      * Test {@link Dataset#extractProfileFeatures} method by setting various
