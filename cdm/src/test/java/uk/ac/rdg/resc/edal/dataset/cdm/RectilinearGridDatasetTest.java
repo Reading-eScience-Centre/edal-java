@@ -108,7 +108,7 @@ public class RectilinearGridDatasetTest {
 
     private RectilinearGrid rGrid;
     private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
-    private Chronology chrnology;
+    private Chronology chronology;
     private VerticalCrs vCrs;
     private Extent<DateTime> datasetTExtent;
     private Extent<Double> datasetZExtent;
@@ -161,15 +161,15 @@ public class RectilinearGridDatasetTest {
         }
         // m stands for meter
         vCrs = new VerticalCrsImpl("m", false, false, false);
-        chrnology = ISOChronology.getInstance();
-        DateTime start = new DateTime(2000, 01, 01, 00, 00, chrnology);
-        DateTime end = new DateTime(2000, 01, 10, 00, 00, chrnology);
+        chronology = ISOChronology.getInstanceUTC();
+        DateTime start = new DateTime(2000, 01, 01, 00, 00, chronology);
+        DateTime end = new DateTime(2000, 01, 10, 00, 00, chronology);
         datasetTExtent = Extents.newExtent(start, end);
         datasetZExtent = Extents.newExtent(0.0, 100.0);
         List<DateTime> tAxisValues = new ArrayList<>();
         List<Double> zAxisValues = new ArrayList<>();
         for (int i = 0; i < tSize; i++) {
-            tAxisValues.add(new DateTime(2000, 01, 01 + i, 00, 00, chrnology));
+            tAxisValues.add(new DateTime(2000, 01, 01 + i, 00, 00, chronology));
             zAxisValues.add(10.0 * i);
         }
         // add the last value of Z axis
@@ -269,8 +269,8 @@ public class RectilinearGridDatasetTest {
     @Test
     public void testReturnEmptyTimeSerieFeatures() throws DataReadingException,
             UnsupportedOperationException, VariableNotFoundException {
-        DateTime start = new DateTime(1990, 01, 01, 00, 00, chrnology);
-        DateTime end = new DateTime(1998, 01, 01, 00, 00, chrnology);
+        DateTime start = new DateTime(1990, 01, 01, 00, 00, chronology);
+        DateTime end = new DateTime(1998, 01, 01, 00, 00, chronology);
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
 
         for (Double zPos = 0.0; zPos <= 100; zPos += 20.0) {
@@ -286,8 +286,8 @@ public class RectilinearGridDatasetTest {
             }
         }
 
-        start = new DateTime(2010, 01, 01, 00, 00, chrnology);
-        end = new DateTime(2012, 01, 01, 00, 00, chrnology);
+        start = new DateTime(2010, 01, 01, 00, 00, chronology);
+        end = new DateTime(2012, 01, 01, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         for (Double zPos = 0.0; zPos <= 100; zPos += 30.0) {
             for (GridCell2D cell : samplePoints) {
@@ -301,8 +301,8 @@ public class RectilinearGridDatasetTest {
             }
         }
 
-        start = new DateTime(2000, 1, 1, 00, 00, chrnology);
-        end = new DateTime(2000, 1, 10, 00, 00, chrnology);
+        start = new DateTime(2000, 1, 1, 00, 00, chronology);
+        end = new DateTime(2000, 1, 10, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         Extent<Double> zExtent = Extents.newExtent(200.0, 500.0);
         for (GridCell2D cell : samplePoints) {
@@ -338,7 +338,7 @@ public class RectilinearGridDatasetTest {
     @Test(expected = IllegalArgumentException.class)
     public void testMapFeaturesWithWrongParams() throws DataReadingException, VariableNotFoundException {
         // date value is out bound of tAxis
-        DateTime tValue = new DateTime(2000, 11, 02, 15, 00, chrnology);
+        DateTime tValue = new DateTime(2000, 11, 02, 15, 00, chronology);
         double zPos = 40.0;
 
         // just pick up one sampling point as we expect an exception
@@ -360,7 +360,7 @@ public class RectilinearGridDatasetTest {
         assertNotNull(caughtEx);
         // depth value is out bound of zAxis
         zPos = 140.0;
-        tValue = new DateTime(2000, 01, 02, 15, 00, chrnology);
+        tValue = new DateTime(2000, 01, 02, 15, 00, chronology);
         i = 3;
         cell = samplePoints.get(i);
         hPos = cell.getCentre();
@@ -383,7 +383,7 @@ public class RectilinearGridDatasetTest {
     @Test
     public void testMapFeatures() throws DataReadingException, VariableNotFoundException {
         // choose one date only
-        DateTime tValue = new DateTime(2000, 01, 02, 15, 00, chrnology);
+        DateTime tValue = new DateTime(2000, 01, 02, 15, 00, chronology);
         for (Double zPos = 0.0; zPos <= 100; zPos += 20.0) {
             for (GridCell2D cell : samplePoints) {
                 HorizontalPosition hPos = cell.getCentre();
@@ -671,40 +671,40 @@ public class RectilinearGridDatasetTest {
      */
     @Test
     public void testTimeSerieFeaturesPartofTExents() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        DateTime start = new DateTime(1999, 12, 25, 15, 00, chrnology);
-        DateTime end = new DateTime(2000, 1, 8, 23, 00, chrnology);
+        DateTime start = new DateTime(1999, 12, 25, 15, 00, chronology);
+        DateTime end = new DateTime(2000, 1, 8, 23, 00, chronology);
 
         // a tExtent is intersected with the dataset tExent
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
         extractTimeSeriesFeature(tExtent);
 
         // another tExtent is intersected with the dataset tExent
-        start = new DateTime(2000, 1, 2, 00, 00, chrnology);
-        end = new DateTime(2000, 1, 8, 00, 00, chrnology);
+        start = new DateTime(2000, 1, 2, 00, 00, chronology);
+        end = new DateTime(2000, 1, 8, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         extractTimeSeriesFeature(tExtent);
 
         // the tExtent is only one point
-        start = new DateTime(2000, 1, 3, 15, 00, chrnology);
-        end = new DateTime(2000, 1, 3, 15, 00, chrnology);
+        start = new DateTime(2000, 1, 3, 15, 00, chronology);
+        end = new DateTime(2000, 1, 3, 15, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         extractTimeSeriesFeature(tExtent);
 
         // another tExtent is intersected with the dataset tExent
-        start = new DateTime(2000, 1, 3, 15, 00, chrnology);
-        end = new DateTime(2000, 5, 3, 15, 00, chrnology);
+        start = new DateTime(2000, 1, 3, 15, 00, chronology);
+        end = new DateTime(2000, 5, 3, 15, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         extractTimeSeriesFeature(tExtent);
 
         // a tExtent is outside of the dataset tExent
-        start = new DateTime(2000, 1, 20, 15, 00, chrnology);
-        end = new DateTime(2000, 5, 3, 15, 00, chrnology);
+        start = new DateTime(2000, 1, 20, 15, 00, chronology);
+        end = new DateTime(2000, 5, 3, 15, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         extractTimeSeriesFeature(tExtent);
 
         // another tExtent is outside of the dataset tExent
-        start = new DateTime(1999, 10, 20, 15, 00, chrnology);
-        end = new DateTime(1999, 12, 3, 23, 59, chrnology);
+        start = new DateTime(1999, 10, 20, 15, 00, chronology);
+        end = new DateTime(1999, 12, 3, 23, 59, chronology);
         tExtent = Extents.newExtent(start, end);
         extractTimeSeriesFeature(tExtent);
     }
@@ -984,7 +984,7 @@ public class RectilinearGridDatasetTest {
      */
     @Test
     public void testProfileFeaturesPartOfTExtent() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        DateTime start = new DateTime(2000, 01, 01, 00, 00, chrnology);
+        DateTime start = new DateTime(2000, 01, 01, 00, 00, chronology);
         DateTime end = start;
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
         DateTime targetT = null;
@@ -1005,15 +1005,15 @@ public class RectilinearGridDatasetTest {
         tExentCaseForProfileFeatures(tExtent, null);
 
         // a targetT is exactly on the tAxis point
-        targetT = new DateTime(2000, 01, 05, 00, 00, chrnology);
+        targetT = new DateTime(2000, 01, 05, 00, 00, chronology);
         tExentCaseForProfileFeatures(tExtent, targetT);
 
         // a targetT is on the tAxis
-        targetT = new DateTime(2000, 01, 05, 10, 50, chrnology);
+        targetT = new DateTime(2000, 01, 05, 10, 50, chronology);
         tExentCaseForProfileFeatures(tExtent, targetT);
 
         // a targetT is outside of the tAxis
-        targetT = new DateTime(1999, 01, 05, 10, 50, chrnology);
+        targetT = new DateTime(1999, 01, 05, 10, 50, chronology);
         tExentCaseForProfileFeatures(tExtent, targetT);
     }
 
@@ -1121,8 +1121,8 @@ public class RectilinearGridDatasetTest {
 
     @Test
     public void testReturnEmptyProfileFeatures() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        DateTime start = new DateTime(2011, 01, 15, 00, 00, chrnology);
-        DateTime end = new DateTime(2012, 02, 03, 00, 00, chrnology);
+        DateTime start = new DateTime(2011, 01, 15, 00, 00, chronology);
+        DateTime end = new DateTime(2012, 02, 03, 00, 00, chronology);
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
         PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, null, datasetZExtent,
                 tExtent, null, null, null);
@@ -1130,24 +1130,24 @@ public class RectilinearGridDatasetTest {
                 params);
         assertEquals(0, profileFeatures.size());
 
-        start = new DateTime(1990, 01, 15, 00, 00, chrnology);
-        end = new DateTime(1998, 02, 03, 00, 00, chrnology);
+        start = new DateTime(1990, 01, 15, 00, 00, chronology);
+        end = new DateTime(1998, 02, 03, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         params = new PlottingDomainParams(xSize, ySize, null, datasetZExtent, tExtent, null, null,
                 null);
         profileFeatures = dataset.extractProfileFeatures(null, params);
         assertEquals(0, profileFeatures.size());
 
-        start = new DateTime(2000, 1, 1, 00, 00, chrnology);
-        end = new DateTime(2000, 1, 10, 00, 00, chrnology);
+        start = new DateTime(2000, 1, 1, 00, 00, chronology);
+        end = new DateTime(2000, 1, 10, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         Extent<Double> zExtent = Extents.newExtent(200.0, 500.0);
         params = new PlottingDomainParams(xSize, ySize, null, zExtent, tExtent, null, null, null);
         profileFeatures = dataset.extractProfileFeatures(null, params);
         assertEquals(0, profileFeatures.size());
 
-        start = new DateTime(2000, 1, 1, 00, 00, chrnology);
-        end = new DateTime(2000, 1, 10, 00, 00, chrnology);
+        start = new DateTime(2000, 1, 1, 00, 00, chronology);
+        end = new DateTime(2000, 1, 10, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         zExtent = Extents.newExtent(-200.0, -50.0);
         params = new PlottingDomainParams(xSize, ySize, null, zExtent, tExtent, null, null, null);
@@ -1199,7 +1199,7 @@ public class RectilinearGridDatasetTest {
 
         // T and Z values are fixed
         double zValue = 60.0;
-        DateTime tValue = new DateTime(2000, 01, 01, 00, 00, chrnology);
+        DateTime tValue = new DateTime(2000, 01, 01, 00, 00, chronology);
         MapDomain mapdomain = new MapDomainImpl(rGrid, zValue, vCrs, tValue);
 
         MapFeature mapfeature = feature.extractMapFeature(ids, rGrid, zValue, tValue);
