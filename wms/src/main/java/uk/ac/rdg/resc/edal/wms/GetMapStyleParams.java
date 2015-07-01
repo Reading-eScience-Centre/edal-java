@@ -210,7 +210,7 @@ public class GetMapStyleParams {
         String csr = params.getString("colorscalerange");
         if (csr == null || csr.equalsIgnoreCase("default")) {
             /* The client wants the layer's default scale range to be used */
-            return Extents.emptyExtent(Float.class);
+            return Extents.emptyExtent();
         } else if (csr.equalsIgnoreCase("auto")) {
             /*
              * The client wants the image to be scaled according to the image's
@@ -221,7 +221,7 @@ public class GetMapStyleParams {
             /* The client has specified an explicit colour scale range */
             String[] scaleEls = csr.split(",");
             if (scaleEls.length == 0) {
-                return Extents.emptyExtent(Float.class);
+                return Extents.emptyExtent();
             }
             Float scaleMin = Float.parseFloat(scaleEls[0]);
             Float scaleMax = Float.parseFloat(scaleEls[1]);

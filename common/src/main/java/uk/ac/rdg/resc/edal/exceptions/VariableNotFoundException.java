@@ -37,10 +37,10 @@ public class VariableNotFoundException extends EdalException {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Creates a new instance of InvalidCrsException
+     * Creates a new instance of {@link VariableNotFoundException}
      * 
-     * @param crsCode
-     *            The code of the unsupported CRS
+     * @param varName
+     *            The name of the variable which was not found
      */
     public VariableNotFoundException(String varName) {
         super("The variable " + varName + " is not available");

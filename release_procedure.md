@@ -75,7 +75,7 @@ Upon successful completion of this stage, log into [sonatype](http://oss.sonatyp
 ### Merge the release branch into master:
 ```
 git checkout master
-git rebase release-VERSION
+git merge release-VERSION
 git push origin master
 git push --tags
 ```
@@ -94,7 +94,7 @@ Prepare for next development iteration
 ### Move to the develop branch and update:
 ```
 git checkout develop
-git rebase master
+git merge master
 ```
 
 ### Set the snapshot versions:

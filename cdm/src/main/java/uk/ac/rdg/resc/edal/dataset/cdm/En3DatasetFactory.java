@@ -117,8 +117,8 @@ public final class En3DatasetFactory extends DatasetFactory {
     private static final Map<String, Parameter> ALL_PARAMETERS = new HashMap<String, Parameter>();
 
     static {
-        ALL_PARAMETERS.put(POT_TEMP_PARAMETER.getId(), POT_TEMP_PARAMETER);
-        ALL_PARAMETERS.put(PSAL_PARAMETER.getId(), PSAL_PARAMETER);
+        ALL_PARAMETERS.put(POT_TEMP_PARAMETER.getVariableId(), POT_TEMP_PARAMETER);
+        ALL_PARAMETERS.put(PSAL_PARAMETER.getVariableId(), PSAL_PARAMETER);
     }
 
     /*
@@ -136,63 +136,34 @@ public final class En3DatasetFactory extends DatasetFactory {
             this.file = file;
             this.profileNumber = profileNumber;
         }
-    }
 
-    public static void main(String[] args) throws IOException, EdalException {
-        En3DatasetFactory f = new En3DatasetFactory();
-        f.createDataset("en3", "/home/guy/Data/EN3/EN3_v2a_Profiles_201312.nc");
-    }
-
-    /**
-     * Converts an ID to a {@link FileAndProfileNumber}
-     * 
-     * @param id
-     *            The ID
-     * @return The corresponding {@link FileAndProfileNumber}
-     */
-    private static FileAndProfileNumber deserialiseId(String id) {
-        /*
-         * The ID is of the form:
-         * 
-         * 123:/path/to/file
-         */
-        String[] split = id.split(":");
-        int profileNumber = Integer.parseInt(split[0]);
-
-        if (split.length > 2) {
-            /*
-             * The file contains ":", so we need to concatenate all of the
-             * elements of split
-             */
-            StringBuilder filePath = new StringBuilder();
-            for (int i = 1; i < split.length; i++) {
-                filePath.append(split[i]);
-                if (i != split.length - 1) {
-                    filePath.append(":");
-                }
-            }
-
-            return new FileAndProfileNumber(new File(filePath.toString()), profileNumber);
-        } else {
-            return new FileAndProfileNumber(new File(split[1]), profileNumber);
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((file == null) ? 0 : file.hashCode());
+            result = prime * result + profileNumber;
+            return result;
         }
-    }
 
-    /**
-     * Converts a {@link File} and profile number into a unique ID
-     * 
-     * @param file
-     *            The file containing the profile
-     * @param profileNumber
-     *            The profile number within the file
-     * @return A unique ID
-     */
-    private static String serialiseId(File file, int profileNumber) {
-        /*
-         * We just use a very simple format here - easy and quick to go back and
-         * forth.
-         */
-        return profileNumber + ":" + file.getAbsolutePath();
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            FileAndProfileNumber other = (FileAndProfileNumber) obj;
+            if (file == null) {
+                if (other.file != null)
+                    return false;
+            } else if (!file.equals(other.file))
+                return false;
+            if (profileNumber != other.profileNumber)
+                return false;
+            return true;
+        }
     }
 
     /*
@@ -211,6 +182,8 @@ public final class En3DatasetFactory extends DatasetFactory {
             .appendMinuteOfHour(1).appendLiteral(":").appendSecondOfMinute(1).appendLiteral(" utc")
             .toFormatter().withZoneUTC().withChronology(ISOChronology.getInstanceUTC());
 
+    /* This is because we deserialise a HashMap which is a generic. */
+    @SuppressWarnings("unchecked")
     @Override
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
         long t1 = System.currentTimeMillis();
@@ -260,7 +233,6 @@ public final class En3DatasetFactory extends DatasetFactory {
             try {
                 fileIn = new FileInputStream(spatialIndexFile);
                 in = new ObjectInputStream(fileIn);
-                @SuppressWarnings("unchecked")
                 List<File> existingFilesList = (List<File>) in.readObject();
                 if (files.equals(existingFilesList)) {
                     /*
@@ -269,7 +241,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                      */
                     readExistingSpatialIndex = true;
                 }
-            } catch (ClassNotFoundException | IOException e) {
+            } catch (ClassNotFoundException | IOException | ClassCastException e) {
                 /*
                  * Log this error, but otherwise ignore it - we will just
                  * recreate the spatial index, so it's not a big problem.
@@ -277,7 +249,6 @@ public final class En3DatasetFactory extends DatasetFactory {
                 log.warn("Problem reading EN3 serialisation index", e);
             }
         }
-        readExistingSpatialIndex = false;
 
         /*
          * The domain of this EN3 dataset
@@ -285,6 +256,10 @@ public final class En3DatasetFactory extends DatasetFactory {
         SimpleHorizontalDomain hDomain = null;
         SimpleVerticalDomain zDomain = null;
         SimpleTemporalDomain tDomain = null;
+        /*
+         * The map of IDs to file locations
+         */
+        Map<Integer, File> id2File = new HashMap<>();
         /*
          * The spatial indexer to use
          */
@@ -295,10 +270,11 @@ public final class En3DatasetFactory extends DatasetFactory {
                 hDomain = (SimpleHorizontalDomain) in.readObject();
                 zDomain = (SimpleVerticalDomain) in.readObject();
                 tDomain = (SimpleTemporalDomain) in.readObject();
+                id2File = (HashMap<Integer, File>) in.readObject();
                 indexer = (PRTreeFeatureIndexer) in.readObject();
 
                 log.debug("Successfully read spatial index from file");
-            } catch (ClassNotFoundException | IOException e) {
+            } catch (ClassNotFoundException | IOException | ClassCastException e) {
                 /*
                  * Problem reading spatial index/domain from file. Set the flag
                  * to regenerate it.
@@ -337,7 +313,27 @@ public final class En3DatasetFactory extends DatasetFactory {
             List<PRTreeFeatureIndexer.FeatureBounds> featureBounds = new ArrayList<>();
             int totalProfiles = 0;
 
+            /*
+             * We want to be able to easily convert a feature ID to a file and
+             * profile number. We could:
+             * 
+             * Create unique IDs and store a map of ID -> File/ProfileNumber
+             * 
+             * Encode the full path/profile number in the ID
+             * 
+             * Store the common prefix+suffix of all file paths in the dataset,
+             * and encode the non-unique path/profile number in the ID
+             * 
+             * But to get around having awkward characters in the ID and not use
+             * too much memory, we use a hybrid solution, where we store a Map
+             * of IDs to Files, and encode the file ID and the profile number in
+             * the feature ID
+             */
+
+            int fileId = 0;
+
             for (File file : files) {
+                id2File.put(fileId, file);
                 NetcdfDataset nc = CdmUtils.openDataset(file.getAbsolutePath());
 
                 Dimension nProfiles = nc.findDimension("N_PROF");
@@ -374,12 +370,12 @@ public final class En3DatasetFactory extends DatasetFactory {
                 /*
                  * Loop over all profiles
                  */
-                for (int i = 0; i < nProfiles.getLength(); i++) {
+                for (int profileNum = 0; profileNum < nProfiles.getLength(); profileNum++) {
                     /*
                      * Get the horizontal position of the current profile
                      */
-                    double lat = latValues.getDouble(i);
-                    double lon = lonValues.getDouble(i);
+                    double lat = latValues.getDouble(profileNum);
+                    double lon = lonValues.getDouble(profileNum);
                     /*
                      * All positions are in WGS84
                      */
@@ -388,7 +384,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                     /*
                      * Find the time of the current profile measurement
                      */
-                    double seconds = (timeValues.getDouble(i) * unitLength);
+                    double seconds = (timeValues.getDouble(profileNum) * unitLength);
                     DateTime time = refTime.plusSeconds((int) seconds);
                     Extent<DateTime> tExtent = Extents.newExtent(time, time);
 
@@ -397,7 +393,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                      */
                     List<Double> depths = new ArrayList<>();
                     for (int j = 0; j < nLevels.getLength(); j++) {
-                        double depth = depthValues.getDouble(i * nLevels.getLength() + j);
+                        double depth = depthValues.getDouble(profileNum * nLevels.getLength() + j);
                         if (!Double.isNaN(depth) && depth != 99999.0) {
                             depths.add(depth);
                         } else {
@@ -441,15 +437,15 @@ public final class En3DatasetFactory extends DatasetFactory {
                     /*
                      * Create a unique ID
                      */
-                    String profileId = serialiseId(file, i);
+                    String profileId = fileId + ":" + profileNum;
 
                     /*
                      * Store the bounds of this feature to load into the spatial
                      * indexer
                      */
                     featureBounds.add(new FeatureBounds(profileId, horizontalPosition, zExtent,
-                            tExtent, CollectionUtils.setOf(POT_TEMP_PARAMETER.getId(),
-                                    PSAL_PARAMETER.getId())));
+                            tExtent, CollectionUtils.setOf(POT_TEMP_PARAMETER.getVariableId(),
+                                    PSAL_PARAMETER.getVariableId())));
 
                     /*
                      * Update entire dataset extents
@@ -478,6 +474,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L)
                         + "/" + (Runtime.getRuntime().maxMemory() / 1_000_000L));
                 totalProfiles += nProfiles.getLength();
+                fileId++;
             }
             log.debug("Read " + totalProfiles + " features.  Starting indexing...");
             /*
@@ -507,6 +504,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 out.writeObject(hDomain);
                 out.writeObject(zDomain);
                 out.writeObject(tDomain);
+                out.writeObject(id2File);
                 out.writeObject(indexer);
                 out.close();
                 fileOut.close();
@@ -534,19 +532,14 @@ public final class En3DatasetFactory extends DatasetFactory {
          * measures, and this reader is only for EN3 datasets...
          */
         List<VariableMetadata> metadata = new ArrayList<VariableMetadata>();
-        // metadata.add(new VariableMetadata(TEMP_PARAMETER.getId(),
-        // TEMP_PARAMETER, hDomain, zDomain,
-        // tDomain));
-        metadata.add(new VariableMetadata(POT_TEMP_PARAMETER.getId(), POT_TEMP_PARAMETER, hDomain,
-                zDomain, tDomain));
-        metadata.add(new VariableMetadata(PSAL_PARAMETER.getId(), PSAL_PARAMETER, hDomain, zDomain,
-                tDomain));
+        metadata.add(new VariableMetadata(POT_TEMP_PARAMETER, hDomain, zDomain, tDomain));
+        metadata.add(new VariableMetadata(PSAL_PARAMETER, hDomain, zDomain, tDomain));
 
         long t2 = System.currentTimeMillis();
         log.debug("Time to create EN3 dataset: " + ((t2 - t1) / 1000.0) + "s");
 
         return new En3Dataset(id, metadata, indexer, hDomain.getBoundingBox(), zDomain.getExtent(),
-                tDomain.getExtent());
+                tDomain.getExtent(), id2File);
     }
 
     private final class En3Dataset extends AbstractPointDataset<ProfileFeature> {
@@ -554,14 +547,16 @@ public final class En3DatasetFactory extends DatasetFactory {
         private BoundingBox bbox;
         private Extent<Double> zExtent;
         private Extent<DateTime> tExtent;
+        private Map<Integer, File> fileMap;
 
         public En3Dataset(String id, Collection<? extends VariableMetadata> vars,
                 FeatureIndexer featureIndexer, BoundingBox bbox, Extent<Double> zExtent,
-                Extent<DateTime> tExtent) {
+                Extent<DateTime> tExtent, Map<Integer, File> fileMap) {
             super(id, vars, featureIndexer);
             this.bbox = bbox;
             this.zExtent = zExtent;
             this.tExtent = tExtent;
+            this.fileMap = fileMap;
         }
 
         @Override
@@ -662,14 +657,33 @@ public final class En3DatasetFactory extends DatasetFactory {
             ret.getFeatureProperties().putAll(profileFeature.getFeatureProperties());
             return ret;
         }
+        
+        private File getFileFromId(int fileId) {
+            return fileMap.get(fileId);
+        }
     }
 
     private final class En3DatabaseReader implements DiscreteFeatureReader<ProfileFeature> {
 
-        private Dataset dataset;
+        private En3Dataset dataset;
 
-        public En3DatabaseReader(Dataset dataset) {
+        public En3DatabaseReader(En3Dataset dataset) {
             this.dataset = dataset;
+        }
+
+        /**
+         * Converts an ID to a {@link FileAndProfileNumber}
+         * 
+         * @param id
+         *            The ID
+         * @return The corresponding {@link FileAndProfileNumber}
+         */
+        private FileAndProfileNumber deserialiseId(String id) {
+            String[] split = id.split(":");
+            int fileId = Integer.parseInt(split[0]);
+            int profileNumber = Integer.parseInt(split[1]);
+            File file = dataset.getFileFromId(fileId);
+            return new FileAndProfileNumber(file, profileNumber);
         }
 
         @Override
@@ -964,7 +978,7 @@ public final class En3DatasetFactory extends DatasetFactory {
             }
             props.put(key, value);
 
-            if (variableIds.contains(POT_TEMP_PARAMETER.getId())) {
+            if (variableIds.contains(POT_TEMP_PARAMETER.getVariableId())) {
                 key = "Potential temperature QC";
                 if (qcPotmCorrected.getChar(profNum) == '1') {
                     value = "Accept";
@@ -978,7 +992,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 props.put(key, value);
             }
 
-            if (variableIds.contains(PSAL_PARAMETER.getId())) {
+            if (variableIds.contains(PSAL_PARAMETER.getVariableId())) {
                 key = "Practical salinity QC";
                 if (qcPsalCorrected.getChar(profNum) == '1') {
                     value = "Accept";

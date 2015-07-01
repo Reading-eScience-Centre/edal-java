@@ -31,8 +31,8 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
@@ -69,8 +69,6 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
-import uk.ac.rdg.resc.edal.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
@@ -79,8 +77,8 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
-import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.Array4D;
+import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
@@ -108,12 +106,12 @@ public class RectilinearGridDatasetTest {
 
     private RectilinearGrid rGrid;
     private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
-    private Chronology chrnology;
+    private Chronology chronology;
     private VerticalCrs vCrs;
     private Extent<DateTime> datasetTExtent;
     private Extent<Double> datasetZExtent;
     private TimeAxis tAxis;
-    private VerticalAxis vAxis;
+//    private VerticalAxis vAxis;
 
     /*
      * Not every cell in the grid be tested, only a few on the edges and near
@@ -161,21 +159,21 @@ public class RectilinearGridDatasetTest {
         }
         // m stands for meter
         vCrs = new VerticalCrsImpl("m", false, false, false);
-        chrnology = ISOChronology.getInstance();
-        DateTime start = new DateTime(2000, 01, 01, 00, 00, chrnology);
-        DateTime end = new DateTime(2000, 01, 10, 00, 00, chrnology);
+        chronology = ISOChronology.getInstanceUTC();
+        DateTime start = new DateTime(2000, 01, 01, 00, 00, chronology);
+        DateTime end = new DateTime(2000, 01, 10, 00, 00, chronology);
         datasetTExtent = Extents.newExtent(start, end);
         datasetZExtent = Extents.newExtent(0.0, 100.0);
         List<DateTime> tAxisValues = new ArrayList<>();
         List<Double> zAxisValues = new ArrayList<>();
         for (int i = 0; i < tSize; i++) {
-            tAxisValues.add(new DateTime(2000, 01, 01 + i, 00, 00, chrnology));
+            tAxisValues.add(new DateTime(2000, 01, 01 + i, 00, 00, chronology));
             zAxisValues.add(10.0 * i);
         }
         // add the last value of Z axis
         zAxisValues.add(100.0);
         tAxis = new TimeAxisImpl("time", tAxisValues);
-        vAxis = new VerticalAxisImpl("depth", zAxisValues, vCrs);
+//        vAxis = new VerticalAxisImpl("depth", zAxisValues, vCrs);
     }
 
     /*
@@ -269,8 +267,8 @@ public class RectilinearGridDatasetTest {
     @Test
     public void testReturnEmptyTimeSerieFeatures() throws DataReadingException,
             UnsupportedOperationException, VariableNotFoundException {
-        DateTime start = new DateTime(1990, 01, 01, 00, 00, chrnology);
-        DateTime end = new DateTime(1998, 01, 01, 00, 00, chrnology);
+        DateTime start = new DateTime(1990, 01, 01, 00, 00, chronology);
+        DateTime end = new DateTime(1998, 01, 01, 00, 00, chronology);
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
 
         for (Double zPos = 0.0; zPos <= 100; zPos += 20.0) {
@@ -286,8 +284,8 @@ public class RectilinearGridDatasetTest {
             }
         }
 
-        start = new DateTime(2010, 01, 01, 00, 00, chrnology);
-        end = new DateTime(2012, 01, 01, 00, 00, chrnology);
+        start = new DateTime(2010, 01, 01, 00, 00, chronology);
+        end = new DateTime(2012, 01, 01, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         for (Double zPos = 0.0; zPos <= 100; zPos += 30.0) {
             for (GridCell2D cell : samplePoints) {
@@ -301,8 +299,8 @@ public class RectilinearGridDatasetTest {
             }
         }
 
-        start = new DateTime(2000, 1, 1, 00, 00, chrnology);
-        end = new DateTime(2000, 1, 10, 00, 00, chrnology);
+        start = new DateTime(2000, 1, 1, 00, 00, chronology);
+        end = new DateTime(2000, 1, 10, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         Extent<Double> zExtent = Extents.newExtent(200.0, 500.0);
         for (GridCell2D cell : samplePoints) {
@@ -338,7 +336,7 @@ public class RectilinearGridDatasetTest {
     @Test(expected = IllegalArgumentException.class)
     public void testMapFeaturesWithWrongParams() throws DataReadingException, VariableNotFoundException {
         // date value is out bound of tAxis
-        DateTime tValue = new DateTime(2000, 11, 02, 15, 00, chrnology);
+        DateTime tValue = new DateTime(2000, 11, 02, 15, 00, chronology);
         double zPos = 40.0;
 
         // just pick up one sampling point as we expect an exception
@@ -360,7 +358,7 @@ public class RectilinearGridDatasetTest {
         assertNotNull(caughtEx);
         // depth value is out bound of zAxis
         zPos = 140.0;
-        tValue = new DateTime(2000, 01, 02, 15, 00, chrnology);
+        tValue = new DateTime(2000, 01, 02, 15, 00, chronology);
         i = 3;
         cell = samplePoints.get(i);
         hPos = cell.getCentre();
@@ -383,7 +381,7 @@ public class RectilinearGridDatasetTest {
     @Test
     public void testMapFeatures() throws DataReadingException, VariableNotFoundException {
         // choose one date only
-        DateTime tValue = new DateTime(2000, 01, 02, 15, 00, chrnology);
+        DateTime tValue = new DateTime(2000, 01, 02, 15, 00, chronology);
         for (Double zPos = 0.0; zPos <= 100; zPos += 20.0) {
             for (GridCell2D cell : samplePoints) {
                 HorizontalPosition hPos = cell.getCentre();
@@ -491,255 +489,255 @@ public class RectilinearGridDatasetTest {
         }
     }
 
-    /**
-     * A helper method to generate {@link PlottingDomainParams} object by using
-     * a given zExtent object. The result is used to evaluating the
-     * {@link Dataset#extractTimeseriesFeatures} behaviour.
-     * 
-     * @param zExtent
-     *            which is used as a para of the constructor of
-     *            {@link PlottingDomainParams}in the calling method
-     * @throws DataReadingException
-     *             If there is a problem reading the underlying data
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     */
-    private void getFeatureByZExtent(Extent<Double> zExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        for (GridCell2D cell : samplePoints) {
-            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
-            int xIndex = gCoordinate.getX();
-            int yIndex = gCoordinate.getY();
-            HorizontalPosition hPos =cell.getCentre();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent,
-                    datasetTExtent, hPos, null, null);
-            Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                    .extractTimeseriesFeatures(null, params);
-            /*
-             * if the given zExtent not intersect with dataset zExtent, it
-             * returns empty!
-             */
-            if (!zExtent.intersects(datasetZExtent)) {
-                // timeSeriesFeature should contain nothing
-                assertEquals(0, timeSeriesFeatures.size());
-            } else {
-                PointSeriesFeature data = (PointSeriesFeature) timeSeriesFeatures.iterator().next();
-                verifyTimeSeriesFeature(data, data.getHorizontalPosition(), xIndex, yIndex);
-            }
-        }
-    }
+//    /**
+//     * A helper method to generate {@link PlottingDomainParams} object by using
+//     * a given zExtent object. The result is used to evaluating the
+//     * {@link Dataset#extractTimeseriesFeatures} behaviour.
+//     * 
+//     * @param zExtent
+//     *            which is used as a para of the constructor of
+//     *            {@link PlottingDomainParams}in the calling method
+//     * @throws DataReadingException
+//     *             If there is a problem reading the underlying data
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     */
+//    private void getFeatureByZExtent(Extent<Double> zExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        for (GridCell2D cell : samplePoints) {
+//            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+//            int xIndex = gCoordinate.getX();
+//            int yIndex = gCoordinate.getY();
+//            HorizontalPosition hPos =cell.getCentre();
+//            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent,
+//                    datasetTExtent, hPos, null, null);
+//            Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
+//                    .extractTimeseriesFeatures(null, params);
+//            /*
+//             * if the given zExtent not intersect with dataset zExtent, it
+//             * returns empty!
+//             */
+//            if (!zExtent.intersects(datasetZExtent)) {
+//                // timeSeriesFeature should contain nothing
+//                assertEquals(0, timeSeriesFeatures.size());
+//            } else {
+//                PointSeriesFeature data = (PointSeriesFeature) timeSeriesFeatures.iterator().next();
+//                verifyTimeSeriesFeature(data, data.getHorizontalPosition(), xIndex, yIndex);
+//            }
+//        }
+//    }
+//
+//    /**
+//     * A helper method which is used to evaluate the returned TimeSeriesFeature
+//     * object.
+//     * 
+//     * @param data
+//     *            the evaluated TimeSeriesFeature
+//     * @param hPos
+//     *            the centre of the grid cell
+//     * @param xIndex
+//     *            the x Index of the grid cell
+//     * @param yIndex
+//     *            the y Index of the grid cell
+//     */
+//    private void verifyTimeSeriesFeature(PointSeriesFeature data, HorizontalPosition hPos,
+//            int xIndex, int yIndex) {
+//        assertEquals(hPos, data.getHorizontalPosition());
+//        Array1D<Number> lonValues = data.getValues("vLon");
+//        Array1D<Number> latValues = data.getValues("vLat");
+//        Array1D<Number> depthValues = data.getValues("vDepth");
+//        Array1D<Number> timeValues = data.getValues("vTime");
+//
+//        assertArrayEquals(new int[] { tSize }, lonValues.getShape());
+//        assertArrayEquals(new int[] { tSize }, latValues.getShape());
+//        assertArrayEquals(new int[] { tSize }, depthValues.getShape());
+//        assertArrayEquals(new int[] { tSize }, timeValues.getShape());
+//
+//        /*
+//         * below three values are set when we generate the responding values of
+//         * the test dataset
+//         */
+//        float expectedLon = 100.0f * xIndex / (xSize - 1);
+//        float expectedLat = 100.0f * yIndex / (ySize - 1);
+//        float expectedDepth = (float) data.getVerticalPosition().getZ();
+//
+//        for (int k = 0; k < tSize; k += 2) {
+//            // the below value is set by test dataset
+//            float expectedTime = 100 * k / 9.0f;
+//
+//            assertEquals(expectedLon, lonValues.get(k).floatValue(), delta);
+//            assertEquals(expectedLat, latValues.get(k).floatValue(), delta);
+//            assertEquals(expectedDepth, depthValues.get(k).floatValue(), delta);
+//            assertEquals(expectedTime, timeValues.get(k).floatValue(), delta);
+//        }
+//    }
+//
+//    /**
+//     * A helper method to generate {@link PlottingDomainParams} object by using
+//     * a given targetZ object. The result is used to evaluate the returned
+//     * {@link Dataset#extractTimeseriesFeatures} behaviour.
+//     * 
+//     * @param targetZ
+//     *            Which is used as a para of PlottingDomainParams object in the
+//     *            calling method
+//     * @throws DataReadingException
+//     *             If there is a problem reading the underlying data
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     */
+//    private void getFeatureByTargetZ(double targetZ) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        if (vAxis.contains(targetZ)) {
+//            int zIndex = vAxis.findIndexOf(targetZ);
+//            for (GridCell2D cell : samplePoints) {
+//                HorizontalPosition hPos =cell.getCentre();
+//                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
+//                        datasetTExtent, hPos, targetZ, null);
+//                Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
+//                        .extractTimeseriesFeatures(null, params);
+//                for (PointSeriesFeature data : timeSeriesFeatures) {
+//                    Array1D<Number> depthValues = data.getValues("vDepth");
+//                    assertArrayEquals(new int[] { tSize }, depthValues.getShape());
+//                    // the value below is set by the dataset
+//                    float expectedDepth = 10.0f * zIndex;
+//                    for (int k = 0; k < tSize; k += 2) {
+//                        assertEquals(expectedDepth, depthValues.get(k).floatValue(), delta);
+//                    }
+//                }
+//            }
+//        } else {
+//            for (GridCell2D cell : samplePoints) {
+//                HorizontalPosition hPos =cell.getCentre();
+//                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
+//                        datasetTExtent, hPos, targetZ, null);
+//                Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
+//                        .extractTimeseriesFeatures(null, params);
+//                // targetZ is out bound of zExtent, it returns an empty feature
+//                assertEquals(0, timeSeriesFeatures.size());
+//            }
+//        }
+//    }
+//
+//    /**
+//     * In this test, the para of zExtent and targetZ in the constructor
+//     * {@link PlottingDomainParams} are set to various values in order to
+//     * evaluating returned {@link TimeSeriesFeatures} objects.
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     * 
+//     * @throws DataReadingExcpetion
+//     *             If there is a problem reading the underlying data
+//     */
+//
+//    @Test
+//    public void testTimeSerieFeaturesPartofZExents() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        // a zExtent is inside the zExtent of dataset.
+//        Extent<Double> zExtent = Extents.newExtent(18.6, 53.4);
+//        getFeatureByZExtent(zExtent);
+//
+//        // a zExtent is overlay the zExtent of dataset.
+//        zExtent = Extents.newExtent(20.0, 153.4);
+//        getFeatureByZExtent(zExtent);
+//
+//        // another zExtent is overlay the zExtent of dataset.
+//        zExtent = Extents.newExtent(-120.6, 47.18);
+//        getFeatureByZExtent(zExtent);
+//
+//        // a zExtent is outside the zExtent of dataset.
+//        zExtent = Extents.newExtent(-18.6, -10.0);
+//        getFeatureByZExtent(zExtent);
+//
+//        // a targetZ value is inside the zExtent of the dataset
+//        double targetZ = 85.8;
+//        getFeatureByTargetZ(targetZ);
+//
+//        // a targetZ value is outside the zExtent of the dataset
+//        targetZ = 110.8; // vAxis.contains(targetZ) return false
+//        getFeatureByTargetZ(targetZ);
+//
+//        targetZ = -20.8; // vAxis.contains(targetZ) return false
+//        getFeatureByTargetZ(targetZ);
+//    }
 
-    /**
-     * A helper method which is used to evaluate the returned TimeSeriesFeature
-     * object.
-     * 
-     * @param data
-     *            the evaluated TimeSeriesFeature
-     * @param hPos
-     *            the centre of the grid cell
-     * @param xIndex
-     *            the x Index of the grid cell
-     * @param yIndex
-     *            the y Index of the grid cell
-     */
-    private void verifyTimeSeriesFeature(PointSeriesFeature data, HorizontalPosition hPos,
-            int xIndex, int yIndex) {
-        assertEquals(hPos, data.getHorizontalPosition());
-        Array1D<Number> lonValues = data.getValues("vLon");
-        Array1D<Number> latValues = data.getValues("vLat");
-        Array1D<Number> depthValues = data.getValues("vDepth");
-        Array1D<Number> timeValues = data.getValues("vTime");
-
-        assertArrayEquals(new int[] { tSize }, lonValues.getShape());
-        assertArrayEquals(new int[] { tSize }, latValues.getShape());
-        assertArrayEquals(new int[] { tSize }, depthValues.getShape());
-        assertArrayEquals(new int[] { tSize }, timeValues.getShape());
-
-        /*
-         * below three values are set when we generate the responding values of
-         * the test dataset
-         */
-        float expectedLon = 100.0f * xIndex / (xSize - 1);
-        float expectedLat = 100.0f * yIndex / (ySize - 1);
-        float expectedDepth = (float) data.getVerticalPosition().getZ();
-
-        for (int k = 0; k < tSize; k += 2) {
-            // the below value is set by test dataset
-            float expectedTime = 100 * k / 9.0f;
-
-            assertEquals(expectedLon, lonValues.get(k).floatValue(), delta);
-            assertEquals(expectedLat, latValues.get(k).floatValue(), delta);
-            assertEquals(expectedDepth, depthValues.get(k).floatValue(), delta);
-            assertEquals(expectedTime, timeValues.get(k).floatValue(), delta);
-        }
-    }
-
-    /**
-     * A helper method to generate {@link PlottingDomainParams} object by using
-     * a given targetZ object. The result is used to evaluate the returned
-     * {@link Dataset#extractTimeseriesFeatures} behaviour.
-     * 
-     * @param targetZ
-     *            Which is used as a para of PlottingDomainParams object in the
-     *            calling method
-     * @throws DataReadingException
-     *             If there is a problem reading the underlying data
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     */
-    private void getFeatureByTargetZ(double targetZ) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        if (vAxis.contains(targetZ)) {
-            int zIndex = vAxis.findIndexOf(targetZ);
-            for (GridCell2D cell : samplePoints) {
-                HorizontalPosition hPos =cell.getCentre();
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
-                        datasetTExtent, hPos, targetZ, null);
-                Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                        .extractTimeseriesFeatures(null, params);
-                for (PointSeriesFeature data : timeSeriesFeatures) {
-                    Array1D<Number> depthValues = data.getValues("vDepth");
-                    assertArrayEquals(new int[] { tSize }, depthValues.getShape());
-                    // the value below is set by the dataset
-                    float expectedDepth = 10.0f * zIndex;
-                    for (int k = 0; k < tSize; k += 2) {
-                        assertEquals(expectedDepth, depthValues.get(k).floatValue(), delta);
-                    }
-                }
-            }
-        } else {
-            for (GridCell2D cell : samplePoints) {
-                HorizontalPosition hPos =cell.getCentre();
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
-                        datasetTExtent, hPos, targetZ, null);
-                Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                        .extractTimeseriesFeatures(null, params);
-                // targetZ is out bound of zExtent, it returns an empty feature
-                assertEquals(0, timeSeriesFeatures.size());
-            }
-        }
-    }
-
-    /**
-     * In this test, the para of zExtent and targetZ in the constructor
-     * {@link PlottingDomainParams} are set to various values in order to
-     * evaluating returned {@link TimeSeriesFeatures} objects.
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     * 
-     * @throws DataReadingExcpetion
-     *             If there is a problem reading the underlying data
-     */
-
-    @Test
-    public void testTimeSerieFeaturesPartofZExents() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        // a zExtent is inside the zExtent of dataset.
-        Extent<Double> zExtent = Extents.newExtent(18.6, 53.4);
-        getFeatureByZExtent(zExtent);
-
-        // a zExtent is overlay the zExtent of dataset.
-        zExtent = Extents.newExtent(20.0, 153.4);
-        getFeatureByZExtent(zExtent);
-
-        // another zExtent is overlay the zExtent of dataset.
-        zExtent = Extents.newExtent(-120.6, 47.18);
-        getFeatureByZExtent(zExtent);
-
-        // a zExtent is outside the zExtent of dataset.
-        zExtent = Extents.newExtent(-18.6, -10.0);
-        getFeatureByZExtent(zExtent);
-
-        // a targetZ value is inside the zExtent of the dataset
-        double targetZ = 85.8;
-        getFeatureByTargetZ(targetZ);
-
-        // a targetZ value is outside the zExtent of the dataset
-        targetZ = 110.8; // vAxis.contains(targetZ) return false
-        getFeatureByTargetZ(targetZ);
-
-        targetZ = -20.8; // vAxis.contains(targetZ) return false
-        getFeatureByTargetZ(targetZ);
-    }
-
-    /**
-     * In this test, the para of tExtent and targetT in the constructor
-     * {@link PlottingDomainParams} are set to various values in order to
-     * evaluating returned {@link TimeSeriesFeatures} objects.
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     * 
-     * @throws DataReadingExcpetion
-     *             If there is a problem reading the underlying data
-     */
-    @Test
-    public void testTimeSerieFeaturesPartofTExents() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        DateTime start = new DateTime(1999, 12, 25, 15, 00, chrnology);
-        DateTime end = new DateTime(2000, 1, 8, 23, 00, chrnology);
-
-        // a tExtent is intersected with the dataset tExent
-        Extent<DateTime> tExtent = Extents.newExtent(start, end);
-        extractTimeSeriesFeature(tExtent);
-
-        // another tExtent is intersected with the dataset tExent
-        start = new DateTime(2000, 1, 2, 00, 00, chrnology);
-        end = new DateTime(2000, 1, 8, 00, 00, chrnology);
-        tExtent = Extents.newExtent(start, end);
-        extractTimeSeriesFeature(tExtent);
-
-        // the tExtent is only one point
-        start = new DateTime(2000, 1, 3, 15, 00, chrnology);
-        end = new DateTime(2000, 1, 3, 15, 00, chrnology);
-        tExtent = Extents.newExtent(start, end);
-        extractTimeSeriesFeature(tExtent);
-
-        // another tExtent is intersected with the dataset tExent
-        start = new DateTime(2000, 1, 3, 15, 00, chrnology);
-        end = new DateTime(2000, 5, 3, 15, 00, chrnology);
-        tExtent = Extents.newExtent(start, end);
-        extractTimeSeriesFeature(tExtent);
-
-        // a tExtent is outside of the dataset tExent
-        start = new DateTime(2000, 1, 20, 15, 00, chrnology);
-        end = new DateTime(2000, 5, 3, 15, 00, chrnology);
-        tExtent = Extents.newExtent(start, end);
-        extractTimeSeriesFeature(tExtent);
-
-        // another tExtent is outside of the dataset tExent
-        start = new DateTime(1999, 10, 20, 15, 00, chrnology);
-        end = new DateTime(1999, 12, 3, 23, 59, chrnology);
-        tExtent = Extents.newExtent(start, end);
-        extractTimeSeriesFeature(tExtent);
-    }
-
-    /**
-     * A helper method is to evaluate TimeSeriesFeatures objects
-     * 
-     * @param tExtent
-     *            the para of tExtent in the constructor of
-     *            {@link PlottingDomainParams} object
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     * @throws DataReadingExcpetion
-     *             If there is a problem reading the underlying data
-     */
-    private void extractTimeSeriesFeature(Extent<DateTime> tExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        for (GridCell2D cell : samplePoints) {
-            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
-            int xIndex = gCoordinate.getX();
-            int yIndex = gCoordinate.getY();
-            HorizontalPosition hPos =cell.getCentre();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, datasetZExtent,
-                    tExtent, hPos, null, null);
-            Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                    .extractTimeseriesFeatures(null, params);
-            if (tExtent == null || tExtent.intersects(datasetTExtent)) {
-                assertEquals(zSize, timeSeriesFeatures.size());
-                for (PointSeriesFeature feature : timeSeriesFeatures) {
-                    verifyTimeSeriesFeature(feature, hPos, xIndex, yIndex);
-                }
-            } else {
-                assertEquals(0, timeSeriesFeatures.size());
-            }
-        }
-    }
+//    /**
+//     * In this test, the para of tExtent and targetT in the constructor
+//     * {@link PlottingDomainParams} are set to various values in order to
+//     * evaluating returned {@link TimeSeriesFeatures} objects.
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     * 
+//     * @throws DataReadingExcpetion
+//     *             If there is a problem reading the underlying data
+//     */
+//    @Test
+//    public void testTimeSerieFeaturesPartofTExents() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        DateTime start = new DateTime(1999, 12, 25, 15, 00, chronology);
+//        DateTime end = new DateTime(2000, 1, 8, 23, 00, chronology);
+//
+//        // a tExtent is intersected with the dataset tExent
+//        Extent<DateTime> tExtent = Extents.newExtent(start, end);
+//        extractTimeSeriesFeature(tExtent);
+//
+//        // another tExtent is intersected with the dataset tExent
+//        start = new DateTime(2000, 1, 2, 00, 00, chronology);
+//        end = new DateTime(2000, 1, 8, 00, 00, chronology);
+//        tExtent = Extents.newExtent(start, end);
+//        extractTimeSeriesFeature(tExtent);
+//
+//        // the tExtent is only one point
+//        start = new DateTime(2000, 1, 3, 15, 00, chronology);
+//        end = new DateTime(2000, 1, 3, 15, 00, chronology);
+//        tExtent = Extents.newExtent(start, end);
+//        extractTimeSeriesFeature(tExtent);
+//
+//        // another tExtent is intersected with the dataset tExent
+//        start = new DateTime(2000, 1, 3, 15, 00, chronology);
+//        end = new DateTime(2000, 5, 3, 15, 00, chronology);
+//        tExtent = Extents.newExtent(start, end);
+//        extractTimeSeriesFeature(tExtent);
+//
+//        // a tExtent is outside of the dataset tExent
+//        start = new DateTime(2000, 1, 20, 15, 00, chronology);
+//        end = new DateTime(2000, 5, 3, 15, 00, chronology);
+//        tExtent = Extents.newExtent(start, end);
+//        extractTimeSeriesFeature(tExtent);
+//
+//        // another tExtent is outside of the dataset tExent
+//        start = new DateTime(1999, 10, 20, 15, 00, chronology);
+//        end = new DateTime(1999, 12, 3, 23, 59, chronology);
+//        tExtent = Extents.newExtent(start, end);
+//        extractTimeSeriesFeature(tExtent);
+//    }
+//
+//    /**
+//     * A helper method is to evaluate TimeSeriesFeatures objects
+//     * 
+//     * @param tExtent
+//     *            the para of tExtent in the constructor of
+//     *            {@link PlottingDomainParams} object
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     * @throws DataReadingExcpetion
+//     *             If there is a problem reading the underlying data
+//     */
+//    private void extractTimeSeriesFeature(Extent<DateTime> tExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        for (GridCell2D cell : samplePoints) {
+//            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+//            int xIndex = gCoordinate.getX();
+//            int yIndex = gCoordinate.getY();
+//            HorizontalPosition hPos =cell.getCentre();
+//            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, datasetZExtent,
+//                    tExtent, hPos, null, null);
+//            Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
+//                    .extractTimeseriesFeatures(null, params);
+//            if (tExtent == null || tExtent.intersects(datasetTExtent)) {
+//                assertEquals(zSize, timeSeriesFeatures.size());
+//                for (PointSeriesFeature feature : timeSeriesFeatures) {
+//                    verifyTimeSeriesFeature(feature, hPos, xIndex, yIndex);
+//                }
+//            } else {
+//                assertEquals(0, timeSeriesFeatures.size());
+//            }
+//        }
+//    }
 
     /**
      * General test to extract profile features by calling
@@ -893,83 +891,83 @@ public class RectilinearGridDatasetTest {
     }
 
     // remember for profile features, targetZ is ignored.
-    /**
-     * A helper method is to evaluate returned ProfileFeature objects based on
-     * given zExtent values.
-     * 
-     * @param zExtent
-     *            the corresponding param of zExtent in PlottingDomainParams
-     *            object
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     * @throws DataReadingExcpetion
-     *             If there is a problem reading the underlying data
-     */
-    private void zExtentCaseForProfileFeatures(Extent<Double> zExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        for (GridCell2D cell : samplePoints) {
-            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
-            int xIndex = gCoordinate.getX();
-            int yIndex = gCoordinate.getY();
-            HorizontalPosition hPos = cell.getCentre();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent, null, hPos,
-                    null, null);
-            Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(
-                    null, params);
-            if (zExtent == null || zExtent.intersects(datasetZExtent)) {
-                assertEquals(tSize, profileFeature.size());
-
-                for (ProfileFeature feature : profileFeature) {
-                    verifyProfileFeature(feature, hPos, xIndex, yIndex);
-                }
-            } else {
-                assertEquals(0, profileFeature.size());
-            }
-        }
-    }
-
-    /**
-     * Test {@link Dataset#extractProfileFeatures} method by setting various
-     * values for zExtent
-     * @throws VariableNotFoundException 
-     * @throws UnsupportedOperationException 
-     * 
-     * @throws DataReadingExcpetion
-     *             If there is a problem reading the underlying data
-     */
-    @Test
-    public void testProfileFeaturesPartOfZExtent() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        // test case 1
-        Extent<Double> zExtent = Extents.newExtent(1220.0, 4401.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        /*
-         * test case 2, the given zExtent intersect with the one of the data set
-         * it should return all profile features the data set contains.
-         */
-
-        zExtent = Extents.newExtent(25.0, 300.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        /*
-         * test case 3: a given zExtent is in the range of of the zExtent of the
-         * dataset, all profile features return.
-         */
-        zExtent = Extents.newExtent(38.0, 55.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        /*
-         * test case 4: another example a given zExtent intersects with the
-         * zExtent of the data set.
-         */
-        zExtent = Extents.newExtent(-100.0, 95.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        zExtent = Extents.newExtent(-100.0, -5.0);
-        zExtentCaseForProfileFeatures(zExtent);
-
-        zExtentCaseForProfileFeatures(null);
-        zExtentCaseForProfileFeatures(zExtent);
-    }
+//    /**
+//     * A helper method is to evaluate returned ProfileFeature objects based on
+//     * given zExtent values.
+//     * 
+//     * @param zExtent
+//     *            the corresponding param of zExtent in PlottingDomainParams
+//     *            object
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     * @throws DataReadingExcpetion
+//     *             If there is a problem reading the underlying data
+//     */
+//    private void zExtentCaseForProfileFeatures(Extent<Double> zExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        for (GridCell2D cell : samplePoints) {
+//            GridCoordinates2D gCoordinate = cell.getGridCoordinates();
+//            int xIndex = gCoordinate.getX();
+//            int yIndex = gCoordinate.getY();
+//            HorizontalPosition hPos = cell.getCentre();
+//            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent, null, hPos,
+//                    null, null);
+//            Collection<? extends ProfileFeature> profileFeature = dataset.extractProfileFeatures(
+//                    null, params);
+//            if (zExtent == null || zExtent.intersects(datasetZExtent)) {
+//                assertEquals(tSize, profileFeature.size());
+//
+//                for (ProfileFeature feature : profileFeature) {
+//                    verifyProfileFeature(feature, hPos, xIndex, yIndex);
+//                }
+//            } else {
+//                assertEquals(0, profileFeature.size());
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Test {@link Dataset#extractProfileFeatures} method by setting various
+//     * values for zExtent
+//     * @throws VariableNotFoundException 
+//     * @throws UnsupportedOperationException 
+//     * 
+//     * @throws DataReadingExcpetion
+//     *             If there is a problem reading the underlying data
+//     */
+//    @Test
+//    public void testProfileFeaturesPartOfZExtent() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
+//        // test case 1
+//        Extent<Double> zExtent = Extents.newExtent(1220.0, 4401.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        /*
+//         * test case 2, the given zExtent intersect with the one of the data set
+//         * it should return all profile features the data set contains.
+//         */
+//
+//        zExtent = Extents.newExtent(25.0, 300.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        /*
+//         * test case 3: a given zExtent is in the range of of the zExtent of the
+//         * dataset, all profile features return.
+//         */
+//        zExtent = Extents.newExtent(38.0, 55.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        /*
+//         * test case 4: another example a given zExtent intersects with the
+//         * zExtent of the data set.
+//         */
+//        zExtent = Extents.newExtent(-100.0, 95.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        zExtent = Extents.newExtent(-100.0, -5.0);
+//        zExtentCaseForProfileFeatures(zExtent);
+//
+//        zExtentCaseForProfileFeatures(null);
+//        zExtentCaseForProfileFeatures(zExtent);
+//    }
 
     /**
      * Test {@link Dataset#extractProfileFeatures} method by setting various
@@ -984,7 +982,7 @@ public class RectilinearGridDatasetTest {
      */
     @Test
     public void testProfileFeaturesPartOfTExtent() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        DateTime start = new DateTime(2000, 01, 01, 00, 00, chrnology);
+        DateTime start = new DateTime(2000, 01, 01, 00, 00, chronology);
         DateTime end = start;
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
         DateTime targetT = null;
@@ -1005,15 +1003,15 @@ public class RectilinearGridDatasetTest {
         tExentCaseForProfileFeatures(tExtent, null);
 
         // a targetT is exactly on the tAxis point
-        targetT = new DateTime(2000, 01, 05, 00, 00, chrnology);
+        targetT = new DateTime(2000, 01, 05, 00, 00, chronology);
         tExentCaseForProfileFeatures(tExtent, targetT);
 
         // a targetT is on the tAxis
-        targetT = new DateTime(2000, 01, 05, 10, 50, chrnology);
+        targetT = new DateTime(2000, 01, 05, 10, 50, chronology);
         tExentCaseForProfileFeatures(tExtent, targetT);
 
         // a targetT is outside of the tAxis
-        targetT = new DateTime(1999, 01, 05, 10, 50, chrnology);
+        targetT = new DateTime(1999, 01, 05, 10, 50, chronology);
         tExentCaseForProfileFeatures(tExtent, targetT);
     }
 
@@ -1121,8 +1119,8 @@ public class RectilinearGridDatasetTest {
 
     @Test
     public void testReturnEmptyProfileFeatures() throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        DateTime start = new DateTime(2011, 01, 15, 00, 00, chrnology);
-        DateTime end = new DateTime(2012, 02, 03, 00, 00, chrnology);
+        DateTime start = new DateTime(2011, 01, 15, 00, 00, chronology);
+        DateTime end = new DateTime(2012, 02, 03, 00, 00, chronology);
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
         PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, null, datasetZExtent,
                 tExtent, null, null, null);
@@ -1130,24 +1128,24 @@ public class RectilinearGridDatasetTest {
                 params);
         assertEquals(0, profileFeatures.size());
 
-        start = new DateTime(1990, 01, 15, 00, 00, chrnology);
-        end = new DateTime(1998, 02, 03, 00, 00, chrnology);
+        start = new DateTime(1990, 01, 15, 00, 00, chronology);
+        end = new DateTime(1998, 02, 03, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         params = new PlottingDomainParams(xSize, ySize, null, datasetZExtent, tExtent, null, null,
                 null);
         profileFeatures = dataset.extractProfileFeatures(null, params);
         assertEquals(0, profileFeatures.size());
 
-        start = new DateTime(2000, 1, 1, 00, 00, chrnology);
-        end = new DateTime(2000, 1, 10, 00, 00, chrnology);
+        start = new DateTime(2000, 1, 1, 00, 00, chronology);
+        end = new DateTime(2000, 1, 10, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         Extent<Double> zExtent = Extents.newExtent(200.0, 500.0);
         params = new PlottingDomainParams(xSize, ySize, null, zExtent, tExtent, null, null, null);
         profileFeatures = dataset.extractProfileFeatures(null, params);
         assertEquals(0, profileFeatures.size());
 
-        start = new DateTime(2000, 1, 1, 00, 00, chrnology);
-        end = new DateTime(2000, 1, 10, 00, 00, chrnology);
+        start = new DateTime(2000, 1, 1, 00, 00, chronology);
+        end = new DateTime(2000, 1, 10, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         zExtent = Extents.newExtent(-200.0, -50.0);
         params = new PlottingDomainParams(xSize, ySize, null, zExtent, tExtent, null, null, null);
@@ -1199,7 +1197,7 @@ public class RectilinearGridDatasetTest {
 
         // T and Z values are fixed
         double zValue = 60.0;
-        DateTime tValue = new DateTime(2000, 01, 01, 00, 00, chrnology);
+        DateTime tValue = new DateTime(2000, 01, 01, 00, 00, chronology);
         MapDomain mapdomain = new MapDomainImpl(rGrid, zValue, vCrs, tValue);
 
         MapFeature mapfeature = feature.extractMapFeature(ids, rGrid, zValue, tValue);

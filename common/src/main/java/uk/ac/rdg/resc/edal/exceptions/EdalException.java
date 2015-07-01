@@ -33,7 +33,7 @@ package uk.ac.rdg.resc.edal.exceptions;
  * 
  * @author Jon Blower
  */
-public class EdalException extends Exception {
+public class EdalException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     private String code = null;
 

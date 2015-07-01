@@ -302,11 +302,11 @@ public final class CdmUtils {
     private static Chronology getChronologyForString(String chronologyString) {
         if (chronologyString == null || "gregorian".equalsIgnoreCase(chronologyString)
                 || "standard".equalsIgnoreCase(chronologyString)) {
-            return ISOChronology.getInstance();
+            return ISOChronology.getInstanceUTC();
         } else if ("proleptic_gregorian".equalsIgnoreCase(chronologyString)) {
-            return GregorianChronology.getInstance();
+            return GregorianChronology.getInstanceUTC();
         } else if ("julian".equalsIgnoreCase(chronologyString)) {
-            return JulianChronology.getInstance();
+            return JulianChronology.getInstanceUTC();
         } else if ("noleap".equalsIgnoreCase(chronologyString)
                 || "365_day".equalsIgnoreCase(chronologyString)) {
             return NoLeapChronology.getInstanceUTC();

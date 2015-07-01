@@ -47,7 +47,7 @@ public class SimpleVerticalDomain implements VerticalDomain, Serializable {
     public SimpleVerticalDomain(Double min, Double max, VerticalCrs crs) {
         this.crs = crs;
         if (min == null || max == null) {
-            extent = Extents.emptyExtent(Double.class);
+            extent = Extents.emptyExtent();
         } else {
             extent = Extents.newExtent(min, max);
         }

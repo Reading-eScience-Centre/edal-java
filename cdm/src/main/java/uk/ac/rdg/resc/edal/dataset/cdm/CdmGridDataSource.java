@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -269,11 +268,6 @@ final class CdmGridDataSource implements GridDataSource {
         @Override
         public void set(Number val, int... coords) {
             throw new UnsupportedOperationException("Modification not supported.");
-        }
-
-        @Override
-        public Iterator<Number> iterator() {
-            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override

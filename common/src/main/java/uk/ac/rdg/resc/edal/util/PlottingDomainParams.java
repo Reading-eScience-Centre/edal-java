@@ -71,7 +71,7 @@ public class PlottingDomainParams {
             if (targetT != null) {
                 tExtent = Extents.newExtent(targetT, targetT);
             } else {
-                tExtent = Extents.emptyExtent(DateTime.class);
+                tExtent = Extents.emptyExtent();
             }
         }
     }
@@ -97,7 +97,7 @@ public class PlottingDomainParams {
             if (targetT != null) {
                 tExtent = Extents.newExtent(targetT, targetT);
             } else {
-                tExtent = Extents.emptyExtent(DateTime.class);
+                tExtent = Extents.emptyExtent();
             }
         }
     }

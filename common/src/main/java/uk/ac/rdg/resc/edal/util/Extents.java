@@ -29,10 +29,10 @@
 package uk.ac.rdg.resc.edal.util;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
@@ -101,19 +101,55 @@ public final class Extents {
 
     @SuppressWarnings("unchecked")
     public static <T extends Object & Comparable<? super T>> Extent<T> newExtent(T min, T max) {
-        if (min instanceof DateTime) {
+        /*
+         * Check both min and max because one of them could be null
+         */
+        if (min instanceof DateTime || max instanceof DateTime) {
             return (Extent<T>) new DateTimeExtent((DateTime) min, (DateTime) max);
         }
         return new SimpleExtent<T>(min, max);
     }
 
-    public static <T extends Comparable<? super T>> Extent<T> newExtent(T min, T max,
-            Comparator<? super T> comp) {
-        return new SimpleExtentWithComparator<T>(min, max, comp);
+    public static <T extends Comparable<? super T>> Extent<T> emptyExtent() {
+        return new EmptyExtent<T>();
     }
 
-    public static <T extends Comparable<? super T>> Extent<T> emptyExtent(Class<T> clazz) {
-        return new SimpleExtentWithComparator<T>((T) null, (T) null, null);
+    /**
+     * Special example of an {@link Extent} which contains no values.
+     * 
+     * @author Guy Griffiths
+     *
+     * @param <T>
+     *            The type of value this {@link EmptyExtent} represents
+     */
+    private static final class EmptyExtent<T> implements Extent<T> {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public boolean contains(T position) {
+            return false;
+        }
+
+        @Override
+        public T getLow() {
+            return null;
+        }
+
+        @Override
+        public T getHigh() {
+            return null;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return true;
+        }
+
+        @Override
+        public boolean intersects(Extent<T> otherExtent) {
+            return false;
+        }
+
     }
 
     private abstract static class AbstractExtent<T extends Comparable<? super T>> implements
@@ -121,16 +157,10 @@ public final class Extents {
         private static final long serialVersionUID = 1L;
         private final T min;
         private final T max;
-        protected final Comparator<? super T> comp;
 
-        protected AbstractExtent(T min, T max, Comparator<? super T> comp) {
-            /* Not legal for only one of min and max to be null */
-            if ((min == null && max != null) || (min != null && max == null)) {
-                throw new IllegalArgumentException("min and max must both be null or non-null");
-            }
+        protected AbstractExtent(T min, T max) {
             this.min = min;
             this.max = max;
-            this.comp = comp;
             if (min != null && max != null && compare(min, max) > 0) {
                 throw new IllegalArgumentException(String.format(
                         "min (%s) must not be greater than max (%s)", min, max));
@@ -145,11 +175,15 @@ public final class Extents {
 
         @Override
         public boolean contains(T val) {
-            //modify by nan. assuming T is primitive wrapper class
-            if (val ==null){
+            if (val == null
+                    || (val instanceof Number && Double.isNaN(((Number) val).doubleValue()))) {
+                /*
+                 * We specifically exclude NaN values because they are treated
+                 * as greater than all other numerical values in the compareTo
+                 * method, which is not the behaviour we want.
+                 */
                 return false;
-            }
-            else{
+            } else {
                 return compare(this.min, val) <= 0 && compare(this.max, val) >= 0;
             }
         }
@@ -175,7 +209,7 @@ public final class Extents {
 
         @Override
         public boolean isEmpty() {
-            return (max == null && min == null);
+            return false;
         }
 
         @Override
@@ -225,58 +259,83 @@ public final class Extents {
         private static final long serialVersionUID = 1L;
 
         public SimpleExtent(T min, T max) {
-            super(min, max, null);
+            super(min, max);
         }
 
         @Override
         protected int compare(T val1, T val2) {
+            /*
+             * In an Extent, we treat null bounds as being open-ended. So
+             * whether or not this a non-null value is greater than a null value
+             * depends on which bound it is.
+             * 
+             * We could code for this situation explicitly, but since bounds are
+             * inclusive, we can also treat null values as being equal to every
+             * other value.
+             */
+            if (val1 == null || val2 == null) {
+                return 0;
+            }
+
             return val1.compareTo(val2);
-        }
-    }
-
-    private static final class SimpleExtentWithComparator<T extends Comparable<? super T>> extends
-            AbstractExtent<T> {
-        private static final long serialVersionUID = 1L;
-        
-        public SimpleExtentWithComparator(T min, T max, Comparator<? super T> comparator) {
-            super(min, max, comparator);
-        }
-
-        @Override
-        protected int compare(T val1, T val2) {
-            return comp.compare(val1, val2);
         }
     }
 
     /**
      * We treat DateTime extents as a special case because although the compare
-     * method works with mixed Chronologies we don't want this to be the case when
-     * testing whether an extent contains a value.
+     * method works with mixed Chronologies we don't want this to be the case
+     * when testing whether an extent contains a value.
      * 
-     * @author Guy
+     * @author Guy Griffiths
      */
     private static final class DateTimeExtent extends AbstractExtent<DateTime> {
         private static final long serialVersionUID = 1L;
-        
+
         public DateTimeExtent(DateTime min, DateTime max) {
-            super(min, max, null);
+            super(min, max);
         }
 
         @Override
         protected int compare(DateTime val1, DateTime val2) {
+            /*
+             * In an Extent, we treat null bounds as being open-ended. So
+             * whether or not this a non-null value is greater than a null value
+             * depends on which bound it is.
+             * 
+             * We could code for this situation explicitly, but since bounds are
+             * inclusive, we can also treat null values as being equal to every
+             * other value.
+             */
+            if (val1 == null || val2 == null) {
+                return 0;
+            }
+
             return val1.compareTo(val2);
         }
 
         @Override
         public boolean contains(DateTime val) {
-            DateTime low = getLow();
-            if (low == null || val == null) {
+            Chronology chronology = null;
+            /*
+             * getLow() and getHigh() cannot both be null:
+             * 
+             * This class is only instantiated in the Extents.newExtent() method
+             * which checks the type of min and max with a call to instanceof.
+             * If both are null then we will just get an instance of
+             * SimpleExtent, which will work as expected
+             */
+            if (getLow() != null) {
+                chronology = getLow().getChronology();
+            } else {
+                chronology = getHigh().getChronology();
+            }
+            if (val == null) {
                 return false;
             }
-            if(val.getChronology() == null) {
-                return low.getChronology() == null;
+            if (val.getChronology() == null) {
+                return chronology == null && super.contains(val);
             }
-            if (!val.getChronology().equals(low.getChronology())) {
+            if (!val.getChronology().equals(chronology)) {
                 return false;
             }
             return super.contains(val);

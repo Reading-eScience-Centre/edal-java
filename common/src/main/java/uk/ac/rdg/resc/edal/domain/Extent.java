@@ -35,12 +35,15 @@ import java.io.Serializable;
  * Defines a contiguous domain that is defined by "low" and "high" bounds. Any
  * value (inclusively) between these values is considered part of the domain. A
  * null value for "low" or "high" indicates that the extent is unbounded at that
- * end. If both values are null, then the Extent includes all possible values of
- * P.
+ * end. If both values are null and the Extent is not empty (i.e.
+ * {@link Extent#isEmpty()} returns <code>false</code>), then the Extent includes
+ * all possible values of P, with the exception of NaN values where P is
+ * numerical.
  * </p>
  * 
  * @param P
  *            The type of object used to identify positions within this extent.
+ * 
  * @author Jon Blower
  * @author Guy
  */
@@ -57,8 +60,10 @@ public interface Extent<P> extends Domain<P>, Serializable {
 
     /**
      * @return Whether or not this is an empty {@link Extent} - empty
-     *         {@link Extent}s are defined as containing <code>null</code> for
-     *         both {@link Extent#getHigh()} and {@link Extent#getLow()}
+     *         {@link Extent}s are defined as containing no values and
+     *         overlapping no other {@link Extent}s, and <code>null</code> will
+     *         be returnedfor both {@link Extent#getHigh()} and
+     *         {@link Extent#getLow()}
      */
     public boolean isEmpty();
 

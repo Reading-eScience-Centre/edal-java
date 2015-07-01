@@ -39,10 +39,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
@@ -1324,7 +1327,7 @@ public class WmsServlet extends HttpServlet {
         }
         DateTime day;
         try {
-            day = TimeUtils.iso8601ToDate(dayStr, temporalDomain.getChronology());
+            day = TimeUtils.iso8601ToDateTime(dayStr, temporalDomain.getChronology());
         } catch (BadTimeFormatException e) {
             throw new MetadataException("\"day\" parameter must be an ISO-formatted date");
         }
@@ -1706,17 +1709,38 @@ public class WmsServlet extends HttpServlet {
          * Loop over all requested layers
          */
         List<PointSeriesFeature> timeseriesFeatures = new ArrayList<PointSeriesFeature>();
+        Map<String, Set<String>> datasets2VariableIds = new HashMap<>();
+        /*
+         * We want to store the copyright information to output in the CSV file.
+         * 
+         * CSVs can only be generated for single datasets, and copyright is only
+         * set on a single dataset, therefore we only need to store the first
+         * copyright message
+         */
+        String copyright = null;
+        Map<String, String> varId2Title = new HashMap<>();
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
             WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            varId2Title.put(variableId, layerMetadata.getTitle());
             if ("text/csv".equalsIgnoreCase(outputFormat) && !layerMetadata.isDownloadable()) {
                 throw new LayerNotQueryableException("The layer: " + layerName
                         + " cannot be downloaded as CSV");
             }
+            if (!datasets2VariableIds.containsKey(dataset.getId())) {
+                datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
+            }
+            datasets2VariableIds.get(dataset.getId()).add(variableId);
+            if (copyright == null) {
+                copyright = catalogue.getLayerMetadata(layerName).getCopyright();
+            }
+        }
+
+        for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
+            Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
             List<? extends PointSeriesFeature> extractedTimeseriesFeatures = dataset
-                    .extractTimeseriesFeatures(CollectionUtils.setOf(variableId),
-                            plottingParameters);
+                    .extractTimeseriesFeatures(entry.getValue(), plottingParameters);
             timeseriesFeatures.addAll(extractedTimeseriesFeatures);
         }
 
@@ -1735,10 +1759,36 @@ public class WmsServlet extends HttpServlet {
                         httpServletResponse.getOutputStream()));
                 PointSeriesFeature feature = timeseriesFeatures.get(0);
                 Set<String> parameterIds = feature.getParameterIds();
-                StringBuilder headerLine = new StringBuilder("Time,");
-                for (String parameterId : parameterIds) {
-                    headerLine.append(parameterId + ",");
+                HorizontalPosition pos = feature.getHorizontalPosition();
+                /*
+                 * If we have a copyright message, split it at semicolons and
+                 * add it as a comment
+                 */
+                if (copyright != null && !copyright.isEmpty()) {
+                    StringBuilder copyrightMessage = new StringBuilder();
+                    String[] copyrightLines = copyright.split(";");
+                    for (String copyrightLine : copyrightLines) {
+                        copyrightMessage.append("# " + copyrightLine + "\n");
+                    }
+                    writer.write(copyrightMessage.toString());
                 }
+                if (GISUtils.isWgs84LonLat(pos.getCoordinateReferenceSystem())) {
+                    writer.write("# Latitude: " + pos.getY() + "\n");
+                    writer.write("# Longitude: " + pos.getX() + "\n");
+                } else {
+                    writer.write("# X: " + pos.getX() + "\n");
+                    writer.write("# Y: " + pos.getY() + "\n");
+                }
+                StringBuilder headerLine = new StringBuilder("Time (UTC),");
+                StringBuilder filename = new StringBuilder();
+                for (String parameterId : parameterIds) {
+                    headerLine.append(varId2Title.get(parameterId) + " ("
+                            + feature.getParameter(parameterId).getUnits() + "),");
+                    filename.append(parameterId + "-");
+                }
+                filename.append("timeseries.csv");
+                httpServletResponse.setHeader("Content-Disposition", "attachment; filename=\""
+                        + filename + "\"");
                 writer.write(headerLine.substring(0, headerLine.length() - 1) + "\n");
                 TimeAxis axis = feature.getDomain();
                 for (int i = 0; i < axis.size(); i++) {
@@ -1937,16 +1987,38 @@ public class WmsServlet extends HttpServlet {
          * Loop over all requested layers
          */
         List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
+        Map<String, Set<String>> datasets2VariableIds = new HashMap<>();
+        /*
+         * We want to store the copyright information to output in the CSV file.
+         * 
+         * CSVs can only be generated for single datasets, and copyright is only
+         * set on a single dataset, therefore we only need to store the first
+         * copyright message
+         */
+        String copyright = null;
+        Map<String, String> varId2Title = new HashMap<>();
         for (String layerName : layerNames) {
             Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
             String variableId = catalogue.getVariableFromId(layerName);
             WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            varId2Title.put(variableId, layerMetadata.getTitle());
             if ("text/csv".equalsIgnoreCase(outputFormat) && !layerMetadata.isDownloadable()) {
                 throw new LayerNotQueryableException("The layer: " + layerName
                         + " cannot be downloaded as CSV");
             }
+            if (!datasets2VariableIds.containsKey(dataset.getId())) {
+                datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
+            }
+            datasets2VariableIds.get(dataset.getId()).add(variableId);
+            if (copyright == null) {
+                copyright = catalogue.getLayerMetadata(layerName).getCopyright();
+            }
+        }
+
+        for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
+            Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
             List<? extends ProfileFeature> extractedProfileFeatures = dataset
-                    .extractProfileFeatures(CollectionUtils.setOf(variableId), plottingParameters);
+                    .extractProfileFeatures(entry.getValue(), plottingParameters);
             profileFeatures.addAll(extractedProfileFeatures);
         }
 
@@ -1965,10 +2037,36 @@ public class WmsServlet extends HttpServlet {
                         httpServletResponse.getOutputStream()));
                 ProfileFeature feature = profileFeatures.get(0);
                 Set<String> parameterIds = feature.getParameterIds();
-                StringBuilder headerLine = new StringBuilder("Z,");
-                for (String parameterId : parameterIds) {
-                    headerLine.append(parameterId + ",");
+                HorizontalPosition pos = feature.getHorizontalPosition();
+                /*
+                 * If we have a copyright message, split it at semicolons and
+                 * add it as a comment
+                 */
+                if (copyright != null && !copyright.isEmpty()) {
+                    StringBuilder copyrightMessage = new StringBuilder();
+                    String[] copyrightLines = copyright.split(";");
+                    for (String copyrightLine : copyrightLines) {
+                        copyrightMessage.append("# " + copyrightLine + "\n");
+                    }
+                    writer.write(copyrightMessage.toString());
                 }
+                if (GISUtils.isWgs84LonLat(pos.getCoordinateReferenceSystem())) {
+                    writer.write("# Latitude: " + pos.getY() + "\n");
+                    writer.write("# Longitude: " + pos.getX() + "\n");
+                } else {
+                    writer.write("# X: " + pos.getX() + "\n");
+                    writer.write("# Y: " + pos.getY() + "\n");
+                }
+                StringBuilder headerLine = new StringBuilder("Z,");
+                StringBuilder filename = new StringBuilder();
+                for (String parameterId : parameterIds) {
+                    headerLine.append(varId2Title.get(parameterId) + " ("
+                            + feature.getParameter(parameterId).getUnits() + "),");
+                    filename.append(parameterId + "-");
+                }
+                filename.append("profile.csv");
+                httpServletResponse.setHeader("Content-Disposition", "attachment; filename=\""
+                        + filename + "\"");
                 writer.write(headerLine.substring(0, headerLine.length() - 1) + "\n");
                 VerticalAxis axis = feature.getDomain();
                 for (int i = 0; i < axis.size(); i++) {
