@@ -1749,7 +1749,7 @@ public class WmsServlet extends HttpServlet {
         }
 
         httpServletResponse.setContentType(outputFormat);
-        
+
         if ("text/csv".equalsIgnoreCase(outputFormat)) {
             if (timeseriesFeatures.size() > 1) {
                 throw new IncorrectDomainException("CSV export is only supported for gridded data");
@@ -1779,10 +1779,11 @@ public class WmsServlet extends HttpServlet {
                     writer.write("# X: " + pos.getX() + "\n");
                     writer.write("# Y: " + pos.getY() + "\n");
                 }
-                StringBuilder headerLine = new StringBuilder("Time,");
+                StringBuilder headerLine = new StringBuilder("Time (UTC),");
                 StringBuilder filename = new StringBuilder();
                 for (String parameterId : parameterIds) {
-                    headerLine.append(varId2Title.get(parameterId)+",");
+                    headerLine.append(varId2Title.get(parameterId) + " ("
+                            + feature.getParameter(parameterId).getUnits() + "),");
                     filename.append(parameterId + "-");
                 }
                 filename.append("timeseries.csv");
@@ -2014,7 +2015,6 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
             Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
             List<? extends ProfileFeature> extractedProfileFeatures = dataset
@@ -2060,7 +2060,8 @@ public class WmsServlet extends HttpServlet {
                 StringBuilder headerLine = new StringBuilder("Z,");
                 StringBuilder filename = new StringBuilder();
                 for (String parameterId : parameterIds) {
-                    headerLine.append(varId2Title.get(parameterId)+",");
+                    headerLine.append(varId2Title.get(parameterId) + " ("
+                            + feature.getParameter(parameterId).getUnits() + "),");
                     filename.append(parameterId + "-");
                 }
                 filename.append("profile.csv");
