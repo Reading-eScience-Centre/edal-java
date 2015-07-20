@@ -46,16 +46,18 @@ import org.apache.velocity.runtime.RuntimeConstants;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
 import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue.StyleDef;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
-import uk.ac.rdg.resc.edal.wms.util.StyleDef;
+import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 public class GetMapStyleParams {
 
@@ -258,8 +260,8 @@ public class GetMapStyleParams {
         }
 
         String layerName = layers[0];
-        WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
-        if (layerMetadata.isDisabled()) {
+        EnhancedVariableMetadata layerMetadata = WmsUtils.getLayerMetadata(layerName, catalogue);
+        if (catalogue.isDisabled(layerName)) {
             throw new EdalLayerNotFoundException("The layer " + layerName
                     + " is not enabled on this server");
         }
@@ -274,8 +276,7 @@ public class GetMapStyleParams {
 
         String plotStyleName = styleParts[0];
 
-        List<StyleDef> supportedStyles = catalogue.getSupportedStyles(catalogue
-                .getVariableMetadataFromId(layerName));
+        List<StyleDef> supportedStyles = WmsUtils.getSupportedStylesForLayer(layerName, catalogue);
         if (supportedStyles.size() == 0) {
             /*
              * We have no supported styles for this layer
@@ -440,7 +441,7 @@ public class GetMapStyleParams {
     }
 
     public static MapImage getDefaultMapImage(WmsCatalogue catalogue, String layerName,
-            String plotStyleName, WmsLayerMetadata defaults) throws EdalException {
+            String plotStyleName, EnhancedVariableMetadata defaults) throws EdalException {
         return getMapImageFromStyleNameAndParams(catalogue, layerName, plotStyleName,
                 defaults.getPalette(), defaults.getColorScaleRange(), defaults.isLogScaling(),
                 defaults.getNumColorBands(), new Color(0, true), Color.black, Color.black);
@@ -464,9 +465,9 @@ public class GetMapStyleParams {
         VelocityContext context = new VelocityContext();
         context.put("paletteName", paletteName);
         if (colourScaleRange == null) {
-            colourScaleRange = GraphicsUtils.estimateValueRange(
-                    catalogue.getDatasetFromLayerName(layerName),
-                    catalogue.getVariableFromId(layerName));
+            colourScaleRange = GraphicsUtils.estimateValueRange(WmsUtils.getDatasetFromLayerName(
+                    layerName, catalogue), catalogue.getLayerNameMapper()
+                    .getVariableIdFromLayerName(layerName));
         }
         context.put("scaleMin", colourScaleRange.getLow());
         context.put("scaleMax", colourScaleRange.getHigh());
@@ -481,8 +482,8 @@ public class GetMapStyleParams {
          * 
          * TODO: handle multiple/derived layers
          */
-        Map<String, String> layerKeysToLayerNames = catalogue.getStyleTemplateLayerNames(layerName,
-                plotStyleName);
+        Map<String, String> layerKeysToLayerNames = WmsUtils.getStyleTemplateLayerNames(layerName,
+                plotStyleName, catalogue);
         for (Entry<String, String> keyToLayerName : layerKeysToLayerNames.entrySet()) {
             context.put(keyToLayerName.getKey(), keyToLayerName.getValue());
         }

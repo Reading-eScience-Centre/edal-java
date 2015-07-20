@@ -36,6 +36,7 @@ import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.wms.exceptions.InvalidPointException;
+import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 public class GetFeatureInfoParameters extends GetMapParameters {
 
@@ -100,7 +101,7 @@ public class GetFeatureInfoParameters extends GetMapParameters {
 
         continuousDomainPresent = false;
         for (String layerName : layers) {
-            if (!(catalogue.getDatasetFromLayerName(layerName) instanceof GriddedDataset)) {
+            if (!(WmsUtils.getDatasetFromLayerName(layerName, catalogue) instanceof GriddedDataset)) {
                 continuousDomainPresent = true;
                 break;
             }

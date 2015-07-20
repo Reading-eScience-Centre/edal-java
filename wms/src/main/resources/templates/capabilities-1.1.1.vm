@@ -90,10 +90,10 @@
 ##
 #macro(layer $dataset $variableMetadata $verboseTimes $children)
 #set($parent = ($children && $children.size() > 0))
-#set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
+#set($supportedStyles = $catalogue.styleCatalogue.getSupportedStyles($variableMetadata))
 #set($plottable = ($supportedStyles && $supportedStyles.size() > 0))
 #set($layerName = $catalogue.getLayerName($dataset.id, $variableMetadata.id))
-#set($layerMetadata = $catalogue.getLayerMetadata($layerName))
+#set($layerMetadata = $catalogue.getLayerMetadata($variableMetadata))
 #if(!$layerMetadata.disabled)
     <Layer #if(!$parent && $layerMetadata.queryable)queryable="1"#end>
 #if($plottable && $layerName && !$parent)
