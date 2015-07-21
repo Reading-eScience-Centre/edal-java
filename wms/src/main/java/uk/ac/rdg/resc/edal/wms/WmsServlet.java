@@ -530,6 +530,10 @@ public class WmsServlet extends HttpServlet {
 
     private void getFeatureInfo(RequestParams params, HttpServletResponse httpServletResponse)
             throws EdalException {
+        if (!catalogue.allowsGetFeatureInfo()) {
+            throw new LayerNotQueryableException(
+                    "This server does not allow GetFeatureInfo requests");
+        }
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
                 catalogue);
         PlottingDomainParams plottingParameters = featureInfoParameters
@@ -977,7 +981,8 @@ public class WmsServlet extends HttpServlet {
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
 
-        layerDetails.put("queryable", layerMetadata.isQueryable());
+        layerDetails.put("queryable",
+                catalogue.allowsGetFeatureInfo() && layerMetadata.isQueryable());
         layerDetails.put("downloadable", layerMetadata.isDownloadable());
 
         if (verticalDomain != null) {

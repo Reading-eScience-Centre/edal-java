@@ -750,6 +750,11 @@ public abstract class WmsCatalogue implements FeatureCatalogue {
     public abstract boolean allowsGlobalCapabilities();
 
     /**
+     * @return <code>true</code> if this server allows features to be queried
+     */
+    public abstract boolean allowsGetFeatureInfo();
+
+    /**
      * @return The last time that data on this server was updated
      */
     public abstract DateTime getServerLastUpdate();
