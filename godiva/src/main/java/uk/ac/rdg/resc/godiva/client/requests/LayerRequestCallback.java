@@ -114,6 +114,13 @@ public abstract class LayerRequestCallback implements RequestCallback {
             } else {
                 if (scaleRangeArr.get(0).isNumber() != null) {
                     layerDetails.setScaleRange(scaleRangeArr.get(0) + "," + scaleRangeArr.get(1));
+                } else if (scaleRangeArr.get(0).isNull() != null
+                        || scaleRangeArr.get(1).isNull() != null) {
+                    /*
+                     * Slightly weird syntax. If isNull() returns an object,
+                     * then it *is* null, otherwise it's not...
+                     */
+                    layerDetails.setScaleRange(null);
                 } else {
                     /*
                      * Backward-compatibility for servers where the scale range

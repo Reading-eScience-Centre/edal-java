@@ -2,6 +2,8 @@
 <module rename-to='godiva'>
 	<!-- Inherit the core Web Toolkit stuff. -->
 	<inherits name='com.google.gwt.user.User' />
+	<inherits name='com.google.gwt.logging.Logging' />
+    <inherits name="com.google.gwt.resources.Resources" />
 
 	<inherits name='com.google.gwt.user.theme.chrome.Chrome' />
 
@@ -11,9 +13,6 @@
 	<inherits name="com.google.gwt.json.JSON" />
 	<inherits name='com.google.gwt.xml.XML' />
 
-	<script src="js/proj4js.js" />
-	<script src="js/defs/projections.js" />
-	<script src="js/OpenLayers-2.11.js" />
 	<stylesheet src="css/Godiva.css"/>
 
 	<!-- Specify the paths for translatable code -->

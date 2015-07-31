@@ -296,6 +296,12 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             wmsPath = Window.Location.getParameter("DATASET");
         }
         if (wmsPath == null) {
+            wmsPath = Window.Location.getParameter("server");
+        }
+        if (wmsPath == null) {
+            wmsPath = Window.Location.getParameter("SERVER");
+        }
+        if (wmsPath == null) {
             /*
              * This is where we define the fact that we are working with a
              * single local server
@@ -328,7 +334,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
                     menuLoaded(menuTree);
                 } catch (Exception e) {
-                    invalidJson(e, response.getText(), getMenuRequest.getUrl());
+                    invalidJson(e, response.getText(), getMenuRequest.getUrl(), true);
                 } finally {
                     setLoading(false);
                 }
