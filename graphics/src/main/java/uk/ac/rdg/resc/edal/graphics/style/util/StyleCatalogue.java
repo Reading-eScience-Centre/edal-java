@@ -39,31 +39,37 @@ import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 /**
+ * A catalogue of supported styles for plotting. This allows the definition of
+ * different plotting styles as templates. A style template is some textual
+ * definition of a style containing keywords for optional elements. For example,
+ * {@link SldTemplateStyleCatalogue} provides an implmentation of a
+ * {@link StyleCatalogue} based on XML SLD templates with keywords for the
+ * palette, scale range etc.
+ * 
  * @author Guy Griffiths
  */
 public interface StyleCatalogue {
+    /**
+     * Gets the supported styles for a given variable
+     * 
+     * @param variableMetadata
+     *            The {@link VariableMetadata} of the variable to get styles for
+     * @return A {@link List} of {@link StyleDef}s defining the supported styles
+     *         for this variable
+     */
     public List<StyleDef> getSupportedStyles(VariableMetadata variableMetadata);
 
     /**
-     * Returns a {@link Map} of keys used in XML templates to the specific
-     * {@link VariableMetadata} objects which they represent. Specifically this
-     * takes the {@link VariableMetadata} of the data layer referred to as
-     * <code>"$layerName"</code> in the XML and finds the necessary child
-     * {@link VariableMetadata} objects which are required for the given style
-     * name.
-     * 
-     * For example, if <code>$layerName</code> refers to a parent layer which
-     * groups vector components, and the style template defines
-     * <code>$layerName-mag</code> and <code>$layerName-dir</code> this method
-     * will return a {@link Map} of <code>$layerName-mag</code> and
-     * <code>$layerName-dir</code> to the {@link VariableMetadata} objects
-     * representing those quantities.
+     * Returns a {@link Map} of keys used in style templates to the specific
+     * {@link VariableMetadata} objects which they represent. Since a style
+     * template may refer to child layers, we need a way to map the keys for
+     * child layers to the concrete variables which they represent
      * 
      * @param namedMetadata
      *            The {@link VariableMetadata} of the main layer being requested
      * @param styleName
      *            The style name to be plotted
-     * @return A {@link Map} of keys used in XML templates to the
+     * @return A {@link Map} of keys used in style templates to the
      *         {@link VariableMetadata} objects they represent.
      */
     public Map<String, VariableMetadata> getStyleTemplateLayerNames(VariableMetadata namedMetadata,
@@ -78,11 +84,11 @@ public interface StyleCatalogue {
      *         <code>null</code> if it doesn't exist
      */
     public StyleDef getStyleDefinitionByName(String styleName);
-    
+
     /**
-     * Definition of a style. This includes properties we need to know to determine
-     * whether a particular variable can support this plotting style, and how to
-     * advertise it.
+     * Definition of a style. This includes properties we need to know to
+     * determine whether a particular variable can support this plotting style,
+     * and how to advertise it.
      * 
      * @author Guy Griffiths
      */
@@ -100,8 +106,8 @@ public interface StyleCatalogue {
          * @param styleName
          *            The name of the style
          * @param requiredChildren
-         *            A {@link Set} of child layers which this style needs (e.g. a
-         *            vector style will need "mag" and "dir" children")
+         *            A {@link Set} of child layers which this style needs (e.g.
+         *            a vector style will need "mag" and "dir" children")
          * @param usesPalette
          *            Whether or not this style uses a named palette
          * @param needsNamedLayer
@@ -109,13 +115,13 @@ public interface StyleCatalogue {
          *            example, a vector style <i>only</i> needs child members to
          *            plot, so this would be <code>false</code>
          * @param roles2FeatureType
-         *            A {@link Collection} where each item in it represents a layer
-         *            in the {@link MapImage} which this style represents.
+         *            A {@link Collection} where each item in it represents a
+         *            layer in the {@link MapImage} which this style represents.
          * 
-         *            Each layer requires a {@link Map} of role name to supported
-         *            feature types, so that we can check whether a variable which
-         *            fulfils a given role can produce one of the supported feature
-         *            types.
+         *            Each layer requires a {@link Map} of role name to
+         *            supported feature types, so that we can check whether a
+         *            variable which fulfils a given role can produce one of the
+         *            supported feature types.
          */
         public StyleDef(String styleName, Collection<String> requiredChildren, boolean usesPalette,
                 boolean needsNamedLayer, String scaledLayerRole,
@@ -152,8 +158,8 @@ public interface StyleCatalogue {
         }
 
         /**
-         * @return Whether this style needs the named layer to be scalar (if not it
-         *         just uses children of the named layer)
+         * @return Whether this style needs the named layer to be scalar (if not
+         *         it just uses children of the named layer)
          */
         public boolean needsNamedLayer() {
             return needsNamedLayer;
@@ -161,8 +167,8 @@ public interface StyleCatalogue {
 
         /**
          * @return The role of the layer which has <code>$scaleMin</code> and
-         *         <code>$scaleMax</code> applied to it. This will return an empty
-         *         string if the parent layer is the scaled one, and
+         *         <code>$scaleMax</code> applied to it. This will return an
+         *         empty string if the parent layer is the scaled one, and
          *         <code>null</code> if no layers use the scale information.
          */
         public String getScaledLayerRole() {
@@ -178,7 +184,8 @@ public interface StyleCatalogue {
          * Tests whether this style is supported by a given variable
          * 
          * @param variableMetadata
-         *            The {@link VariableMetadata} representing the variable to test
+         *            The {@link VariableMetadata} representing the variable to
+         *            test
          * @return <code>true</code> if the style can be supported
          */
         public boolean supportedBy(VariableMetadata variableMetadata) {
@@ -187,17 +194,17 @@ public interface StyleCatalogue {
             }
             if (needsNamedLayer()) {
                 /*
-                 * If this style needs the named layer, but it is not scalar (i.e.
-                 * has no scalar data field which can be read) then it cannot be
-                 * supported.
+                 * If this style needs the named layer, but it is not scalar
+                 * (i.e. has no scalar data field which can be read) then it
+                 * cannot be supported.
                  */
                 if (!variableMetadata.isScalar()) {
                     return false;
                 }
                 /*
-                 * We check that the feature type supported by this VariableMetadata
-                 * is compatible with the layers which the named layer is required
-                 * in.
+                 * We check that the feature type supported by this
+                 * VariableMetadata is compatible with the layers which the
+                 * named layer is required in.
                  */
                 if (!styleSupportsRoleAndFeatureType("", variableMetadata.getDataset()
                         .getMapFeatureType(variableMetadata.getId()))) {
@@ -208,21 +215,22 @@ public interface StyleCatalogue {
             List<String> requiredChildRoles = getRequiredChildRoles();
             if (requiredChildRoles != null && !requiredChildRoles.isEmpty()) {
                 for (String requiredRole : requiredChildRoles) {
-                    VariableMetadata childMetadata = variableMetadata.getChildWithRole(requiredRole);
+                    VariableMetadata childMetadata = variableMetadata
+                            .getChildWithRole(requiredRole);
                     if (childMetadata == null || !childMetadata.isScalar()) {
                         /*
-                         * We required a child layer which is either missing or not
-                         * scalar. This style is not supported by the supplied
-                         * metadata.
+                         * We required a child layer which is either missing or
+                         * not scalar. This style is not supported by the
+                         * supplied metadata.
                          */
                         return false;
                     }
                     try {
-                        if (!styleSupportsRoleAndFeatureType(requiredRole, childMetadata.getDataset()
-                                .getMapFeatureType(childMetadata.getId()))) {
+                        if (!styleSupportsRoleAndFeatureType(requiredRole, childMetadata
+                                .getDataset().getMapFeatureType(childMetadata.getId()))) {
                             /*
-                             * We need the child metadata to support a feature type
-                             * which it does not.
+                             * We need the child metadata to support a feature
+                             * type which it does not.
                              */
                             return false;
                         }
@@ -235,22 +243,24 @@ public interface StyleCatalogue {
         }
 
         /**
-         * This method checks to see whether a particular combination of role and
-         * feature type are supported by this style
+         * This method checks to see whether a particular combination of role
+         * and feature type are supported by this style
          * 
          * @param role
          *            The name of the role to test ("" or <code>null</code> for
          *            parent layer)
          * @param featureType
-         *            The {@link Class} of the corresponding feature type supported
-         *            by this role
-         * @return <code>true</code> if the given role/feature type are supported
+         *            The {@link Class} of the corresponding feature type
+         *            supported by this role
+         * @return <code>true</code> if the given role/feature type are
+         *         supported
          */
         private boolean styleSupportsRoleAndFeatureType(String role,
                 Class<? extends Feature<?>> featureType) {
 
             for (Map<String, Collection<Class<? extends Feature<?>>>> role2FeatureTypes : roles2FeatureType) {
-                Collection<Class<? extends Feature<?>>> supportedFeatures = role2FeatureTypes.get(role);
+                Collection<Class<? extends Feature<?>>> supportedFeatures = role2FeatureTypes
+                        .get(role);
                 if (supportedFeatures != null) {
                     /*
                      * This role is required in the current image layer.
@@ -262,9 +272,9 @@ public interface StyleCatalogue {
                     for (Class<? extends Feature<?>> clazz : supportedFeatures) {
                         if (clazz.isAssignableFrom(featureType)) {
                             /*
-                             * We have found that the feature type associated with
-                             * the given role is compatible with one of the feature
-                             * types supported by the layer
+                             * We have found that the feature type associated
+                             * with the given role is compatible with one of the
+                             * feature types supported by the layer
                              */
                             supportsFeatureType = true;
                             break;
@@ -272,9 +282,9 @@ public interface StyleCatalogue {
                     }
 
                     /*
-                     * We have checked all possible supported feature types. If none
-                     * are supported, this role has failed in the current image
-                     * layer. This is enough to mark it as a failure.
+                     * We have checked all possible supported feature types. If
+                     * none are supported, this role has failed in the current
+                     * image layer. This is enough to mark it as a failure.
                      * 
                      * To mark it as a success, we need to continue checking all
                      * layers in the image.

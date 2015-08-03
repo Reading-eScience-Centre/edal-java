@@ -199,6 +199,20 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         return supportedStyles;
     }
 
+    /**
+     * {@inheritDoc}<br>
+     * This implementation takes the {@link VariableMetadata} of the data layer
+     * referred to as <code>$layerName</code> in the template and finds the
+     * necessary child {@link VariableMetadata} objects which are required for
+     * the given style name.
+     * 
+     * For example, if <code>$layerName</code> refers to a parent layer which
+     * groups vector components, and the style template defines
+     * <code>$layerName-mag</code> and <code>$layerName-dir</code> this method
+     * will return a {@link Map} of <code>$layerName-mag</code> and
+     * <code>$layerName-dir</code> to the {@link VariableMetadata} objects
+     * representing those quantities.
+     */
     @Override
     public Map<String, VariableMetadata> getStyleTemplateLayerNames(VariableMetadata namedMetadata,
             String styleName) {

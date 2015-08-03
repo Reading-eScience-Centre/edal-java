@@ -479,8 +479,6 @@ public class GetMapStyleParams {
 
         /*
          * Now deal with the layer names
-         * 
-         * TODO: handle multiple/derived layers
          */
         Map<String, String> layerKeysToLayerNames = WmsUtils.getStyleTemplateLayerNames(layerName,
                 plotStyleName, catalogue);
