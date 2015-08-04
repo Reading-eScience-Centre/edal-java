@@ -1,0 +1,23 @@
+Clicked:
+    Longitude: $position.x
+    Latitude:  $position.y
+    
+#foreach( $info in $featureInfo )
+#if( $info.layerName )        
+Layer: $info.layerName
+#end        
+#if( $info.featureId )
+ID:    $info.featureId
+#end
+#if( $info.time )
+Time:  $info.time
+#end
+#if( !$info.value )
+No value
+#else
+Value: $info.value
+#end
+#foreach( $property in $info.featureProperties.entrySet() )
+$property.key: $property.value
+#end
+#end

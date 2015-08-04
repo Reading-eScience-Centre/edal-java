@@ -157,7 +157,7 @@ public class WmsServlet extends HttpServlet {
     public static final int AXIS_RESOLUTION = 500;
     private static final long serialVersionUID = 1L;
     private static final String FEATURE_INFO_XML_FORMAT = "text/xml";
-    private static final String FEATURE_INFO_PNG_FORMAT = "image/png";
+    private static final String FEATURE_INFO_PLAIN_FORMAT = "text/plain";
     private static final String[] SUPPORTED_CRS_CODES = new String[] { "EPSG:4326", "CRS:84",
             "EPSG:41001", // Mercator
             "EPSG:27700", // British National Grid
@@ -506,7 +506,7 @@ public class WmsServlet extends HttpServlet {
         context.put("catalogue", catalogue);
         context.put("datasets", datasets);
         context.put("supportedImageFormats", ImageFormat.getSupportedMimeTypes());
-        context.put("supportedFeatureInfoFormats", new String[] { FEATURE_INFO_PNG_FORMAT,
+        context.put("supportedFeatureInfoFormats", new String[] { FEATURE_INFO_PLAIN_FORMAT,
                 FEATURE_INFO_XML_FORMAT });
         context.put("supportedCrsCodes", SUPPORTED_CRS_CODES);
         context.put("GISUtils", GISUtils.class);
@@ -536,6 +536,11 @@ public class WmsServlet extends HttpServlet {
         }
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
                 catalogue);
+        if (!FEATURE_INFO_XML_FORMAT.equals(featureInfoParameters.getInfoFormat())
+                && !FEATURE_INFO_PLAIN_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
+            throw new EdalUnsupportedOperationException(
+                    "Currently the supported feature info types are \"text/xml\" and \"text/plain\"");
+        }
         PlottingDomainParams plottingParameters = featureInfoParameters
                 .getPlottingDomainParameters();
         final HorizontalPosition position = featureInfoParameters.getClickedPosition();
@@ -627,7 +632,12 @@ public class WmsServlet extends HttpServlet {
         /*
          * Now render the output XML and send to the output stream
          */
-        Template template = velocityEngine.getTemplate("templates/featureInfo.vm");
+        Template template;
+        if (FEATURE_INFO_XML_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
+            template = velocityEngine.getTemplate("templates/featureInfo-xml.vm");
+        } else {
+            template = velocityEngine.getTemplate("templates/featureInfo-plain.vm");
+        }
         VelocityContext context = new VelocityContext();
         context.put("position", GISUtils.transformPosition(position, DefaultGeographicCRS.WGS84));
         context.put("featureInfo", featureInfos);
@@ -1299,7 +1309,7 @@ public class WmsServlet extends HttpServlet {
          */
         String layerName = params.getString("layerName");
         if (layerName == null) {
-            throw new MetadataException("Must supply a LAYERNAME parameter to get layer details");
+            throw new MetadataException("Must supply a LAYERNAME parameter to get time steps");
         }
 
         Dataset dataset;
@@ -1944,7 +1954,7 @@ public class WmsServlet extends HttpServlet {
             }
             for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
                 PlottingDomainParams plottingParams = new PlottingDomainParams(1, 1, null, null,
-                        null, pos, null, time);
+                        /*Extents.newExtent(time, time)*/null, pos, null, time);
                 List<? extends ProfileFeature> features = gridDataset.extractProfileFeatures(
                         CollectionUtils.setOf(varId), plottingParams);
                 profileFeatures.addAll(features);

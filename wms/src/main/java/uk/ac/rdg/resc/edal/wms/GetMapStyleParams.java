@@ -151,7 +151,7 @@ public class GetMapStyleParams {
 
         this.transparent = params.getBoolean("transparent", false);
 
-        String bgcStr = params.getString("bgcolor", "0x00000000");
+        String bgcStr = params.getString("bgcolor", "0xffffff");
         backgroundColour = GraphicsUtils.parseColour(bgcStr);
 
         String bmcStr = params.getString("belowmincolor");

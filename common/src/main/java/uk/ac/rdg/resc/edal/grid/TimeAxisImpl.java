@@ -56,7 +56,7 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implemen
     protected DateTime extendFirstValue(DateTime firstVal, DateTime nextVal) {
         long tVal = (long) (firstVal.getMillis() - 0.5 * (nextVal.getMillis() - firstVal
                 .getMillis()));
-        return new DateTime(tVal);
+        return new DateTime(tVal, chronology);
     }
 
     @Override
@@ -73,7 +73,7 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implemen
 
     @Override
     protected DateTime getMidpoint(DateTime pos1, DateTime pos2) {
-        return new DateTime((long) (0.5 * (pos1.getMillis() + pos2.getMillis())));
+        return new DateTime((long) (0.5 * (pos1.getMillis() + pos2.getMillis())), chronology);
     }
 
     @Override
