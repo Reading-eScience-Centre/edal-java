@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.graphics.style.util;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
@@ -87,7 +88,7 @@ public class ColourPalette {
         loadedColourSets.put(DEFAULT_PALETTE_NAME, DEFAULT_COLOURS);
         Color[] invColourSet = (Color[]) ArrayUtils.clone(DEFAULT_COLOURS);
         ArrayUtils.reverse(invColourSet);
-        loadedColourSets.put(DEFAULT_PALETTE_NAME+INVERSE_SUFFIX, invColourSet);
+        loadedColourSets.put(DEFAULT_PALETTE_NAME + INVERSE_SUFFIX, invColourSet);
 
         try {
             String[] paletteFileNames = getResourceListing(ColourPalette.class, "palettes/");
@@ -96,23 +97,10 @@ public class ColourPalette {
                     try {
                         String paletteName = paletteFileName.substring(0,
                                 paletteFileName.lastIndexOf("."));
-                        StringBuilder paletteString = new StringBuilder();
                         BufferedReader reader = new BufferedReader(new InputStreamReader(
                                 ColourPalette.class.getResource("/palettes/" + paletteFileName)
                                         .openStream()));
-                        String line = null;
-                        while ((line = reader.readLine()) != null) {
-                            if (!line.startsWith("%")) {
-                                paletteString.append(line);
-                                paletteString.append(",");
-                            }
-                        }
-                        paletteString.deleteCharAt(paletteString.length() - 1);
-                        Color[] colourSet = colourSetFromString(paletteString.toString());
-                        loadedColourSets.put(paletteName, colourSet);
-                        invColourSet = (Color[]) ArrayUtils.clone(colourSet);
-                        ArrayUtils.reverse(invColourSet);
-                        loadedColourSets.put(paletteName+INVERSE_SUFFIX, invColourSet);
+                        addPaletteFile(paletteName, reader);
                     } catch (IOException e) {
                         /*
                          * If we can't add this palette, don't add it
@@ -126,6 +114,44 @@ public class ColourPalette {
              * directory
              */
         }
+    }
+
+    public static void addPaletteDirectory(File paletteDir) {
+        if (paletteDir.isDirectory()) {
+            for (String paletteFileName : paletteDir.list()) {
+                if (paletteFileName.endsWith(".pal")) {
+                    try {
+                        String paletteName = paletteFileName.substring(0,
+                                paletteFileName.lastIndexOf("."));
+                        BufferedReader reader = new BufferedReader(new FileReader(new File(
+                                paletteDir.getAbsolutePath() + "/" + paletteFileName)));
+                        addPaletteFile(paletteName, reader);
+                    } catch (IOException e) {
+                        /*
+                         * If we can't add this palette, don't add it
+                         */
+                    }
+                }
+            }
+        }
+    }
+
+    private static void addPaletteFile(String paletteName, BufferedReader reader)
+            throws IOException {
+        StringBuilder paletteString = new StringBuilder();
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            if (!line.startsWith("%")) {
+                paletteString.append(line);
+                paletteString.append(",");
+            }
+        }
+        paletteString.deleteCharAt(paletteString.length() - 1);
+        Color[] colourSet = colourSetFromString(paletteString.toString());
+        loadedColourSets.put(paletteName, colourSet);
+        Color[] invColourSet = (Color[]) ArrayUtils.clone(colourSet);
+        ArrayUtils.reverse(invColourSet);
+        loadedColourSets.put(paletteName + INVERSE_SUFFIX, invColourSet);
     }
 
     private final Color[] colours;
@@ -317,20 +343,25 @@ public class ColourPalette {
     private static String[] getResourceListing(Class clazz, String path) throws URISyntaxException,
             IOException {
         URL dirURL = clazz.getClassLoader().getResource(path);
+        /*
+         * GG Modification:
+         * 
+         * We want to return both file path entries *AND* those in a JAR
+         */
+        String[] fileList = new String[0];
         if (dirURL != null && dirURL.getProtocol().equals("file")) {
             /* A file path: easy enough */
-            return new File(dirURL.toURI()).list();
+            fileList = new File(dirURL.toURI()).list();
         }
 
-        if (dirURL == null) {
-            /*
-             * In case of a jar file, we can't actually find a directory. Have
-             * to assume the same jar as clazz.
-             */
-            String me = clazz.getName().replace(".", "/") + ".class";
-            dirURL = clazz.getClassLoader().getResource(me);
-        }
+        /*
+         * In case of a jar file, we can't actually find a directory. Have to
+         * assume the same jar as clazz.
+         */
+        String me = clazz.getName().replace(".", "/") + ".class";
+        dirURL = clazz.getClassLoader().getResource(me);
 
+        String[] jarList = new String[0];
         if (dirURL.getProtocol().equals("jar")) {
             /* A JAR path */
             /* strip out only the JAR file */
@@ -357,9 +388,17 @@ public class ColourPalette {
                 }
             }
             jar.close();
-            return result.toArray(new String[result.size()]);
+            jarList = result.toArray(new String[result.size()]);
         }
 
-        throw new UnsupportedOperationException("Cannot list files for URL " + dirURL);
+        String[] retList = new String[fileList.length + jarList.length];
+        int rlCount = 0;
+        for (String fileEntry : fileList) {
+            retList[rlCount++] = fileEntry;
+        }
+        for (String jarEntry : jarList) {
+            retList[rlCount++] = jarEntry;
+        }
+        return retList;
     }
 }

@@ -17,7 +17,7 @@ The standalone version of ncWMS requires no installation.  It can be run from th
 
 ncWMS is a Java servlet which runs on a servlet container such as Tomcat, JBoss, or Glassfish.  Installation is servlet-container dependent, but there are no ncWMS-specific procedures for installation.
 
-Once ncWMS is up-and-running, on first launch it will create a configuration file and logging directory.  By default this is located in a directory named `.ncWMS-edal` in the home directory of the user running the servlet container.  To change the location of the server configuration, stop the servlet container, and edit the file `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  This configuration file contains a single property: `configDir=$HOME/.ncWMS-edal`.  Change this to the desired directory and restart the servlet container.
+Once ncWMS is up-and-running, on first launch it will create a configuration file and logging directory.  By default this is located in a directory named `.ncWMS-edal` in the home directory of the user running the servlet container.  To change the location of the server configuration, stop the servlet container, and edit the file `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  This configuration file may contain the property: `configDir=$HOME/.ncWMS-edal`.  Change/add this to reflect the desired directory and restart the servlet container.
 
 ### Security configuration
 
@@ -265,6 +265,14 @@ Development
 -----------
 
 ### Adding new colour palettes
+
+To add new colour palettes to ncWMS, you must create palette files.  These are text files with the extension ".pal".  The name of the file will be the name of the palette.  This files must contain one line for each colour in the palette.  Intermediate colours will be interpolated.  A colour is either of the form `#RRGGBB` or `#AARRGGBB`.  Where values are in hexadecimal notation.
+
+If the resulting palette files are placed in a directory named `$WEBAPP_DIR/WEB-INF/classes/palettes` then they will be picked up automatically (after a servlet restart) but may be deleted upon webapp redeployment.
+
+A better solution is to place the palette files in a directory of your choice and modify `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  The property named `paletteDir` should point at the palette directory, and all palettes will become available after a servlet restart.
+
+Note that once a palette file has been defined this will add 2 available palettes - the normal one you have defined along with its inverse.
 
 ### Defining new style templates
 
