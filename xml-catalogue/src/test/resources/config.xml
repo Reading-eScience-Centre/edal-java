@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- This is a full ncWMS config, not all of which is used in the XML catalogue -->
+<!-- This means that we can test that the XML catalogue works properly even with excess tags -->
+<config>
+    <datasets>
+        <dataset id="en3" title="EN3" location="/home/guy/Data/EN3/*.nc" queryable="true" downloadable="false" dataReaderClass="uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory" copyrightStatement="" moreInfo="" disabled="false" updateInterval="-1">
+            <variables>
+                <variable id="POTM_CORRECTED" title="POTM_CORRECTED" description="The potential temperature, in degrees celcius, of the sea water" colorScaleRange="-3.7513561 34.77848" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="PSAL_CORRECTED" title="PSAL_CORRECTED" description="The measured salinity, in practical salinity units (psu) of the sea water " colorScaleRange="-2.00954 42.20034" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+            </variables>
+        </dataset>
+        <dataset id="foam" title="FOAM one degree" location="/home/guy/Data/FOAM_ONE/FOAM_one.ncml" queryable="false" downloadable="false" dataReaderClass="" copyrightStatement="" moreInfo="" disabled="false" updateInterval="-1">
+            <variables>
+                <variable id="U" title="U" description="u-component of current" colorScaleRange="-1.5424213 1.4116802" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="U:V-mag" title="U:V-mag" description="Magnitude of components: u-component of current and v-component of current" colorScaleRange="-0.08465992 1.7869734" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="V" title="V" description="v-component of current" colorScaleRange="-1.266621 1.2384571" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="TMP" title="TMP" description="temperature" colorScaleRange="269.5628 305.5534" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="SALTY" title="SALTY" description="salinity" colorScaleRange="10.638666 41.438667" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="M" title="M" description="Mixed layer depth" colorScaleRange="-119.20529 2562.8699" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="ICETK" title="ICETK" description="ice thickness" colorScaleRange="-0.4374077 9.1875925" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="U:V-dir" title="U:V-dir" description="Direction of components: u-component of current and v-component of current" colorScaleRange="-197.43433 197.96367" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="ICEC" title="ICEC" description="Ice concentration (ice=1;no ice=0)" colorScaleRange="-0.049208093 1.0336044" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+                <variable id="U:V-group" title="U:V-group" description="Vector fields for sea_water_velocity" colorScaleRange="0.0 100.0" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250"/>
+            </variables>
+        </dataset>
+        <dataset id="cci" title="CCI Test" location="/home/guy/Data/cci-sst/2010/**/**/*.nc" queryable="true" downloadable="true" dataReaderClass="" copyrightStatement="SST is the monthly average value over an area ~25 km x ~25 km for the month starting at the indicated time. SST_SD is the standard deviation of the SST values that went into the monthly SST. ;These data are freely provided by the Sea Surface Temperature project of the European Space Agency Climate Change Initiative for any purpose under a Creative Commons Licence by Attribution.;Any published use of this data should cite doi: 10.1002/gdj3.20.;For access to the full dataset refer to: http://catalogue.ceda.ac.uk/uuid/1dc189bbf94209b48ed446c0e9a078af." moreInfo="" disabled="false" updateInterval="-1">
+            <variables>
+                <variable id="analysis_error" title="analysis_error" description="estimated error standard deviation of analysed_sst" colorScaleRange="-0.041499995 6.5915" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250" disabled="false"/>
+                <variable id="sea_ice_fraction" title="sea_ice_fraction" description="sea ice area fraction" colorScaleRange="-0.05 1.05" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250" disabled="false"/>
+                <variable id="mask" title="mask" description="sea/land/lake/ice field composite mask" colorScaleRange="0.6 9.4" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250" disabled="false"/>
+                <variable id="sea_ice_fraction_error" title="sea_ice_fraction_error" description="sea ice area fraction error estimate" colorScaleRange="0.0 100.0" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250" disabled="false"/>
+                <variable id="analysed_sst" title="SST!" description="analysed sea surface temperature" colorScaleRange="269.4935 305.9365" palette="default" belowMinColor="#FF000000" aboveMaxColor="#FF000000" noDataColor="transparent" scaling="linear" numColorBands="250" disabled="false"/>
+            </variables>
+        </dataset>
+    </datasets>
+    <dynamicServices>
+        <dynamicService alias="local" servicePath="/home/guy/Data/cci-ssl" datasetIdMatch=".*ESACCI-SEALEVEL-L4.*" dataReaderClass="" copyrightStatement="" moreInfoUrl="" disabled="false" queryable="true" downloadable="false"/>
+        <dynamicService alias="localsst" servicePath="/home/guy/Data/cci-sst" datasetIdMatch=".*" dataReaderClass="" copyrightStatement="" moreInfoUrl="" disabled="false" queryable="true" downloadable="false"/>
+    </dynamicServices>
+    <contact>
+        <name>Guy Griffiths</name>
+        <organization>University of Reading</organization>
+        <telephone>0118 999 9999</telephone>
+        <email>guy.griffiths@rdg.ac.uk</email>
+    </contact>
+    <server>
+        <title>ncWMS Server</title>
+        <allowFeatureInfo>true</allowFeatureInfo>
+        <maxImageWidth>4096</maxImageWidth>
+        <maxImageHeight>2048</maxImageHeight>
+        <abstract></abstract>
+        <keywords></keywords>
+        <url></url>
+        <allowglobalcapabilities>true</allowglobalcapabilities>
+    </server>
+    <cache enabled="true">
+        <inMemorySizeMB>256</inMemorySizeMB>
+        <elementLifetimeMinutes>0.0</elementLifetimeMinutes>
+    </cache>
+</config>

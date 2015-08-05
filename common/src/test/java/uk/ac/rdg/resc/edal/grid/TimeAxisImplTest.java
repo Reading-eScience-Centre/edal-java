@@ -100,24 +100,15 @@ public class TimeAxisImplTest {
     public void testGetMethods() {
         assertEquals(chronology, tAxis.getChronology());
         Extent<DateTime> dateExtent = tAxis.getCoordinateExtent();
-        /*
-         * the date value start from the first date value minus half of the date
-         * step, which is 12 hours
-         */
-        DateTime from = start.minusHours(12);
-        /*
-         * the date value end after the last date value plus half of the date
-         * step, which is 12 hours
-         */
-        DateTime to = start.plusDays(numberOfDate).plusHours(12);
-        Extent<DateTime> expectedDateExtent = Extents.newExtent(from, to);
+        Extent<DateTime> expectedDateExtent = Extents.newExtent(start, start.plusDays(numberOfDate));
         assertEquals(expectedDateExtent, dateExtent);
 
         Array<Extent<DateTime>> dates = tAxis.getDomainObjects();
         int dateCounter = 0;
         for (Extent<DateTime> tExtent : dates) {
-            Extent<DateTime> expectedExtent = Extents.newExtent(from.plusDays(dateCounter),
-                    from.plusDays(++dateCounter));
+            Extent<DateTime> expectedExtent = Extents.newExtent(start.plusDays(dateCounter),
+                    start.plusDays(dateCounter));
+            dateCounter++;
             assertEquals(expectedExtent, tExtent);
         }
 
@@ -126,8 +117,7 @@ public class TimeAxisImplTest {
         DateTime fifthDate = tAxis.getCoordinateValue(expectedIndex);
         assertEquals(start.plusDays(expectedIndex), fifthDate);
 
-        Extent<DateTime> expectedFifthDateBound = Extents.newExtent(fifthDate.minusHours(12),
-                fifthDate.plusHours(12));
+        Extent<DateTime> expectedFifthDateBound = Extents.newExtent(fifthDate, fifthDate);
         assertEquals(expectedFifthDateBound, tAxis.getCoordinateBounds(expectedIndex));
         assertEquals(datetimes, tAxis.getCoordinateValues());
         assertEquals(tAxisName, tAxis.getName());
@@ -153,7 +143,7 @@ public class TimeAxisImplTest {
     @Test
     public void testIsAscending() {
         assertTrue(tAxis.isAscending());
-        
+
         ArrayList<DateTime> dts = new ArrayList<>();
         for (int i = 0; i < numberOfDate + 1; i++) {
             dts.add(start.minusDays(i));

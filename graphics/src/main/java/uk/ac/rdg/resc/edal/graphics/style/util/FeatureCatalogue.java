@@ -35,7 +35,20 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
+/**
+ * An interface defining a catalogue which can extract {@link DiscreteFeature}s
+ * based on a {@link String} identifier and a set of
+ * {@link PlottingDomainParams}
+ *
+ * @author Guy Griffiths
+ */
 public interface FeatureCatalogue {
+    /**
+     * Simple class combining a {@link Collection} of {@link DiscreteFeature}s
+     * and the name of the member of interest
+     *
+     * @author Guy Griffiths
+     */
     public class FeaturesAndMemberName {
         private Collection<? extends DiscreteFeature<?, ?>> features;
         private String member;
@@ -62,6 +75,21 @@ public interface FeatureCatalogue {
         }
     }
 
-    public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params)
+    /**
+     * Given a single {@link String} identifier and a set of
+     * {@link PlottingDomainParams}, returns a {@link Collection} of
+     * {@link DiscreteFeature}s
+     * 
+     * @param layerName
+     *            The name of the layer to extract
+     * @param params
+     *            The {@link PlottingDomainParams} describing the domain to be
+     *            plotted
+     * @return A {@link FeaturesAndMemberName} object encapsulating the returned
+     *         {@link DiscreteFeature}s
+     * @throws EdalException
+     *             if there is a problem with feature extraction.
+     */
+    public FeaturesAndMemberName getFeaturesForLayer(String layerName, PlottingDomainParams params)
             throws EdalException;
 }

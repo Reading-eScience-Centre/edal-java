@@ -52,6 +52,7 @@ import java.util.Stack;
 
 import javax.imageio.ImageIO;
 import javax.naming.OperationNotSupportedException;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
@@ -106,6 +107,7 @@ import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.LineString;
 import uk.ac.rdg.resc.edal.graphics.Charting;
+import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
@@ -115,8 +117,10 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue.StyleDef;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -131,11 +135,9 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
-import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.LayerNotQueryableException;
-import uk.ac.rdg.resc.edal.wms.util.StyleDef;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
 /**
@@ -145,7 +147,12 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  * {@link WmsServlet#setCatalogue(WmsCatalogue)}.
  * 
  * If the {@link WmsCatalogue} is not set, behaviour is undefined. It'll fail in
- * all sorts of ways - nothing will work properly.
+ * all sorts of ways - nothing will work properly. However, the
+ * {@link WmsCatalogue} set in {@link WmsServlet#setCatalogue(WmsCatalogue)} is
+ * only directly used in
+ * {@link WmsServlet#dispatchWmsRequest(String, RequestParams, HttpServletRequest, HttpServletResponse, WmsCatalogue)}
+ * , so if it is not set, a subclass can still override that method and inject a
+ * {@link WmsCatalogue} on a per-request basis.
  * 
  * The recommended usage is to either subclass this servlet and set a valid
  * instance of a {@link WmsCatalogue} in the constructor/init method or to use
@@ -170,7 +177,7 @@ public class WmsServlet extends HttpServlet {
             "EPSG:32761" // South Polar stereographic
     };
 
-    private WmsCatalogue catalogue;
+    private WmsCatalogue catalogue = null;
     private final VelocityEngine velocityEngine;
 
     /**
@@ -193,6 +200,24 @@ public class WmsServlet extends HttpServlet {
         velocityEngine.init(props);
     }
 
+    /**
+     * Sets a {@link WmsCatalogue} to be used globally for all requests.
+     * 
+     * If no catalogue is set and this {@link Servlet} is used then it will fail
+     * with a {@link NullPointerException} on the vast majority of calls.
+     * 
+     * Note that this {@link WmsCatalogue} is only used in the
+     * {@link WmsServlet#dispatchWmsRequest(String, RequestParams, HttpServletRequest, HttpServletResponse)}
+     * method, which passes it to all of the worker methods. Thus, a different
+     * {@link WmsCatalogue} can be used for each request if required (for
+     * example to have dataset/variable defined by the URL) by subclassing
+     * {@link WmsServlet} and overriding
+     * {@link WmsServlet#dispatchWmsRequest(String, RequestParams, HttpServletRequest, HttpServletResponse)}
+     * such that it passes a new catalogue to each of those methods
+     * 
+     * @param catalogue
+     *            The {@link WmsCatalogue} to use.
+     */
     public void setCatalogue(WmsCatalogue catalogue) {
         this.catalogue = catalogue;
     }
@@ -217,7 +242,7 @@ public class WmsServlet extends HttpServlet {
              * capabilities document, a map or a FeatureInfo
              */
             String request = params.getMandatoryString("request");
-            dispatchWmsRequest(request, params, httpServletRequest, httpServletResponse);
+            dispatchWmsRequest(request, params, httpServletRequest, httpServletResponse, catalogue);
         } catch (EdalException wmse) {
             boolean v130;
             try {
@@ -252,20 +277,39 @@ public class WmsServlet extends HttpServlet {
              */
             throw ioe;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Problem with GET request", e);
             /* An unexpected (internal) error has occurred */
             throw new IOException(e);
         }
     }
 
+    /**
+     * Sends the HTTP request to the appropriate WMS method
+     * 
+     * @param request
+     *            The URL REQUEST parameter
+     * @param params
+     *            A map of URL parameters, implemented in a case-insensitive way
+     * @param httpServletRequest
+     *            The {@link HttpServletRequest} object from the GET request
+     * @param httpServletResponse
+     *            The {@link HttpServletResponse} object from the GET request
+     * @param catalogue
+     *            The {@link WmsCatalogue} which should be used to serve
+     *            datasets.
+     */
     protected void dispatchWmsRequest(String request, RequestParams params,
-            HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
-            throws Exception {
+            HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
+            WmsCatalogue catalogue) throws Exception {
+        if (catalogue == null) {
+            throw new EdalException(
+                    "No WMS catalogue has been set to discover datasets.  This is likely to be a programming error.");
+        }
         if (request.equals("GetMap")) {
-            getMap(params, httpServletResponse);
+            getMap(params, httpServletResponse, catalogue);
         } else if (request.equals("GetCapabilities")) {
             getCapabilities(params, httpServletResponse, httpServletRequest.getRequestURL()
-                    .toString());
+                    .toString(), catalogue);
         } else if (request.equals("GetFeatureInfo")) {
             /* Look to see if we're requesting data from a remote server */
             String url = params.getString("url");
@@ -276,7 +320,7 @@ public class WmsServlet extends HttpServlet {
                 WmsUtils.proxyRequest(url, httpServletRequest, httpServletResponse);
                 return;
             }
-            getFeatureInfo(params, httpServletResponse);
+            getFeatureInfo(params, httpServletResponse, catalogue);
         }
         /*
          * The REQUESTs below are non-standard
@@ -285,19 +329,19 @@ public class WmsServlet extends HttpServlet {
             /*
              * This is a request for non-standard metadata.
              */
-            getMetadata(params, httpServletResponse);
+            getMetadata(params, httpServletResponse, catalogue);
         } else if (request.equals("GetLegendGraphic")) {
             /*
              * This is a request for an image representing the legend for the
              * map parameters
              */
-            getLegendGraphic(params, httpServletResponse);
+            getLegendGraphic(params, httpServletResponse, catalogue);
         } else if (request.equals("GetTimeseries")) {
-            getTimeseries(params, httpServletResponse);
+            getTimeseries(params, httpServletResponse, catalogue);
         } else if (request.equals("GetTransect")) {
-            getTransect(params, httpServletResponse);
+            getTransect(params, httpServletResponse, catalogue);
         } else if (request.equals("GetVerticalProfile")) {
-            getVerticalProfile(params, httpServletResponse);
+            getVerticalProfile(params, httpServletResponse, catalogue);
             // } else if (request.equals("GetVerticalSection")) {
             // getVerticalSection(params, httpServletResponse);
         } else {
@@ -305,8 +349,8 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getMap(RequestParams params, HttpServletResponse httpServletResponse)
-            throws EdalException {
+    protected void getMap(RequestParams params, HttpServletResponse httpServletResponse,
+            WmsCatalogue catalogue) throws EdalException {
         GetMapParameters getMapParams = new GetMapParameters(params, catalogue);
 
         PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
@@ -400,7 +444,8 @@ public class WmsServlet extends HttpServlet {
                     httpServletResponse.setHeader("Content-Disposition", "inline; filename="
                             + layerName.replaceAll("/", "-") + ".kmz");
                 }
-                WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+                EnhancedVariableMetadata layerMetadata = WmsUtils.getLayerMetadata(layerName,
+                        catalogue);
                 String name = layerMetadata.getTitle();
                 String description = layerMetadata.getDescription();
                 String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters
@@ -424,8 +469,8 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getCapabilities(RequestParams params, HttpServletResponse httpServletResponse,
-            String baseUrl) throws EdalException {
+    protected void getCapabilities(RequestParams params, HttpServletResponse httpServletResponse,
+            String baseUrl, WmsCatalogue catalogue) throws EdalException {
         /*
          * We only advertise text/xml as a GetCapabilities format. The spec says
          * we can return text/xml for unknown formats, so we don't even need to
@@ -452,9 +497,9 @@ public class WmsServlet extends HttpServlet {
              * lastUpdate is created in the server's time zone, meaning that the
              * Chronologies are different.
              */
-            if (updateSequence.isEqual(catalogue.getServerLastUpdate())) {
+            if (updateSequence.isEqual(catalogue.getLastUpdateTime())) {
                 throw new CurrentUpdateSequence(updateSeqStr);
-            } else if (updateSequence.isAfter(catalogue.getServerLastUpdate())) {
+            } else if (updateSequence.isAfter(catalogue.getLastUpdateTime())) {
                 throw new InvalidUpdateSequence(updateSeqStr
                         + " is later than the current server updatesequence value");
             }
@@ -482,7 +527,7 @@ public class WmsServlet extends HttpServlet {
              * system admin has allowed us to create a global Capabilities doc
              * (this can be VERY large)
              */
-            if (catalogue.allowsGlobalCapabilities()) {
+            if (catalogue.getServerInfo().allowsGlobalCapabilities()) {
                 datasets = catalogue.getAllDatasets();
             } else {
                 throw new EdalException("Cannot create a Capabilities document "
@@ -528,9 +573,9 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getFeatureInfo(RequestParams params, HttpServletResponse httpServletResponse)
-            throws EdalException {
-        if (!catalogue.allowsGetFeatureInfo()) {
+    protected void getFeatureInfo(RequestParams params, HttpServletResponse httpServletResponse,
+            WmsCatalogue catalogue) throws EdalException {
+        if (!catalogue.getServerInfo().allowsFeatureInfo()) {
             throw new LayerNotQueryableException(
                     "This server does not allow GetFeatureInfo requests");
         }
@@ -554,17 +599,19 @@ public class WmsServlet extends HttpServlet {
          * Loop over all requested layers
          */
         for (String layerName : layerNames) {
-            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
-            if (layerMetadata.isDisabled()) {
+//            PlotLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            if (catalogue.isDisabled(layerName)) {
                 throw new EdalLayerNotFoundException("The layer " + layerName
                         + " is not enabled on this server");
             }
-            if (!layerMetadata.isQueryable()) {
+            if (!catalogue.isQueryable(layerName)) {
                 throw new LayerNotQueryableException("The layer " + layerName + " is not queryable");
             }
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
-            String variableId = catalogue.getVariableFromId(layerName);
-            VariableMetadata metadata = catalogue.getVariableMetadataFromId(layerName);
+            Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
+            String variableId = catalogue.getLayerNameMapper()
+                    .getVariableIdFromLayerName(layerName);
+            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(layerName,
+                    catalogue);
             Set<VariableMetadata> children = metadata.getChildren();
             /*
              * Extract the map features. Because of the way
@@ -599,8 +646,7 @@ public class WmsServlet extends HttpServlet {
                      * multiple features we will want to use a combination of
                      * feature ID + child variable ID.
                      */
-                    String name = catalogue.getLayerMetadata(
-                            catalogue.getLayerName(dataset.getId(), child.getId())).getTitle();
+                    String name = catalogue.getLayerMetadata(child).getTitle();
                     FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
                             child.getId(), plottingParameters, layerNameToSave, name);
                     if (featurePoint != null) {
@@ -742,25 +788,26 @@ public class WmsServlet extends HttpServlet {
      *            The URL parameters
      * @param httpServletResponse
      *            The response object to write out to
+     * @param catalogue2
      * @throws MetadataException
      *             If there are any issues with returning the metadata
      */
-    protected void getMetadata(RequestParams params, HttpServletResponse httpServletResponse)
-            throws MetadataException {
+    protected void getMetadata(RequestParams params, HttpServletResponse httpServletResponse,
+            WmsCatalogue catalogue) throws MetadataException {
         String item = params.getString("item");
         String json = null;
         if (item == null) {
             throw new MetadataException("Must provide an ITEM parameter");
         } else if (item.equals("menu")) {
-            json = showMenu(params);
+            json = showMenu(params, catalogue);
         } else if (item.equals("layerDetails")) {
-            json = showLayerDetails(params);
+            json = showLayerDetails(params, catalogue);
         } else if (item.equals("timesteps")) {
-            json = showTimesteps(params);
+            json = showTimesteps(params, catalogue);
         } else if (item.equals("minmax")) {
-            json = showMinMax(params);
+            json = showMinMax(params, catalogue);
         } else if (item.equals("animationTimesteps")) {
-            json = showAnimationTimesteps(params);
+            json = showAnimationTimesteps(params, catalogue);
         }
         if (json != null) {
             httpServletResponse.setContentType("application/json");
@@ -775,7 +822,8 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private String showMenu(RequestParams params) throws MetadataException {
+    protected String showMenu(RequestParams params, WmsCatalogue catalogue)
+            throws MetadataException {
         JSONObject menu = new JSONObject();
         menu.put("label", catalogue.getServerInfo().getName());
 
@@ -799,7 +847,7 @@ public class WmsServlet extends HttpServlet {
             Set<VariableMetadata> topLevelVariables = dataset.getTopLevelVariables();
             JSONArray datasetChildren;
             try {
-                datasetChildren = addVariablesToArray(topLevelVariables, datasetId);
+                datasetChildren = addVariablesToArray(topLevelVariables, datasetId, catalogue);
                 String datasetLabel = catalogue.getDatasetTitle(datasetId);
                 JSONObject datasetJson = new JSONObject();
                 datasetJson.put("label", datasetLabel);
@@ -822,14 +870,15 @@ public class WmsServlet extends HttpServlet {
         return menu.toString(4);
     }
 
-    private JSONArray addVariablesToArray(Set<VariableMetadata> variables, String datasetId)
-            throws EdalLayerNotFoundException {
+    protected JSONArray addVariablesToArray(Set<VariableMetadata> variables, String datasetId,
+            WmsCatalogue catalogue) throws EdalLayerNotFoundException {
         JSONArray ret = new JSONArray();
         for (VariableMetadata variable : variables) {
             String id = variable.getId();
-            String layerName = catalogue.getLayerName(datasetId, id);
-            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
-            if (layerMetadata.isDisabled()) {
+            String layerName = catalogue.getLayerNameMapper().getLayerName(datasetId, id);
+            EnhancedVariableMetadata layerMetadata = WmsUtils
+                    .getLayerMetadata(layerName, catalogue);
+            if (catalogue.isDisabled(layerName)) {
                 continue;
             }
 
@@ -840,12 +889,13 @@ public class WmsServlet extends HttpServlet {
             String title = layerMetadata.getTitle();
             child.put("label", title);
 
-            List<StyleDef> supportedStyles = catalogue.getSupportedStyles(variable);
+            List<StyleDef> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
+                    variable);
             child.put("plottable", (supportedStyles != null && supportedStyles.size() > 0));
 
             Set<VariableMetadata> children = variable.getChildren();
             if (children.size() > 0) {
-                JSONArray childrenArray = addVariablesToArray(children, datasetId);
+                JSONArray childrenArray = addVariablesToArray(children, datasetId, catalogue);
                 child.put("children", childrenArray);
             }
 
@@ -854,7 +904,8 @@ public class WmsServlet extends HttpServlet {
         return ret;
     }
 
-    private String showLayerDetails(RequestParams params) throws MetadataException {
+    protected String showLayerDetails(RequestParams params, WmsCatalogue catalogue)
+            throws MetadataException {
         /*
          * Parse the parameters and get access to the variable and layer
          * metadata
@@ -869,16 +920,16 @@ public class WmsServlet extends HttpServlet {
         Dataset dataset;
         String variableId;
         try {
-            dataset = catalogue.getDatasetFromLayerName(layerName);
-            variableId = catalogue.getVariableFromId(layerName);
+            dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
+            variableId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
         }
 
-        WmsLayerMetadata layerMetadata;
+        EnhancedVariableMetadata layerMetadata;
         try {
-            layerMetadata = catalogue.getLayerMetadata(layerName);
-            if (layerMetadata.isDisabled()) {
+            layerMetadata = WmsUtils.getLayerMetadata(layerName, catalogue);
+            if (catalogue.isDisabled(layerName)) {
                 throw new EdalLayerNotFoundException("The layer " + layerName
                         + " is not enabled on this server");
             }
@@ -904,9 +955,16 @@ public class WmsServlet extends HttpServlet {
         BoundingBox boundingBox = GISUtils.constrainBoundingBox(variableMetadata
                 .getHorizontalDomain().getBoundingBox());
         Extent<Float> scaleRange = layerMetadata.getColorScaleRange();
+        if(scaleRange == null) {
+            scaleRange = Extents.emptyExtent();
+        }
         Integer numColorBands = layerMetadata.getNumColorBands();
+        if(numColorBands == null) {
+            numColorBands = 250;
+        }
 
-        List<StyleDef> supportedStyles = catalogue.getSupportedStyles(variableMetadata);
+        List<StyleDef> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
+                variableMetadata);
 
         VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
@@ -958,11 +1016,17 @@ public class WmsServlet extends HttpServlet {
 
         Set<String> supportedPalettes = ColourPalette.getPredefinedPalettes();
         String defaultPalette = layerMetadata.getPalette();
+        if (defaultPalette == null) {
+            defaultPalette = ColourPalette.DEFAULT_PALETTE_NAME;
+        }
         String aboveMaxColour = GraphicsUtils.colourToString(layerMetadata.getAboveMaxColour());
         String belowMinColour = GraphicsUtils.colourToString(layerMetadata.getBelowMinColour());
         String noDataColour = GraphicsUtils.colourToString(layerMetadata.getNoDataColour());
 
         Boolean logScaling = layerMetadata.isLogScaling();
+        if (logScaling == null) {
+            logScaling = false;
+        }
 
         /*
          * Now write the layer details out to a JSON object
@@ -991,9 +1055,8 @@ public class WmsServlet extends HttpServlet {
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
 
-        layerDetails.put("queryable",
-                catalogue.allowsGetFeatureInfo() && layerMetadata.isQueryable());
-        layerDetails.put("downloadable", layerMetadata.isDownloadable());
+        layerDetails.put("queryable", catalogue.getServerInfo().allowsFeatureInfo() && catalogue.isQueryable(layerName));
+        layerDetails.put("downloadable", catalogue.isDownloadable(layerName));
 
         if (verticalDomain != null) {
             layerDetails.put("continuousZ", !discreteZ);
@@ -1286,8 +1349,12 @@ public class WmsServlet extends HttpServlet {
         layerDetails.put("supportsTransects", transects);
 
         layerDetails.put("nearestTimeIso", TimeUtils.dateTimeToISO8601(nearestTime));
-        layerDetails.put("moreInfo", moreInfo);
-        layerDetails.put("copyright", copyright);
+        if (moreInfo != null) {
+            layerDetails.put("moreInfo", moreInfo);
+        }
+        if (copyright != null) {
+            layerDetails.put("copyright", copyright);
+        }
         JSONArray supportedPalettesJson = new JSONArray();
         for (String supportedPalette : supportedPalettes) {
             supportedPalettesJson.add(supportedPalette);
@@ -1302,7 +1369,8 @@ public class WmsServlet extends HttpServlet {
         return layerDetails.toString(4);
     }
 
-    private String showTimesteps(RequestParams params) throws MetadataException {
+    protected String showTimesteps(RequestParams params, WmsCatalogue catalogue)
+            throws MetadataException {
         /*
          * Parse the parameters and get access to the variable and layer
          * metadata
@@ -1315,9 +1383,9 @@ public class WmsServlet extends HttpServlet {
         Dataset dataset;
         String variableId;
         try {
-            dataset = catalogue.getDatasetFromLayerName(layerName);
-            variableId = catalogue.getVariableFromId(layerName);
-            if (catalogue.getLayerMetadata(layerName).isDisabled()) {
+            dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
+            variableId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
+            if (catalogue.isDisabled(layerName)) {
                 throw new EdalLayerNotFoundException("The layer " + layerName
                         + " is not enabled on this server");
             }
@@ -1362,7 +1430,8 @@ public class WmsServlet extends HttpServlet {
         return response.toString();
     }
 
-    private String showMinMax(RequestParams params) throws MetadataException {
+    protected String showMinMax(RequestParams params, WmsCatalogue catalogue)
+            throws MetadataException {
         JSONObject minmax = new JSONObject();
         GetMapParameters getMapParams;
         try {
@@ -1385,9 +1454,9 @@ public class WmsServlet extends HttpServlet {
         VariableMetadata variableMetadata;
         String datasetId;
         try {
-            variableMetadata = catalogue.getVariableMetadataFromId(layerNames[0]);
-            datasetId = catalogue.getDatasetFromLayerName(layerNames[0]).getId();
-            if (catalogue.getLayerMetadata(layerNames[0]).isDisabled()) {
+            variableMetadata = WmsUtils.getVariableMetadataFromLayerName(layerNames[0], catalogue);
+            datasetId = WmsUtils.getDatasetFromLayerName(layerNames[0], catalogue).getId();
+            if (catalogue.isDisabled(layerNames[0])) {
                 throw new EdalLayerNotFoundException("The layer " + layerNames[0]
                         + " is not enabled on this server");
             }
@@ -1409,7 +1478,7 @@ public class WmsServlet extends HttpServlet {
              * Specified as a URL parameter
              */
             String styleName = styleNames[0];
-            style = catalogue.getStyleDefinitionByName(styleName);
+            style = catalogue.getStyleCatalogue().getStyleDefinitionByName(styleName);
             if (style == null) {
                 throw new MetadataException("Cannot find min-max for this layer.  The style "
                         + styleName + " is not supported.");
@@ -1418,7 +1487,8 @@ public class WmsServlet extends HttpServlet {
             /*
              * The default style
              */
-            List<StyleDef> supportedStyles = catalogue.getSupportedStyles(variableMetadata);
+            List<StyleDef> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
+                    variableMetadata);
             for (StyleDef supportedStyle : supportedStyles) {
                 if (supportedStyle.getStyleName().startsWith("default")) {
                     style = supportedStyle;
@@ -1452,7 +1522,7 @@ public class WmsServlet extends HttpServlet {
              */
             String variableId = variableMetadata.getChildWithRole(style.getScaledLayerRole())
                     .getId();
-            layerName = catalogue.getLayerName(datasetId, variableId);
+            layerName = catalogue.getLayerNameMapper().getLayerName(datasetId, variableId);
         }
 
         /*
@@ -1532,7 +1602,8 @@ public class WmsServlet extends HttpServlet {
         return minmax.toString();
     }
 
-    private String showAnimationTimesteps(RequestParams params) throws MetadataException {
+    protected String showAnimationTimesteps(RequestParams params, WmsCatalogue catalogue)
+            throws MetadataException {
         String layerName = params.getString("layerName");
         if (layerName == null) {
             throw new MetadataException(
@@ -1542,9 +1613,9 @@ public class WmsServlet extends HttpServlet {
         Dataset dataset;
         String variableId;
         try {
-            dataset = catalogue.getDatasetFromLayerName(layerName);
-            variableId = catalogue.getVariableFromId(layerName);
-            if (catalogue.getLayerMetadata(layerName).isDisabled()) {
+            dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
+            variableId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
+            if (catalogue.isDisabled(layerName)) {
                 throw new EdalLayerNotFoundException("The layer " + layerName
                         + " is not enabled on this server");
             }
@@ -1651,8 +1722,8 @@ public class WmsServlet extends HttpServlet {
         return builder.toString();
     }
 
-    private void getLegendGraphic(RequestParams params, HttpServletResponse httpServletResponse)
-            throws EdalException {
+    protected void getLegendGraphic(RequestParams params, HttpServletResponse httpServletResponse,
+            WmsCatalogue catalogue) throws EdalException {
         BufferedImage legend;
 
         /* numColourBands defaults to ColorPalette.MAX_NUM_COLOURS if not set */
@@ -1705,8 +1776,8 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse)
-            throws EdalException {
+    protected void getTimeseries(RequestParams params, HttpServletResponse httpServletResponse,
+            WmsCatalogue catalogue) throws EdalException {
         GetPlotParameters getPlotParameters = new GetPlotParameters(params, catalogue);
         PlottingDomainParams plottingParameters = getPlotParameters.getPlottingDomainParameters();
         final HorizontalPosition position = getPlotParameters.getClickedPosition();
@@ -1735,11 +1806,13 @@ public class WmsServlet extends HttpServlet {
         String copyright = null;
         Map<String, String> varId2Title = new HashMap<>();
         for (String layerName : layerNames) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
-            String variableId = catalogue.getVariableFromId(layerName);
-            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
+            String variableId = catalogue.getLayerNameMapper()
+                    .getVariableIdFromLayerName(layerName);
+            EnhancedVariableMetadata layerMetadata = WmsUtils
+                    .getLayerMetadata(layerName, catalogue);
             varId2Title.put(variableId, layerMetadata.getTitle());
-            if ("text/csv".equalsIgnoreCase(outputFormat) && !layerMetadata.isDownloadable()) {
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
                         + " cannot be downloaded as CSV");
             }
@@ -1748,7 +1821,7 @@ public class WmsServlet extends HttpServlet {
             }
             datasets2VariableIds.get(dataset.getId()).add(variableId);
             if (copyright == null) {
-                copyright = catalogue.getLayerMetadata(layerName).getCopyright();
+                copyright = layerMetadata.getCopyright();
             }
         }
 
@@ -1841,8 +1914,8 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getTransect(RequestParams params, HttpServletResponse httpServletResponse)
-            throws EdalException {
+    protected void getTransect(RequestParams params, HttpServletResponse httpServletResponse,
+            WmsCatalogue catalogue) throws EdalException {
         String outputFormat = params.getMandatoryString("format");
         if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
                 && !"image/jpg".equals(outputFormat)) {
@@ -1867,11 +1940,12 @@ public class WmsServlet extends HttpServlet {
         GriddedDataset gridDataset = null;
         String varId = null;
         for (String layerName : layers) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
+            Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             if (dataset instanceof GriddedDataset) {
                 gridDataset = (GriddedDataset) dataset;
-                varId = catalogue.getVariableFromId(layerName);
-                String layerCopyright = catalogue.getLayerMetadata(layerName).getCopyright();
+                varId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
+                String layerCopyright = WmsUtils.getLayerMetadata(layerName, catalogue)
+                        .getCopyright();
                 if (layerCopyright != null && !"".equals(layerCopyright)) {
                     copyright.append(layerCopyright);
                     copyright.append('\n');
@@ -1982,8 +2056,8 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse)
-            throws EdalException {
+    protected void getVerticalProfile(RequestParams params,
+            HttpServletResponse httpServletResponse, WmsCatalogue catalogue) throws EdalException {
         GetPlotParameters getPlotParameters = new GetPlotParameters(params, catalogue);
         PlottingDomainParams plottingParameters = getPlotParameters.getPlottingDomainParameters();
         final HorizontalPosition position = getPlotParameters.getClickedPosition();
@@ -2013,11 +2087,13 @@ public class WmsServlet extends HttpServlet {
         String copyright = null;
         Map<String, String> varId2Title = new HashMap<>();
         for (String layerName : layerNames) {
-            Dataset dataset = catalogue.getDatasetFromLayerName(layerName);
-            String variableId = catalogue.getVariableFromId(layerName);
-            WmsLayerMetadata layerMetadata = catalogue.getLayerMetadata(layerName);
+            Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
+            String variableId = catalogue.getLayerNameMapper()
+                    .getVariableIdFromLayerName(layerName);
+            EnhancedVariableMetadata layerMetadata = WmsUtils
+                    .getLayerMetadata(layerName, catalogue);
             varId2Title.put(variableId, layerMetadata.getTitle());
-            if ("text/csv".equalsIgnoreCase(outputFormat) && !layerMetadata.isDownloadable()) {
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
                         + " cannot be downloaded as CSV");
             }
@@ -2026,7 +2102,7 @@ public class WmsServlet extends HttpServlet {
             }
             datasets2VariableIds.get(dataset.getId()).add(variableId);
             if (copyright == null) {
-                copyright = catalogue.getLayerMetadata(layerName).getCopyright();
+                copyright = layerMetadata.getCopyright();
             }
         }
 

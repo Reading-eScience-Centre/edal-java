@@ -41,6 +41,7 @@ import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -49,7 +50,6 @@ import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
-import uk.ac.rdg.resc.edal.wms.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
 
@@ -105,7 +105,7 @@ public class GetMapParameters {
                 .getFieldsWithScales();
         for (NameAndRange nameAndRange : fieldsWithScales) {
             String wmsLayerName = nameAndRange.getFieldLabel();
-            TemporalDomain temporalDomain = catalogue.getVariableMetadataFromId(wmsLayerName)
+            TemporalDomain temporalDomain = WmsUtils.getVariableMetadataFromLayerName(wmsLayerName, catalogue)
                     .getTemporalDomain();
             if(temporalDomain != null) {
                 if (chronology == null) {
@@ -280,8 +280,8 @@ public class GetMapParameters {
                  */
                 return ret;
             }
-            VariableMetadata metadata = catalogue.getVariableMetadataFromId(styleParameters
-                    .getLayerNames()[0]);
+            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(styleParameters
+                    .getLayerNames()[0], catalogue);
             TemporalDomain temporalDomain = metadata.getTemporalDomain();
             if (!(temporalDomain instanceof TimeAxis)) {
                 /*

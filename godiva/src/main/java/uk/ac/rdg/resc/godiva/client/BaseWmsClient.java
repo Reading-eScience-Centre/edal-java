@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.gwtopenmaps.openlayers.client.OpenLayers;
 
@@ -40,6 +42,7 @@ import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.LayerSelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.PaletteSelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.TimeDateSelectionHandler;
+import uk.ac.rdg.resc.godiva.client.jsresource.JavascriptDependencies;
 import uk.ac.rdg.resc.godiva.client.requests.ConnectionException;
 import uk.ac.rdg.resc.godiva.client.requests.ErrorHandler;
 import uk.ac.rdg.resc.godiva.client.requests.LayerDetails;
@@ -54,6 +57,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.ScriptInjector;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
@@ -115,6 +119,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     protected boolean dateTimeDetailsLoaded;
     protected boolean minMaxDetailsLoaded;
 
+    private static Logger log = Logger.getLogger("BaseWmsClient");
+
     /**
      * This is the entry point for GWT.
      * 
@@ -124,11 +130,13 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     @Override
     public void onModuleLoad() {
-        /*
-         * Set the path for OpenLayers images. This means that we can package
-         * them with this GWT source code, keeping everything nicely separated
-         */
-        setImagePath(GWT.getModuleBaseURL() + "/js/img/");
+        ScriptInjector.fromString(JavascriptDependencies.INSTANCE.openLayers().getText())
+                .setWindow(ScriptInjector.TOP_WINDOW).inject();
+        setImagePath(GWT.getModuleBaseURL() + "img/openlayers/");
+        ScriptInjector.fromString(JavascriptDependencies.INSTANCE.proj4js().getText())
+                .setWindow(ScriptInjector.TOP_WINDOW).inject();
+        ScriptInjector.fromString(JavascriptDependencies.INSTANCE.projections().getText())
+                .setWindow(ScriptInjector.TOP_WINDOW).inject();
 
         /*
          * The location of the config servlet is hard-coded. If it is not found,
@@ -189,9 +197,10 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * @param imagepath
      *            The path where OpenLayers images are stored
      */
-    private static native void setImagePath(String imagepath)/*-{
-                                                             $wnd.OpenLayers.ImgPath = imagepath;
-                                                             }-*/;
+    private static native void setImagePath(String imagepath)
+    /*-{
+        $wnd.OpenLayers.ImgPath = imagepath;
+    }-*/;
 
     /**
      * This is called after all other parameters have been received from a
@@ -268,11 +277,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * @return the URL of the request
      */
     protected String getWmsRequestUrl(String wmsUrl, String request, Map<String, String> parameters) {
-        String[] params = new String[parameters.size()+1];
-        params[0] = "request="+request;
-        int i=1;
+        String[] params = new String[parameters.size() + 1];
+        params[0] = "request=" + request;
+        int i = 1;
         for (String key : parameters.keySet()) {
-            params[i++] = key+"="+parameters.get(key);
+            params[i++] = key + "=" + parameters.get(key);
         }
         return getUrlFromGetArgs(wmsUrl, params);
     }
@@ -292,11 +301,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * If the baseUrl already contains a "?", we need to append with "&"
          */
         argPart.append(baseUrl.contains("?") ? "&" : "?");
-        for(String param : params) {
-            argPart.append(param+"&");
+        for (String param : params) {
+            argPart.append(param + "&");
         }
-        argPart.deleteCharAt(argPart.length()-1);
-        
+        argPart.deleteCharAt(argPart.length() - 1);
+
         return URL.encode(proxyUrl + baseUrl + argPart.toString());
     }
 
@@ -392,7 +401,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                      */
                     updateMapBase(layerId);
                 } catch (Exception e) {
-                    invalidJson(e, response.getText(), getLayerDetailsRequest.getUrl());
+                    invalidJson(e, response.getText(), getLayerDetailsRequest.getUrl(), true);
                 } finally {
                     /*
                      * Indicate that we have finished this loading operation
@@ -442,6 +451,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            whether to perform even if a scale has been set on the server
      */
     protected void maybeRequestAutoRange(final String layerId, boolean force) {
+        minMaxDetailsLoaded = false;
+
         GodivaStateInfo widgetCollection = getWidgetCollection(layerId);
 
         /*
@@ -459,15 +470,26 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * Note that the current default scale range is [-50, 50]. This should
          * probably be signalled in a more appropriate manner
          */
-        String[] scaleRangeSplit = widgetCollection.getPaletteSelector().getScaleRange().split(",");
-        if (!force
-                && (Double.parseDouble(scaleRangeSplit[0]) != -50 || Double
-                        .parseDouble(scaleRangeSplit[1]) != 50)) {
-            minMaxDetailsLoaded = true;
-            return;
-        }
+        String currentScaleRange = widgetCollection.getPaletteSelector().getScaleRange();
+        if (!force) {
+            if (currentScaleRange != null && !currentScaleRange.equals(",")) {
+                String[] scaleRangeSplit = currentScaleRange.split(",");
+                try {
+                    double low = Double.parseDouble(scaleRangeSplit[0]);
+                    double high = Double.parseDouble(scaleRangeSplit[0]);
+                    if (low != -50 || high != 50) {
+                        minMaxDetailsLoaded = true;
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    /*
+                     * We had unparseable scale limits, so we want the auto
+                     * range
+                     */
+                }
 
-        minMaxDetailsLoaded = false;
+            }
+        }
 
         Map<String, String> parameters = new HashMap<String, String>();
         /*
@@ -582,7 +604,11 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         rangeLoaded(layerId, min, max);
                     }
                 } catch (Exception e) {
-                    invalidJson(e, response.getText(), getMinMaxRequest.getUrl());
+                    /*
+                     * Auto-range failure is non-critical. We log the error, but
+                     * don't display popup
+                     */
+                    invalidJson(e, response.getText(), getMinMaxRequest.getUrl(), false);
                 } finally {
                     /*
                      * Set the state correctly and update the map, regardless of
@@ -696,8 +722,12 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         widgetCollection.getPaletteSelector().populatePalettes(layerDetails.getAvailablePalettes());
         widgetCollection.getPaletteSelector().populateStyles(layerDetails.getSupportedStyles());
         if (!widgetCollection.getPaletteSelector().isLocked()) {
-            widgetCollection.getPaletteSelector().setScaleRange(layerDetails.getScaleRange(),
-                    layerDetails.isLogScale());
+            if (layerDetails.getScaleRange() == null) {
+                maybeRequestAutoRange(layerDetails.getId(), true);
+            } else {
+                widgetCollection.getPaletteSelector().setScaleRange(layerDetails.getScaleRange(),
+                        layerDetails.isLogScale());
+            }
             widgetCollection.getPaletteSelector().setNumColorBands(layerDetails.getNumColorBands());
         }
 
@@ -810,23 +840,27 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * @param url
      *            The URL which caused the exception
      */
-    protected void invalidJson(Exception e, String response, String url) {
-        e.printStackTrace();
-        final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(mapArea);
-        VerticalPanel v = new VerticalPanel();
-        if (e instanceof ConnectionException) {
-            v.add(new Label(e.getMessage()));
-        } else {
-            v.add(new Label("The server has experienced an error"));
-            v.add(new Label("Please try again in a short while"));
-            v.add(new Label("The URL which behaved unexpectedly was:"));
-            v.add(new Label(url));
-            v.add(new Label("The response from the server was:"));
-            v.add(new Label(response));
+    protected void invalidJson(Exception e, String response, String url, boolean displayPopup) {
+        log.log(Level.SEVERE, "Problem processing JSON", e);
+        if (displayPopup) {
+            final DialogBoxWithCloseButton popup = new DialogBoxWithCloseButton(mapArea);
+            VerticalPanel v = new VerticalPanel();
+            if (e instanceof ConnectionException) {
+                v.add(new Label(e.getMessage()));
+            } else {
+                v.add(new Label("The server has experienced an error"));
+                v.add(new Label("Please try again in a short while"));
+                v.add(new Label("The URL which behaved unexpectedly was:"));
+                v.add(new Label(url));
+                v.add(new Label("The response from the server was:"));
+                v.add(new Label(response));
+                v.add(new Label("The error was:"));
+                v.add(new Label(e.getMessage()));
+            }
+            popup.setHTML("Server Error");
+            popup.setWidget(v);
+            popup.center();
         }
-        popup.setHTML("Server Error");
-        popup.setWidget(v);
-        popup.center();
     }
 
     /*
@@ -911,7 +945,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     datetimeSelected(layerId, getWidgetCollection(layerId).getTimeSelector()
                             .getSelectedDateTime());
                 } catch (Exception e) {
-                    invalidJson(e, response.getText(), getTimeRequest.getUrl());
+                    invalidJson(e, response.getText(), getTimeRequest.getUrl(), true);
                 } finally {
                     setLoading(false);
                 }
@@ -1012,7 +1046,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * This is not ideal, but there is little we can do about some of these
          * exceptions. This at least logs the error for debugging.
          */
-        e.printStackTrace();
+        log.log(Level.SEVERE, e.getMessage(), e);
     }
 
     /*

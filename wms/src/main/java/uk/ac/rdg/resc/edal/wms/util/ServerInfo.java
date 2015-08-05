@@ -66,4 +66,16 @@ public interface ServerInfo {
      * @return The maximum image height this server supports
      */
     public int getMaxImageHeight();
+    
+
+    /**
+     * @return Whether or not this server allows GetFeatureInfo requests
+     */
+    public boolean allowsFeatureInfo();
+    
+    /**
+     * @return <code>true</code> if this server allows capabilities documents to
+     *         be generated for all datasets
+     */
+    public abstract boolean allowsGlobalCapabilities();
 }

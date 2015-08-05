@@ -29,16 +29,17 @@
 package uk.ac.rdg.resc.edal.wms.util;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.channels.FileChannel;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -50,9 +51,16 @@ import org.joda.time.chrono.JulianChronology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
+import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue;
+import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue.StyleDef;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
+import uk.ac.rdg.resc.edal.wms.WmsCatalogue;
 
 /**
  * <p>
@@ -126,24 +134,6 @@ public class WmsUtils {
         return location.endsWith(".xml") || location.endsWith(".ncml");
     }
 
-    /** Copies a file */
-    public static void copyFile(File sourceFile, File destFile) throws IOException {
-        FileChannel source = null;
-        FileChannel destination = null;
-        try {
-            source = new FileInputStream(sourceFile).getChannel();
-            destination = new FileOutputStream(destFile).getChannel();
-            destination.transferFrom(source, 0, source.size());
-        } finally {
-            if (source != null) {
-                source.close();
-            }
-            if (destination != null) {
-                destination.close();
-            }
-        }
-    }
-
     /**
      * Forwards the request to a third party. In this case this server is acting
      * as a proxy.
@@ -211,14 +201,6 @@ public class WmsUtils {
             }
         }
     }
-    
-    /*
-     * Starting here, we have methods which are only used in the Velocity
-     * templates (mostly those defining Capabilities documents)
-     * 
-     * Don't delete them just because you can't find where they're used in Java
-     * code
-     */
 
     /**
      * <p>
@@ -241,5 +223,115 @@ public class WmsUtils {
         if (chronology instanceof AllLeapChronology)
             return "all_leap";
         return "unknown";
+    }
+
+    /**
+     * Given a {@link WmsCatalogue}, returns the {@link Dataset} which
+     * corresponds to a given layer name
+     * 
+     * @param layerName
+     *            The name of the layer
+     * @param catalogue
+     *            The {@link WmsCatalogue} which holds the {@link Dataset}
+     * @return The requested {@link Dataset}
+     * @throws EdalLayerNotFoundException
+     *             If the given layer name doesn't map to an available
+     *             {@link Dataset}
+     */
+    public static Dataset getDatasetFromLayerName(String layerName, WmsCatalogue catalogue)
+            throws EdalLayerNotFoundException {
+        return catalogue.getDatasetFromId(catalogue.getLayerNameMapper().getDatasetIdFromLayerName(
+                layerName));
+    }
+
+    /**
+     * Given a {@link WmsCatalogue}, returns the {@link VariableMetadata} which
+     * corresponds to a given layer name
+     * 
+     * @param layerName
+     *            The name of the layer
+     * @param catalogue
+     *            The {@link WmsCatalogue} which holds the variable
+     * @return The requested {@link VariableMetadata}
+     * @throws EdalLayerNotFoundException
+     *             If the given layer name doesn't map to an available
+     *             {@link Dataset} and Variable combination
+     */
+    public static VariableMetadata getVariableMetadataFromLayerName(String layerName,
+            WmsCatalogue catalogue) throws EdalLayerNotFoundException {
+        String datasetId = catalogue.getLayerNameMapper().getDatasetIdFromLayerName(layerName);
+        String varId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
+        return catalogue.getDatasetFromId(datasetId).getVariableMetadata(varId);
+    }
+
+    /**
+     * Given a {@link WmsCatalogue}, returns a {@link List} of styles supported
+     * by the given layer name
+     * 
+     * @param layerName
+     *            The name of the layer
+     * @param catalogue
+     *            The {@link WmsCatalogue} which holds the variable
+     * @return A {@link List} of {@link StyleDef}s representing the supported
+     *         styles
+     * @throws EdalLayerNotFoundException
+     *             If the given layer name doesn't map to an available
+     *             {@link Dataset} and Variable combination
+     */
+    public static List<StyleDef> getSupportedStylesForLayer(String layerName, WmsCatalogue catalogue)
+            throws EdalLayerNotFoundException {
+        VariableMetadata variableMetadata = getVariableMetadataFromLayerName(layerName, catalogue);
+        return catalogue.getStyleCatalogue().getSupportedStyles(variableMetadata);
+    }
+
+    /**
+     * Performs the functionality of
+     * {@link StyleCatalogue#getStyleTemplateLayerNames(VariableMetadata, String)}
+     * for a given layer name, as opposed to a {@link VariableMetadata} object
+     * 
+     * @param layerName
+     *            The name of the layer
+     * @param plotStyleName
+     *            The name of the plot style
+     * @param catalogue
+     *            The {@link WmsCatalogue} containing the named layer
+     * @return A {@link Map} of the same objects found in
+     *         {@link StyleCatalogue#getStyleTemplateLayerNames(VariableMetadata, String)}
+     * @throws EdalLayerNotFoundException
+     *             If the given layer name doesn't map to an available
+     *             {@link Dataset} and Variable combination
+     * @see {@link StyleCatalogue#getStyleTemplateLayerNames(VariableMetadata, String)}
+     */
+    public static Map<String, String> getStyleTemplateLayerNames(String layerName,
+            String plotStyleName, WmsCatalogue catalogue) throws EdalLayerNotFoundException {
+        String datasetId = catalogue.getLayerNameMapper().getDatasetIdFromLayerName(layerName);
+        VariableMetadata variableMetadata = getVariableMetadataFromLayerName(layerName, catalogue);
+        Map<String, String> ret = new HashMap<>();
+        for (Entry<String, VariableMetadata> entry : catalogue.getStyleCatalogue()
+                .getStyleTemplateLayerNames(variableMetadata, plotStyleName).entrySet()) {
+            ret.put(entry.getKey(),
+                    catalogue.getLayerNameMapper()
+                            .getLayerName(datasetId, entry.getValue().getId()));
+        }
+        return ret;
+    }
+
+    /**
+     * Given a named layer and a {@link WmsCatalogue} which contains it, returns
+     * the associated {@link EnhancedVariableMetadata}
+     * 
+     * @param layerName
+     *            The name of the layer to get {@link EnhancedVariableMetadata}
+     *            about
+     * @param catalogue
+     *            The {@link WmsCatalogue} containing the layer
+     * @return The corresponding {@link EnhancedVariableMetadata}
+     * @throws EdalLayerNotFoundException
+     *             If the given layer name doesn't map to an available
+     *             {@link Dataset} and Variable combination
+     */
+    public static EnhancedVariableMetadata getLayerMetadata(String layerName, WmsCatalogue catalogue)
+            throws EdalLayerNotFoundException {
+        return catalogue.getLayerMetadata(getVariableMetadataFromLayerName(layerName, catalogue));
     }
 }
