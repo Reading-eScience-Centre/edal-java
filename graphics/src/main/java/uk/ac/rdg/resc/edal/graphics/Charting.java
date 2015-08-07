@@ -111,8 +111,8 @@ final public class Charting {
     }
 
     public static JFreeChart createVerticalProfilePlot(
-            Collection<? extends ProfileFeature> features, HorizontalPosition hPos)
-            throws MismatchedCrsException {
+            Collection<? extends ProfileFeature> features, HorizontalPosition hPos,
+            String copyrightStatement) throws MismatchedCrsException {
         XYSeriesCollection xySeriesColl = new XYSeriesCollection();
 
         Set<String> plottedVarList = new HashSet<String>();
@@ -206,7 +206,18 @@ final public class Charting {
         /*
          * Use default font and create a legend if there are multiple lines
          */
-        return new JFreeChart(title.toString(), null, plot, xySeriesColl.getSeriesCount() > 1);
+        JFreeChart chart = new JFreeChart(title.toString(), null, plot,
+                xySeriesColl.getSeriesCount() > 1);
+
+        if (copyrightStatement != null) {
+            final TextTitle textTitle = new TextTitle(copyrightStatement);
+            textTitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
+            textTitle.setPosition(RectangleEdge.BOTTOM);
+            textTitle.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+            chart.addSubtitle(textTitle);
+        }
+
+        return chart;
     }
 
     /**
@@ -234,8 +245,8 @@ final public class Charting {
         }
 
         String units = "";
-        if(vCrs != null) {
-            units = " ("+vCrs.getUnits()+")";
+        if (vCrs != null) {
+            units = " (" + vCrs.getUnits() + ")";
         }
         NumberAxis zAxis = new NumberAxis(zAxisLabel + units);
         zAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
@@ -245,8 +256,8 @@ final public class Charting {
     }
 
     public static JFreeChart createTimeSeriesPlot(
-            Collection<? extends PointSeriesFeature> features, HorizontalPosition hPos)
-            throws MismatchedCrsException {
+            Collection<? extends PointSeriesFeature> features, HorizontalPosition hPos,
+            String copyrightStatement) throws MismatchedCrsException {
 
         Chronology chronology = null;
         List<String> plottedVarList = new ArrayList<String>();
@@ -358,7 +369,17 @@ final public class Charting {
         /*
          * Use default font and create a legend if there are multiple lines
          */
-        return new JFreeChart(title.toString(), null, plot, legendNeeded);
+        chart = new JFreeChart(title.toString(), null, plot, legendNeeded);
+
+        if (copyrightStatement != null) {
+            final TextTitle textTitle = new TextTitle(copyrightStatement);
+            textTitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
+            textTitle.setPosition(RectangleEdge.BOTTOM);
+            textTitle.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+            chart.addSubtitle(textTitle);
+        }
+
+        return chart;
     }
 
     /**
@@ -453,7 +474,7 @@ final public class Charting {
             }
         }
 
-        if (copyrightStatement != null && !hasVerticalAxis) {
+        if (copyrightStatement != null) {
             final TextTitle textTitle = new TextTitle(copyrightStatement);
             textTitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
             textTitle.setPosition(RectangleEdge.BOTTOM);
@@ -587,6 +608,7 @@ final public class Charting {
         chart.removeLegend();
         chart.addSubtitle(paintScaleLegend);
         chart.setBackgroundPaint(Color.white);
+
         return chart;
     }
 
@@ -613,6 +635,11 @@ final public class Charting {
         }
 
         JFreeChart combinedChart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
+
+        /* Set left margin to 10 to avoid number wrap at color bar */
+        RectangleInsets r = new RectangleInsets(0, 10, 0, 0);
+        transectChart.setPadding(r);
+
         /*
          * This is not ideal. We have already added the copyright label to the
          * first chart, but then we extract the actual plot, so we need to add
@@ -623,15 +650,11 @@ final public class Charting {
             textTitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
             textTitle.setPosition(RectangleEdge.BOTTOM);
             textTitle.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-            transectChart.addSubtitle(textTitle);
+            combinedChart.addSubtitle(textTitle);
         }
-
-        /* Set left margin to 10 to avoid number wrap at color bar */
-        RectangleInsets r = new RectangleInsets(0, 10, 0, 0);
-        transectChart.setPadding(r);
-
+        
         /* Use the legend from the vertical section chart */
-        transectChart.addSubtitle(verticalSectionChart.getSubtitle(0));
+        combinedChart.addSubtitle(verticalSectionChart.getSubtitle(0));
 
         return combinedChart;
     }

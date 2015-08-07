@@ -1810,13 +1810,9 @@ public class WmsServlet extends HttpServlet {
         List<PointSeriesFeature> timeseriesFeatures = new ArrayList<PointSeriesFeature>();
         Map<String, Set<String>> datasets2VariableIds = new HashMap<>();
         /*
-         * We want to store the copyright information to output in the CSV file.
-         * 
-         * CSVs can only be generated for single datasets, and copyright is only
-         * set on a single dataset, therefore we only need to store the first
-         * copyright message
+         * We want to store the copyright information to output
          */
-        String copyright = null;
+        StringBuilder copyright = new StringBuilder();
         Map<String, String> varId2Title = new HashMap<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
@@ -1824,6 +1820,11 @@ public class WmsServlet extends HttpServlet {
                     .getVariableIdFromLayerName(layerName);
             EnhancedVariableMetadata layerMetadata = WmsUtils
                     .getLayerMetadata(layerName, catalogue);
+            String layerCopyright = layerMetadata.getCopyright();
+            if (layerCopyright != null && !"".equals(layerCopyright)) {
+                copyright.append(layerCopyright);
+                copyright.append('\n');
+            }
             varId2Title.put(variableId, layerMetadata.getTitle());
             if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
@@ -1833,9 +1834,10 @@ public class WmsServlet extends HttpServlet {
                 datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
             }
             datasets2VariableIds.get(dataset.getId()).add(variableId);
-            if (copyright == null) {
-                copyright = layerMetadata.getCopyright();
-            }
+        }
+
+        if (copyright.length() > 0) {
+            copyright.deleteCharAt(copyright.length() - 1);
         }
 
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
@@ -1865,9 +1867,9 @@ public class WmsServlet extends HttpServlet {
                  * If we have a copyright message, split it at semicolons and
                  * add it as a comment
                  */
-                if (copyright != null && !copyright.isEmpty()) {
+                if (copyright.length() > 0) {
                     StringBuilder copyrightMessage = new StringBuilder();
-                    String[] copyrightLines = copyright.split(";");
+                    String[] copyrightLines = copyright.toString().split(";");
                     for (String copyrightLine : copyrightLines) {
                         copyrightMessage.append("# " + copyrightLine + "\n");
                     }
@@ -1910,7 +1912,8 @@ public class WmsServlet extends HttpServlet {
             int height = 600;
 
             /* Now create the vertical profile plot */
-            JFreeChart chart = Charting.createTimeSeriesPlot(timeseriesFeatures, position);
+            JFreeChart chart = Charting.createTimeSeriesPlot(timeseriesFeatures, position,
+                    copyright.toString());
             try {
                 if ("image/png".equals(outputFormat)) {
                     ChartUtilities.writeChartAsPNG(httpServletResponse.getOutputStream(), chart,
@@ -2091,13 +2094,9 @@ public class WmsServlet extends HttpServlet {
         List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
         Map<String, Set<String>> datasets2VariableIds = new HashMap<>();
         /*
-         * We want to store the copyright information to output in the CSV file.
-         * 
-         * CSVs can only be generated for single datasets, and copyright is only
-         * set on a single dataset, therefore we only need to store the first
-         * copyright message
+         * We want to store the copyright information to output
          */
-        String copyright = null;
+        StringBuilder copyright = new StringBuilder();
         Map<String, String> varId2Title = new HashMap<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
@@ -2105,6 +2104,11 @@ public class WmsServlet extends HttpServlet {
                     .getVariableIdFromLayerName(layerName);
             EnhancedVariableMetadata layerMetadata = WmsUtils
                     .getLayerMetadata(layerName, catalogue);
+            String layerCopyright = layerMetadata.getCopyright();
+            if (layerCopyright != null && !"".equals(layerCopyright)) {
+                copyright.append(layerCopyright);
+                copyright.append('\n');
+            }
             varId2Title.put(variableId, layerMetadata.getTitle());
             if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
@@ -2114,9 +2118,10 @@ public class WmsServlet extends HttpServlet {
                 datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
             }
             datasets2VariableIds.get(dataset.getId()).add(variableId);
-            if (copyright == null) {
-                copyright = layerMetadata.getCopyright();
-            }
+        }
+
+        if (copyright.length() > 0) {
+            copyright.deleteCharAt(copyright.length() - 1);
         }
 
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
@@ -2146,9 +2151,9 @@ public class WmsServlet extends HttpServlet {
                  * If we have a copyright message, split it at semicolons and
                  * add it as a comment
                  */
-                if (copyright != null && !copyright.isEmpty()) {
+                if (copyright.length() > 0) {
                     StringBuilder copyrightMessage = new StringBuilder();
-                    String[] copyrightLines = copyright.split(";");
+                    String[] copyrightLines = copyright.toString().split(";");
                     for (String copyrightLine : copyrightLines) {
                         copyrightMessage.append("# " + copyrightLine + "\n");
                     }
@@ -2191,7 +2196,8 @@ public class WmsServlet extends HttpServlet {
             int height = 600;
 
             /* Now create the vertical profile plot */
-            JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, position);
+            JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, position,
+                    copyright.toString());
 
             try {
                 if ("image/png".equals(outputFormat)) {
