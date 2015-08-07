@@ -148,8 +148,12 @@ public class VariableConfig implements EnhancedVariableMetadata {
         } else {
             logScale = scaling.equalsIgnoreCase("log") || scaling.equalsIgnoreCase("logarithmic");
         }
+        /*
+         * TODO make opacity a configurable property? Or just controllable from
+         * WMS URL parameters (currently the case)
+         */
         return new PlottingStyleParameters(colorScaleRange, paletteName, aboveMaxColour,
-                belowMinColour, noDataColour, logScale, numColorBands);
+                belowMinColour, noDataColour, logScale, numColorBands, 1f);
     }
 
     public boolean isQueryable() {
@@ -200,7 +204,7 @@ public class VariableConfig implements EnhancedVariableMetadata {
             this.colorScaleRange = colorScaleRange;
         }
     }
-    
+
     /*
      * Required for JAX-B marshalling, so not unused
      */
@@ -225,7 +229,7 @@ public class VariableConfig implements EnhancedVariableMetadata {
             this.scaling = scaling;
         }
     }
-    
+
     /*
      * Required for JAX-B marshalling, so not unused
      */

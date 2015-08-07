@@ -78,7 +78,8 @@ public interface StyleCatalogue {
      *            The name of the style
      * @param templateableProperties
      *            The properties which should be injected into the style
-     *            template
+     *            template. None of the methods in this object may return
+     *            <code>null</code>
      * @param metadata
      *            The {@link VariableMetadata} of the variable being plotted. In
      *            the case that multiple variables are used for a single plot,

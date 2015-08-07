@@ -46,9 +46,11 @@ public class PlottingStyleParameters {
     private final Color noDataColour;
     private final Boolean logScaling;
     private final Integer numColourBands;
+    private final Float opacity;
 
     public PlottingStyleParameters(Extent<Float> scaleRange, String palette, Color aboveMaxColour,
-            Color belowMinColour, Color noDataColour, Boolean logScaling, Integer numColourBands) {
+            Color belowMinColour, Color noDataColour, Boolean logScaling, Integer numColourBands,
+            Float opacity) {
         this.scaleRange = scaleRange;
         this.palette = palette;
         this.aboveMaxColour = aboveMaxColour;
@@ -56,6 +58,7 @@ public class PlottingStyleParameters {
         this.noDataColour = noDataColour;
         this.logScaling = logScaling;
         this.numColourBands = numColourBands;
+        this.opacity = opacity;
     }
 
     /**
@@ -66,8 +69,8 @@ public class PlottingStyleParameters {
     }
 
     /**
-     * @return The default palette to use for this layer. This can be an
-     *         existing palette name, or a palette definition in the form
+     * @return The palette to use for this layer. This can be an existing
+     *         palette name, or a palette definition in the form
      *         #[aa]rrggbb,#[aa]rrggbb,#[aa]rrggbb..., where each element is a
      *         hexadecimal value
      */
@@ -76,23 +79,23 @@ public class PlottingStyleParameters {
     }
 
     /**
-     * @return The default colour to use for values which are higher the the
-     *         maximum scale value.
+     * @return The colour to use for values which are higher the the maximum
+     *         scale value.
      */
     public Color getAboveMaxColour() {
         return aboveMaxColour;
     }
 
     /**
-     * @return The default colour to use for values which are lower the the
-     *         minimum scale value.
+     * @return The colour to use for values which are lower the the minimum
+     *         scale value.
      */
     public Color getBelowMinColour() {
         return belowMinColour;
     }
 
     /**
-     * @return The default colour to use for values which have no data.
+     * @return The colour to use for values which have no data.
      */
     public Color getNoDataColour() {
         return noDataColour;
@@ -107,10 +110,13 @@ public class PlottingStyleParameters {
     }
 
     /**
-     * @return The default number of colour bands to use for this layer's
-     *         palette
+     * @return The number of colour bands to use for this layer's palette
      */
     public Integer getNumColorBands() {
         return numColourBands;
+    }
+
+    public Float getOpacity() {
+        return opacity;
     }
 }

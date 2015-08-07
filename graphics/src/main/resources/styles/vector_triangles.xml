@@ -9,7 +9,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
       <se:CoverageStyle>
         <se:Rule>
           <se:RasterSymbolizer>
-            <se:Opacity>1.0</se:Opacity>
+            <se:Opacity>$opacity</se:Opacity>
             <se:ColorMap>
               <resc:Segment fallbackValue="$bgColor">
                 <se:LookupValue>Rasterdata</se:LookupValue>
@@ -37,7 +37,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
       <se:CoverageStyle>
         <se:Rule>
           <resc:ArrowSymbolizer>
-            <se:Opacity>1.0</se:Opacity>
+            <se:Opacity>$opacity</se:Opacity>
             <resc:ArrowSize>8</resc:ArrowSize>
             <resc:ArrowColour>#FF000000</resc:ArrowColour>
             <resc:ArrowStyle>TRI_ARROW</resc:ArrowStyle>

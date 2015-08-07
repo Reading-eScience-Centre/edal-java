@@ -9,7 +9,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
       <se:CoverageStyle>
         <se:Rule>
           <resc:ContourSymbolizer>
-            <se:Opacity>1.0</se:Opacity>
+            <se:Opacity>$opacity</se:Opacity>
             <resc:NumberOfContours>10</resc:NumberOfContours>
             <resc:ContourLineColour>#FF000000</resc:ContourLineColour>
             <resc:ContourLineWidth>1</resc:ContourLineWidth>

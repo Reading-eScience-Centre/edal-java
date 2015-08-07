@@ -275,6 +275,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 GraphicsUtils.colourToString(templateProperties.getBelowMinColour()));
         context.put("aboveMaxColor",
                 GraphicsUtils.colourToString(templateProperties.getAboveMaxColour()));
+        context.put("opacity", templateProperties.getOpacity());
 
         /*
          * Now deal with the layer names
@@ -461,6 +462,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         xmlString = xmlString.replaceAll("\\$bgColor", "#000000");
         xmlString = xmlString.replaceAll("\\$belowMinColor", "#000000");
         xmlString = xmlString.replaceAll("\\$aboveMaxColor", "#000000");
+        xmlString = xmlString.replaceAll("\\$opacity", "1.0");
 
         /*
          * Java generics at its finest ;-)

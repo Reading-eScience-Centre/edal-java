@@ -133,6 +133,7 @@ In additional to the standard GetMap parameters, ncWMS accepts the following opt
 * LOGSCALE: "true" or "false" - whether to plot data with a logarithmic scale
 * TARGETTIME: For in-situ data, all points which fall within the time range (specified in the TIME parameter) will be plotted.  In the case that an in-situ point has multiple time readings within that range, the colour used to plot them will depend on the time value which is closest to this given value
 * TARGETELEVATION: For in-situ data, all points which fall within the elevation range (specified in the ELEVATION parameter) will be plotted.  In the case that an in-situ point has multiple elevation readings within that range, the colour used to plot them will depend on the elevation value which is closest to this given value
+* OPACITY: The percentage opacity of the final output image
  
 #### GetFeatureInfo
 
@@ -307,6 +308,7 @@ To create a new style for plotting, you will need to create an SLD template.  Th
 * $bgColor
 * $belowMinColor
 * $aboveMaxColor
+* $opacity
 
 In addition to the $layerName parameter, you may add children of the named layer, according to the role they have to their parent layer.  For example, if a named layer has two children with roles "mag" and "dir" (this is the case for a vector layer), you may specify them as `$layerName-mag` and `$layerName-dir`.  This style will then be supported only for parent layers with such children.
 

@@ -384,7 +384,8 @@ public class GetMapStyleParams {
         return catalogue.getStyleCatalogue().getMapImageFromStyle(
                 plotStyleName,
                 new PlottingStyleParameters(colourScaleRange, paletteName, aboveMaxColour,
-                        belowMinColour, backgroundColour, logarithmic, numColourBands),
+                        belowMinColour, backgroundColour, logarithmic, numColourBands,
+                        opacity / 100f),
                 WmsUtils.getVariableMetadataFromLayerName(layerName, catalogue),
                 catalogue.getLayerNameMapper());
     }
