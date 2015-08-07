@@ -282,8 +282,8 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         Map<String, VariableMetadata> layerKeysToLayerNames = getStyleTemplateLayerNames(metadata,
                 styleName);
         for (Entry<String, VariableMetadata> keyToLayerName : layerKeysToLayerNames.entrySet()) {
-            context.put(keyToLayerName.getKey(),
-                    layerNameMapper.getLayerName(metadata.getDataset().getId(), metadata.getId()));
+            context.put(keyToLayerName.getKey(), layerNameMapper.getLayerName(keyToLayerName
+                    .getValue().getDataset().getId(), keyToLayerName.getValue().getId()));
         }
 
         /*
