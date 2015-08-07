@@ -90,15 +90,6 @@ public class VariableConfig implements EnhancedVariableMetadata {
     @XmlAttribute(name = "numColorBands")
     private int numColorBands = ColourPalette.MAX_NUM_COLOURS;
 
-    @XmlAttribute(name = "metadataUrl")
-    private String metadataUrl = null;
-
-    @XmlAttribute(name = "metadataDesc")
-    private String metadataDesc = null;
-
-    @XmlAttribute(name = "metadataMimetype")
-    private String metadataMimetype = null;
-
     @XmlAttribute(name = "disabled")
     private Boolean disabled = null;
 
@@ -106,16 +97,12 @@ public class VariableConfig implements EnhancedVariableMetadata {
     @XmlTransient
     private DatasetConfig dataset;
 
-    @XmlTransient
-    private PlottingStyleParameters plotStyleProperties = null;
-
     VariableConfig() {
     }
 
     public VariableConfig(String id, String title, String description,
             Extent<Float> colorScaleRange, String paletteName, Color belowMinColour,
-            Color aboveMaxColour, Color noDataColour, String scaling, int numColorBands,
-            String metadataUrl, String metadataDesc, String metadataMimetype) {
+            Color aboveMaxColour, Color noDataColour, String scaling, int numColorBands) {
         super();
         this.id = id;
         this.title = title;
@@ -131,9 +118,6 @@ public class VariableConfig implements EnhancedVariableMetadata {
         }
         this.scaling = scaling;
         this.numColorBands = numColorBands;
-        this.metadataUrl = metadataUrl;
-        this.metadataDesc = metadataDesc;
-        this.metadataMimetype = metadataMimetype;
     }
 
     /**
@@ -150,32 +134,17 @@ public class VariableConfig implements EnhancedVariableMetadata {
 
     @Override
     public PlottingStyleParameters getDefaultPlottingParameters() {
-        if (plotStyleProperties == null) {
-            if (!ColourPalette.getPredefinedPalettes().contains(paletteName)) {
-                this.paletteName = ColourPalette.DEFAULT_PALETTE_NAME;
-            }
-            boolean logScale;
-            if (scaling == null) {
-                logScale = false;
-            } else {
-                logScale = scaling.equalsIgnoreCase("log");
-            }
-            plotStyleProperties = new PlottingStyleParameters(colorScaleRange, paletteName,
-                    aboveMaxColour, belowMinColour, noDataColour, logScale, numColorBands);
+        if (!ColourPalette.getPredefinedPalettes().contains(paletteName)) {
+            this.paletteName = ColourPalette.DEFAULT_PALETTE_NAME;
         }
-        return plotStyleProperties;
-    }
-
-    public String getMetadataUrl() {
-        return metadataUrl;
-    }
-
-    public String getMetadataDesc() {
-        return metadataDesc;
-    }
-
-    public String getMetadataMimetype() {
-        return metadataMimetype;
+        boolean logScale;
+        if (scaling == null) {
+            logScale = false;
+        } else {
+            logScale = scaling.equalsIgnoreCase("log") || scaling.equalsIgnoreCase("logarithmic");
+        }
+        return new PlottingStyleParameters(colorScaleRange, paletteName, aboveMaxColour,
+                belowMinColour, noDataColour, logScale, numColorBands);
     }
 
     public boolean isQueryable() {
@@ -232,24 +201,6 @@ public class VariableConfig implements EnhancedVariableMetadata {
             this.numColorBands = 2;
         } else {
             this.numColorBands = numColorBands;
-        }
-    }
-
-    public void setMetadataUrl(String metadataUrl) {
-        if (!"".equals(metadataUrl)) {
-            this.metadataUrl = metadataUrl;
-        }
-    }
-
-    public void setMetadataDesc(String metadataDesc) {
-        if (!"".equals(metadataDesc)) {
-            this.metadataDesc = metadataDesc;
-        }
-    }
-
-    public void setMetadataMimetype(String metadataMimetype) {
-        if (!"".equals(metadataMimetype)) {
-            this.metadataMimetype = metadataMimetype;
         }
     }
 

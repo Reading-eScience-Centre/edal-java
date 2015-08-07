@@ -282,7 +282,7 @@ public class DatasetConfig {
                 VariableConfig variable = new VariableConfig(varId, varId, variableMetadata
                         .getParameter().getDescription(), colorScaleRange,
                         ColourPalette.DEFAULT_PALETTE_NAME, Color.black, Color.black, new Color(0,
-                                true), "linear", ColourPalette.MAX_NUM_COLOURS, null, null, null);
+                                true), "linear", ColourPalette.MAX_NUM_COLOURS);
                 variable.setParentDataset(this);
                 variables.put(varId, variable);
             }

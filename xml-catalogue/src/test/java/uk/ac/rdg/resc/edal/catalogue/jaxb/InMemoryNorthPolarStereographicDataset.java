@@ -103,37 +103,37 @@ public class InMemoryNorthPolarStereographicDataset extends GriddedDataset {
 
         VariableConfig xuVar = new VariableConfig("allx_u", "All X u-comp", "", Extents.newExtent(0f,
                 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black, Color.black, new Color(0,
-                true), "linear", 250, null, null, null);
+                true), "linear", 250);
         VariableConfig xvVar = new VariableConfig("allx_v", "All X v-comp", "", Extents.newExtent(0f,
                 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black, Color.black, new Color(0,
-                true), "linear", 250, null, null, null);
+                true), "linear", 250);
         VariableConfig yuVar = new VariableConfig("ally_u", "All Y u-comp", "", Extents.newExtent(0f,
                 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black, Color.black, new Color(0,
-                true), "linear", 250, null, null, null);
+                true), "linear", 250);
         VariableConfig yvVar = new VariableConfig("ally_v", "All Y v-comp", "", Extents.newExtent(0f,
                 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black, Color.black, new Color(0,
-                true), "linear", 250, null, null, null);
+                true), "linear", 250);
 
         VariableConfig xmagVar = new VariableConfig("allx_uallx_v-mag", "All X magnitude", "",
                 Extents.newExtent(0f, 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black,
-                Color.black, new Color(0, true), "linear", 250, null, null, null);
+                Color.black, new Color(0, true), "linear", 250);
         VariableConfig xdirVar = new VariableConfig("allx_uallx_v-dir", "All X direction", "",
                 Extents.newExtent(0f, 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black,
-                Color.black, new Color(0, true), "linear", 250, null, null, null);
+                Color.black, new Color(0, true), "linear", 250);
 
         VariableConfig ymagVar = new VariableConfig("ally_ually_v-mag", "All Y magnitude", "",
                 Extents.newExtent(0f, 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black,
-                Color.black, new Color(0, true), "linear", 250, null, null, null);
+                Color.black, new Color(0, true), "linear", 250);
         VariableConfig ydirVar = new VariableConfig("ally_ually_v-dir", "All Y direction", "",
                 Extents.newExtent(0f, 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black,
-                Color.black, new Color(0, true), "linear", 250, null, null, null);
+                Color.black, new Color(0, true), "linear", 250);
 
         VariableConfig xgroupVar = new VariableConfig("allx_uallx_v-group", "All X", "",
                 Extents.newExtent(0f, 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black,
-                Color.black, new Color(0, true), "linear", 250, null, null, null);
+                Color.black, new Color(0, true), "linear", 250);
         VariableConfig ygroupVar = new VariableConfig("ally_ually_v-group", "All Y", "",
                 Extents.newExtent(0f, 100f), ColourPalette.DEFAULT_PALETTE_NAME, Color.black,
-                Color.black, new Color(0, true), "linear", 250, null, null, null);
+                Color.black, new Color(0, true), "linear", 250);
         List<VariableConfig> vars = new ArrayList<VariableConfig>();
         xuVar.setParentDataset(ds);
         vars.add(xuVar);
