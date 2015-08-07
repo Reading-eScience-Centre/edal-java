@@ -1599,8 +1599,11 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        minmax.put("min", min);
-        minmax.put("max", max);
+        /*
+         * Limit output to 4s.f
+         */
+        minmax.put("min", GraphicsUtils.roundToSignificantFigures(min, 4));
+        minmax.put("max", GraphicsUtils.roundToSignificantFigures(max, 4));
 
         return minmax.toString();
     }

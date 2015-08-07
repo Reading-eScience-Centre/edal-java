@@ -94,7 +94,7 @@ public class GraphicsUtils {
             return null;
         }
         if (!colourString.toLowerCase().startsWith("0x") && !colourString.startsWith("#")) {
-            throw new EdalParseException("Invalid format for colour: "+colourString);
+            throw new EdalParseException("Invalid format for colour: " + colourString);
         }
         if (colourString.length() == 7 || colourString.length() == 8) {
             /*
@@ -233,7 +233,34 @@ public class GraphicsUtils {
             max += 0.05 * diff;
         }
 
-        return Extents.newExtent(min, max);
+        return Extents.newExtent((float) roundToSignificantFigures(min, 4),
+                (float) roundToSignificantFigures(max, 4));
+    }
+
+    /**
+     * Rounds a double to a number of significant figures
+     * 
+     * Taken from:
+     * http://stackoverflow.com/questions/202302/rounding-to-an-arbitrary
+     * -number-of-significant-digits
+     * 
+     * @param num
+     *            The number to round
+     * @param n
+     *            The number of significant figures
+     * @return The rounded number
+     */
+    public static double roundToSignificantFigures(double num, int n) {
+        if (num == 0) {
+            return 0;
+        }
+
+        final double d = Math.ceil(Math.log10(num < 0 ? -num : num));
+        final int power = n - (int) d;
+
+        final double magnitude = Math.pow(10, power);
+        final long shifted = Math.round(num * magnitude);
+        return shifted / magnitude;
     }
 
     public static class ColorAdapter extends XmlAdapter<String, Color> {
