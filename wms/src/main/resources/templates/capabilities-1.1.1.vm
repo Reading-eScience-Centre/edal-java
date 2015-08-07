@@ -99,7 +99,6 @@
 #if($plottable && $layerName && !$parent)
         <Name>$layerName</Name>
 #end
-#set($supportedStyles = $catalogue.getSupportedStyles($variableMetadata))
 #if($layerMetadata.title)
         <Title>$layerMetadata.title</Title>
 #end
@@ -169,12 +168,12 @@
 #end
 #end
 #foreach($style in $supportedStyles)
-#if($style.usesPalette())
+#if($catalogue.styleCatalogue.styleUsesPalette($style))
 #foreach($paletteName in $availablePalettes)
         <Style>
-            <Name>$style.styleName/$paletteName</Name>
-            <Title>$style.styleName/$paletteName</Title>
-            <Abstract>$style.styleName style, using the $paletteName palette</Abstract>
+            <Name>$style/$paletteName</Name>
+            <Title>$style/$paletteName</Title>
+            <Abstract>$style style, using the $paletteName palette</Abstract>
             <LegendURL width="110" height="264">
                 <Format>image/png</Format>
                 <OnlineResource xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$paletteName&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>
@@ -183,9 +182,9 @@
 #end
 #else
         <Style>
-            <Name>$style.styleName</Name>
-            <Title>$style.styleName</Title>
-            <Abstract>$style.styleName style</Abstract>
+            <Name>$style</Name>
+            <Title>$style</Title>
+            <Abstract>$style style</Abstract>
         </Style>
 #end
 #end

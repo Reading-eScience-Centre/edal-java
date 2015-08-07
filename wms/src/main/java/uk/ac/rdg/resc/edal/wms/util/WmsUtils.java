@@ -35,11 +35,9 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -54,8 +52,6 @@ import org.slf4j.LoggerFactory;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue.StyleDef;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
@@ -278,42 +274,10 @@ public class WmsUtils {
      *             If the given layer name doesn't map to an available
      *             {@link Dataset} and Variable combination
      */
-    public static List<StyleDef> getSupportedStylesForLayer(String layerName, WmsCatalogue catalogue)
+    public static Collection<String> getSupportedStylesForLayer(String layerName, WmsCatalogue catalogue)
             throws EdalLayerNotFoundException {
         VariableMetadata variableMetadata = getVariableMetadataFromLayerName(layerName, catalogue);
         return catalogue.getStyleCatalogue().getSupportedStyles(variableMetadata);
-    }
-
-    /**
-     * Performs the functionality of
-     * {@link StyleCatalogue#getStyleTemplateLayerNames(VariableMetadata, String)}
-     * for a given layer name, as opposed to a {@link VariableMetadata} object
-     * 
-     * @param layerName
-     *            The name of the layer
-     * @param plotStyleName
-     *            The name of the plot style
-     * @param catalogue
-     *            The {@link WmsCatalogue} containing the named layer
-     * @return A {@link Map} of the same objects found in
-     *         {@link StyleCatalogue#getStyleTemplateLayerNames(VariableMetadata, String)}
-     * @throws EdalLayerNotFoundException
-     *             If the given layer name doesn't map to an available
-     *             {@link Dataset} and Variable combination
-     * @see {@link StyleCatalogue#getStyleTemplateLayerNames(VariableMetadata, String)}
-     */
-    public static Map<String, String> getStyleTemplateLayerNames(String layerName,
-            String plotStyleName, WmsCatalogue catalogue) throws EdalLayerNotFoundException {
-        String datasetId = catalogue.getLayerNameMapper().getDatasetIdFromLayerName(layerName);
-        VariableMetadata variableMetadata = getVariableMetadataFromLayerName(layerName, catalogue);
-        Map<String, String> ret = new HashMap<>();
-        for (Entry<String, VariableMetadata> entry : catalogue.getStyleCatalogue()
-                .getStyleTemplateLayerNames(variableMetadata, plotStyleName).entrySet()) {
-            ret.put(entry.getKey(),
-                    catalogue.getLayerNameMapper()
-                            .getLayerName(datasetId, entry.getValue().getId()));
-        }
-        return ret;
     }
 
     /**

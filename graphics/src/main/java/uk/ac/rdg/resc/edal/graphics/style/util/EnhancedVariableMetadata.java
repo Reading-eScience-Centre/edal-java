@@ -28,9 +28,6 @@
 
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
-import java.awt.Color;
-
-import uk.ac.rdg.resc.edal.domain.Extent;
 
 /**
  * Interface defining the enahnced metadata about a variable, including title,
@@ -60,49 +57,6 @@ public interface EnhancedVariableMetadata {
     public String getDescription();
 
     /**
-     * @return The default scale range of this layer, or <code>null</code> if no
-     *         scale range is set
-     */
-    public Extent<Float> getColorScaleRange();
-
-    /**
-     * @return The default palette to use for this layer. This can be an
-     *         existing palette name, or a palette definition in the form
-     *         #[aa]rrggbb,#[aa]rrggbb,#[aa]rrggbb..., where each element is a
-     *         hexadecimal value
-     */
-    public String getPalette();
-
-    /**
-     * @return The default colour to use for values which are higher the the
-     *         maximum scale value.
-     */
-    public Color getAboveMaxColour();
-
-    /**
-     * @return The default colour to use for values which are lower the the
-     *         minimum scale value.
-     */
-    public Color getBelowMinColour();
-
-    /**
-     * @return The default colour to use for values which have no data.
-     */
-    public Color getNoDataColour();
-
-    /**
-     * @return <code>true</code> if this variable is to use logarithmic scaling
-     *         by default
-     */
-    public Boolean isLogScaling();
-
-    /**
-     * @return The default number of colour bands to use for this layer's
-     *         palette
-     */
-    public Integer getNumColorBands();
-
-    /**
      * @return Copyright information about this layer to be displayed be clients
      */
     public String getCopyright();
@@ -111,4 +65,11 @@ public interface EnhancedVariableMetadata {
      * @return More information about this layer to be displayed be clients
      */
     public String getMoreInfo();
+
+    /**
+     * @return The default plot settings for this variable - this may not return
+     *         <code>null</code>, but any of the defined methods within the
+     *         returned {@link PlottingStyleParameters} object may do.
+     */
+    public PlottingStyleParameters getDefaultPlottingParameters();
 }

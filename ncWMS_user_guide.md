@@ -185,6 +185,26 @@ The GetMetadata request is used to request small pieces of metadata from ncWMS. 
 * timesteps: Returns the available times for a given day.  Takes the parameters `LAYERNAME` and `DAY` (yyyy-mm-dd)
 * animationTimesteps: Returns a list of time strings at different temporal resolutions for a given time range.  This is used to present to the user different frequencies for the generation of an animation.  Takes the parameters `LAYERNAME`, `START`, and `END`
 
+#### GetLegendGraphic
+
+The GetLegendGraphic request generates an image which can be used as a legend.  There are two main options:  Generating just a colourbar, and generating a full legend.  In the first case (the URL parameter `COLORBARONLY` is set to "true") , the following URL parameters are used:
+
+* PALETTE: The name of the palette to use.  If missing, set to "default"
+* NUMCOLORBANDS: The number of colour bands to use.  If missing, set to 250
+* VERTICAL: Whether to very colours vertically.  If missing, defaults to true
+* WIDTH: The width of the image to generate.  If missing, defaults to 50 
+* HEIGHT: The height of the image to generate.  If missing, defaults to 200
+
+For a full legend, the additional parameters `LAYERS` and either `STYLES`, `SLD`, or `SLD_BODY` must be supplied.  This is because a single WMS layer may depend on an arbitrary number of sub-layers, depending on the style it is plotted in.  In addition to these parameters, the optional parameters controlling the style may be supplied (these are the same as documented in the GetMap request):
+
+* COLORSCALERANGE
+* NUMCOLORBANDS
+* ABOVEMAXCOLOR
+* BELOWMINCOLOR
+* LOGSCALE
+
+Note that for full legends, the supplied width and height are NOT the final height of the image, but rather the width and height of each individual coloured plot area (i.e. the 1d/2d colourbar)  
+
 ### Godiva3
 
 Normal access to the WMS is done using a web client.  ncWMS comes with Godiva3 - a WMS client written to take advantage of all of the extended WMS methods in ncWMS.  It is accessed at http://serveraddress/ncWMS/Godiva.html
@@ -270,10 +290,32 @@ To add new colour palettes to ncWMS, you must create palette files.  These are t
 
 If the resulting palette files are placed in a directory named `$WEBAPP_DIR/WEB-INF/classes/palettes` then they will be picked up automatically (after a servlet restart) but may be deleted upon webapp redeployment.
 
-A better solution is to place the palette files in a directory of your choice and modify `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  The property named `paletteDir` should point at the palette directory, and all palettes will become available after a servlet restart.
+A better solution is to place the palette files in a directory of your choice and modify `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  The property named `paletteDirs` should contain a comma-separated list of directories containing palette files, and all palettes will become available after a servlet restart.
 
 Note that once a palette file has been defined this will add 2 available palettes - the normal one you have defined along with its inverse.
 
 ### Defining new style templates
 
+To create a new style for plotting, you will need to create an SLD template.  The documentation for SLD can be found in the root directory of the source code, and is named "ncWMS-sld_specification".  Within this template, you may use the following placeholders:
+
+* $layerName
+* $paletteName
+* $scaleMin
+* $scaleMax
+* $logarithmic
+* $numColorBands
+* $bgColor
+* $belowMinColor
+* $aboveMaxColor
+
+In addition to the $layerName parameter, you may add children of the named layer, according to the role they have to their parent layer.  For example, if a named layer has two children with roles "mag" and "dir" (this is the case for a vector layer), you may specify them as `$layerName-mag` and `$layerName-dir`.  This style will then be supported only for parent layers with such children.
+
+For further examples, see the existing style templates in the edal-graphics module at src/main/resources/styles.
+
+Once you have created these templates, you may either place them in `$WEBAPP_DIR/WEB-INF/classes/styles`, or modify `$WEBAPP_DIR/WEB-INF/classes/config.properties` to specify the `styleDirs` property.  This takes a comma-separated list of directories which will be scanned on startup and any defined styles residing within them will be made available.
+
 ### Adding new data readers
+
+By default ncWMS supports reading of gridded NetCDF/GRIB/OPeNDAP data, and in-situ data from the EN3/4 UK Met Office dataset.  To read additional types of data, a new data reader must be written.  To do this, you must extend the class `uk.ac.rdg.resc.edal.dataset.DatasetFactory`.  This has a single abstract method which returns a `uk.ac.rdg.resc.edal.dataset.Dataset` object given an ID and location.
+
+The full details of how to implement this are beyond the scope of this guide, but it is recommended to example the two existing data readers: `uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory` and `uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory`, which can be found in the edal-cdm module.  The Javadoc for EDAL is reasonably complete and will be of great use.  Additionally you may wish to contact the developers of ncWMS through the website, who will be happy to provide guidance and assistance.

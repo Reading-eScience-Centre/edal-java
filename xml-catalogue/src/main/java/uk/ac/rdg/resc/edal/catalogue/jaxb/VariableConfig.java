@@ -42,6 +42,7 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils.ColorAdapter;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -105,6 +106,9 @@ public class VariableConfig implements EnhancedVariableMetadata {
     @XmlTransient
     private DatasetConfig dataset;
 
+    @XmlTransient
+    private PlottingStyleParameters plotStyleProperties = null;
+
     VariableConfig() {
     }
 
@@ -145,44 +149,21 @@ public class VariableConfig implements EnhancedVariableMetadata {
     }
 
     @Override
-    public Extent<Float> getColorScaleRange() {
-        return colorScaleRange;
-    }
-
-    @Override
-    public String getPalette() {
-        if (!ColourPalette.getPredefinedPalettes().contains(paletteName)) {
-            this.paletteName = ColourPalette.DEFAULT_PALETTE_NAME;
+    public PlottingStyleParameters getDefaultPlottingParameters() {
+        if (plotStyleProperties == null) {
+            if (!ColourPalette.getPredefinedPalettes().contains(paletteName)) {
+                this.paletteName = ColourPalette.DEFAULT_PALETTE_NAME;
+            }
+            boolean logScale;
+            if (scaling == null) {
+                logScale = false;
+            } else {
+                logScale = scaling.equalsIgnoreCase("log");
+            }
+            plotStyleProperties = new PlottingStyleParameters(colorScaleRange, paletteName,
+                    aboveMaxColour, belowMinColour, noDataColour, logScale, numColorBands);
         }
-        return paletteName;
-    }
-
-    @Override
-    public Color getBelowMinColour() {
-        return belowMinColour;
-    }
-
-    @Override
-    public Color getAboveMaxColour() {
-        return aboveMaxColour;
-    }
-
-    @Override
-    public Color getNoDataColour() {
-        return noDataColour;
-    }
-
-    @Override
-    public Boolean isLogScaling() {
-        if (scaling == null) {
-            return false;
-        }
-        return scaling.equalsIgnoreCase("log");
-    }
-
-    @Override
-    public Integer getNumColorBands() {
-        return numColorBands;
+        return plotStyleProperties;
     }
 
     public String getMetadataUrl() {
@@ -245,9 +226,9 @@ public class VariableConfig implements EnhancedVariableMetadata {
     }
 
     public void setNumColorBands(int numColorBands) {
-        if(numColorBands > ColourPalette.MAX_NUM_COLOURS) {
+        if (numColorBands > ColourPalette.MAX_NUM_COLOURS) {
             this.numColorBands = ColourPalette.MAX_NUM_COLOURS;
-        } else if(numColorBands < 2){
+        } else if (numColorBands < 2) {
             this.numColorBands = 2;
         } else {
             this.numColorBands = numColorBands;

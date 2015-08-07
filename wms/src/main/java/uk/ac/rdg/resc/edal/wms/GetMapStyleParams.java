@@ -33,16 +33,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
+import java.util.Collection;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.RuntimeConstants;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
@@ -53,7 +46,7 @@ import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue.StyleDef;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
@@ -78,22 +71,9 @@ public class GetMapStyleParams {
     private Boolean logarithmic = null;
 
     private Extent<Float> colourScaleRange = null;
-    /*
-     * true if we want to auto-scale the data
-     * 
-     * TODO Not currently used
-     */
-//    private boolean autoScale = false;
 
     /* true if we are using an XML style specification */
     private boolean xmlSpecified = false;
-
-    /* Velocity templating engine used for reading fixed styles */
-    private static VelocityEngine velocityEngine;
-
-    static {
-        initVelocity();
-    }
 
     public GetMapStyleParams(RequestParams params) throws EdalException {
         String layersStr = params.getString("layers");
@@ -193,18 +173,6 @@ public class GetMapStyleParams {
         }
     }
 
-    private static void initVelocity() {
-        Properties props = new Properties();
-        props.put("resource.loader", "class");
-        props.put("class.resource.loader.class",
-                "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-        velocityEngine = new VelocityEngine();
-        velocityEngine.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS,
-                "org.apache.velocity.runtime.log.Log4JLogChute");
-        velocityEngine.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
-        velocityEngine.init(props);
-    }
-
     /**
      * Gets the ColorScaleRange object requested by the client
      */
@@ -276,7 +244,8 @@ public class GetMapStyleParams {
 
         String plotStyleName = styleParts[0];
 
-        List<StyleDef> supportedStyles = WmsUtils.getSupportedStylesForLayer(layerName, catalogue);
+        Collection<String> supportedStyles = WmsUtils.getSupportedStylesForLayer(layerName,
+                catalogue);
         if (supportedStyles.size() == 0) {
             /*
              * We have no supported styles for this layer
@@ -296,9 +265,9 @@ public class GetMapStyleParams {
              */
 
             boolean supported = false;
-            for (StyleDef supportedStyle : supportedStyles) {
-                if (supportedStyle.getStyleName().startsWith("default")) {
-                    plotStyleName = supportedStyle.getStyleName();
+            for (String supportedStyle : supportedStyles) {
+                if (supportedStyle.startsWith("default")) {
+                    plotStyleName = supportedStyle;
                     supported = true;
                     break;
                 }
@@ -315,8 +284,8 @@ public class GetMapStyleParams {
              * Check that the requested style is actually supported
              */
             boolean supported = false;
-            for (StyleDef supportedStyle : supportedStyles) {
-                if (supportedStyle.getStyleName().equals(plotStyleName)) {
+            for (String supportedStyle : supportedStyles) {
+                if (supportedStyle.equals(plotStyleName)) {
                     supported = true;
                     break;
                 }
@@ -327,6 +296,8 @@ public class GetMapStyleParams {
             }
         }
 
+        PlottingStyleParameters defaults = layerMetadata.getDefaultPlottingParameters();
+
         /*-
          * Choose the palette name:
          * a) from URL parameter, or failing that
@@ -336,8 +307,8 @@ public class GetMapStyleParams {
         String paletteName;
         if (styleParts.length > 1) {
             paletteName = styleParts[1];
-        } else if (layerMetadata.getPalette() != null && !"".equals(layerMetadata.getPalette())) {
-            paletteName = layerMetadata.getPalette();
+        } else if (defaults.getPalette() != null && !"".equals(defaults.getPalette())) {
+            paletteName = defaults.getPalette();
         } else {
             paletteName = ColourPalette.DEFAULT_PALETTE_NAME;
         }
@@ -354,15 +325,12 @@ public class GetMapStyleParams {
              * This is the case where this.colorScaleRange is null and we want
              * auto-scaling
              */
-            /*
-             * TODO How are we dealing with this?
-             */
             colourScaleRange = null;
         } else if (this.colourScaleRange.isEmpty()) {
             /*
              * We want to use the default scale range if possible
              */
-            Extent<Float> defaultColourScaleRange = layerMetadata.getColorScaleRange();
+            Extent<Float> defaultColourScaleRange = defaults.getColorScaleRange();
             if (defaultColourScaleRange == null || defaultColourScaleRange.isEmpty()) {
                 /*
                  * We have to auto-scale
@@ -377,6 +345,11 @@ public class GetMapStyleParams {
              */
             colourScaleRange = this.colourScaleRange;
         }
+        if (colourScaleRange == null) {
+            colourScaleRange = GraphicsUtils.estimateValueRange(WmsUtils.getDatasetFromLayerName(
+                    layerName, catalogue), catalogue.getLayerNameMapper()
+                    .getVariableIdFromLayerName(layerName));
+        }
 
         /*-
          * Choose whether this is a logarithmic plot:
@@ -387,8 +360,8 @@ public class GetMapStyleParams {
         boolean logarithmic;
         if (this.logarithmic != null) {
             logarithmic = this.logarithmic;
-        } else if (layerMetadata.isLogScaling() != null) {
-            logarithmic = layerMetadata.isLogScaling();
+        } else if (defaults.isLogScaling() != null) {
+            logarithmic = defaults.isLogScaling();
         } else {
             logarithmic = false;
         }
@@ -402,15 +375,18 @@ public class GetMapStyleParams {
         int numColourBands;
         if (this.numColourBands != null) {
             numColourBands = this.numColourBands;
-        } else if (layerMetadata.getNumColorBands() != null) {
-            numColourBands = layerMetadata.getNumColorBands();
+        } else if (defaults.getNumColorBands() != null) {
+            numColourBands = defaults.getNumColorBands();
         } else {
             numColourBands = ColourPalette.MAX_NUM_COLOURS;
         }
 
-        return getMapImageFromStyleNameAndParams(catalogue, layerName, plotStyleName, paletteName,
-                colourScaleRange, logarithmic, numColourBands, backgroundColour, belowMinColour,
-                aboveMaxColour);
+        return catalogue.getStyleCatalogue().getMapImageFromStyle(
+                plotStyleName,
+                new PlottingStyleParameters(colourScaleRange, paletteName, aboveMaxColour,
+                        belowMinColour, backgroundColour, logarithmic, numColourBands),
+                WmsUtils.getVariableMetadataFromLayerName(layerName, catalogue),
+                catalogue.getLayerNameMapper());
     }
 
     public boolean isTransparent() {
@@ -438,72 +414,5 @@ public class GetMapStyleParams {
 
     public String[] getStyleNames() {
         return styles;
-    }
-
-    public static MapImage getDefaultMapImage(WmsCatalogue catalogue, String layerName,
-            String plotStyleName, EnhancedVariableMetadata defaults) throws EdalException {
-        return getMapImageFromStyleNameAndParams(catalogue, layerName, plotStyleName,
-                defaults.getPalette(), defaults.getColorScaleRange(), defaults.isLogScaling(),
-                defaults.getNumColorBands(), new Color(0, true), Color.black, Color.black);
-    }
-
-    public static MapImage getMapImageFromStyleNameAndParams(WmsCatalogue catalogue,
-            String layerName, String plotStyleName, String paletteName,
-            Extent<Float> colourScaleRange, boolean logarithmic, int numColourBands,
-            Color backgroundColour, Color belowMinColour, Color aboveMaxColour)
-            throws EdalException {
-        /*
-         * Now that we have all the URL parameters + any server defined
-         * defaults, we get the style XML template
-         */
-        Template template = velocityEngine.getTemplate("styles/" + plotStyleName.toLowerCase()
-                + ".xml");
-
-        /*
-         * Set all of the variables for replacing in the template
-         */
-        VelocityContext context = new VelocityContext();
-        context.put("paletteName", paletteName);
-        if (colourScaleRange == null) {
-            colourScaleRange = GraphicsUtils.estimateValueRange(WmsUtils.getDatasetFromLayerName(
-                    layerName, catalogue), catalogue.getLayerNameMapper()
-                    .getVariableIdFromLayerName(layerName));
-        }
-        context.put("scaleMin", colourScaleRange.getLow());
-        context.put("scaleMax", colourScaleRange.getHigh());
-        context.put("logarithmic", logarithmic ? "logarithmic" : "linear");
-        context.put("numColorBands", numColourBands);
-        context.put("bgColor", GraphicsUtils.colourToString(backgroundColour));
-        context.put("belowMinColor", GraphicsUtils.colourToString(belowMinColour));
-        context.put("aboveMaxColor", GraphicsUtils.colourToString(aboveMaxColour));
-
-        /*
-         * Now deal with the layer names
-         */
-        Map<String, String> layerKeysToLayerNames = WmsUtils.getStyleTemplateLayerNames(layerName,
-                plotStyleName, catalogue);
-        for (Entry<String, String> keyToLayerName : layerKeysToLayerNames.entrySet()) {
-            context.put(keyToLayerName.getKey(), keyToLayerName.getValue());
-        }
-
-        /*
-         * Process the template, replacing all parameters with their actual
-         * value for this request
-         */
-        StringWriter xmlStringWriter = new StringWriter();
-        template.merge(context, xmlStringWriter);
-        try {
-            /*
-             * We now have an XML description of the style for this request.
-             * Parse it into a MapImage and return the result.
-             */
-            return StyleSLDParser.createImage(xmlStringWriter.toString());
-        } catch (SLDException e) {
-            e.printStackTrace();
-            /*
-             * There is a problem parsing the XML
-             */
-            throw new EdalException("Problem parsing XML template for style " + plotStyleName);
-        }
     }
 }

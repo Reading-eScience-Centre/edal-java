@@ -30,8 +30,10 @@ package uk.ac.rdg.resc.edal.graphics.style.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
@@ -41,6 +43,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -54,6 +57,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -61,6 +68,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
@@ -68,17 +77,26 @@ import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
 import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue.StyleDef;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 /**
  * An implementation of a {@link StyleCatalogue} which is based on having
- * resources containing Xml templates of SLD documents
+ * resources containing Xml templates of SLD documents.
+ * 
+ * This uses the singleton pattern and the object is obtained with
+ * {@link SldTemplateStyleCatalogue#getStyleCatalogue()}
  *
  * @author Guy Griffiths
  */
 public class SldTemplateStyleCatalogue implements StyleCatalogue {
+    /*
+     * Because we will generally set the external style directory separately to
+     * where we use this catalogue, make it a singleton
+     */
+    private final static SldTemplateStyleCatalogue INSTANCE = new SldTemplateStyleCatalogue();
     private static final Logger log = LoggerFactory.getLogger(StyleCatalogue.class);
+    /* Velocity templating engine used for reading fixed styles */
+    private VelocityEngine velocityEngine;
 
     private SortedMap<String, StyleDef> styleDefs = new TreeMap<String, StyleDef>(
             new Comparator<String>() {
@@ -100,7 +118,31 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 }
             });
 
-    public SldTemplateStyleCatalogue() {
+    /**
+     * @return An instance of the {@link SldTemplateStyleCatalogue}
+     */
+    public static SldTemplateStyleCatalogue getStyleCatalogue() {
+        return INSTANCE;
+    }
+
+    private SldTemplateStyleCatalogue() {
+        /*
+         * Initialise the velocity engine to be able to generate MapImages from
+         * XML style templates
+         */
+        velocityEngine = new VelocityEngine();
+        velocityEngine.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS,
+                "org.apache.velocity.runtime.log.Log4JLogChute");
+        velocityEngine.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
+        /*
+         * We add a classpath resource loader and a file resource loader. The
+         * file resource loader has no path until it is added with the
+         * addStylesInDirectory() method
+         */
+        velocityEngine.setProperty(RuntimeConstants.RESOURCE_LOADER, "class,file");
+        velocityEngine.setProperty("class.resource.loader.class",
+                "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+
         /*
          * We want the catalogue to read all possible XML templates for
          * supported styles. This includes 2 parts:
@@ -110,6 +152,9 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          * 
          * 2. Reading any additional styles defined by a user (i.e. from the
          * classpath)
+         * 
+         * Styles in an arbitrary directory can be added with the
+         * addStylesInDirectory() method
          */
         NoAutoCloseZipInputStream zip = null;
         try {
@@ -132,7 +177,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                         String xmlString = IOUtils.toString(zip);
                         StyleDef style = processStyle(matcher.group(1), xmlString);
                         if (style != null) {
-                            styleDefs.put(style.getStyleName(), style);
+                            styleDefs.put(style.styleName, style);
                         }
                     }
                 }
@@ -157,20 +202,9 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             /*
              * This reads all styles from the WEB-INF/classes/styles directory
              */
-            Pattern styleXmlPath = Pattern.compile("^(.*)\\.xml$");
-            File stylesDir = new File(getClass().getResource("/styles/").toURI());
-            if (stylesDir.isDirectory()) {
-                for (File styleFile : stylesDir.listFiles()) {
-                    Matcher matcher = styleXmlPath.matcher(styleFile.getName());
-                    if (matcher.matches()) {
-                        StyleDef style = processStyle(matcher.group(1),
-                                IOUtils.toString(new FileInputStream(styleFile)));
-                        if (style != null) {
-                            styleDefs.put(style.getStyleName(), style);
-                        }
-                    }
-                }
-            }
+            File stylesDir = new File(SldTemplateStyleCatalogue.class.getResource("/styles/")
+                    .toURI());
+            addStylesInDirectory(stylesDir);
         } catch (IllegalArgumentException e) {
             /*
              * We ignore this exception since it just means that the styles
@@ -185,22 +219,136 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
     }
 
     @Override
-    public List<StyleDef> getSupportedStyles(VariableMetadata variableMetadata) {
-        List<StyleDef> supportedStyles = new ArrayList<StyleDef>();
+    public Collection<String> getSupportedStyles(VariableMetadata variableMetadata) {
+        List<String> supportedStyles = new ArrayList<>();
         /*
          * Loop through all loaded style definitions
          */
         for (StyleDef styleDef : styleDefs.values()) {
             if (styleDef.supportedBy(variableMetadata)) {
-                supportedStyles.add(styleDef);
+                supportedStyles.add(styleDef.styleName);
             }
         }
 
         return supportedStyles;
     }
 
+    @Override
+    public boolean styleUsesPalette(String styleName) {
+        return styleDefs.get(styleName).usesPalette;
+    }
+
+    @Override
+    public String getScaledRoleForStyle(String styleName) {
+        return styleDefs.get(styleName).scaledLayerRole;
+    }
+
+    @Override
+    public MapImage getMapImageFromStyle(String styleName,
+            PlottingStyleParameters templateProperties, VariableMetadata metadata,
+            LayerNameMapper layerNameMapper) {
+        /*
+         * We first try and find a resource in the styles directory - this will
+         * be the case for any styles defined on the classpath / in the JAR.
+         * 
+         * If that fails, try without a directory prefix - this will be the case
+         * for all styles in a user-added directory.
+         */
+        String resourceName = "styles/" + styleName.toLowerCase() + ".xml";
+        if (!velocityEngine.resourceExists(resourceName)) {
+            resourceName = styleName.toLowerCase() + ".xml";
+        }
+        Template template = velocityEngine.getTemplate(resourceName);
+
+        /*
+         * Set all of the variables for replacing in the template
+         */
+        VelocityContext context = new VelocityContext();
+        context.put("paletteName", templateProperties.getPalette());
+        Extent<Float> colourScaleRange = templateProperties.getColorScaleRange();
+        context.put("scaleMin", colourScaleRange.getLow());
+        context.put("scaleMax", colourScaleRange.getHigh());
+        context.put("logarithmic", templateProperties.isLogScaling() ? "logarithmic" : "linear");
+        context.put("numColorBands", templateProperties.getNumColorBands());
+        context.put("bgColor", GraphicsUtils.colourToString(templateProperties.getNoDataColour()));
+        context.put("belowMinColor",
+                GraphicsUtils.colourToString(templateProperties.getBelowMinColour()));
+        context.put("aboveMaxColor",
+                GraphicsUtils.colourToString(templateProperties.getAboveMaxColour()));
+
+        /*
+         * Now deal with the layer names
+         */
+        Map<String, VariableMetadata> layerKeysToLayerNames = getStyleTemplateLayerNames(metadata,
+                styleName);
+        for (Entry<String, VariableMetadata> keyToLayerName : layerKeysToLayerNames.entrySet()) {
+            context.put(keyToLayerName.getKey(),
+                    layerNameMapper.getLayerName(metadata.getDataset().getId(), metadata.getId()));
+        }
+
+        /*
+         * Process the template, replacing all parameters with their supplied
+         * values
+         */
+        StringWriter xmlStringWriter = new StringWriter();
+        template.merge(context, xmlStringWriter);
+        try {
+            /*
+             * We now have an XML description of the style for this request.
+             * Parse it into a MapImage and return the result.
+             */
+            return StyleSLDParser.createImage(xmlStringWriter.toString());
+        } catch (SLDException e) {
+            e.printStackTrace();
+            /*
+             * There is a problem parsing the XML
+             */
+            throw new EdalException("Problem parsing XML template for style " + styleName);
+        }
+    }
+
     /**
-     * {@inheritDoc}<br>
+     * Adds an external directory containing styles.
+     * 
+     * @param stylesDir
+     *            The location of the directory to add.
+     * @throws FileNotFoundException
+     *             If the supplied path is not a directory
+     */
+    public void addStylesInDirectory(File stylesDir) throws FileNotFoundException {
+        Pattern styleXmlPath = Pattern.compile("^(.*)\\.xml$");
+        if (stylesDir.isDirectory()) {
+            for (File styleFile : stylesDir.listFiles()) {
+                Matcher matcher = styleXmlPath.matcher(styleFile.getName());
+                if (matcher.matches()) {
+                    StyleDef style = null;
+                    try {
+                        style = processStyle(matcher.group(1),
+                                IOUtils.toString(new FileInputStream(styleFile)));
+                    } catch (IOException | ParserConfigurationException | SAXException e) {
+                        log.error("Problem processing styles on classpath", e);
+                    }
+                    if (style != null) {
+                        styleDefs.put(style.styleName, style);
+                    }
+                }
+            }
+            velocityEngine.addProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH,
+                    stylesDir.getAbsolutePath());
+        } else {
+            log.error("User tried to add a styles directory which was not a directory: "
+                    + stylesDir.getAbsolutePath());
+            throw new FileNotFoundException("The path " + stylesDir.getAbsolutePath()
+                    + " is not a directory");
+        }
+    }
+
+    /**
+     * Returns a {@link Map} of keys used in style templates to the specific
+     * {@link VariableMetadata} objects which they represent. Since a style
+     * template may refer to child layers, we need a way to map the keys for
+     * child layers to the concrete variables which they represent
+     * 
      * This implementation takes the {@link VariableMetadata} of the data layer
      * referred to as <code>$layerName</code> in the template and finds the
      * necessary child {@link VariableMetadata} objects which are required for
@@ -212,16 +360,22 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      * will return a {@link Map} of <code>$layerName-mag</code> and
      * <code>$layerName-dir</code> to the {@link VariableMetadata} objects
      * representing those quantities.
+     * 
+     * @param namedMetadata
+     *            The {@link VariableMetadata} of the main layer being requested
+     * @param styleName
+     *            The style name to be plotted
+     * @return A {@link Map} of keys used in style templates to the
+     *         {@link VariableMetadata} objects they represent.
      */
-    @Override
-    public Map<String, VariableMetadata> getStyleTemplateLayerNames(VariableMetadata namedMetadata,
-            String styleName) {
+    private Map<String, VariableMetadata> getStyleTemplateLayerNames(
+            VariableMetadata namedMetadata, String styleName) {
         StyleDef styleDef = styleDefs.get(styleName);
         Map<String, VariableMetadata> layerKeyToLayerName = new HashMap<>();
-        if (styleDef.needsNamedLayer()) {
+        if (styleDef.needsNamedLayer) {
             layerKeyToLayerName.put("layerName", namedMetadata);
         }
-        for (String childPurpose : styleDef.getRequiredChildRoles()) {
+        for (String childPurpose : styleDef.requiredChildRoles) {
             VariableMetadata childWithRole = namedMetadata.getChildWithRole(childPurpose);
             if (childWithRole != null) {
                 layerKeyToLayerName.put("layerName-" + childPurpose, childWithRole);
@@ -249,7 +403,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      * @throws SAXException
      *             If there is a problem parsing the XML
      */
-    private StyleDef processStyle(String name, String xmlString) throws IOException,
+    private static StyleDef processStyle(String name, String xmlString) throws IOException,
             ParserConfigurationException, SAXException {
         /*
          * Get the XML style definition into a NodeList
@@ -374,7 +528,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      * @return The {@link Node} containing "$scaleMin", or <code>null</code> if
      *         none exists
      */
-    private Node findScaleMinNode(NodeList nodes) {
+    private static Node findScaleMinNode(NodeList nodes) {
         /*
          * Recursively search through the tree for the tag "$scaleMin"
          */
@@ -413,7 +567,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      * @return The name of the layer to which "$scaleMin" applies, or
      *         <code>null</code> if there are none.
      */
-    private String getScaledLayerName(Node scaleMinNode) {
+    private static String getScaledLayerName(Node scaleMinNode) {
         /*
          * Get the parent node and then check all of its children for a
          * $layerName[-xxxx] tag.
@@ -447,7 +601,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      *         <code>null</code> if no such layers exist (e.g. for a fixed layer
      *         name style which uses the scale URL arguments)
      */
-    private String recursivelyCheckChildrenForLayerName(Node parentNode) {
+    private static String recursivelyCheckChildrenForLayerName(Node parentNode) {
         /*
          * This could probably be factored out for more efficiency, but this
          * part of the code is really not a bottleneck (and only gets called at
@@ -487,7 +641,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      *            A regular expression defining the tag to search for
      * @return <code>true</code> if the regular expression matches
      */
-    private boolean styleContainsTag(NodeList nodes, String regexp) {
+    private static boolean styleContainsTag(NodeList nodes, String regexp) {
         if (nodes == null) {
             return false;
         }
@@ -519,7 +673,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      * @param childRoles
      *            A {@link Set} to add the child role names to
      */
-    private void populateStyleChildRoles(NodeList nodes, Set<String> childRoles) {
+    private static void populateStyleChildRoles(NodeList nodes, Set<String> childRoles) {
         Pattern pattern = Pattern.compile("^\\$layerName-?(\\w*)$");
         if (nodes == null) {
             return;
@@ -540,9 +694,207 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         }
     }
 
-    @Override
-    public StyleDef getStyleDefinitionByName(String styleName) {
-        return styleDefs.get(styleName);
+    /**
+     * Definition of a style. This includes properties we need to know to
+     * determine whether a particular variable can support this plotting style,
+     * and how to advertise it.
+     * 
+     * @author Guy Griffiths
+     */
+    private static class StyleDef {
+        /**
+         * @return The name of this style
+         */
+        private String styleName;
+        /**
+         * @return A {@link List} of the roles which the named layer needs its
+         *         children to have.
+         */
+        private List<String> requiredChildRoles;
+        /**
+         * @return Whether this style uses a palette
+         */
+        private boolean usesPalette;
+        /**
+         * @return Whether this style needs the named layer to be scalar (if not
+         *         it just uses children of the named layer)
+         */
+        private boolean needsNamedLayer;
+        /**
+         * @return The role of the layer which has <code>$scaleMin</code> and
+         *         <code>$scaleMax</code> applied to it. This will return an
+         *         empty string if the parent layer is the scaled one, and
+         *         <code>null</code> if no layers use the scale information.
+         */
+        private String scaledLayerRole;
+        private Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType;
+
+        /**
+         * Instantiate a new {@link StyleDef}
+         * 
+         * @param styleName
+         *            The name of the style
+         * @param requiredChildren
+         *            A {@link Set} of child layers which this style needs (e.g.
+         *            a vector style will need "mag" and "dir" children")
+         * @param usesPalette
+         *            Whether or not this style uses a named palette
+         * @param needsNamedLayer
+         *            Whether this style needs the requested layer to plot. For
+         *            example, a vector style <i>only</i> needs child members to
+         *            plot, so this would be <code>false</code>
+         * @param roles2FeatureType
+         *            A {@link Collection} where each item in it represents a
+         *            layer in the {@link MapImage} which this style represents.
+         * 
+         *            Each layer requires a {@link Map} of role name to
+         *            supported feature types, so that we can check whether a
+         *            variable which fulfils a given role can produce one of the
+         *            supported feature types.
+         */
+        public StyleDef(String styleName, Collection<String> requiredChildren, boolean usesPalette,
+                boolean needsNamedLayer, String scaledLayerRole,
+                Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType) {
+            super();
+            this.styleName = styleName;
+            this.requiredChildRoles = new ArrayList<String>(requiredChildren);
+            this.usesPalette = usesPalette;
+            this.needsNamedLayer = needsNamedLayer;
+            this.scaledLayerRole = scaledLayerRole;
+            this.roles2FeatureType = roles2FeatureType;
+        }
+
+        @Override
+        public String toString() {
+            return styleName;
+        }
+
+        /**
+         * Tests whether this style is supported by a given variable
+         * 
+         * @param variableMetadata
+         *            The {@link VariableMetadata} representing the variable to
+         *            test
+         * @return <code>true</code> if the style can be supported
+         */
+        public boolean supportedBy(VariableMetadata variableMetadata) {
+            if (variableMetadata == null) {
+                return false;
+            }
+            if (needsNamedLayer) {
+                /*
+                 * If this style needs the named layer, but it is not scalar
+                 * (i.e. has no scalar data field which can be read) then it
+                 * cannot be supported.
+                 */
+                if (!variableMetadata.isScalar()) {
+                    return false;
+                }
+                /*
+                 * We check that the feature type supported by this
+                 * VariableMetadata is compatible with the layers which the
+                 * named layer is required in.
+                 */
+                if (!styleSupportsRoleAndFeatureType("", variableMetadata.getDataset()
+                        .getMapFeatureType(variableMetadata.getId()))) {
+                    return false;
+                }
+            }
+
+            if (requiredChildRoles != null && !requiredChildRoles.isEmpty()) {
+                for (String requiredRole : requiredChildRoles) {
+                    VariableMetadata childMetadata = variableMetadata
+                            .getChildWithRole(requiredRole);
+                    if (childMetadata == null || !childMetadata.isScalar()) {
+                        /*
+                         * We required a child layer which is either missing or
+                         * not scalar. This style is not supported by the
+                         * supplied metadata.
+                         */
+                        return false;
+                    }
+                    try {
+                        if (!styleSupportsRoleAndFeatureType(requiredRole, childMetadata
+                                .getDataset().getMapFeatureType(childMetadata.getId()))) {
+                            /*
+                             * We need the child metadata to support a feature
+                             * type which it does not.
+                             */
+                            return false;
+                        }
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return true;
+        }
+
+        /**
+         * This method checks to see whether a particular combination of role
+         * and feature type are supported by this style
+         * 
+         * @param role
+         *            The name of the role to test ("" or <code>null</code> for
+         *            parent layer)
+         * @param featureType
+         *            The {@link Class} of the corresponding feature type
+         *            supported by this role
+         * @return <code>true</code> if the given role/feature type are
+         *         supported
+         */
+        private boolean styleSupportsRoleAndFeatureType(String role,
+                Class<? extends Feature<?>> featureType) {
+
+            for (Map<String, Collection<Class<? extends Feature<?>>>> role2FeatureTypes : roles2FeatureType) {
+                Collection<Class<? extends Feature<?>>> supportedFeatures = role2FeatureTypes
+                        .get(role);
+                if (supportedFeatures != null) {
+                    /*
+                     * This role is required in the current image layer.
+                     * 
+                     * Therefore it needs to map to one of the feature types
+                     * supported by this image layer.
+                     */
+                    boolean supportsFeatureType = false;
+                    for (Class<? extends Feature<?>> clazz : supportedFeatures) {
+                        if (clazz.isAssignableFrom(featureType)) {
+                            /*
+                             * We have found that the feature type associated
+                             * with the given role is compatible with one of the
+                             * feature types supported by the layer
+                             */
+                            supportsFeatureType = true;
+                            break;
+                        }
+                    }
+
+                    /*
+                     * We have checked all possible supported feature types. If
+                     * none are supported, this role has failed in the current
+                     * image layer. This is enough to mark it as a failure.
+                     * 
+                     * To mark it as a success, we need to continue checking all
+                     * layers in the image.
+                     */
+                    if (!supportsFeatureType) {
+                        return false;
+                    }
+                }
+                /*
+                 * Implied:
+                 * 
+                 * else {
+                 * 
+                 * This role is not required in the current layer of the image.
+                 * 
+                 * Continue checking the rest of the image layers
+                 * 
+                 * }
+                 */
+            }
+            return true;
+        }
     }
 
     /**
@@ -560,7 +912,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      * 
      * @author Guy Griffiths
      */
-    private class NoAutoCloseZipInputStream extends ZipInputStream {
+    private static class NoAutoCloseZipInputStream extends ZipInputStream {
         private boolean canBeClosed = false;
 
         public NoAutoCloseZipInputStream(InputStream is) {

@@ -120,7 +120,7 @@ import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue.StyleDef;
+import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -889,7 +889,7 @@ public class WmsServlet extends HttpServlet {
             String title = layerMetadata.getTitle();
             child.put("label", title);
 
-            List<StyleDef> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
+            Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
                     variable);
             child.put("plottable", (supportedStyles != null && supportedStyles.size() > 0));
 
@@ -948,22 +948,24 @@ public class WmsServlet extends HttpServlet {
             throw new MetadataException("Layer not found", e);
         }
 
+        PlottingStyleParameters defaultProperties = layerMetadata.getDefaultPlottingParameters();
+
         /*
          * Now create local variables containing the relevant details needed
          */
         String units = variableMetadata.getParameter().getUnits();
         BoundingBox boundingBox = GISUtils.constrainBoundingBox(variableMetadata
                 .getHorizontalDomain().getBoundingBox());
-        Extent<Float> scaleRange = layerMetadata.getColorScaleRange();
-        if(scaleRange == null) {
+        Extent<Float> scaleRange = defaultProperties.getColorScaleRange();
+        if (scaleRange == null) {
             scaleRange = Extents.emptyExtent();
         }
-        Integer numColorBands = layerMetadata.getNumColorBands();
-        if(numColorBands == null) {
+        Integer numColorBands = defaultProperties.getNumColorBands();
+        if (numColorBands == null) {
             numColorBands = 250;
         }
 
-        List<StyleDef> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
+        Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
                 variableMetadata);
 
         VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
@@ -1015,15 +1017,15 @@ public class WmsServlet extends HttpServlet {
         String copyright = layerMetadata.getCopyright();
 
         Set<String> supportedPalettes = ColourPalette.getPredefinedPalettes();
-        String defaultPalette = layerMetadata.getPalette();
+        String defaultPalette = defaultProperties.getPalette();
         if (defaultPalette == null) {
             defaultPalette = ColourPalette.DEFAULT_PALETTE_NAME;
         }
-        String aboveMaxColour = GraphicsUtils.colourToString(layerMetadata.getAboveMaxColour());
-        String belowMinColour = GraphicsUtils.colourToString(layerMetadata.getBelowMinColour());
-        String noDataColour = GraphicsUtils.colourToString(layerMetadata.getNoDataColour());
+        String aboveMaxColour = GraphicsUtils.colourToString(defaultProperties.getAboveMaxColour());
+        String belowMinColour = GraphicsUtils.colourToString(defaultProperties.getBelowMinColour());
+        String noDataColour = GraphicsUtils.colourToString(defaultProperties.getNoDataColour());
 
-        Boolean logScaling = layerMetadata.isLogScaling();
+        Boolean logScaling = defaultProperties.isLogScaling();
         if (logScaling == null) {
             logScaling = false;
         }
@@ -1050,12 +1052,13 @@ public class WmsServlet extends HttpServlet {
         layerDetails.put("numColorBands", numColorBands);
 
         JSONArray supportedStylesJson = new JSONArray();
-        for (StyleDef supportedStyle : supportedStyles) {
-            supportedStylesJson.add(supportedStyle.getStyleName());
+        for (String supportedStyle : supportedStyles) {
+            supportedStylesJson.add(supportedStyle);
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
 
-        layerDetails.put("queryable", catalogue.getServerInfo().allowsFeatureInfo() && catalogue.isQueryable(layerName));
+        layerDetails.put("queryable",
+                catalogue.getServerInfo().allowsFeatureInfo() && catalogue.isQueryable(layerName));
         layerDetails.put("downloadable", catalogue.isDownloadable(layerName));
 
         if (verticalDomain != null) {
@@ -1472,14 +1475,14 @@ public class WmsServlet extends HttpServlet {
         /*
          * First get the style which is applied to this layer
          */
-        StyleDef style = null;
+        String styleName = null;
         if (styleNames != null && styleNames.length > 0) {
             /*
              * Specified as a URL parameter
              */
-            String styleName = styleNames[0];
-            style = catalogue.getStyleCatalogue().getStyleDefinitionByName(styleName);
-            if (style == null) {
+            styleName = styleNames[0];
+            if (!catalogue.getStyleCatalogue().getSupportedStyles(variableMetadata)
+                    .contains(styleName)) {
                 throw new MetadataException("Cannot find min-max for this layer.  The style "
                         + styleName + " is not supported.");
             }
@@ -1487,14 +1490,14 @@ public class WmsServlet extends HttpServlet {
             /*
              * The default style
              */
-            List<StyleDef> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
+            Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
                     variableMetadata);
-            for (StyleDef supportedStyle : supportedStyles) {
-                if (supportedStyle.getStyleName().startsWith("default")) {
-                    style = supportedStyle;
+            for (String supportedStyle : supportedStyles) {
+                if (supportedStyle.startsWith("default")) {
+                    styleName = supportedStyle;
                 }
             }
-            if (style == null) {
+            if (styleName == null) {
                 throw new MetadataException(
                         "Cannot find min-max for this layer.  No default styles are supported.");
             }
@@ -1503,14 +1506,15 @@ public class WmsServlet extends HttpServlet {
         /*
          * Now find which layer the scale is being applied to
          */
-        if (style.getScaledLayerRole() == null) {
+        String scaledLayerRole = catalogue.getStyleCatalogue().getScaledRoleForStyle(styleName);
+        if (scaledLayerRole == null) {
             /*
              * No layer has scaling - we can return anything
              */
             minmax.put("min", 0);
             minmax.put("max", 100);
             return minmax.toString();
-        } else if ("".equals(style.getScaledLayerRole())) {
+        } else if ("".equals(scaledLayerRole)) {
             /*
              * The named (possibly parent) layer is scaled.
              */
@@ -1520,8 +1524,7 @@ public class WmsServlet extends HttpServlet {
              * A child layer is being scaled. Get the WMS layer name
              * corresponding to this child variable
              */
-            String variableId = variableMetadata.getChildWithRole(style.getScaledLayerRole())
-                    .getId();
+            String variableId = variableMetadata.getChildWithRole(scaledLayerRole).getId();
             layerName = catalogue.getLayerNameMapper().getLayerName(datasetId, variableId);
         }
 
@@ -1754,18 +1757,25 @@ public class WmsServlet extends HttpServlet {
              * We're creating a legend with supporting text so we need to know
              * the colour scale range and the layer in question
              */
-            GetMapParameters getMapParameters;
+            GetMapStyleParams getMapStyleParameters;
             try {
-                getMapParameters = new GetMapParameters(params, catalogue);
+                getMapStyleParameters = new GetMapStyleParams(params);
             } catch (EdalLayerNotFoundException e) {
                 throw new MetadataException(
                         "Requested layer is either not present, disabled, or not yet loaded.");
             } catch (Exception e) {
                 throw new MetadataException(
-                        "A full set of GetMap parameters must be provided to generate a full legend.  You can set COLORBARONLY=true to just generate a colour bar");
+                        "You must specify either SLD, SLD_BODY or LAYERS and STYLES for a full legend.  You may set COLORBARONLY=true to just generate a colour bar");
             }
-            legend = getMapParameters.getStyleParameters().getImageGenerator(catalogue)
-                    .getLegend(50, 200);
+            MapImage imageGenerator = getMapStyleParameters.getImageGenerator(catalogue);
+            int height = params.getPositiveInt("height", 200);
+            int width;
+            if (imageGenerator.getFieldsWithScales().size() > 1) {
+                width = params.getPositiveInt("width", 200);
+            } else {
+                width = params.getPositiveInt("width", 50);
+            }
+            legend = getMapStyleParameters.getImageGenerator(catalogue).getLegend(width, height);
         }
         httpServletResponse.setContentType("image/png");
         try {
@@ -2028,7 +2038,7 @@ public class WmsServlet extends HttpServlet {
             }
             for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
                 PlottingDomainParams plottingParams = new PlottingDomainParams(1, 1, null, null,
-                        /*Extents.newExtent(time, time)*/null, pos, null, time);
+                        null, pos, null, time);
                 List<? extends ProfileFeature> features = gridDataset.extractProfileFeatures(
                         CollectionUtils.setOf(varId), plottingParams);
                 profileFeatures.addAll(features);

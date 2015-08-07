@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.graphics.style.util;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -116,7 +117,7 @@ public class ColourPalette {
         }
     }
 
-    public static void addPaletteDirectory(File paletteDir) {
+    public static void addPaletteDirectory(File paletteDir) throws FileNotFoundException {
         if (paletteDir.isDirectory()) {
             for (String paletteFileName : paletteDir.list()) {
                 if (paletteFileName.endsWith(".pal")) {
@@ -133,6 +134,8 @@ public class ColourPalette {
                     }
                 }
             }
+        } else {
+            throw new FileNotFoundException(paletteDir.getAbsolutePath() + " is not a directory");
         }
     }
 
