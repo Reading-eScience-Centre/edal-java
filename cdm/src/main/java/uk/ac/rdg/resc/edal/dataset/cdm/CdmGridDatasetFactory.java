@@ -222,6 +222,9 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                 VariableDS variable = grid.getVariable();
                 String varId = variable.getFullName();
                 String name = getVariableName(variable);
+                
+                Attribute stdNameAtt = variable.findAttributeIgnoreCase("standard_name");
+                String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null; 
 
                 /*
                  * If this is a parent variable for a stats collection, we don't
@@ -242,8 +245,8 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                     }
                 }
 
-                Parameter parameter = new Parameter(varId, variable.getShortName(),
-                        variable.getDescription(), variable.getUnitsString(), name);
+                Parameter parameter = new Parameter(varId, name, variable.getDescription(),
+                        variable.getUnitsString(), standardName);
                 GridVariableMetadata metadata = new GridVariableMetadata(parameter, hDomain,
                         zDomain, tDomain, true);
                 vars.add(metadata);
