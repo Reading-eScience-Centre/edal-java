@@ -51,7 +51,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  */
 public class TimeAxisImplTest {
     private TimeAxis tAxis;
-    private Chronology chronology = ISOChronology.getInstance();
+    private Chronology chronology = ISOChronology.getInstanceUTC();
     private String tAxisName = "Sample TimeAxis";
     // the number not include the first one on the axis
     private int numberOfDate = 10;

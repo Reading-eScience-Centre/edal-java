@@ -94,6 +94,11 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implemen
         DateTime time = getCoordinateValue(index);
         return Extents.newExtent(time, time);
     }
+    
+    @Override
+    public Extent<DateTime> getCoordinateExtent() {
+        return Extents.newExtent(getCoordinateValue(0), getCoordinateValue(size()-1));
+    }
 
     @Override
     public int hashCode() {
