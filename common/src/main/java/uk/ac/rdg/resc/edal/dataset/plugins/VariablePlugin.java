@@ -120,7 +120,7 @@ public abstract class VariablePlugin {
      * @return An {@link Array1D} containing the generated values
      */
     public Array1D<Number> generateArray1D(final String varId,
-            final Array1D<HorizontalPosition> positions, final Array1D<Number>... sourceArrays) {
+            final Array1D<HorizontalPosition> positions, @SuppressWarnings("unchecked") final Array1D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
@@ -155,7 +155,8 @@ public abstract class VariablePlugin {
      * @return An {@link Array2D} containing the generated values
      */
     public Array2D<Number> generateArray2D(final String varId,
-            final Array2D<HorizontalPosition> positions, final Array2D<Number>... sourceArrays) {
+            final Array2D<HorizontalPosition> positions,
+            @SuppressWarnings("unchecked") final Array2D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
