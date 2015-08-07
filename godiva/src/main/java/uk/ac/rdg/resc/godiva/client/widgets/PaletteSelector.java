@@ -239,6 +239,7 @@ public class PaletteSelector implements PaletteSelectorIF {
                         getSelectedStyle(), getNumColorBands());
             }
         });
+        styles.setTitle("Select the style to plot this layer with");
 
         opacity = new ListBox();
         opacity.addItem("25%", "0.25");
