@@ -48,6 +48,7 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.NumberFormat;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CellPanel;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -129,6 +130,12 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     /** Whether to use normal or inverted palettes */
     private boolean inverted = false;
+    
+    /*
+     * Used to repopulate the scale min/max boxes in the event of invalid input
+     */
+    private String lastMinScaleValue = "";
+    private String lastMaxScaleValue = "";
 
     /**
      * Instantiates a new {@link PaletteSelector}
@@ -186,9 +193,33 @@ public class PaletteSelector implements PaletteSelectorIF {
         paletteImage.setTitle("Click to choose palette and number of colour bands");
         paletteImage.setStylePrimaryName("imageStyle");
 
-        ChangeHandler scaleChangeHandler = new ChangeHandler() {
+        ValueChangeHandler<String> scaleChangeHandler = new ValueChangeHandler<String>() {
             @Override
-            public void onChange(ChangeEvent event) {
+            public void onValueChange(ValueChangeEvent<String> event) {
+                float minVal;
+                try {
+                    minVal = Float.parseFloat(minScale.getValue());
+                } catch (NumberFormatException e) {
+                    Window.alert(minScale.getValue() + " is not a number!");
+                    minScale.setValue(lastMinScaleValue);
+                    return;
+                }
+                float maxVal;
+                try {
+                    maxVal = Float.parseFloat(maxScale.getValue());
+                } catch (NumberFormatException e) {
+                    Window.alert(maxScale.getValue() + " is not a number!");
+                    maxScale.setValue(lastMaxScaleValue);
+                    return;
+                }
+                if(maxVal < minVal) {
+                    Window.alert(maxScale.getValue() + " is less than "+minScale.getValue());
+                    minScale.setValue(lastMinScaleValue);
+                    maxScale.setValue(lastMaxScaleValue);
+                    return;
+                }
+                lastMinScaleValue = minScale.getValue();
+                lastMaxScaleValue = maxScale.getValue();
                 handler.scaleRangeChanged(PaletteSelector.this.wmsLayerId, getScaleRange());
                 setScaleLabels();
             }
@@ -196,7 +227,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 
         maxScale = new TextBox();
         maxScale.setWidth("80px");
-        maxScale.addChangeHandler(scaleChangeHandler);
+        maxScale.addValueChangeHandler(scaleChangeHandler);
         maxScale.setTitle("The maximum value of the colour range");
         maxScale.setMaxLength(8);
 
@@ -244,7 +275,7 @@ public class PaletteSelector implements PaletteSelectorIF {
 
         minScale = new TextBox();
         minScale.setWidth("80px");
-        minScale.addChangeHandler(scaleChangeHandler);
+        minScale.addValueChangeHandler(scaleChangeHandler);
         minScale.setTitle("The minimum value of the colour range");
         minScale.setMaxLength(8);
 
@@ -586,7 +617,7 @@ public class PaletteSelector implements PaletteSelectorIF {
     @Override
     public void populatePalettes(List<String> availablePalettes) {
         this.availablePalettes = availablePalettes;
-        if(!isLocked()) {
+        if (!isLocked()) {
             setEnabled(true);
         }
     }
@@ -856,6 +887,8 @@ public class PaletteSelector implements PaletteSelectorIF {
          */
         minScale.setValue(minVal + "");
         maxScale.setValue(maxVal + "");
+        lastMinScaleValue = minScale.getValue();
+        lastMaxScaleValue = maxScale.getValue();
         setLogScale(isLogScale);
         setScaleLabels();
         return true;
