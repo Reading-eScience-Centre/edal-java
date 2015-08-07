@@ -62,6 +62,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.UnitsInfo;
 import uk.ac.rdg.resc.godiva.shared.LayerMenuItem;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.Request;
@@ -921,7 +922,15 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
      * clients, so put it in a method which can be overridden
      */
     protected Image getLogo() {
-        return new Image(GWT.getModuleBaseURL() + "img/logo.png");
+        Image ret = new Image(GWT.getModuleBaseURL() + "img/logo.png");
+        ret.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                Window.open("http://www.met.reading.ac.uk/resc/home/", "_blank", null);
+            }
+        });
+        ret.getElement().getStyle().setCursor(Cursor.POINTER);
+        return ret;
     }
 
     /**
