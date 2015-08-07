@@ -268,6 +268,8 @@ public class PaletteSelector implements PaletteSelectorIF {
                 autoButton.setEnabled(unlocked);
                 maxScale.setEnabled(unlocked);
                 minScale.setEnabled(unlocked);
+                aboveMax.setEnabled(unlocked);
+                belowMin.setEnabled(unlocked);
                 lockButton.setTitle(unlocked ? "Lock the colour range" : "Unlock the colour range");
             }
         });
@@ -584,7 +586,9 @@ public class PaletteSelector implements PaletteSelectorIF {
     @Override
     public void populatePalettes(List<String> availablePalettes) {
         this.availablePalettes = availablePalettes;
-        setEnabled(true);
+        if(!isLocked()) {
+            setEnabled(true);
+        }
     }
 
     @Override
