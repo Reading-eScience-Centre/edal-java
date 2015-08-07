@@ -65,8 +65,10 @@ public class VariableConfig implements EnhancedVariableMetadata {
     @XmlAttribute(name = "description")
     private String description = null;
 
-    @XmlAttribute(name = "colorScaleRange")
-    @XmlJavaTypeAdapter(ScaleRangeAdapter.class)
+    /*
+     * This is handled by the setter, to check for conflict with log scaling
+     */
+    @XmlTransient
     private Extent<Float> colorScaleRange = null;
 
     @XmlAttribute(name = "palette")
@@ -84,7 +86,10 @@ public class VariableConfig implements EnhancedVariableMetadata {
     @XmlJavaTypeAdapter(ColorAdapter.class)
     private Color noDataColour = new Color(0, true);
 
-    @XmlAttribute(name = "scaling")
+    /*
+     * This is handled by the setter, to check for conflict with scale range
+     */
+    @XmlTransient
     private String scaling = "linear";
 
     @XmlAttribute(name = "numColorBands")
@@ -182,16 +187,51 @@ public class VariableConfig implements EnhancedVariableMetadata {
         this.title = title;
     }
 
+    @XmlAttribute(name = "colorScaleRange")
+    @XmlJavaTypeAdapter(ScaleRangeAdapter.class)
     public void setColorScaleRange(Extent<Float> colorScaleRange) {
-        this.colorScaleRange = colorScaleRange;
+        if ((!scaling.equalsIgnoreCase("log") && !scaling.equalsIgnoreCase("logarithmic"))
+                || (colorScaleRange != null && colorScaleRange.getLow() > 0.0 && colorScaleRange
+                        .getHigh() > 0.0)) {
+            /*
+             * We don't set either limit to <= zero if the scaling to
+             * logarithmic
+             */
+            this.colorScaleRange = colorScaleRange;
+        }
+    }
+    
+    /*
+     * Required for JAX-B marshalling, so not unused
+     */
+    @SuppressWarnings("unused")
+    private Extent<Float> getColorScaleRange() {
+        return colorScaleRange;
     }
 
     public void setPaletteName(String paletteName) {
         this.paletteName = paletteName;
     }
 
+    @XmlAttribute(name = "scaling")
     public void setScaling(String scaling) {
-        this.scaling = scaling;
+        if ((!scaling.equalsIgnoreCase("log") && !scaling.equalsIgnoreCase("logarithmic"))
+                || (colorScaleRange != null && colorScaleRange.getLow() > 0.0 && colorScaleRange
+                        .getHigh() > 0.0)) {
+            /*
+             * We don't set the scaling to logarithmic if either scale bound is
+             * less than zero
+             */
+            this.scaling = scaling;
+        }
+    }
+    
+    /*
+     * Required for JAX-B marshalling, so not unused
+     */
+    @SuppressWarnings("unused")
+    private String getScaling() {
+        return scaling;
     }
 
     public void setNumColorBands(int numColorBands) {
