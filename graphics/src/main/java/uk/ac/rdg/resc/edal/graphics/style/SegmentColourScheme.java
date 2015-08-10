@@ -34,7 +34,7 @@ import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 
 public class SegmentColourScheme extends ColourScheme {
 
-    private ColourScale scaleRange;
+    private ScaleRange scaleRange;
     /*
      * The colour to plot for values below the minimum. If null, then use the
      * lowest value in the palette
@@ -56,7 +56,7 @@ public class SegmentColourScheme extends ColourScheme {
 
     private ColourPalette palette = null;
 
-    public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour, Color aboveMaxColour,
+    public SegmentColourScheme(ScaleRange scaleRange, Color belowMinColour, Color aboveMaxColour,
             Color noDataColour, Color[] palette, Integer nColourBands) {
         super();
         this.scaleRange = scaleRange;
@@ -69,7 +69,7 @@ public class SegmentColourScheme extends ColourScheme {
         this.palette = new ColourPalette(palette, nColourBands);
     }
 
-    public SegmentColourScheme(ColourScale scaleRange, Color belowMinColour, Color aboveMaxColour,
+    public SegmentColourScheme(ScaleRange scaleRange, Color belowMinColour, Color aboveMaxColour,
             Color noDataColour, String paletteString, Integer nColourBands) {
         super();
         this.scaleRange = scaleRange;

@@ -30,20 +30,20 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 
-public class ColourScale {
+public class ScaleRange {
     // The scale range spanned by this colour scheme
     private Float scaleMin = -50f;
     private Float scaleMax = 50f;
     // Whether or not the scale is logarithmic
     private Boolean logarithmic = false;
     
-    public ColourScale(Extent<Float> scaleRange, Boolean logarithmic) {
+    public ScaleRange(Extent<Float> scaleRange, Boolean logarithmic) {
         this.scaleMin = scaleRange.getLow();
         this.scaleMax = scaleRange.getHigh();
         this.logarithmic = logarithmic;
     }
     
-    public ColourScale(Float scaleMin, Float scaleMax, Boolean logarithmic) {
+    public ScaleRange(Float scaleMin, Float scaleMax, Boolean logarithmic) {
         this.scaleMin = scaleMin;
         this.scaleMax = scaleMax;
         this.logarithmic = logarithmic;

@@ -112,7 +112,7 @@ import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
-import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
@@ -1751,7 +1751,7 @@ public class WmsServlet extends HttpServlet {
             int width = params.getPositiveInt("width", 50);
             int height = params.getPositiveInt("height", 200);
             /* Find the requested colour palette, or use the default if not set */
-            SegmentColourScheme colourScheme = new SegmentColourScheme(new ColourScale(
+            SegmentColourScheme colourScheme = new SegmentColourScheme(new ScaleRange(
                     Extents.newExtent(0f, 1f), false), Color.black, Color.black, Color.black,
                     paletteName, numColourBands);
             legend = colourScheme.getScaleBar(width, height, 0.0f, vertical, false, null, null);
@@ -2028,7 +2028,7 @@ public class WmsServlet extends HttpServlet {
             if (scaleRange == null || scaleRange.isEmpty()) {
                 scaleRange = Extents.newExtent(270f, 300f);
             }
-            ColourScale colourScale = new ColourScale(scaleRange.getLow(), scaleRange.getHigh(),
+            ScaleRange colourScale = new ScaleRange(scaleRange.getLow(), scaleRange.getHigh(),
                     params.getBoolean("logscale", false));
             ColourScheme colourScheme = new SegmentColourScheme(colourScale,
                     GraphicsUtils.parseColour(params.getString("belowmincolor", "0x000000")),

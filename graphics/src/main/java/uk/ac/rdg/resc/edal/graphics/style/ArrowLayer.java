@@ -72,8 +72,6 @@ public class ArrowLayer extends GriddedImageLayer {
         if (arrowSize < 1 || arrowSize == null) {
             throw new IllegalArgumentException("Arrow size must be non-null and > 0");
         }
-        setXSampleSize((int) (arrowSize * 1.5));
-        setYSampleSize((int) (arrowSize * 1.5));
     }
 
     public String getDirectionFieldName() {
@@ -103,7 +101,7 @@ public class ArrowLayer extends GriddedImageLayer {
          * Calculate the (floating point) number of pixels per arrow. In ideal
          * situations, this will be an integer equal to the arrow size * 2
          * 
-         * For non-ideal situtations it means that the arrows will not be evenly
+         * For non-ideal situations it means that the arrows will not be evenly
          * spaced (they will be either n or n+1 pixels apart). They will tile
          * perfectly though.
          */
@@ -150,14 +148,14 @@ public class ArrowLayer extends GriddedImageLayer {
                                  * multiply the arrow size by 0.1 to get the
                                  * scale factor.
                                  */
-                                VectorFactory.renderVector("LINEVEC", 1.0, angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                                VectorFactory.renderVector("LINEVEC", angle.doubleValue() * Math.PI
+                                        / 180.0, i, j, arrowSize * 0.1f, g);
                             } else if (arrowStyle == ArrowStyle.FAT_ARROW) {
-                                VectorFactory.renderVector("STUMPVEC", 1.0, angle.doubleValue()
+                                VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
                                         * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
                             } else if (arrowStyle == ArrowStyle.TRI_ARROW) {
-                                VectorFactory.renderVector("TRIVEC", 1.0, angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                                VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
+                                        / 180.0, i, j, arrowSize * 0.1f, g);
                             }
 
                         }

@@ -6,7 +6,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
-import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
@@ -29,10 +29,10 @@ public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
 		} else {
 			autoscaleEnabled = Boolean.parseBoolean(autoscaleEnabledText);
 		}
-		ColourScale scale;
+		ScaleRange scale;
 		if (autoscaleEnabled.equals(false)) {
 			SLDRange range = SLDRange.parseRange(xPath, symbolizerNode);
-			scale = new ColourScale(range.getMinimum(), range.getMaximum(),
+			scale = new ScaleRange(range.getMinimum(), range.getMaximum(),
 					range.getSpacing() == Spacing.LOGARITHMIC);
 		} else {
 			scale = null;

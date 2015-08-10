@@ -33,18 +33,15 @@ import java.util.Collection;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.graphics.style.util.DataReadingTypes.SubsampleType;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
+/**
+ * Abstract class representing a layer within an image.
+ *
+ * @author Guy Griffiths
+ */
 public abstract class ImageLayer extends Drawable {
-    /*
-     * For when the plot type is SUBSAMPLE
-     */
-    private int xSampleSize = 8;
-    private int ySampleSize = 8;
-    private SubsampleType subsampleType = SubsampleType.CLOSEST;
-
     @Override
     public BufferedImage drawImage(final PlottingDomainParams params,
             final FeatureCatalogue catalogue) throws EdalException {
@@ -54,32 +51,16 @@ public abstract class ImageLayer extends Drawable {
         return image;
     }
 
+    /**
+     * Draw the data into a supplied {@link BufferedImage}
+     * 
+     * @param image
+     * @param params
+     * @param catalogue
+     * @throws EdalException
+     */
     protected abstract void drawIntoImage(BufferedImage image, final PlottingDomainParams params,
             final FeatureCatalogue catalogue) throws EdalException;
 
-    public void setXSampleSize(int xSampleSize) {
-        this.xSampleSize = xSampleSize;
-    }
-
-    public int getXSampleSize() {
-        return xSampleSize;
-    }
-
-    public void setYSampleSize(int ySampleSize) {
-        this.ySampleSize = ySampleSize;
-    }
-
-    public int getYSampleSize() {
-        return ySampleSize;
-    }
-
-    public void setSubsampleType(SubsampleType subsampleType) {
-        this.subsampleType = subsampleType;
-    }
-
-    public SubsampleType getSubsampleType() {
-        return subsampleType;
-    }
-    
     public abstract Collection<Class<? extends Feature<?>>> supportedFeatureTypes();
 }

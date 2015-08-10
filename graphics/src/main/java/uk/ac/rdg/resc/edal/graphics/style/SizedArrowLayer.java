@@ -35,7 +35,6 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 
-import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.util.VectorFactory;
@@ -50,23 +49,20 @@ public class SizedArrowLayer extends GriddedImageLayer {
     private String magnitudeFieldName;
     private Color arrowColour = Color.black;
 
-    private int minArrowSize = 8;
-    private int maxArrowSize = 16;
+    private int minArrowSize = 4;
+    private int maxArrowSize = 12;
 
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
-    private Extent<Float> magnitudeScaleRange;
+    private ScaleRange magnitudeScaleRange;
 
     public SizedArrowLayer(String directionFieldName, String magnitudeFieldName,
-            Integer minArrowSize, Integer maxArrowSize, Extent<Float> magnitudeScaleRange,
+            Integer minArrowSize, Integer maxArrowSize, ScaleRange magnitudeScaleRange,
             Color arrowColour, ArrowStyle arrowStyle) {
         this.directionFieldName = directionFieldName;
         this.magnitudeFieldName = magnitudeFieldName;
 
         this.minArrowSize = minArrowSize;
         this.maxArrowSize = maxArrowSize;
-
-        setXSampleSize((int) (this.maxArrowSize * 1.5));
-        setYSampleSize((int) (this.maxArrowSize * 1.5));
 
         this.magnitudeScaleRange = magnitudeScaleRange;
 
@@ -88,9 +84,9 @@ public class SizedArrowLayer extends GriddedImageLayer {
 
         /*
          * Calculate the (floating point) number of pixels per arrow. In ideal
-         * situations, this will be an integer equal to the arrow size * 2
+         * situations, this will be an integer equal to the sample spacing
          * 
-         * For non-ideal situtations it means that the arrows will not be evenly
+         * For non-ideal situations it means that the arrows will not be evenly
          * spaced (they will be either n or n+1 pixels apart). They will tile
          * perfectly though.
          */
@@ -106,9 +102,6 @@ public class SizedArrowLayer extends GriddedImageLayer {
             if (yLoc > yPixelsPerArrow) {
                 yLoc -= yPixelsPerArrow;
                 for (int i = 0; i < width; i++) {
-                    Number magnitude = magnitudes.get(j, i);
-                    int arrowSize = (int) (minArrowSize + (maxArrowSize - minArrowSize) * magnitude.doubleValue()
-                            / (magnitudeScaleRange.getHigh() - magnitudeScaleRange.getLow()));
 
                     if (xLoc > xPixelsPerArrow) {
                         xLoc -= xPixelsPerArrow;
@@ -116,9 +109,22 @@ public class SizedArrowLayer extends GriddedImageLayer {
                         /*
                          * We are at a point where we need to draw an arrow
                          */
+                        Number magnitude = magnitudes.get(j, i);
                         Double angle = GISUtils.transformWgs84Heading(directions.get(j, i),
                                 domainObjects.get(j, i));
-                        if (angle != null && !Float.isNaN(angle.floatValue())) {
+                        if (magnitude != null && !Float.isNaN(magnitude.floatValue())
+                                && angle != null && !Float.isNaN(angle.floatValue())) {
+
+                            double scaleZeroToOne = magnitudeScaleRange.scaleZeroToOne(magnitude);
+                            if (scaleZeroToOne < 0) {
+                                scaleZeroToOne = 0.0;
+                            }
+                            if (scaleZeroToOne > 1) {
+                                scaleZeroToOne = 1.0;
+                            }
+
+                            int arrowSize = (int) (minArrowSize + scaleZeroToOne
+                                    * (maxArrowSize - minArrowSize));
                             if (arrowStyle == ArrowStyle.UPSTREAM) {
                                 /* Convert from degrees to radians */
                                 angle = angle * GISUtils.DEG2RAD;
@@ -131,7 +137,9 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                 double jEnd = j - arrowSize * Math.cos(angle);
                                 /* Draw a dot representing the data location */
                                 g.fillOval(i - 2, j - 2, 4, 4);
-                                /* Draw a line representing the vector direction */
+                                /*
+                                 * Draw a line representing the vector direction
+                                 */
                                 g.setStroke(new BasicStroke(1));
                                 g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
                             } else if (arrowStyle == ArrowStyle.THIN_ARROW) {
@@ -141,14 +149,14 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                  * multiply the arrow size by 0.1 to get the
                                  * scale factor.
                                  */
-                                VectorFactory.renderVector("LINEVEC", 1.0, angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                                VectorFactory.renderVector("LINEVEC", angle.doubleValue() * Math.PI
+                                        / 180.0, i, j, arrowSize * 0.1f, g);
                             } else if (arrowStyle == ArrowStyle.FAT_ARROW) {
-                                VectorFactory.renderVector("STUMPVEC", 1.0, angle.doubleValue()
+                                VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
                                         * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
                             } else if (arrowStyle == ArrowStyle.TRI_ARROW) {
-                                VectorFactory.renderVector("TRIVEC", 1.0, angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                                VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
+                                        / 180.0, i, j, arrowSize * 0.1f, g);
                             }
 
                         }

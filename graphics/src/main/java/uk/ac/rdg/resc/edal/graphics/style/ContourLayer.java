@@ -109,7 +109,7 @@ public class ContourLayer extends GriddedImageLayer {
     }
 
     private String dataFieldName;
-    private ColourScale scale;
+    private ScaleRange scale;
     
     private Boolean autoscaleEnabled = true;
     private Double numberOfContours = 10.0;
@@ -118,7 +118,7 @@ public class ContourLayer extends GriddedImageLayer {
     private ContourLineStyle contourLineStyle = ContourLineStyle.DASHED;
     private Boolean labelEnabled = true;
     
-    public ContourLayer(String dataFieldName, ColourScale scale, boolean autoscaleEnabled, 
+    public ContourLayer(String dataFieldName, ScaleRange scale, boolean autoscaleEnabled, 
     		double numberOfContours, Color contourLineColour, int contourLineWidth, ContourLineStyle contourLineStyle, boolean labelEnabled) {
     	this.dataFieldName = dataFieldName;
     	this.scale = scale;
@@ -134,7 +134,7 @@ public class ContourLayer extends GriddedImageLayer {
         return dataFieldName;
     }
 
-    public ColourScale getScale() {
+    public ScaleRange getScale() {
 		return scale;
 	}
 	

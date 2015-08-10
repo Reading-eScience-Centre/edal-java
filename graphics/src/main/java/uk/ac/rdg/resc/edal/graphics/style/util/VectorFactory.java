@@ -53,7 +53,7 @@ public class VectorFactory {
     public VectorFactory() {
     }
 
-    public static void renderVector(String style, double speed, double angle, int i, int j,
+    public static void renderVector(String style, double angle, int i, int j,
             float scale, Graphics2D g) {
 
         int type = 0;

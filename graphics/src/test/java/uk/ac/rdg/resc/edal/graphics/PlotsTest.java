@@ -54,7 +54,7 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
-import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
@@ -102,7 +102,7 @@ public class PlotsTest {
     private FeatureCatalogue catalogue;
     private PlottingDomainParams params;
     /* ColourScale which can be used by any plotting layer which needs it */
-    private ColourScale scale = new ColourScale(0f, 1f, false);
+    private ScaleRange scale = new ScaleRange(0f, 1f, false);
 
     @Before
     public void setup() {

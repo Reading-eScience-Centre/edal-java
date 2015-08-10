@@ -8,7 +8,7 @@ import javax.xml.xpath.XPathConstants;
 
 import org.w3c.dom.Node;
 
-import uk.ac.rdg.resc.edal.graphics.style.ColourScale;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.InterpolateColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
@@ -51,7 +51,7 @@ public class SLDColorMapParser {
 			} else if (function instanceof ColorSLDSegmentFunction) {
 				ColorSLDSegmentFunction segment = (ColorSLDSegmentFunction) function;
 				SLDRange range = segment.getRange();
-				ColourScale colourScale = new ColourScale(range.getMinimum(),
+				ScaleRange colourScale = new ScaleRange(range.getMinimum(),
 						range.getMaximum(), range.getSpacing() == Spacing.LOGARITHMIC);
 				if (segment.getPaletteName() != null) {
 					colourScheme = new SegmentColourScheme(colourScale,

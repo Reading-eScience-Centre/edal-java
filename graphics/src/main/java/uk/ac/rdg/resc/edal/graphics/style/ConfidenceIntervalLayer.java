@@ -60,15 +60,9 @@ public class ConfidenceIntervalLayer extends GriddedImageLayer {
 		this.glyphSize = glyphSize;
 		this.colourScheme = colourSceme;
 		
-		setSampleSize();
-	}
-	
-	private void setSampleSize() {
-	    if(glyphSize < 1 || glyphSize == null) {
-	        throw new IllegalArgumentException("Glyph size must be non-null and > 0");
-	    }        
-	    setXSampleSize(glyphSize);
-	    setYSampleSize(glyphSize);
+		if(glyphSize < 1) {
+		    throw new IllegalArgumentException("Glyph size must be > 0");
+		}        
 	}
 
 	@Override
@@ -92,7 +86,7 @@ public class ConfidenceIntervalLayer extends GriddedImageLayer {
             if (value != null && !Float.isNaN(value.floatValue())) {
             	int j = index/image.getWidth();
             	int i = index - j*image.getWidth();
-            	if (j%getYSampleSize() == 0 && i%getXSampleSize() == 0) {
+            	if (j%glyphSize == 0 && i%glyphSize == 0) {
 	            	Color color = colourScheme.getColor(value);
 	        		int[] xPoints = {i - glyphSize / 2, i + glyphSize / 2, i + glyphSize / 2};
 	        		int[] yPoints = {j + glyphSize / 2, j + glyphSize / 2, j - glyphSize / 2};
@@ -116,7 +110,7 @@ public class ConfidenceIntervalLayer extends GriddedImageLayer {
             if (value != null && !Float.isNaN(value.floatValue())) {
             	int j = index/image.getWidth();
             	int i = index - j*image.getWidth();
-            	if (j%getYSampleSize() == 0 && i%getXSampleSize() == 0) {
+            	if (j%glyphSize == 0 && i%glyphSize == 0) {
             		Color color = colourScheme.getColor(value);
             		int[] xPoints = {i - glyphSize / 2, i - glyphSize / 2, i + glyphSize / 2};
             		int[] yPoints = {j + glyphSize / 2, j - glyphSize / 2, j - glyphSize / 2};
