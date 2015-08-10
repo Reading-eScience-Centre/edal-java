@@ -29,7 +29,6 @@
 package uk.ac.rdg.resc.godiva.client.widgets;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,11 +125,6 @@ public class StartEndTimePopup extends DialogBoxWithCloseButton {
                     }
                 }
 
-                /*
-                 * These need to be in date order. They should already be, but
-                 * sort to be safe
-                 */
-                Collections.sort(availableDates);
                 startTimeSelector.populateDates(availableDates);
 
                 if (currentTime != null

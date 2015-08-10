@@ -39,13 +39,22 @@ import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.logical.shared.ShowRangeEvent;
+import com.google.gwt.event.logical.shared.ShowRangeHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.datepicker.client.CalendarUtil;
+import com.google.gwt.user.datepicker.client.DateBox;
+import com.google.gwt.user.datepicker.client.DateBox.DefaultFormat;
 
 /**
  * Implementation of {@link TimeSelectorIF} which presents dates and times (and
@@ -67,10 +76,13 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         }
     }
 
+    private DateBox datesCalendar;
+    private List<String> availableDates = new ArrayList<>();
     private ListBox dates;
     private ListBox times;
     private String id;
     private TimeDateSelectionHandler handler;
+    private String selectedDate = null;
 
     /*
      * These are used when we have a continuous time axis
@@ -84,7 +96,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
      */
     private String startTime;
     private String endTime;
-    private static final DateTimeFormat datePrinter = DateTimeFormat.getFormat("yyyy-MM-dd");
+    private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
     public TimeSelector(String id, final TimeDateSelectionHandler handler) {
         this(id, "Time", handler);
@@ -94,6 +106,18 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         super(label);
         this.id = id;
         this.handler = handler;
+
+        /*
+         * Allow for either a drop-down list or a calendar widget
+         */
+        this.label.setTitle("Click this label to switch between calendar / list selectors");
+        this.label.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                datesCalendar.setVisible(!datesCalendar.isVisible());
+                dates.setVisible(!dates.isVisible());
+            }
+        });
         initDiscrete();
     }
 
@@ -107,11 +131,68 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         dates.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                dateSelected();
+                selectDate(dates.getValue(dates.getSelectedIndex()));
             }
         });
+        dates.setVisible(false);
         dates.setTitle("Adjust the date");
         add(dates);
+
+        datesCalendar = new DateBox();
+        datesCalendar.setTitle("Adjust the date");
+        datesCalendar.setVisible(true);
+        datesCalendar.setFormat(new DefaultFormat(DATE_FORMAT));
+        datesCalendar.setWidth("6em");
+        datesCalendar.getDatePicker().setYearAndMonthDropdownVisible(true);
+        datesCalendar.getDatePicker().setYearArrowsVisible(true);
+        datesCalendar.getDatePicker().addShowRangeHandler(new ShowRangeHandler<Date>() {
+            @Override
+            public void onShowRange(ShowRangeEvent<Date> event) {
+                /*
+                 * Here we check which dates are available and which should be
+                 * disabled
+                 */
+                Date calCurrentDate = CalendarUtil.copyDate(event.getStart());
+                Date calEndDate = event.getEnd();
+                if (continuous) {
+                    Date startDate;
+                    Date endDate;
+                    if (availableDates.size() == 0) {
+                        /*
+                         * That's not a typo! We want all dates to be invalid if
+                         * we don't have a set of available dates yet
+                         */
+                        startDate = CalendarUtil.copyDate(calEndDate);
+                        endDate = CalendarUtil.copyDate(calCurrentDate);
+                    } else {
+                        startDate = DATE_FORMAT.parse(availableDates.get(0).substring(0, 10));
+                        endDate = DATE_FORMAT.parse(availableDates.get(1).substring(0, 10));
+                    }
+                    while (calCurrentDate.before(calEndDate)) {
+                        if (calCurrentDate.before(startDate) || calCurrentDate.after(endDate)) {
+                            datesCalendar.getDatePicker().setTransientEnabledOnDates(false,
+                                    calCurrentDate);
+                        }
+                        CalendarUtil.addDaysToDate(calCurrentDate, 1);
+                    }
+                } else {
+                    while (calCurrentDate.before(calEndDate)) {
+                        if (!availableDates.contains(DATE_FORMAT.format(calCurrentDate))) {
+                            datesCalendar.getDatePicker().setTransientEnabledOnDates(false,
+                                    calCurrentDate);
+                        }
+                        CalendarUtil.addDaysToDate(calCurrentDate, 1);
+                    }
+                }
+            }
+        });
+        datesCalendar.addValueChangeHandler(new ValueChangeHandler<Date>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Date> event) {
+                selectDate(DATE_FORMAT.format(event.getValue()));
+            }
+        });
+        add(datesCalendar);
 
         times = new ListBox();
         times.setName("time_selector");
@@ -168,7 +249,6 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
                     range.setSelectedIndex(i);
                 }
             }
-
             handler.datetimeSelected(id, getSelectedDateTime());
         } else {
             /*
@@ -219,6 +299,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 
     @Override
     public void populateDates(List<String> availableDatetimes) {
+        this.availableDates = availableDatetimes;
         dates.clear();
         times.clear();
         if (availableDatetimes == null || availableDatetimes.size() == 0) {
@@ -248,7 +329,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 
                 int i = 0;
                 int selectDate = 0;
-                String nowString = datePrinter.format(new Date());
+                String nowString = DATE_FORMAT.format(new Date());
                 for (String item : availableDatetimes) {
                     if (item.compareTo(nowString) < 0) {
                         selectDate = i;
@@ -258,6 +339,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
                 }
                 dates.setEnabled(true);
                 dates.setSelectedIndex(selectDate);
+                datesCalendar.setValue(DATE_FORMAT.parse(dates.getValue(selectDate)));
 
                 label.removeStyleDependentName("inactive");
                 /*
@@ -269,6 +351,8 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
                 for (String item : availableDatetimes) {
                     dates.addItem(item, URL.encodePathSegment(item));
                 }
+                datesCalendar.setValue(DATE_FORMAT.parse(availableDatetimes.get(availableDatetimes
+                        .size() - 1)));
                 dates.setEnabled(true);
                 label.removeStyleDependentName("inactive");
             }
@@ -296,27 +380,35 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 
     @Override
     public String getSelectedDate() {
-        int i = dates.getSelectedIndex();
-        if (i != -1) {
-            return dates.getValue(i);
-        } else {
-            return null;
-        }
+        return selectedDate;
+//        int i = dates.getSelectedIndex();
+//        if (i != -1) {
+//            return dates.getValue(i);
+//        } else {
+//            return null;
+//        }
     }
 
     @Override
     public String getSelectedDateTime() {
-        int i = dates.getSelectedIndex();
         int j = times.getSelectedIndex();
-        // TODO Look at this more carefully for case when no times are present
-        if (i != -1 && j != -1) {
-            /*
-             * TODO Maybe the Z will cause issues?
-             */
-            return dates.getValue(i) + "T" + times.getValue(j);
+        if (j != -1) {
+            return selectedDate + "T" + times.getValue(j);
         } else {
             return null;
         }
+//        int i = dates.getSelectedIndex();
+//        int j = times.getSelectedIndex();
+//        return dates.getValue(i) + "T" + times.getValue(j);
+//        // TODO Look at this more carefully for case when no times are present
+//        if (i != -1 && j != -1) {
+//            /*
+//             * TODO Maybe the Z will cause issues?
+//             */
+//            return dates.getValue(i) + "T" + times.getValue(j);
+//        } else {
+//            return null;
+//        }
     }
 
     @Override
@@ -324,12 +416,12 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         if (!continuous) {
             return null;
         } else {
-            int i = dates.getSelectedIndex();
+//            int i = dates.getSelectedIndex();
             int j = times.getSelectedIndex();
             int k = range.getSelectedIndex();
             // TODO Look at this more carefully for case when no times are
             // present
-            if (i != -1 && j != -1 && k != -1) {
+            if (j != -1 && k != -1) {
                 return getRangeString(getSelectedDateTime(), range.getValue(k));
             } else {
                 return null;
@@ -360,14 +452,28 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 
     @Override
     public boolean selectDate(String dateString) {
-        for (int i = 0; i < dates.getItemCount(); i++) {
-            if (dates.getValue(i).equals(dateString)) {
-                dates.setSelectedIndex(i);
-                dateSelected();
-                return true;
-            }
+        List<String> availableDates;
+        if (continuous) {
+            availableDates = getDatesInRange(this.availableDates.get(0),
+                    this.availableDates.get(this.availableDates.size() - 1));
+        } else {
+            availableDates = this.availableDates;
         }
-        return false;
+
+        if (availableDates.contains(dateString)) {
+            Date date = DATE_FORMAT.parse(dateString);
+            datesCalendar.setValue(date);
+            for (int i = 0; i < dates.getItemCount(); i++) {
+                if (dates.getValue(i).equals(dateString)) {
+                    dates.setSelectedIndex(i);
+                }
+            }
+            selectedDate = dateString;
+            dateSelected();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -380,6 +486,8 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
             }
         }
         if (dateValid) {
+            Date date = DATE_FORMAT.parse(timeString.substring(0, 10));
+            datesCalendar.setValue(date);
             String time = URL.encodePathSegment(timeString.substring(11));
             for (int i = 0; i < times.getItemCount(); i++) {
                 if (times.getValue(i).equals(time)) {
@@ -411,7 +519,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 
     @Override
     public boolean hasMultipleTimes() {
-        return (dates.getItemCount() > 1) || (times.getItemCount() > 1);
+        return (availableDates.size() > 1) || (times.getItemCount() > 1);
     }
 
     @Override
@@ -420,9 +528,12 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
             this.continuous = continuous;
             if (dates != null)
                 remove(dates);
+            if (datesCalendar != null)
+                remove(datesCalendar);
             if (times != null)
                 remove(times);
             dates = null;
+            datesCalendar = null;
             times = null;
 
             if (range != null)
@@ -458,7 +569,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 
         List<String> dates = new ArrayList<String>();
         while (startDate.getTime() <= endDate.getTime()) {
-            dates.add(datePrinter.format(startDate));
+            dates.add(DATE_FORMAT.format(startDate));
             startDate.setDate(startDate.getDate() + 1);
         }
         return dates;
@@ -471,11 +582,11 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 
     @Override
     public List<String> getAvailableDates() {
-        List<String> allDates = new ArrayList<String>();
-        for (int i = 0; i < dates.getItemCount(); i++) {
-            allDates.add(dates.getValue(i));
+        if (continuous) {
+            return getDatesInRange(availableDates.get(0), availableDates.get(1));
+        } else {
+            return availableDates;
         }
-        return allDates;
     }
 
     @Override

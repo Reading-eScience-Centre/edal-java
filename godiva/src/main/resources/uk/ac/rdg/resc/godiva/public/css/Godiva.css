@@ -178,3 +178,8 @@
 	padding: 0px;
 	margin: 0px;
 }
+
+/* Used for popup in date selector */
+.dateBoxPopup {
+	z-index: 2010;
+}
