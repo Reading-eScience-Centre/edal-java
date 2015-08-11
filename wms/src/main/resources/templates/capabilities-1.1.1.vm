@@ -2,7 +2,7 @@
 <!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
 <WMT_MS_Capabilities
         version="1.1.1"
-        updateSequence="$catalogue.serverLastUpdate"
+        updateSequence="$catalogue.lastUpdateTime"
         xmlns="http://www.opengis.net/wms"
         xmlns:xlink="http://www.w3.org/1999/xlink">
     <Service>
@@ -156,14 +156,14 @@
 ## Discrete vertical domain
 ## Domain is a VerticalAxis
         <Extent name="elevation" default="$GISUtils.getClosestElevationToSurface($zDomain)">
-#foreach($zval in $vDomain.coordinateValues)
+#foreach($zval in $zDomain.coordinateValues)
             $zval#if($foreach.hasNext),#end
 #end            
         </Extent>
 #else
 ## Continuous vertical domain
         <Extent name="elevation" default="$zDomain.extent.low">
-            $vDomain.extent.low/$vDomain.extent.high/0
+            $zDomain.extent.low/$zDomain.extent.high/0
         </Extent>
 #end
 #end

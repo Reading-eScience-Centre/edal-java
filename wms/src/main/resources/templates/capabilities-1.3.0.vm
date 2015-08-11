@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <WMS_Capabilities
         version="1.3.0"
-        updateSequence="$catalogue.serverLastUpdate"
+        updateSequence="$catalogue.lastUpdateTime"
         xmlns="http://www.opengis.net/wms"
         xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -156,14 +156,14 @@
 ## Discrete vertical domain
 ## Domain is a VerticalAxis
         <Dimension name="elevation" units="$zDomain.verticalCrs.units" default="$GISUtils.getClosestElevationToSurface($zDomain)">
-#foreach($zval in $vDomain.coordinateValues)
+#foreach($zval in $zDomain.coordinateValues)
             $zval#if($foreach.hasNext),#end
 #end            
         </Dimension>
 #else
 ## Continuous vertical domain
         <Dimension name="elevation" units="$zDomain.verticalCrs.units" default="$zDomain.extent.low">
-            $vDomain.extent.low/$vDomain.extent.high/0
+            $zDomain.extent.low/$zDomain.extent.high/0
         </Dimension>
 #end
 #end
