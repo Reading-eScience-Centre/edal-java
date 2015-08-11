@@ -200,7 +200,7 @@ public class ScreenshotServlet extends HttpServlet {
          * be
          */
         BufferedImage colorBar = null;
-        URL url = createWmsUrl(params, false, minLon, minLat, maxLon, maxLat, mapWidth, mapHeight,
+        URL url = createWmsUrl(params, false, minLon, minLat, maxLon, maxLat, 50, mapHeight,
                 servletUrl, time, true);
         if (url != null) {
             InputStream in = null;
@@ -421,8 +421,14 @@ public class ScreenshotServlet extends HttpServlet {
             String numColorBands = params.getString("numColorBands");
             if (numColorBands != null)
                 url.append("&NUMCOLORBANDS=" + numColorBands);
+            String logscale = params.getString("logscale");
+            if (logscale != null)
+                url.append("&LOGSCALE=" + logscale);
             if (time != null)
-                /* Yuck.  But it seems to be necessary, otherwise "+" gets interpreted wrongly */
+                /*
+                 * Yuck. But it seems to be necessary, otherwise "+" gets
+                 * interpreted wrongly
+                 */
                 url.append("&TIME=" + URLEncoder.encode(URLEncoder.encode(time, "UTF-8"), "UTF-8"));
             String elevation = params.getString("elevation");
             if (elevation != null)
@@ -432,7 +438,10 @@ public class ScreenshotServlet extends HttpServlet {
                 url.append("&TARGETELEVATION=" + targetElevation);
             String targetTime = params.getString("targettime");
             if (targetTime != null)
-                /* Yuck.  But it seems to be necessary, otherwise "+" gets interpreted wrongly */
+                /*
+                 * Yuck. But it seems to be necessary, otherwise "+" gets
+                 * interpreted wrongly
+                 */
                 url.append("&TARGETTIME="
                         + URLEncoder.encode(URLEncoder.encode(targetTime, "UTF-8"), "UTF-8"));
         }
@@ -442,9 +451,13 @@ public class ScreenshotServlet extends HttpServlet {
         if (colorbar) {
             url.append("GetLegendGraphic");
         } else {
-            url.append("GetMap");
+            /*
+             * Don't specify a width for a colourbar. A different default will
+             * be used depending on whether we have a 1D or 2D variable
+             */
+            url.append("GetMap&WIDTH=" + width);
         }
-        url.append("&FORMAT=image/png&WIDTH=" + width + "&HEIGHT=" + height);
+        url.append("&FORMAT=image/png&HEIGHT=" + height);
         url.append("&BBOX=" + minLon + "," + minLat + "," + maxLon + "," + maxLat);
         String crs = params.getString("crs");
         if (crs.equalsIgnoreCase("CRS:84")) {

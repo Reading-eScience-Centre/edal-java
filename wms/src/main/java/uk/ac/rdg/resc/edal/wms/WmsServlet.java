@@ -1774,7 +1774,7 @@ public class WmsServlet extends HttpServlet {
             int height = params.getPositiveInt("height", 200);
             int width;
             if (imageGenerator.getFieldsWithScales().size() > 1) {
-                width = params.getPositiveInt("width", 200);
+                width = params.getPositiveInt("width", height);
             } else {
                 width = params.getPositiveInt("width", 50);
             }
