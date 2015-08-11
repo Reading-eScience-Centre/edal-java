@@ -34,19 +34,19 @@ import com.google.gwt.resources.client.TextResource;
 
 /**
  * Define the Javascript dependencies so that they can be injected prior to
- * using
+ * using them
  *
  * @author Guy Griffiths
  */
 public  interface JavascriptDependencies extends ClientBundle {
     JavascriptDependencies INSTANCE = GWT.create(JavascriptDependencies.class);
 
-    @Source("OpenLayers-2.11.js")
+    @Source("uk/ac/rdg/resc/godiva/public/js/OpenLayers-2.11.js")
     public TextResource openLayers();
 
-    @Source("proj4js.js")
+    @Source("uk/ac/rdg/resc/godiva/public/js/proj4js.js")
     public TextResource proj4js();
 
-    @Source("projections.js")
+    @Source("uk/ac/rdg/resc/godiva/public/js/projections.js")
     public TextResource projections();
 }
