@@ -42,58 +42,34 @@
 <p>EDAL is the Environmental Data Abstraction Layer - a set of libraries which provide a data model for dealing with environmental datatypes, and numerous utility routines for reading, manipulating, and plotting this data, as well as serving it over a WMS.</p>
 
 <h2>
-<a name="getting-started-with-ncwms" class="anchor" href="#getting-started-with-ncwms"><span class="octicon octicon-link"></span></a>Getting started with ncWMS</h2>
+<a name="getting-ncwms" class="anchor" href="#getting-started-with-ncwms"><span class="octicon octicon-link"></span></a>Getting ncWMS</h2>
 
 <p>ncWMS is designed to run in a servlet container such as <a href="http://tomcat.apache.org/">Tomcat</a> or <a href="https://glassfish.java.net/">Glassfish</a>.  However, we do provide a standalone version which uses an embedded <a href="http://winstone.sourceforge.net/">Winstone</a> servlet container to allow users to quickly try it out.</p>
 
 <h3>
-<a name="standalone-version" class="anchor" href="#standalone-version"><span class="octicon octicon-link"></span></a>Standalone version</h3>
-
-<p>TODO Add a download link.
-TODO Highlight the lack of security in the standalone version
-The standalone version can be run from the command line using the command:</p>
-
-<pre><code>java -jar ncWMS-2.0-standalone.jar
-</code></pre>
-
-<p>This will run the embedded servlet container with ncWMS.  You can access the web interface to ncWMS at <a href="http://localhost:8080/">http://localhost:8080/</a></p>
-
-<h3>
 <a name="servlet-container-version" class="anchor" href="#servlet-container-version"><span class="octicon octicon-link"></span></a>Servlet container version</h3>
 
-<p>TODO Add a download link
-TODO Explain security config</p>
+<p>This is the standard version of ncWMS which most people will want to use it can be downloaded from <a href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0-rc1/ncWMS-2.0-rc1.war">here</a></p>
+<p>Note that you will need to configure a security role within your servlet container to be able to use this.</p>
 
 <h3>
-<a name="adding-data" class="anchor" href="#adding-data"><span class="octicon octicon-link"></span></a>Adding data</h3>
+<a name="standalone-version" class="anchor" href="#standalone-version"><span class="octicon octicon-link"></span></a>Standalone version</h3>
 
-<p>TODO Explain admin interface briefly
-TODO Gridded CF (NetCDF/GRIB) data by default
-TODO Non-default data reader (with link to dev guide/cookbook)</p>
+<p>The standalone version of ncWMS can be downloaded from <a href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0-rc1/ncWMS-2.0-rc1-standalone.jar">here</a></p>
+<p>Note that this version is designed to be run locally and has no security for any of the administrative functions.  To run a publicly-available version of ncWMS, please use the servlet container version.
+The standalone version can be run from the command line using the command:</p>
 
-<h3>
-<a name="using-the-godiva-3-interface" class="anchor" href="#using-the-godiva-3-interface"><span class="octicon octicon-link"></span></a>Using the Godiva 3 interface</h3>
-
-<p>TODO image(?) showing overview
-TODO Link to Godiva 3 quickstart guide.</p>
-
-<h3>
-<a name="developing-ncwms" class="anchor" href="#developing-ncwms"><span class="octicon octicon-link"></span></a>Developing ncWMS</h3>
-
-<p>ncWMS can be extended in a number of ways for custom behaviour.  These include:</p>
-
-<ul>
-<li>Adding new colour palettes</li>
-<li>Precisely defining new styles using custom <a href="http://en.wikipedia.org/wiki/Styled_Layer_Descriptor">SLDs</a>
-</li>
-<li>Adding readers for new data formats</li>
-<li>Adding plugins to perform on-the-fly manipulation of existing data layers</li>
-</ul><p>TODO add link to dev cookbook for how to do these</p>
+<h2>
+<a name="getting-started-with-ncwms" class="anchor" href="#getting-started-with-ncwms"><span class="octicon octicon-link"></span></a>Using ncWMS</h2>
+For information on how to use ncWMS, please consult the <a href="ncWMS_user_guide.html">ncWMS User Guide</a>
 
 <h2>
 <a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h2>
 
-<p><a href="https://github.com/jonblower" class="user-mention">@jonblower</a>, <a href="https://github.com/guygriffiths" class="user-mention">@guygriffiths</a>, <a href="https://github.com/N-Lin" class="user-mention">@N-Lin</a>, <a href="https://github.com/purplecat" class="user-mention">@purplecat</a></p>
+<p>
+<a href="https://github.com/guygriffiths" class="user-mention">@guygriffiths</a>, 
+<a href="https://github.com/jonblower" class="user-mention">@jonblower</a>, 
+<a href="https://github.com/N-Lin" class="user-mention">@N-Lin</a>, <a href="https://github.com/purplecat" class="user-mention">@purplecat</a></p>
       </section>
     </div>
 

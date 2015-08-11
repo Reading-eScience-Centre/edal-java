@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="description" content="ncWMS User Guide">
+<link rel="stylesheet" type="text/css" media="screen"
+	href="stylesheets/stylesheet.css">
+<title>ncWMS User Guide</title>
+<style></style>
+</head>
+<body>
+	<!-- HEADER -->
+	<div id="header_wrap" class="outer">
+		<header class="inner">
+			<a id="forkme_banner"
+				href="https://github.com/Reading-eScience-Centre/edal-java">View
+				on GitHub</a>
+
+			<h1 id="project_title">ncWMS</h1>
+			<h2 id="project_tagline">User Guide</h2>
+
+			<section id="downloads">
+				<a class="jar_download_link"
+					href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0-rc1/ncWMS-2.0-rc1-standalone.jar">Download
+					ncWMS as a standalone JAR file</a> <a class="war_download_link"
+					href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0-rc1/ncWMS-2.0-rc1.war">Download
+					ncWMS as a WAR file</a>
+			</section>
+		</header>
+	</div>
+
+	<!-- MAIN CONTENT -->
+	<div id="main_content_wrap" class="outer">
+		<section id="main_content" class="inner">
+
+			<h1>
+				<a id="ncWMS_User_Guide_0"></a>ncWMS User Guide
+			</h1>
+			<p>ncWMS is a Web Map Service for geospatial data that are stored
+				in CF-compliant NetCDF files. The intention is to create a WMS that
+				requires minimal configuration: the source data files should already
+				contain most of the necessary metadata. ncWMS is developed and
+				maintained by the Reading e-Science Centre at the University of
+				Reading, UK.</p>
+			<p>This guide provides instructions on installing, setting up,
+				and using ncWMS v2.</p>
+			<h2>
+				<a id="Installation_8"></a>Installation
+			</h2>
+			<h3>
+				<a id="Standalone_version_11"></a>Standalone version
+			</h3>
+			<p>
+				The standalone version of ncWMS requires no installation. It can be
+				run from the command-line with the command
+				<code>java -jar ncWMS-standalone.jar</code>
+				. This will run the WMS server locally with no security for
+				administration and configuration. It will be available at <a
+					href="http://localhost:8080/">http://localhost:8080/</a>. All
+				configuration etc. is identical to the standard version.
+			</p>
+			<h3>
+				<a id="Installation_15"></a>Installation
+			</h3>
+			<p>ncWMS is a Java servlet which runs on a servlet container such
+				as Tomcat, JBoss, or Glassfish. Installation is servlet-container
+				dependent, but there are no ncWMS-specific procedures for
+				installation.</p>
+			<p>
+				Once ncWMS is up-and-running, on first launch it will create a
+				configuration file and logging directory. By default this is located
+				in a directory named
+				<code>.ncWMS-edal</code>
+				in the home directory of the user running the servlet container. To
+				change the location of the server configuration, stop the servlet
+				container, and edit the file
+				<code>$WEBAPP_DIR/WEB-INF/classes/config.properties</code>
+				. This configuration file may contain the property:
+				<code>configDir=$HOME/.ncWMS-edal</code>
+				. Change/add this to reflect the desired directory and restart the
+				servlet container.
+			</p>
+			<h3>
+				<a id="Security_configuration_21"></a>Security configuration
+			</h3>
+			<p>
+				Security for the administration of ncWMS is delegated to the servlet
+				container (in standalone mode there is no security on any
+				administration). You should define a security role with the name
+				<code>ncWMS-admin</code>
+				, and add users with that role. For example, using Tomcat, you can
+				add the following to
+				<code>tomcat-users.xml</code>
+				:
+			</p>
+			<pre><code>&lt;role rolename=&quot;ncWMS-admin&quot; /&gt;
+&lt;user username=&quot;admin&quot; password=&quot;ncWMS-password&quot; roles=&quot;ncWMS-admin&quot;/&gt;</code></pre>
+			<p>
+				Access to the administration interface would then be granted to a
+				user with the name
+				<code>admin</code>
+				and the password
+				<code>ncWMS-password</code>
+			</p>
+			<h2>
+				<a id="Configuration_31"></a>Configuration
+			</h2>
+			<p>
+				Configuration of ncWMS is performed by either accessing the
+				administration web interface (<a
+					href="http://serveraddress/ncWMS/admin/">http://serveraddress/ncWMS/admin/</a>)
+				or by directly modifying
+				<code>config.xml</code>
+				in the configuration directory. It is recommended to use the web
+				interface - precise documentation of the XML configuration file is
+				beyond the scope of this guide.
+			</p>
+			<p>Once any changes have been made on this page, click the “Save
+				configuration” button to apply them.</p>
+			<h3>
+				<a id="Adding_datasets_38"></a>Adding datasets
+			</h3>
+			<p>On the admin page, new datasets can be added by filling in the
+				information in the “Required Data” column of the Datasets section.
+				All other fields are optional. Already-configured datasets can be
+				modified here.</p>
+			<h4>
+				<a id="Required_Data_42"></a>Required Data
+			</h4>
+			<ul>
+				<li>ID: An alphanumeric identifier for the dataset. This should
+					be unique on the server.</li>
+				<li>Title: The title of the dataset. This is displayed in menus
+					etc. on the user interface.</li>
+				<li>Location: The location of the dataset. This should be
+					either a location on disk or an OPeNDAP URL. <em>Note that
+						locations should use slashes - not backslashes - regardless of
+						operating system</em>. For example, on Windows a path such as <code>C:/Data/dataset.nc</code>
+					should be used. If referring to a location on disk, regular
+					expressions of the form <code>/mnt/data/dataset/**/**/*.nc</code>
+					are valid. If such an expression refers to multiple NetCDF files,
+					they will be interpreted as having non-overlapping time axes. Any
+					other configuration of data spanning multiple files is not
+					supported.
+				</li>
+			</ul>
+			<h4>
+				<a id="Optional_Metadata_47"></a>Optional Metadata
+			</h4>
+			<ul>
+				<li>More Info URL: A URL containing more information about the
+					dataset. This will appear when clicking the information button in
+					the web interface.</li>
+				<li>Copyright: The copyright information for the dataset. This
+					will appear when clicking the information button in the web
+					interface as well as on graphs generated by ncWMS.</li>
+			</ul>
+			<h4>
+				<a id="Status_51"></a>Status
+			</h4>
+			<p>Status information about the dataset will appear here</p>
+			<h4>
+				<a id="Refresh_54"></a>Refresh
+			</h4>
+			<ul>
+				<li>Auto-refresh rate: Specifies how regularly the dataset will
+					be scanned for changes</li>
+				<li>Force refresh: By ticking this box and saving the
+					configuration, the dataset will be refreshed immediately</li>
+			</ul>
+			<h4>
+				<a id="Options_58"></a>Options:
+			</h4>
+			<ul>
+				<li>Disabled: Disables this dataset but keeps the configuration
+					intact</li>
+				<li>Queryable: Whether or not to allow GetFeatureInfo requests
+					to this dataset</li>
+				<li>Downloadable: Whether or not to allow data download for
+					this dataset</li>
+			</ul>
+			<h4>
+				<a id="Data_reading_class_63"></a>Data reading class:
+			</h4>
+			<p>
+				This is the Java class which should be used to read the data. This
+				should be left blank to use the default gridded NetCDF data reader.
+				ncWMS v2 also provides the reader
+				<code>uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory</code>
+				for reading data from the UK Met Office EN3/EN4 dataset (<a
+					href="http://www.metoffice.gov.uk/hadobs/en4/">http://www.metoffice.gov.uk/hadobs/en4/</a>).
+				For custom data types you specify their class name here (see
+				Development section for more information)
+			</p>
+			<h4>
+				<a id="Remove_66"></a>Remove?
+			</h4>
+			<p>Tick this box to completely remove this dataset from the
+				configuration</p>
+			<h3>
+				<a id="Configuring_variables_69"></a>Configuring variables
+			</h3>
+			<p>Once a dataset has been added, a link will appear in the “Edit
+				variables” column. By clicking this, all of the variables within the
+				dataset can be individually configured. The properties which can be
+				adjusted are:</p>
+			<ul>
+				<li>Title: The title of the variable to appear in menus / the
+					capabilities document</li>
+				<li>Default colour scale range: This is the value range which
+					the data covers. When a dataset is added, this is populated with a
+					range based upon a small sample of the data</li>
+				<li>Default palette: The name of default colour palette to use.
+					Available palettes can be browsed in the Godiva interface by
+					clicking on the colour bar. The names of the palettes can be found
+					by hovering over them.</li>
+				<li>Default number of colour bands: The number of gradations of
+					colour to use when plotting the variable. Must be between 2 and
+					250.</li>
+				<li>Default scaling: Whether to plot data on a linear or a
+					logarithmic colour scale.</li>
+			</ul>
+			<h3>
+				<a id="Dynamic_services_79"></a>Dynamic services
+			</h3>
+			<p>Dynamic services are equivalent to datasets but are not
+				pre-indexed. This allows users to access potentially very large
+				numbers of files without having to configure them. An explanation of
+				dynamic services is provided on the administration interface and
+				their configuration is very similar to that of standard datasets.</p>
+			<h3>
+				<a id="Other_server_settings_83"></a>Other server settings
+			</h3>
+			<h4>
+				<a id="Cache_85"></a>Cache
+			</h4>
+			<p>To increase speed, ncWMS uses a cache of recently-extracted
+				data. Enabling/disabling the cache can be done here, as well as
+				configuration of how much memory the cache is allow to consume. The
+				higher this is, the more features will be cached.</p>
+			<h4>
+				<a id="Server_settings_89"></a>Server settings
+			</h4>
+			<ul>
+				<li>Title: The server name, which will be the title of the
+					Godiva interface, and will also appear in the capabilities document</li>
+				<li>Abstract: Description of the purpose of this server -
+					appears in the capabilities document</li>
+				<li>Keywords: Keywords describing this server - appear in the
+					capabilities document</li>
+				<li>URL: A URL of the service provider - appears in the
+					capabilities document</li>
+				<li>Max image width: The maximum allowable width (in pixels)
+					which can be requested in a GetMap call</li>
+				<li>Max image height: The maximum allowable height (in pixels)
+					which can be requested in a GetMap call</li>
+				<li>Allow GetFeatureInfo: This can be used to disable
+					GetFeatureInfo requests globally on the server. If this is enabled,
+					individual datasets can still have GetFeatureInfo disabled using
+					the “Queryable” option</li>
+				<li>Allow global capabilities: Allows clients to request a WMS
+					Capabilities document including all datasets on the server</li>
+			</ul>
+			<h4>
+				<a id="Contact_information_100"></a>Contact information
+			</h4>
+			<p>This configures the contact information which will appear in
+				the capabilities document</p>
+			<h2>
+				<a id="Usage_104"></a>Usage
+			</h2>
+			<h3>
+				<a id="Standard_WMS_107"></a>Standard WMS
+			</h3>
+			<p>ncWMS provides the three mandatory methods of the WMS
+				specification and should work with any standard WMS client. However,
+				it also accepts a number of additional parameters for finer control
+				of the images produced.</p>
+			<p>
+				In ncWMS, the WMS layer names are of the form
+				<code>datasetId/variableId</code>
+				.
+			</p>
+			<h4>
+				<a id="GetMap_113"></a>GetMap
+			</h4>
+			<p>All of the standard parameters for GetMap are supported on
+				ncWMS. Additional notes on some of these:</p>
+			<ul>
+				<li>FORMAT: The supported formats are:
+					<ul>
+						<li>image/png</li>
+						<li>image/png;mode=32bit</li>
+						<li>image/gif</li>
+						<li>image/jpeg</li>
+						<li>application/vnd.google-earth.kmz</li>
+					</ul>
+				</li>
+				<li>TIME: For gridded data with a discrete time axis this takes
+					a single value. For in-situ data which is spread over a range, it
+					is more useful to provide a time range in the form <code>starttime/endtime</code>.
+					This should ideally be used in conjunction with the TARGETTIME
+					parameter (see below)
+				</li>
+				<li>ELEVATION: For gridded data with a discrete vertical axis
+					this takes a single value. For in-situ data which is spread over a
+					range, it is more useful to provide an elevation range in the form
+					<code>startelevation/endelevation</code>. This should ideally be
+					used in conjunction with the TARGETELEVATION parameter (see below)
+				</li>
+			</ul>
+			<p>In additional to the standard GetMap parameters, ncWMS accepts
+				the following optional additional parameters. If not specified, the
+				server-configured defaults are used:</p>
+			<ul>
+				<li>COLORSCALERANGE: Of the form <code>min,max</code> this is
+					the scale range used for plotting the data.
+				</li>
+				<li>NUMCOLORBANDS: The number of discrete colours to plot the
+					data. Must be between 2 and 250</li>
+				<li>ABOVEMAXCOLOR: The colour to plot values which are above
+					the maximum end of the scale range. Colours are of the form
+					0xRRGGBB or 0xAARRGGBB, and it also accepts “transparent” and
+					“extend”</li>
+				<li>BELOWMINCOLOR: The colour to plot values which are below
+					the minimum end of the scale range. Colours are of the form
+					0xRRGGBB or 0xAARRGGBB, and it also accepts “transparent” and
+					“extend”</li>
+				<li>LOGSCALE: “true” or “false” - whether to plot data with a
+					logarithmic scale</li>
+				<li>TARGETTIME: For in-situ data, all points which fall within
+					the time range (specified in the TIME parameter) will be plotted.
+					In the case that an in-situ point has multiple time readings within
+					that range, the colour used to plot them will depend on the time
+					value which is closest to this given value</li>
+				<li>TARGETELEVATION: For in-situ data, all points which fall
+					within the elevation range (specified in the ELEVATION parameter)
+					will be plotted. In the case that an in-situ point has multiple
+					elevation readings within that range, the colour used to plot them
+					will depend on the elevation value which is closest to this given
+					value</li>
+				<li>OPACITY: The percentage opacity of the final output image</li>
+			</ul>
+			<h4>
+				<a id="GetFeatureInfo_137"></a>GetFeatureInfo
+			</h4>
+			<p>The GetFeatureInfo request works as per the standard WMS, with
+				the following notable points:</p>
+			<ul>
+				<li>INFO_FORMAT: <code>text/xml</code> and <code>text/plain</code>
+					are supported
+				</li>
+				<li>For in-situ (i.e. non-gridded) datasets, all features
+					within a 9-pixel box of the click position are returned, up to the
+					maximum specified by FEATURE_COUNT.</li>
+			</ul>
+			<h4>
+				<a id="GetCapabilities_144"></a>GetCapabilities
+			</h4>
+			<p>The GetCapabilities request works as per the standard WMS,
+				with the following additional optional parameter:</p>
+			<ul>
+				<li>DATASET: If this is present, a capabilities document will
+					be returned containing only layers which are present within the
+					given dataset ID</li>
+			</ul>
+			<h3>
+				<a id="Custom_ncWMS_methods_150"></a>Custom ncWMS methods
+			</h3>
+			<p>
+				In additional to the standard WMS methods, ncWMS provides a number
+				of additional requests. These all take the standard WMS parameters
+				of
+				<code>SERVICE=WMS</code>
+				,
+				<code>VERSION</code>
+				, and
+				<code>REQUEST</code>
+				. The following are the valid values for the
+				<code>REQUEST</code>
+				parameter:
+			</p>
+			<h4>
+				<a id="GetTimeseries_154"></a>GetTimeseries
+			</h4>
+			<p>
+				This produces either a timeseries graph or, if downloading is
+				enabled, a CSV file containing the data. The URL parameters are
+				identical to those of a GetFeatureInfo request. The
+				<code>TIME</code>
+				parameter should specify a range of times in the form
+				<code>starttime/endtime</code>
+				, and the supported formats are:
+			</p>
+			<ul>
+				<li>image/png</li>
+				<li>image/jpg</li>
+				<li>image/jpeg</li>
+				<li>text/csv</li>
+			</ul>
+			<h4>
+				<a id="GetVerticalProfile_163"></a>GetVerticalProfile
+			</h4>
+			<p>
+				This produces either a vertical profile graph or, if downloading is
+				enabled, a CSV file containing the data. The URL parameters are
+				identical to those of a GetFeatureInfo request. The
+				<code>ELEVATION</code>
+				parameter should specify a range of elevations in the form
+				<code>startelevation/endelevation</code>
+				, and the supported formats are:
+			</p>
+			<ul>
+				<li>image/png</li>
+				<li>image/jpg</li>
+				<li>image/jpeg</li>
+				<li>text/csv</li>
+			</ul>
+			<h4>
+				<a id="GetTransect_172"></a>GetTransect
+			</h4>
+			<p>This produces a graph of data values along an arbitrary path.
+				Additionally if there is vertical information present in the
+				dataset, it will produce a vertical section along the same path.</p>
+			<p>
+				It takes the same URL parameters as a GetMap request with the
+				addition of a parameter
+				<code>LINESTRING</code>
+				of the format
+				<code>x1 y1,x2 y2,x3 y3...</code>
+				which defines the control points of the graph.
+			</p>
+			<h4>
+				<a id="GetMetadata_178"></a>GetMetadata
+			</h4>
+			<p>
+				The GetMetadata request is used to request small pieces of metadata
+				from ncWMS. Many of these are also present in the capabilities
+				document, but GetMetadata provides a more convenient method of
+				accessing such data. GetMetadata always returns data in the JSON
+				format. All GetMetadata requests must provide the parameter
+				<code>ITEM</code>
+				which states the type of metadata requested.
+				<code>ITEM</code>
+				can take the following values:
+			</p>
+			<ul>
+				<li>menu: Returns a tree representation of the available WMS
+					layers, with IDs. Takes the optional parameter <code>DATASET</code>
+					to return the same tree for a single dataset
+				</li>
+				<li>layerDetails: Returns a set of details needed to plot a
+					given layer. This includes such data as units, layer bounding box,
+					configured scale range, etc. Takes the parameters <code>LAYERNAME</code>
+					and <code>TIME</code>. The <code>TIME</code> parameter is optional,
+					and if it is specified then the nearest available time is returned
+					as part of the layer’s details.
+				</li>
+				<li>minmax: Calculates the range of values in the given area.
+					Takes the same parameters as a GetMap request.</li>
+				<li>timesteps: Returns the available times for a given day.
+					Takes the parameters <code>LAYERNAME</code> and <code>DAY</code>
+					(yyyy-mm-dd)
+				</li>
+				<li>animationTimesteps: Returns a list of time strings at
+					different temporal resolutions for a given time range. This is used
+					to present to the user different frequencies for the generation of
+					an animation. Takes the parameters <code>LAYERNAME</code>, <code>START</code>,
+					and <code>END</code>
+				</li>
+			</ul>
+			<h4>
+				<a id="GetLegendGraphic_188"></a>GetLegendGraphic
+			</h4>
+			<p>
+				The GetLegendGraphic request generates an image which can be used as
+				a legend. There are two main options: Generating just a colourbar,
+				and generating a full legend. In the first case (the URL parameter
+				<code>COLORBARONLY</code>
+				is set to “true”) , the following URL parameters are used:
+			</p>
+			<ul>
+				<li>PALETTE: The name of the palette to use. If missing, set to
+					“default”</li>
+				<li>NUMCOLORBANDS: The number of colour bands to use. If
+					missing, set to 250</li>
+				<li>VERTICAL: Whether to very colours vertically. If missing,
+					defaults to true</li>
+				<li>WIDTH: The width of the image to generate. If missing,
+					defaults to 50</li>
+				<li>HEIGHT: The height of the image to generate. If missing,
+					defaults to 200</li>
+			</ul>
+			<p>
+				For a full legend, the additional parameters
+				<code>LAYERS</code>
+				and either
+				<code>STYLES</code>
+				,
+				<code>SLD</code>
+				, or
+				<code>SLD_BODY</code>
+				must be supplied. This is because a single WMS layer may depend on
+				an arbitrary number of sub-layers, depending on the style it is
+				plotted in. In addition to these parameters, the optional parameters
+				controlling the style may be supplied (these are the same as
+				documented in the GetMap request):
+			</p>
+			<ul>
+				<li>COLORSCALERANGE</li>
+				<li>NUMCOLORBANDS</li>
+				<li>ABOVEMAXCOLOR</li>
+				<li>BELOWMINCOLOR</li>
+				<li>LOGSCALE</li>
+			</ul>
+			<p>Note that for full legends, the supplied width and height are
+				NOT the final height of the image, but rather the width and height
+				of each individual coloured plot area (i.e. the 1d/2d colourbar)</p>
+			<h3>
+				<a id="Godiva3_208"></a>Godiva3
+			</h3>
+			<p>
+				Normal access to the WMS is done using a web client. ncWMS comes
+				with Godiva3 - a WMS client written to take advantage of all of the
+				extended WMS methods in ncWMS. It is accessed at <a
+					href="http://serveraddress/ncWMS/Godiva.html">http://serveraddress/ncWMS/Godiva.html</a>
+			</p>
+			<p>Most of the controls on the Godiva3 interface have tool tips
+				to help you: hover the mouse over the control in question to find
+				out what it does.</p>
+			<h4>
+				<a id="Basic_usage_214"></a>Basic usage
+			</h4>
+			<p>Use the left-hand menu to select a variable for viewing (click
+				on the variable’s name in the tree view). The data should appear on
+				the interactive map after a short delay (a progress bar may appear
+				showing the progress of loading image tiles from the ncWMS
+				server(s)).</p>
+			<h4>
+				<a id="Navigating_the_map_218"></a>Navigating the map
+			</h4>
+			<p>The interactive map can be dragged with the mouse to navigate
+				around. Using the controls in the top left of the map you can zoom
+				in and out. You can zoom quickly to a particular area by holding
+				down Shift and dragging a rectangle on the map. You can
+				automatically centre the current data overlay on the map by clicking
+				the “Fit layer” button (below the map, the button with 4 divergent
+				arrows).</p>
+			<h4>
+				<a id="Selecting_the_vertical_level_222"></a>Selecting the vertical
+				level
+			</h4>
+			<p>If the variable you are viewing has a vertical dimension you
+				will be able to select the vertical level using the drop-down
+				“Elevation / Depth” box above the map.</p>
+			<h4>
+				<a id="Selecting_the_timestep_226"></a>Selecting the timestep
+			</h4>
+			<p>If the displayed variable has a time dimension you will be
+				able to select the date and time using the drop-down “Time” box
+				above the map</p>
+			<h4>
+				<a id="Finding_the_data_value_at_a_point_230"></a>Finding the data
+				value at a point
+			</h4>
+			<p>Once a variable has been displayed on the map, you can click
+				on the map to discover the data value at that point. The data value,
+				along with the latitude and longitude of the point you clicked, will
+				appear in a small pop-up window at the point where you clicked, as
+				well as links to generate timeseries / vertical profile plots.</p>
+			<h4>
+				<a id="Changing_the_style_of_the_data_display_234"></a>Changing the
+				style of the data display
+			</h4>
+			<h5>
+				<a id="Adjusting_the_colour_contrast_range_236"></a>Adjusting the
+				colour contrast range
+			</h5>
+			<p>When you first load up a variable it will appear with a
+				default colour scale range. This range may not be appropriate for
+				the geographical region and timestep you are interested in. By
+				clicking the “auto” button (the colour-wheel button to the right of
+				the colour bar) the colour scale range will be automatically
+				stretched to suit the data currently displayed in the map. You can
+				also manually change the colour scale range by editing the values at
+				the top and bottom of the colour scale bar.</p>
+			<h5>
+				<a id="Locking_the_scale_range_240"></a>Locking the scale range
+			</h5>
+			<p>Sometimes, when comparing two datasets, you might want to fix
+				the colour scale range so that when you select a new variable, that
+				variable is shaded with exactly the same colour scale. To do this,
+				click the “lock” button link (the padlock button to the right of the
+				colour bar). The colour scale range will then not be changed when a
+				new variable is loaded and the scale range cannot be edited
+				manually. Click the button again to unlock the colour scale.</p>
+			<h5>
+				<a id="Changing_the_colour_palette_244"></a>Changing the colour
+				palette
+			</h5>
+			<p>The colour palette can be changed by clicking on the colour
+				scale bar. A pop-up window will appear with the available palettes.
+				Clicking the “Flip” button will invert all of the palettes. Click on
+				one to load the new palette. The window also contains a drop-down
+				box to select the number of colour bands to use, from 10 (giving a
+				contoured appearance) to 250 (smoothed).</p>
+			<h5>
+				<a id="Changing_plotting_style_248"></a>Changing plotting style
+			</h5>
+			<p>The style used to plot the variable can be adjusted using the
+				topmost of the 3 drop-down boxes to the right of the colour bar. All
+				styles which are compatible with the displayed data will be
+				available, although not necessarily appropriate (for example, arrows
+				are compatible with any scalar data type, but only meaningful when
+				that data represents a direction in degrees).</p>
+			<h5>
+				<a id="Changing_layer_opacity_252"></a>Changing layer opacity
+			</h5>
+			<p>The overall opacity of the WMS layer can be adjusted using the
+				drop-down box to the right of the colour bar.</p>
+			<h5>
+				<a id="Changing_scaling_256"></a>Changing scaling
+			</h5>
+			<p>Certain variables, particularly biological parameters, are
+				best displayed with a logarithmic colour scale. The spacing of the
+				colour scale can be toggled between linear and logarithmic using the
+				drop-down box to the right of the colour bar. Note that you cannot
+				select a logarithmic scale if the colour scale range contains
+				negative or zero values.</p>
+			<h4>
+				<a id="Creating_animations_260"></a>Creating animations
+			</h4>
+			<p>To create an animation, click the filmstrip button below the
+				map. This will bring up a wizard allowing you to select the start
+				and end times, followed by the number of frames to generate and the
+				frame rate for playback. This may take a long time to generate,
+				depending on the number of frames and the data resolution. Once
+				playing, the animation can be stopped by clicking the same button.</p>
+			<h4>
+				<a id="Vertical_sections_and_transects_along_arbitrary_paths_264"></a>Vertical
+				sections and transects along arbitrary paths
+			</h4>
+			<p>At the top of the map itself, select the icon that looks like
+				a line joining four points. Click on the map to start drawing a
+				line. Add “waypoints” along this line by single-clicking at each
+				point. Double-click to finish the line. A pop-up will appear showing
+				the variation of the viewed variable along the line (i.e. a transect
+				plot). If the variable has a vertical dimension, a vertical section
+				plot will appear under the transect plot.</p>
+			<h4>
+				<a id="Changing_the_background_map_268"></a>Changing the background
+				map
+			</h4>
+			<p>A selection of background maps are available on which data can
+				be projected. Select a different background map by clicking the
+				small plus sign in the top right-hand corner of the interactive map.</p>
+			<h4>
+				<a id="Changing_the_map_projection_272"></a>Changing the map
+				projection
+			</h4>
+			<p>The map projection is changed by selecting a new background
+				map as above. If the background map is in a different projection
+				then the data overlay will be automatically reprojected into the new
+				coordinate system. Commonly, Godiva3 websites will give the option
+				to select a background map in north or south polar stereographic
+				projection. There may be a delay before the map appears in the new
+				projection.</p>
+			<h4>
+				<a id="Saving_and_emailing_the_view_276"></a>Saving and emailing the
+				view
+			</h4>
+			<p>You may wish to save the current view to return to it later or
+				share it with a colleague. The “Permalink” under the bottom
+				right-hand corner of the map links to a complete URL that, when
+				loaded, recreates the current view. Left-click on the permalink to
+				bring up a new window with an identical view. Right-click on the
+				permalink and select “Copy link location” or the equivalent for your
+				web browser. You can then paste the link into a report, your notes
+				or an email. You can also click on “email” (next to the permalink)
+				to start a new email message in your default email client with the
+				permalink already included in the message body.</p>
+			<h4>
+				<a id="Exporting_to_a_map_280"></a>Exporting to a map
+			</h4>
+			<p>By clicking the “Export to PNG” link below the map, a static
+				image of the current view will be generated, which can be saved from
+				your browser.</p>
+			<h2>
+				<a id="Development_284"></a>Development
+			</h2>
+			<h3>
+				<a id="Adding_new_colour_palettes_287"></a>Adding new colour
+				palettes
+			</h3>
+			<p>
+				To add new colour palettes to ncWMS, you must create palette files.
+				These are text files with the extension “.pal”. The name of the file
+				will be the name of the palette. This files must contain one line
+				for each colour in the palette. Intermediate colours will be
+				interpolated. A colour is either of the form
+				<code>#RRGGBB</code>
+				or
+				<code>#AARRGGBB</code>
+				. Where values are in hexadecimal notation.
+			</p>
+			<p>
+				If the resulting palette files are placed in a directory named
+				<code>$WEBAPP_DIR/WEB-INF/classes/palettes</code>
+				then they will be picked up automatically (after a servlet restart)
+				but may be deleted upon webapp redeployment.
+			</p>
+			<p>
+				A better solution is to place the palette files in a directory of
+				your choice and modify
+				<code>$WEBAPP_DIR/WEB-INF/classes/config.properties</code>
+				. The property named
+				<code>paletteDirs</code>
+				should contain a comma-separated list of directories containing
+				palette files, and all palettes will become available after a
+				servlet restart.
+			</p>
+			<p>Note that once a palette file has been defined this will add 2
+				available palettes - the normal one you have defined along with its
+				inverse.</p>
+			<h3>
+				<a id="Defining_new_style_templates_297"></a>Defining new style
+				templates
+			</h3>
+			<p>To create a new style for plotting, you will need to create an
+				SLD template. The documentation for SLD can be found in the root
+				directory of the source code, and is named
+				“ncWMS-sld_specification”. Within this template, you may use the
+				following placeholders:</p>
+			<ul>
+				<li>$layerName</li>
+				<li>$paletteName</li>
+				<li>$scaleMin</li>
+				<li>$scaleMax</li>
+				<li>$logarithmic</li>
+				<li>$numColorBands</li>
+				<li>$bgColor</li>
+				<li>$belowMinColor</li>
+				<li>$aboveMaxColor</li>
+				<li>$opacity</li>
+			</ul>
+			<p>
+				In addition to the $layerName parameter, you may add children of the
+				named layer, according to the role they have to their parent layer.
+				For example, if a named layer has two children with roles “mag” and
+				“dir” (this is the case for a vector layer), you may specify them as
+				<code>$layerName-mag</code>
+				and
+				<code>$layerName-dir</code>
+				. This style will then be supported only for parent layers with such
+				children.
+			</p>
+			<p>For further examples, see the existing style templates in the
+				edal-graphics module at src/main/resources/styles.</p>
+			<p>
+				Once you have created these templates, you may either place them in
+				<code>$WEBAPP_DIR/WEB-INF/classes/styles</code>
+				, or modify
+				<code>$WEBAPP_DIR/WEB-INF/classes/config.properties</code>
+				to specify the
+				<code>styleDirs</code>
+				property. This takes a comma-separated list of directories which
+				will be scanned on startup and any defined styles residing within
+				them will be made available.
+			</p>
+			<h3>
+				<a id="Adding_new_data_readers_318"></a>Adding new data readers
+			</h3>
+			<p>
+				By default ncWMS supports reading of gridded NetCDF/GRIB/OPeNDAP
+				data, and in-situ data from the EN3/4 UK Met Office dataset. To read
+				additional types of data, a new data reader must be written. To do
+				this, you must extend the class
+				<code>uk.ac.rdg.resc.edal.dataset.DatasetFactory</code>
+				. This has a single abstract method which returns a
+				<code>uk.ac.rdg.resc.edal.dataset.Dataset</code>
+				object given an ID and location.
+			</p>
+			<p>
+				The full details of how to implement this are beyond the scope of
+				this guide, but it is recommended to example the two existing data
+				readers:
+				<code>uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory</code>
+				and
+				<code>uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory</code>
+				, which can be found in the edal-cdm module. The Javadoc for EDAL is
+				reasonably complete and will be of great use. Additionally you may
+				wish to contact the developers of ncWMS through the website, who
+				will be happy to provide guidance and assistance.
+			</p>
+			<h2>
+				<a name="authors-and-contributors" class="anchor"
+					href="#authors-and-contributors"><span
+					class="octicon octicon-link"></span></a>Authors and Contributors
+			</h2>
+
+			<p>
+				<a href="https://github.com/guygriffiths" class="user-mention">@guygriffiths</a>,
+				<a href="https://github.com/jonblower" class="user-mention">@jonblower</a>
+			</p>
+		</section>
+	</div>
+	<!-- FOOTER  -->
+	<div id="footer_wrap" class="outer">
+		<footer class="inner">
+			<p class="copyright">
+				EDAL maintained by <a
+					href="https://github.com/Reading-eScience-Centre">Reading-eScience-Centre</a>
+			</p>
+		</footer>
+	</div>
+
+</body>
+</html>
