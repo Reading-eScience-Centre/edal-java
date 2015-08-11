@@ -39,20 +39,20 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import ucar.nc2.dataset.CoordinateAxis1D;
 import ucar.nc2.dt.GridCoordSystem;
 import ucar.unidata.geoloc.LatLonPoint;
-import ucar.unidata.geoloc.LatLonPointImpl;
+import ucar.unidata.geoloc.LatLonRect;
 import ucar.unidata.geoloc.Projection;
 import ucar.unidata.geoloc.ProjectionImpl;
-import ucar.unidata.geoloc.ProjectionPointImpl;
+import ucar.unidata.geoloc.ProjectionPoint;
 import ucar.unidata.geoloc.projection.RotatedPole;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.geometry.AbstractPolygon;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.grid.AbstractTransformedGrid;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.GridCell2DImpl;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.AbstractTransformedGrid;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
@@ -139,9 +139,28 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
         xAxis = CdmUtils.createReferenceableAxis((CoordinateAxis1D) coordSys.getXHorizAxis(),
                 xAxisIsLongitude);
         yAxis = CdmUtils.createReferenceableAxis((CoordinateAxis1D) coordSys.getYHorizAxis());
-        bbox = new BoundingBoxImpl(coordSys.getLatLonBoundingBox().getLonMin(), coordSys
-                .getLatLonBoundingBox().getLatMin(), coordSys.getLatLonBoundingBox().getLonMax(),
-                coordSys.getLatLonBoundingBox().getLatMax(), DefaultGeographicCRS.WGS84);
+        LatLonRect latLonBoundingBox = coordSys.getLatLonBoundingBox();
+        /*
+         * Some projections do not have a well-defined lat-lon bounding box and
+         * return NaNs. In these cases, we fall back to using global limits
+         */
+        double lonMin = latLonBoundingBox.getLonMin();
+        double lonMax = latLonBoundingBox.getLonMax();
+        double latMin = latLonBoundingBox.getLatMin();
+        double latMax = latLonBoundingBox.getLatMax();
+        if (Double.isNaN(lonMin)) {
+            lonMin = -180.0;
+        }
+        if (Double.isNaN(lonMax)) {
+            lonMax = 180.0;
+        }
+        if (Double.isNaN(latMin)) {
+            latMin = -90.0;
+        }
+        if (Double.isNaN(latMax)) {
+            latMax = 90.0;
+        }
+        bbox = new BoundingBoxImpl(lonMin, latMin, lonMax, latMax, DefaultGeographicCRS.WGS84);
     }
 
     @Override
@@ -244,20 +263,20 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
         /*
          * Now transform from CRS84 to the local CRS
          */
-        ProjectionPointImpl transformed = proj.latLonToProj(position.getY(), position.getX());
+        ProjectionPoint transformed = proj.latLonToProj(position.getY(), position.getX());
         /*
          * and find the indices along both axes
          */
-        return new GridCoordinates2D(xAxis.findIndexOf(transformed.x),
-                yAxis.findIndexOf(transformed.y));
+        return new GridCoordinates2D(xAxis.findIndexOf(transformed.getX()),
+                yAxis.findIndexOf(transformed.getY()));
     }
 
     @Override
     public double transformNativeHeadingToWgs84(double xComp, double yComp, double lon, double lat) {
         double dxy = 1e-8;
-        ProjectionPointImpl centre = proj.latLonToProj(lat, lon);
-        LatLonPointImpl xPlus = proj.projToLatLon(centre.x + dxy, centre.y);
-        LatLonPointImpl yPlus = proj.projToLatLon(centre.x, centre.y + dxy);
+        ProjectionPoint centre = proj.latLonToProj(lat, lon);
+        LatLonPoint xPlus = proj.projToLatLon(centre.getX() + dxy, centre.getY());
+        LatLonPoint yPlus = proj.projToLatLon(centre.getX(), centre.getY() + dxy);
 
         /*
          * Java naming convention ignored for clarity that these are partial

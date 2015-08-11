@@ -9,6 +9,9 @@
         <version>1.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
+    <properties>
+        <netcdfversion>5.0.0</netcdfversion>
+    </properties>
     <artifactId>edal-cdm</artifactId>
     <packaging>jar</packaging>
     <name>EDAL interface to the Unidata Common Data Model</name>
@@ -20,8 +23,8 @@
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
-            <artifactId>netcdf</artifactId>
-            <version>4.3.22</version>
+            <artifactId>netcdf4</artifactId>
+            <version>${netcdfversion}</version>
             <optional>false</optional>
             <exclusions>
                 <exclusion>
@@ -33,7 +36,7 @@
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>grib</artifactId>
-            <version>4.3.22</version>
+            <version>${netcdfversion}</version>
             <optional>false</optional>
             <exclusions>
                 <exclusion>
@@ -47,7 +50,7 @@
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>opendap</artifactId>
-            <version>4.3.22</version>
+            <version>${netcdfversion}</version>
         </dependency>
         <dependency>
             <groupId>oro</groupId>
