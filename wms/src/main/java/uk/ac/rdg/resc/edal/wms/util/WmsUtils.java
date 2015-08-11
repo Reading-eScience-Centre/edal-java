@@ -257,7 +257,12 @@ public class WmsUtils {
             WmsCatalogue catalogue) throws EdalLayerNotFoundException {
         String datasetId = catalogue.getLayerNameMapper().getDatasetIdFromLayerName(layerName);
         String varId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
-        return catalogue.getDatasetFromId(datasetId).getVariableMetadata(varId);
+        Dataset dataset = catalogue.getDatasetFromId(datasetId);
+        if (dataset == null) {
+            throw new EdalLayerNotFoundException("The layer " + layerName
+                    + " was not found on this server");
+        }
+        return dataset.getVariableMetadata(varId);
     }
 
     /**
@@ -274,8 +279,8 @@ public class WmsUtils {
      *             If the given layer name doesn't map to an available
      *             {@link Dataset} and Variable combination
      */
-    public static Collection<String> getSupportedStylesForLayer(String layerName, WmsCatalogue catalogue)
-            throws EdalLayerNotFoundException {
+    public static Collection<String> getSupportedStylesForLayer(String layerName,
+            WmsCatalogue catalogue) throws EdalLayerNotFoundException {
         VariableMetadata variableMetadata = getVariableMetadataFromLayerName(layerName, catalogue);
         return catalogue.getStyleCatalogue().getSupportedStyles(variableMetadata);
     }
