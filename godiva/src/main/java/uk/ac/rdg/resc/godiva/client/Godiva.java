@@ -599,7 +599,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         } else {
             infoButton.setEnabled(false);
         }
-        
+
         /*
          * We populate our widgets here, but in a multi-layer system, we may
          * want to create new widgets here
@@ -640,8 +640,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                         Integer.parseInt(numColorBands));
             }
 
-            String aboveMaxString = URL.decodePathSegment(permalinkParamsMap.get("aboveMaxColor"));
+            String aboveMaxString = permalinkParamsMap.get("aboveMaxColor");
             if (aboveMaxString != null) {
+                aboveMaxString = URL.decodePathSegment(aboveMaxString);
                 if ("extend".equalsIgnoreCase(aboveMaxString)) {
                     widgetCollection.getPaletteSelector().setAboveMax(OutOfRangeState.EXTEND);
                 } else if ("transparent".equalsIgnoreCase(aboveMaxString)) {
@@ -653,8 +654,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 }
             }
 
-            String belowMinString = URL.decodePathSegment(permalinkParamsMap.get("belowMinColor"));
+            String belowMinString = permalinkParamsMap.get("belowMinColor");
             if (belowMinString != null) {
+                belowMinString = URL.decodePathSegment(belowMinString);
                 if ("extend".equalsIgnoreCase(belowMinString)) {
                     widgetCollection.getPaletteSelector().setBelowMin(OutOfRangeState.EXTEND);
                 } else if ("transparent".equalsIgnoreCase(belowMinString)) {
@@ -666,9 +668,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 }
             }
 
-            String noDataString = URL.decodePathSegment(permalinkParamsMap.get("noDataColor"));
+            String noDataString = permalinkParamsMap.get("noDataColor");
             if (belowMinString != null) {
-                widgetCollection.getPaletteSelector().setNoDataColour(noDataString);
+                widgetCollection.getPaletteSelector().setNoDataColour(
+                        URL.decodePathSegment(noDataString));
             }
 
             String currentElevation = permalinkParamsMap.get("elevation");
