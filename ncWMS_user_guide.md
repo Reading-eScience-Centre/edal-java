@@ -5,6 +5,14 @@ ncWMS is a  Web Map Service for geospatial data that are stored in  CF-compliant
 
 This guide provides instructions on installing, setting up, and using ncWMS v2.
 
+Migrating from ncWMS 1.x
+------------------------
+
+Configuration for ncWMS v2 is very similar to that for ncWMS v1.x.  Whilst the dataset configuration has changed quite a bit, old `config.xml` files from 1.x versions can be used on v2 (but not the other way around).  Therefore, to migrate from v1.x to v2, only two steps need to be taken:
+
+* Copy the `config.xml` file from its old location (`~/.ncWMS/`) to the v2 location (`~/.ncWMS-edal` by default - see below for configuration)
+* Configure your servlet container to add a security role for the ncWMS admin user (see below)
+
 
 Installation
 ------------
