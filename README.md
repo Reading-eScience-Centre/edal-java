@@ -41,9 +41,7 @@ Documentation
 Further documentation on using ncWMS and EDAL can be found in the following locations:
 * [EDAL homepage](http://reading-escience-centre.github.io/edal-java/)
 * [EDAL code](https://github.com/Reading-eScience-Centre/edal-java)
-* ncWMS user guide (TODO)
-* EDAL user guide (TODO)
-* Godiva3 quickstart guide (TODO)
+* [ncWMS user guide](http://reading-escience-centre.github.io/edal-java/ncWMS_user_guide.html)
 
 Authors
 -------
