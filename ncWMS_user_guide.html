@@ -7,6 +7,7 @@
     <meta name="description" content="ncWMS User Guide">
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
     <title>ncWMS User Guide</title>
+    <script src="javascripts/generated_toc.js"></script>
 </head>
 
 <body>
@@ -29,12 +30,12 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
         <section id="main_content" class="inner">
-
             <h1>ncWMS User Guide</h1>
             <p>ncWMS is a Web Map Service for geospatial data that are stored in CF-compliant NetCDF files. The intention is to create a WMS that requires minimal configuration: the source data files should already contain most of the necessary metadata. ncWMS is developed and maintained by the Reading e-Science Centre (ReSC) at the University of Reading, UK.</p>
             <p>ncWMS v2 is build on top of the <a href="edal_user_guide.html">EDAL</a> libraries developed by ReSC</p>
             <p>This guide provides instructions on installing, setting up, and using ncWMS v2.</p>
 
+            <div id="generated-toc" class="generate_from_h2"></div>
             <h2>Migrating from ncWMS 1.x</h2>
             <p>Configuration for ncWMS v2 is very similar to that for ncWMS v1.x. Whilst the dataset configuration has changed quite a bit, old `config.xml` files from 1.x versions can be used on v2 (but not the other way around). Therefore, to migrate from v1.x to v2, only two steps need to be taken:
                 <ul>
@@ -49,17 +50,17 @@
             <p>The standalone version of ncWMS requires no installation. It can be run from the command-line with the command
                 <code>java -jar ncWMS-standalone.jar</code> . This will run the WMS server locally with no security for administration and configuration. It will be available at <a href="http://localhost:8080/">http://localhost:8080/</a>. All configuration etc. is identical to the standard version.</p>
 
-            <h3>Installation</h3>
+            <h3>Servlet Container</h3>
             <p>ncWMS is a Java servlet which runs on a servlet container such as Tomcat, JBoss, or Glassfish. Installation is servlet-container dependent, but there are no ncWMS-specific procedures for installation.</p>
             <p>Once ncWMS is up-and-running, on first launch it will create a configuration file and logging directory. By default this is located in a directory named <code>.ncWMS-edal</code> in the home directory of the user running the servlet container. To change the location of the server configuration, stop the servlet container, and edit the file <code>$WEBAPP_DIR/WEB-INF/classes/config.properties</code> . This configuration file may contain the property <code>configDir=$HOME/.ncWMS-edal</code> . Change/add this to reflect the desired directory and restart the servlet container.</p>
 
             <h3>Security configuration</h3>
-            <p>Security for the administration of ncWMS is delegated to the servlet container (in standalone mode there is no security on any administration). You should define a security role with the name <code>ncWMS-admin</code> , and add users with that role. For example, using Tomcat, you can add the following to <code>tomcat-users.xml</code>:
+            <p>Security for the administration of ncWMS is delegated to the servlet container (in standalone mode there is no security on any administration). You should define a security role with the name <code>ncWMS-admin</code>, and add users with that role. For example, using Tomcat, you can add the following to <code>tomcat-users.xml</code>:
                 <pre><code>&lt;role rolename=&quot;ncWMS-admin&quot; /&gt;
 &lt;user username=&quot;admin&quot; password=&quot;ncWMS-password&quot; roles=&quot;ncWMS-admin&quot;/&gt;</code></pre></p>
             <p>Access to the administration interface would then be granted to a user with the name <code>admin</code> and the password <code>ncWMS-password</code></p>
 
-            <h2>Configuration</h2>
+            <h2 id="configuration">Configuration</h2>
             <p>Configuration of ncWMS is performed by either accessing the administration web interface (<a href="http://serveraddress/ncWMS/admin/">http://serveraddress/ncWMS/admin/</a>) or by directly modifying <code>config.xml</code> in the configuration directory. It is recommended to use the web interface - precise documentation of the XML configuration file is beyond the scope of this guide.</p>
             <p>Once any changes have been made on this page, click the "Save configuration" button to apply them.</p>
 
@@ -203,7 +204,7 @@
             <p>In additional to the standard WMS methods, ncWMS provides a number of additional requests. These all take the standard WMS parameters of <code>SERVICE=WMS</code>, <code>VERSION</code>, and <code>REQUEST</code>. The following are the valid values for the <code>REQUEST</code> parameter:</p>
 
             <h4>GetTimeseries</h4>
-            <p>This produces either a timeseries graph or, if downloading is enabled, a CSV file containing the data. The URL parameters are identical to those of a GetFeatureInfo request. The <code>TIME</code> parameter should specify a range of times in the form <code>starttime/endtime</code> , and the supported formats are:
+            <p>This produces either a timeseries graph or, if downloading is enabled, a CSV file containing the data. The URL parameters are identical to those of a GetFeatureInfo request. The <code>TIME</code> parameter should specify a range of times in the form <code>starttime/endtime</code>, and the supported formats are:
                 <ul>
                     <li>image/png</li>
                     <li>image/jpg</li>
@@ -241,7 +242,7 @@
                 </ul>
             </p>
             <h4>GetLegendGraphic</h4>
-            <p>The GetLegendGraphic request generates an image which can be used as a legend. There are two main options: Generating just a colourbar, and generating a full legend. In the first case (the URL parameter <code>COLORBARONLY</code> is set to "true") , the following URL parameters are used:
+            <p>The GetLegendGraphic request generates an image which can be used as a legend. There are two main options: Generating just a colourbar, and generating a full legend. In the first case (the URL parameter <code>COLORBARONLY</code> is set to "true"), the following URL parameters are used:
                 <ul>
                     <li>PALETTE: The name of the palette to use. If missing, set to "default"</li>
                     <li>NUMCOLORBANDS: The number of colour bands to use. If missing, set to 250</li>
@@ -345,7 +346,7 @@
 
             <h3>Adding new data readers</h3>
             <p>By default ncWMS supports reading of gridded NetCDF/GRIB/OPeNDAP data, and in-situ data from the EN3/4 UK Met Office dataset. To read additional types of data, a new data reader must be written. To do this, you must extend the class <code>uk.ac.rdg.resc.edal.dataset.DatasetFactory</code>. This has a single abstract method which returns a <code>uk.ac.rdg.resc.edal.dataset.Dataset</code> object given an ID and location.</p>
-            <p>The full details of how to implement this are beyond the scope of this guide, but it is recommended to example the two existing data readers: <code>uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory</code> and <code>uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory</code>, which can be found in the edal-cdm module. The Javadoc for EDAL is reasonably complete and will be of great use. Additionally you may wish to contact the developers of ncWMS through the website, who will be happy to provide guidance and assistance.</p>
+            <p>The full details of how to implement this are beyond the scope of this guide, but it is recommended to example the two existing data readers: <code>uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory</code> and <code>uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory</code>, which can be found in the edal-cdm module. The <a href="apidocs/index.html">EDAL Javadocs</a> are reasonably complete and will be of great use. Additionally you may wish to contact the developers of ncWMS through the website, who will be happy to provide guidance and assistance.</p>
 
             <h2>Authors and Contributors</h2>
             <p><a href="https://github.com/guygriffiths" class="user-mention">@guygriffiths</a>, <a href="https://github.com/jonblower" class="user-mention">@jonblower</a></p>
