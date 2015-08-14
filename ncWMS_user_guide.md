@@ -10,7 +10,7 @@ Migrating from ncWMS 1.x
 
 Configuration for ncWMS v2 is very similar to that for ncWMS v1.x.  Whilst the dataset configuration has changed quite a bit, old `config.xml` files from 1.x versions can be used on v2 (but not the other way around).  Therefore, to migrate from v1.x to v2, only two steps need to be taken:
 
-* Copy the `config.xml` file from its old location (`~/.ncWMS/`) to the v2 location (`~/.ncWMS-edal` by default - see below for configuration)
+* Copy the `config.xml` file from its old location (`~/.ncWMS/`) to the v2 location (`~/.ncWMS2` by default - see below for configuration)
 * Configure your servlet container to add a security role for the ncWMS admin user (see below)
 
 
@@ -25,7 +25,7 @@ The standalone version of ncWMS requires no installation.  It can be run from th
 
 ncWMS is a Java servlet which runs on a servlet container such as Tomcat, JBoss, or Glassfish.  Installation is servlet-container dependent, but there are no ncWMS-specific procedures for installation.
 
-Once ncWMS is up-and-running, on first launch it will create a configuration file and logging directory.  By default this is located in a directory named `.ncWMS-edal` in the home directory of the user running the servlet container.  To change the location of the server configuration, stop the servlet container, and edit the file `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  This configuration file may contain the property: `configDir=$HOME/.ncWMS-edal`.  Change/add this to reflect the desired directory and restart the servlet container.
+Once ncWMS is up-and-running, on first launch it will create a configuration file and logging directory.  By default this is located in a directory named `.ncWMS2` in the home directory of the user running the servlet container.  To change the location of the server configuration, stop the servlet container, and edit the file `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  This configuration file may contain the property: `configDir=$HOME/.ncWMS2`.  Change/add this to reflect the desired directory and restart the servlet container.
 
 ### Security configuration
 
@@ -216,7 +216,7 @@ Note that for full legends, the supplied width and height are NOT the final heig
 
 ### Godiva3
 
-Normal access to the WMS is done using a web client.  ncWMS comes with Godiva3 - a WMS client written to take advantage of all of the extended WMS methods in ncWMS.  It is accessed at http://serveraddress/ncWMS/Godiva.html
+Normal access to the WMS is done using a web client.  ncWMS comes with Godiva3 - a WMS client written to take advantage of all of the extended WMS methods in ncWMS.  It is accessed at http://serveraddress/ncWMS/Godiva3.html
 
 Most of the controls on the Godiva3 interface have tool tips to help you: hover the mouse over the control in question to find out what it does.
 
