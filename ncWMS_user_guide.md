@@ -142,6 +142,7 @@ In additional to the standard GetMap parameters, ncWMS accepts the following opt
 * TARGETTIME: For in-situ data, all points which fall within the time range (specified in the TIME parameter) will be plotted.  In the case that an in-situ point has multiple time readings within that range, the colour used to plot them will depend on the time value which is closest to this given value
 * TARGETELEVATION: For in-situ data, all points which fall within the elevation range (specified in the ELEVATION parameter) will be plotted.  In the case that an in-situ point has multiple elevation readings within that range, the colour used to plot them will depend on the elevation value which is closest to this given value
 * OPACITY: The percentage opacity of the final output image
+* ANIMATION: "true" or "false" - whether to generate an animation.  This also needs the TIME to be of the form `starttime/endtime`, and currently is only implemented for features with a discrete time axis.
  
 #### GetFeatureInfo
 
