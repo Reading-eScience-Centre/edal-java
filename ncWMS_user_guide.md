@@ -51,7 +51,7 @@ On the admin page, new datasets can be added by filling in the information in th
 #### Required Data
 * ID: An alphanumeric identifier for the dataset.  This should be unique on the server.
 * Title: The title of the dataset.  This is displayed in menus etc. on the user interface.
-* Location: The location of the dataset.  This should be either a location on disk or an OPeNDAP URL.  *Note that locations should use slashes - not backslashes - regardless of operating system*.  For example, on Windows a path such as `C:/Data/dataset.nc` should be used.  If referring to a location on disk, regular expressions of the form `/mnt/data/dataset/**/**/*.nc` are valid.  If such an expression refers to multiple NetCDF files, they will be interpreted as having non-overlapping time axes.  Any other configuration of data spanning multiple files is not supported.
+* Location: The location of the dataset.  This should be either a location on disk or an OPeNDAP URL.  *Note that locations should use slashes - not backslashes - regardless of operating system*.  For example, on Windows a path such as `C:/Data/dataset.nc` should be used.  If referring to a location on disk, glob expressions of the form `/mnt/data/dataset/**/**/*.nc` are valid.  If such an expression refers to multiple NetCDF files, they will be interpreted as having non-overlapping time axes.  Any other configuration of data spanning multiple files is not supported.
 
 #### Optional Metadata
 * More Info URL: A URL containing more information about the dataset.  This will appear when clicking the information button in the web interface.
