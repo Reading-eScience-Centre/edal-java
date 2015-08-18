@@ -5,6 +5,14 @@ ncWMS is a  Web Map Service for geospatial data that are stored in  CF-compliant
 
 This guide provides instructions on installing, setting up, and using ncWMS v2.
 
+Migrating from ncWMS 1.x
+------------------------
+
+Configuration for ncWMS v2 is very similar to that for ncWMS v1.x.  Whilst the dataset configuration has changed quite a bit, old `config.xml` files from 1.x versions can be used on v2 (but not the other way around).  Therefore, to migrate from v1.x to v2, only two steps need to be taken:
+
+* Copy the `config.xml` file from its old location (`~/.ncWMS/`) to the v2 location (`~/.ncWMS2` by default - see below for configuration)
+* Configure your servlet container to add a security role for the ncWMS admin user (see below)
+
 
 Installation
 ------------
@@ -17,7 +25,7 @@ The standalone version of ncWMS requires no installation.  It can be run from th
 
 ncWMS is a Java servlet which runs on a servlet container such as Tomcat, JBoss, or Glassfish.  Installation is servlet-container dependent, but there are no ncWMS-specific procedures for installation.
 
-Once ncWMS is up-and-running, on first launch it will create a configuration file and logging directory.  By default this is located in a directory named `.ncWMS-edal` in the home directory of the user running the servlet container.  To change the location of the server configuration, stop the servlet container, and edit the file `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  This configuration file may contain the property: `configDir=$HOME/.ncWMS-edal`.  Change/add this to reflect the desired directory and restart the servlet container.
+Once ncWMS is up-and-running, on first launch it will create a configuration file and logging directory.  By default this is located in a directory named `.ncWMS2` in the home directory of the user running the servlet container.  To change the location of the server configuration, stop the servlet container, and edit the file `$WEBAPP_DIR/WEB-INF/classes/config.properties`.  This configuration file may contain the property: `configDir=$HOME/.ncWMS2`.  Change/add this to reflect the desired directory and restart the servlet container.
 
 ### Security configuration
 
@@ -43,7 +51,7 @@ On the admin page, new datasets can be added by filling in the information in th
 #### Required Data
 * ID: An alphanumeric identifier for the dataset.  This should be unique on the server.
 * Title: The title of the dataset.  This is displayed in menus etc. on the user interface.
-* Location: The location of the dataset.  This should be either a location on disk or an OPeNDAP URL.  *Note that locations should use slashes - not backslashes - regardless of operating system*.  For example, on Windows a path such as `C:/Data/dataset.nc` should be used.  If referring to a location on disk, regular expressions of the form `/mnt/data/dataset/**/**/*.nc` are valid.  If such an expression refers to multiple NetCDF files, they will be interpreted as having non-overlapping time axes.  Any other configuration of data spanning multiple files is not supported.
+* Location: The location of the dataset.  This should be either a location on disk or an OPeNDAP URL.  *Note that locations should use slashes - not backslashes - regardless of operating system*.  For example, on Windows a path such as `C:/Data/dataset.nc` should be used.  If referring to a location on disk, glob expressions of the form `/mnt/data/dataset/**/**/*.nc` are valid.  If such an expression refers to multiple NetCDF files, they will be interpreted as having non-overlapping time axes.  Any other configuration of data spanning multiple files is not supported.
 
 #### Optional Metadata
 * More Info URL: A URL containing more information about the dataset.  This will appear when clicking the information button in the web interface.
@@ -134,6 +142,7 @@ In additional to the standard GetMap parameters, ncWMS accepts the following opt
 * TARGETTIME: For in-situ data, all points which fall within the time range (specified in the TIME parameter) will be plotted.  In the case that an in-situ point has multiple time readings within that range, the colour used to plot them will depend on the time value which is closest to this given value
 * TARGETELEVATION: For in-situ data, all points which fall within the elevation range (specified in the ELEVATION parameter) will be plotted.  In the case that an in-situ point has multiple elevation readings within that range, the colour used to plot them will depend on the elevation value which is closest to this given value
 * OPACITY: The percentage opacity of the final output image
+* ANIMATION: "true" or "false" - whether to generate an animation.  This also needs the TIME to be of the form `starttime/endtime`, and currently is only implemented for features with a discrete time axis.
  
 #### GetFeatureInfo
 
@@ -208,7 +217,7 @@ Note that for full legends, the supplied width and height are NOT the final heig
 
 ### Godiva3
 
-Normal access to the WMS is done using a web client.  ncWMS comes with Godiva3 - a WMS client written to take advantage of all of the extended WMS methods in ncWMS.  It is accessed at http://serveraddress/ncWMS/Godiva.html
+Normal access to the WMS is done using a web client.  ncWMS comes with Godiva3 - a WMS client written to take advantage of all of the extended WMS methods in ncWMS.  It is accessed at http://serveraddress/ncWMS/Godiva3.html
 
 Most of the controls on the Godiva3 interface have tool tips to help you: hover the mouse over the control in question to find out what it does.
 
