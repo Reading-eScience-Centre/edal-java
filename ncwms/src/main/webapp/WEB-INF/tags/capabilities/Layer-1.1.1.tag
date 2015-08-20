@@ -31,7 +31,7 @@
             <c:if test="${not empty layer.vExtent}">
                 <Dimension name="elevation" units="${layer.vExtent.low.coordinateReferenceSystem.units.unitString}"/>
 	            <Extent name="elevation" default="${layer.vExtent.high}">
-                    <c:out value="${layer.vExtent.low}"/>/<c:out value="${layer.vExtent.high}"/>
+                    <c:out value="${layer.vExtent.low.z}"/>/<c:out value="${layer.vExtent.high.z}"/>
 	            </Extent>
             </c:if>
         </c:when>
