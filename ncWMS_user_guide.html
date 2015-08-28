@@ -20,8 +20,8 @@
             <h2 id="project_tagline">User Guide</h2>
 
             <section id="downloads">
-                <a class="jar_download_link" href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0/ncWMS-2.0-standalone.jar">Download
-					ncWMS as a standalone JAR file</a> <a class="war_download_link" href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0/ncWMS-2.0.war">Download
+                <a class="jar_download_link" href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0.1/ncWMS2-standalone.jar">Download
+					ncWMS as a standalone JAR file</a> <a class="war_download_link" href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0.1/ncWMS2.war">Download
 					ncWMS as a WAR file</a>
             </section>
         </header>
@@ -49,8 +49,7 @@
                 <li> Updated to the latest NetCDF libraries from Unidata </li>
                 <li> Some changes to the API:</li>
                 <ul>
-                    <li>GetMap no longer supports animations when supplied with a time range</li>
-                    <li>GetAnimation is a new method for producing animations</li>
+                    <li>GetMap only produces animations with the addition of an extra URL parameter: "animation"</li>
                     <li>GetFeatureInfo now only returns text/XML</li>
                     <li>GetTimeseries, GetVerticalProfile, are new methods which replace the previous PNG implementations for GetFeatureInfo</li>
                 </ul>
@@ -201,6 +200,7 @@
                     <li>TARGETTIME: For in-situ data, all points which fall within the time range (specified in the TIME parameter) will be plotted. In the case that an in-situ point has multiple time readings within that range, the colour used to plot them will depend on the time value which is closest to this given value</li>
                     <li>TARGETELEVATION: For in-situ data, all points which fall within the elevation range (specified in the ELEVATION parameter) will be plotted. In the case that an in-situ point has multiple elevation readings within that range, the colour used to plot them will depend on the elevation value which is closest to this given value</li>
                     <li>OPACITY: The percentage opacity of the final output image</li>
+                    <li>ANIMATION: "true" or "false" - whether to generate an animation. This also needs the TIME to be of the form<code>starttime/endtime</code>, and currently is only implemented for features with a discrete time axis.</li>
                 </ul>
             </p>
 
