@@ -19,7 +19,7 @@ Installation
 
 ### Standalone version
 
-The standalone version of ncWMS requires no installation.  It can be run from the command-line with the command `java -jar ncWMS-standalone.jar`.  This will run the WMS server locally with no security for administration and configuration.  It will be available at http://localhost:8080/.  All configuration etc. is identical to the standard version.
+The standalone version of ncWMS requires no installation.  It can be run from the command-line with the command `java -jar ncWMS2-standalone.jar`.  This will run the WMS server locally with no security for administration and configuration.  It will be available at http://localhost:8080/.  All configuration etc. is identical to the standard version.
 
 ### Installation
 
