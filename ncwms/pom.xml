@@ -169,9 +169,9 @@
 	<repositories>
 		<repository>
 			<!-- This has the JSON taglib in it -->
-			<id>intalio-maven</id>
-			<name>Intalio maven repository</name>
-			<url>http://www.intalio.org/public/maven2/</url>
+			<id>nuxeo-maven</id>
+			<name>JSON Taglib repo</name>
+            <url>http://maven.nuxeo.org/nexus/content/repositories/public/atg/taglib/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
