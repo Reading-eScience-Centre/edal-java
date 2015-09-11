@@ -590,6 +590,10 @@ public class DatasetConfig {
         this.loadingProgress = loadingProgress;
     }
 
+    public DateTime getLastUpdateTime() {
+        return lastSuccessfulUpdateTime;
+    }
+    
     public void setLastSuccessfulUpdateTime(DateTime lastSuccessfulUpdateTime) {
         this.lastSuccessfulUpdateTime = lastSuccessfulUpdateTime;
     }
