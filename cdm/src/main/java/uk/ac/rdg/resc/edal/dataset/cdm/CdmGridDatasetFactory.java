@@ -504,9 +504,9 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                                 nc2 = NetcdfFile.open(ncFile2.getAbsolutePath());
                                 Variable timeVar1 = nc1.findVariable(aggDimName);
                                 Variable timeVar2 = nc2.findVariable(aggDimName);
-                                long time1 = timeVar1.read().getLong(0);
-                                long time2 = timeVar2.read().getLong(0);
-                                return Long.compare(time1, time2);
+                                float time1 = timeVar1.read().getFloat(0);
+                                float time2 = timeVar2.read().getFloat(0);
+                                return Float.compare(time1, time2);
                             } catch (Exception e) {
                                 /*
                                  * There was a problem reading the data. Sort
