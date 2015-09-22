@@ -121,7 +121,7 @@
 #set($bbox = $variableMetadata.horizontalDomain.geographicBoundingBox)
         <EX_GeographicBoundingBox>
             <westBoundLongitude>$bbox.westBoundLongitude</westBoundLongitude>
-            <eastBoundLongitude>$bbox.westBoundLongitude</eastBoundLongitude>
+            <eastBoundLongitude>$bbox.eastBoundLongitude</eastBoundLongitude>
             <southBoundLatitude>$bbox.southBoundLatitude</southBoundLatitude>
             <northBoundLatitude>$bbox.northBoundLatitude</northBoundLatitude>
         </EX_GeographicBoundingBox>

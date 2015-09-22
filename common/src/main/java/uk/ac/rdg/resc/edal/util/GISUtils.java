@@ -715,6 +715,7 @@ public final class GISUtils {
         double miny = Double.MAX_VALUE;
         double maxy = -Double.MAX_VALUE;
         if (isWgs84LonLat(bbox.getCoordinateReferenceSystem())) {
+            bbox = constrainBoundingBox(bbox);
             minx = bbox.getMinX();
             maxx = bbox.getMaxX();
             miny = bbox.getMinY();
