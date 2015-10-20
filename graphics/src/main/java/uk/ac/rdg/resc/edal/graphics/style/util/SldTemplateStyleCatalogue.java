@@ -395,7 +395,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      * @param name
      *            The name of the style
      * @param xmlString
-     *            The input stream containing the XML
+     *            A string containing the XML definition of the style
      * @return A {@link StyleDef} representing the properties of the style
      * @throws IOException
      *             If there is a problem reading the style file
