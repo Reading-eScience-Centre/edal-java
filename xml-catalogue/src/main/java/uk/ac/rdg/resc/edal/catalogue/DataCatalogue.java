@@ -89,7 +89,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
 
     protected final CatalogueConfig config;
     protected Map<String, Dataset> datasets;
-    protected final Map<DatasetVariableId, EnhancedVariableMetadata> layerMetadata;
+    private final Map<DatasetVariableId, EnhancedVariableMetadata> layerMetadata;
 
     protected final LayerNameMapper layerNameMapper;
 
@@ -258,10 +258,10 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         /*
          * Now add the layer metadata to a map for future reference
          */
-        for (VariableConfig ncwmsVariable : variables) {
-            DatasetVariableId id = new DatasetVariableId(ncwmsVariable.getParentDataset().getId(),
-                    ncwmsVariable.getId());
-            layerMetadata.put(id, ncwmsVariable);
+        for (VariableConfig variable : variables) {
+            DatasetVariableId id = new DatasetVariableId(variable.getParentDataset().getId(),
+                    variable.getId());
+            layerMetadata.put(id, variable);
         }
         lastUpdateTime = new DateTime();
 
