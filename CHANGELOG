@@ -1,0 +1,26 @@
+1.0.3
+=====
+Added CHANGELOG
+Use latest version of JFreeChart
+Bugfixes:
+    Geographic bounding boxes were not always working in GetCapabilities
+    Time values were not read correctly in aggregations when they were stored as floats
+    Title generation for dynamic datasets
+    Return numerical data in same type as underlying storage
+
+1.0.2
+=====
+Update docs
+Bugfixes:
+    Layer names were not appearing in capabilities document
+    Last update times were not appearing in ncWMS admin interface
+    Only show messages from exceptions if present
+
+1.0.1
+=====
+Updated docs
+Fixed bug where pcolor library was not being included in edal-graphics
+
+1.0
+===
+First release of EDAL 1.0 / ncWMS 2.0
