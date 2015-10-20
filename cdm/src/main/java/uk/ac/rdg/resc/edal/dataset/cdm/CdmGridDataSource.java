@@ -197,7 +197,6 @@ final class CdmGridDataSource implements GridDataSource {
     private static final class WrappedArray extends Array4D<Number> {
         private VariableDS var;
         private Array arr;
-        private boolean needsEnhance;
         private final int[] shape;
         private final int xAxisIndex;
         private final int yAxisIndex;
@@ -208,9 +207,13 @@ final class CdmGridDataSource implements GridDataSource {
                 RangesList rangesList) {
             super(shape[0], shape[1], shape[2], shape[3]);
             this.var = var;
-            this.arr = arr;
-            this.needsEnhance = needsEnhance;
             this.shape = shape;
+
+            if (needsEnhance) {
+                this.arr = var.convertScaleOffsetMissing(arr);
+            } else {
+                this.arr = arr;
+            }
 
             xAxisIndex = rangesList.getXAxisIndex();
             yAxisIndex = rangesList.getYAxisIndex();
@@ -249,19 +252,34 @@ final class CdmGridDataSource implements GridDataSource {
             if (xAxisIndex >= 0)
                 index.setDim(xAxisIndex, x);
 
-            double val = arr.getFloat(index);
-            if (needsEnhance) {
-                val = var.convertScaleOffsetMissing(val);
+            Number val = null;
+            switch (arr.getDataType()) {
+            case BYTE:
+                val = arr.getByte(index);
+                break;
+            case DOUBLE:
+                val = arr.getDouble(index);
+                break;
+            case FLOAT:
+                val = arr.getFloat(index);
+                break;
+            case INT:
+                val = arr.getInt(index);
+                break;
+            case LONG:
+                val = arr.getLong(index);
+                break;
+            case SHORT:
+                val = arr.getShort(index);
+                break;
+            default:
+                break;
             }
+
             if (isMissing(val)) {
-                /*
-                 * In NcML aggregations, there is a double/float overflow issue
-                 * which means that isMissing can return true in cases where it
-                 * should be false.
-                 */
                 return null;
             } else {
-                return (float) val;
+                return val;
             }
         }
 
@@ -292,27 +310,28 @@ final class CdmGridDataSource implements GridDataSource {
          *            The value to check
          * @return Whether or not this should be considered missing data
          */
-        private boolean isMissing(double val) {
-            if (Double.isNaN(val)) {
+        private boolean isMissing(Number num) {
+            if (num == null) {
                 return true;
-            }
-            if (var.hasMissingValue() && var.isMissingValue(val)) {
-                return true;
-            } else if (var.hasFillValue() && var.isFillValue(val)) {
-                return true;
-            } else if (var.hasInvalidData()) {
-                if (var.getValidMax() != -Double.MAX_VALUE) {
-                    if (val > var.getValidMax() && (val - var.getValidMax()) > 1e-7) {
-                        return true;
+            } else {
+                double val = num.doubleValue();
+                if (var.hasFillValue() && var.isFillValue(val) || var.hasMissingValue()
+                        && var.isMissingValue(val) || Double.isNaN(val)) {
+                    return true;
+                } else if (var.hasInvalidData()) {
+                    if (var.getValidMax() != -Double.MAX_VALUE) {
+                        if (val > var.getValidMax() && (val - var.getValidMax()) > 1e-7) {
+                            return true;
+                        }
+                    }
+                    if (var.getValidMin() != Double.MAX_VALUE) {
+                        if (val < var.getValidMin() && (var.getValidMin() - val) > 1e-7) {
+                            return true;
+                        }
                     }
                 }
-                if (var.getValidMin() != Double.MAX_VALUE) {
-                    if (val < var.getValidMin() && (var.getValidMin() - val) > 1e-7) {
-                        return true;
-                    }
-                }
+                return false;
             }
-            return false;
         }
     }
 }
