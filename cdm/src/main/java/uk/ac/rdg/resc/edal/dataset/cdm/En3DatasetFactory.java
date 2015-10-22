@@ -80,15 +80,11 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
@@ -544,18 +540,13 @@ public final class En3DatasetFactory extends DatasetFactory {
 
     private final class En3Dataset extends AbstractPointDataset<ProfileFeature> {
         private En3DatabaseReader reader = new En3DatabaseReader(this);
-        private BoundingBox bbox;
-        private Extent<Double> zExtent;
-        private Extent<DateTime> tExtent;
+
         private Map<Integer, File> fileMap;
 
         public En3Dataset(String id, Collection<? extends VariableMetadata> vars,
                 FeatureIndexer featureIndexer, BoundingBox bbox, Extent<Double> zExtent,
                 Extent<DateTime> tExtent, Map<Integer, File> fileMap) {
-            super(id, vars, featureIndexer);
-            this.bbox = bbox;
-            this.zExtent = zExtent;
-            this.tExtent = tExtent;
+            super(id, vars, featureIndexer, bbox, zExtent, tExtent);
             this.fileMap = fileMap;
         }
 
@@ -570,21 +561,6 @@ public final class En3DatasetFactory extends DatasetFactory {
         @Override
         public DiscreteFeatureReader<ProfileFeature> getFeatureReader() {
             return reader;
-        }
-
-        @Override
-        protected BoundingBox getDatasetBoundingBox() {
-            return bbox;
-        }
-
-        @Override
-        protected Extent<Double> getDatasetVerticalExtent() {
-            return zExtent;
-        }
-
-        @Override
-        protected Extent<DateTime> getDatasetTimeExtent() {
-            return tExtent;
         }
 
         @Override
@@ -603,63 +579,13 @@ public final class En3DatasetFactory extends DatasetFactory {
             return false;
         }
 
-        @Override
-        protected PointFeature convertFeature(ProfileFeature feature, PlottingDomainParams params) {
-            ProfileFeature profileFeature = (ProfileFeature) feature;
-
-            HorizontalPosition position = profileFeature.getHorizontalPosition();
-
-            /*
-             * Get the z-index of the target depth within the vertical domain
-             */
-            int zIndex;
-            if (params.getTargetZ() == null) {
-                /*
-                 * If no target z is provided, pick the value closest to the
-                 * surface
-                 */
-                zIndex = profileFeature.getDomain().findIndexOf(
-                        GISUtils.getClosestElevationToSurface(profileFeature.getDomain()));
-            } else {
-                zIndex = GISUtils.getIndexOfClosestElevationTo(params.getTargetZ(),
-                        feature.getDomain());
-            }
-            if (zIndex < 0) {
-                return null;
-            }
-
-            Double zValue = feature.getDomain().getCoordinateValue(zIndex);
-            if (params.getZExtent() != null && !params.getZExtent().contains(zValue)) {
-                /*
-                 * If we have specified a z-extent, make sure that the z-value
-                 * is actually contained within that extent.
-                 * 
-                 * This is to avoid the case where a feature may have an overall
-                 * extent which overlaps the supplied extent, but has no actual
-                 * measurements within that range.
-                 */
-                return null;
-            }
-
-            GeoPosition pos4d = new GeoPosition(position, new VerticalPosition(zValue, feature
-                    .getDomain().getVerticalCrs()), feature.getTime());
-
-            Map<String, Array1D<Number>> values = new HashMap<>();
-            for (String paramId : feature.getParameterIds()) {
-                values.put(paramId,
-                        new ImmutableArray1D<>(new Number[] { profileFeature.getValues(paramId)
-                                .get(zIndex) }));
-            }
-
-            PointFeature ret = new PointFeature(feature.getId() + ":" + zValue, "Measurement from "
-                    + feature.getName(), "Value extracted at depth " + zValue + " from "
-                    + feature.getDescription(), pos4d, feature.getParameterMap(), values);
-            ret.getFeatureProperties().putAll(profileFeature.getFeatureProperties());
-            return ret;
-        }
-        
         private File getFileFromId(int fileId) {
             return fileMap.get(fileId);
+        }
+
+        @Override
+        protected PointFeature convertFeature(ProfileFeature feature, PlottingDomainParams params) {
+            return convertProfileFeature(feature, params);
         }
     }
 

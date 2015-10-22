@@ -36,8 +36,11 @@ import java.util.Set;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
@@ -122,6 +125,35 @@ public interface FeatureIndexer extends Serializable {
                 this.timeExtent = Extents.newExtent(-Long.MAX_VALUE, Long.MAX_VALUE);
             }
             this.variableIds = variableIds;
+        }
+
+        /**
+         * Convenience method to generate a {@link FeatureBounds} object from a {@link ProfileFeature}
+         * @param feature A {@link ProfileFeature} to calculate the bounds for
+         * @return The appropriate {@link FeatureBounds}
+         */
+        public static FeatureBounds fromProfileFeature(ProfileFeature feature) {
+            return new FeatureBounds(feature.getId(), feature.getHorizontalPosition(), feature
+                    .getDomain().getCoordinateExtent(), Extents.newExtent(feature.getTime(),
+                    feature.getTime()), feature.getParameterIds());
+        }
+
+        /**
+         * Convenience method to generate a {@link FeatureBounds} object from a
+         * {@link PointSeriesFeature}
+         * 
+         * @param feature
+         *            A {@link PointSeriesFeature} to calculate the bounds for
+         * @return The appropriate {@link FeatureBounds}
+         */
+        public static FeatureBounds fromPointSeriesFeature(PointSeriesFeature feature) {
+            VerticalPosition zPos = feature.getVerticalPosition();
+            Extent<Double> zExtent = null;
+            if (zPos != null) {
+                zExtent = Extents.newExtent(zPos.getZ(), zPos.getZ());
+            }
+            return new FeatureBounds(feature.getId(), feature.getHorizontalPosition(), zExtent,
+                    feature.getDomain().getCoordinateExtent(), feature.getParameterIds());
         }
     }
 }
