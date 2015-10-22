@@ -1,3 +1,11 @@
+1.0.4
+=====
+Modified AbstractPointDataset to make it simpler to extend
+Preliminary support for WaterML
+Made it possible to specify dataset as part of the URL
+Access to specific datasets in Godiva3 (incl. dynamic datasets)
+Better error handling in Godiva3
+
 1.0.3
 =====
 Added CHANGELOG
