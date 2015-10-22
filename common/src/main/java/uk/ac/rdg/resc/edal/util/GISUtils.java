@@ -1081,7 +1081,7 @@ public final class GISUtils {
         }
         if (allTimeAxes) {
             /*
-             * All of our domains were vertical axes, so we create a new axis
+             * All of our domains were time axes, so we create a new axis
              * out of the intersection of all their points. Often it's the case
              * that all domains are the same.
              */
