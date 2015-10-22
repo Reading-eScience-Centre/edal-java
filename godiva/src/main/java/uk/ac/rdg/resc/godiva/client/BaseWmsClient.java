@@ -847,6 +847,10 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             VerticalPanel v = new VerticalPanel();
             if (e instanceof ConnectionException) {
                 v.add(new Label(e.getMessage()));
+            } else if(response.contains("<ServiceException>")){
+                int start = response.indexOf("<ServiceException>")+18;
+                int end = response.indexOf("</ServiceException>");
+                v.add(new Label(response.substring(start, end)));
             } else {
                 v.add(new Label("The server has experienced an error"));
                 v.add(new Label("Please try again in a short while"));
