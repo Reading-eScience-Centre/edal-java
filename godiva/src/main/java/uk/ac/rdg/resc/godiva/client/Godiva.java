@@ -292,13 +292,11 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     protected void requestAndPopulateMenu() {
         final String wmsUrl;
 
-        String wmsPath = Window.Location.getParameter("dataset");
-        if (wmsPath == null) {
-            wmsPath = Window.Location.getParameter("DATASET");
+        String dataset = Window.Location.getParameter("dataset");
+        if (dataset == null) {
+            dataset = Window.Location.getParameter("DATASET");
         }
-        if (wmsPath == null) {
-            wmsPath = Window.Location.getParameter("server");
-        }
+        String wmsPath = Window.Location.getParameter("server");
         if (wmsPath == null) {
             wmsPath = Window.Location.getParameter("SERVER");
         }
@@ -309,7 +307,11 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
              */
             String path = Window.Location.getHost() + Window.Location.getPath();
             path = path.substring(0, path.lastIndexOf("/"));
-            wmsUrl = "http://" + path + "/wms";
+            if (dataset != null) {
+                wmsUrl = "http://" + path + "/wms/" + dataset;
+            } else {
+                wmsUrl = "http://" + path + "/wms";
+            }
         } else {
             wmsUrl = wmsPath;
         }
