@@ -2229,7 +2229,9 @@ public class WmsServlet extends HttpServlet {
      */
     void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
-        log.warn("Wms Exception caught: " + exception.getMessage());
+        StackTraceElement element = exception.getStackTrace()[0];
+        log.warn("Wms Exception caught: \"" + exception.getMessage() + "\" from:"
+                + element.getClassName() + ":" + element.getLineNumber());
 
         VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();
