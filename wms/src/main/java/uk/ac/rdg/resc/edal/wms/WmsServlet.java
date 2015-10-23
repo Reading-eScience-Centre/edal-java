@@ -1596,6 +1596,11 @@ public class WmsServlet extends HttpServlet {
             } else {
                 min *= 0.95;
                 max *= 1.05;
+                if(min > max) {
+                    double t = min;
+                    min = max;
+                    max = t;
+                }
             }
         }
 
