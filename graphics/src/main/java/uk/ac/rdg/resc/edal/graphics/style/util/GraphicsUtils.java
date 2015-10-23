@@ -29,7 +29,13 @@
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
 import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
@@ -56,6 +62,25 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  */
 public class GraphicsUtils {
     private static final Logger log = LoggerFactory.getLogger(GraphicsUtils.class);
+    private static Map<String, Color> namedColors = new HashMap<>();
+
+    static {
+        try {
+            URL resource = GraphicsUtils.class.getResource("/colors.csv");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] split = line.split(",");
+                namedColors.put(
+                        split[0],
+                        new Color(Integer.parseInt(split[1]), Integer.parseInt(split[2]), Integer
+                                .parseInt(split[3])));
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Parses a string to obtain a {@link Color}.
@@ -92,6 +117,9 @@ public class GraphicsUtils {
              * value, so null is not a disaster.
              */
             return null;
+        }
+        if (namedColors.containsKey(colourString)) {
+            return namedColors.get(colourString);
         }
         if (!colourString.toLowerCase().startsWith("0x") && !colourString.startsWith("#")) {
             throw new EdalParseException("Invalid format for colour: " + colourString);

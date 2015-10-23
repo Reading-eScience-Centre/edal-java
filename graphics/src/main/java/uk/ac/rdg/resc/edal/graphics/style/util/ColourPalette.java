@@ -49,6 +49,7 @@ import java.util.jar.JarFile;
 
 import org.apache.commons.lang.ArrayUtils;
 
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils.ColorAdapter;
 
 public class ColourPalette {
@@ -75,7 +76,7 @@ public class ColourPalette {
     private static final Color[] DEFAULT_COLOURS = new Color[] { new Color(8, 29, 88),
             new Color(65, 182, 196), new Color(255, 255, 217) };
 
-    private static Map<String, Color[]> loadedColourSets = new HashMap<String, Color[]>();
+    private static Map<String, Color[]> loadedColourSets = new HashMap<>();
     private static ColorAdapter cParser;
 
     static {
@@ -298,7 +299,7 @@ public class ColourPalette {
                 Color[] colours = colourSetFromString(paletteString);
                 return new ColourPalette(colours, nColourBands);
             } catch (Exception e) {
-                throw new IllegalArgumentException(paletteString
+                throw new EdalException(paletteString
                         + " is not an existing palette name or a palette definition");
             }
         }
