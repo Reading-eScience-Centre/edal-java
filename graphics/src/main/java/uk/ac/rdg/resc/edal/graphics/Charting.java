@@ -135,7 +135,7 @@ final public class Charting {
                 /*
                  * This is the label used for the legend.
                  */
-                String legend = feature.getName() + "("
+                String legend = feature.getName() + " of " + varId + "(" 
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ","
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ") - "
                         + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
@@ -290,6 +290,9 @@ final public class Charting {
                 TimeSeries series = new TimeSeries(parameter.getTitle());
                 series.setDescription(feature.getParameter(varId).getDescription());
                 for (int i = 0; i < timeValues.size(); i++) {
+                    if(feature.getValues(varId) == null) {
+                        continue;
+                    }
                     Number val = feature.getValues(varId).get(i);
                     if (val == null || Double.isNaN(val.doubleValue())) {
                         /*

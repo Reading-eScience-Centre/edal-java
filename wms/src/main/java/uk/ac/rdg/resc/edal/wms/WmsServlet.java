@@ -1816,24 +1816,39 @@ public class WmsServlet extends HttpServlet {
         Map<String, String> varId2Title = new HashMap<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            String variableId = catalogue.getLayerNameMapper()
-                    .getVariableIdFromLayerName(layerName);
-            EnhancedVariableMetadata layerMetadata = WmsUtils
-                    .getLayerMetadata(layerName, catalogue);
+            VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
+                    layerName, catalogue);
+
+            if ("text/csv".equalsIgnoreCase(outputFormat)
+                    && !catalogue.isDownloadable(layerName)) {
+                throw new LayerNotQueryableException("The layer: " + layerName
+                        + " cannot be downloaded as CSV");
+            }
+            EnhancedVariableMetadata layerMetadata = catalogue
+                    .getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
                 copyright.append(layerCopyright);
                 copyright.append('\n');
             }
-            varId2Title.put(variableId, layerMetadata.getTitle());
-            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
-                throw new LayerNotQueryableException("The layer: " + layerName
-                        + " cannot be downloaded as CSV");
+            if (variableMetadata.isScalar()) {
+                varId2Title.put(variableMetadata.getId(), layerMetadata.getTitle());
+                if (!datasets2VariableIds.containsKey(dataset.getId())) {
+                    datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
+                }
+                datasets2VariableIds.get(dataset.getId()).add(variableMetadata.getId());
+            } else {
+                Set<VariableMetadata> children = variableMetadata.getChildren();
+                for(VariableMetadata child : children) {
+                    EnhancedVariableMetadata childLayerMetadata = catalogue
+                            .getLayerMetadata(child);
+                    varId2Title.put(child.getId(), childLayerMetadata.getTitle());
+                    if (!datasets2VariableIds.containsKey(dataset.getId())) {
+                        datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
+                    }
+                    datasets2VariableIds.get(dataset.getId()).add(child.getId());
+                }
             }
-            if (!datasets2VariableIds.containsKey(dataset.getId())) {
-                datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
-            }
-            datasets2VariableIds.get(dataset.getId()).add(variableId);
         }
 
         if (copyright.length() > 0) {
@@ -2100,24 +2115,39 @@ public class WmsServlet extends HttpServlet {
         Map<String, String> varId2Title = new HashMap<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            String variableId = catalogue.getLayerNameMapper()
-                    .getVariableIdFromLayerName(layerName);
-            EnhancedVariableMetadata layerMetadata = WmsUtils
-                    .getLayerMetadata(layerName, catalogue);
+            VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
+                    layerName, catalogue);
+
+            if ("text/csv".equalsIgnoreCase(outputFormat)
+                    && !catalogue.isDownloadable(layerName)) {
+                throw new LayerNotQueryableException("The layer: " + layerName
+                        + " cannot be downloaded as CSV");
+            }
+            EnhancedVariableMetadata layerMetadata = catalogue
+                    .getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
                 copyright.append(layerCopyright);
                 copyright.append('\n');
             }
-            varId2Title.put(variableId, layerMetadata.getTitle());
-            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
-                throw new LayerNotQueryableException("The layer: " + layerName
-                        + " cannot be downloaded as CSV");
+            if (variableMetadata.isScalar()) {
+                varId2Title.put(variableMetadata.getId(), layerMetadata.getTitle());
+                if (!datasets2VariableIds.containsKey(dataset.getId())) {
+                    datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
+                }
+                datasets2VariableIds.get(dataset.getId()).add(variableMetadata.getId());
+            } else {
+                Set<VariableMetadata> children = variableMetadata.getChildren();
+                for(VariableMetadata child : children) {
+                    EnhancedVariableMetadata childLayerMetadata = catalogue
+                            .getLayerMetadata(child);
+                    varId2Title.put(child.getId(), childLayerMetadata.getTitle());
+                    if (!datasets2VariableIds.containsKey(dataset.getId())) {
+                        datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
+                    }
+                    datasets2VariableIds.get(dataset.getId()).add(child.getId());
+                }
             }
-            if (!datasets2VariableIds.containsKey(dataset.getId())) {
-                datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
-            }
-            datasets2VariableIds.get(dataset.getId()).add(variableId);
         }
 
         if (copyright.length() > 0) {
