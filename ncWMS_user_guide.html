@@ -31,8 +31,10 @@
     <div id="main_content_wrap" class="outer">
         <section id="main_content" class="inner">
             <h1>ncWMS User Guide</h1>
+            <p>This is the user guide for ncWMS - a piece of software for visualising and exploring enviromental data in a browser. It can be run on a server to make your data available over the web or locally for personal use.</p>
+            <img src="images/sst.png">
             <p><a href="https://github.com/Reading-eScience-Centre/edal-java/releases/download/edal-1.0.3/licence.txt">ncWMS Licence</a></p>
-            <p>ncWMS is a Web Map Service for geospatial data that are stored in CF-compliant NetCDF files. The intention is to create a WMS that requires minimal configuration: the source data files should already contain most of the necessary metadata. ncWMS is developed and maintained by the Reading e-Science Centre (ReSC) at the University of Reading, UK.</p>
+            <p>ncWMS is a <a href="https://en.wikipedia.org/wiki/Web_Map_Service">Web Map Service</a> for geospatial data that are stored in CF-compliant NetCDF files. The intention is to create a WMS that requires minimal configuration: the source data files should already contain most of the necessary metadata. ncWMS is developed and maintained by the Reading e-Science Centre (ReSC) at the University of Reading, UK.</p>
             <p>ncWMS v2 is build on top of the <a href="edal_user_guide.html">EDAL</a> libraries developed by ReSC</p>
             <p>This guide provides instructions on installing, setting up, and using ncWMS v2.</p>
 
@@ -127,6 +129,7 @@
 
             <h4>Data reading class:</h4>
             <p>This is the Java class which should be used to read the data. This should be left blank to use the default gridded NetCDF data reader. ncWMS v2 also provides the reader <code>uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory</code> for reading data from the UK Met Office EN3/EN4 dataset (<a href="http://www.metoffice.gov.uk/hadobs/en4/">http://www.metoffice.gov.uk/hadobs/en4/</a>). For custom data types you specify their class name here (see Development section for more information)</p>
+            <img src="images/godiva-en3.png">
 
             <h4>Remove?</h4>
             <p>Tick this box to completely remove this dataset from the configuration</p>
@@ -246,6 +249,7 @@
             <h4>GetTransect</h4>
             <p>This produces a graph of data values along an arbitrary path. Additionally if there is vertical information present in the dataset, it will produce a vertical section along the same path.</p>
             <p>It takes the same URL parameters as a GetMap request with the addition of a parameter <code>LINESTRING</code> of the format <code>x1 y1,x2 y2,x3 y3...</code> which defines the control points of the graph.</p>
+            <img src="images/trajectory.png">
 
             <h4>GetMetadata</h4>
             <p>The GetMetadata request is used to request small pieces of metadata from ncWMS. Many of these are also present in the capabilities document, but GetMetadata provides a more convenient method of accessing such data. GetMetadata always returns data in the JSON format. All GetMetadata requests must provide the parameter <code>ITEM</code> which states the type of metadata requested. <code>ITEM</code> can take the following values:
