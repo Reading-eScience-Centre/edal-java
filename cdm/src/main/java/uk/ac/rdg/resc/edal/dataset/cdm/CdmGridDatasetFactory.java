@@ -34,15 +34,11 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
@@ -54,6 +50,7 @@ import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset.Gridset;
 import ucar.nc2.dt.GridDatatype;
 import ucar.nc2.ncml.NcMLReader;
+import ucar.nc2.units.DateUnit;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
@@ -83,7 +80,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Jon
  */
 public final class CdmGridDatasetFactory extends DatasetFactory {
-    private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
+//    private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
 
     private static final int DATASET_CACHE_SIZE = 10;
 
@@ -482,63 +479,38 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                         throw new EdalException(
                                 "Cannot join multiple files without time dimensions");
                     }
+                    
                     /*
-                     * We can't assume that the glob expression will have
-                     * returned the files in time order.
-                     * 
-                     * We could assume that alphabetical == time ordered (and
-                     * for properly named files it will - but let's not rely on
-                     * our users having sensible naming conventions...
-                     * 
-                     * Sort the list using a comparator which opens the file and
-                     * gets the first value of the time dimension
+                     * Create a Map
                      */
-                    final String aggDimName = timeDimName;
-                    Collections.sort(files, new Comparator<File>() {
-                        @Override
-                        public int compare(File ncFile1, File ncFile2) {
-                            NetcdfFile nc1 = null;
-                            NetcdfFile nc2 = null;
-                            try {
-                                nc1 = NetcdfFile.open(ncFile1.getAbsolutePath());
-                                nc2 = NetcdfFile.open(ncFile2.getAbsolutePath());
-                                Variable timeVar1 = nc1.findVariable(aggDimName);
-                                Variable timeVar2 = nc2.findVariable(aggDimName);
-                                float time1 = timeVar1.read().getFloat(0);
-                                float time2 = timeVar2.read().getFloat(0);
-                                return Float.compare(time1, time2);
-                            } catch (Exception e) {
-                                /*
-                                 * There was a problem reading the data. Sort
-                                 * alphanumerically by filename and hope for the
-                                 * best...
-                                 * 
-                                 * This catches all exceptions because however
-                                 * it fails this is still our best option.
-                                 * 
-                                 * If the error is a genuine problem, it'll show
-                                 * up as soon as we try and aggregate.
-                                 */
-                                return ncFile1.getAbsolutePath().compareTo(
-                                        ncFile2.getAbsolutePath());
-                            } finally {
-                                if (nc1 != null) {
-                                    try {
-                                        nc1.close();
-                                    } catch (IOException e) {
-                                        log.error("Problem closing netcdf file", e);
-                                    }
-                                }
-                                if (nc2 != null) {
-                                    try {
-                                        nc2.close();
-                                    } catch (IOException e) {
-                                        log.error("Problem closing netcdf file", e);
-                                    }
-                                }
+                    Map<Long, Map<String,String>> time2vars2filename = new HashMap<>();
+                    for(File file : files) {
+                        NetcdfFile ncFile = null;
+                        try {
+                            ncFile = NetcdfFile.open(file.getAbsolutePath());
+                            Variable timeVar = ncFile.findVariable(timeDimName);
+                            String unitsString = timeVar.findAttribute("units").getStringValue();
+                            String[] unitsParts = unitsString.split(" since ");
+                            long time = new DateUnit(timeVar.read().getDouble(0), unitsParts[0], DateUnit.getStandardOrISO(unitsParts[1])).getDate().getTime();
+                            if(!time2vars2filename.containsKey(time)) {
+                                Map<String, String> vars2filename = new HashMap<>();
+                                time2vars2filename.put(time, vars2filename);
                             }
+                            List<Variable> variables = ncFile.getVariables();
+                            String varNames = "";
+                            for(Variable v : variables) {
+                                varNames += v.getFullName();
+                            }
+                            time2vars2filename.get(time).put(varNames, file.getAbsolutePath());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            ncFile.close();
                         }
-                    });
+                    }
+                    
+                    List<Long> times = new ArrayList<>(time2vars2filename.keySet());
+                    Collections.sort(times);
 
                     /*
                      * Now create the NcML string and use it to create an
@@ -549,9 +521,21 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
                     ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName
                             + "\" type=\"joinExisting\">");
-                    for (File file : files) {
-                        ncmlStringBuffer.append("<netcdf location=\"" + file.getAbsolutePath()
-                                + "\"/>");
+                    for(Long time : times) {
+                        System.out.println(time);
+                        Map<String, String> vars2filename = time2vars2filename.get(time);
+                        if(vars2filename.size() == 1) {
+                            String filename = vars2filename.values().iterator().next();
+                            System.out.println(filename);
+                            ncmlStringBuffer.append("<netcdf location=\"" + filename
+                                    + "\"/>");
+                        } else {
+                            ncmlStringBuffer.append("<netcdf><aggregation type=\"union\">");
+                            for(Entry<String,String> entry : vars2filename.entrySet()) {
+                                ncmlStringBuffer.append("<netcdf location=\""+entry.getValue()+"\"/>");
+                            }
+                            ncmlStringBuffer.append("</aggregation></netcdf>");
+                        }
                     }
                     ncmlStringBuffer.append("</aggregation>");
                     ncmlStringBuffer.append("</netcdf>");
