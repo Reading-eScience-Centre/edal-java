@@ -93,7 +93,7 @@ public class ColouredGlyphLayer extends ImageLayer {
         return glyphIconName;
     }
 
-    protected void readInIcons() throws InstantiationException {
+    protected void readInIcons() {
         icons = new HashMap<String, ColourableIcon>();
 
         URL iconUrl;
@@ -113,10 +113,9 @@ public class ColouredGlyphLayer extends ImageLayer {
             iconImage = ImageIO.read(iconUrl);
             icons.put("square", new ColourableIcon(iconImage));
         } catch (IOException e) {
-            throw new InstantiationException(
+            throw new EdalException(
                     "Cannot read required icons.  Ensure that JAR is packaged correctly, or that your project is set up correctly in your IDE");
         }
-
     }
 
     protected ColourableIcon getIcon(String name) {

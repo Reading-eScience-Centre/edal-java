@@ -89,12 +89,12 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
  * @author Guy Griffiths
  */
 public class SldTemplateStyleCatalogue implements StyleCatalogue {
+    private static final Logger log = LoggerFactory.getLogger(SldTemplateStyleCatalogue.class);
     /*
      * Because we will generally set the external style directory separately to
      * where we use this catalogue, make it a singleton
      */
-    private final static SldTemplateStyleCatalogue INSTANCE = new SldTemplateStyleCatalogue();
-    private static final Logger log = LoggerFactory.getLogger(StyleCatalogue.class);
+    private static final SldTemplateStyleCatalogue INSTANCE = new SldTemplateStyleCatalogue();
     /* Velocity templating engine used for reading fixed styles */
     private VelocityEngine velocityEngine;
 
