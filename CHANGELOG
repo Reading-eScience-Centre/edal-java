@@ -6,6 +6,8 @@ Made it possible to specify dataset as part of the URL
 Access to specific datasets in Godiva3 (incl. dynamic datasets)
 Better error handling in Godiva3
 Support for named colours
+Fixed bug where a parsing error on a style can cause ncWMS not to start
+Preliminary support for MODIS land cover
 
 1.0.3
 =====
