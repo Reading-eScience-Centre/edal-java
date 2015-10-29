@@ -165,7 +165,7 @@ public class InMemoryNorthPolarStereographicDataset extends GriddedDataset {
     }
 
     @Override
-    protected GridDataSource openGridDataSource() throws IOException {
+    protected GridDataSource openDataSource() throws IOException {
         return new GridDataSource() {
             @Override
             public Array4D<Number> read(final String variableId, int tmin, int tmax, int zmin,

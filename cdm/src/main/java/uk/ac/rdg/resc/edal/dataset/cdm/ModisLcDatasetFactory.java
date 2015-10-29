@@ -105,7 +105,7 @@ public class ModisLcDatasetFactory extends DatasetFactory {
         }
 
         @Override
-        protected GridDataSource openGridDataSource() throws IOException {
+        protected GridDataSource openDataSource() throws IOException {
             return new GridDataSource() {
                 @Override
                 public Array4D<Number> read(String variableId, final int tmin, int tmax,

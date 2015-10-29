@@ -366,7 +366,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         }
 
         @Override
-        protected GridDataSource openGridDataSource() throws IOException {
+        protected GridDataSource openDataSource() throws IOException {
             NetcdfDataset nc;
             try {
                 nc = openAndAggregateDataset(location);
