@@ -522,11 +522,9 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                     ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName
                             + "\" type=\"joinExisting\">");
                     for(Long time : times) {
-                        System.out.println(time);
                         Map<String, String> vars2filename = time2vars2filename.get(time);
                         if(vars2filename.size() == 1) {
                             String filename = vars2filename.values().iterator().next();
-                            System.out.println(filename);
                             ncmlStringBuffer.append("<netcdf location=\"" + filename
                                     + "\"/>");
                         } else {
