@@ -29,39 +29,30 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
-import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
-import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
-import uk.ac.rdg.resc.edal.feature.MapFeature;
-import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
@@ -69,10 +60,11 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  * A partial implementation of a {@link Dataset} based on a 4D grid, using a
  * {@link GridDataSource} and a {@link DataReadingStrategy}.
  * 
- * @author Jon
- * @author Guy
+ * @author Guy Griffiths
+ * @author Jon Blower
  */
-public abstract class GriddedDataset extends AbstractPluginEnabledDataset<GridDataSource> {
+public abstract class GriddedDataset extends
+        DiscreteLayeredDataset<GridDataSource, GridVariableMetadata> {
     private static final Logger log = LoggerFactory.getLogger(GriddedDataset.class);
 
     public GriddedDataset(String id, Collection<GridVariableMetadata> vars) {
@@ -130,12 +122,6 @@ public abstract class GriddedDataset extends AbstractPluginEnabledDataset<GridDa
             return new GridFeature(featureId, featureId + " data",
                     "The entire range of data for the variable: " + featureId, domain, parameters,
                     values);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new DataReadingException("Problem reading the data from underlying storage", e);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new DataReadingException("Problem reading the data from underlying storage", e);
         } catch (Throwable e) {
             e.printStackTrace();
             throw new DataReadingException("Problem reading the data from underlying storage", e);
@@ -143,7 +129,7 @@ public abstract class GriddedDataset extends AbstractPluginEnabledDataset<GridDa
             if (gridDataSource != null) {
                 try {
                     gridDataSource.close();
-                } catch (IOException e) {
+                } catch (DataReadingException e) {
                     log.error("Problem closing data source");
                 }
             }
@@ -260,55 +246,10 @@ public abstract class GriddedDataset extends AbstractPluginEnabledDataset<GridDa
         }
     }
 
-    /**
-     * Reads horizontal data for a non-derived variable
-     * 
-     * @param varId
-     *            The ID of the variable to read
-     * @param targetGrid
-     *            The {@link HorizontalGrid} on which to read data
-     * @param zPos
-     *            The z-position to read at
-     * @param time
-     *            The time to read at
-     * @param dataSource
-     *            The {@link GridDataSource} to read data from
-     * @return
-     * @throws IOException
-     *             If there is a problem opening the {@link GridDataSource}
-     * @throws DataReadingException
-     *             If there is a problem reading the data
-     * @throws VariableNotFoundException
-     */
     @Override
-    protected Array2D<Number> readUnderlyingHorizontalData(String varId, HorizontalGrid targetGrid,
-            Double zPos, DateTime time, GridDataSource dataSource) throws IOException,
-            DataReadingException, VariableNotFoundException {
-        /*
-         * This cast will always work, because we only ever call this method for
-         * non-derived variables - i.e. those whose metadata was provided in the
-         * constructor (which constrains metadata to be GridVariableMetadata
-         */
-        GridVariableMetadata metadata = (GridVariableMetadata) getVariableMetadata(varId);
-
-        /*
-         * Get the domain of the grid
-         */
+    protected Array2D<Number> extractHorizontalData(GridVariableMetadata metadata, int tIndex, int zIndex,
+            HorizontalGrid targetGrid, GridDataSource dataSource) {
         HorizontalGrid sourceGrid = metadata.getHorizontalDomain();
-        VerticalAxis zAxis = metadata.getVerticalDomain();
-        TimeAxis tAxis = metadata.getTemporalDomain();
-
-        /*
-         * All variables within this dataset should share the same vertical CRS
-         * (even if they don't share the same values)
-         */
-
-        /*
-         * Use these objects to convert natural coordinates to grid indices
-         */
-        int tIndex = getTimeIndex(time, tAxis, varId);
-        int zIndex = getVerticalIndex(zPos, zAxis, varId);
-
         /*
          * Create a DomainMapper from the source and target grids
          */
@@ -317,348 +258,94 @@ public abstract class GriddedDataset extends AbstractPluginEnabledDataset<GridDa
         /*
          * Now use the appropriate DataReadingStrategy to read data
          */
-        Array2D<Number> data = getDataReadingStrategy().readMapData(dataSource, varId, tIndex,
-                zIndex, domainMapper);
+        Array2D<Number> data;
+        try {
+            data = getDataReadingStrategy().readMapData(dataSource, metadata.getId(), tIndex, zIndex,
+                    domainMapper);
+        } catch (IOException e) {
+            throw new DataReadingException("Could not read underlying data", e);
+        }
         return data;
     }
 
-    /**
-     * Reads profile data for a given non-derived variable
-     * 
-     * @param metadata
-     *            The {@link GridVariableMetadata} representing the variable
-     * @param zAxis
-     *            The desired vertical axis of the data
-     * @param bbox
-     *            The {@link BoundingBox} within which to read profiles
-     * @param targetT
-     *            The target time at which to read profiles
-     * @param tExtent
-     *            The time {@link Extent} within which to read profiles
-     * @param dataSource
-     *            The {@link GridDataSource} to read from
-     * @return A {@link Map} of unique profile locations to data for each
-     * @throws IOException
-     *             If there was a problem reading data from the
-     *             {@link GridDataSource}
-     */
     @Override
-    protected Map<ProfileLocation, Array1D<Number>> readUnderlyingVerticalData(
-            GridVariableMetadata metadata, VerticalAxis zAxis, BoundingBox bbox, DateTime targetT,
-            Extent<DateTime> tExtent, GridDataSource dataSource) throws IOException,
-            DataReadingException {
-        String varId = metadata.getId();
+    protected Array1D<Number> extractProfileData(GridVariableMetadata metadata, List<Integer> zs, int tIndex,
+            HorizontalPosition hPos, GridDataSource dataSource) throws DataReadingException {
+        HorizontalGrid hGrid = metadata.getHorizontalDomain();
+        GridCoordinates2D hIndices = hGrid.findIndexOf(hPos);
 
+        int xIndex = hIndices.getX();
+        int yIndex = hIndices.getY();
         /*
-         * Get the domain of the grid
+         * Read the data and move it to a 1D Array
          */
-        HorizontalGrid hDomain = metadata.getHorizontalDomain();
-        TimeAxis tAxis = metadata.getTemporalDomain();
-        VerticalAxis variableZAxis = metadata.getVerticalDomain();
-
-        /*
-         * Find all of the horizontal positions which should be included
-         */
-        List<HorizontalPosition> horizontalPositions = new ArrayList<HorizontalPosition>();
-        if (bbox == null) {
-            bbox = hDomain.getBoundingBox();
-        }
-        if (bbox.getLowerCorner().equals(bbox.getUpperCorner())) {
-            /*
-             * We have a single position
-             */
-            horizontalPositions.add(bbox.getLowerCorner());
-        } else {
-            /*
-             * We want all horizontal grid cells which fall within the bounding
-             * box
-             */
-            for (GridCell2D gridCell : hDomain.getDomainObjects()) {
-                if (bbox.contains(gridCell.getCentre())) {
-                    horizontalPositions.add(gridCell.getCentre());
-                }
-            }
-        }
-
-        /*
-         * Find all of the times which should be included
-         */
-        List<DateTime> times = new ArrayList<DateTime>();
-        if (tAxis != null) {
-            if (tExtent != null) {
-                for (DateTime time : tAxis.getCoordinateValues()) {
-                    if (tExtent.contains(time)) {
-                        times.add(time);
-                    }
-                }
-            } else if (targetT != null) {
-                if (tAxis.contains(targetT)) {
-                    int tIndex = GISUtils.getIndexOfClosestTimeTo(targetT, tAxis);
-                    times.add(tAxis.getCoordinateValue(tIndex));
-                }
-            } else {
-                times = tAxis.getCoordinateValues();
-            }
-        } else {
-            times.add(null);
-        }
-
-        /*
-         * Now read the data for each unique profile location.
-         */
-        Map<ProfileLocation, Array1D<Number>> ret = new HashMap<ProfileLocation, Array1D<Number>>();
-        for (HorizontalPosition hPos : horizontalPositions) {
-            for (DateTime time : times) {
-                ProfileLocation location = new ProfileLocation(hPos, time);
-
-                GridCoordinates2D hIndices = hDomain.findIndexOf(hPos);
-
-                int xIndex = hIndices.getX();
-                int yIndex = hIndices.getY();
-
-                /*
-                 * We only want times which exactly match
-                 */
-                int tIndex = 0;
-                if (tAxis != null) {
-                    tIndex = tAxis.getCoordinateValues().indexOf(time);
-                }
-                if (tIndex < 0) {
-                    continue;
-                }
-
-                /*
-                 * Now read the z-limits
-                 */
-                if (variableZAxis == null) {
-                    throw new IllegalArgumentException("The variable " + varId
-                            + " has no vertical axis, so a vertical profile cannot be read.");
-                }
-                if (!variableZAxis.getVerticalCrs().equals(zAxis.getVerticalCrs())) {
-                    throw new IllegalArgumentException("The vertical CRS of the variable " + varId
-                            + " must match that of the domain you are trying to read.");
-                }
-                int zMin;
-                int zMax;
-                if (zAxis.isAscending()) {
-                    zMin = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
-                    zMax = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
-                } else {
-                    zMin = variableZAxis.findIndexOf(zAxis.getExtent().getHigh());
-                    zMax = variableZAxis.findIndexOf(zAxis.getExtent().getLow());
-                }
-
-                /*
-                 * Read the data and move it to a 1D Array
-                 */
-                Array4D<Number> data4d = dataSource.read(varId, tIndex, tIndex, zMin, zMax, yIndex,
-                        yIndex, xIndex, xIndex);
-                int zSize = zAxis.size();
-                Array1D<Number> data = new ValuesArray1D(zSize);
-
-                for (int i = 0; i < zSize; i++) {
-                    Double zVal = zAxis.getCoordinateValue(i);
-                    int zIndex = variableZAxis.findIndexOf(zVal);
-                    if (zIndex < 0) {
-                        throw new IllegalArgumentException("The z-axis for the variable " + varId
-                                + " does not contain the position " + zVal
-                                + " which was requested.");
-                    }
-                    data.set(data4d.get(new int[] { 0, zIndex - zMin, 0, 0 }), new int[] { i });
-                }
-
-                ret.put(location, data);
-
-            }
-        }
-
-        return ret;
-    }
-
-    /**
-     * Reads timeseries data for a given non-derived variable
-     * 
-     * @param metadata
-     *            The {@link GridVariableMetadata} representing the variable
-     * @param tAxis
-     *            The desired time axis of the data
-     * @param bbox
-     *            The {@link BoundingBox} within which to read timeseries
-     * @param targetZ
-     *            The target depth to read timeseries at
-     * @param zExtent
-     *            The vertical {@link Extent} within which to read timeseries
-     * @param dataSource
-     *            The {@link GridDataSource} to read from
-     * @return A {@link Map} of unique profile locations to data for each
-     * @throws IOException
-     *             If there was a problem reading data from the
-     *             {@link GridDataSource}
-     */
-    @Override
-    protected Map<PointSeriesLocation, Array1D<Number>> readUnderlyingTemporalData(
-            GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox, Double targetZ,
-            Extent<Double> zExtent, GridDataSource dataSource) throws IOException,
-            MismatchedCrsException, DataReadingException {
-        String varId = metadata.getId();
-
-        /*
-         * Get the domain of the grid
-         */
-        HorizontalGrid hDomain = metadata.getHorizontalDomain();
-        VerticalAxis zAxis = metadata.getVerticalDomain();
-        TimeAxis variableTAxis = metadata.getTemporalDomain();
-
-        /*
-         * Find all of the horizontal positions which should be included
-         */
-        List<HorizontalPosition> horizontalPositions = new ArrayList<HorizontalPosition>();
-        if (bbox == null) {
-            bbox = hDomain.getBoundingBox();
-        }
-        if (bbox.getLowerCorner().equals(bbox.getUpperCorner())) {
-            /*
-             * We have a single position
-             */
-            horizontalPositions.add(bbox.getLowerCorner());
-        } else {
-            /*
-             * We want all horizontal grid cells which fall within the bounding
-             * box
-             */
-            for (GridCell2D gridCell : hDomain.getDomainObjects()) {
-                if (bbox.contains(gridCell.getCentre())) {
-                    horizontalPositions.add(gridCell.getCentre());
-                }
-            }
-        }
-
-        /*
-         * Find all of the elevations which should be included
-         */
-        List<Double> zVals = new ArrayList<Double>();
-        if (zAxis != null) {
-            if (zExtent != null) {
-                for (Double zVal : zAxis.getCoordinateValues()) {
-                    if (zExtent.contains(zVal)) {
-                        zVals.add(zVal);
-                    }
-                }
-            } else if (targetZ != null) {
-                if (zAxis.contains(targetZ)) {
-                    int zIndex = GISUtils.getIndexOfClosestElevationTo(targetZ, zAxis);
-                    zVals.add(zAxis.getCoordinateValue(zIndex));
-                }
-            } else {
-                zVals = zAxis.getCoordinateValues();
-            }
-        } else {
-            zVals.add(null);
-        }
-
-        /*
-         * Now read the data for each unique profile location.
-         */
-        Map<PointSeriesLocation, Array1D<Number>> ret = new HashMap<PointSeriesLocation, Array1D<Number>>();
-        for (HorizontalPosition hPos : horizontalPositions) {
-            for (Double zVal : zVals) {
-                VerticalPosition zPos = null;
-                if (zVal != null) {
-                    zPos = new VerticalPosition(zVal, zAxis.getVerticalCrs());
-                }
-                PointSeriesLocation location = new PointSeriesLocation(hPos, zPos);
-
-                GridCoordinates2D hIndices = hDomain.findIndexOf(hPos);
-
-                int xIndex = hIndices.getX();
-                int yIndex = hIndices.getY();
-
-                /*
-                 * We only want co-ordinate values which match exactly
-                 */
-                int zIndex = 0;
-                if (zAxis != null) {
-                    zIndex = zAxis.getCoordinateValues().indexOf(zVal);
-                }
-                if (zIndex < 0) {
-                    continue;
-                }
-
-                /*
-                 * Now read the t-limits
-                 */
-                if (variableTAxis == null) {
-                    throw new IllegalArgumentException("The variable " + varId
-                            + " has no time axis, so a timeseries cannot be read.");
-                }
-                if (!variableTAxis.getChronology().equals(tAxis.getChronology())) {
-                    throw new IllegalArgumentException("The Chronology of the variable " + varId
-                            + " must match that of the domain you are trying to read.");
-                }
-                int tMin = variableTAxis.findIndexOf(tAxis.getExtent().getLow());
-                int tMax = variableTAxis.findIndexOf(tAxis.getExtent().getHigh());
-
-                /*
-                 * Read the data and move it to a 1D Array
-                 */
-                Array4D<Number> data4d = dataSource.read(varId, tMin, tMax, zIndex, zIndex, yIndex,
-                        yIndex, xIndex, xIndex);
-                int tSize = tAxis.size();
-                Array1D<Number> data = new ValuesArray1D(tSize);
-
-                for (int i = 0; i < tSize; i++) {
-                    DateTime time = tAxis.getCoordinateValue(i);
-                    int tIndex = variableTAxis.findIndexOf(time);
-                    if (tIndex < 0) {
-                        throw new IllegalArgumentException("The time-axis for the variable "
-                                + varId + " does not contain the time " + time
-                                + " which was requested.");
-                    }
-                    data.set(data4d.get(new int[] { tIndex - tMin, 0, 0, 0 }), new int[] { i });
-                }
-
-                ret.put(location, data);
-
-            }
-        }
-
-        return ret;
-    }
-
-    @Override
-    protected Number readUnderlyingPointData(String variableId, HorizontalPosition position,
-            Double zVal, DateTime time, GridDataSource gridDataSource) throws DataReadingException,
-            VariableNotFoundException {
+        int zMin = Collections.min(zs);
+        int zMax = Collections.max(zs);
+        Array4D<Number> data4d;
         try {
-            /*
-             * We have a non-derived variable
-             */
-            /*
-             * This cast is OK, since this is only called for non-derived
-             * variables
-             */
-            GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(variableId);
-            GridCoordinates2D xy = variableMetadata.getHorizontalDomain().findIndexOf(position);
-            if (xy == null) {
-                return null;
-            }
-
-            VerticalAxis verticalDomain = variableMetadata.getVerticalDomain();
-            int z = getVerticalIndex(zVal, verticalDomain, variableId);
-
-            TimeAxis temporalDomain = variableMetadata.getTemporalDomain();
-            int t = getTimeIndex(time, temporalDomain, variableId);
-
-            Array4D<Number> readData = gridDataSource.read(variableId, t, t, z, z, xy.getY(),
-                    xy.getY(), xy.getX(), xy.getX());
-            return readData.get(0, 0, 0, 0);
+            data4d = dataSource.read(metadata.getId(), tIndex, tIndex, zMin, zMax, yIndex, yIndex, xIndex,
+                    xIndex);
         } catch (IOException e) {
-            throw new DataReadingException("Problem reading data", e);
+            throw new DataReadingException("Cannot read data from underlying data source", e);
         }
+        Array1D<Number> data = new ValuesArray1D(zs.size());
+
+        int i = 0;
+        for (Integer z : zs) {
+            data.set(data4d.get(new int[] { 0, z - zMin, 0, 0 }), new int[] { i++ });
+        }
+        return data;
     }
 
     @Override
-    public Class<MapFeature> getMapFeatureType(String variableId) {
-        return MapFeature.class;
+    protected Array1D<Number> extractTimeseriesData(GridVariableMetadata metadata, List<Integer> ts, int zIndex,
+            HorizontalPosition hPos, GridDataSource dataSource) throws DataReadingException {
+        HorizontalGrid hGrid = metadata.getHorizontalDomain();
+        GridCoordinates2D hIndices = hGrid.findIndexOf(hPos);
+
+        int xIndex = hIndices.getX();
+        int yIndex = hIndices.getY();
+        /*
+         * Read the data and move it to a 1D Array
+         */
+        int tMin = Collections.min(ts);
+        int tMax = Collections.max(ts);
+        Array4D<Number> data4d;
+        try {
+            data4d = dataSource.read(metadata.getId(), tMin, tMax, zIndex, zIndex, yIndex, yIndex, xIndex,
+                    xIndex);
+        } catch (IOException e) {
+            throw new DataReadingException("Cannot read data from underlying data source", e);
+        }
+        Array1D<Number> data = new ValuesArray1D(ts.size());
+
+        int i = 0;
+        for (Integer t : ts) {
+            Number value = data4d.get(new int[] { t - tMin, 0, 0, 0 });
+            data.set(value, new int[] { i++ });
+        }
+        return data;
     }
+
+    @Override
+    protected Number extractPoint(GridVariableMetadata metadata, int t, int z, HorizontalPosition hPos,
+            GridDataSource dataSource) throws DataReadingException {
+        HorizontalGrid hGrid = metadata.getHorizontalDomain();
+        GridCoordinates2D hIndices = hGrid.findIndexOf(hPos);
+        if (hIndices == null) {
+            return null;
+        }
+
+        int xIndex = hIndices.getX();
+        int yIndex = hIndices.getY();
+
+        try {
+            return dataSource.read(metadata.getId(), t, t, z, z, yIndex, yIndex, xIndex, xIndex).get(0, 0, 0,
+                    0);
+        } catch (IOException e) {
+            throw new DataReadingException("Problem reading underlying data", e);
+        }
+    }
+
+    protected abstract DataReadingStrategy getDataReadingStrategy();
 }

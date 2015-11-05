@@ -108,7 +108,7 @@ public class RectilinearGridImplTest {
             int xIndex = cell.getGridCoordinates().getX();
             int yIndex = cell.getGridCoordinates().getY();
             assertEquals(hPoss.get(xIndex + yIndex * xSize), cell.getCentre());
-            assertEquals(rGrid, cell.getGrid());
+            assertEquals(rGrid, cell.getParentDomain());
         }
     }
 

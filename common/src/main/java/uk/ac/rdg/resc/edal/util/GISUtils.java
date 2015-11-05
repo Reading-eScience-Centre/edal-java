@@ -62,6 +62,7 @@ import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
+import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.geometry.LineString;
@@ -584,8 +585,8 @@ public final class GISUtils {
         } else {
             /*
              * We just have a domain representing an extent. If it contains the
-             * target elevation, return the target elevation, otherwise return either the
-             * upper or lower bound, as appropriate.
+             * target elevation, return the target elevation, otherwise return
+             * either the upper or lower bound, as appropriate.
              */
             if (zDomain.contains(targetZ)) {
                 return targetZ;
@@ -832,6 +833,31 @@ public final class GISUtils {
                 - yExtra, bbox.getMaxX() + xExtra, bbox.getMaxY() + yExtra,
                 bbox.getCoordinateReferenceSystem());
         return bboxBordered;
+    }
+
+    public static BoundingBox getBoundingBox(List<HorizontalPosition> positions) {
+        double minX = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+        CoordinateReferenceSystem crs = null;
+        for (HorizontalPosition pos : positions) {
+            minX = Math.min(minX, pos.getX());
+            maxX = Math.max(maxX, pos.getX());
+            minY = Math.min(minY, pos.getY());
+            maxY = Math.max(maxY, pos.getY());
+            if (crs == null) {
+                crs = pos.getCoordinateReferenceSystem();
+            } else {
+                if (!crsMatch(crs, pos.getCoordinateReferenceSystem())) {
+                    throw new MismatchedCrsException(
+                            "All positions must have the same CRS to get bounding box");
+                }
+            }
+
+        }
+        BoundingBox bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, crs);
+        return constrainBoundingBox(bbox);
     }
 
     /**
@@ -1081,9 +1107,9 @@ public final class GISUtils {
         }
         if (allTimeAxes) {
             /*
-             * All of our domains were time axes, so we create a new axis
-             * out of the intersection of all their points. Often it's the case
-             * that all domains are the same.
+             * All of our domains were time axes, so we create a new axis out of
+             * the intersection of all their points. Often it's the case that
+             * all domains are the same.
              */
             List<DateTime> values = new ArrayList<DateTime>(axisVals);
             Collections.sort(values);

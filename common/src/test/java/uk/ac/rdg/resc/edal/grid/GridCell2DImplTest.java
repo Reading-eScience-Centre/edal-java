@@ -82,7 +82,7 @@ public class GridCell2DImplTest {
         cell = cells.get(3, 4);
         position = new HorizontalPosition(97.2, 34.444, crs);
         assertTrue(cell.contains(position));
-        assertEquals(rGrid, cell.getGrid());
+        assertEquals(rGrid, cell.getParentDomain());
     }
 
     /**

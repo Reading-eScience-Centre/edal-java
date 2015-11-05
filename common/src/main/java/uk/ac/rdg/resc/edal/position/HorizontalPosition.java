@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.position;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
@@ -46,6 +47,32 @@ public class HorizontalPosition implements Serializable {
     private double y;
     private CoordinateReferenceSystem crs;
 
+    /**
+     * Constructs a {@link HorizontalPosition} which uses
+     * {@link DefaultGeographicCRS#WGS84} as its co-ordinate reference system
+     * 
+     * @param longitude
+     *            The longitude of the position
+     * @param latitude
+     *            The latitude of the position
+     */
+    public HorizontalPosition(double longitude, double latitude) {
+        this.x = longitude;
+        this.y = latitude;
+        this.crs = DefaultGeographicCRS.WGS84;
+    }
+
+    /**
+     * Construct a {@link HorizontalPosition}
+     * 
+     * @param x
+     *            The x-value of the position
+     * @param y
+     *            The y-value of the position
+     * @param crs
+     *            The {@link CoordinateReferenceSystem} used to reference the
+     *            x/y values
+     */
     public HorizontalPosition(double x, double y, CoordinateReferenceSystem crs) {
         this.x = x;
         this.y = y;
@@ -76,7 +103,7 @@ public class HorizontalPosition implements Serializable {
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return crs;
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -85,8 +112,8 @@ public class HorizontalPosition implements Serializable {
         sb.append(',');
         sb.append(NUMBER_3DP.format(y));
         sb.append(")");
-        if(crs != null) {
-            sb.append(" - "+crs.getName());
+        if (crs != null) {
+            sb.append(" - " + crs.getName());
         }
         return sb.toString();
     }

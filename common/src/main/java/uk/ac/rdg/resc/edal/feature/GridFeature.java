@@ -151,7 +151,7 @@ public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D
                 }
 
                 @Override
-                public void close() throws IOException {
+                public void close() throws DataReadingException {
                 }
             };
             Array2D<Number> readMapData;

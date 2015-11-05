@@ -183,7 +183,7 @@ final class CdmGridDataSource implements GridDataSource {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() throws DataReadingException {
         /*
          * We do not close this DataSource. The CdmGridDatasetFactory keeps a
          * cache of NetcdfDataset objects and will close them when the cache

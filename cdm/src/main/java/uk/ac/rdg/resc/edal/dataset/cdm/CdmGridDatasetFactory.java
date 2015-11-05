@@ -58,6 +58,7 @@ import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -219,9 +220,9 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                 VariableDS variable = grid.getVariable();
                 String varId = variable.getFullName();
                 String name = getVariableName(variable);
-                
+
                 Attribute stdNameAtt = variable.findAttributeIgnoreCase("standard_name");
-                String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null; 
+                String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null;
 
                 /*
                  * If this is a parent variable for a stats collection, we don't
@@ -366,20 +367,21 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
         }
 
         @Override
-        protected GridDataSource openDataSource() throws IOException {
+        protected GridDataSource openDataSource() throws DataReadingException {
             NetcdfDataset nc;
             try {
                 nc = openAndAggregateDataset(location);
-            } catch (EdalException e) {
-                throw new IOException("Problem aggregating datasets", e);
-            }
-            synchronized (this) {
-                /*
-                 * If the getGridDataset method runs concurrently on the same
-                 * object, we can get a ConcurrentModificationException, so we
-                 * synchronise this action to avoid the issue.
-                 */
-                return new CdmGridDataSource(CdmUtils.getGridDataset(nc));
+                synchronized (this) {
+                    /*
+                     * If the getGridDataset method runs concurrently on the
+                     * same object, we can get a
+                     * ConcurrentModificationException, so we synchronise this
+                     * action to avoid the issue.
+                     */
+                    return new CdmGridDataSource(CdmUtils.getGridDataset(nc));
+                }
+            } catch (EdalException | IOException e) {
+                throw new DataReadingException("Problem aggregating datasets", e);
             }
         }
 
@@ -479,26 +481,27 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                         throw new EdalException(
                                 "Cannot join multiple files without time dimensions");
                     }
-                    
+
                     /*
                      * Create a Map
                      */
-                    Map<Long, Map<String,String>> time2vars2filename = new HashMap<>();
-                    for(File file : files) {
+                    Map<Long, Map<String, String>> time2vars2filename = new HashMap<>();
+                    for (File file : files) {
                         NetcdfFile ncFile = null;
                         try {
                             ncFile = NetcdfFile.open(file.getAbsolutePath());
                             Variable timeVar = ncFile.findVariable(timeDimName);
                             String unitsString = timeVar.findAttribute("units").getStringValue();
                             String[] unitsParts = unitsString.split(" since ");
-                            long time = new DateUnit(timeVar.read().getDouble(0), unitsParts[0], DateUnit.getStandardOrISO(unitsParts[1])).getDate().getTime();
-                            if(!time2vars2filename.containsKey(time)) {
+                            long time = new DateUnit(timeVar.read().getDouble(0), unitsParts[0],
+                                    DateUnit.getStandardOrISO(unitsParts[1])).getDate().getTime();
+                            if (!time2vars2filename.containsKey(time)) {
                                 Map<String, String> vars2filename = new HashMap<>();
                                 time2vars2filename.put(time, vars2filename);
                             }
                             List<Variable> variables = ncFile.getVariables();
                             String varNames = "";
-                            for(Variable v : variables) {
+                            for (Variable v : variables) {
                                 varNames += v.getFullName();
                             }
                             time2vars2filename.get(time).put(varNames, file.getAbsolutePath());
@@ -508,7 +511,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             ncFile.close();
                         }
                     }
-                    
+
                     List<Long> times = new ArrayList<>(time2vars2filename.keySet());
                     Collections.sort(times);
 
@@ -521,16 +524,16 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
                     ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName
                             + "\" type=\"joinExisting\">");
-                    for(Long time : times) {
+                    for (Long time : times) {
                         Map<String, String> vars2filename = time2vars2filename.get(time);
-                        if(vars2filename.size() == 1) {
+                        if (vars2filename.size() == 1) {
                             String filename = vars2filename.values().iterator().next();
-                            ncmlStringBuffer.append("<netcdf location=\"" + filename
-                                    + "\"/>");
+                            ncmlStringBuffer.append("<netcdf location=\"" + filename + "\"/>");
                         } else {
                             ncmlStringBuffer.append("<netcdf><aggregation type=\"union\">");
-                            for(Entry<String,String> entry : vars2filename.entrySet()) {
-                                ncmlStringBuffer.append("<netcdf location=\""+entry.getValue()+"\"/>");
+                            for (Entry<String, String> entry : vars2filename.entrySet()) {
+                                ncmlStringBuffer.append("<netcdf location=\"" + entry.getValue()
+                                        + "\"/>");
                             }
                             ncmlStringBuffer.append("</aggregation></netcdf>");
                         }

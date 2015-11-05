@@ -60,7 +60,6 @@ import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
-import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
@@ -73,7 +72,6 @@ import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
-import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
@@ -88,35 +86,31 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
 /**
- * A partial implementation of a {@link Dataset} based on a 4D grid, using a
- * {@link DS} and a {@link DataReadingStrategy}.
+ * A partial implementation of a 4-dimensional {@link Dataset} which handles the
+ * use of plugins to generate values.
  * 
- * @author Jon
- * @author Guy
+ * @param <DS>
+ *            The type of {@link DataSource} which will be used to read the
+ *            underlying data
+ * 
+ * @author Guy Griffiths
+ * @author Jon Blower
  */
 public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extends AbstractDataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractPluginEnabledDataset.class);
     private static final String NO_Z_AXIS_CODE = "NO_Z_AXIS";
     private static final String NO_T_AXIS_CODE = "NO_T_AXIS";
 
-    public AbstractPluginEnabledDataset(String id, Collection<GridVariableMetadata> vars) {
+    public AbstractPluginEnabledDataset(String id, Collection<? extends VariableMetadata> vars) {
         super(id, vars);
     }
 
-    @Override
-    public Class<GridFeature> getFeatureType(String variableId) {
-        /*
-         * All classes based on this class will have GridFeature as their
-         * underlying data type
-         */
-        return GridFeature.class;
-    }
-
+    /**
+     * {@inheritDoc} By default we have one feature per variable. Subclasses can
+     * override this method to implement a different scheme.
+     */
     @Override
     public Set<String> getFeatureIds() {
-        /*
-         * For a GridDataset, there is one feature per variable
-         */
         return getVariableIds();
     }
 
@@ -200,7 +194,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                 description += "Elevation: " + zPos;
             }
 
-            MapFeature mapFeature = new MapFeature(generateId(varIds), name.toString(),
+            MapFeature mapFeature = new MapFeature(generateId(varIds, params), name.toString(),
                     description, domain, getParameters(varIds), values);
 
             return Collections.singletonList(mapFeature);
@@ -211,20 +205,21 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
             if (dataSource != null) {
                 try {
                     dataSource.close();
-                } catch (IOException e) {
+                } catch (DataReadingException e) {
                     log.error("Problem closing data source");
                 }
             }
         }
     }
 
-    private String generateId(Set<String> varIds) {
+    private String generateId(Set<String> varIds, PlottingDomainParams params) {
         StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
-        id.append(getId() + System.currentTimeMillis());
+        id.append(getId());
         id.append(":");
         for (String varId : varIds) {
             id.append(varId);
         }
+        id.append(params.toString());
         return UUID.nameUUIDFromBytes(id.toString().getBytes()).toString();
     }
 
@@ -268,8 +263,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      * @throws VariableNotFoundException
      */
     private Array2D<Number> readHorizontalData(String varId, final HorizontalGrid targetGrid,
-            Double zPos, DateTime time, DS dataSource) throws IOException,
-            DataReadingException, VariableNotFoundException {
+            Double zPos, DateTime time, DS dataSource) throws IOException, DataReadingException,
+            VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(varId);
         if (plugin == null) {
             return readUnderlyingHorizontalData(varId, targetGrid, zPos, time, dataSource);
@@ -433,17 +428,11 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                 }
 
                 /*
-                 * We now know that this is not a derived variable, and hence
-                 * will have GridVariableMetadata
-                 */
-                GridVariableMetadata gridVariableMetadata = (GridVariableMetadata) getVariableMetadata(varId);
-
-                /*
                  * Do the actual data reading
                  */
                 Map<ProfileLocation, Array1D<Number>> data;
                 try {
-                    data = readVerticalData(gridVariableMetadata, zAxis, bbox, params.getTargetT(),
+                    data = readVerticalData(varId, zAxis, bbox, params.getTargetT(),
                             params.getTExtent(), dataSource);
                 } catch (IOException e) {
                     throw new DataReadingException("Problem reading profile feature", e);
@@ -475,7 +464,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
              */
             for (ProfileLocation location : location2Var2Values.keySet()) {
                 Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
-                ProfileFeature feature = new ProfileFeature(generateId(varIds),
+                ProfileFeature feature = new ProfileFeature(generateId(varIds, params),
                         "Extracted Profile Feature",
                         generateDescription("Profile feature", varIds), zAxis, location.hPos,
                         location.time, getParameters(varIds), var2Values);
@@ -492,13 +481,17 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                     }
                 });
             }
-        } catch (IOException e) {
-            throw new DataReadingException("Problem reading profile feature", e);
+        } catch (DataReadingException e) {
+            /*
+             * Rethrow. Catch is just here to ensure that finally part gets
+             * executed
+             */
+            throw e;
         } finally {
             if (dataSource != null) {
                 try {
                     dataSource.close();
-                } catch (IOException e) {
+                } catch (DataReadingException e) {
                     log.error("Problem closing data source");
                 }
             }
@@ -599,8 +592,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
     /**
      * Reads profile data for a given variable
      * 
-     * @param metadata
-     *            The {@link GridVariableMetadata} representing the variable
+     * @param varId
+     *            The ID of the variable to read data for
      * @param zAxis
      *            The desired vertical axis of the data
      * @param bbox
@@ -613,22 +606,19 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      *            The {@link DS} to read from
      * @return A {@link Map} of unique profile locations to data for each
      * @throws IOException
-     *             If there was a problem reading data from the
-     *             {@link DS}
+     *             If there was a problem reading data from the {@link DS}
      * @throws VariableNotFoundException
      */
-    private Map<ProfileLocation, Array1D<Number>> readVerticalData(VariableMetadata metadata,
+    private Map<ProfileLocation, Array1D<Number>> readVerticalData(String varId,
             VerticalAxis zAxis, BoundingBox bbox, DateTime targetT, Extent<DateTime> tExtent,
-            DS dataSource) throws IOException, DataReadingException,
-            VariableNotFoundException {
-        VariablePlugin plugin = isDerivedVariable(metadata.getId());
+            DS dataSource) throws IOException, DataReadingException, VariableNotFoundException {
+        VariablePlugin plugin = isDerivedVariable(varId);
         if (plugin == null) {
             /*
              * Cast to GridVariableMetadata is fine because all
              * non-plugin-derived variables are gridded
              */
-            return readUnderlyingVerticalData((GridVariableMetadata) metadata, zAxis, bbox,
-                    targetT, tExtent, dataSource);
+            return readUnderlyingVerticalData(varId, zAxis, bbox, targetT, tExtent, dataSource);
         } else {
             List<Map<ProfileLocation, Array1D<Number>>> pluginSourceData = new ArrayList<>();
             int nSourceVars = plugin.usesVariables().length;
@@ -642,9 +632,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
              */
             for (int i = 0; i < nSourceVars; i++) {
                 String pluginSourceVarId = plugin.usesVariables()[i];
-                VariableMetadata variableMetadata = getVariableMetadata(pluginSourceVarId);
                 try {
-                    pluginSourceData.add(readVerticalData(variableMetadata, zAxis, bbox, targetT,
+                    pluginSourceData.add(readVerticalData(pluginSourceVarId, zAxis, bbox, targetT,
                             tExtent, dataSource));
                 } catch (IOException e) {
                     log.error("Problem reading data", e);
@@ -678,7 +667,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                 for (int i = 0; i < nSourceVars; i++) {
                     pluginSource[i] = pluginSourceData.get(i).get(location);
                 }
-                Array1D<Number> values = plugin.generateArray1D(metadata.getId(),
+                Array1D<Number> values = plugin.generateArray1D(varId,
                         new Array1D<HorizontalPosition>(nSourceVars) {
                             @Override
                             public HorizontalPosition get(int... coords) {
@@ -822,17 +811,11 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                 }
 
                 /*
-                 * We now know that this is not a derived variable, and hence
-                 * will have GridVariableMetadata
-                 */
-                GridVariableMetadata gridVariableMetadata = (GridVariableMetadata) getVariableMetadata(varId);
-
-                /*
                  * Do the actual data reading
                  */
                 Map<PointSeriesLocation, Array1D<Number>> data;
                 try {
-                    data = readTemporalData(gridVariableMetadata, tAxis, bbox, params.getTargetZ(),
+                    data = readTemporalData(varId, tAxis, bbox, params.getTargetZ(),
                             params.getZExtent(), dataSource);
                 } catch (IOException e) {
                     log.error("Problem reading data", e);
@@ -869,7 +852,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
              */
             for (PointSeriesLocation location : location2Var2Values.keySet()) {
                 Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
-                PointSeriesFeature feature = new PointSeriesFeature(generateId(varIds),
+                PointSeriesFeature feature = new PointSeriesFeature(generateId(varIds, params),
                         "Extracted Profile Feature", generateDescription("Point series", varIds),
                         tAxis, location.hPos, location.elevation, getParameters(varIds), var2Values);
                 features.add(feature);
@@ -885,13 +868,13 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                     }
                 });
             }
-        } catch (IOException e) {
-            throw new DataReadingException("Problem reading timeseries feature", e);
+        } catch (DataReadingException e) {
+            throw e;
         } finally {
             if (dataSource != null) {
                 try {
                     dataSource.close();
-                } catch (IOException e) {
+                } catch (DataReadingException e) {
                     log.error("Problem closing data source");
                 }
             }
@@ -902,9 +885,6 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
 
     private TimeAxis getTimeAxis(Set<String> varIds) throws IncorrectDomainException,
             VariableNotFoundException {
-        /*
-         * TODO Test?
-         */
         TimeAxis retAxis = null;
         Extent<DateTime> tExtent = null;
         Chronology chronology = null;
@@ -999,8 +979,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
     /**
      * Reads timeseries data for a given variable
      * 
-     * @param metadata
-     *            The {@link GridVariableMetadata} representing the variable
+     * @param varId
+     *            The ID of the variable to read data for
      * @param tAxis
      *            The desired time axis of the data
      * @param bbox
@@ -1013,22 +993,16 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      *            The {@link DS} to read from
      * @return A {@link Map} of unique profile locations to data for each
      * @throws IOException
-     *             If there was a problem reading data from the
-     *             {@link DS}
+     *             If there was a problem reading data from the {@link DS}
      * @throws VariableNotFoundException
      */
-    private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(VariableMetadata metadata,
-            TimeAxis tAxis, BoundingBox bbox, Double targetZ, Extent<Double> zExtent,
-            DS dataSource) throws IOException, MismatchedCrsException,
-            DataReadingException, VariableNotFoundException {
-        VariablePlugin plugin = isDerivedVariable(metadata.getId());
+    private Map<PointSeriesLocation, Array1D<Number>> readTemporalData(String varId,
+            TimeAxis tAxis, BoundingBox bbox, Double targetZ, Extent<Double> zExtent, DS dataSource)
+            throws IOException, MismatchedCrsException, DataReadingException,
+            VariableNotFoundException {
+        VariablePlugin plugin = isDerivedVariable(varId);
         if (plugin == null) {
-            /*
-             * Cast to GridVariableMetadata is fine because all
-             * non-plugin-derived variables are gridded
-             */
-            return readUnderlyingTemporalData((GridVariableMetadata) metadata, tAxis, bbox,
-                    targetZ, zExtent, dataSource);
+            return readUnderlyingTemporalData(varId, tAxis, bbox, targetZ, zExtent, dataSource);
         } else {
             List<Map<PointSeriesLocation, Array1D<Number>>> pluginSourceData = new ArrayList<>();
             int nSourceVars = plugin.usesVariables().length;
@@ -1042,9 +1016,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
              */
             for (int i = 0; i < nSourceVars; i++) {
                 String pluginSourceVarId = plugin.usesVariables()[i];
-                VariableMetadata variableMetadata = getVariableMetadata(pluginSourceVarId);
                 try {
-                    pluginSourceData.add(readTemporalData(variableMetadata, tAxis, bbox, targetZ,
+                    pluginSourceData.add(readTemporalData(pluginSourceVarId, tAxis, bbox, targetZ,
                             zExtent, dataSource));
                 } catch (IOException e) {
                     log.error("Problem reading data", e);
@@ -1082,7 +1055,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                 for (int i = 0; i < nSourceVars; i++) {
                     pluginSource[i] = pluginSourceData.get(i).get(location);
                 }
-                Array1D<Number> values = plugin.generateArray1D(metadata.getId(),
+                Array1D<Number> values = plugin.generateArray1D(varId,
                         new Array1D<HorizontalPosition>(nSourceVars) {
                             @Override
                             public HorizontalPosition get(int... coords) {
@@ -1136,9 +1109,14 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                         return (int) domainObjects.size();
                     }
                 });
-        return new PointCollectionFeature(generateId(varIds), "Extracted point collection",
-                generateDescription("Point collection feature", varIds), domain,
-                getParameters(varIds), values);
+        String id = getId() + ":";
+        if (varIds != null) {
+            for (String varId : varIds) {
+                id += varId;
+            }
+        }
+        return new PointCollectionFeature(id, "Extracted point collection", generateDescription(
+                "Point collection feature", varIds), domain, getParameters(varIds), values);
     }
 
     /**
@@ -1173,9 +1151,14 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                         return (int) domainObjects.size();
                     }
                 });
-        return new TrajectoryFeature(generateId(varIds), "Extracted point collection",
-                generateDescription("Point collection feature", varIds), domain,
-                getParameters(varIds), values);
+        String id = getId() + ":";
+        if (varIds != null) {
+            for (String varId : varIds) {
+                id += varId;
+            }
+        }
+        return new TrajectoryFeature(id, "Extracted point collection", generateDescription(
+                "Point collection feature", varIds), domain, getParameters(varIds), values);
     }
 
     /*
@@ -1299,13 +1282,13 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
             dataSource.close();
 
             return values;
-        } catch (IOException e) {
-            throw new DataReadingException("Problem reading multiple points", e);
+        } catch (DataReadingException e) {
+            throw e;
         } finally {
             if (dataSource != null) {
                 try {
                     dataSource.close();
-                } catch (IOException e) {
+                } catch (DataReadingException e) {
                     log.error("Problem closing data source");
                 }
             }
@@ -1322,13 +1305,13 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
         try {
             dataSource = openDataSource();
             return readPointData(variableId, position, zVal, time, dataSource);
-        } catch (IOException e) {
-            throw new DataReadingException("Problem reading data", e);
+        } catch (DataReadingException e) {
+            throw e;
         } finally {
             if (dataSource != null) {
                 try {
                     dataSource.close();
-                } catch (IOException e) {
+                } catch (DataReadingException e) {
                     log.error("Problem closing data source");
                 }
             }
@@ -1353,37 +1336,32 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
     }
 
     private Number readPointData(String variableId, HorizontalPosition position, Double zVal,
-            DateTime time, DS dataSource) throws DataReadingException,
-            VariableNotFoundException {
+            DateTime time, DS dataSource) throws DataReadingException, VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(variableId);
-        try {
-            if (plugin != null) {
-                /*
-                 * We have a derived variable - read all of the required
-                 * variables first.
-                 */
-                String[] baseVariables = plugin.usesVariables();
-                Number[] baseValues = new Number[baseVariables.length];
+        if (plugin != null) {
+            /*
+             * We have a derived variable - read all of the required variables
+             * first.
+             */
+            String[] baseVariables = plugin.usesVariables();
+            Number[] baseValues = new Number[baseVariables.length];
 
-                for (int i = 0; i < baseVariables.length; i++) {
-                    /*
-                     * Read all of the required base variables. By recursing
-                     * this method, we safely cover the cases where derived
-                     * variables are derived from other derived variables
-                     */
-                    baseValues[i] = readUnderlyingPointData(variableId, position, zVal, time,
-                            dataSource);
-                }
-
-                return plugin.getValue(variableId, position, baseValues);
-            } else {
+            for (int i = 0; i < baseVariables.length; i++) {
                 /*
-                 * We have a non-derived variable
+                 * Read all of the required base variables. By recursing this
+                 * method, we safely cover the cases where derived variables are
+                 * derived from other derived variables
                  */
-                return readUnderlyingPointData(variableId, position, zVal, time, dataSource);
+                baseValues[i] = readUnderlyingPointData(variableId, position, zVal, time,
+                        dataSource);
             }
-        } catch (IOException e) {
-            throw new DataReadingException("Problem reading data", e);
+
+            return plugin.getValue(variableId, position, baseValues);
+        } else {
+            /*
+             * We have a non-derived variable
+             */
+            return readUnderlyingPointData(variableId, position, zVal, time, dataSource);
         }
     }
 
@@ -1515,9 +1493,30 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
         }
     }
 
+    /**
+     * Reads a single point for a non-derived variable
+     * 
+     * @param variableId
+     *            The ID of the variable to read
+     * @param position
+     *            The {@link HorizontalPosition} at which to read the data
+     * @param zVal
+     *            The z-position to read at
+     * @param time
+     *            The time to read at
+     * @param dataSource
+     *            The {@link DataSource} to read from
+     * @return The value of the data, or <code>null</code> if there is no data
+     *         there
+     * @throws DataReadingException
+     *             If there is a problem reading the data
+     * @throws VariableNotFoundException
+     *             If the requested variable is not present in the
+     *             {@link Dataset}
+     */
     protected abstract Number readUnderlyingPointData(String variableId,
             HorizontalPosition position, Double zVal, DateTime time, DS dataSource)
-            throws IOException;
+            throws DataReadingException, VariableNotFoundException;
 
     /**
      * Reads horizontal data for a non-derived variable
@@ -1532,22 +1531,23 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      *            The time to read at
      * @param dataSource
      *            The {@link DS} to read data from
-     * @return
-     * @throws IOException
-     *             If there is a problem opening the {@link DS}
+     * @return An {@link Array2D} containing the data corresponding to the
+     *         supplied {@link HorizontalGrid}
      * @throws DataReadingException
      *             If there is a problem reading the data
      * @throws VariableNotFoundException
+     *             If the requested variable is not present in the
+     *             {@link Dataset}
      */
     protected abstract Array2D<Number> readUnderlyingHorizontalData(String varId,
             HorizontalGrid targetGrid, Double zPos, DateTime time, DS dataSource)
-            throws IOException, DataReadingException, VariableNotFoundException;
+            throws DataReadingException, VariableNotFoundException;
 
     /**
      * Reads profile data for a given non-derived variable
      * 
-     * @param metadata
-     *            The {@link GridVariableMetadata} representing the variable
+     * @param varId
+     *            The of the variable to read data for
      * @param zAxis
      *            The desired vertical axis of the data
      * @param bbox
@@ -1557,22 +1557,25 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      * @param tExtent
      *            The time {@link Extent} within which to read profiles
      * @param dataSource
-     *            The {@link DS} to read from
+     *            The {@link DataSource} to read from
      * @return A {@link Map} of unique profile locations to data for each
-     * @throws IOException
+     * @throws DataReadingException
      *             If there was a problem reading data from the
-     *             {@link DS}
+     *             {@link DataSource}
+     * @throws VariableNotFoundException
+     *             If the requested variable is not present in the
+     *             {@link Dataset}
      */
     protected abstract Map<ProfileLocation, Array1D<Number>> readUnderlyingVerticalData(
-            GridVariableMetadata metadata, VerticalAxis zAxis, BoundingBox bbox, DateTime targetT,
-            Extent<DateTime> tExtent, DS dataSource) throws IOException,
-            DataReadingException;
+            String varId, VerticalAxis zAxis, BoundingBox bbox, DateTime targetT,
+            Extent<DateTime> tExtent, DS dataSource) throws DataReadingException,
+            VariableNotFoundException;
 
     /**
      * Reads timeseries data for a given non-derived variable
      * 
-     * @param metadata
-     *            The {@link GridVariableMetadata} representing the variable
+     * @param varId
+     *            The of the variable to read data for
      * @param tAxis
      *            The desired time axis of the data
      * @param bbox
@@ -1582,18 +1585,23 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      * @param zExtent
      *            The vertical {@link Extent} within which to read timeseries
      * @param dataSource
-     *            The {@link DS} to read from
+     *            The {@link DataSource} to read from
      * @return A {@link Map} of unique profile locations to data for each
-     * @throws IOException
+     * @throws DataReadingException
      *             If there was a problem reading data from the
-     *             {@link DS}
+     *             {@link DataSource}
+     * @throws VariableNotFoundException
+     *             If the requested variable is not present in the
+     *             {@link Dataset}
      */
     protected abstract Map<PointSeriesLocation, Array1D<Number>> readUnderlyingTemporalData(
-            GridVariableMetadata metadata, TimeAxis tAxis, BoundingBox bbox, Double targetZ,
-            Extent<Double> zExtent, DS dataSource) throws IOException,
-            MismatchedCrsException, DataReadingException;
+            String varId, TimeAxis tAxis, BoundingBox bbox, Double targetZ, Extent<Double> zExtent,
+            DS dataSource) throws DataReadingException, VariableNotFoundException;
 
-    protected abstract DS openDataSource() throws IOException;
-
-    protected abstract DataReadingStrategy getDataReadingStrategy();
+    /**
+     * @return The {@link DataSource} from which to read data
+     * @throws DataReadingException
+     *             if there is a problem opening the {@link DataSource}
+     */
+    protected abstract DS openDataSource() throws DataReadingException;
 }

@@ -28,14 +28,14 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
-import java.io.IOException;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 
 public interface DataSource {
     /**
      * Close all resources associated with the underlying data.
      * 
-     * @throws IOException
+     * @throws DataReadingException
      *             If the underlying data cannot be closed for some reason
      */
-    public void close() throws IOException;
+    public void close() throws DataReadingException;
 }
