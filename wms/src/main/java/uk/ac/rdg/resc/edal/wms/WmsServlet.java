@@ -85,7 +85,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
+import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.PointCollectionDomain;
@@ -112,9 +112,9 @@ import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
-import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
@@ -1973,12 +1973,12 @@ public class WmsServlet extends HttpServlet {
         /* Do we also want to plot a vertical section plot? */
         boolean verticalSection = false;
         List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
-        GriddedDataset gridDataset = null;
+        DiscreteLayeredDataset<?, ?> gridDataset = null;
         String varId = null;
         for (String layerName : layers) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            if (dataset instanceof GriddedDataset) {
-                gridDataset = (GriddedDataset) dataset;
+            if (dataset instanceof DiscreteLayeredDataset<?, ?>) {
+                gridDataset = (DiscreteLayeredDataset<?, ?>) dataset;
                 varId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
                 String layerCopyright = WmsUtils.getLayerMetadata(layerName, catalogue)
                         .getCopyright();
