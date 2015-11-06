@@ -41,6 +41,8 @@ import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
 import uk.ac.rdg.resc.edal.geometry.AbstractPolygon;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.grid.kdtree.KDTree;
+import uk.ac.rdg.resc.edal.grid.kdtree.Point;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
 import uk.ac.rdg.resc.edal.util.Array;
@@ -55,6 +57,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
     private final List<HorizontalPosition> positions;
     private final BoundingBox bbox;
     private Polygon boundary;
+    private KDTree kdTree;
 
     /**
      * Create a new {@link HorizontalMesh}
@@ -70,6 +73,8 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
      *            make up each cell of the grid.
      */
     public HorizontalMesh(List<HorizontalPosition> positions, List<int[]> connections) {
+        this.kdTree = new KDTree(positions);
+        this.kdTree.buildTree();
         this.positions = positions;
         this.bbox = GISUtils.getBoundingBox(positions);
         /*
@@ -82,14 +87,6 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
          */
         Map<Edge, Integer> edgeOccurences = new HashMap<>();
         for (int[] connection : connections) {
-//            for(int i=0;i<connection.length-1;i++) {
-//                Edge e = new Edge(connection[i], connection[i+1]);
-//                if(!edgeOccurences.containsKey(e)) {
-//                    edgeOccurences.put(e, 1);
-//                } else {
-//                    edgeOccurences.put(e, edgeOccurences.get(e)+1);
-//                }
-//            }
             Edge e1 = new Edge(connection[0], connection[1]);
             Edge e2 = new Edge(connection[1], connection[2]);
             Edge e3 = new Edge(connection[2], connection[0]);
@@ -136,6 +133,10 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
                 searchVertexIndex = currentEdge.i1;
             }
 
+            /*
+             * By removing edges once they've been used, this loop gets smaller
+             * each time
+             */
             for (Edge testEdge : boundaryEdges) {
                 if (testEdge.i1 == searchVertexIndex) {
                     onI1 = true;
@@ -149,7 +150,6 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
                 }
             }
             boundaryEdges.remove(currentEdge);
-
         }
 
         /*
@@ -237,18 +237,25 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         if (!boundary.contains(position)) {
             return -1;
         }
-        int index = -1;
-        double minDistSquared = Double.MAX_VALUE;
-        int i = 0;
-        for (HorizontalPosition pos : positions) {
-            double distSquared = GISUtils.getDistSquared(pos, position);
-            if (distSquared < minDistSquared) {
-                minDistSquared = distSquared;
-                index = i;
-            }
-            i++;
-        }
-        return index;
+        Point nearestNeighbour = kdTree.nearestNeighbour(position);
+        return nearestNeighbour.getIndex();
+
+        /*
+         * Linear search method. Not considerably slower than our KDTree
+         * implementation for the datasets I've tried it on.
+         */
+//        int index = -1;
+//        double minDistSquared = Double.MAX_VALUE;
+//        int i = 0;
+//        for (HorizontalPosition pos : positions) {
+//            double distSquared = GISUtils.getDistSquared(pos, position);
+//            if (distSquared < minDistSquared) {
+//                minDistSquared = distSquared;
+//                index = i;
+//            }
+//            i++;
+//        }
+//        return index;
     }
 
     /**
