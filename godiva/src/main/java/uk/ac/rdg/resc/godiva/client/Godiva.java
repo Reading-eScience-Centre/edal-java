@@ -833,6 +833,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             urlParams += "&displayScaleRange=" + displayScaleRange;
         }
         urlParams += "&opacity=" + paletteSelector.getOpacity();
+        if(paletteSelector.isLogScale()) {
+            logScale = true;
+        }
 
         anim.updateDetails(currentLayer, currentElevation, currentPalette, currentStyle,
                 scaleRange, aboveMax, belowMin, noData, nColorBands, logScale);
