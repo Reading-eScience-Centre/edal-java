@@ -28,7 +28,7 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
+import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
@@ -101,7 +101,7 @@ public class GetFeatureInfoParameters extends GetMapParameters {
 
         continuousDomainPresent = false;
         for (String layerName : layers) {
-            if (!(WmsUtils.getDatasetFromLayerName(layerName, catalogue) instanceof GriddedDataset)) {
+            if (!(WmsUtils.getDatasetFromLayerName(layerName, catalogue) instanceof DiscreteLayeredDataset<?, ?>)) {
                 continuousDomainPresent = true;
                 break;
             }
