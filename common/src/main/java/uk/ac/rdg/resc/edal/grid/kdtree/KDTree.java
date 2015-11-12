@@ -2,7 +2,6 @@ package uk.ac.rdg.resc.edal.grid.kdtree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -20,24 +19,16 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Guy Griffiths
  */
 public class KDTree {
-    private final static double SQRT2 = Math.sqrt(2.0);
     private static final Logger log = LoggerFactory.getLogger(KDTree.class);
 
     private List<HorizontalPosition> points;
     private CoordinateReferenceSystem crs = null;
+    private boolean latLon = false;
 
     private TreeNode[] tree = null;
-    private double nominalMinResolution;
-    private double expansionFactor = 3.5;
-    private int approxQueries = 0, approxResults = 0, approxIterations = 0;
 
     public KDTree(List<HorizontalPosition> points) {
         this.points = points;
-    }
-
-    public void setQueryParameters(double expansionFactor, double nominalMinimumResolution) {
-        this.expansionFactor = expansionFactor;
-        this.nominalMinResolution = nominalMinimumResolution;
     }
 
     public void buildTree() {
@@ -47,7 +38,7 @@ public class KDTree {
         double minX = Double.NEGATIVE_INFINITY;
         double maxX = Double.POSITIVE_INFINITY;
         Point[] sourceData = new Point[points.size()];
-        for(int i=0;i < points.size();i++) {
+        for (int i = 0; i < points.size(); i++) {
             HorizontalPosition pos = points.get(i);
             /*
              * Set the CRS or convert the
@@ -59,16 +50,17 @@ public class KDTree {
                     pos = GISUtils.transformPosition(pos, crs);
                 }
             }
+            if (GISUtils.isWgs84LonLat(crs)) {
+                latLon = true;
+                pos = new HorizontalPosition(GISUtils.constrainLongitude360(pos.getX()), pos.getY());
+            }
+
             minX = Math.min(minX, pos.getX());
             maxX = Math.max(maxX, pos.getX());
             minY = Math.min(minY, pos.getY());
             maxY = Math.max(maxY, pos.getY());
             sourceData[i] = new Point(pos.getX(), pos.getY(), i);
         }
-        /* Compute the nominal resolution */
-        nominalMinResolution = 0.25f;
-        // Math.sqrt(Math.min(max_lon - min_lon, max_lat - min_lat)) / 20.0f;
-
         /*
          * Perform an initial sort of the source data by longitude (likely to be
          * bigger for world data)
@@ -237,87 +229,6 @@ public class KDTree {
                 sourceData);
     }
 
-    public Point limitedNearestNeighbour(HorizontalPosition pos, double maxDistance) {
-        /*
-         * Transform position into correct CRS if necessary
-         */
-        if (!GISUtils.crsMatch(pos.getCoordinateReferenceSystem(), crs)) {
-            pos = GISUtils.transformPosition(pos, crs);
-        }
-        Point nearestNeighbour = null;
-        double bestDistance = Double.POSITIVE_INFINITY;
-        for (Point candidate : approxNearestNeighbour(pos, maxDistance)) {
-            double currentDistanceX = (pos.getX() - candidate.getX());
-            double currentDistanceY = (pos.getY() - candidate.getY());
-            double currentDistance = currentDistanceY * currentDistanceY + currentDistanceX
-                    * currentDistanceX;
-            if (currentDistance < bestDistance) {
-                nearestNeighbour = candidate;
-                bestDistance = currentDistance;
-            }
-        }
-        /* Return best result */
-        return nearestNeighbour;
-    }
-
-    public List<Point> approxNearestNeighbour(HorizontalPosition pos, double maxDistance) {
-        /*
-         * Transform position into correct CRS if necessary
-         */
-        if (!GISUtils.crsMatch(pos.getCoordinateReferenceSystem(), crs)) {
-            pos = GISUtils.transformPosition(pos, crs);
-        }
-        approxQueries++;
-        double currentDistance = nominalMinResolution;
-        ArrayList<Point> results;
-        boolean breakNext = false;
-        while (currentDistance <= maxDistance) {
-            approxIterations++;
-            results = rangeQuery(pos.getX() - currentDistance, pos.getX() + currentDistance,
-                    pos.getY() - currentDistance, pos.getY() + currentDistance);
-            if (results.size() > 0) {
-                /*
-                 * Need to do one more check - if the point found is at the
-                 * corner of the current box, there could be a closer point
-                 * within that distance, so set the search distance to the
-                 * distance to the current point
-                 */
-                currentDistance *= SQRT2;
-                results = rangeQuery(pos.getX() - currentDistance, pos.getX() + currentDistance,
-                        pos.getY() - currentDistance, pos.getY() + currentDistance);
-                approxResults += results.size();
-                return results;
-            }
-            if (breakNext) {
-                break;
-            }
-            currentDistance *= expansionFactor;
-            if (currentDistance > maxDistance) {
-                breakNext = true;
-                currentDistance = maxDistance;
-            }
-        }
-        /* Reached max distance and no points found - return empty */
-        return Collections.emptyList();
-    }
-
-    public void printApproxQueryStats() {
-        System.out.println("Computed nominal resolution " + nominalMinResolution);
-        if (approxQueries > 0) {
-            System.out.println("Results per query " + (double) (approxResults / approxQueries));
-            System.out.println("Iterations per query "
-                    + (double) (approxIterations / approxQueries));
-        } else {
-            System.out.println("No approximate queries made");
-        }
-    }
-
-    public void resetApproxQueryStats() {
-        approxIterations = 0;
-        approxResults = 0;
-        approxQueries = 0;
-    }
-
     private final static double squaredDistance(Point p, HorizontalPosition pos) {
         return Math.pow(p.getX() - pos.getX(), 2.0) + Math.pow(p.getY() - pos.getY(), 2.0);
     }
@@ -329,7 +240,25 @@ public class KDTree {
         if (!GISUtils.crsMatch(pos.getCoordinateReferenceSystem(), crs)) {
             pos = GISUtils.transformPosition(pos, crs);
         }
-        return nearestNeighbourRecurse(pos, 0);
+        if (latLon) {
+            double x180 = GISUtils.constrainLongitude180(pos.getX());
+            double x360 = GISUtils.constrainLongitude360(pos.getX());
+            if (x180 != x360) {
+                HorizontalPosition pos180 = new HorizontalPosition(x180, pos.getY());
+                HorizontalPosition pos360 = new HorizontalPosition(x360, pos.getY());
+                Point nn180 = nearestNeighbourRecurse(pos180, 0);
+                Point nn360 = nearestNeighbourRecurse(pos360, 0);
+                if (squaredDistance(nn180, pos180) < squaredDistance(nn360, pos360)) {
+                    return nn180;
+                } else {
+                    return nn360;
+                }
+            } else {
+                return nearestNeighbourRecurse(new HorizontalPosition(x180, pos.getY()), 0);
+            }
+        } else {
+            return nearestNeighbourRecurse(pos, 0);
+        }
     }
 
     private final Point nearestNeighbourRecurse(HorizontalPosition pos, int currentIndex) {
@@ -362,14 +291,11 @@ public class KDTree {
                 Point potentialBest;
                 /* Search the 'away' branch */
                 if (pivotTargetDistance > 0) {
-                    potentialBest = nearestNeighbourRecurse(pos,
-                            2 * (currentIndex + 1));
+                    potentialBest = nearestNeighbourRecurse(pos, 2 * (currentIndex + 1));
                 } else {
-                    potentialBest = nearestNeighbourRecurse(pos,
-                            (2 * (currentIndex + 1)) - 1);
+                    potentialBest = nearestNeighbourRecurse(pos, (2 * (currentIndex + 1)) - 1);
                 }
-                if (squaredDistance(potentialBest, pos) < squaredDistance(best,
-                        pos)) {
+                if (squaredDistance(potentialBest, pos) < squaredDistance(best, pos)) {
                     return potentialBest;
                 }
             }

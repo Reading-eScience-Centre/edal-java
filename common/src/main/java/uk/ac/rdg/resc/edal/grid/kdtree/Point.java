@@ -49,4 +49,9 @@ public class Point implements TreeNode {
     public int getIndex() {
         return index;
     }
+    
+    @Override
+    public String toString() {
+        return x+","+y+": "+index;
+    }
 }
