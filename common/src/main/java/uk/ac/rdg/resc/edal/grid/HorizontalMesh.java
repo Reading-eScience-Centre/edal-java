@@ -38,9 +38,9 @@ import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
-import uk.ac.rdg.resc.edal.geometry.AbstractPolygon;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.geometry.SimplePolygon;
 import uk.ac.rdg.resc.edal.grid.kdtree.KDTree;
 import uk.ac.rdg.resc.edal.grid.kdtree.Point;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -58,6 +58,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
     private final BoundingBox bbox;
     private Polygon boundary;
     private KDTree kdTree;
+    private List<Polygon> cellBounds;
 
     /**
      * Create a new {@link HorizontalMesh}
@@ -72,11 +73,8 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
      *            points in the {@link HorizontalPosition} {@link List} which
      *            make up each cell of the grid.
      */
-    public HorizontalMesh(List<HorizontalPosition> positions, List<int[]> connections) {
-        this.kdTree = new KDTree(positions);
-        this.kdTree.buildTree();
-        this.positions = positions;
-        this.bbox = GISUtils.getBoundingBox(positions);
+    public static HorizontalMesh fromConnections(List<HorizontalPosition> positions, List<int[]> connections) {
+        HorizontalMesh mesh = new HorizontalMesh(positions);
         /*
          * Calculate the boundary of the grid.
          * 
@@ -155,17 +153,29 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         /*
          * Create the boundary
          */
-        this.boundary = new AbstractPolygon() {
-            @Override
-            public List<HorizontalPosition> getVertices() {
-                return orderedVertices;
-            }
-
-            @Override
-            public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-                return bbox.getCoordinateReferenceSystem();
-            }
-        };
+        mesh.boundary = new SimplePolygon(orderedVertices);
+        return mesh;
+    }
+    
+    public static HorizontalMesh fromBounds(List<HorizontalPosition> positions, List<Polygon> boundaries) {
+        HorizontalMesh mesh = new HorizontalMesh(positions);
+        /*
+         * The set of boundaries seem to use slightly different values for
+         * coincident edges in the test data I had.
+         * 
+         * This means that there is no way to calculate the actual boundary of
+         * the data.
+         */
+        mesh.boundary = mesh.bbox;
+        mesh.cellBounds = boundaries;
+        return mesh;
+    }
+    
+    private HorizontalMesh(List<HorizontalPosition> positions) {
+        this.kdTree = new KDTree(positions);
+        this.kdTree.buildTree();
+        this.positions = positions;
+        this.bbox = GISUtils.getBoundingBox(positions);
     }
 
     @Override
@@ -176,8 +186,11 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
                 return new HorizontalCell() {
                     @Override
                     public boolean contains(HorizontalPosition position) {
+                        if(cellBounds != null) {
+                            return cellBounds.get(coords[0]).contains(position);
+                        }
                         throw new UnsupportedOperationException(
-                                "Not yet implmented footprints for unstructured grids");
+                                "Not yet implemented footprints for unstructured grids");
                     }
 
                     @Override
@@ -187,6 +200,9 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
 
                     @Override
                     public Polygon getFootprint() {
+                        if(cellBounds != null) {
+                            return cellBounds.get(coords[0]);
+                        }
                         throw new UnsupportedOperationException(
                                 "Not yet implmented footprints for unstructured grids");
                     }
@@ -234,9 +250,17 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
      *         position is outside the boundary of this {@link HorizontalMesh}
      */
     public int findIndexOf(HorizontalPosition position) {
-        if (!boundary.contains(position)) {
-            return -1;
+        if (boundary != null) {
+            if (!boundary.contains(position)) {
+                return -1;
+            }
         }
+        /*
+         * Note that if we have a null boundary but a non-null cellBounds array,
+         * we could search each cell bounds and check if it contains the
+         * position. However, this is SLOW.
+         */
+
         Point nearestNeighbour = kdTree.nearestNeighbour(position);
         return nearestNeighbour.getIndex();
 
@@ -263,7 +287,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
      *
      * @author Guy Griffiths
      */
-    private class Edge {
+    private static class Edge {
         int i1, i2;
 
         public Edge(int i1, int i2) {
@@ -285,7 +309,6 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + getOuterType().hashCode();
             result = prime * result + i1;
             result = prime * result + i2;
             return result;
@@ -300,17 +323,11 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
             if (getClass() != obj.getClass())
                 return false;
             Edge other = (Edge) obj;
-            if (!getOuterType().equals(other.getOuterType()))
-                return false;
             if (i1 != other.i1)
                 return false;
             if (i2 != other.i2)
                 return false;
             return true;
-        }
-
-        private HorizontalMesh getOuterType() {
-            return HorizontalMesh.this;
         }
     }
 }

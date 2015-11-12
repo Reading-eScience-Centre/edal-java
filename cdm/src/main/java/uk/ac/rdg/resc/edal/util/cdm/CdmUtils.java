@@ -104,7 +104,7 @@ public final class CdmUtils {
     /**
      * @param ncDataset
      *            The {@link NetcdfDataset} to get a {@link GridDataset} from
-     * @return A GridDataset from the given {@link NetcdfDataset}
+     * @return A {@link GridDataset} from the given {@link NetcdfDataset}
      * @throws IOException
      *             If the given {@link NetcdfDataset} doesn't contain any
      *             {@link GridDataset}s
@@ -115,8 +115,7 @@ public final class CdmUtils {
         if (featureDS == null) {
             throw new IOException("No grid datasets found in file: " + ncDataset.getLocation());
         }
-        FeatureType fType = featureDS.getFeatureType();
-        assert (fType == FeatureType.GRID);
+        assert (featureDS.getFeatureType() == FeatureType.GRID);
         return (GridDataset) featureDS;
     }
 
