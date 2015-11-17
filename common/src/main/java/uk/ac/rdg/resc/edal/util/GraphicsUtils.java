@@ -29,6 +29,8 @@
 package uk.ac.rdg.resc.edal.util;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -49,6 +51,7 @@ import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 /**
@@ -404,5 +407,54 @@ public class GraphicsUtils {
         public static ColorAdapter getInstance() {
             return adapter;
         }
+    }
+
+    /**
+     * Renders a legend for categorical data
+     * 
+     * @param categories
+     *            The categories to draw a legend for
+     * @return The resulting BufferedImage
+     */
+    public static BufferedImage drawCategoricalLegend(Map<Integer, Category> categories) {
+        /*
+         * Make a very large canvas to draw all of the category labels onto.
+         * This can then be trimmed later
+         */
+        int WIDTH = 1000;
+        int HEIGHT = 10000;
+        BufferedImage canvas = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = canvas.createGraphics();
+        final int GAP = 5;
+        final int SWATH_SIZE = 16;
+        int yCoord = GAP;
+        for (Category category : categories.values()) {
+            g.setColor(category.getColour());
+            g.fillRect(GAP, yCoord, SWATH_SIZE, SWATH_SIZE);
+            g.setColor(Color.black);
+            g.drawRect(GAP, yCoord, SWATH_SIZE, SWATH_SIZE);
+            yCoord += SWATH_SIZE;
+            g.drawString(category.getLabel(), GAP + SWATH_SIZE + GAP, yCoord - 3);
+            yCoord += GAP;
+        }
+        int x = canvas.getWidth() - 1;
+        for (; x >= 0; x--) {
+            boolean hitStuff = false;
+            for (int j = 0; j < yCoord; j++) {
+                if (canvas.getRGB(x, j) != 0) {
+                    hitStuff = true;
+                }
+            }
+            if (hitStuff) {
+                break;
+            }
+        }
+        BufferedImage ret = new BufferedImage(x + GAP, yCoord, BufferedImage.TYPE_INT_ARGB);
+
+        g = ret.createGraphics();
+        g.setColor(Color.white);
+        g.fillRect(0, 0, ret.getWidth(), ret.getHeight());
+        g.drawImage(canvas, 0, 0, null);
+        return ret;
     }
 }

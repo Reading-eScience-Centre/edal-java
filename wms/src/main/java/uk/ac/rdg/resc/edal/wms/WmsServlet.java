@@ -112,9 +112,9 @@ import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
-import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
@@ -123,6 +123,7 @@ import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
@@ -1055,7 +1056,7 @@ public class WmsServlet extends HttpServlet {
         JSONArray noPaletteStylesJson = new JSONArray();
         for (String supportedStyle : supportedStyles) {
             supportedStylesJson.add(supportedStyle);
-            if(!catalogue.getStyleCatalogue().styleUsesPalette(supportedStyle)) {
+            if (!catalogue.getStyleCatalogue().styleUsesPalette(supportedStyle)) {
                 noPaletteStylesJson.add(supportedStyle);
             }
         }
@@ -1780,15 +1781,36 @@ public class WmsServlet extends HttpServlet {
                 throw new MetadataException(
                         "You must specify either SLD, SLD_BODY or LAYERS and STYLES for a full legend.  You may set COLORBARONLY=true to just generate a colour bar");
             }
-            MapImage imageGenerator = getMapStyleParameters.getImageGenerator(catalogue);
-            int height = params.getPositiveInt("height", 200);
-            int width;
-            if (imageGenerator.getFieldsWithScales().size() > 1) {
-                width = params.getPositiveInt("width", height);
-            } else {
-                width = params.getPositiveInt("width", 50);
+            /*
+             * Test whether we have categorical data - this will generate a
+             * different style of legend
+             */
+            Map<Integer, Category> categories = null;
+            if (getMapStyleParameters.getNumLayers() == 1) {
+                categories = WmsUtils
+                        .getVariableMetadataFromLayerName(getMapStyleParameters.getLayerNames()[0],
+                                catalogue).getParameter().getCategories();
             }
-            legend = getMapStyleParameters.getImageGenerator(catalogue).getLegend(width, height);
+            MapImage imageGenerator = getMapStyleParameters.getImageGenerator(catalogue);
+            if (categories != null) {
+                /*
+                 * We have categorical data
+                 */
+                legend = GraphicsUtils.drawCategoricalLegend(categories);
+            } else {
+                /*
+                 * We have non-categorical data - use the MapImage to generate a
+                 * legend
+                 */
+                int height = params.getPositiveInt("height", 200);
+                int width;
+                if (imageGenerator.getFieldsWithScales().size() > 1) {
+                    width = params.getPositiveInt("width", height);
+                } else {
+                    width = params.getPositiveInt("width", 50);
+                }
+                legend = imageGenerator.getLegend(width, height);
+            }
         }
         httpServletResponse.setContentType("image/png");
         try {
