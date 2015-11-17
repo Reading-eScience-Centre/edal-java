@@ -722,6 +722,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         widgetCollection.getPaletteSelector().populatePalettes(layerDetails.getAvailablePalettes());
         widgetCollection.getPaletteSelector().populateStyles(layerDetails.getSupportedStyles());
         widgetCollection.getPaletteSelector().setNoPaletteStyles(layerDetails.getNoPaletteStyles());
+        widgetCollection.getPaletteSelector().setCategorical(layerDetails.isCategorical());
         if (!widgetCollection.getPaletteSelector().isLocked()) {
             if (layerDetails.getScaleRange() == null) {
                 maybeRequestAutoRange(layerDetails.getId(), true);

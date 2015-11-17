@@ -1063,6 +1063,8 @@ public class WmsServlet extends HttpServlet {
         layerDetails.put("supportedStyles", supportedStylesJson);
         layerDetails.put("noPaletteStyles", noPaletteStylesJson);
 
+        layerDetails.put("categorical", variableMetadata.getParameter().getCategories() != null);
+
         layerDetails.put("queryable",
                 catalogue.getServerInfo().allowsFeatureInfo() && catalogue.isQueryable(layerName));
         layerDetails.put("downloadable", catalogue.isDownloadable(layerName));

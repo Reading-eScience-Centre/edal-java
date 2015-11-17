@@ -155,7 +155,7 @@ public abstract class LayerRequestCallback implements RequestCallback {
         } else {
             err.handleError(new NullPointerException("No styles listed"));
         }
-        
+
         JSONValue noPaletteStylesJson = parentObj.get("noPaletteStyles");
         List<String> noPaletteStyles = new ArrayList<String>();
         if (noPaletteStylesJson != null) {
@@ -165,6 +165,11 @@ public abstract class LayerRequestCallback implements RequestCallback {
             }
         }
         layerDetails.setNoPaletteStyles(noPaletteStyles);
+
+        JSONValue categoricalJson = parentObj.get("categorical");
+        if (categoricalJson != null) {
+            layerDetails.setIsCategorical(categoricalJson.isBoolean().booleanValue());
+        }
 
         JSONValue moreInfoJson = parentObj.get("moreInfo");
         if (moreInfoJson != null) {

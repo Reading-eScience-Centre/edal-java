@@ -118,7 +118,8 @@ public interface PaletteSelectorIF extends IsWidget {
     public void populateStyles(List<String> availableStyles);
 
     /**
-     * Sets the list of styles which do not use a palette (e.g. contours, arrows)
+     * Sets the list of styles which do not use a palette (e.g. contours,
+     * arrows)
      * 
      * @param noPaletteStyles
      *            The list of styles which do not use a palette
@@ -231,4 +232,11 @@ public interface PaletteSelectorIF extends IsWidget {
      *            <code>null</code> to use the WMS native units
      */
     public void setUnitConverter(UnitConverter converter);
+
+    /**
+     * @param categorical
+     *            Whether or not this palette should retrieve a categorical
+     *            legend in place of the usual scaling tools
+     */
+    public void setCategorical(boolean categorical);
 }

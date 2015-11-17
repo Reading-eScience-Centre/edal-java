@@ -68,7 +68,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Implementation of {@link PaletteSelectorIF} which can be either horizontally
- * or verticall oriented, and contains controls for setting all palette
+ * or vertically oriented, and contains controls for setting all palette
  * variables
  * 
  * @author Guy Griffiths
@@ -111,6 +111,7 @@ public class PaletteSelector implements PaletteSelectorIF {
      * Whether the palette selector is vertically orientated
      */
     private boolean vertical;
+    private boolean categorical = false;
 
     /**
      * A List of styles which do not use a palette
@@ -143,6 +144,7 @@ public class PaletteSelector implements PaletteSelectorIF {
      */
     private String lastMinScaleValue = "";
     private String lastMaxScaleValue = "";
+    private Image legend;
 
     /**
      * Instantiates a new {@link PaletteSelector}
@@ -168,7 +170,6 @@ public class PaletteSelector implements PaletteSelectorIF {
     public PaletteSelector(String wmsLayerId, int height, int width,
             final PaletteSelectionHandler handler, LayerSelectorIF wmsUrlProvider,
             final CentrePosIF localCentre, boolean vertical) {
-
         this.wmsLayerId = wmsLayerId;
         this.wmsUrlProvider = wmsUrlProvider;
         this.height = height;
@@ -389,7 +390,21 @@ public class PaletteSelector implements PaletteSelectorIF {
             }
         });
 
+        legend = new Image();
+
         if (vertical) {
+            mainPanel = new HorizontalPanel();
+        } else {
+            mainPanel = new VerticalPanel();
+        }
+        mainPanel.setSpacing(5);
+        resetLayout();
+    }
+
+    private void resetLayout() {
+        if (categorical) {
+            initCategorical();
+        } else if (vertical) {
             initVertical();
         } else {
             initHorizontal();
@@ -400,9 +415,8 @@ public class PaletteSelector implements PaletteSelectorIF {
      * Sets up the layout for a vertical palette
      */
     private void initVertical() {
-        mainPanel = new HorizontalPanel();
-        mainPanel.setSpacing(5);
-
+        GWT.log("initing vertical...");
+        mainPanel.clear();
         VerticalPanel palettePanel = new VerticalPanel();
         palettePanel.add(aboveMax);
         palettePanel.setCellVerticalAlignment(aboveMax, HasVerticalAlignment.ALIGN_TOP);
@@ -473,8 +487,7 @@ public class PaletteSelector implements PaletteSelectorIF {
      * Sets the layout for a horizontal palette
      */
     private void initHorizontal() {
-        mainPanel = new VerticalPanel();
-
+        mainPanel.clear();
         HorizontalPanel palettePanel = new HorizontalPanel();
         palettePanel.add(belowMin);
         palettePanel.setCellVerticalAlignment(belowMin, HasVerticalAlignment.ALIGN_TOP);
@@ -524,6 +537,14 @@ public class PaletteSelector implements PaletteSelectorIF {
         hp.setCellHorizontalAlignment(maxScale, HasHorizontalAlignment.ALIGN_RIGHT);
 
         mainPanel.add(hp);
+    }
+
+    private void initCategorical() {
+        mainPanel.clear();
+        VerticalPanel vp = new VerticalPanel();
+        vp.add(legend);
+        vp.add(opacity);
+        mainPanel.add(vp);
     }
 
     /*
@@ -1105,5 +1126,18 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     public void setUnitConverter(UnitConverter converter) {
         this.converter = converter;
+    }
+
+    @Override
+    public void setCategorical(boolean categorical) {
+        if (categorical) {
+            legend.setUrl(wmsUrlProvider.getWmsUrl() + "?STYLES=default-categorical&LAYERS="
+                    + wmsUrlProvider.getSelectedId()
+                    + "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic");
+        }
+        if (categorical != this.categorical) {
+            this.categorical = categorical;
+            resetLayout();
+        }
     }
 }
