@@ -47,6 +47,7 @@ public class LayerDetails {
     private int nColorBands = 50;
     private boolean logScale = false;
     private List<String> supportedStyles = null;
+    private List<String> noPaletteStyles = null;
     private String zUnits = null;
     private boolean zPositive = true;
     private List<String> availableZs = null;
@@ -105,6 +106,10 @@ public class LayerDetails {
 
     public List<String> getSupportedStyles() {
         return supportedStyles;
+    }
+
+    public List<String> getNoPaletteStyles() {
+        return noPaletteStyles;
     }
 
     public String getZUnits() {
@@ -181,6 +186,10 @@ public class LayerDetails {
 
     public void setSupportedStyles(List<String> supportedStyles) {
         this.supportedStyles = supportedStyles;
+    }
+    
+    public void setNoPaletteStyles(List<String> noPaletteStyles) {
+        this.noPaletteStyles = noPaletteStyles;
     }
 
     public void setZUnits(String zUnits) {

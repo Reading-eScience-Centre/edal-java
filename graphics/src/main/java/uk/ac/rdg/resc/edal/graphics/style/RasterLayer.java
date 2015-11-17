@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -53,13 +54,14 @@ public class RasterLayer extends GriddedImageLayer {
     public ColourScheme getColourScheme() {
         return colourScheme;
     }
-    
+
     public void setColourScheme(ColourScheme colourScheme) {
         this.colourScheme = colourScheme;
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader)
+            throws EdalException {
         /*
          * Initialise the array to store colour values
          */
@@ -89,4 +91,31 @@ public class RasterLayer extends GriddedImageLayer {
                 colourScheme.getScaleMax())));
         return ret;
     }
+
+    @Override
+    public MetadataFilter getMetadataFilter() {
+        return new MetadataFilter() {
+            @Override
+            public boolean supportsMetadata(VariableMetadata metadata) {
+                if (metadata.getParameter().getUnits().equalsIgnoreCase("degrees")) {
+                    /*
+                     * We want to exclude directional fields - they look
+                     * terrible plotted as rasters, and we already have
+                     * ArrowLayers for that...
+                     */
+                    return false;
+                }
+                if (metadata.getParameter().getCategories() != null
+                        && !(getColourScheme() instanceof MappedColourScheme)) {
+                    /*
+                     * If we have categorical data we only want to support it if
+                     * we're using a MappedColourScheme
+                     */
+                    return false;
+                }
+                return true;
+            }
+        };
+    }
+
 }

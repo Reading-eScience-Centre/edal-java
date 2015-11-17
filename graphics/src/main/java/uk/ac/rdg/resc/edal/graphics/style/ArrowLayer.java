@@ -37,6 +37,7 @@ import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.util.VectorFactory;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -172,5 +173,19 @@ public class ArrowLayer extends GriddedImageLayer {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
         ret.add(new NameAndRange(directionFieldName, Extents.newExtent(0f, 360f)));
         return ret;
+    }
+
+    @Override
+    public MetadataFilter getMetadataFilter() {
+        return new MetadataFilter() {
+            @Override
+            public boolean supportsMetadata(VariableMetadata metadata) {
+                /*
+                 * Arrows should only be plotted for layers where the units are
+                 * "degrees"
+                 */
+                return metadata.getParameter().getUnits().equalsIgnoreCase("degrees");
+            }
+        };
     }
 }

@@ -119,7 +119,6 @@ import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -131,6 +130,7 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
@@ -1052,10 +1052,15 @@ public class WmsServlet extends HttpServlet {
         layerDetails.put("numColorBands", numColorBands);
 
         JSONArray supportedStylesJson = new JSONArray();
+        JSONArray noPaletteStylesJson = new JSONArray();
         for (String supportedStyle : supportedStyles) {
             supportedStylesJson.add(supportedStyle);
+            if(!catalogue.getStyleCatalogue().styleUsesPalette(supportedStyle)) {
+                noPaletteStylesJson.add(supportedStyle);
+            }
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
+        layerDetails.put("noPaletteStyles", noPaletteStylesJson);
 
         layerDetails.put("queryable",
                 catalogue.getServerInfo().allowsFeatureInfo() && catalogue.isQueryable(layerName));
@@ -1596,7 +1601,7 @@ public class WmsServlet extends HttpServlet {
             } else {
                 min *= 0.95;
                 max *= 1.05;
-                if(min > max) {
+                if (min > max) {
                     double t = min;
                     min = max;
                     max = t;
@@ -1824,13 +1829,11 @@ public class WmsServlet extends HttpServlet {
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
                     layerName, catalogue);
 
-            if ("text/csv".equalsIgnoreCase(outputFormat)
-                    && !catalogue.isDownloadable(layerName)) {
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
                         + " cannot be downloaded as CSV");
             }
-            EnhancedVariableMetadata layerMetadata = catalogue
-                    .getLayerMetadata(variableMetadata);
+            EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
                 copyright.append(layerCopyright);
@@ -1844,9 +1847,8 @@ public class WmsServlet extends HttpServlet {
                 datasets2VariableIds.get(dataset.getId()).add(variableMetadata.getId());
             } else {
                 Set<VariableMetadata> children = variableMetadata.getChildren();
-                for(VariableMetadata child : children) {
-                    EnhancedVariableMetadata childLayerMetadata = catalogue
-                            .getLayerMetadata(child);
+                for (VariableMetadata child : children) {
+                    EnhancedVariableMetadata childLayerMetadata = catalogue.getLayerMetadata(child);
                     varId2Title.put(child.getId(), childLayerMetadata.getTitle());
                     if (!datasets2VariableIds.containsKey(dataset.getId())) {
                         datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
@@ -2123,13 +2125,11 @@ public class WmsServlet extends HttpServlet {
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
                     layerName, catalogue);
 
-            if ("text/csv".equalsIgnoreCase(outputFormat)
-                    && !catalogue.isDownloadable(layerName)) {
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
                         + " cannot be downloaded as CSV");
             }
-            EnhancedVariableMetadata layerMetadata = catalogue
-                    .getLayerMetadata(variableMetadata);
+            EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
                 copyright.append(layerCopyright);
@@ -2143,9 +2143,8 @@ public class WmsServlet extends HttpServlet {
                 datasets2VariableIds.get(dataset.getId()).add(variableMetadata.getId());
             } else {
                 Set<VariableMetadata> children = variableMetadata.getChildren();
-                for(VariableMetadata child : children) {
-                    EnhancedVariableMetadata childLayerMetadata = catalogue
-                            .getLayerMetadata(child);
+                for (VariableMetadata child : children) {
+                    EnhancedVariableMetadata childLayerMetadata = catalogue.getLayerMetadata(child);
                     varId2Title.put(child.getId(), childLayerMetadata.getTitle());
                     if (!datasets2VariableIds.containsKey(dataset.getId())) {
                         datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());

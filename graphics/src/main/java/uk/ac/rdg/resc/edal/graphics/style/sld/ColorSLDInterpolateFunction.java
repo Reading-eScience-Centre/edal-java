@@ -10,7 +10,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import uk.ac.rdg.resc.edal.graphics.style.InterpolationPoint;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 public class ColorSLDInterpolateFunction extends
 		AbstractSLDInterpolateFunction<Color> {

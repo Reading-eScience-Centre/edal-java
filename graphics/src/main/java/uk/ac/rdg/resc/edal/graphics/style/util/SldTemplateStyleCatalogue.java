@@ -71,13 +71,20 @@ import org.xml.sax.SAXException;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.graphics.exceptions.EdalStyleNotFoundException;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
+import uk.ac.rdg.resc.edal.graphics.style.ImageLayer.MetadataFilter;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.MappedColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
 import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 /**
  * An implementation of a {@link StyleCatalogue} which is based on having
@@ -97,6 +104,9 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
     private static final SldTemplateStyleCatalogue INSTANCE = new SldTemplateStyleCatalogue();
     /* Velocity templating engine used for reading fixed styles */
     private VelocityEngine velocityEngine;
+
+    /* This style is determined dynamically based on the layer metadata */
+    private static final String CATEGORICAL_STYLE_NAME = "default-categorical";
 
     private SortedMap<String, StyleDef> styleDefs = new TreeMap<String, StyleDef>(
             new Comparator<String>() {
@@ -216,6 +226,23 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         } catch (Exception e) {
             log.error("Problem processing styles on classpath", e);
         }
+
+        /*
+         * We also want to define a default categorical plotting style. This is
+         * not defined as an SLD, because the colour values are determined
+         * dynamically from the metadata.
+         */
+        MetadataFilter metadataFilter = new MetadataFilter() {
+            @Override
+            public boolean supportsMetadata(VariableMetadata metadata) {
+                return metadata.getParameter().getCategories() != null;
+            }
+        };
+        StyleDef categories = new StyleDef(CATEGORICAL_STYLE_NAME, new ArrayList<String>(), false,
+                true, true, null,
+                new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>(),
+                CollectionUtils.setOf(metadataFilter));
+        styleDefs.put(CATEGORICAL_STYLE_NAME, categories);
     }
 
     @Override
@@ -247,6 +274,30 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
     public MapImage getMapImageFromStyle(String styleName,
             PlottingStyleParameters templateProperties, VariableMetadata metadata,
             LayerNameMapper layerNameMapper) {
+        if (!styleDefs.get(styleName).supportedBy(metadata)) {
+            throw new EdalStyleNotFoundException("The style " + styleName
+                    + " is not supported for this layer");
+        }
+        if (CATEGORICAL_STYLE_NAME.equalsIgnoreCase(styleName)) {
+            /*
+             * We are plotting categorical data
+             */
+            Map<Integer, Category> categories = metadata.getParameter().getCategories();
+            if (categories == null) {
+                throw new EdalStyleNotFoundException(
+                        "No categorical data available for this layer - cannot plot with STYLE="
+                                + styleName);
+            }
+
+            MapImage ret = new MapImage();
+            String layerName = layerNameMapper.getLayerName(metadata.getDataset().getId(),
+                    metadata.getId());
+            RasterLayer raster = new RasterLayer(layerName, new MappedColourScheme(categories,
+                    templateProperties.getNoDataColour()));
+            ret.getLayers().add(raster);
+            return ret;
+        }
+
         /*
          * We first try and find a resource in the styles directory - this will
          * be the case for any styles defined on the classpath / in the JAR.
@@ -481,12 +532,15 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          * of which the variable with that role must be a type of.
          */
         Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType = new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>();
+        Collection<MetadataFilter> metadataFilters = new ArrayList<>();
+        boolean isCategorical = false;
         try {
             MapImage mapImage = StyleSLDParser.createImage(xmlString);
             for (Drawable layer : mapImage.getLayers()) {
                 Map<String, Collection<Class<? extends Feature<?>>>> role2FeatureType = new HashMap<String, Collection<Class<? extends Feature<?>>>>();
                 if (layer instanceof ImageLayer) {
                     ImageLayer imageLayer = (ImageLayer) layer;
+                    metadataFilters.add(imageLayer.getMetadataFilter());
                     Collection<Class<? extends Feature<?>>> supportedFeatureTypes = imageLayer
                             .supportedFeatureTypes();
                     /*
@@ -517,8 +571,8 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             log.error("Problem parsing style XML", e);
         }
 
-        return new StyleDef(name, requiredChildren, usesPalette, needsNamedLayer, scaledLayer,
-                roles2FeatureType);
+        return new StyleDef(name, requiredChildren, usesPalette, isCategorical, needsNamedLayer,
+                scaledLayer, roles2FeatureType, metadataFilters);
     }
 
     /**
@@ -730,6 +784,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          */
         private String scaledLayerRole;
         private Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType;
+        private Collection<MetadataFilter> metadataFilters;
 
         /**
          * Instantiate a new {@link StyleDef}
@@ -741,10 +796,15 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          *            a vector style will need "mag" and "dir" children")
          * @param usesPalette
          *            Whether or not this style uses a named palette
+         * @param usesPalette
+         *            Whether or not this style plots categorical data
          * @param needsNamedLayer
          *            Whether this style needs the requested layer to plot. For
          *            example, a vector style <i>only</i> needs child members to
          *            plot, so this would be <code>false</code>
+         * @param scaledLayerRole
+         *            If this style uses child layers, which child role should
+         *            scale info apply to
          * @param roles2FeatureType
          *            A {@link Collection} where each item in it represents a
          *            layer in the {@link MapImage} which this style represents.
@@ -753,10 +813,15 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          *            supported feature types, so that we can check whether a
          *            variable which fulfils a given role can produce one of the
          *            supported feature types.
+         * @param metadataFilters
+         *            A {@link Collection} of {@link MetadataFilter}s which all
+         *            {@link ImageLayer}s must pass through before being
+         *            plottable
          */
         public StyleDef(String styleName, Collection<String> requiredChildren, boolean usesPalette,
-                boolean needsNamedLayer, String scaledLayerRole,
-                Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType) {
+                boolean isCategorical, boolean needsNamedLayer, String scaledLayerRole,
+                Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType,
+                Collection<MetadataFilter> metadataFilters) {
             super();
             this.styleName = styleName;
             this.requiredChildRoles = new ArrayList<String>(requiredChildren);
@@ -764,6 +829,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             this.needsNamedLayer = needsNamedLayer;
             this.scaledLayerRole = scaledLayerRole;
             this.roles2FeatureType = roles2FeatureType;
+            this.metadataFilters = metadataFilters;
         }
 
         @Override
@@ -782,6 +848,15 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         public boolean supportedBy(VariableMetadata variableMetadata) {
             if (variableMetadata == null) {
                 return false;
+            }
+            /*
+             * If one of the layers in the image doesn't support this type of
+             * variable metadata, it won't work...
+             */
+            for (MetadataFilter filter : metadataFilters) {
+                if (!filter.supportsMetadata(variableMetadata)) {
+                    return false;
+                }
             }
             if (needsNamedLayer) {
                 /*

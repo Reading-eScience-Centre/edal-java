@@ -50,7 +50,8 @@ import java.util.jar.JarFile;
 import org.apache.commons.lang.ArrayUtils;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils.ColorAdapter;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils.ColorAdapter;
 
 public class ColourPalette {
     /**
@@ -161,108 +162,11 @@ public class ColourPalette {
     private final Color[] colours;
 
     public ColourPalette(Color[] palette, int numColorBands) {
-        colours = generateColourSet(palette, numColorBands);
-    }
-
-    /**
-     * Gets a version of this palette with the given number of color bands,
-     * either by subsampling or interpolating the existing palette
-     * 
-     * @param numColorBands
-     *            The number of bands of colour to be used in the new palette
-     * @return An array of Colors, with length numColorBands
-     * @throws IllegalArgumentException
-     *             if the requested number of colour bands is less than one or
-     *             greater than {@link #MAX_NUM_COLOURS}.
-     */
-    private static Color[] generateColourSet(Color[] palette, int numColorBands) {
         if (numColorBands < 1 || numColorBands > MAX_NUM_COLOURS) {
             throw new IllegalArgumentException(
                     "numColorBands must be greater than 1 and less than " + MAX_NUM_COLOURS);
         }
-        Color[] targetPalette;
-        if (numColorBands == palette.length) {
-            /* We can just use the source palette directly */
-            targetPalette = palette;
-        } else {
-            /* We need to create a new palette */
-            targetPalette = new Color[numColorBands];
-            /*
-             * We fix the endpoints of the target palette to the endpoints of
-             * the source palette
-             */
-            targetPalette[0] = palette[0];
-            targetPalette[targetPalette.length - 1] = palette[palette.length - 1];
-
-            if (targetPalette.length < palette.length) {
-                /*
-                 * We only need some of the colours from the source palette We
-                 * search through the target palette and find the nearest
-                 * colours in the source palette
-                 */
-                for (int i = 1; i < targetPalette.length - 1; i++) {
-                    /*
-                     * Find the nearest index in the source palette (Multiplying
-                     * by 1.0f converts integers to floats)
-                     */
-                    int nearestIndex = Math.round(palette.length * i * 1.0f
-                            / (targetPalette.length - 1));
-                    targetPalette[i] = palette[nearestIndex];
-                }
-            } else {
-                /*
-                 * Transfer all the colours from the source palette into their
-                 * corresponding positions in the target palette and use
-                 * interpolation to find the remaining values
-                 */
-                int lastIndex = 0;
-                for (int i = 1; i < palette.length - 1; i++) {
-                    /* Find the nearest index in the target palette */
-                    int nearestIndex = Math.round(targetPalette.length * i * 1.0f
-                            / (palette.length - 1));
-                    targetPalette[nearestIndex] = palette[i];
-                    /* Now interpolate all the values we missed */
-                    for (int j = lastIndex + 1; j < nearestIndex; j++) {
-                        /*
-                         * Work out how much we need from the previous colour
-                         * and how much from the new colour
-                         */
-                        float fracFromThis = (1.0f * j - lastIndex) / (nearestIndex - lastIndex);
-                        targetPalette[j] = interpolate(targetPalette[nearestIndex],
-                                targetPalette[lastIndex], fracFromThis);
-
-                    }
-                    lastIndex = nearestIndex;
-                }
-                /* Now for the last bit of interpolation */
-                for (int j = lastIndex + 1; j < targetPalette.length - 1; j++) {
-                    float fracFromThis = (1.0f * j - lastIndex)
-                            / (targetPalette.length - lastIndex);
-                    targetPalette[j] = interpolate(targetPalette[targetPalette.length - 1],
-                            targetPalette[lastIndex], fracFromThis);
-                }
-            }
-        }
-        return targetPalette;
-    }
-
-    /**
-     * Linearly interpolates between two RGB colours
-     * 
-     * @param c1
-     *            the first colour
-     * @param c2
-     *            the second colour
-     * @param fracFromC1
-     *            the fraction of the final colour that will come from c1
-     * @return the interpolated Color
-     */
-    private static Color interpolate(Color c1, Color c2, float fracFromC1) {
-        float fracFromC2 = 1.0f - fracFromC1;
-        return new Color(Math.round(fracFromC1 * c1.getRed() + fracFromC2 * c2.getRed()),
-                Math.round(fracFromC1 * c1.getGreen() + fracFromC2 * c2.getGreen()),
-                Math.round(fracFromC1 * c1.getBlue() + fracFromC2 * c2.getBlue()),
-                Math.round(fracFromC1 * c1.getAlpha() + fracFromC2 * c2.getAlpha()));
+        colours = GraphicsUtils.generateColourSet(palette, numColorBands);
     }
 
     /**

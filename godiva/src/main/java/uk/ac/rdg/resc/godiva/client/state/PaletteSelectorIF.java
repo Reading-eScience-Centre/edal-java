@@ -112,9 +112,18 @@ public interface PaletteSelectorIF extends IsWidget {
     public void setExtraBelowMinColour(String belowMinColour);
 
     /**
-     * Populates the list of available style names
+     * @param availableStyles
+     *            The list of available style names
      */
     public void populateStyles(List<String> availableStyles);
+
+    /**
+     * Sets the list of styles which do not use a palette (e.g. contours, arrows)
+     * 
+     * @param noPaletteStyles
+     *            The list of styles which do not use a palette
+     */
+    public void setNoPaletteStyles(List<String> noPaletteStyles);
 
     /**
      * @return The name of the currently selected style

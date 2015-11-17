@@ -155,6 +155,16 @@ public abstract class LayerRequestCallback implements RequestCallback {
         } else {
             err.handleError(new NullPointerException("No styles listed"));
         }
+        
+        JSONValue noPaletteStylesJson = parentObj.get("noPaletteStyles");
+        List<String> noPaletteStyles = new ArrayList<String>();
+        if (noPaletteStylesJson != null) {
+            JSONArray noPaletteStylesArr = noPaletteStylesJson.isArray();
+            for (int i = 0; i < noPaletteStylesArr.size(); i++) {
+                noPaletteStyles.add(noPaletteStylesArr.get(i).isString().stringValue());
+            }
+        }
+        layerDetails.setNoPaletteStyles(noPaletteStyles);
 
         JSONValue moreInfoJson = parentObj.get("moreInfo");
         if (moreInfoJson != null) {
