@@ -633,7 +633,8 @@ public class WmsServlet extends HttpServlet {
                      * using the feature name to identify values.
                      */
                     FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
-                            variableId, plottingParameters, layerNameToSave, feature.getName());
+                            variableId, plottingParameters, layerNameToSave, feature.getName(),
+                            metadata);
                     if (featurePoint != null) {
                         featureInfos.add(featurePoint);
                     }
@@ -649,7 +650,7 @@ public class WmsServlet extends HttpServlet {
                      */
                     String name = catalogue.getLayerMetadata(child).getTitle();
                     FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
-                            child.getId(), plottingParameters, layerNameToSave, name);
+                            child.getId(), plottingParameters, layerNameToSave, name, metadata);
                     if (featurePoint != null) {
                         featureInfos.add(featurePoint);
                     }
@@ -709,13 +710,15 @@ public class WmsServlet extends HttpServlet {
      *            The layer name to add to the {@link FeatureInfoPoint}
      * @param featureName
      *            The feature name to add to the {@link FeatureInfoPoint}
+     * @param metadata
+     *            The {@link VariableMetadata} of the layer being queried
      * @return The extracted value and corresponding information collected as a
      *         {@link FeatureInfoPoint}
      */
     private FeatureInfoPoint getFeatureInfoValuesFromFeature(DiscreteFeature<?, ?> feature,
             String variableId, PlottingDomainParams plottingParameters, String layerName,
-            String featureName) {
-        Number value = null;
+            String featureName, VariableMetadata metadata) {
+        Object value = null;
         HorizontalPosition position = null;
         String timeStr = null;
         if (feature instanceof MapFeature) {
@@ -775,6 +778,14 @@ public class WmsServlet extends HttpServlet {
             }
         }
         if (value != null) {
+            /*
+             * Change value to the category label if it represents a category
+             */
+            Map<Integer, Category> categories = metadata.getParameter().getCategories();
+            if (categories != null && value instanceof Number
+                    && categories.containsKey(((Number) value).intValue())) {
+                value = categories.get(((Number) value).intValue()).getLabel();
+            }
             return new FeatureInfoPoint(layerName, featureName, position, timeStr, value,
                     feature.getFeatureProperties());
         } else {

@@ -36,12 +36,12 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * Class which encapsulates information pertinent to individual points in a
  * GetFeatureInfo request
  * 
- * @author Guy
+ * @author Guy Griffiths
  */
 public class FeatureInfoPoint {
 	private String layerName;
 	private HorizontalPosition position;
-	private Number value;
+	private Object value;
 	private String featureId;
 	private String timeStr;
 	private Properties properties;
@@ -69,7 +69,7 @@ public class FeatureInfoPoint {
 	 *            Any additional properties associated with the feature
 	 */
 	public FeatureInfoPoint(String layerName, String featureId,
-			HorizontalPosition position, String timeStr, Number value,
+			HorizontalPosition position, String timeStr, Object value,
 			Properties properties) {
 		this.layerName = layerName;
 		this.featureId = featureId;
@@ -116,7 +116,7 @@ public class FeatureInfoPoint {
 	/**
 	 * @return The value of the feature at the clicked point
 	 */
-	public Number getValue() {
+	public Object getValue() {
 		return value;
 	}
 
