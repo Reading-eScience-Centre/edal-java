@@ -83,15 +83,7 @@ public class NetcdfDatasetAggregator {
     };
 
     /**
-     * Opens the NetCDF dataset at the given location, using the dataset cache
-     * if {@code location} represents an NcML aggregation. We cannot use the
-     * cache for OPeNDAP or single NetCDF files because the underlying data may
-     * have changed and the NetcdfDataset cache may cache a dataset forever. In
-     * the case of NcML we rely on the fact that server administrators ought to
-     * have set a "recheckEvery" parameter for NcML aggregations that may change
-     * with time. It is desirable to use the dataset cache for NcML aggregations
-     * because they can be time-consuming to assemble and we don't want to do
-     * this every time a map is drawn.
+     * Opens the NetCDF dataset at the given location, using the dataset cache.
      * 
      * @param location
      *            The location of the data: a local NetCDF file, an NcML
@@ -100,7 +92,8 @@ public class NetcdfDatasetAggregator {
      *            NetcdfDataset.openDataset(location).
      * 
      * @return a {@link NetcdfDataset} object for accessing the data at the
-     *         given location.
+     *         given location. This should not be closed - the cache will take
+     *         care of this for us.
      * 
      * @throws IOException
      *             if there was an error reading from the data source.
