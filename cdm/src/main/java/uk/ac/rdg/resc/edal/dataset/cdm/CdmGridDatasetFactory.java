@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -58,12 +59,15 @@ import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
@@ -219,9 +223,9 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                 VariableDS variable = grid.getVariable();
                 String varId = variable.getFullName();
                 String name = getVariableName(variable);
-                
+
                 Attribute stdNameAtt = variable.findAttributeIgnoreCase("standard_name");
-                String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null; 
+                String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null;
 
                 /*
                  * If this is a parent variable for a stats collection, we don't
@@ -242,8 +246,73 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                     }
                 }
 
+                /*
+                 * We look to see if this data is categorical, and if so parse
+                 * the categories to add the to Parameter
+                 */
+                Map<Integer, Category> catMap = null;
+                Attribute flagValues = variable.findAttributeIgnoreCase("flag_values");
+                Attribute flagMeanings = variable.findAttributeIgnoreCase("flag_meanings");
+                Attribute flagColours = variable.findAttributeIgnoreCase("flag_colors");
+                if (flagValues != null) {
+                    /*
+                     * We have flag values defined. We also need either labels
+                     * or colours (preferably both...)
+                     */
+                    String[] meaningsArray = null;
+                    if (flagMeanings != null) {
+                        meaningsArray = ((String) flagMeanings.getValue(0)).split("\\s+");
+                        if (meaningsArray.length != flagValues.getLength()) {
+                            throw new DataReadingException(
+                                    "Categorical data detected, but there are "
+                                            + flagValues.getLength() + " category values and "
+                                            + meaningsArray.length + " category meanings.");
+                        }
+                    }
+                    Color[] coloursArray = null;
+                    if (flagColours != null) {
+                        String[] split = ((String) flagColours.getValue(0)).split("\\s+");
+                        if (split.length != flagValues.getLength()) {
+                            throw new DataReadingException(
+                                    "Categorical data detected, but there are "
+                                            + flagValues.getLength() + " category values and "
+                                            + split.length + " category meanings.");
+                        }
+                        coloursArray = new Color[split.length];
+                        for (int i = 0; i < split.length; i++) {
+                            coloursArray[i] = GraphicsUtils.parseColour(split[i]);
+                        }
+                    }
+                    if (meaningsArray != null || coloursArray != null) {
+                        /*
+                         * We have values and meanings and/or colours.
+                         */
+                        catMap = new HashMap<>();
+                        if (coloursArray == null) {
+                            /*
+                             * If we don't have colours defined in the metadata,
+                             * pick some defaults.
+                             */
+                            coloursArray = GraphicsUtils.generateColourSet(
+                                    Parameter.CATEGORICAL_COLOUR_SET, flagValues.getLength());
+                        }
+                        /*
+                         * Now map the values to the corresponding labels /
+                         * colours.
+                         */
+                        for (int i = 0; i < flagValues.getLength(); i++) {
+                            String label = "No label";
+                            if (meaningsArray != null) {
+                                label = meaningsArray[i].replaceAll("_", " ");
+                            }
+                            catMap.put(flagValues.getNumericValue(i).intValue(), new Category(
+                                    label, coloursArray[i], label));
+                        }
+                    }
+                }
+
                 Parameter parameter = new Parameter(varId, name, variable.getDescription(),
-                        variable.getUnitsString(), standardName);
+                        variable.getUnitsString(), standardName, catMap);
                 GridVariableMetadata metadata = new GridVariableMetadata(parameter, hDomain,
                         zDomain, tDomain, true);
                 vars.add(metadata);
@@ -479,26 +548,27 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                         throw new EdalException(
                                 "Cannot join multiple files without time dimensions");
                     }
-                    
+
                     /*
                      * Create a Map
                      */
-                    Map<Long, Map<String,String>> time2vars2filename = new HashMap<>();
-                    for(File file : files) {
+                    Map<Long, Map<String, String>> time2vars2filename = new HashMap<>();
+                    for (File file : files) {
                         NetcdfFile ncFile = null;
                         try {
                             ncFile = NetcdfFile.open(file.getAbsolutePath());
                             Variable timeVar = ncFile.findVariable(timeDimName);
                             String unitsString = timeVar.findAttribute("units").getStringValue();
                             String[] unitsParts = unitsString.split(" since ");
-                            long time = new DateUnit(timeVar.read().getDouble(0), unitsParts[0], DateUnit.getStandardOrISO(unitsParts[1])).getDate().getTime();
-                            if(!time2vars2filename.containsKey(time)) {
+                            long time = new DateUnit(timeVar.read().getDouble(0), unitsParts[0],
+                                    DateUnit.getStandardOrISO(unitsParts[1])).getDate().getTime();
+                            if (!time2vars2filename.containsKey(time)) {
                                 Map<String, String> vars2filename = new HashMap<>();
                                 time2vars2filename.put(time, vars2filename);
                             }
                             List<Variable> variables = ncFile.getVariables();
                             String varNames = "";
-                            for(Variable v : variables) {
+                            for (Variable v : variables) {
                                 varNames += v.getFullName();
                             }
                             time2vars2filename.get(time).put(varNames, file.getAbsolutePath());
@@ -508,7 +578,7 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             ncFile.close();
                         }
                     }
-                    
+
                     List<Long> times = new ArrayList<>(time2vars2filename.keySet());
                     Collections.sort(times);
 
@@ -521,16 +591,16 @@ public final class CdmGridDatasetFactory extends DatasetFactory {
                             .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
                     ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName
                             + "\" type=\"joinExisting\">");
-                    for(Long time : times) {
+                    for (Long time : times) {
                         Map<String, String> vars2filename = time2vars2filename.get(time);
-                        if(vars2filename.size() == 1) {
+                        if (vars2filename.size() == 1) {
                             String filename = vars2filename.values().iterator().next();
-                            ncmlStringBuffer.append("<netcdf location=\"" + filename
-                                    + "\"/>");
+                            ncmlStringBuffer.append("<netcdf location=\"" + filename + "\"/>");
                         } else {
                             ncmlStringBuffer.append("<netcdf><aggregation type=\"union\">");
-                            for(Entry<String,String> entry : vars2filename.entrySet()) {
-                                ncmlStringBuffer.append("<netcdf location=\""+entry.getValue()+"\"/>");
+                            for (Entry<String, String> entry : vars2filename.entrySet()) {
+                                ncmlStringBuffer.append("<netcdf location=\"" + entry.getValue()
+                                        + "\"/>");
                             }
                             ncmlStringBuffer.append("</aggregation></netcdf>");
                         }

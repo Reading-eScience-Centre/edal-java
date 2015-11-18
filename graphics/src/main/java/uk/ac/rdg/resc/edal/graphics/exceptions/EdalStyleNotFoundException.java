@@ -26,55 +26,25 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.graphics.style;
-
-import java.awt.image.BufferedImage;
-import java.util.Collection;
+package uk.ac.rdg.resc.edal.graphics.exceptions;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
- * Abstract class representing a layer within an image.
+ * {@link EdalException} thrown when a request is made for a style which is not
+ * accessible, or not available with the requested layer.
  *
  * @author Guy Griffiths
  */
-public abstract class ImageLayer extends Drawable {
-    @Override
-    public BufferedImage drawImage(final PlottingDomainParams params,
-            final FeatureCatalogue catalogue) throws EdalException {
-        BufferedImage image = new BufferedImage(params.getWidth(), params.getHeight(),
-                BufferedImage.TYPE_INT_ARGB);
-        drawIntoImage(image, params, catalogue);
-        return image;
+public class EdalStyleNotFoundException extends EdalException {
+    private static final long serialVersionUID = 1L;
+    private static final String STYLE_NOT_DEFINED_CODE = "StyleNotDefined";
+
+    public EdalStyleNotFoundException(String message) {
+        super(message, STYLE_NOT_DEFINED_CODE);
     }
 
-    /**
-     * Draw the data into a supplied {@link BufferedImage}
-     * 
-     * @param image
-     * @param params
-     * @param catalogue
-     * @throws EdalException
-     */
-    protected abstract void drawIntoImage(BufferedImage image, final PlottingDomainParams params,
-            final FeatureCatalogue catalogue) throws EdalException;
-
-    public abstract Collection<Class<? extends Feature<?>>> supportedFeatureTypes();
-    
-    public MetadataFilter getMetadataFilter() {
-        return new MetadataFilter() {
-            @Override
-            public boolean supportsMetadata(VariableMetadata metadata) {
-                return true;
-            }
-        };
-    }
-    
-    public static interface MetadataFilter {
-        public boolean supportsMetadata(VariableMetadata metadata);
+    public EdalStyleNotFoundException(String message, Throwable cause) {
+        super(message, STYLE_NOT_DEFINED_CODE, cause);
     }
 }

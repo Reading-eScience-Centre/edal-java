@@ -43,8 +43,8 @@ import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils.ColorAdapter;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils.ColorAdapter;
 
 /**
  * A class representing a variable in the XML config. This contains all of the

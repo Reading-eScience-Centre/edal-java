@@ -26,9 +26,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.graphics.style.util;
+package uk.ac.rdg.resc.edal.util;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -49,11 +51,8 @@ import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.util.Array;
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * Class containing static utility methods for dealing with graphics
@@ -291,6 +290,100 @@ public class GraphicsUtils {
         return shifted / magnitude;
     }
 
+    /**
+     * Gets a version of this palette with the given number of color bands,
+     * either by subsampling or interpolating the existing palette
+     * 
+     * @param numColorBands
+     *            The number of bands of colour to be used in the new palette
+     * @return An array of Colors, with length numColorBands
+     */
+    public static Color[] generateColourSet(Color[] palette, int numColorBands) {
+        Color[] targetPalette;
+        if (numColorBands == palette.length) {
+            /* We can just use the source palette directly */
+            targetPalette = palette;
+        } else {
+            /* We need to create a new palette */
+            targetPalette = new Color[numColorBands];
+            /*
+             * We fix the endpoints of the target palette to the endpoints of
+             * the source palette
+             */
+            targetPalette[0] = palette[0];
+            targetPalette[targetPalette.length - 1] = palette[palette.length - 1];
+
+            if (targetPalette.length < palette.length) {
+                /*
+                 * We only need some of the colours from the source palette We
+                 * search through the target palette and find the nearest
+                 * colours in the source palette
+                 */
+                for (int i = 1; i < targetPalette.length - 1; i++) {
+                    /*
+                     * Find the nearest index in the source palette (Multiplying
+                     * by 1.0f converts integers to floats)
+                     */
+                    int nearestIndex = Math.round(palette.length * i * 1.0f
+                            / (targetPalette.length - 1));
+                    targetPalette[i] = palette[nearestIndex];
+                }
+            } else {
+                /*
+                 * Transfer all the colours from the source palette into their
+                 * corresponding positions in the target palette and use
+                 * interpolation to find the remaining values
+                 */
+                int lastIndex = 0;
+                for (int i = 1; i < palette.length - 1; i++) {
+                    /* Find the nearest index in the target palette */
+                    int nearestIndex = Math.round(targetPalette.length * i * 1.0f
+                            / (palette.length - 1));
+                    targetPalette[nearestIndex] = palette[i];
+                    /* Now interpolate all the values we missed */
+                    for (int j = lastIndex + 1; j < nearestIndex; j++) {
+                        /*
+                         * Work out how much we need from the previous colour
+                         * and how much from the new colour
+                         */
+                        float fracFromThis = (1.0f * j - lastIndex) / (nearestIndex - lastIndex);
+                        targetPalette[j] = interpolate(targetPalette[nearestIndex],
+                                targetPalette[lastIndex], fracFromThis);
+
+                    }
+                    lastIndex = nearestIndex;
+                }
+                /* Now for the last bit of interpolation */
+                for (int j = lastIndex + 1; j < targetPalette.length - 1; j++) {
+                    float fracFromThis = (1.0f * j - lastIndex)
+                            / (targetPalette.length - lastIndex);
+                    targetPalette[j] = interpolate(targetPalette[targetPalette.length - 1],
+                            targetPalette[lastIndex], fracFromThis);
+                }
+            }
+        }
+        return targetPalette;
+    }
+
+    /**
+     * Linearly interpolates between two RGB colours
+     * 
+     * @param c1
+     *            the first colour
+     * @param c2
+     *            the second colour
+     * @param fracFromC1
+     *            the fraction of the final colour that will come from c1
+     * @return the interpolated Color
+     */
+    private static Color interpolate(Color c1, Color c2, float fracFromC1) {
+        float fracFromC2 = 1.0f - fracFromC1;
+        return new Color(Math.round(fracFromC1 * c1.getRed() + fracFromC2 * c2.getRed()),
+                Math.round(fracFromC1 * c1.getGreen() + fracFromC2 * c2.getGreen()),
+                Math.round(fracFromC1 * c1.getBlue() + fracFromC2 * c2.getBlue()),
+                Math.round(fracFromC1 * c1.getAlpha() + fracFromC2 * c2.getAlpha()));
+    }
+
     public static class ColorAdapter extends XmlAdapter<String, Color> {
         private ColorAdapter() {
         }
@@ -314,5 +407,54 @@ public class GraphicsUtils {
         public static ColorAdapter getInstance() {
             return adapter;
         }
+    }
+
+    /**
+     * Renders a legend for categorical data
+     * 
+     * @param categories
+     *            The categories to draw a legend for
+     * @return The resulting BufferedImage
+     */
+    public static BufferedImage drawCategoricalLegend(Map<Integer, Category> categories) {
+        /*
+         * Make a very large canvas to draw all of the category labels onto.
+         * This can then be trimmed later
+         */
+        int WIDTH = 1000;
+        int HEIGHT = 10000;
+        BufferedImage canvas = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = canvas.createGraphics();
+        final int GAP = 5;
+        final int SWATH_SIZE = 16;
+        int yCoord = GAP;
+        for (Category category : categories.values()) {
+            g.setColor(category.getColour());
+            g.fillRect(GAP, yCoord, SWATH_SIZE, SWATH_SIZE);
+            g.setColor(Color.black);
+            g.drawRect(GAP, yCoord, SWATH_SIZE, SWATH_SIZE);
+            yCoord += SWATH_SIZE;
+            g.drawString(category.getLabel(), GAP + SWATH_SIZE + GAP, yCoord - 3);
+            yCoord += GAP;
+        }
+        int x = canvas.getWidth() - 1;
+        for (; x >= 0; x--) {
+            boolean hitStuff = false;
+            for (int j = 0; j < yCoord; j++) {
+                if (canvas.getRGB(x, j) != 0) {
+                    hitStuff = true;
+                }
+            }
+            if (hitStuff) {
+                break;
+            }
+        }
+        BufferedImage ret = new BufferedImage(x + GAP, yCoord, BufferedImage.TYPE_INT_ARGB);
+
+        g = ret.createGraphics();
+        g.setColor(Color.white);
+        g.fillRect(0, 0, ret.getWidth(), ret.getHeight());
+        g.drawImage(canvas, 0, 0, null);
+        return ret;
     }
 }

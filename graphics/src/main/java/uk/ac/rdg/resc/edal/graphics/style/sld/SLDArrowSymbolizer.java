@@ -9,7 +9,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
 

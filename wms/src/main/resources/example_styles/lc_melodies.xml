@@ -1,0 +1,41 @@
+<StyledLayerDescriptor version="1.1.0" xsi:schemaLocation="http://www.opengis.net/sld StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
+    <NamedLayer>
+        <se:Name>$layerName</se:Name>
+        <UserStyle>
+            <se:CoverageStyle>
+                <se:Rule>
+                    <se:RasterSymbolizer>
+                        <se:Opacity>1.0</se:Opacity>
+                        <se:ColorMap>
+                            <resc:Map fallbackValue="$bgColor">
+                                <se:Value dataValue="1">#FF0000</se:Value>
+                                <se:Value dataValue="2">#006600</se:Value>
+                                <se:Value dataValue="3">#732600</se:Value>
+                                <se:Value dataValue="4">#00FF00</se:Value>
+                                <se:Value dataValue="5">#FAAA00</se:Value>
+                                <se:Value dataValue="6">#7FE57F</se:Value>
+                                <se:Value dataValue="7">#70A800</se:Value>
+                                <se:Value dataValue="8">#998100</se:Value>
+                                <se:Value dataValue="9">#FFFF00</se:Value>
+                                <se:Value dataValue="10">#801A80</se:Value>
+                                <se:Value dataValue="11">#E68CA6</se:Value>
+                                <se:Value dataValue="12">#008073</se:Value>
+                                <se:Value dataValue="13">#00FFFF</se:Value>
+                                <se:Value dataValue="14">#D2D2FF</se:Value>
+                                <se:Value dataValue="15">#000080</se:Value>
+                                <se:Value dataValue="16">#0000FF</se:Value>
+                                <se:Value dataValue="17">#CCB300</se:Value>
+                                <se:Value dataValue="18">#CCB300</se:Value>
+                                <se:Value dataValue="19">#FFFF80</se:Value>
+                                <se:Value dataValue="20">#FFFF80</se:Value>
+                                <se:Value dataValue="21">#8080FF</se:Value>
+                                <se:Value dataValue="22">#000000</se:Value>
+                                <se:Value dataValue="23">#808080</se:Value>
+                            </resc:Map>
+                        </se:ColorMap>
+                    </se:RasterSymbolizer>
+                </se:Rule>
+            </se:CoverageStyle>
+        </UserStyle>
+    </NamedLayer>
+</StyledLayerDescriptor>

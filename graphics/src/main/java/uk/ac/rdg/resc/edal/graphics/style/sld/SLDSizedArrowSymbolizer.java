@@ -11,7 +11,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SizedArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 public class SLDSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
 

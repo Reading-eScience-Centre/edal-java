@@ -112,18 +112,18 @@ import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.formats.KmzFormat;
 import uk.ac.rdg.resc.edal.graphics.formats.SimpleFormat;
-import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
-import uk.ac.rdg.resc.edal.graphics.style.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
@@ -131,6 +131,7 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
@@ -632,7 +633,8 @@ public class WmsServlet extends HttpServlet {
                      * using the feature name to identify values.
                      */
                     FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
-                            variableId, plottingParameters, layerNameToSave, feature.getName());
+                            variableId, plottingParameters, layerNameToSave, feature.getName(),
+                            metadata);
                     if (featurePoint != null) {
                         featureInfos.add(featurePoint);
                     }
@@ -648,7 +650,7 @@ public class WmsServlet extends HttpServlet {
                      */
                     String name = catalogue.getLayerMetadata(child).getTitle();
                     FeatureInfoPoint featurePoint = getFeatureInfoValuesFromFeature(feature,
-                            child.getId(), plottingParameters, layerNameToSave, name);
+                            child.getId(), plottingParameters, layerNameToSave, name, metadata);
                     if (featurePoint != null) {
                         featureInfos.add(featurePoint);
                     }
@@ -708,13 +710,15 @@ public class WmsServlet extends HttpServlet {
      *            The layer name to add to the {@link FeatureInfoPoint}
      * @param featureName
      *            The feature name to add to the {@link FeatureInfoPoint}
+     * @param metadata
+     *            The {@link VariableMetadata} of the layer being queried
      * @return The extracted value and corresponding information collected as a
      *         {@link FeatureInfoPoint}
      */
     private FeatureInfoPoint getFeatureInfoValuesFromFeature(DiscreteFeature<?, ?> feature,
             String variableId, PlottingDomainParams plottingParameters, String layerName,
-            String featureName) {
-        Number value = null;
+            String featureName, VariableMetadata metadata) {
+        Object value = null;
         HorizontalPosition position = null;
         String timeStr = null;
         if (feature instanceof MapFeature) {
@@ -774,6 +778,14 @@ public class WmsServlet extends HttpServlet {
             }
         }
         if (value != null) {
+            /*
+             * Change value to the category label if it represents a category
+             */
+            Map<Integer, Category> categories = metadata.getParameter().getCategories();
+            if (categories != null && value instanceof Number
+                    && categories.containsKey(((Number) value).intValue())) {
+                value = categories.get(((Number) value).intValue()).getLabel();
+            }
             return new FeatureInfoPoint(layerName, featureName, position, timeStr, value,
                     feature.getFeatureProperties());
         } else {
@@ -1052,10 +1064,17 @@ public class WmsServlet extends HttpServlet {
         layerDetails.put("numColorBands", numColorBands);
 
         JSONArray supportedStylesJson = new JSONArray();
+        JSONArray noPaletteStylesJson = new JSONArray();
         for (String supportedStyle : supportedStyles) {
             supportedStylesJson.add(supportedStyle);
+            if (!catalogue.getStyleCatalogue().styleUsesPalette(supportedStyle)) {
+                noPaletteStylesJson.add(supportedStyle);
+            }
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
+        layerDetails.put("noPaletteStyles", noPaletteStylesJson);
+
+        layerDetails.put("categorical", variableMetadata.getParameter().getCategories() != null);
 
         layerDetails.put("queryable",
                 catalogue.getServerInfo().allowsFeatureInfo() && catalogue.isQueryable(layerName));
@@ -1596,7 +1615,7 @@ public class WmsServlet extends HttpServlet {
             } else {
                 min *= 0.95;
                 max *= 1.05;
-                if(min > max) {
+                if (min > max) {
                     double t = min;
                     min = max;
                     max = t;
@@ -1775,15 +1794,36 @@ public class WmsServlet extends HttpServlet {
                 throw new MetadataException(
                         "You must specify either SLD, SLD_BODY or LAYERS and STYLES for a full legend.  You may set COLORBARONLY=true to just generate a colour bar");
             }
-            MapImage imageGenerator = getMapStyleParameters.getImageGenerator(catalogue);
-            int height = params.getPositiveInt("height", 200);
-            int width;
-            if (imageGenerator.getFieldsWithScales().size() > 1) {
-                width = params.getPositiveInt("width", height);
-            } else {
-                width = params.getPositiveInt("width", 50);
+            /*
+             * Test whether we have categorical data - this will generate a
+             * different style of legend
+             */
+            Map<Integer, Category> categories = null;
+            if (getMapStyleParameters.getNumLayers() == 1) {
+                categories = WmsUtils
+                        .getVariableMetadataFromLayerName(getMapStyleParameters.getLayerNames()[0],
+                                catalogue).getParameter().getCategories();
             }
-            legend = getMapStyleParameters.getImageGenerator(catalogue).getLegend(width, height);
+            MapImage imageGenerator = getMapStyleParameters.getImageGenerator(catalogue);
+            if (categories != null) {
+                /*
+                 * We have categorical data
+                 */
+                legend = GraphicsUtils.drawCategoricalLegend(categories);
+            } else {
+                /*
+                 * We have non-categorical data - use the MapImage to generate a
+                 * legend
+                 */
+                int height = params.getPositiveInt("height", 200);
+                int width;
+                if (imageGenerator.getFieldsWithScales().size() > 1) {
+                    width = params.getPositiveInt("width", height);
+                } else {
+                    width = params.getPositiveInt("width", 50);
+                }
+                legend = imageGenerator.getLegend(width, height);
+            }
         }
         httpServletResponse.setContentType("image/png");
         try {
@@ -1824,13 +1864,11 @@ public class WmsServlet extends HttpServlet {
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
                     layerName, catalogue);
 
-            if ("text/csv".equalsIgnoreCase(outputFormat)
-                    && !catalogue.isDownloadable(layerName)) {
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
                         + " cannot be downloaded as CSV");
             }
-            EnhancedVariableMetadata layerMetadata = catalogue
-                    .getLayerMetadata(variableMetadata);
+            EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
                 copyright.append(layerCopyright);
@@ -1844,9 +1882,8 @@ public class WmsServlet extends HttpServlet {
                 datasets2VariableIds.get(dataset.getId()).add(variableMetadata.getId());
             } else {
                 Set<VariableMetadata> children = variableMetadata.getChildren();
-                for(VariableMetadata child : children) {
-                    EnhancedVariableMetadata childLayerMetadata = catalogue
-                            .getLayerMetadata(child);
+                for (VariableMetadata child : children) {
+                    EnhancedVariableMetadata childLayerMetadata = catalogue.getLayerMetadata(child);
                     varId2Title.put(child.getId(), childLayerMetadata.getTitle());
                     if (!datasets2VariableIds.containsKey(dataset.getId())) {
                         datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
@@ -2123,13 +2160,11 @@ public class WmsServlet extends HttpServlet {
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
                     layerName, catalogue);
 
-            if ("text/csv".equalsIgnoreCase(outputFormat)
-                    && !catalogue.isDownloadable(layerName)) {
+            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
                         + " cannot be downloaded as CSV");
             }
-            EnhancedVariableMetadata layerMetadata = catalogue
-                    .getLayerMetadata(variableMetadata);
+            EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
                 copyright.append(layerCopyright);
@@ -2143,9 +2178,8 @@ public class WmsServlet extends HttpServlet {
                 datasets2VariableIds.get(dataset.getId()).add(variableMetadata.getId());
             } else {
                 Set<VariableMetadata> children = variableMetadata.getChildren();
-                for(VariableMetadata child : children) {
-                    EnhancedVariableMetadata childLayerMetadata = catalogue
-                            .getLayerMetadata(child);
+                for (VariableMetadata child : children) {
+                    EnhancedVariableMetadata childLayerMetadata = catalogue.getLayerMetadata(child);
                     varId2Title.put(child.getId(), childLayerMetadata.getTitle());
                     if (!datasets2VariableIds.containsKey(dataset.getId())) {
                         datasets2VariableIds.put(dataset.getId(), new LinkedHashSet<String>());
