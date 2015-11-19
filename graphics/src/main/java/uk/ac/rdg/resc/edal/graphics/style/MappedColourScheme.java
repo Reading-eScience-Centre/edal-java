@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 The University of Reading
+ * Copyright (c) 2015 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -28,53 +28,42 @@
 
 package uk.ac.rdg.resc.edal.graphics.style;
 
-import java.awt.image.BufferedImage;
-import java.util.Collection;
+import java.awt.Color;
+import java.util.Collections;
+import java.util.Map;
 
-import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 
-/**
- * Abstract class representing a layer within an image.
- *
- * @author Guy Griffiths
- */
-public abstract class ImageLayer extends Drawable {
+public class MappedColourScheme extends ColourScheme {
+
+    private Map<Integer, Category> colours;
+    private Color bgColour;
+    private float min;
+    private float max;
+
+    public MappedColourScheme(Map<Integer, Category> colours, Color bgColour) {
+        this.colours = colours;
+        this.bgColour = bgColour;
+        this.min = Collections.min(colours.keySet()).floatValue();
+        this.max = Collections.max(colours.keySet()).floatValue();
+    }
+
     @Override
-    public BufferedImage drawImage(final PlottingDomainParams params,
-            final FeatureCatalogue catalogue) throws EdalException {
-        BufferedImage image = new BufferedImage(params.getWidth(), params.getHeight(),
-                BufferedImage.TYPE_INT_ARGB);
-        drawIntoImage(image, params, catalogue);
-        return image;
+    public Color getColor(Number value) {
+        if(value == null || !colours.containsKey(value.intValue())) {
+            return bgColour;
+        } else {
+            return colours.get(value.intValue()).getColour();
+        }
     }
 
-    /**
-     * Draw the data into a supplied {@link BufferedImage}
-     * 
-     * @param image
-     * @param params
-     * @param catalogue
-     * @throws EdalException
-     */
-    protected abstract void drawIntoImage(BufferedImage image, final PlottingDomainParams params,
-            final FeatureCatalogue catalogue) throws EdalException;
-
-    public abstract Collection<Class<? extends Feature<?>>> supportedFeatureTypes();
-    
-    public MetadataFilter getMetadataFilter() {
-        return new MetadataFilter() {
-            @Override
-            public boolean supportsMetadata(VariableMetadata metadata) {
-                return true;
-            }
-        };
+    @Override
+    public Float getScaleMin() {
+        return min;
     }
-    
-    public static interface MetadataFilter {
-        public boolean supportsMetadata(VariableMetadata metadata);
+
+    @Override
+    public Float getScaleMax() {
+        return max;
     }
 }

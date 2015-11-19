@@ -54,9 +54,9 @@ import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.catalogue.jaxb.CacheInfo;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.CatalogueConfig;
+import uk.ac.rdg.resc.edal.catalogue.jaxb.CatalogueConfig.DatasetStorage;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.DatasetConfig;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.VariableConfig;
-import uk.ac.rdg.resc.edal.catalogue.jaxb.CatalogueConfig.DatasetStorage;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -336,15 +336,19 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                 mapFeatures = (Collection<? extends DiscreteFeature<?, ?>>) element
                         .getObjectValue();
             } else {
-                Dataset dataset = getDatasetFromLayerName(layerName);
-                mapFeatures = dataset.extractMapFeatures(CollectionUtils.setOf(variable), params);
+                mapFeatures = doExtraction(layerName, variable, params);
                 featureCache.put(new Element(key, mapFeatures));
             }
         } else {
-            Dataset dataset = getDatasetFromLayerName(layerName);
-            mapFeatures = dataset.extractMapFeatures(CollectionUtils.setOf(variable), params);
+            mapFeatures = doExtraction(layerName, variable, params);
         }
         return new FeaturesAndMemberName(mapFeatures, variable);
+    }
+
+    private Collection<? extends DiscreteFeature<?, ?>> doExtraction(String layerName,
+            String variable, PlottingDomainParams params) {
+        Dataset dataset = getDatasetFromLayerName(layerName);
+        return dataset.extractMapFeatures(CollectionUtils.setOf(variable), params);
     }
 
     private Dataset getDatasetFromLayerName(String layerName) {

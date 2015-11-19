@@ -47,6 +47,8 @@ public class LayerDetails {
     private int nColorBands = 50;
     private boolean logScale = false;
     private List<String> supportedStyles = null;
+    private List<String> noPaletteStyles = null;
+    private boolean categorical = false;
     private String zUnits = null;
     private boolean zPositive = true;
     private List<String> availableZs = null;
@@ -70,7 +72,7 @@ public class LayerDetails {
 
     private boolean queryable = true;
     private boolean downloadable = false;
-    
+
     private boolean timeseriesSupported = false;
     private boolean profilesSupported = false;
     private boolean transectsSupported = false;
@@ -105,6 +107,14 @@ public class LayerDetails {
 
     public List<String> getSupportedStyles() {
         return supportedStyles;
+    }
+
+    public List<String> getNoPaletteStyles() {
+        return noPaletteStyles;
+    }
+
+    public boolean isCategorical() {
+        return categorical;
     }
 
     public String getZUnits() {
@@ -181,6 +191,14 @@ public class LayerDetails {
 
     public void setSupportedStyles(List<String> supportedStyles) {
         this.supportedStyles = supportedStyles;
+    }
+
+    public void setNoPaletteStyles(List<String> noPaletteStyles) {
+        this.noPaletteStyles = noPaletteStyles;
+    }
+
+    public void setIsCategorical(boolean categorical) {
+        this.categorical = categorical;
     }
 
     public void setZUnits(String zUnits) {
@@ -286,19 +304,19 @@ public class LayerDetails {
     public boolean isQueryable() {
         return queryable;
     }
-    
+
     public void setQueryable(boolean queryable) {
         this.queryable = queryable;
     }
-    
+
     public boolean isDownloadable() {
         return downloadable;
     }
-    
+
     public void setDownloadable(boolean downloadable) {
         this.downloadable = downloadable;
     }
-    
+
     public boolean supportsTimeseries() {
         return timeseriesSupported;
     }

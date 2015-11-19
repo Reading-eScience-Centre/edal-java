@@ -91,16 +91,8 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         if (tExtent == null) {
             tExtent = getDatasetTimeExtent();
         }
-        /*
-         * Extend the bounding box by 5% so that we include any features which
-         * are just off the map. This may not work if we are tiling very small
-         * images or using very big icons (i.e. cases where 5% of the total
-         * width < half the icon size). Then we will see artifacts at tile
-         * boundaries.
-         */
-        BoundingBox largeBoundingBox = GISUtils.getLargeBoundingBox(hExtent, 5);
         List<DiscreteFeature<?, ?>> features = new ArrayList<>();
-        Collection<String> featureIds = featureIndexer.findFeatureIds(largeBoundingBox, zExtent,
+        Collection<String> featureIds = featureIndexer.findFeatureIds(hExtent, zExtent,
                 tExtent, varIds);
         features.addAll(getFeatureReader().readFeatures(featureIds, varIds));
         return features;

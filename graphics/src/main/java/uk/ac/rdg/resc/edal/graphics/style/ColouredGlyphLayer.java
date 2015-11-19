@@ -48,11 +48,13 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourableIcon;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
+import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
@@ -136,16 +138,26 @@ public class ColouredGlyphLayer extends ImageLayer {
     protected void drawIntoImage(BufferedImage image, PlottingDomainParams params,
             FeatureCatalogue catalogue) throws EdalException {
         /*
-         * Get all of the features which need to be drawn in this image
-         */
-        FeaturesAndMemberName featuresForLayer = catalogue.getFeaturesForLayer(dataFieldName,
-                params);
-        Collection<? extends DiscreteFeature<?, ?>> features = featuresForLayer.getFeatures();
-
-        /*
          * Get a RegularGrid from the parameters
          */
         RegularGrid imageGrid = params.getImageGrid();
+
+        /*
+         * Get all of the features which need to be drawn in this image. Because
+         * we want to also draw glyphs which are outside the image (so that
+         * their edges are visible), we extend the bounding box
+         */
+        BoundingBox bbox = params.getBbox();
+        BoundingBox largeBoundingBox = GISUtils.getLargeBoundingBox(bbox, 5);
+        PlottingDomainParams extractParams = new PlottingDomainParams(new RegularGridImpl(largeBoundingBox,
+                (int) (params.getWidth() * 1.05), (int) (params.getHeight() * 1.05)),
+                params.getZExtent(), params.getTExtent(), params.getTargetHorizontalPosition(),
+                params.getTargetZ(), params.getTargetT());
+
+        FeaturesAndMemberName featuresForLayer = catalogue.getFeaturesForLayer(dataFieldName,
+                extractParams);
+        Collection<? extends DiscreteFeature<?, ?>> features = featuresForLayer.getFeatures();
+
         /*
          * Get the RegularAxis objects so that we can find the unconstrained
          * index of the position (i.e. the index even if it is beyond the axis

@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,8 +43,11 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 /**
  * {@link DatasetFactory} that creates {@link Dataset}s representing gridded
@@ -86,7 +90,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
 
     protected abstract Dataset generateDataset(String id, String location, NetcdfDataset nc)
             throws IOException;
-    
+
     protected Parameter getParameter(Variable variable) {
         String varId = variable.getFullName();
         String name = getVariableName(variable);
@@ -94,8 +98,70 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         Attribute stdNameAtt = variable.findAttributeIgnoreCase("standard_name");
         String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null;
 
+        /*
+         * We look to see if this data is categorical, and if so parse the
+         * categories to add the to Parameter
+         */
+        Map<Integer, Category> catMap = null;
+        Attribute flagValues = variable.findAttributeIgnoreCase("flag_values");
+        Attribute flagMeanings = variable.findAttributeIgnoreCase("flag_meanings");
+        Attribute flagColours = variable.findAttributeIgnoreCase("flag_colors");
+        if (flagValues != null) {
+            /*
+             * We have flag values defined. We also need either labels or
+             * colours (preferably both...)
+             */
+            String[] meaningsArray = null;
+            if (flagMeanings != null) {
+                meaningsArray = ((String) flagMeanings.getValue(0)).split("\\s+");
+                if (meaningsArray.length != flagValues.getLength()) {
+                    throw new DataReadingException("Categorical data detected, but there are "
+                            + flagValues.getLength() + " category values and "
+                            + meaningsArray.length + " category meanings.");
+                }
+            }
+            Color[] coloursArray = null;
+            if (flagColours != null) {
+                String[] split = ((String) flagColours.getValue(0)).split("\\s+");
+                if (split.length != flagValues.getLength()) {
+                    throw new DataReadingException("Categorical data detected, but there are "
+                            + flagValues.getLength() + " category values and " + split.length
+                            + " category meanings.");
+                }
+                coloursArray = new Color[split.length];
+                for (int i = 0; i < split.length; i++) {
+                    coloursArray[i] = GraphicsUtils.parseColour(split[i]);
+                }
+            }
+            if (meaningsArray != null || coloursArray != null) {
+                /*
+                 * We have values and meanings and/or colours.
+                 */
+                catMap = new HashMap<>();
+                if (coloursArray == null) {
+                    /*
+                     * If we don't have colours defined in the metadata, pick
+                     * some defaults.
+                     */
+                    coloursArray = GraphicsUtils.generateColourSet(
+                            Parameter.CATEGORICAL_COLOUR_SET, flagValues.getLength());
+                }
+                /*
+                 * Now map the values to the corresponding labels / colours.
+                 */
+                for (int i = 0; i < flagValues.getLength(); i++) {
+                    String label = "No label";
+                    if (meaningsArray != null) {
+                        label = meaningsArray[i].replaceAll("_", " ");
+                    }
+                    catMap.put(flagValues.getNumericValue(i).intValue(), new Category(label,
+                            coloursArray[i], label));
+                }
+            }
+        }
+
         return new Parameter(varId, name, variable.getDescription(), variable.getUnitsString(),
-                standardName);
+                standardName, catMap);
     }
 
     private List<VectorPlugin> processVectors(NetcdfDataset nc) {
@@ -273,13 +339,13 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
     /**
      * @return the phenomenon that the given variable represents.
      * 
-     * This name will be, in order of preference:
+     *         This name will be, in order of preference:
      * 
-     * The standard name
+     *         The standard name
      * 
-     * The long name
+     *         The long name
      * 
-     * The variable name
+     *         The variable name
      */
     protected static String getVariableName(Variable var) {
         Attribute stdNameAtt = var.findAttributeIgnoreCase("standard_name");

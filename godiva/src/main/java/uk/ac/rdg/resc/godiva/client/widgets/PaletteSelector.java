@@ -37,11 +37,13 @@ import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -66,7 +68,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Implementation of {@link PaletteSelectorIF} which can be either horizontally
- * or verticall oriented, and contains controls for setting all palette
+ * or vertically oriented, and contains controls for setting all palette
  * variables
  * 
  * @author Guy Griffiths
@@ -109,7 +111,12 @@ public class PaletteSelector implements PaletteSelectorIF {
      * Whether the palette selector is vertically orientated
      */
     private boolean vertical;
+    private boolean categorical = false;
 
+    /**
+     * A List of styles which do not use a palette
+     */
+    private List<String> noPaletteStyles;
     private List<String> availablePalettes;
     private String currentPalette;
     private int height;
@@ -123,6 +130,7 @@ public class PaletteSelector implements PaletteSelectorIF {
     private HorizontalPanel palettesPanel;
 
     private boolean enabled;
+    private boolean paletteEnabled;
 
     private String wmsLayerId;
 
@@ -130,12 +138,13 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     /** Whether to use normal or inverted palettes */
     private boolean inverted = false;
-    
+
     /*
      * Used to repopulate the scale min/max boxes in the event of invalid input
      */
     private String lastMinScaleValue = "";
     private String lastMaxScaleValue = "";
+    private Image legend;
 
     /**
      * Instantiates a new {@link PaletteSelector}
@@ -161,7 +170,6 @@ public class PaletteSelector implements PaletteSelectorIF {
     public PaletteSelector(String wmsLayerId, int height, int width,
             final PaletteSelectionHandler handler, LayerSelectorIF wmsUrlProvider,
             final CentrePosIF localCentre, boolean vertical) {
-
         this.wmsLayerId = wmsLayerId;
         this.wmsUrlProvider = wmsUrlProvider;
         this.height = height;
@@ -186,7 +194,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         paletteImage.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                if (enabled && !isLocked())
+                if (paletteEnabled && !isLocked())
                     popupPaletteSelector(localCentre);
             }
         });
@@ -212,8 +220,8 @@ public class PaletteSelector implements PaletteSelectorIF {
                     maxScale.setValue(lastMaxScaleValue);
                     return;
                 }
-                if(maxVal < minVal) {
-                    Window.alert(maxScale.getValue() + " is less than "+minScale.getValue());
+                if (maxVal < minVal) {
+                    Window.alert(maxScale.getValue() + " is less than " + minScale.getValue());
                     minScale.setValue(lastMinScaleValue);
                     maxScale.setValue(lastMaxScaleValue);
                     return;
@@ -235,6 +243,7 @@ public class PaletteSelector implements PaletteSelectorIF {
         styles.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
+                styleSelected(getSelectedStyle());
                 paletteHandler.paletteChanged(PaletteSelector.this.wmsLayerId, currentPalette,
                         getSelectedStyle(), getNumColorBands());
             }
@@ -318,29 +327,31 @@ public class PaletteSelector implements PaletteSelectorIF {
         aboveMax.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                switch (aboveMaxState) {
-                case OVERRIDE:
-                    aboveMaxState = OutOfRangeState.BLACK;
-                    break;
-                case BLACK:
-                    aboveMaxState = OutOfRangeState.EXTEND;
-                    break;
-                case EXTEND:
-                    aboveMaxState = OutOfRangeState.TRANSPARENT;
-                    break;
-                case TRANSPARENT:
-                    if (aboveMaxColourOverride != null) {
-                        aboveMaxState = OutOfRangeState.OVERRIDE;
-                    } else {
+                if (paletteEnabled && !isLocked()) {
+                    switch (aboveMaxState) {
+                    case OVERRIDE:
                         aboveMaxState = OutOfRangeState.BLACK;
+                        break;
+                    case BLACK:
+                        aboveMaxState = OutOfRangeState.EXTEND;
+                        break;
+                    case EXTEND:
+                        aboveMaxState = OutOfRangeState.TRANSPARENT;
+                        break;
+                    case TRANSPARENT:
+                        if (aboveMaxColourOverride != null) {
+                            aboveMaxState = OutOfRangeState.OVERRIDE;
+                        } else {
+                            aboveMaxState = OutOfRangeState.BLACK;
+                        }
+                        break;
+                    default:
+                        break;
                     }
-                    break;
-                default:
-                    break;
+                    setOutOfRangeImages();
+                    paletteHandler.paletteChanged(PaletteSelector.this.wmsLayerId, currentPalette,
+                            getSelectedStyle(), getNumColorBands());
                 }
-                setOutOfRangeImages();
-                paletteHandler.paletteChanged(PaletteSelector.this.wmsLayerId, currentPalette,
-                        getSelectedStyle(), getNumColorBands());
             }
         });
 
@@ -351,33 +362,49 @@ public class PaletteSelector implements PaletteSelectorIF {
         belowMin.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                switch (belowMinState) {
-                case OVERRIDE:
-                    belowMinState = OutOfRangeState.BLACK;
-                    break;
-                case BLACK:
-                    belowMinState = OutOfRangeState.EXTEND;
-                    break;
-                case EXTEND:
-                    belowMinState = OutOfRangeState.TRANSPARENT;
-                    break;
-                case TRANSPARENT:
-                    if (belowMinColourOverride != null) {
-                        belowMinState = OutOfRangeState.OVERRIDE;
-                    } else {
+                if (paletteEnabled && !isLocked()) {
+                    switch (belowMinState) {
+                    case OVERRIDE:
                         belowMinState = OutOfRangeState.BLACK;
+                        break;
+                    case BLACK:
+                        belowMinState = OutOfRangeState.EXTEND;
+                        break;
+                    case EXTEND:
+                        belowMinState = OutOfRangeState.TRANSPARENT;
+                        break;
+                    case TRANSPARENT:
+                        if (belowMinColourOverride != null) {
+                            belowMinState = OutOfRangeState.OVERRIDE;
+                        } else {
+                            belowMinState = OutOfRangeState.BLACK;
+                        }
+                        break;
+                    default:
+                        break;
                     }
-                    break;
-                default:
-                    break;
+                    setOutOfRangeImages();
+                    paletteHandler.paletteChanged(PaletteSelector.this.wmsLayerId, currentPalette,
+                            getSelectedStyle(), getNumColorBands());
                 }
-                setOutOfRangeImages();
-                paletteHandler.paletteChanged(PaletteSelector.this.wmsLayerId, currentPalette,
-                        getSelectedStyle(), getNumColorBands());
             }
         });
 
+        legend = new Image();
+
         if (vertical) {
+            mainPanel = new HorizontalPanel();
+        } else {
+            mainPanel = new VerticalPanel();
+        }
+        mainPanel.setSpacing(5);
+        resetLayout();
+    }
+
+    private void resetLayout() {
+        if (categorical) {
+            initCategorical();
+        } else if (vertical) {
             initVertical();
         } else {
             initHorizontal();
@@ -388,9 +415,8 @@ public class PaletteSelector implements PaletteSelectorIF {
      * Sets up the layout for a vertical palette
      */
     private void initVertical() {
-        mainPanel = new HorizontalPanel();
-        mainPanel.setSpacing(5);
-
+        GWT.log("initing vertical...");
+        mainPanel.clear();
         VerticalPanel palettePanel = new VerticalPanel();
         palettePanel.add(aboveMax);
         palettePanel.setCellVerticalAlignment(aboveMax, HasVerticalAlignment.ALIGN_TOP);
@@ -461,8 +487,7 @@ public class PaletteSelector implements PaletteSelectorIF {
      * Sets the layout for a horizontal palette
      */
     private void initHorizontal() {
-        mainPanel = new VerticalPanel();
-
+        mainPanel.clear();
         HorizontalPanel palettePanel = new HorizontalPanel();
         palettePanel.add(belowMin);
         palettePanel.setCellVerticalAlignment(belowMin, HasVerticalAlignment.ALIGN_TOP);
@@ -512,6 +537,14 @@ public class PaletteSelector implements PaletteSelectorIF {
         hp.setCellHorizontalAlignment(maxScale, HasHorizontalAlignment.ALIGN_RIGHT);
 
         mainPanel.add(hp);
+    }
+
+    private void initCategorical() {
+        mainPanel.clear();
+        VerticalPanel vp = new VerticalPanel();
+        vp.add(legend);
+        vp.add(opacity);
+        mainPanel.add(vp);
     }
 
     /*
@@ -996,6 +1029,7 @@ public class PaletteSelector implements PaletteSelectorIF {
             mhLabel.addStyleDependentName("inactive");
         }
         this.enabled = enabled;
+        this.paletteEnabled = enabled;
     }
 
     @Override
@@ -1020,6 +1054,15 @@ public class PaletteSelector implements PaletteSelectorIF {
     }
 
     @Override
+    public void setNoPaletteStyles(List<String> noPaletteStyles) {
+        this.noPaletteStyles = noPaletteStyles;
+        /*
+         * Fire a change event to disable the palette if need be
+         */
+        DomEvent.fireNativeEvent(Document.get().createChangeEvent(), styles);
+    }
+
+    @Override
     public String getSelectedStyle() {
         if (styles.getSelectedIndex() >= 0)
             return styles.getValue(styles.getSelectedIndex());
@@ -1033,8 +1076,27 @@ public class PaletteSelector implements PaletteSelectorIF {
             String style = styles.getValue(i);
             if (styleString.equals(style)) {
                 styles.setSelectedIndex(i);
+                styleSelected(style);
                 return;
             }
+        }
+    }
+
+    private void styleSelected(String style) {
+        if (noPaletteStyles.contains(style)) {
+            paletteEnabled = false;
+            aboveMax.setEnabled(false);
+            belowMin.setEnabled(false);
+            paletteImage.addStyleDependentName("inactive");
+            aboveMax.addStyleDependentName("inactive");
+            belowMin.addStyleDependentName("inactive");
+        } else {
+            paletteEnabled = true;
+            aboveMax.setEnabled(true);
+            belowMin.setEnabled(true);
+            paletteImage.removeStyleDependentName("inactive");
+            aboveMax.removeStyleDependentName("inactive");
+            belowMin.removeStyleDependentName("inactive");
         }
     }
 
@@ -1064,5 +1126,18 @@ public class PaletteSelector implements PaletteSelectorIF {
 
     public void setUnitConverter(UnitConverter converter) {
         this.converter = converter;
+    }
+
+    @Override
+    public void setCategorical(boolean categorical) {
+        if (categorical) {
+            legend.setUrl(wmsUrlProvider.getWmsUrl() + "?STYLES=default-categorical&LAYERS="
+                    + wmsUrlProvider.getSelectedId()
+                    + "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic");
+        }
+        if (categorical != this.categorical) {
+            this.categorical = categorical;
+            resetLayout();
+        }
     }
 }

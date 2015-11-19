@@ -51,6 +51,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
@@ -69,65 +70,66 @@ public class ContourLayer extends GriddedImageLayer {
                 return ContourLineAttribute.DASHED;
             }
         },
-        
+
         HEAVY {
             @Override
             public int getLineStyleInteger() {
                 return ContourLineAttribute.HEAVY;
             }
         },
-        
+
         HIGHLIGHT {
             @Override
             public int getLineStyleInteger() {
                 return ContourLineAttribute.HIGHLIGHT;
             }
         },
-        
+
         MARK {
             @Override
             public int getLineStyleInteger() {
                 return ContourLineAttribute.MARK;
             }
         },
-        
+
         MARK_LINE {
             @Override
             public int getLineStyleInteger() {
                 return ContourLineAttribute.MARK_LINE;
             }
         },
-        
+
         STROKE {
             @Override
             public int getLineStyleInteger() {
                 return ContourLineAttribute.STROKE;
             }
         };
-        
+
         public abstract int getLineStyleInteger();
     }
 
     private String dataFieldName;
     private ScaleRange scale;
-    
+
     private Boolean autoscaleEnabled = true;
     private Double numberOfContours = 10.0;
     private Color contourLineColour = Color.BLACK;
     private Integer contourLineWidth = 1;
     private ContourLineStyle contourLineStyle = ContourLineStyle.DASHED;
     private Boolean labelEnabled = true;
-    
-    public ContourLayer(String dataFieldName, ScaleRange scale, boolean autoscaleEnabled, 
-    		double numberOfContours, Color contourLineColour, int contourLineWidth, ContourLineStyle contourLineStyle, boolean labelEnabled) {
-    	this.dataFieldName = dataFieldName;
-    	this.scale = scale;
-    	this.autoscaleEnabled = autoscaleEnabled;
-    	this.numberOfContours = numberOfContours;
-    	this.contourLineColour = contourLineColour;
-    	this.contourLineWidth = contourLineWidth;
-    	this.contourLineStyle = contourLineStyle;
-    	this.labelEnabled = labelEnabled;
+
+    public ContourLayer(String dataFieldName, ScaleRange scale, boolean autoscaleEnabled,
+            double numberOfContours, Color contourLineColour, int contourLineWidth,
+            ContourLineStyle contourLineStyle, boolean labelEnabled) {
+        this.dataFieldName = dataFieldName;
+        this.scale = scale;
+        this.autoscaleEnabled = autoscaleEnabled;
+        this.numberOfContours = numberOfContours;
+        this.contourLineColour = contourLineColour;
+        this.contourLineWidth = contourLineWidth;
+        this.contourLineStyle = contourLineStyle;
+        this.labelEnabled = labelEnabled;
     }
 
     public String getDataFieldName() {
@@ -135,38 +137,39 @@ public class ContourLayer extends GriddedImageLayer {
     }
 
     public ScaleRange getScale() {
-		return scale;
-	}
-	
-	public boolean isAutoscaleEnabled() {
-		return autoscaleEnabled;
-	}
+        return scale;
+    }
 
-	public double getNumberOfContours() {
-		return numberOfContours;
-	}
-	
-	public Color getContourLineColour() {
-		return contourLineColour;
-	}
-	
-	public int getContourLineWidth() {
-		return contourLineWidth;
-	}
+    public boolean isAutoscaleEnabled() {
+        return autoscaleEnabled;
+    }
 
-	public ContourLineStyle getContourLineStyle() {
-		return contourLineStyle;
-	}
+    public double getNumberOfContours() {
+        return numberOfContours;
+    }
 
-	public boolean isLabelEnabled() {
-		return labelEnabled;
-	}
+    public Color getContourLineColour() {
+        return contourLineColour;
+    }
 
-	@Override
-	protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException  {
-		int width = image.getWidth();
-		int height = image.getHeight();
-		double[] values = new double[width * height];
+    public int getContourLineWidth() {
+        return contourLineWidth;
+    }
+
+    public ContourLineStyle getContourLineStyle() {
+        return contourLineStyle;
+    }
+
+    public boolean isLabelEnabled() {
+        return labelEnabled;
+    }
+
+    @Override
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader)
+            throws EdalException {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        double[] values = new double[width * height];
         double[] xAxis = new double[width];
         double[] yAxis = new double[height];
 
@@ -179,40 +182,42 @@ public class ContourLayer extends GriddedImageLayer {
                 count++;
             }
         }
-        
+
         Float scaleMin = null;
         Float scaleMax = null;
         if (autoscaleEnabled) {
-        	scaleMin = Float.MAX_VALUE;
-        	scaleMax = -Float.MAX_VALUE;
+            scaleMin = Float.MAX_VALUE;
+            scaleMax = -Float.MAX_VALUE;
         } else {
             scaleMin = scale.getScaleMin();
             scaleMax = scale.getScaleMax();
         }
-        
+
         Array2D<Number> dataValues = dataReader.getDataForLayerName(dataFieldName);
-        for(int j=0; j<height; j++) {
-            for(int i=0; i< width;i++){
-                Number value = dataValues.get(j,i);
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+                Number value = dataValues.get(j, i);
                 float val;
-                if(value == null) {
+                if (value == null) {
                     val = Float.NaN;
                 } else {
                     val = value.floatValue();
                 }
                 /*
-                 * SGT goes against the grain somewhat by specifying that the y-axis
-                 * values vary fastest.
+                 * SGT goes against the grain somewhat by specifying that the
+                 * y-axis values vary fastest.
                  */
-                values[j + i*height] = val;
+                values[j + i * height] = val;
                 if (autoscaleEnabled) {
-                    if (val < scaleMin) scaleMin = val;
-                    if (val > scaleMax) scaleMax = val;
+                    if (val < scaleMin)
+                        scaleMin = val;
+                    if (val > scaleMax)
+                        scaleMax = val;
                 }
             }
         }
-		
-		SGTGrid sgtGrid = new SimpleGrid(values, xAxis, yAxis, null);
+
+        SGTGrid sgtGrid = new SimpleGrid(values, xAxis, yAxis, null);
 
         CartesianGraph cg = getCartesianGraph(sgtGrid, width, height);
 
@@ -225,7 +230,7 @@ public class ContourLayer extends GriddedImageLayer {
         DefaultContourLineAttribute defAttr = new DefaultContourLineAttribute();
 
         defAttr.setColor(contourLineColour);
-        if(contourLineStyle != null) {
+        if (contourLineStyle != null) {
             defAttr.setStyle(contourLineStyle.getLineStyleInteger());
         }
         defAttr.setWidth(contourLineWidth);
@@ -239,7 +244,7 @@ public class ContourLayer extends GriddedImageLayer {
 
         Graphics g = image.getGraphics();
         renderer.draw(g);
-	}
+    }
 
     private static CartesianGraph getCartesianGraph(SGTData data, int width, int height) {
         /*
@@ -276,11 +281,36 @@ public class ContourLayer extends GriddedImageLayer {
         layer.setGraph(graph);
         return graph;
     }
-    
+
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
-        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(scale.getScaleMin(), scale.getScaleMax())));
+        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(scale.getScaleMin(),
+                scale.getScaleMax())));
         return ret;
+    }
+
+    @Override
+    public MetadataFilter getMetadataFilter() {
+        return new MetadataFilter() {
+            @Override
+            public boolean supportsMetadata(VariableMetadata metadata) {
+                if (metadata.getParameter().getUnits().equalsIgnoreCase("degrees")) {
+                    /*
+                     * We want to exclude directional fields - they look
+                     * terrible plotted as rasters, and we already have
+                     * ArrowLayers for that...
+                     */
+                    return false;
+                }
+                if (metadata.getParameter().getCategories() != null) {
+                    /*
+                     * We don't want to plot contours for categorical data
+                     */
+                    return false;
+                }
+                return true;
+            }
+        };
     }
 }

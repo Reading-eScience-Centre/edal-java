@@ -34,7 +34,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
@@ -49,7 +51,9 @@ import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.util.Array4D;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.ValuesArray4D;
 
 public class ModisLcDatasetFactory extends DatasetFactory {
@@ -88,9 +92,27 @@ public class ModisLcDatasetFactory extends DatasetFactory {
         RegularAxisImpl xAxis = new RegularAxisImpl("x", xstart, inc, cols, true);
         RegularAxisImpl yAxis = new RegularAxisImpl("y", ystart, inc, rows, true);
 
+        Map<Integer, Category> categories = new HashMap<>();
+        categories.put(0, new Category("Water", GraphicsUtils.parseColour("#000080"), null));
+        categories.put(1, new Category("Evergreen Needleleaf Forest", GraphicsUtils.parseColour("#008000"), null));
+        categories.put(2, new Category("Evergreen Broadleaf Forest", GraphicsUtils.parseColour("#00FF00"), null));
+        categories.put(3, new Category("Deciduous Needleleaf forest", GraphicsUtils.parseColour("#99CC00"), null));
+        categories.put(4, new Category("Deciduous Broadleaf forest", GraphicsUtils.parseColour("#99FF99"), null));
+        categories.put(5, new Category("Mixed forest", GraphicsUtils.parseColour("#339966"), null));
+        categories.put(6, new Category("Closed shrublands", GraphicsUtils.parseColour("#993366"), null));
+        categories.put(7, new Category("Open shrublands", GraphicsUtils.parseColour("#FFCC99"), null));
+        categories.put(8, new Category("Woody savannas", GraphicsUtils.parseColour("#CCFFCC"), null));
+        categories.put(9, new Category("Savannas", GraphicsUtils.parseColour("#FFCC00"), null));
+        categories.put(10, new Category("Grasslands", GraphicsUtils.parseColour("#FF9900"), null));
+        categories.put(11, new Category("Permanent wetlands", GraphicsUtils.parseColour("#006699"), null));
+        categories.put(12, new Category("Croplands", GraphicsUtils.parseColour("#FFFF00"), null));
+        categories.put(13, new Category("Urban and built-up", GraphicsUtils.parseColour("#FF0000"), null));
+        categories.put(14, new Category("Cropland/Natural vegetation mosaic", GraphicsUtils.parseColour("#999966"), null));
+        categories.put(15, new Category("Snow and ice", GraphicsUtils.parseColour("#FFFFFF"), null));
+        categories.put(16, new Category("Barren or sparsely vegetated", GraphicsUtils.parseColour("#808080"), null));
         GridVariableMetadata metadata = new GridVariableMetadata(new Parameter("land_cover",
-                "Land Cover", "MODIS land cover", "MODIS", ""), new RegularGridImpl(xAxis, yAxis,
-                DefaultGeographicCRS.WGS84), null, null, true);
+                "Land Cover", "MODIS land cover", "MODIS", "", categories), new RegularGridImpl(
+                xAxis, yAxis, DefaultGeographicCRS.WGS84), null, null, true);
 
         List<GridVariableMetadata> metadataCollection = Arrays.asList(metadata);
         return new ModisGridDataset(id, metadataCollection, vals);
