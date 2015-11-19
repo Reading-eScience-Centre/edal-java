@@ -83,7 +83,6 @@ import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
 import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 /**
@@ -238,10 +237,12 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 return metadata.getParameter().getCategories() != null;
             }
         };
+        Map<String, MetadataFilter> role2MetadataFilter = new HashMap<>();
+        role2MetadataFilter.put("", metadataFilter);
         StyleDef categories = new StyleDef(CATEGORICAL_STYLE_NAME, new ArrayList<String>(), false,
                 true, true, null,
                 new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>(),
-                CollectionUtils.setOf(metadataFilter));
+                role2MetadataFilter);
         styleDefs.put(CATEGORICAL_STYLE_NAME, categories);
     }
 
@@ -532,7 +533,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          * of which the variable with that role must be a type of.
          */
         Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType = new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>();
-        Collection<MetadataFilter> metadataFilters = new ArrayList<>();
+        Map<String, MetadataFilter> metadataFilters = new HashMap<>();
         boolean isCategorical = false;
         try {
             MapImage mapImage = StyleSLDParser.createImage(xmlString);
@@ -540,7 +541,6 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 Map<String, Collection<Class<? extends Feature<?>>>> role2FeatureType = new HashMap<String, Collection<Class<? extends Feature<?>>>>();
                 if (layer instanceof ImageLayer) {
                     ImageLayer imageLayer = (ImageLayer) layer;
-                    metadataFilters.add(imageLayer.getMetadataFilter());
                     Collection<Class<? extends Feature<?>>> supportedFeatureTypes = imageLayer
                             .supportedFeatureTypes();
                     /*
@@ -562,6 +562,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                                 role = layerName.substring(layerName.indexOf("-"));
                             }
                             role2FeatureType.put(role, supportedFeatureTypes);
+                            metadataFilters.put(role, imageLayer.getMetadataFilter());
                         }
                     }
                 }
@@ -784,7 +785,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          */
         private String scaledLayerRole;
         private Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType;
-        private Collection<MetadataFilter> metadataFilters;
+        private Map<String, MetadataFilter> role2MetadataFilter;
 
         /**
          * Instantiate a new {@link StyleDef}
@@ -821,7 +822,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         public StyleDef(String styleName, Collection<String> requiredChildren, boolean usesPalette,
                 boolean isCategorical, boolean needsNamedLayer, String scaledLayerRole,
                 Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType,
-                Collection<MetadataFilter> metadataFilters) {
+                Map<String, MetadataFilter> role2MetadataFilter) {
             super();
             this.styleName = styleName;
             this.requiredChildRoles = new ArrayList<String>(requiredChildren);
@@ -829,7 +830,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             this.needsNamedLayer = needsNamedLayer;
             this.scaledLayerRole = scaledLayerRole;
             this.roles2FeatureType = roles2FeatureType;
-            this.metadataFilters = metadataFilters;
+            this.role2MetadataFilter = role2MetadataFilter;
         }
 
         @Override
@@ -849,15 +850,6 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             if (variableMetadata == null) {
                 return false;
             }
-            /*
-             * If one of the layers in the image doesn't support this type of
-             * variable metadata, it won't work...
-             */
-            for (MetadataFilter filter : metadataFilters) {
-                if (!filter.supportsMetadata(variableMetadata)) {
-                    return false;
-                }
-            }
             if (needsNamedLayer) {
                 /*
                  * If this style needs the named layer, but it is not scalar
@@ -874,6 +866,10 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                  */
                 if (!styleSupportsRoleAndFeatureType("", variableMetadata.getDataset()
                         .getMapFeatureType(variableMetadata.getId()))) {
+                    return false;
+                }
+
+                if (!role2MetadataFilter.get("").supportsMetadata(variableMetadata)) {
                     return false;
                 }
             }
@@ -901,6 +897,14 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                         }
                     } catch (NullPointerException e) {
                         e.printStackTrace();
+                    }
+
+                    /*
+                     * Do we have a metadata filter in place for this role?
+                     */
+                    MetadataFilter metadataFilter = role2MetadataFilter.get(requiredRole);
+                    if (metadataFilter != null && !metadataFilter.supportsMetadata(childMetadata)) {
+                        return false;
                     }
                 }
             }
