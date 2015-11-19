@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import ucar.nc2.Attribute;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
@@ -68,7 +67,8 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  */
 public final class CdmGridDatasetFactory extends CdmDatasetFactory {
     @Override
-    protected Dataset generateDataset(String id, String location, NetcdfDataset nc) throws IOException {
+    protected Dataset generateDataset(String id, String location, NetcdfDataset nc)
+            throws IOException {
         ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
         List<GridVariableMetadata> vars = new ArrayList<>();
 
@@ -83,14 +83,8 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
              */
             for (GridDatatype grid : gridset.getGrids()) {
                 VariableDS variable = grid.getVariable();
-                String varId = variable.getFullName();
-                String name = getVariableName(variable);
 
-                Attribute stdNameAtt = variable.findAttributeIgnoreCase("standard_name");
-                String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null;
-
-                Parameter parameter = new Parameter(varId, name, variable.getDescription(),
-                        variable.getUnitsString(), standardName);
+                Parameter parameter = getParameter(variable);
                 GridVariableMetadata metadata = new GridVariableMetadata(parameter, hDomain,
                         zDomain, tDomain, true);
                 vars.add(metadata);

@@ -43,6 +43,7 @@ import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 
 /**
  * {@link DatasetFactory} that creates {@link Dataset}s representing gridded
@@ -85,6 +86,17 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
 
     protected abstract Dataset generateDataset(String id, String location, NetcdfDataset nc)
             throws IOException;
+    
+    protected Parameter getParameter(Variable variable) {
+        String varId = variable.getFullName();
+        String name = getVariableName(variable);
+
+        Attribute stdNameAtt = variable.findAttributeIgnoreCase("standard_name");
+        String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null;
+
+        return new Parameter(varId, name, variable.getDescription(), variable.getUnitsString(),
+                standardName);
+    }
 
     private List<VectorPlugin> processVectors(NetcdfDataset nc) {
         /*
