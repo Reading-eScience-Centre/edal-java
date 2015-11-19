@@ -69,11 +69,12 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
      * @param connections
      *            A {@link List} of arrays of <code>int</code>s which define the
      *            connections between the vertices. Each element of the list
-     *            should consist of 3 integers - these are the indices of the
-     *            points in the {@link HorizontalPosition} {@link List} which
-     *            make up each cell of the grid.
+     *            should consist of at least 3 integers - these are the indices
+     *            of the points in the {@link HorizontalPosition} {@link List}
+     *            which make up each cell of the grid.
      */
-    public static HorizontalMesh fromConnections(List<HorizontalPosition> positions, List<int[]> connections) {
+    public static HorizontalMesh fromConnections(List<HorizontalPosition> positions,
+            List<int[]> connections) {
         HorizontalMesh mesh = new HorizontalMesh(positions);
         /*
          * Calculate the boundary of the grid.
@@ -85,23 +86,19 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
          */
         Map<Edge, Integer> edgeOccurences = new HashMap<>();
         for (int[] connection : connections) {
-            Edge e1 = new Edge(connection[0], connection[1]);
-            Edge e2 = new Edge(connection[1], connection[2]);
-            Edge e3 = new Edge(connection[2], connection[0]);
-            if (!edgeOccurences.containsKey(e1)) {
-                edgeOccurences.put(e1, 1);
-            } else {
-                edgeOccurences.put(e1, edgeOccurences.get(e1) + 1);
+            for (int e = 0; e < connection.length - 1; e++) {
+                Edge edge = new Edge(connection[e], connection[e + 1]);
+                if (!edgeOccurences.containsKey(edge)) {
+                    edgeOccurences.put(edge, 1);
+                } else {
+                    edgeOccurences.put(edge, edgeOccurences.get(edge) + 1);
+                }
             }
-            if (!edgeOccurences.containsKey(e2)) {
-                edgeOccurences.put(e2, 1);
+            Edge edge = new Edge(connection[connection.length - 1], connection[0]);
+            if (!edgeOccurences.containsKey(edge)) {
+                edgeOccurences.put(edge, 1);
             } else {
-                edgeOccurences.put(e2, edgeOccurences.get(e2) + 1);
-            }
-            if (!edgeOccurences.containsKey(e3)) {
-                edgeOccurences.put(e3, 1);
-            } else {
-                edgeOccurences.put(e3, edgeOccurences.get(e3) + 1);
+                edgeOccurences.put(edge, edgeOccurences.get(edge) + 1);
             }
         }
         /*
@@ -156,8 +153,9 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         mesh.boundary = new SimplePolygon(orderedVertices);
         return mesh;
     }
-    
-    public static HorizontalMesh fromBounds(List<HorizontalPosition> positions, List<Polygon> boundaries) {
+
+    public static HorizontalMesh fromBounds(List<HorizontalPosition> positions,
+            List<Polygon> boundaries) {
         HorizontalMesh mesh = new HorizontalMesh(positions);
         /*
          * The set of boundaries seem to use slightly different values for
@@ -170,7 +168,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         mesh.cellBounds = boundaries;
         return mesh;
     }
-    
+
     private HorizontalMesh(List<HorizontalPosition> positions) {
         this.kdTree = new KDTree(positions);
         this.kdTree.buildTree();
@@ -186,7 +184,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
                 return new HorizontalCell() {
                     @Override
                     public boolean contains(HorizontalPosition position) {
-                        if(cellBounds != null) {
+                        if (cellBounds != null) {
                             return cellBounds.get(coords[0]).contains(position);
                         }
                         throw new UnsupportedOperationException(
@@ -200,7 +198,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
 
                     @Override
                     public Polygon getFootprint() {
-                        if(cellBounds != null) {
+                        if (cellBounds != null) {
                             return cellBounds.get(coords[0]);
                         }
                         throw new UnsupportedOperationException(
