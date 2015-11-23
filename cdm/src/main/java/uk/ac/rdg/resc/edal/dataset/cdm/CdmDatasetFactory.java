@@ -42,6 +42,7 @@ import ucar.nc2.dataset.NetcdfDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
+import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
@@ -60,26 +61,36 @@ import uk.ac.rdg.resc.edal.util.GraphicsUtils;
  * expire.
  * 
  * @author Guy Griffiths
- * @author Jon
  */
 public abstract class CdmDatasetFactory extends DatasetFactory {
     @Override
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
         /*
-         * Open the dataset, using the cache for NcML aggregations.
+         * Open the NetcdfDataset, using the cache.
          * 
          * We don't close this - it will get closed once the cache determines it
          * needs to be.
          */
         NetcdfDataset nc = NetcdfDatasetAggregator.openAndAggregateDataset(location);
 
+        /*
+         * Generate a simple dataset - delegated to subclasses
+         */
         Dataset dataset = generateDataset(id, location, nc);
 
+        /*
+         * Scans the NetcdfDataset for variables which pair up to make vectors,
+         * and adds the appropriate VectorPlugins
+         */
         List<VectorPlugin> vectors = processVectors(nc);
         for (VectorPlugin plugin : vectors) {
             dataset.addVariablePlugin(plugin);
         }
 
+        /*
+         * Scans the NetcdfDataset for variables which pair up as mean/stddev,
+         * and adds the appropriate MeanSDPlugins
+         */
         List<MeanSDPlugin> uncerts = processUncertainty(nc);
         for (MeanSDPlugin plugin : uncerts) {
             dataset.addVariablePlugin(plugin);
@@ -88,9 +99,16 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         return dataset;
     }
 
-    protected abstract Dataset generateDataset(String id, String location, NetcdfDataset nc)
-            throws IOException;
-
+    /**
+     * Generates a {@link Parameter} object, correctly parsing categorical flags
+     * and creating the {@link Category}s associated with the {@link Parameter}.
+     * Subclasses should use this method to generate {@link Parameter}s.
+     * 
+     * @param variable
+     *            The {@link Variable} object representing the variable in the
+     *            NetCDF file
+     * @return The resulting {@link Parameter}
+     */
     protected Parameter getParameter(Variable variable) {
         String varId = variable.getFullName();
         String name = getVariableName(variable);
@@ -150,9 +168,11 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                  * Now map the values to the corresponding labels / colours.
                  */
                 for (int i = 0; i < flagValues.getLength(); i++) {
-                    String label = "No label";
+                    String label;
                     if (meaningsArray != null) {
                         label = meaningsArray[i].replaceAll("_", " ");
+                    } else {
+                        label = "Category value: "+flagValues.getNumericValue(i).intValue();
                     }
                     catMap.put(flagValues.getNumericValue(i).intValue(), new Category(label,
                             coloursArray[i], label));
@@ -335,6 +355,26 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         }
         return ret;
     }
+
+    /**
+     * Generate a {@link Dataset} for the given ID, location, and
+     * {@link NetcdfDataset}. Subclasses should use this to generate a simple
+     * {@link Dataset} - i.e. one with no additional plugins etc. All required
+     * {@link VariablePlugin}s will be detected and handled by this class.
+     * 
+     * @param id
+     *            The ID of the {@link Dataset}
+     * @param location
+     *            The location of the {@link Dataset} (either on disk or online)
+     * @param nc
+     *            The {@link NetcdfDataset} representing the {@link Dataset}
+     * @return A {@link Dataset}
+     * @throws IOException
+     *             If there is a problem reading the underlying
+     *             {@link NetcdfDataset}
+     */
+    protected abstract Dataset generateDataset(String id, String location, NetcdfDataset nc)
+            throws IOException;
 
     /**
      * @return the phenomenon that the given variable represents.
