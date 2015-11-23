@@ -54,7 +54,7 @@ import ucar.nc2.dataset.CoordinateAxis1DTime;
 import ucar.nc2.dataset.CoordinateAxis2D;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridCoordSystem;
-import ucar.nc2.dt.GridDataset;
+import ucar.nc2.dt.grid.GridDataset;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import ucar.nc2.time.CalendarDate;
@@ -110,7 +110,7 @@ public final class CdmUtils {
      *             {@link GridDataset}s
      */
     public static GridDataset getGridDataset(NetcdfDataset ncDataset) throws IOException {
-        FeatureDataset featureDS = FeatureDatasetFactoryManager.wrap(FeatureType.GRID, ncDataset,
+        /* FeatureDataset featureDS = FeatureDatasetFactoryManager.wrap(FeatureType.GRID, ncDataset,
                 null, null);
         if (featureDS == null) {
             throw new IOException("No grid datasets found in file: " + ncDataset.getLocation());
@@ -118,6 +118,9 @@ public final class CdmUtils {
         FeatureType fType = featureDS.getFeatureType();
         assert (fType == FeatureType.GRID);
         return (GridDataset) featureDS;
+        */
+        GridDataset gds = new GridDataset(ncDataset);
+        return gds;
     }
 
     /**
