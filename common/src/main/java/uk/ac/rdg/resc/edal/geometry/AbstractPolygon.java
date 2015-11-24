@@ -32,7 +32,6 @@ import java.awt.geom.Path2D;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
@@ -41,10 +40,12 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * implementations of the {@code contains()}, {@code hashCode()} and
  * {@code equals()} methods.
  * 
- * @author Jon
- * @author Guy
+ * @author Guy Griffiths
+ * @author Jon Blower
  */
 public abstract class AbstractPolygon implements Polygon {
+    private Path2D boundaryPath = null;
+    private BoundingBox bbox = null;
 
     @Override
     public final boolean contains(HorizontalPosition pos) {
@@ -67,24 +68,35 @@ public abstract class AbstractPolygon implements Polygon {
      */
     public boolean contains(double x, double y) {
         Path2D path = this.getBoundaryPath();
-        return path.contains(x, y);
+        boolean in = path.contains(x, y);
+        return in;
     }
 
-    private Path2D getBoundaryPath() {
-        Path2D path = new Path2D.Double();
-        boolean firstTime = true;
-        for (HorizontalPosition pos : this.getVertices()) {
-            /*
-             * Add the point to the path
-             */
-            if (firstTime)
-                path.moveTo(pos.getX(), pos.getY());
-            else
-                path.lineTo(pos.getX(), pos.getY());
-            firstTime = false;
+    protected Path2D getBoundaryPath() {
+        if (boundaryPath == null) {
+            boundaryPath = new Path2D.Double();
+            boolean firstTime = true;
+            for (HorizontalPosition pos : this.getVertices()) {
+                /*
+                 * Add the point to the path
+                 */
+                if (firstTime)
+                    boundaryPath.moveTo(pos.getX(), pos.getY());
+                else
+                    boundaryPath.lineTo(pos.getX(), pos.getY());
+                firstTime = false;
+            }
+            boundaryPath.closePath();
         }
-        path.closePath();
-        return path;
+        return boundaryPath;
+    }
+
+    @Override
+    public BoundingBox getBoundingBox() {
+        if (bbox == null) {
+            bbox = GISUtils.getBoundingBox(getVertices());
+        }
+        return bbox;
     }
 
     @Override

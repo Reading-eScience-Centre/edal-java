@@ -123,7 +123,7 @@ public class HydromodelVtkDatasetFactory extends DatasetFactory {
             /*
              * Create the domain of the dataset
              */
-            HorizontalMesh grid = new HorizontalMesh(positions, connections);
+            HorizontalMesh grid = HorizontalMesh.fromConnections(positions, connections, 0);
 
             /*
              * Read all of the value arrays.

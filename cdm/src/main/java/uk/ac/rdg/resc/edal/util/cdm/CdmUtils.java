@@ -236,29 +236,28 @@ public final class CdmUtils {
 
     /**
      * @param coordSys
-     *            the {@link GridCoordSystem} to create a {@link VerticalAxis}
+     *            the {@link CoordinateAxis1D} to create a {@link VerticalAxis}
      *            from
+     * @param isPositive
+     *            Whether increasing values
      * @return The resulting {@link VerticalAxis}
      */
-    public static VerticalAxis createVerticalAxis(GridCoordSystem coordSys) {
-        CoordinateAxis1D zAxis = coordSys.getVerticalAxis();
-        boolean isPositive = coordSys.isZPositive();
+    public static VerticalAxis createVerticalAxis(CoordinateAxis1D zAxis, boolean isPositive) {
+        if (zAxis == null) {
+            return null;
+        }
         boolean isPressure = false;
         String units = "";
         List<Double> values = Collections.emptyList();
 
-        if (zAxis != null) {
-            isPressure = zAxis.getAxisType() == AxisType.Pressure;
-            units = zAxis.getUnitsString();
+        isPressure = zAxis.getAxisType() == AxisType.Pressure;
+        units = zAxis.getUnitsString();
 
-            List<Double> zValues = new ArrayList<Double>();
-            for (double zVal : zAxis.getCoordValues()) {
-                zValues.add(zVal);
-            }
-            values = Collections.unmodifiableList(zValues);
-        } else {
-            return null;
+        List<Double> zValues = new ArrayList<Double>();
+        for (double zVal : zAxis.getCoordValues()) {
+            zValues.add(zVal);
         }
+        values = Collections.unmodifiableList(zValues);
 
         /*
          * TODO: We're assuming this CRS is not dimensionless.
@@ -271,15 +270,13 @@ public final class CdmUtils {
      * Creates a time axis from the given {@link GridCoordSystem}
      * 
      * @param coordSys
-     *            the {@link GridCoordSystem} containing the axis definition
+     *            the {@link CoordinateAxis1DTime} defining the axis
      * @return a new {@link TimeAxis}
      */
-    public static TimeAxis createTimeAxis(GridCoordSystem coordSys) {
-        if (!coordSys.hasTimeAxis1D()) {
+    public static TimeAxis createTimeAxis(CoordinateAxis1DTime timeAxis) {
+        if(timeAxis == null) {
             return null;
         }
-        CoordinateAxis1DTime timeAxis = coordSys.getTimeAxis1D();
-
         Attribute cal = timeAxis.findAttribute("calendar");
         String calString = cal == null ? null : cal.getStringValue().toLowerCase();
 

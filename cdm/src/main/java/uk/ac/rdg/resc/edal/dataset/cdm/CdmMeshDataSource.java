@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ucar.ma2.Array;
+import ucar.ma2.Index;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
@@ -77,18 +78,22 @@ final class CdmMeshDataSource implements HZTDataSource {
     private static Object syncObj = new Object();
     private NetcdfDataset nc;
     private Map<String, Array> cachedArrays = new HashMap<>();
+    private Map<String, int[]> varId2hztIndices;
 
-    public CdmMeshDataSource(NetcdfDataset nc) {
+    public CdmMeshDataSource(NetcdfDataset nc, Map<String, int[]> varId2hztIndices) {
         this.nc = nc;
         synchronized (instances) {
             this.instance = instances++;
         }
+        this.varId2hztIndices = varId2hztIndices;
     }
 
     @Override
     public Number read(String variableId, int tIndex, int zIndex, int hIndex)
             throws DataReadingException {
-        if (hIndex < 0) {
+        int[] hztIndices = varId2hztIndices.get(variableId);
+        if ((hIndex < 0 && hztIndices[0] >= 0) || (hztIndices[2] >= 0 && tIndex < 0)
+                || (hztIndices[1] >= 0 && zIndex < 0)) {
             return null;
         }
         try {
@@ -105,7 +110,17 @@ final class CdmMeshDataSource implements HZTDataSource {
                     arr = cachedArrays.get(variableId);
                 }
 
-                int index = hIndex;
+                Index index = arr.getIndex();
+                if (hztIndices[2] >= 0) {
+                    index.setDim(hztIndices[2], tIndex);
+                }
+                if (hztIndices[1] >= 0) {
+                    index.setDim(hztIndices[1], zIndex);
+                }
+                if (hztIndices[0] >= 0) {
+                    index.setDim(hztIndices[0], hIndex);
+                }
+
                 Number val = null;
                 switch (arr.getDataType()) {
                 case BYTE:

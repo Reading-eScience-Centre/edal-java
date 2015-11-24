@@ -1278,4 +1278,26 @@ public final class GISUtils {
             e.printStackTrace();
         }
     }
+
+    public static boolean isPressureUnits(String units) {
+        if (units.equalsIgnoreCase("bar") || units.equalsIgnoreCase("standard_atmosphere")
+                || units.equalsIgnoreCase("technical_atmosphere")
+                || units.equalsIgnoreCase("inch_H2O_39F") || units.equalsIgnoreCase("inch_H2O_60F")
+                || units.equalsIgnoreCase("inch_Hg_32F") || units.equalsIgnoreCase("inch_Hg_60F")
+                || units.equalsIgnoreCase("millimeter_Hg_0C") || units.equalsIgnoreCase("footH2O")
+                || units.equalsIgnoreCase("cmHg") || units.equalsIgnoreCase("cmH2O")
+                || units.equalsIgnoreCase("Pa") || units.equalsIgnoreCase("inch_Hg")
+                || units.equalsIgnoreCase("inch_hg") || units.equalsIgnoreCase("inHg")
+                || units.equalsIgnoreCase("in_Hg") || units.equalsIgnoreCase("in_hg")
+                || units.equalsIgnoreCase("millimeter_Hg") || units.equalsIgnoreCase("mmHg")
+                || units.equalsIgnoreCase("mm_Hg") || units.equalsIgnoreCase("mm_hg")
+                || units.equalsIgnoreCase("torr") || units.equalsIgnoreCase("foot_H2O")
+                || units.equalsIgnoreCase("ftH2O") || units.equalsIgnoreCase("psi")
+                || units.equalsIgnoreCase("ksi") || units.equalsIgnoreCase("barie")
+                || units.equalsIgnoreCase("at") || units.equalsIgnoreCase("atmosphere")
+                || units.equalsIgnoreCase("atm") || units.equalsIgnoreCase("barye")) {
+            return true;
+        }
+        return false;
+    }
 }

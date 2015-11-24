@@ -63,7 +63,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * expire.
  * 
  * @author Guy Griffiths
- * @author Jon
+ * @author Jon Blower
  */
 public final class CdmGridDatasetFactory extends CdmDatasetFactory {
     @Override
@@ -75,8 +75,8 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         for (Gridset gridset : gridDataset.getGridsets()) {
             GridCoordSystem coordSys = gridset.getGeoCoordSystem();
             HorizontalGrid hDomain = CdmUtils.createHorizontalGrid(coordSys);
-            VerticalAxis zDomain = CdmUtils.createVerticalAxis(coordSys);
-            TimeAxis tDomain = CdmUtils.createTimeAxis(coordSys);
+            VerticalAxis zDomain = CdmUtils.createVerticalAxis(coordSys.getVerticalAxis(), coordSys.isZPositive());
+            TimeAxis tDomain = CdmUtils.createTimeAxis(coordSys.getTimeAxis1D());
 
             /*
              * Create a VariableMetadata object for each GridDatatype
