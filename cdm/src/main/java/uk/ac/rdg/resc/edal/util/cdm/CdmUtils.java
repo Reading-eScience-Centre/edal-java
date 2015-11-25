@@ -47,18 +47,16 @@ import org.slf4j.LoggerFactory;
 
 import ucar.nc2.Attribute;
 import ucar.nc2.constants.AxisType;
-import ucar.nc2.constants.FeatureType;
 import ucar.nc2.dataset.CoordinateAxis;
 import ucar.nc2.dataset.CoordinateAxis1D;
 import ucar.nc2.dataset.CoordinateAxis1DTime;
 import ucar.nc2.dataset.CoordinateAxis2D;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridCoordSystem;
-import ucar.nc2.dt.GridDataset;
-import ucar.nc2.ft.FeatureDataset;
-import ucar.nc2.ft.FeatureDatasetFactoryManager;
+import ucar.nc2.dt.grid.GridDataset;
 import ucar.nc2.time.CalendarDate;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
@@ -105,18 +103,20 @@ public final class CdmUtils {
      * @param ncDataset
      *            The {@link NetcdfDataset} to get a {@link GridDataset} from
      * @return A {@link GridDataset} from the given {@link NetcdfDataset}
-     * @throws IOException
+     * @throws DataReadingException
      *             If the given {@link NetcdfDataset} doesn't contain any
      *             {@link GridDataset}s
      */
-    public static GridDataset getGridDataset(NetcdfDataset ncDataset) throws IOException {
-        FeatureDataset featureDS = FeatureDatasetFactoryManager.wrap(FeatureType.GRID, ncDataset,
-                null, null);
-        if (featureDS == null) {
-            throw new IOException("No grid datasets found in file: " + ncDataset.getLocation());
+    public static GridDataset getGridDataset(NetcdfDataset ncDataset) throws DataReadingException, IOException {
+        /*
+         * TODO Convert this to return Coverage objects once netcdf-5 is more
+         * stable
+         */
+        GridDataset gridDataset = new GridDataset(ncDataset);
+        if (gridDataset.getGrids().size() == 0) {
+            throw new DataReadingException("No grids found in underlying NetCDF dataset");
         }
-        assert (featureDS.getFeatureType() == FeatureType.GRID);
-        return (GridDataset) featureDS;
+        return gridDataset;
     }
 
     /**
@@ -274,7 +274,7 @@ public final class CdmUtils {
      * @return a new {@link TimeAxis}
      */
     public static TimeAxis createTimeAxis(CoordinateAxis1DTime timeAxis) {
-        if(timeAxis == null) {
+        if (timeAxis == null) {
             return null;
         }
         Attribute cal = timeAxis.findAttribute("calendar");
@@ -380,26 +380,30 @@ public final class CdmUtils {
      * @throws IOException
      *             if there was an error reading from the data source.
      */
-    public static NetcdfDataset openDataset(String location) throws IOException {
+    public static NetcdfDataset openDataset(String location) throws DataReadingException {
         NetcdfDataset nc;
-        if (isNcmlAggregation(location)) {
-            /*
-             * We use the cache of NetcdfDatasets to read NcML aggregations as
-             * they can be time-consuming to put together. If the underlying
-             * data can change we rely on the server admin setting the
-             * "recheckEvery" parameter in the aggregation file.
-             */
-            nc = NetcdfDataset.acquireDataset(location, null);
-        } else {
-            /*
-             * For local single files and OPeNDAP datasets we don't use the
-             * cache, to ensure that we are always reading the most up-to-date
-             * data. There is a small possibility that the dataset cache will
-             * have swallowed up all available file handles, in which case the
-             * server admin will need to increase the number of available
-             * handles on the server.
-             */
-            nc = NetcdfDataset.openDataset(location);
+        try {
+            if (isNcmlAggregation(location)) {
+                /*
+                 * We use the cache of NetcdfDatasets to read NcML aggregations
+                 * as they can be time-consuming to put together. If the
+                 * underlying data can change we rely on the server admin
+                 * setting the "recheckEvery" parameter in the aggregation file.
+                 */
+                nc = NetcdfDataset.acquireDataset(location, null);
+            } else {
+                /*
+                 * For local single files and OPeNDAP datasets we don't use the
+                 * cache, to ensure that we are always reading the most
+                 * up-to-date data. There is a small possibility that the
+                 * dataset cache will have swallowed up all available file
+                 * handles, in which case the server admin will need to increase
+                 * the number of available handles on the server.
+                 */
+                nc = NetcdfDataset.openDataset(location);
+            }
+        } catch (IOException e) {
+            throw new DataReadingException("Problem reading underlying NetCDF dataset", e);
         }
         return nc;
     }
