@@ -174,8 +174,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                     } else {
                         label = "Category value: "+flagValues.getNumericValue(i).intValue();
                     }
-                    catMap.put(flagValues.getNumericValue(i).intValue(), new Category(label,
-                            coloursArray[i], label));
+                    catMap.put(flagValues.getNumericValue(i).intValue(), new Category(label, label,
+                            coloursArray[i], null));
                 }
             }
         }

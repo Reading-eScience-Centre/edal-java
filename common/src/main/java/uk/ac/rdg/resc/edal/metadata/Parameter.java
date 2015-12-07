@@ -43,14 +43,20 @@ import uk.ac.rdg.resc.edal.feature.Feature;
 public class Parameter {
 
     public static class Category {
+        private final String id;
         private final String label;
         private final Color colour;
         private final String description;
 
-        public Category(String label, Color colour, String description) {
+        public Category(String id, String label, Color colour, String description) {
+            this.id = id;
             this.label = label;
             this.colour = colour;
             this.description = description;
+        }
+        
+        public String getId() {
+            return id;
         }
 
         public String getLabel() {
