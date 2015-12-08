@@ -166,6 +166,10 @@ public class GraphicsUtils {
         return String.format("#%08X", colour.getRGB());
     }
 
+    public static void main(String[] args) {
+        System.out.println(colourToHtmlString(Color.blue));
+    }
+
     /**
      * Converts a {@link Color} to an HTML {@link String} (#RRGGBB), ignoring
      * transparency.
@@ -179,10 +183,8 @@ public class GraphicsUtils {
     public static String colourToHtmlString(Color colour) {
         if (colour == null) {
             return null;
-        } else if (colour.getAlpha() == 0) {
-            return "transparent";
         }
-        return String.format("#%06X", colour.getRGB());
+        return String.format("#%06X", colour.getRGB() & 0x00FFFFFF);
     }
 
     /**
