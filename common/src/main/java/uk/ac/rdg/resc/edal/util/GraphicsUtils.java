@@ -32,7 +32,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collection;
@@ -77,7 +76,7 @@ public class GraphicsUtils {
                                 .parseInt(split[3])));
             }
             reader.close();
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }
@@ -148,6 +147,16 @@ public class GraphicsUtils {
         }
     }
 
+    /**
+     * Converts a {@link Color} to an HTML-like {@link String} (#AARRGGBB), with
+     * additional cases for transparent / <code>null</code> values
+     * 
+     * @param colour
+     *            The colour to represent as a {@link String}
+     * @return The HTML representation of the {@link Color}, or
+     *         <code>null</code> if a <code>null</code> {@link Color} was
+     *         supplied.
+     */
     public static String colourToString(Color colour) {
         if (colour == null) {
             return "extend";
@@ -155,6 +164,25 @@ public class GraphicsUtils {
             return "transparent";
         }
         return String.format("#%08X", colour.getRGB());
+    }
+
+    /**
+     * Converts a {@link Color} to an HTML {@link String} (#RRGGBB), ignoring
+     * transparency.
+     * 
+     * @param colour
+     *            The colour to represent as a {@link String}
+     * @return The HTML representation of the {@link Color}, or
+     *         <code>null</code> if a <code>null</code> {@link Color} was
+     *         supplied.
+     */
+    public static String colourToHtmlString(Color colour) {
+        if (colour == null) {
+            return null;
+        } else if (colour.getAlpha() == 0) {
+            return "transparent";
+        }
+        return String.format("#%06X", colour.getRGB());
     }
 
     /**
