@@ -49,24 +49,47 @@ public class Parameter {
         private final String description;
 
         public Category(String id, String label, Color colour, String description) {
+            if(id == null) {
+                throw new IllegalArgumentException("The ID of a Category may not be null");
+            }
             this.id = id;
-            this.label = label;
+            if(label != null) {
+                this.label = label;
+            } else {
+                this.label = "Category for "+id;
+            }
             this.colour = colour;
             this.description = description;
         }
-        
+
+        /**
+         * @return The ID of this {@link Category}. Will never return
+         *         <code>null</code>
+         */
         public String getId() {
             return id;
         }
 
+        /**
+         * @return The label associated with this {@link Category}. Will never
+         *         return <code>null</code>
+         */
         public String getLabel() {
             return label;
         }
 
+        /**
+         * @return The preferred {@link Color} to be used for this
+         *         {@link Category}. May return <code>null</code>
+         */
         public Color getColour() {
             return colour;
         }
 
+        /**
+         * @return A description of this {@link Category}. May return
+         *         <code>null</code>
+         */
         public String getDescription() {
             return description;
         }
