@@ -33,19 +33,20 @@ import java.util.Collections;
 import java.util.Map;
 
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 public class MappedColourScheme extends ColourScheme {
 
-    private Map<Integer, Category> colours;
+    private Map<Integer, Color> colours;
     private Color bgColour;
     private float min;
     private float max;
 
-    public MappedColourScheme(Map<Integer, Category> colours, Color bgColour) {
-        this.colours = colours;
+    public MappedColourScheme(Map<Integer, Category> categories, Color bgColour) {
+        this.colours = GraphicsUtils.getColourMapForCategories(categories);
         this.bgColour = bgColour;
-        this.min = Collections.min(colours.keySet()).floatValue();
-        this.max = Collections.max(colours.keySet()).floatValue();
+        this.min = Collections.min(categories.keySet()).floatValue();
+        this.max = Collections.max(categories.keySet()).floatValue();
     }
 
     @Override
@@ -53,7 +54,7 @@ public class MappedColourScheme extends ColourScheme {
         if(value == null || !colours.containsKey(value.intValue())) {
             return bgColour;
         } else {
-            return colours.get(value.intValue()).getColour();
+            return colours.get(value.intValue());
         }
     }
 

@@ -144,39 +144,32 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                 if (split.length != flagValues.getLength()) {
                     throw new DataReadingException("Categorical data detected, but there are "
                             + flagValues.getLength() + " category values and " + split.length
-                            + " category meanings.");
+                            + " category colours.");
                 }
                 coloursArray = new Color[split.length];
                 for (int i = 0; i < split.length; i++) {
                     coloursArray[i] = GraphicsUtils.parseColour(split[i]);
                 }
             }
-            if (meaningsArray != null || coloursArray != null) {
-                /*
-                 * We have values and meanings and/or colours.
-                 */
-                catMap = new HashMap<>();
-                if (coloursArray == null) {
-                    /*
-                     * If we don't have colours defined in the metadata, pick
-                     * some defaults.
-                     */
-                    coloursArray = GraphicsUtils.generateColourSet(
-                            Parameter.CATEGORICAL_COLOUR_SET, flagValues.getLength());
+            /*
+             * We have values and meanings and/or colours.
+             */
+            catMap = new HashMap<>();
+            /*
+             * Now map the values to the corresponding labels / colours.
+             */
+            for (int i = 0; i < flagValues.getLength(); i++) {
+                String id, label;
+                if (meaningsArray != null) {
+                    id = meaningsArray[i];
+                    label = id.replaceAll("_", " ");
+                } else {
+                    id = "category_" + flagValues.getNumericValue(i).intValue();
+                    label = "Category value: " + flagValues.getNumericValue(i).intValue();
                 }
-                /*
-                 * Now map the values to the corresponding labels / colours.
-                 */
-                for (int i = 0; i < flagValues.getLength(); i++) {
-                    String label;
-                    if (meaningsArray != null) {
-                        label = meaningsArray[i].replaceAll("_", " ");
-                    } else {
-                        label = "Category value: "+flagValues.getNumericValue(i).intValue();
-                    }
-                    catMap.put(flagValues.getNumericValue(i).intValue(), new Category(label, label,
-                            coloursArray[i], null));
-                }
+                Color colour = coloursArray == null ? null : coloursArray[i];
+                catMap.put(flagValues.getNumericValue(i).intValue(), new Category(id, label,
+                        colour, null));
             }
         }
 
