@@ -123,6 +123,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         Map<Integer, Category> catMap = null;
         Attribute flagValues = variable.findAttributeIgnoreCase("flag_values");
         Attribute flagMeanings = variable.findAttributeIgnoreCase("flag_meanings");
+        Attribute flagNamespaceAttr = variable.findAttributeIgnoreCase("flag_namespace");
         Attribute flagColours = variable.findAttributeIgnoreCase("flag_colors");
         if (flagValues != null) {
             /*
@@ -130,8 +131,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              * colours (preferably both...)
              */
             String[] meaningsArray = null;
-            if (flagMeanings != null) {
-                meaningsArray = ((String) flagMeanings.getValue(0)).split("\\s+");
+            if (flagMeanings != null && flagMeanings.isString()) {
+                meaningsArray = flagMeanings.getStringValue().split("\\s+");
                 if (meaningsArray.length != flagValues.getLength()) {
                     throw new DataReadingException("Categorical data detected, but there are "
                             + flagValues.getLength() + " category values and "
@@ -158,6 +159,12 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
             /*
              * Now map the values to the corresponding labels / colours.
              */
+            String flagNamespace = null;
+            if(flagNamespaceAttr!= null){
+                if(flagNamespaceAttr.isString()) {
+                    flagNamespace = flagNamespaceAttr.getStringValue();
+                }
+            }
             for (int i = 0; i < flagValues.getLength(); i++) {
                 String id, label;
                 if (meaningsArray != null) {
@@ -166,6 +173,9 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                 } else {
                     id = "category_" + flagValues.getNumericValue(i).intValue();
                     label = "Category value: " + flagValues.getNumericValue(i).intValue();
+                }
+                if(flagNamespace != null) {
+                    id = flagNamespace + id;
                 }
                 Color colour = coloursArray == null ? null : coloursArray[i];
                 catMap.put(flagValues.getNumericValue(i).intValue(), new Category(id, label,
