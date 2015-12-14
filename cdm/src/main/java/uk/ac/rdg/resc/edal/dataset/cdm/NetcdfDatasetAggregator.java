@@ -192,7 +192,9 @@ public class NetcdfDatasetAggregator {
                         } catch (Exception e) {
                             e.printStackTrace();
                         } finally {
-                            ncFile.close();
+                            if(ncFile != null) {
+                                ncFile.close();
+                            }
                         }
                     }
 
