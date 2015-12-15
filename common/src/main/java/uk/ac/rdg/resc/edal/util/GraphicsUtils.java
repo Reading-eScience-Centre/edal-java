@@ -210,22 +210,27 @@ public class GraphicsUtils {
             return Extents.newExtent(0f, 100f);
         }
         if (!variableMetadata.isScalar()) {
-            return Extents.newExtent(0f, 100f);
             /*
              * We have a non-scalar variable. We will attempt to use the first
              * child member to estimate the value range. This may not work in
              * which case we ignore it - worst case scenario is that we end up
              * with a bad scale range set - administrators can just override it.
              */
-//            try {
-//                variableMetadata = variableMetadata.getChildren().iterator().next();
-//                varId = variableMetadata.getId();
-//            } catch (Exception e) {
-//                /*
-//                 * Ignore this error and just generate a (probably) inaccurate
-//                 * range
-//                 */
-//            }
+            try {
+                for(VariableMetadata child : variableMetadata.getChildren()) {
+                    if(child.isScalar()) {
+                        variableMetadata = child;
+                        varId = variableMetadata.getId();
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                /*
+                 * Ignore this error and just generate a (probably) inaccurate
+                 * range
+                 */
+                return Extents.newExtent(0f, 100f);
+            }
         }
 
         Double zPos = null;

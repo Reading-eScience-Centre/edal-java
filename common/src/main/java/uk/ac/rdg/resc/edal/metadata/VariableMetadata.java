@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.metadata;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -66,7 +67,7 @@ public class VariableMetadata {
      * relation to this one. This can be used to specify e.g. a certain child
      * represents magnitude of a vector group
      */
-    private Map<String, VariableMetadata> childrenWithRoles = new HashMap<String, VariableMetadata>();
+    private Map<String, VariableMetadata> childrenWithRoles = new LinkedHashMap<String, VariableMetadata>();
 
     /**
      * Constructs a {@link VariableMetadata} object holding metadata about a
@@ -120,8 +121,8 @@ public class VariableMetadata {
      *            Whether or not this {@link VariableMetadata} can be read as a
      *            scalar quantity
      */
-    public VariableMetadata(Parameter parameter, HorizontalDomain hDomain,
-            VerticalDomain zDomain, TemporalDomain tDomain, boolean scalar) {
+    public VariableMetadata(Parameter parameter, HorizontalDomain hDomain, VerticalDomain zDomain,
+            TemporalDomain tDomain, boolean scalar) {
         if (parameter == null) {
             throw new NullPointerException("Parameter cannot be null");
         }
