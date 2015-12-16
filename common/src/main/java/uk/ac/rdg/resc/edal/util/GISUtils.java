@@ -1240,6 +1240,19 @@ public final class GISUtils {
         return new TimeAxisImpl(axis.getName(), values);
     }
 
+    /**
+     * Contains a single static flag. This can be used to set the path for the
+     * EPSG database directory. If not set, it will use the system's temporary
+     * directory.
+     * 
+     * This is in a separate class because the static{} block in GISUtils will
+     * get executed before the class can be used, so setting something like
+     * GISUtils.DB_PATH would have no effect - it gets set too late.
+     */
+    public static class EpsgDatabasePath {
+        public static String DB_PATH = null;
+    }
+
     static {
         /*
          * Initialise the EPSG database if necessary
@@ -1247,12 +1260,18 @@ public final class GISUtils {
         try {
             Class.forName("org.h2.Driver");
             JdbcDataSource dataSource = new JdbcDataSource();
+            String path;
+            if (EpsgDatabasePath.DB_PATH == null) {
+                path = System.getProperty("java.io.tmpdir");
+            } else {
+                path = EpsgDatabasePath.DB_PATH;
+            }
             /*
              * AUTO_SERVER=TRUE means that this DB will run in embedded mode on
              * the first JVM. However, if a second JVM tries to access it, it
              * will then start server mode.
              */
-            dataSource.setURL("jdbc:h2:.h2/epsg.db;AUTO_SERVER=TRUE");
+            dataSource.setURL("jdbc:h2:" + path + "/.h2/epsg.db;AUTO_SERVER=TRUE");
             Connection conn = dataSource.getConnection();
             conn.setAutoCommit(true);
             Hints.putSystemDefault(Hints.EPSG_DATA_SOURCE, dataSource);
