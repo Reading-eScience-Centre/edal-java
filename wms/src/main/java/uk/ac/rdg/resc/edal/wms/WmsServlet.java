@@ -29,6 +29,8 @@
 package uk.ac.rdg.resc.edal.wms;
 
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -414,7 +416,17 @@ public class WmsServlet extends HttpServlet {
                         plottingParameters.getBbox(), plottingParameters.getZExtent(), null,
                         plottingParameters.getTargetHorizontalPosition(),
                         plottingParameters.getTargetZ(), timeStep);
-                frames.add(imageGenerator.drawImage(timestepParameters, catalogue));
+                BufferedImage frame = imageGenerator.drawImage(timestepParameters, catalogue);
+                Graphics2D g = frame.createGraphics();
+                g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+                g.setColor(Color.white);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 9, frame.getHeight() - 9);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 9, frame.getHeight() - 11);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 11, frame.getHeight() - 11);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 11, frame.getHeight() - 9);
+                g.setColor(Color.black);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 10, frame.getHeight() - 10);
+                frames.add(frame);
             }
         }
 
