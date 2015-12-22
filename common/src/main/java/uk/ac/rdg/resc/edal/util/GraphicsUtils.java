@@ -36,8 +36,11 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
@@ -45,7 +48,9 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
@@ -191,7 +196,7 @@ public class GraphicsUtils {
      * Estimate the range of values in this layer by reading a sample of data
      * from the default time and elevation.
      * 
-     * If the given variable is found, a default range of 0-100 is returned
+     * If the given variable is not found, a default range of 0-100 is returned
      * 
      * @param dataset
      *            The dataset containing the variable to estimate
@@ -207,6 +212,7 @@ public class GraphicsUtils {
             /*
              * Variable doesn't exist, any range is fine
              */
+            log.debug(varId + " not found in range estimation");
             return Extents.newExtent(0f, 100f);
         }
         if (!variableMetadata.isScalar()) {
@@ -217,8 +223,8 @@ public class GraphicsUtils {
              * with a bad scale range set - administrators can just override it.
              */
             try {
-                for(VariableMetadata child : variableMetadata.getChildren()) {
-                    if(child.isScalar()) {
+                for (VariableMetadata child : variableMetadata.getChildren()) {
+                    if (child.isScalar()) {
                         variableMetadata = child;
                         varId = variableMetadata.getId();
                         break;
@@ -229,35 +235,79 @@ public class GraphicsUtils {
                  * Ignore this error and just generate a (probably) inaccurate
                  * range
                  */
+                log.debug("Couldn't get scalar variable for " + varId + " when estimating range");
                 return Extents.newExtent(0f, 100f);
             }
         }
 
         Double zPos = null;
         Extent<Double> zExtent = null;
-        /*
-         * TODO SLOW! This will be problematic if we are using
-         * AbstractContinuousDomainDatasets, because we will end up extracting
-         * every single feature. On the plus side, the value range returned will
-         * be absolutely accurate...
-         */
-        if (variableMetadata.getVerticalDomain() != null) {
-            zPos = variableMetadata.getVerticalDomain().getExtent().getLow();
-            zExtent = variableMetadata.getVerticalDomain().getExtent();
-        }
-        DateTime time = null;
-        Extent<DateTime> tExtent = null;
-        if (variableMetadata.getTemporalDomain() != null) {
-            time = variableMetadata.getTemporalDomain().getExtent().getHigh();
-            tExtent = variableMetadata.getTemporalDomain().getExtent();
-        }
-        PlottingDomainParams params = new PlottingDomainParams(100, 100, variableMetadata
-                .getHorizontalDomain().getBoundingBox(), zExtent, tExtent, null, zPos, time);
+
         float min = Float.MAX_VALUE;
         float max = -Float.MAX_VALUE;
-        try {
-            Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(
-                    CollectionUtils.setOf(varId), params);
+        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = null;
+        if (!(dataset instanceof AbstractContinuousDomainDataset)) {
+            /*
+             * Extract map features at a low resolution over the entire domain
+             * of the dataset. This will give a good approximation of the values
+             * present (albeit at a specific time/depth)
+             */
+            if (variableMetadata.getVerticalDomain() != null) {
+                zPos = variableMetadata.getVerticalDomain().getExtent().getLow();
+                zExtent = variableMetadata.getVerticalDomain().getExtent();
+            }
+            DateTime time = null;
+            Extent<DateTime> tExtent = null;
+            if (variableMetadata.getTemporalDomain() != null) {
+                time = variableMetadata.getTemporalDomain().getExtent().getHigh();
+                tExtent = variableMetadata.getTemporalDomain().getExtent();
+            }
+            PlottingDomainParams params = new PlottingDomainParams(100, 100, variableMetadata
+                    .getHorizontalDomain().getBoundingBox(), zExtent, tExtent, null, zPos, time);
+            try {
+                long t1 = 0L, t2 = 0L;
+                if (log.isDebugEnabled()) {
+                    log.debug("Extracting data for range estimation");
+                    t1 = System.currentTimeMillis();
+                }
+                mapFeatures = dataset.extractMapFeatures(CollectionUtils.setOf(varId), params);
+                if (log.isDebugEnabled()) {
+                    t2 = System.currentTimeMillis();
+                    log.debug("Extracted data for range estimation: " + (t2 - t1) + "ms");
+                }
+            } catch (DataReadingException | VariableNotFoundException e) {
+                log.error(
+                        "Problem reading data whilst estimating scale range.  A default value will be used.",
+                        e);
+            }
+        } else {
+            /*
+             * We can have any number of features in a dataset with a continuous
+             * domain. We can't just extract all features at low resolution
+             * because that has no meaning. Instead, we extract a fixed number
+             * of features. This is not so accurate since there is no guarantee
+             * that the sample will be representative.
+             * 
+             * However, extracting ALL the features is not a feasible option,
+             * and this is only an estimation anyway.
+             */
+            AbstractContinuousDomainDataset cdDataset = (AbstractContinuousDomainDataset) dataset;
+            Set<String> featureIds = cdDataset.getFeatureIds();
+
+            int maxFeatures = featureIds.size() > 100 ? 100 : featureIds.size();
+            Set<String> featureIdsToRead = new HashSet<>();
+            Iterator<String> iterator = featureIds.iterator();
+            int i = 0;
+            while (iterator.hasNext() && i < maxFeatures) {
+                featureIdsToRead.add(iterator.next());
+                i++;
+            }
+            DiscreteFeatureReader<? extends DiscreteFeature<?, ?>> featureReader = cdDataset
+                    .getFeatureReader();
+            mapFeatures = featureReader
+                    .readFeatures(featureIdsToRead, CollectionUtils.setOf(varId));
+        }
+        if (mapFeatures != null) {
             for (DiscreteFeature<?, ?> feature : mapFeatures) {
                 Array<Number> values = feature.getValues(varId);
                 if (values != null) {
@@ -269,10 +319,6 @@ public class GraphicsUtils {
                     }
                 }
             }
-        } catch (DataReadingException | VariableNotFoundException e) {
-            log.error(
-                    "Problem reading data whilst estimating scale range.  A default value will be used.",
-                    e);
         }
 
         if (max == -Float.MAX_VALUE || min == Float.MAX_VALUE) {
@@ -296,6 +342,7 @@ public class GraphicsUtils {
             max += 0.05 * diff;
         }
 
+        log.debug("Estimated value range.  Returning");
         return Extents.newExtent((float) roundToSignificantFigures(min, 4),
                 (float) roundToSignificantFigures(max, 4));
     }
