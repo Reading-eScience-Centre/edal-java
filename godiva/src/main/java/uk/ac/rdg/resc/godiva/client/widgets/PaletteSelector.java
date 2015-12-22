@@ -415,7 +415,6 @@ public class PaletteSelector implements PaletteSelectorIF {
      * Sets up the layout for a vertical palette
      */
     private void initVertical() {
-        GWT.log("initing vertical...");
         mainPanel.clear();
         VerticalPanel palettePanel = new VerticalPanel();
         palettePanel.add(aboveMax);
