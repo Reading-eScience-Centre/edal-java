@@ -281,12 +281,14 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
                 handler.datetimeSelected(id, getSelectedDateTime());
             }
         });
+        range.addItem("30 mins", "" + 1000L * 60 * 30);
         range.addItem("1 hour", "" + 1000L * 60 * 60);
+        range.addItem("12 hours", "" + 1000L * 60 * 60 * 12);
         range.addItem("1 day", "" + 1000L * 60 * 60 * 24);
         range.addItem("1 week", "" + 1000L * 60 * 60 * 24 * 7);
+        range.addItem("2 weeks", "" + 1000L * 60 * 60 * 24 * 7 * 2);
         range.addItem("1 month", "" + 1000L * 60 * 60 * 24 * 31);
         range.addItem("6 months", "" + 1000L * 60 * 60 * 24 * 31 * 6);
-        range.addItem("1 year", "" + 1000L * 60 * 60 * 24 * 365);
         range.setEnabled(true);
         range.setSelectedIndex(1);
         add(range);
