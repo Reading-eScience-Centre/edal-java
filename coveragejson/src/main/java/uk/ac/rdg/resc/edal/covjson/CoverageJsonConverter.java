@@ -32,7 +32,7 @@ import java.util.Collection;
 
 import uk.ac.rdg.resc.edal.feature.Feature;
 
-public interface CoverageJsonConvertor {
+public interface CoverageJsonConverter {
     public String convertFeatureToJson(Feature<?> feature);
 
     public String convertFeaturesToJson(Collection<Feature<?>> features);
