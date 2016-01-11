@@ -16,6 +16,7 @@ public class JsonStreamingEncoder implements StreamingEncoder {
 		stream = os;
 		JsonFactory jsonFactory = new JsonFactory();
 		generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8);
+		generator.useDefaultPrettyPrinter();
 	}
 	
 	@Override

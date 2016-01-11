@@ -31,12 +31,15 @@ public class FeatureWriter <T> {
 		
 		MapEncoder<MapEncoder<T>> domain = map.startMap("domain");
 		new DomainWriter<>(domain).write(feature);
+		domain.end();
 		
 		MapEncoder<MapEncoder<T>> parameters = map.startMap("parameters");
 		new ParametersWriter<>(parameters).write(feature.getParameterMap().values());
+		parameters.end();
 		
 		MapEncoder<MapEncoder<T>> ranges = map.startMap("ranges");
 		new RangesWriter<>(ranges).write(feature);
+		ranges.end();
 	}
 
 }
