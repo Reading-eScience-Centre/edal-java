@@ -16,11 +16,11 @@ public class SimpleCoverageJsonConverter implements CoverageJsonConverter {
 		StreamingEncoder encoder;
 		try {
 			encoder = new JsonStreamingEncoder(os);
+			CoverageJsonWriter writer = new CoverageJsonWriter(encoder);
+			writer.write(feature);
 		} catch (IOException e) {
 			throw new EdalException("Error writing CoverageJSON", e);
 		}
-		CoverageJsonWriter writer = new CoverageJsonWriter(encoder);
-		writer.write(feature);
 		String covjson = os.toString();
 		return covjson;
 	}
@@ -31,11 +31,11 @@ public class SimpleCoverageJsonConverter implements CoverageJsonConverter {
 		StreamingEncoder encoder;
 		try {
 			encoder = new JsonStreamingEncoder(os);
+			CoverageJsonWriter writer = new CoverageJsonWriter(encoder);
+			writer.write(features);
 		} catch (IOException e) {
 			throw new EdalException("Error writing CoverageJSON", e);
 		}
-		CoverageJsonWriter writer = new CoverageJsonWriter(encoder);
-		writer.write(features);
 		String covjson = os.toString();
 		return covjson;
 	}

@@ -41,15 +41,15 @@ import java.io.IOException;
  * @author Maik Riechert
  */
 public interface StreamingEncoder {
-	class ArrayHints {
+	public class ArrayHints {
 		private final Long size;
-		private final Class<Number> type;
+		private final Class<? extends Number> type;
 		/**
 		 * 
 		 * @param size can be null
 		 * @param type can be null
 		 */
-		public ArrayHints(Long size, Class<Number> type) {
+		public ArrayHints(Long size, Class<? extends Number> type) {
 			this.size = size;
 			this.type = type;
 		}
@@ -62,12 +62,12 @@ public interface StreamingEncoder {
 		boolean hasType() {
 			return type != null;
 		}
-		Class<Number> getType() {
+		Class<? extends Number> getType() {
 			return type;
 		}
 	}
 		
-	interface ArrayEncoder <T> {
+	public interface ArrayEncoder <T> {
 		ArrayEncoder<T> add(String value) throws IOException;
 		ArrayEncoder<T> add(boolean value) throws IOException;
 		ArrayEncoder<T> add(int value) throws IOException;
@@ -80,7 +80,7 @@ public interface StreamingEncoder {
 		T end() throws IOException;
 	}
 	
-	interface MapEncoder <T> {
+	public interface MapEncoder <T> {
 		MapEncoder<T> put(String key, String value) throws IOException;
 		MapEncoder<T> put(String key, boolean value) throws IOException;
 		MapEncoder<T> put(String key, int value) throws IOException;
