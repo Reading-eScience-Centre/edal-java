@@ -32,12 +32,12 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
@@ -76,7 +76,7 @@ public class GraphicsUtils {
                                 .parseInt(split[3])));
             }
             reader.close();
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }
@@ -147,6 +147,16 @@ public class GraphicsUtils {
         }
     }
 
+    /**
+     * Converts a {@link Color} to an HTML-like {@link String} (#AARRGGBB), with
+     * additional cases for transparent / <code>null</code> values
+     * 
+     * @param colour
+     *            The colour to represent as a {@link String}
+     * @return The HTML representation of the {@link Color}, or
+     *         <code>null</code> if a <code>null</code> {@link Color} was
+     *         supplied.
+     */
     public static String colourToString(Color colour) {
         if (colour == null) {
             return "extend";
@@ -154,6 +164,27 @@ public class GraphicsUtils {
             return "transparent";
         }
         return String.format("#%08X", colour.getRGB());
+    }
+
+    public static void main(String[] args) {
+        System.out.println(colourToHtmlString(Color.blue));
+    }
+
+    /**
+     * Converts a {@link Color} to an HTML {@link String} (#RRGGBB), ignoring
+     * transparency.
+     * 
+     * @param colour
+     *            The colour to represent as a {@link String}
+     * @return The HTML representation of the {@link Color}, or
+     *         <code>null</code> if a <code>null</code> {@link Color} was
+     *         supplied.
+     */
+    public static String colourToHtmlString(Color colour) {
+        if (colour == null) {
+            return null;
+        }
+        return String.format("#%06X", colour.getRGB() & 0x00FFFFFF);
     }
 
     /**
@@ -409,6 +440,21 @@ public class GraphicsUtils {
         }
     }
 
+    public static Map<Integer, Color> getColourMapForCategories(Map<Integer, Category> categories) {
+        Map<Integer, Color> colours = new HashMap<>();
+        Color[] fallback = generateColourSet(CATEGORICAL_COLOUR_SET, categories.size());
+        int i = 0;
+        for (Entry<Integer, Category> entry : categories.entrySet()) {
+            if (entry.getValue().getColour() == null) {
+                colours.put(entry.getKey(), fallback[i]);
+            } else {
+                colours.put(entry.getKey(), entry.getValue().getColour());
+            }
+            i++;
+        }
+        return colours;
+    }
+
     /**
      * Renders a legend for categorical data
      * 
@@ -428,13 +474,15 @@ public class GraphicsUtils {
         final int GAP = 5;
         final int SWATH_SIZE = 16;
         int yCoord = GAP;
-        for (Category category : categories.values()) {
-            g.setColor(category.getColour());
+        Map<Integer, Color> colours = getColourMapForCategories(categories);
+        for (Integer categoryValue : categories.keySet()) {
+            g.setColor(colours.get(categoryValue));
             g.fillRect(GAP, yCoord, SWATH_SIZE, SWATH_SIZE);
             g.setColor(Color.black);
             g.drawRect(GAP, yCoord, SWATH_SIZE, SWATH_SIZE);
             yCoord += SWATH_SIZE;
-            g.drawString(category.getLabel(), GAP + SWATH_SIZE + GAP, yCoord - 3);
+            g.drawString(categories.get(categoryValue).getLabel(), GAP + SWATH_SIZE + GAP,
+                    yCoord - 3);
             yCoord += GAP;
         }
         int x = canvas.getWidth() - 1;
@@ -457,4 +505,34 @@ public class GraphicsUtils {
         g.drawImage(canvas, 0, 0, null);
         return ret;
     }
+
+    /**
+     * A colour set for generating categorical palettes. This is a rainbow
+     * colour set, so picking values as spread out as possible from this will
+     * generate a reasonable categorical map.
+     * 
+     * It is preferable to specify the colours manually for categorical data,
+     * but this is here for those occasions where that is not possible.
+     */
+    private static final Color[] CATEGORICAL_COLOUR_SET = new Color[] { new Color(140, 0, 0),
+            new Color(158, 0, 0), new Color(175, 0, 0), new Color(193, 0, 0), new Color(211, 0, 0),
+            new Color(228, 0, 0), new Color(246, 0, 0), new Color(255, 7, 0),
+            new Color(255, 23, 0), new Color(255, 39, 0), new Color(255, 55, 0),
+            new Color(255, 71, 0), new Color(255, 87, 0), new Color(255, 103, 0),
+            new Color(255, 119, 0), new Color(255, 135, 0), new Color(255, 151, 0),
+            new Color(255, 167, 0), new Color(255, 183, 0), new Color(255, 199, 0),
+            new Color(255, 215, 0), new Color(255, 231, 0), new Color(255, 247, 0),
+            new Color(247, 255, 7), new Color(231, 255, 23), new Color(215, 255, 39),
+            new Color(199, 255, 55), new Color(183, 255, 71), new Color(167, 255, 87),
+            new Color(151, 255, 103), new Color(135, 255, 119), new Color(119, 255, 135),
+            new Color(103, 255, 151), new Color(87, 255, 167), new Color(71, 255, 183),
+            new Color(55, 255, 199), new Color(39, 255, 215), new Color(23, 255, 231),
+            new Color(7, 255, 247), new Color(0, 251, 255), new Color(0, 235, 255),
+            new Color(0, 219, 255), new Color(0, 203, 255), new Color(0, 187, 255),
+            new Color(0, 171, 255), new Color(0, 155, 255), new Color(0, 139, 255),
+            new Color(0, 123, 255), new Color(0, 107, 255), new Color(0, 91, 255),
+            new Color(0, 75, 255), new Color(0, 59, 255), new Color(0, 43, 255),
+            new Color(0, 27, 255), new Color(0, 11, 255), new Color(0, 0, 255),
+            new Color(0, 0, 239), new Color(0, 0, 223), new Color(0, 0, 207), new Color(0, 0, 191),
+            new Color(0, 0, 175), new Color(0, 0, 159), new Color(0, 0, 143) };
 }

@@ -26,37 +26,33 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.metadata;
+package uk.ac.rdg.resc.edal.grid;
 
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.Domain;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
- * This is used to ensure that {@link VariableMetadata} supplied to
- * {@link GriddedDataset}s have gridded domains, but it will not be used to
- * constrain any return types (which are all just {@link VariableMetadata})
+ * A cell in a horizontal {@link Domain}.
  * 
  * @author Guy Griffiths
  */
-public class GridVariableMetadata extends DiscreteLayeredVariableMetadata {
-
-    public GridVariableMetadata(Parameter parameter, HorizontalGrid hDomain, VerticalAxis zDomain,
-            TimeAxis tDomain, boolean scalar) {
-        super(parameter, hDomain, zDomain, tDomain, scalar);
-        if (hDomain == null) {
-            throw new IllegalArgumentException(
-                    "GridVariableMetadata must contain a horizontal domain");
-        }
-    }
+public interface HorizontalCell extends Domain<HorizontalPosition> {
+    /**
+     * @return the centre of the cell in horizontal space
+     */
+    public HorizontalPosition getCentre();
 
     /**
-     * Returns the {@link HorizontalGrid} of the variable.
+     * @return the footprint of this cell in horizontal space.
      */
-    @Override
-    public HorizontalGrid getHorizontalDomain() {
-        return (HorizontalGrid) super.getHorizontalDomain();
-    }
+    public Polygon getFootprint();
+
+    /**
+     * @return the parent {@link DiscreteHorizontalDomain} of which this cell is
+     *         a part
+     */
+    public DiscreteHorizontalDomain<? extends HorizontalCell> getParentDomain();
+
 }

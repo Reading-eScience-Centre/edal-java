@@ -45,10 +45,10 @@ import ucar.unidata.geoloc.ProjectionImpl;
 import ucar.unidata.geoloc.ProjectionPoint;
 import ucar.unidata.geoloc.projection.RotatedPole;
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.geometry.AbstractPolygon;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.geometry.SimplePolygon;
 import uk.ac.rdg.resc.edal.grid.AbstractTransformedGrid;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.GridCell2DImpl;
@@ -216,15 +216,10 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
                     final List<HorizontalPosition> iVertices = Collections
                             .unmodifiableList(vertices);
 
-                    Polygon footprint = new AbstractPolygon() {
+                    Polygon footprint = new SimplePolygon(iVertices) {
                         @Override
                         public CoordinateReferenceSystem getCoordinateReferenceSystem() {
                             return CdmTransformedGrid.this.getCoordinateReferenceSystem();
-                        }
-
-                        @Override
-                        public List<HorizontalPosition> getVertices() {
-                            return iVertices;
                         }
 
                         @Override

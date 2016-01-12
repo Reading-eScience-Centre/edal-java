@@ -63,4 +63,9 @@ public interface Polygon extends Domain<HorizontalPosition> {
      *         plane.
      */
     public List<HorizontalPosition> getVertices();
+    
+    /**
+     * @return The MBR of this {@link Polygon}
+     */
+    public BoundingBox getBoundingBox();
 }

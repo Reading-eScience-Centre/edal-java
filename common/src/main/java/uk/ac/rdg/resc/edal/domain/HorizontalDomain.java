@@ -36,11 +36,10 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 /**
  * A two-dimensional {@link Domain} in the horizontal plane
  * 
- * @author Guy
- * @author Jon
+ * @author Guy Griffiths
+ * @author Jon Blower
  */
 public interface HorizontalDomain extends Domain<HorizontalPosition> {
-
     /**
      * Returns the bounding box of the domain in the domain's own coordinate
      * reference system.

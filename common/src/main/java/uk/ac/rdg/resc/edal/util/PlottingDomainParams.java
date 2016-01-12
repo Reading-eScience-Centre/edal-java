@@ -205,4 +205,26 @@ public class PlottingDomainParams {
             return false;
         return true;
     }
+    
+    @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        str.append("Width: ");
+        str.append(width);
+        str.append("\nHeight: ");
+        str.append(height);
+        str.append("\nBounding box: ");
+        str.append(bbox);
+        str.append("\nZ-extent: ");
+        str.append(zExtent);
+        str.append("\nT-extent: ");
+        str.append(tExtent);
+        str.append("\nTarget position: ");
+        str.append(targetPos);
+        str.append(", ");
+        str.append(targetZ);
+        str.append(", ");
+        str.append(TimeUtils.dateTimeToISO8601(targetT));
+        return str.toString();
+    }
 }

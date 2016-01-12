@@ -125,7 +125,7 @@ public class MapDomainTest {
             HorizontalPosition expectedcentre = new HorizontalPosition(lowX + xIndex * resolution,
                     lowY + yIndex * resolution, crs);
             assertEquals(expectedcentre, cell.getCentre());
-            assertEquals(hGrid, cell.getGrid());
+            assertEquals(hGrid, cell.getParentDomain());
         }
     }
 }

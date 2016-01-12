@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.metadata;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.HorizontalMesh;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 
 /**
@@ -39,12 +40,13 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
  * {@link GriddedDataset}s have gridded domains, but it will not be used to
  * constrain any return types (which are all just {@link VariableMetadata})
  * 
- * @author Guy Griffiths
+ * @author Guy
  */
-public class GridVariableMetadata extends DiscreteLayeredVariableMetadata {
+public class HorizontalMesh4dVariableMetadata extends DiscreteLayeredVariableMetadata {
 
-    public GridVariableMetadata(Parameter parameter, HorizontalGrid hDomain, VerticalAxis zDomain,
-            TimeAxis tDomain, boolean scalar) {
+    public HorizontalMesh4dVariableMetadata(Parameter parameter,
+            HorizontalMesh hDomain, VerticalAxis zDomain, TimeAxis tDomain,
+            boolean scalar) {
         super(parameter, hDomain, zDomain, tDomain, scalar);
         if (hDomain == null) {
             throw new IllegalArgumentException(
@@ -56,7 +58,7 @@ public class GridVariableMetadata extends DiscreteLayeredVariableMetadata {
      * Returns the {@link HorizontalGrid} of the variable.
      */
     @Override
-    public HorizontalGrid getHorizontalDomain() {
-        return (HorizontalGrid) super.getHorizontalDomain();
+    public HorizontalMesh getHorizontalDomain() {
+        return (HorizontalMesh) super.getHorizontalDomain();
     }
 }

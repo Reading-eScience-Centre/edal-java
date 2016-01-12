@@ -28,22 +28,25 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.TemporalDomain;
+import uk.ac.rdg.resc.edal.domain.VerticalDomain;
+import uk.ac.rdg.resc.edal.grid.HorizontalCell;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 
 /**
- * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
- * This is used to ensure that {@link VariableMetadata} supplied to
- * {@link GriddedDataset}s have gridded domains, but it will not be used to
- * constrain any return types (which are all just {@link VariableMetadata})
+ * {@link VariableMetadata} whose {@link VerticalDomain} and
+ * {@link TemporalDomain} are discrete axes, and whose {@link HorizontalDomain}
+ * is a {@link DiscreteHorizontalDomain} (but not necessarily a grid)
  * 
  * @author Guy Griffiths
  */
-public class GridVariableMetadata extends DiscreteLayeredVariableMetadata {
+public class DiscreteLayeredVariableMetadata extends VariableMetadata {
 
-    public GridVariableMetadata(Parameter parameter, HorizontalGrid hDomain, VerticalAxis zDomain,
+    public DiscreteLayeredVariableMetadata(Parameter parameter,
+            DiscreteHorizontalDomain<? extends HorizontalCell> hDomain, VerticalAxis zDomain,
             TimeAxis tDomain, boolean scalar) {
         super(parameter, hDomain, zDomain, tDomain, scalar);
         if (hDomain == null) {
@@ -52,11 +55,25 @@ public class GridVariableMetadata extends DiscreteLayeredVariableMetadata {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public DiscreteHorizontalDomain<? extends HorizontalCell> getHorizontalDomain() {
+        return (DiscreteHorizontalDomain<HorizontalCell>) super.getHorizontalDomain();
+    }
+
     /**
-     * Returns the {@link HorizontalGrid} of the variable.
+     * Returns the {@link VerticalAxis} of the variable
      */
     @Override
-    public HorizontalGrid getHorizontalDomain() {
-        return (HorizontalGrid) super.getHorizontalDomain();
+    public VerticalAxis getVerticalDomain() {
+        return (VerticalAxis) super.getVerticalDomain();
+    }
+
+    /**
+     * Returns the {@link TimeAxis} of the variable
+     */
+    @Override
+    public TimeAxis getTemporalDomain() {
+        return (TimeAxis) super.getTemporalDomain();
     }
 }

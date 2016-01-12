@@ -47,7 +47,7 @@ public class ColorSLDMapFunction extends AbstractSLDMapFunction<Color> {
                     }
                     categories.put(
                             Integer.parseInt(mapValue),
-                            new Category(catLabel, GraphicsUtils.parseColour(colourNode
+                            new Category(catLabel, catLabel, GraphicsUtils.parseColour(colourNode
                                     .getTextContent()), catLabel));
                 } else {
                     throw new SLDException(

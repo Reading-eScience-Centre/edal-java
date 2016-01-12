@@ -62,6 +62,7 @@ import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
+import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.geometry.LineString;
@@ -584,8 +585,8 @@ public final class GISUtils {
         } else {
             /*
              * We just have a domain representing an extent. If it contains the
-             * target elevation, return the target elevation, otherwise return either the
-             * upper or lower bound, as appropriate.
+             * target elevation, return the target elevation, otherwise return
+             * either the upper or lower bound, as appropriate.
              */
             if (zDomain.contains(targetZ)) {
                 return targetZ;
@@ -832,6 +833,31 @@ public final class GISUtils {
                 - yExtra, bbox.getMaxX() + xExtra, bbox.getMaxY() + yExtra,
                 bbox.getCoordinateReferenceSystem());
         return bboxBordered;
+    }
+
+    public static BoundingBox getBoundingBox(List<HorizontalPosition> positions) {
+        double minX = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+        CoordinateReferenceSystem crs = null;
+        for (HorizontalPosition pos : positions) {
+            minX = Math.min(minX, pos.getX());
+            maxX = Math.max(maxX, pos.getX());
+            minY = Math.min(minY, pos.getY());
+            maxY = Math.max(maxY, pos.getY());
+            if (crs == null) {
+                crs = pos.getCoordinateReferenceSystem();
+            } else {
+                if (!crsMatch(crs, pos.getCoordinateReferenceSystem())) {
+                    throw new MismatchedCrsException(
+                            "All positions must have the same CRS to get bounding box");
+                }
+            }
+
+        }
+        BoundingBox bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, crs);
+        return constrainBoundingBox(bbox);
     }
 
     /**
@@ -1081,9 +1107,9 @@ public final class GISUtils {
         }
         if (allTimeAxes) {
             /*
-             * All of our domains were time axes, so we create a new axis
-             * out of the intersection of all their points. Often it's the case
-             * that all domains are the same.
+             * All of our domains were time axes, so we create a new axis out of
+             * the intersection of all their points. Often it's the case that
+             * all domains are the same.
              */
             List<DateTime> values = new ArrayList<DateTime>(axisVals);
             Collections.sort(values);
@@ -1251,5 +1277,27 @@ public final class GISUtils {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean isPressureUnits(String units) {
+        if (units.equalsIgnoreCase("bar") || units.equalsIgnoreCase("standard_atmosphere")
+                || units.equalsIgnoreCase("technical_atmosphere")
+                || units.equalsIgnoreCase("inch_H2O_39F") || units.equalsIgnoreCase("inch_H2O_60F")
+                || units.equalsIgnoreCase("inch_Hg_32F") || units.equalsIgnoreCase("inch_Hg_60F")
+                || units.equalsIgnoreCase("millimeter_Hg_0C") || units.equalsIgnoreCase("footH2O")
+                || units.equalsIgnoreCase("cmHg") || units.equalsIgnoreCase("cmH2O")
+                || units.equalsIgnoreCase("Pa") || units.equalsIgnoreCase("inch_Hg")
+                || units.equalsIgnoreCase("inch_hg") || units.equalsIgnoreCase("inHg")
+                || units.equalsIgnoreCase("in_Hg") || units.equalsIgnoreCase("in_hg")
+                || units.equalsIgnoreCase("millimeter_Hg") || units.equalsIgnoreCase("mmHg")
+                || units.equalsIgnoreCase("mm_Hg") || units.equalsIgnoreCase("mm_hg")
+                || units.equalsIgnoreCase("torr") || units.equalsIgnoreCase("foot_H2O")
+                || units.equalsIgnoreCase("ftH2O") || units.equalsIgnoreCase("psi")
+                || units.equalsIgnoreCase("ksi") || units.equalsIgnoreCase("barie")
+                || units.equalsIgnoreCase("at") || units.equalsIgnoreCase("atmosphere")
+                || units.equalsIgnoreCase("atm") || units.equalsIgnoreCase("barye")) {
+            return true;
+        }
+        return false;
     }
 }

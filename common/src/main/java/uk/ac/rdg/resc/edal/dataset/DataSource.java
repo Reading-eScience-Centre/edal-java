@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 The University of Reading
+ * Copyright (c) 2015 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -26,37 +26,16 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.metadata;
+package uk.ac.rdg.resc.edal.dataset;
 
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 
-/**
- * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
- * This is used to ensure that {@link VariableMetadata} supplied to
- * {@link GriddedDataset}s have gridded domains, but it will not be used to
- * constrain any return types (which are all just {@link VariableMetadata})
- * 
- * @author Guy Griffiths
- */
-public class GridVariableMetadata extends DiscreteLayeredVariableMetadata {
-
-    public GridVariableMetadata(Parameter parameter, HorizontalGrid hDomain, VerticalAxis zDomain,
-            TimeAxis tDomain, boolean scalar) {
-        super(parameter, hDomain, zDomain, tDomain, scalar);
-        if (hDomain == null) {
-            throw new IllegalArgumentException(
-                    "GridVariableMetadata must contain a horizontal domain");
-        }
-    }
-
+public interface DataSource {
     /**
-     * Returns the {@link HorizontalGrid} of the variable.
+     * Close all resources associated with the underlying data.
+     * 
+     * @throws DataReadingException
+     *             If the underlying data cannot be closed for some reason
      */
-    @Override
-    public HorizontalGrid getHorizontalDomain() {
-        return (HorizontalGrid) super.getHorizontalDomain();
-    }
+    public void close() throws DataReadingException;
 }

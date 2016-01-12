@@ -117,9 +117,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
          * needs to be calculated prior to inserting it into the cache.
          * 
          * The maxDepth property specified the maximum number of object
-         * references to count before a warning is given (we could also
-         * configure it to stop counting once the limit is reached, but this
-         * kind of defeats the whole point).
+         * references to count before a warning is given.
          * 
          * Now, we are generally caching 2 things:
          * 
@@ -131,11 +129,12 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
          * 
          * These can need to count a very large number of object references.
          * However, this calculation is actually pretty quick. Setting the max
-         * depth to 1,000,000 seems to suppress the vast majority of warnings,
+         * depth to 2,000,000 seems to suppress the vast majority of warnings,
          * and doesn't impact performance noticeably.
          */
         cacheManager = CacheManager.create(new Configuration().name("EDAL-WMS-CacheManager")
-                .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(1_000_000)));
+                .sizeOfPolicy(
+                        new SizeOfPolicyConfiguration().maxDepth(2_000_000)));
 
         setCache(config.getCacheSettings());
     }

@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2013 The University of Reading
+ * Copyright (c) 2015 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -24,39 +24,35 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- ******************************************************************************/
+ *******************************************************************************/
 
-package uk.ac.rdg.resc.edal.metadata;
+package uk.ac.rdg.resc.edal.grid.kdtree;
 
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import java.util.Comparator;
 
-/**
- * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
- * This is used to ensure that {@link VariableMetadata} supplied to
- * {@link GriddedDataset}s have gridded domains, but it will not be used to
- * constrain any return types (which are all just {@link VariableMetadata})
- * 
- * @author Guy Griffiths
- */
-public class GridVariableMetadata extends DiscreteLayeredVariableMetadata {
+public class PointComparator implements Comparator<Point> {
 
-    public GridVariableMetadata(Parameter parameter, HorizontalGrid hDomain, VerticalAxis zDomain,
-            TimeAxis tDomain, boolean scalar) {
-        super(parameter, hDomain, zDomain, tDomain, scalar);
-        if (hDomain == null) {
-            throw new IllegalArgumentException(
-                    "GridVariableMetadata must contain a horizontal domain");
-        }
+    Boolean sort_by_latitude;
+
+    public PointComparator(Boolean sortByLatitude) {
+        sort_by_latitude = sortByLatitude;
     }
 
-    /**
-     * Returns the {@link HorizontalGrid} of the variable.
-     */
     @Override
-    public HorizontalGrid getHorizontalDomain() {
-        return (HorizontalGrid) super.getHorizontalDomain();
+    public int compare(Point o1, Point o2) {
+        double difference;
+        if (sort_by_latitude) {
+            difference = (o1.getY() - o2.getY());
+        } else {
+            difference = (o1.getX() - o2.getX());
+        }
+        if (difference < 0) {
+            return -1;
+        } else if (difference > 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+
     }
 }

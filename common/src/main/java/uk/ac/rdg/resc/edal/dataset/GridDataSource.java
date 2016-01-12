@@ -44,7 +44,7 @@ import uk.ac.rdg.resc.edal.util.Array4D;
  * @author Jon
  * @author Guy
  */
-public interface GridDataSource {
+public interface GridDataSource extends DataSource {
 
     /**
      * Read an {@link Array4D} of data from the underlying data source
@@ -75,13 +75,4 @@ public interface GridDataSource {
      */
     public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax,
             int ymin, int ymax, int xmin, int xmax) throws IOException, DataReadingException;
-
-    /**
-     * Close all resources associated with the underlying data.
-     * 
-     * @throws IOException
-     *             If the underlying data cannot be closed for some reason
-     */
-    public void close() throws IOException;
-
 }

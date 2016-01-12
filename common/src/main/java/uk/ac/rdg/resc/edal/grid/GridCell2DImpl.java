@@ -87,7 +87,7 @@ public final class GridCell2DImpl implements GridCell2D {
     }
 
     @Override
-    public HorizontalGrid getGrid() {
+    public HorizontalGrid getParentDomain() {
         return parentGrid;
     }
 
