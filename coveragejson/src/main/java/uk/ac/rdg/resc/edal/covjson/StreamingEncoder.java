@@ -47,7 +47,7 @@ public interface StreamingEncoder {
 		/**
 		 * 
 		 * @param size can be null
-		 * @param type can be null
+		 * @param type If not null, then all array elements must be of the given type and cannot be null.
 		 */
 		public ArrayHints(Long size, Class<? extends Number> type) {
 			this.size = size;

@@ -37,6 +37,7 @@ import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array1D;
@@ -59,6 +60,12 @@ public class RangesWriter <T> {
 			throw new EdalException("Only discrete-type features are supported");
 		}
 		DiscreteFeature<?,?> discreteFeature = (DiscreteFeature<?, ?>) feature;
+		
+		// Converting MapFeature to GridFeature simplifies code below (no Array2D case necessary).
+		if (discreteFeature instanceof MapFeature) {
+			discreteFeature = Util.convertToGridFeature((MapFeature) discreteFeature);
+		}
+		
 		map.put("type", "RangeSet");
 		for (String paramId : feature.getParameterIds()) {
 			MapEncoder<?> rangeMap = map.startMap(paramId);

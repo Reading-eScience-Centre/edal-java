@@ -30,6 +30,8 @@ package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
@@ -44,10 +46,13 @@ import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayHints;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
+import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
@@ -67,6 +72,8 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
+import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
  * 
@@ -85,6 +92,8 @@ public class DomainWriter <T> {
 		
 		if (feature instanceof GridFeature) {
 			doWrite((GridFeature) feature);
+		} else if (feature instanceof MapFeature) {
+			doWrite((MapFeature) feature);
 		} else if (feature instanceof ProfileFeature) {
 			doWrite((ProfileFeature) feature);
 		} else if (feature instanceof PointFeature) {
@@ -95,7 +104,7 @@ public class DomainWriter <T> {
 			throw new EdalException("Unsupported feature type: " + feature.getClass().getSimpleName());
 		}
 	}
-	
+
 	private void doWrite(GridFeature feature) throws IOException {
 		map.put("profile", "Grid");
 		
@@ -123,6 +132,10 @@ public class DomainWriter <T> {
 		writeReferencing(t != null ? t.getChronology() : null, 
 				xy.getCoordinateReferenceSystem(),
 				z != null ? z.getVerticalCrs(): null);
+	}
+	
+	private void doWrite(MapFeature feature) throws IOException {
+		doWrite(Util.convertToGridFeature(feature));
 	}
 
 	private void doWrite(ProfileFeature feature) throws IOException {

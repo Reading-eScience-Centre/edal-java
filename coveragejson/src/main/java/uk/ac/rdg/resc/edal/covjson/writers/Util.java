@@ -29,13 +29,29 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.geotoolkit.metadata.iso.citation.Citations;
 import org.geotoolkit.referencing.IdentifiedObjects;
+import org.joda.time.DateTime;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
+import uk.ac.rdg.resc.edal.domain.GridDomain;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
+import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
+import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
  * 
@@ -64,5 +80,38 @@ public class Util {
 			throw new RuntimeException(e); 
 		}
 		return crsUri;
+	}
+	
+	public static GridFeature convertToGridFeature(MapFeature feature) {
+		// A MapFeature is a GridFeature with T and Z fixed.
+		// TODO MapFeature should inherit from GridFeature
+		
+		MapDomain domain = feature.getDomain();
+		VerticalAxis z = new VerticalAxisImpl("z", 
+				Arrays.asList(domain.getZ()), domain.getVerticalCrs());
+		HorizontalGrid xy = domain;
+		DateTime time = domain.getTime();
+		TimeAxis t = time != null ? new TimeAxisImpl("t", Arrays.asList(time)) : null;
+		
+		GridDomain gridDomain = new SimpleGridDomain(xy, z, t);
+		
+		Map<String, Array4D<Number>> valuesMap = new HashMap<>();
+		for (String paramId : feature.getParameterIds()) {
+			final Array2D<Number> vals = feature.getValues(paramId);
+			valuesMap.put(paramId, new Array4D<Number>(1, 1, domain.getYSize(), domain.getXSize()) {
+				@Override
+				public Number get(int... coords) {
+					return vals.get(coords[2], coords[3]);
+				}
+				@Override
+				public void set(Number value, int... coords) {
+					throw new UnsupportedOperationException();
+				}
+			});
+		}
+		
+		GridFeature gridFeature = new GridFeature(feature.getId(), feature.getName(), 
+				feature.getDescription(), gridDomain, feature.getParameterMap(), valuesMap);
+		return gridFeature;
 	}
 }
