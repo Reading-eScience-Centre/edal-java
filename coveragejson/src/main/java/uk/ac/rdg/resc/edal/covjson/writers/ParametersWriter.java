@@ -60,8 +60,12 @@ public class ParametersWriter <T> {
 	
 	private void write(MapEncoder<?> paramMap, Parameter parameter) throws IOException {
 		paramMap
-		  .put("type", "Parameter")
-		  .startMap("description").put("en", parameter.getDescription()).end();
+		  .put("type", "Parameter");
+		
+		if (parameter.getDescription() != null) {
+			paramMap.startMap("description").put("en", parameter.getDescription()).end();
+		}
+		  
 		if (parameter.getCategories() != null) {
 		  paramMap.startMap("unit").put("symbol", parameter.getUnits());
 		}

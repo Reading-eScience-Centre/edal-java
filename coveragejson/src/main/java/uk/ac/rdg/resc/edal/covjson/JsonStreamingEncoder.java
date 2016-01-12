@@ -59,6 +59,7 @@ public class JsonStreamingEncoder implements StreamingEncoder {
 
 	@Override
 	public void end() throws IOException {
+		generator.flush();
 		// TODO are we supposed to close the stream or not? maybe this should be optional
 		stream.close();
 	}
