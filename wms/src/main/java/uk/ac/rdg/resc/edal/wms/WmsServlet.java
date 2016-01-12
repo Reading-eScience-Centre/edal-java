@@ -86,6 +86,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverter;
+import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverterImpl;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
@@ -100,6 +102,7 @@ import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
@@ -121,6 +124,7 @@ import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
+import uk.ac.rdg.resc.edal.graphics.style.util.LayerNameMapper;
 import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -358,6 +362,39 @@ public class WmsServlet extends HttpServlet {
 
         PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
+
+        /*
+         * If the user has requested the actual data in coverageJSON format...
+         */
+        if (getMapParams.getFormatString().equalsIgnoreCase("application/json")) {
+            String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
+            LayerNameMapper layerNameMapper = catalogue.getLayerNameMapper();
+            List<Feature<?>> features = new ArrayList<>();
+            for (String layerName : layerNames) {
+                Dataset dataset = catalogue.getDatasetFromId(layerNameMapper
+                        .getDatasetIdFromLayerName(layerName));
+
+                features.addAll(dataset.extractMapFeatures(CollectionUtils.setOf(layerNameMapper
+                        .getVariableIdFromLayerName(layerName)), getMapParams
+                        .getPlottingDomainParameters()));
+            }
+            CoverageJsonConverter converter = new CoverageJsonConverterImpl();
+
+            try {
+                converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+            } catch (IOException e) {
+                log.error("Problem writing coverage JSON to output stream", e);
+            } catch (Exception e) {
+                e.printStackTrace();
+                /*
+                 * Can't handle a thrown exception here - it won't be handled
+                 * properly, since the output stream has already been opened
+                 * 
+                 * Need a method to check that the conversion will be successful first.
+                 */
+            }
+            return;
+        }
 
         if (getMapParams.getImageFormat() instanceof KmzFormat) {
             if (!GISUtils
