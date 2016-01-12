@@ -28,29 +28,65 @@
 
 package uk.ac.rdg.resc.edal.covjson.writers;
 
+import java.io.IOException;
 import java.util.Collection;
 
+import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayEncoder;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
-import uk.ac.rdg.resc.edal.domain.Domain;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 
 /**
  * 
  * @author Maik Riechert
- *
- * @param <T>
  */
 public class ParametersWriter <T> {
 
-	private final MapEncoder<T> encoder;
+	private final MapEncoder<T> map;
 
 	public ParametersWriter(MapEncoder<T> encoder) {
-		this.encoder = encoder;
+		this.map = encoder;
 	}
 
-	public void write(Collection<Parameter> parameters) {
+	public void write(Collection<Parameter> parameters) throws IOException {
+		for (Parameter parameter : parameters) {
+			MapEncoder<?> paramMap = map.startMap(parameter.getVariableId());
+			write(paramMap, parameter);
+			paramMap.end();
+		}
+	}
+	
+	private void write(MapEncoder<?> paramMap, Parameter parameter) throws IOException {
+		paramMap
+		  .put("type", "Parameter")
+		  .startMap("description").put("en", parameter.getDescription()).end();
+		if (parameter.getCategories() != null) {
+		  paramMap.startMap("unit").put("symbol", parameter.getUnits());
+		}
 		
+		String observedPropertyUri = null;
+		if (parameter.getStandardName() != null) {
+			observedPropertyUri = "http://vocab.nerc.ac.uk/standard_name/" + parameter.getStandardName();
+		}
+		MapEncoder<?> obsProp = paramMap.startMap("observedProperty");
+		obsProp.startMap("label").put("en", parameter.getTitle()).end();
+		if (observedPropertyUri != null) {
+			obsProp.put("id", observedPropertyUri);
+		}
+		if (parameter.getCategories() != null) {
+			ArrayEncoder<?> cats = obsProp.startArray("categories");
+			for (Category category : parameter.getCategories().values()) {
+				cats.startMap()
+				  .put("id", category.getId())
+				  
+			}
+			cats.end();
+		}
+		obsProp.end();
 		
+		if (parameter.getCategories() != null) {
+			
+		}
 	}
 
 }

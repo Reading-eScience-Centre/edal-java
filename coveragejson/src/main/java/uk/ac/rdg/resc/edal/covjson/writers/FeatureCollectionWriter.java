@@ -28,10 +28,15 @@
 
 package uk.ac.rdg.resc.edal.covjson.writers;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
+import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayEncoder;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
 import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 
 /**
  * 
@@ -40,22 +45,34 @@ import uk.ac.rdg.resc.edal.feature.Feature;
 public class FeatureCollectionWriter <T> {
 
 	private final MapEncoder<T> map;
-	private final boolean root;
 
-	/**
-	 * 
-	 * @param encoder
-	 * @param root If true, then the feature is the root element in the document
-	 * 	that is written.
-	 */
-	public FeatureCollectionWriter(MapEncoder<T> encoder, boolean root) {
+	public FeatureCollectionWriter(MapEncoder<T> encoder) {
 		this.map = encoder;
-		this.root = root;
 	}
 
-	public void write(Collection<Feature<?>> features) {
-		// TODO Auto-generated method stub
+	public void write(Collection<Feature<?>> features) throws IOException {
+		Util.addJsonLdContext(map);
+		map.put("type", "CoverageCollection");
 		
+		// IMPORTANT: this assumes that different parameters have different IDs
+		Map<String, Parameter> parameters = new HashMap<>();
+		
+		ArrayEncoder<?> covs = map.startArray("coverages");
+		for (Feature<?> feature : features) {
+			MapEncoder<?> cov = covs.startMap();
+			new FeatureWriter<>(cov, false).write(feature, true);
+			cov.end();
+			
+			// TODO this may be slightly inefficient for big numbers of uniform coverages
+			//   -> with Collection<Feature<?>> there is no easy way to avoid it
+			parameters.putAll(feature.getParameterMap());
+		}
+		
+		MapEncoder<?> params = map.startMap("parameters");
+		new ParametersWriter<>(params).write(parameters.values());
+		params.end();
+		
+		covs.end();
 	}
 
 }

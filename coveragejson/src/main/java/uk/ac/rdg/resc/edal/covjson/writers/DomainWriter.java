@@ -74,14 +74,14 @@ import uk.ac.rdg.resc.edal.util.Array1D;
  */
 public class DomainWriter <T> {
 
-	private final MapEncoder<T> encoder;
+	private final MapEncoder<T> map;
 
 	public DomainWriter(MapEncoder<T> encoder) {
-		this.encoder = encoder;
+		this.map = encoder;
 	}
 
 	public void write(Feature<?> feature) throws IOException {
-		encoder.put("type", "Domain");
+		map.put("type", "Domain");
 		
 		if (feature instanceof GridFeature) {
 			doWrite((GridFeature) feature);
@@ -97,20 +97,20 @@ public class DomainWriter <T> {
 	}
 	
 	private void doWrite(GridFeature feature) throws IOException {
-		encoder.put("profile", "Grid");
+		map.put("profile", "Grid");
 		
 		GridDomain domain = feature.getDomain();
 		VerticalAxis z = domain.getVerticalAxis();
 		HorizontalGrid xy = domain.getHorizontalGrid();
 		TimeAxis t = domain.getTimeAxis();
 		
-		MapEncoder<?> axes = encoder.startMap("axes");
+		MapEncoder<?> axes = map.startMap("axes");
 		writeTimeAxis(axes, t);
 		writeHorizontalAxes(axes, xy);
 		writeVerticalAxis(axes, z);
 		axes.end();
 		
-		ArrayEncoder<?> order = encoder.startArray("rangeAxisOrder");
+		ArrayEncoder<?> order = map.startArray("rangeAxisOrder");
 		if (t != null) {
 			order.add("t");
 		}
@@ -126,14 +126,14 @@ public class DomainWriter <T> {
 	}
 
 	private void doWrite(ProfileFeature feature) throws IOException {
-		encoder.put("profile", "Profile");
+		map.put("profile", "Profile");
 		
 		VerticalAxis z = feature.getDomain();
 		HorizontalPosition xy = feature.getHorizontalPosition();
 		DateTime time = feature.getTime();
 		TimeAxis t = time != null ? new TimeAxisImpl("t", Arrays.asList(time)) : null;
 		
-		MapEncoder<?> axes = encoder.startMap("axes");
+		MapEncoder<?> axes = map.startMap("axes");
 		writeTimeAxis(axes, t);
 		writeHorizontalAxes(axes, xy);
 		writeVerticalAxis(axes, z);
@@ -145,7 +145,7 @@ public class DomainWriter <T> {
 	}
 	
 	private void doWrite(PointFeature feature) throws IOException {
-		encoder.put("profile", "Point");
+		map.put("profile", "Point");
 		
 		GeoPosition domain = feature.getGeoPosition();
 		VerticalPosition zpos = domain.getVerticalPosition();
@@ -155,7 +155,7 @@ public class DomainWriter <T> {
 		DateTime time = domain.getTime();
 		TimeAxis t = time != null ? new TimeAxisImpl("time", Arrays.asList(domain.getTime())) : null;
 		
-		MapEncoder<?> axes = encoder.startMap("axes");
+		MapEncoder<?> axes = map.startMap("axes");
 		writeTimeAxis(axes, t);
 		writeHorizontalAxes(axes, xy);
 		writeVerticalAxis(axes, z);
@@ -167,13 +167,13 @@ public class DomainWriter <T> {
 	}
 	
 	private void doWrite(TrajectoryFeature feature) throws IOException {
-		encoder.put("profile", "Trajectory");
+		map.put("profile", "Trajectory");
 		
 		TrajectoryDomain domain = feature.getDomain();
 		Array1D<GeoPosition> points = domain.getDomainObjects();
 		
 		MapEncoder<MapEncoder<MapEncoder<T>>> axis = 
-		  encoder.startMap("axes")
+		  map.startMap("axes")
 		    .startMap("composite")
 		      .put("compositeType", "Simple");
 		
@@ -206,7 +206,7 @@ public class DomainWriter <T> {
 	}
 	
 	private void writeReferencing(Chronology t, CoordinateReferenceSystem xy, VerticalCrs z) throws IOException {
-		ArrayEncoder<?> ref = encoder.startArray("referencing");
+		ArrayEncoder<?> ref = map.startArray("referencing");
 		writeTimeReferencing(ref, t);
 		writeHorizontalReferencing(ref, xy);
 		writeVerticalReferencing(ref, z);

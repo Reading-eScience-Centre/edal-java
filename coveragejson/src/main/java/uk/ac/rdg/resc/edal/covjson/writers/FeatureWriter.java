@@ -55,6 +55,10 @@ public class FeatureWriter <T> {
 	}
 
 	public void write(Feature<?> feature) throws IOException {
+		write(feature, false);
+	}
+	
+	public void write(Feature<?> feature, boolean skipParameters) throws IOException {
 		if (root) {
 			Util.addJsonLdContext(map);
 		}
@@ -66,9 +70,11 @@ public class FeatureWriter <T> {
 		new DomainWriter<>(domain).write(feature);
 		domain.end();
 		
-		MapEncoder<MapEncoder<T>> parameters = map.startMap("parameters");
-		new ParametersWriter<>(parameters).write(feature.getParameterMap().values());
-		parameters.end();
+		if (!skipParameters) {
+			MapEncoder<MapEncoder<T>> parameters = map.startMap("parameters");
+			new ParametersWriter<>(parameters).write(feature.getParameterMap().values());
+			parameters.end();
+		}
 		
 		MapEncoder<MapEncoder<T>> ranges = map.startMap("ranges");
 		new RangesWriter<>(ranges).write(feature);
