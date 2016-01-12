@@ -28,12 +28,29 @@
 
 package uk.ac.rdg.resc.edal.covjson;
 
+import java.io.OutputStream;
 import java.util.Collection;
 
 import uk.ac.rdg.resc.edal.feature.Feature;
 
 public interface CoverageJsonConverter {
-    public String convertFeatureToJson(Feature<?> feature);
+	/**
+	 * Writes a Feature as a CoverageJSON document to the given OutputStream.
+	 * 
+	 * Note that the OutputStream is *not* closed at the end.
+	 * 
+	 * @param out The stream to write to.
+	 * @param feature The feature to serialize.
+	 */
+    public void convertFeatureToJson(OutputStream out, Feature<?> feature);
 
-    public String convertFeaturesToJson(Collection<Feature<?>> features);
+	/**
+	 * Writes a collection of Features as a CoverageJSON document to the given OutputStream.
+	 * 
+	 * Note that the OutputStream is *not* closed at the end.
+	 * 
+	 * @param out The stream to write to.
+	 * @param feature The features to serialize.
+	 */
+    public void convertFeaturesToJson(OutputStream out, Collection<Feature<?>> features);
 }

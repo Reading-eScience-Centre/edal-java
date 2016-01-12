@@ -41,11 +41,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
  */
 public class JsonStreamingEncoder implements StreamingEncoder {
 
-	private final OutputStream stream;
 	private final JsonGenerator generator;
 	
 	public JsonStreamingEncoder(OutputStream os) throws IOException {
-		stream = os;
 		JsonFactory jsonFactory = new JsonFactory();
 		generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8);
 		generator.useDefaultPrettyPrinter();
@@ -60,8 +58,6 @@ public class JsonStreamingEncoder implements StreamingEncoder {
 	@Override
 	public void end() throws IOException {
 		generator.flush();
-		// TODO are we supposed to close the stream or not? maybe this should be optional
-		stream.close();
 	}
 
 	class JsonMapEncoder <T> implements MapEncoder<T> {

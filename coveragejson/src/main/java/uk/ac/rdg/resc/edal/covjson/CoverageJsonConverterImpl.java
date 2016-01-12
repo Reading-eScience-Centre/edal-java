@@ -28,8 +28,8 @@
 
 package uk.ac.rdg.resc.edal.covjson;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
@@ -40,12 +40,10 @@ import uk.ac.rdg.resc.edal.feature.Feature;
  * @author Maik Riechert
  *
  */
-public class SimpleCoverageJsonConverter implements CoverageJsonConverter {
+public class CoverageJsonConverterImpl implements CoverageJsonConverter {
 
 	@Override
-	public String convertFeatureToJson(Feature<?> feature) {
-		// TODO this is too much overhead, just output to stream and not string
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
+	public void convertFeatureToJson(OutputStream os, Feature<?> feature) {
 		StreamingEncoder encoder;
 		try {
 			encoder = new JsonStreamingEncoder(os);
@@ -54,13 +52,10 @@ public class SimpleCoverageJsonConverter implements CoverageJsonConverter {
 		} catch (IOException e) {
 			throw new EdalException("Error writing CoverageJSON", e);
 		}
-		String covjson = os.toString();
-		return covjson;
 	}
 
 	@Override
-	public String convertFeaturesToJson(Collection<Feature<?>> features) {
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
+	public void convertFeaturesToJson(OutputStream os, Collection<Feature<?>> features) {
 		StreamingEncoder encoder;
 		try {
 			encoder = new JsonStreamingEncoder(os);
@@ -69,8 +64,6 @@ public class SimpleCoverageJsonConverter implements CoverageJsonConverter {
 		} catch (IOException e) {
 			throw new EdalException("Error writing CoverageJSON", e);
 		}
-		String covjson = os.toString();
-		return covjson;
 	}
 
 }

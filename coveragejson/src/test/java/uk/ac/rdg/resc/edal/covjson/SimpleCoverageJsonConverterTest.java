@@ -1,10 +1,13 @@
 package uk.ac.rdg.resc.edal.covjson;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +47,8 @@ public class SimpleCoverageJsonConverterTest {
     
     @Test
     public void testConversion() {
-    	String covjson = new SimpleCoverageJsonConverter().convertFeatureToJson(feature);
-    	assertNotNull(covjson);
+    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+    	new CoverageJsonConverterImpl().convertFeatureToJson(out, feature);
+    	assertTrue(out.size() > 0);
     }
 }
