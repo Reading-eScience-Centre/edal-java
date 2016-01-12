@@ -34,7 +34,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
+import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array;
@@ -46,12 +47,12 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * @author Guy
  */
 public class MapDomainImpl implements MapDomain {
-    private HorizontalGrid hGrid;
+    private RectilinearGrid hGrid;
     private Double z;
     private VerticalCrs vCrs;
     private DateTime time;
 
-    public MapDomainImpl(HorizontalGrid hGrid, Double z, VerticalCrs vCrs, DateTime time) {
+    public MapDomainImpl(RectilinearGrid hGrid, Double z, VerticalCrs vCrs, DateTime time) {
         this.hGrid = hGrid;
         this.z = z;
         this.vCrs = vCrs;
@@ -86,6 +87,16 @@ public class MapDomainImpl implements MapDomain {
     @Override
     public int getYSize() {
         return hGrid.getYSize();
+    }
+    
+    @Override
+    public ReferenceableAxis<Double> getXAxis() {
+        return hGrid.getXAxis();
+    }
+    
+    @Override
+    public ReferenceableAxis<Double> getYAxis() {
+        return hGrid.getYAxis();
     }
 
     @Override

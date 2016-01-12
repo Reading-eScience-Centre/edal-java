@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
@@ -65,6 +66,7 @@ public class GetMapParameters {
     private String imageFormatString;
     private boolean animation;
     private List<DateTime> animationTimesteps = new ArrayList<>();
+    private int frameRate;
 
     protected PlottingDomainParams plottingDomainParams;
     private GetMapStyleParams styleParameters;
@@ -90,6 +92,7 @@ public class GetMapParameters {
         }
         imageFormatString = params.getString("format");
         animation = params.getBoolean("animation", false);
+        frameRate = params.getPositiveInt("frameRate", 24);
         styleParameters = new GetMapStyleParams(params);
 
         /*
@@ -105,9 +108,9 @@ public class GetMapParameters {
                 .getFieldsWithScales();
         for (NameAndRange nameAndRange : fieldsWithScales) {
             String wmsLayerName = nameAndRange.getFieldLabel();
-            TemporalDomain temporalDomain = WmsUtils.getVariableMetadataFromLayerName(wmsLayerName, catalogue)
-                    .getTemporalDomain();
-            if(temporalDomain != null) {
+            TemporalDomain temporalDomain = WmsUtils.getVariableMetadataFromLayerName(wmsLayerName,
+                    catalogue).getTemporalDomain();
+            if (temporalDomain != null) {
                 if (chronology == null) {
                     chronology = temporalDomain.getChronology();
                 } else {
@@ -146,7 +149,11 @@ public class GetMapParameters {
     public List<DateTime> getAnimationTimesteps() {
         return animationTimesteps;
     }
-
+    
+    public int getFrameRate() {
+        return frameRate;
+    }
+    
     public ImageFormat getImageFormat() throws EdalException {
         if (imageFormatString == null) {
             throw new EdalException("Parameter FORMAT was not supplied");
@@ -280,8 +287,8 @@ public class GetMapParameters {
                  */
                 return ret;
             }
-            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(styleParameters
-                    .getLayerNames()[0], catalogue);
+            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(
+                    styleParameters.getLayerNames()[0], catalogue);
             TemporalDomain temporalDomain = metadata.getTemporalDomain();
             if (!(temporalDomain instanceof TimeAxis)) {
                 /*
@@ -322,10 +329,23 @@ public class GetMapParameters {
                     }
                 } else if (timestepStrings.length == 3) {
                     /*
-                     * Start, end, period. Not yet supported
+                     * Start, end, period.
                      */
-                    throw new EdalUnsupportedOperationException(
-                            "Currently only lists of time(range)s are supported for animations");
+                    DateTime startTime = TimeUtils
+                            .iso8601ToDateTime(timestepStrings[0], chronology);
+                    DateTime endTime = TimeUtils.iso8601ToDateTime(timestepStrings[1], chronology);
+
+                    int startIndex = tAxis.findIndexOf(startTime);
+                    int endIndex = tAxis.findIndexOf(endTime);
+                    ret.add(tAxis.getCoordinateValue(startIndex));
+                    Period resolution = Period.parse(timestepStrings[2]);
+                    for (int i = startIndex + 1; i <= endIndex; i++) {
+                        DateTime lastdt = ret.get(ret.size() - 1);
+                        DateTime thisdt = tAxis.getCoordinateValue(i);
+                        if (!thisdt.isBefore(lastdt.plus(resolution))) {
+                            ret.add(thisdt);
+                        }
+                    }
                 } else {
                     throw new BadTimeFormatException(
                             "Time can either be a single value or a range (with an optional period)");

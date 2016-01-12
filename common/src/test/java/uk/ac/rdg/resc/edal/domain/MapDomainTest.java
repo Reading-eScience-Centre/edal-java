@@ -28,7 +28,9 @@
 
 package uk.ac.rdg.resc.edal.domain;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.Chronology;
@@ -41,7 +43,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGridImpl;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
@@ -71,7 +73,7 @@ public class MapDomainTest {
     double lowX = -10.0;
     // latitude position of lower left point of the HorizontalGrid
     double lowY = 51.0;
-    private HorizontalGrid hGrid;
+    private RectilinearGrid hGrid;
 
     /**
      * Initialize a map domain.

@@ -29,7 +29,7 @@ package uk.ac.rdg.resc.edal.domain;
 
 import org.joda.time.DateTime;
 
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
@@ -38,7 +38,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
  * 
  * @author Guy
  */
-public interface MapDomain extends HorizontalGrid {
+public interface MapDomain extends RectilinearGrid {
     /**
      * Returns the vertical position of the domain, or <code>null</code> if
      * there is not one associated

@@ -50,8 +50,8 @@ import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
+import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
@@ -173,7 +173,7 @@ public class LegendDataGenerator {
         xAxis = new RegularAxisImpl("", 0, 0.001, width, false);
         yAxis = new RegularAxisImpl("", 0, 0.001, height, false);
 
-        HorizontalGrid hGrid = new RegularGridImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84);
+        RegularGrid hGrid = new RegularGridImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84);
         domain = new MapDomainImpl(hGrid, null, null, null);
 
         this.fractionExtraXLow = fractionExtraXLow;

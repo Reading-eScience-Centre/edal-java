@@ -162,6 +162,12 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     /** Map of unit conversions to be applied to each layer */
     protected java.util.Map<String, UnitConverter> converters;
 
+    /**
+     * We keep track of this because animations can be turned off before they've
+     * finished loading. This means the loading bar stays present.
+     */
+    protected boolean animLayerLoading = false;
+
     public MapArea(int width, int height, final GodivaActionsHandler godivaListener, String proxyUrl) {
         super(width + "px", height + "px", getDefaultMapOptions());
 
@@ -273,15 +279,26 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         animLayer = new Image("Animation Layer", wmsUrl + "?"
                 + GodivaUtils.encodeQueryString(url.toString()), map.getExtent(), map.getSize(),
                 opts);
-        animLayer.addLayerLoadStartListener(loadStartListener);
-        animLayer.addLayerLoadCancelListener(new LayerLoadCancelListener() {
+        animLayer.addLayerLoadStartListener(new LayerLoadStartListener() {
             @Override
-            public void onLoadCancel(LoadCancelEvent eventObject) {
-                stopAnimation();
-                loadCancelListener.onLoadCancel(eventObject);
+            public void onLoadStart(LoadStartEvent eventObject) {
+                animLayerLoading = true;
+                loadStartListener.onLoadStart(eventObject);
             }
         });
-        animLayer.addLayerLoadEndListener(loadEndListener);
+        animLayer.addLayerLoadEndListener(new LayerLoadEndListener() {
+            @Override
+            public void onLoadEnd(LoadEndEvent eventObject) {
+                /*
+                 * Only fire the load end event if we are still WAITING for the
+                 * animation layer (i.e. it hasn't been cancelled)
+                 */
+                if (animLayerLoading) {
+                    animLayerLoading = false;
+                    loadEndListener.onLoadEnd(eventObject);
+                }
+            }
+        });
         animLayer.setIsBaseLayer(false);
         animLayer.setDisplayInLayerSwitcher(false);
         animLayer.setOpacity(opacity);
@@ -311,6 +328,17 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
          */
         widgetDisabler.enableWidgets();
         if (animLayer != null) {
+            /*
+             * Because the animation is just an animated GIF, we use Image for
+             * our OpenLayers layer
+             */
+            if (animLayerLoading) {
+                /*
+                 * The layer is still loading, but is no longer required.  Cancel it.
+                 */
+                animLayerLoading = false;
+                loadEndListener.onLoadEnd(null);
+            }
             map.removeLayer(animLayer);
             animLayer = null;
         }
@@ -436,7 +464,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, queryable,
                 downloadable, multipleElevations, multipleTimes);
         wmsLayers.put(internalLayerId, newWmsAndParams);
-        
+
         /*
          * This is a little weird and should be unnecessary. However, it's not
          * unnecessary.
@@ -970,7 +998,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         WMS blueMarbleNP;
         WMS blueMarbleSP;
 
-        String dexterUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?";
+//        String mapServerUrl = "http://godiva.reading.ac.uk/geoserver/ReSC/wms?";
+        String mapServerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?";
 
         WMSParams wmsParams;
         WMSOptions wmsOptions;
@@ -982,7 +1011,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setLayers("naturalearth");
         wmsParams.setFormat("image/png");
 
-        naturalEarth = new WMS("NaturalEarth WMS", dexterUrl, wmsParams, wmsOptions);
+        naturalEarth = new WMS("NaturalEarth WMS", mapServerUrl, wmsParams, wmsOptions);
         naturalEarth.addLayerLoadStartListener(loadStartListener);
         naturalEarth.addLayerLoadEndListener(loadEndListener);
         naturalEarth.setIsBaseLayer(true);
@@ -991,7 +1020,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setLayers("bluemarble");
         wmsParams.setFormat("image/png");
 
-        blueMarble = new WMS("BlueMarble WMS", dexterUrl, wmsParams, wmsOptions);
+        blueMarble = new WMS("BlueMarble WMS", mapServerUrl, wmsParams, wmsOptions);
         blueMarble.addLayerLoadStartListener(loadStartListener);
         blueMarble.addLayerLoadEndListener(loadEndListener);
         blueMarble.setIsBaseLayer(true);
@@ -1026,15 +1055,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setLayers("naturalearth-np");
         wmsParams.setFormat("image/png");
 
-        naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", dexterUrl, wmsParams,
-                wmsNorthPolarOptions);
+        naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", mapServerUrl,
+                wmsParams, wmsNorthPolarOptions);
         naturalEarthNP.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("bluemarble-np");
         wmsParams.setFormat("image/png");
 
-        blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", dexterUrl, wmsParams,
+        blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", mapServerUrl, wmsParams,
                 wmsNorthPolarOptions);
         blueMarbleNP.setIsBaseLayer(true);
         blueMarbleNP.setSingleTile(true);
@@ -1050,15 +1079,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setLayers("naturalearth-sp");
         wmsParams.setFormat("image/png");
 
-        naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", dexterUrl, wmsParams,
-                wmsSouthPolarOptions);
+        naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", mapServerUrl,
+                wmsParams, wmsSouthPolarOptions);
         naturalEarthSP.setIsBaseLayer(true);
 
         wmsParams = new WMSParams();
         wmsParams.setLayers("bluemarble-sp");
         wmsParams.setFormat("image/png");
 
-        blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", dexterUrl, wmsParams,
+        blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", mapServerUrl, wmsParams,
                 wmsSouthPolarOptions);
         blueMarbleSP.setIsBaseLayer(true);
 
@@ -1080,7 +1109,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         });
 
         map.setBaseLayer(naturalEarth);
-        baseUrlForExport = dexterUrl;
+        baseUrlForExport = mapServerUrl;
         layersForExport = "naturalEarth";
     }
 

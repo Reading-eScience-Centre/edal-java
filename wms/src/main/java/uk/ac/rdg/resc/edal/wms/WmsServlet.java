@@ -29,6 +29,8 @@
 package uk.ac.rdg.resc.edal.wms;
 
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -414,7 +416,22 @@ public class WmsServlet extends HttpServlet {
                         plottingParameters.getBbox(), plottingParameters.getZExtent(), null,
                         plottingParameters.getTargetHorizontalPosition(),
                         plottingParameters.getTargetZ(), timeStep);
-                frames.add(imageGenerator.drawImage(timestepParameters, catalogue));
+                BufferedImage frame = imageGenerator.drawImage(timestepParameters, catalogue);
+                Graphics2D g = frame.createGraphics();
+                g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+                g.setColor(Color.white);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 9,
+                        frame.getHeight() - 9);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 9,
+                        frame.getHeight() - 11);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 11,
+                        frame.getHeight() - 11);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 11,
+                        frame.getHeight() - 9);
+                g.setColor(Color.black);
+                g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 10,
+                        frame.getHeight() - 10);
+                frames.add(frame);
             }
         }
 
@@ -426,7 +443,7 @@ public class WmsServlet extends HttpServlet {
                  * We have a normal image format
                  */
                 SimpleFormat simpleFormat = (SimpleFormat) getMapParams.getImageFormat();
-                simpleFormat.writeImage(frames, outputStream, null);
+                simpleFormat.writeImage(frames, outputStream, getMapParams.getFrameRate());
             } else {
                 /*
                  * We have KML (or another image format which needs additional
@@ -456,16 +473,17 @@ public class WmsServlet extends HttpServlet {
                 GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters
                         .getBbox());
                 imageFormat.writeImage(frames, outputStream, name, description, gbbox, tValues,
-                        zValue, legend, 24);
+                        zValue, legend, getMapParams.getFrameRate());
             }
             outputStream.close();
-        } catch (IOException e) {
+        } catch (SocketException e) {
             /*
              * The client can quite often cancel requests when loading tiled
              * maps.
              * 
              * This gives Broken pipe errors which can be ignored.
              */
+        } catch (IOException e) {
             log.error("Problem writing output to stream", e);
         }
     }
@@ -1695,18 +1713,13 @@ public class WmsServlet extends HttpServlet {
             timestep.put("title", "Full (" + (endIndex - startIndex + 1) + " frames)");
             timestep.put("timeString", startStr + "/" + endStr);
             timeStrings.add(timestep);
-            addTimeStringToJson("Daily", timeStrings, tValues, startIndex, endIndex,
-                    new Period().withDays(1));
-            addTimeStringToJson("Weekly", timeStrings, tValues, startIndex, endIndex,
-                    new Period().withWeeks(1));
-            addTimeStringToJson("Monthly", timeStrings, tValues, startIndex, endIndex,
-                    new Period().withMonths(1));
-            addTimeStringToJson("Bi-monthly", timeStrings, tValues, startIndex, endIndex,
-                    new Period().withMonths(2));
-            addTimeStringToJson("Twice-yearly", timeStrings, tValues, startIndex, endIndex,
-                    new Period().withMonths(6));
-            addTimeStringToJson("Yearly", timeStrings, tValues, startIndex, endIndex,
-                    new Period().withYears(1));
+            addTimeStringToJson(AnimationStep.DAILY, timeStrings, tValues, startIndex, endIndex);
+            addTimeStringToJson(AnimationStep.WEEKLY, timeStrings, tValues, startIndex, endIndex);
+            addTimeStringToJson(AnimationStep.MONTHLY, timeStrings, tValues, startIndex, endIndex);
+            addTimeStringToJson(AnimationStep.BIMONTHLY, timeStrings, tValues, startIndex, endIndex);
+            addTimeStringToJson(AnimationStep.BIANNUALLY, timeStrings, tValues, startIndex,
+                    endIndex);
+            addTimeStringToJson(AnimationStep.YEARLY, timeStrings, tValues, startIndex, endIndex);
 
             response.put("timeStrings", timeStrings);
             return response.toString();
@@ -1720,36 +1733,61 @@ public class WmsServlet extends HttpServlet {
         }
     }
 
-    private static void addTimeStringToJson(String label, JSONArray jsonArray,
-            List<DateTime> tValues, int startIndex, int endIndex, Period resolution) {
-        List<DateTime> timesteps = new ArrayList<DateTime>();
-        timesteps.add(tValues.get(startIndex));
+    /**
+     * Enum defining the possibilities for animation timesteps, including the
+     * label, the period string for ISO8601, and the joda time period which
+     * corresponds to it.
+     *
+     * @author Guy Griffiths
+     */
+    private enum AnimationStep {
+        DAILY("Daily", "P1D", new Period().withDays(1)),
+
+        WEEKLY("Weekly", "P7D", new Period().withDays(7)),
+
+        MONTHLY("Monthly", "P1M", new Period().withMonths(1)),
+
+        BIMONTHLY("Bi-monthly", "P2M", new Period().withMonths(2)),
+
+        BIANNUALLY("Six-monthly", "P6M", new Period().withMonths(6)),
+
+        YEARLY("Yearly", "P1Y", new Period().withYears(1));
+
+        final String label;
+        final String periodString;
+        final Period period;
+
+        private AnimationStep(String label, String periodString, Period period) {
+            this.label = label;
+            this.periodString = periodString;
+            this.period = period;
+        }
+    };
+
+    private static void addTimeStringToJson(AnimationStep step, JSONArray jsonArray,
+            List<DateTime> tValues, int startIndex, int endIndex) {
+        /*
+         * First we calculate how many timesteps would be displayed, so that we
+         * can only include ones which would be animated
+         */
+        int nSteps = 1;
+        DateTime thisdt = tValues.get(startIndex);
+        DateTime lastdt = tValues.get(startIndex);
         for (int i = startIndex + 1; i <= endIndex; i++) {
-            DateTime lastdt = timesteps.get(timesteps.size() - 1);
-            DateTime thisdt = tValues.get(i);
-            if (!thisdt.isBefore(lastdt.plus(resolution))) {
-                timesteps.add(thisdt);
+            thisdt = tValues.get(i);
+            if (!thisdt.isBefore(lastdt.plus(step.period))) {
+                nSteps++;
+                lastdt = thisdt;
             }
         }
-        /* We filter out all the animations with less than 2 timesteps */
-        if (timesteps.size() > 1) {
-            String timeString = getTimeString(timesteps);
+        if (nSteps > 1) {
+            String timeString = TimeUtils.dateTimeToISO8601(tValues.get(startIndex)) + "/"
+                    + TimeUtils.dateTimeToISO8601(tValues.get(endIndex)) + "/" + step.periodString;
             JSONObject timestep = new JSONObject();
-            timestep.put("title", label + " (" + timesteps.size() + " frames)");
+            timestep.put("title", step.label + " (" + nSteps + " frames)");
             timestep.put("timeString", timeString);
             jsonArray.add(timestep);
         }
-    }
-
-    private static String getTimeString(List<DateTime> timesteps) {
-        if (timesteps.size() == 0)
-            return "";
-        StringBuilder builder = new StringBuilder();
-        for (DateTime timestep : timesteps) {
-            builder.append(TimeUtils.dateTimeToISO8601(timestep) + ",");
-        }
-        builder.deleteCharAt(builder.length() - 1);
-        return builder.toString();
     }
 
     protected void getLegendGraphic(RequestParams params, HttpServletResponse httpServletResponse,

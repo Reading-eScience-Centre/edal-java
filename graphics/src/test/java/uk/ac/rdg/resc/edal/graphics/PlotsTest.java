@@ -54,7 +54,6 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
-import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
@@ -63,6 +62,7 @@ import uk.ac.rdg.resc.edal.graphics.style.DensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.Raster2DLayer;
 import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentDensityMap;
 import uk.ac.rdg.resc.edal.graphics.style.StippleLayer;
@@ -71,7 +71,7 @@ import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
@@ -108,7 +108,7 @@ public class PlotsTest {
     public void setup() {
         BoundingBox bbox = new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84);
 
-        HorizontalGrid hGrid = new RegularGridImpl(bbox, WIDTH, HEIGHT);
+        RegularGrid hGrid = new RegularGridImpl(bbox, WIDTH, HEIGHT);
         MapDomain domain = new MapDomainImpl(hGrid, null, null, null);
         Map<String, Array2D<Number>> valuesMap = new HashMap<String, Array2D<Number>>();
 

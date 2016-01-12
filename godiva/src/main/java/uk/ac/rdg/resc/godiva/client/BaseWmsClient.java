@@ -222,8 +222,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      * Subclasses can override this to define new defaults
      */
     protected void initWithDefaults() {
-        mapHeight = 400;
-        mapWidth = 512;
+        mapHeight = 600;
+        mapWidth = 750;
         /*
          * No proxy by default, because by default we run on the same server as
          * ncWMS
