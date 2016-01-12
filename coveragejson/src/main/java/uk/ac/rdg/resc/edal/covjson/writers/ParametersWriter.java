@@ -30,11 +30,13 @@ package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map.Entry;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayEncoder;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
+import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 /**
  * 
@@ -76,16 +78,24 @@ public class ParametersWriter <T> {
 		if (parameter.getCategories() != null) {
 			ArrayEncoder<?> cats = obsProp.startArray("categories");
 			for (Category category : parameter.getCategories().values()) {
-				cats.startMap()
+				MapEncoder<?> catMap = cats.startMap()
 				  .put("id", category.getId())
-				  
+				  .startMap("label").put("en", category.getLabel());
+				if (category.getColour() != null) {
+					catMap.put("preferredColor", GraphicsUtils.colourToHtmlString(category.getColour()));
+				}
+				catMap.end();
 			}
 			cats.end();
 		}
 		obsProp.end();
 		
 		if (parameter.getCategories() != null) {
-			
+			MapEncoder<?> catEnc = map.startMap("categoryEncoding");
+			for (Entry<Integer,Category> entry : parameter.getCategories().entrySet()) {
+				catEnc.put(entry.getValue().getId(), entry.getKey());
+			}
+			catEnc.end();
 		}
 	}
 
