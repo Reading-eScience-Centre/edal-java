@@ -7,6 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,10 +17,15 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
+import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 public class SimpleCoverageJsonConverterTest {
 	
 	private Feature<?> feature;
+	private MapFeature mapFeature;
 	
     @Before
     public void setup() throws IOException, EdalException {
@@ -43,12 +50,29 @@ public class SimpleCoverageJsonConverterTest {
         CdmGridDatasetFactory datasetFactory = new CdmGridDatasetFactory();
         Dataset dataset = datasetFactory.createDataset("testdataset", location);
         feature = dataset.readFeature(dataset.getFeatureIds().iterator().next());
+        
+        // from CdmGridDatasetFactoryTest
+        int xSize = 36;
+        int ySize = 19;
+        HorizontalGrid hGrid = new RegularGridImpl(-180.5, -90.5, 179.5, 90.5, DefaultGeographicCRS.WGS84, xSize,
+                ySize);
+        DateTime time = new DateTime(2000, 01, 01, 00, 00);
+        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
+                hGrid.getBoundingBox(), null, null, null, 0.0, time);
+        mapFeature = (MapFeature) dataset.extractMapFeatures(dataset.getVariableIds(), params).get(0);
     }
     
     @Test
     public void testConversion() {
     	ByteArrayOutputStream out = new ByteArrayOutputStream();
     	new CoverageJsonConverterImpl().convertFeatureToJson(out, feature);
+    	assertTrue(out.size() > 0);
+    }
+    
+    @Test
+    public void testMapFeatureConversion() {
+    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+    	new CoverageJsonConverterImpl().convertFeatureToJson(out, mapFeature);
     	assertTrue(out.size() > 0);
     }
 }
