@@ -89,7 +89,6 @@ public class Util {
 		MapDomain domain = feature.getDomain();
 		VerticalAxis z = new VerticalAxisImpl("z", 
 				Arrays.asList(domain.getZ()), domain.getVerticalCrs());
-		// FIXME convert to RegularGrid; need access to underlying HorizontalGrid of MapDomain(Impl)
 		HorizontalGrid xy = domain;
 		DateTime time = domain.getTime();
 		TimeAxis t = time != null ? new TimeAxisImpl("t", Arrays.asList(time)) : null;
