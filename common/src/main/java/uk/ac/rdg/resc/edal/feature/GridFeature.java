@@ -44,6 +44,7 @@ import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.grid.GridCell4D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
@@ -93,7 +94,7 @@ public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D
      * @throws DataReadingException
      *             If there is a problem reading the required data
      */
-    public MapFeature extractMapFeature(Set<String> varIds, HorizontalGrid targetGrid,
+    public MapFeature extractMapFeature(Set<String> varIds, RectilinearGrid targetGrid,
             Double elevation, DateTime time) throws DataReadingException {
         GridDomain domain = getDomain();
 

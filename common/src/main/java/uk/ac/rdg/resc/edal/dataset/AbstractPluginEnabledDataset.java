@@ -68,6 +68,7 @@ import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -132,7 +133,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
          */
         List<String> variableIds = new ArrayList<String>(varIds);
 
-        final HorizontalGrid targetGrid = params.getImageGrid();
+        final RectilinearGrid targetGrid = params.getImageGrid();
         Double zPos = params.getTargetZ();
 
         DateTime time = params.getTargetT();
