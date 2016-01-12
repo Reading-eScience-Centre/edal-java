@@ -67,12 +67,11 @@ public class FeatureCollectionWriter <T> {
 			//   -> with Collection<Feature<?>> there is no easy way to avoid it
 			parameters.putAll(feature.getParameterMap());
 		}
+		covs.end();
 		
 		MapEncoder<?> params = map.startMap("parameters");
 		new ParametersWriter<>(params).write(parameters.values());
 		params.end();
-		
-		covs.end();
 	}
 
 }
