@@ -155,14 +155,7 @@ final class CdmMeshDataSource implements HZTDataSource {
 
     @Override
     public void close() throws DataReadingException {
-        /*
-         * We do not close this DataSource. The NetCDFDatasetAggregator keeps a
-         * cache of NetcdfDataset objects and will close them when the cache
-         * becomes full.
-         * 
-         * This is a big speed improvement when the same dataset is accessed
-         * multiple times in quick succession
-         */
+        NetcdfDatasetAggregator.releaseDataset(nc);
     }
 
 }

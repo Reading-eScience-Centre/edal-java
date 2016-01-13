@@ -37,6 +37,7 @@ import ucar.ma2.Array;
 import ucar.ma2.Index;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Variable;
+import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.NetcdfDataset.Enhance;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridDataset;
@@ -44,6 +45,7 @@ import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.util.Array4D;
+import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
  * Implementation of {@link GridDataSource} using the Unidata Common Data Model
@@ -57,6 +59,7 @@ final class CdmGridDataSource implements GridDataSource {
      * Note that this is the CDM GridDataset, not the EDAL one
      */
     private final GridDataset gridDataset;
+    private NetcdfDataset nc;
     private Map<String, RangesList> rangeListCache = new HashMap<>();
 
     /*
@@ -86,8 +89,9 @@ final class CdmGridDataSource implements GridDataSource {
      */
     private static Object syncObj = new Object();
 
-    public CdmGridDataSource(GridDataset gridDataset) {
-        this.gridDataset = gridDataset;
+    public CdmGridDataSource(NetcdfDataset nc) throws DataReadingException, IOException {
+        this.gridDataset = CdmUtils.getGridDataset(nc);
+        this.nc = nc;
     }
 
     @Override
@@ -184,14 +188,7 @@ final class CdmGridDataSource implements GridDataSource {
 
     @Override
     public void close() throws DataReadingException {
-        /*
-         * We do not close this DataSource. The NetCDFDatasetAggregator keeps a
-         * cache of NetcdfDataset objects and will close them when the cache
-         * becomes full.
-         * 
-         * This is a big speed improvement when the same dataset is accessed
-         * multiple times in quick succession
-         */
+        NetcdfDatasetAggregator.releaseDataset(nc);
     }
 
     private static final class WrappedArray extends Array4D<Number> {

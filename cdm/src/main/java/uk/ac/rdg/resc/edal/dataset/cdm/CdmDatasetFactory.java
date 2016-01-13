@@ -65,38 +65,44 @@ import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 public abstract class CdmDatasetFactory extends DatasetFactory {
     @Override
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
-        /*
-         * Open the NetcdfDataset, using the cache.
-         * 
-         * We don't close this - it will get closed once the cache determines it
-         * needs to be.
-         */
-        NetcdfDataset nc = NetcdfDatasetAggregator.openAndAggregateDataset(location);
+        NetcdfDataset nc = null;
+        try {
+            /*
+             * Open the NetcdfDataset, using the cache.
+             */
+            nc = NetcdfDatasetAggregator.getDataset(location);
 
-        /*
-         * Generate a simple dataset - delegated to subclasses
-         */
-        Dataset dataset = generateDataset(id, location, nc);
+            /*
+             * Generate a simple dataset - delegated to subclasses
+             */
+            Dataset dataset = generateDataset(id, location, nc);
 
-        /*
-         * Scans the NetcdfDataset for variables which pair up to make vectors,
-         * and adds the appropriate VectorPlugins
-         */
-        List<VectorPlugin> vectors = processVectors(nc);
-        for (VectorPlugin plugin : vectors) {
-            dataset.addVariablePlugin(plugin);
+            /*
+             * Scans the NetcdfDataset for variables which pair up to make
+             * vectors, and adds the appropriate VectorPlugins
+             */
+            List<VectorPlugin> vectors = processVectors(nc);
+            for (VectorPlugin plugin : vectors) {
+                dataset.addVariablePlugin(plugin);
+            }
+
+            /*
+             * Scans the NetcdfDataset for variables which pair up as
+             * mean/stddev, and adds the appropriate MeanSDPlugins
+             */
+            List<MeanSDPlugin> uncerts = processUncertainty(nc);
+            for (MeanSDPlugin plugin : uncerts) {
+                dataset.addVariablePlugin(plugin);
+            }
+
+            /*
+             * Release the dataset so that it can be removed from the cache if
+             * necessary.
+             */
+            return dataset;
+        } finally {
+            NetcdfDatasetAggregator.releaseDataset(nc);
         }
-
-        /*
-         * Scans the NetcdfDataset for variables which pair up as mean/stddev,
-         * and adds the appropriate MeanSDPlugins
-         */
-        List<MeanSDPlugin> uncerts = processUncertainty(nc);
-        for (MeanSDPlugin plugin : uncerts) {
-            dataset.addVariablePlugin(plugin);
-        }
-
-        return dataset;
     }
 
     /**
@@ -160,8 +166,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              * Now map the values to the corresponding labels / colours.
              */
             String flagNamespace = null;
-            if(flagNamespaceAttr!= null){
-                if(flagNamespaceAttr.isString()) {
+            if (flagNamespaceAttr != null) {
+                if (flagNamespaceAttr.isString()) {
                     flagNamespace = flagNamespaceAttr.getStringValue();
                 }
             }
@@ -174,7 +180,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                     id = "category_" + flagValues.getNumericValue(i).intValue();
                     label = "Category value: " + flagValues.getNumericValue(i).intValue();
                 }
-                if(flagNamespace != null) {
+                if (flagNamespace != null) {
                     id = flagNamespace + id;
                 }
                 Color colour = coloursArray == null ? null : coloursArray[i];

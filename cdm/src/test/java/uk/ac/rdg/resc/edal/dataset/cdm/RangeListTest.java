@@ -75,7 +75,7 @@ public class RangeListTest {
     public void setUp() throws IOException, EdalException {
         URL url = this.getClass().getResource("/rectilinear_test_data.nc");
         String location = url.getPath();
-        NetcdfDataset nc = CdmUtils.openDataset(location);
+        NetcdfDataset nc = NetcdfDatasetAggregator.getDataset(location);
         gridDataset = CdmUtils.getGridDataset(nc);
     }
 

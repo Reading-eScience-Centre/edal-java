@@ -1277,11 +1277,6 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                 parameters.put(derivedVarId, getVariableMetadata(derivedVarId).getParameter());
             }
 
-            /*
-             * Release resources held by the DS
-             */
-            dataSource.close();
-
             return values;
         } catch (DataReadingException e) {
             throw e;

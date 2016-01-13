@@ -1,3 +1,17 @@
+1.1.0
+=====
+Support for unstructured grids which follow the UGRID conventions - includes refactor of dataset hierarchy
+Support for categorical datasets, including plotting, legend, and GetFeatureInfo
+Added more perceptually linear colour palettes
+Optimisation of Polygon.contains()
+Uses new background map server
+Re-added datetime label on animations
+Bugfixes:
+    Animations respect log scale
+    Metadata filters on ImageLayers now only get applied to the relevant layers (not all layers)
+    Border around extraction area now only applies to glyph layers
+    Handles environments where the user's home directory is non-writable
+
 1.0.4
 =====
 Modified AbstractPointDataset to make it simpler to extend
