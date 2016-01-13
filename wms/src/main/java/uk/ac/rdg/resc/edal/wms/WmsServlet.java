@@ -359,6 +359,13 @@ public class WmsServlet extends HttpServlet {
         PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
 
+        /*
+         * Set the content type to be what was requested. If anything goes
+         * wrong, this will be overwritten to "text/xml" in the
+         * handleWmsException method.
+         */
+        httpServletResponse.setContentType(getMapParams.getImageFormat().getMimeType());
+
         if (getMapParams.getImageFormat() instanceof KmzFormat) {
             if (!GISUtils
                     .isWgs84LonLat(plottingParameters.getBbox().getCoordinateReferenceSystem())) {
@@ -579,6 +586,7 @@ public class WmsServlet extends HttpServlet {
         context.put("verbose", params.getBoolean("verbose", false));
         context.put("availablePalettes", ColourPalette.getPredefinedPalettes());
 
+        httpServletResponse.setContentType("text/xml");
         try {
             template.merge(context, httpServletResponse.getWriter());
         } catch (ResourceNotFoundException e) {
@@ -605,6 +613,8 @@ public class WmsServlet extends HttpServlet {
             throw new EdalUnsupportedOperationException(
                     "Currently the supported feature info types are \"text/xml\" and \"text/plain\"");
         }
+        httpServletResponse.setContentType(featureInfoParameters.getInfoFormat());
+
         PlottingDomainParams plottingParameters = featureInfoParameters
                 .getPlottingDomainParameters();
         final HorizontalPosition position = featureInfoParameters.getClickedPosition();
@@ -2336,6 +2346,7 @@ public class WmsServlet extends HttpServlet {
      */
     void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
+        httpServletResponse.setContentType("text/xml");
         StackTraceElement element = exception.getStackTrace()[0];
         log.warn("Wms Exception caught: \"" + exception.getMessage() + "\" from:"
                 + element.getClassName() + ":" + element.getLineNumber());
