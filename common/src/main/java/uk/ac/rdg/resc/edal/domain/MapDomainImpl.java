@@ -34,8 +34,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
-import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
+import uk.ac.rdg.resc.edal.grid.RegularAxis;
+import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array;
@@ -47,12 +47,12 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * @author Guy
  */
 public class MapDomainImpl implements MapDomain {
-    private RectilinearGrid hGrid;
+    private RegularGrid hGrid;
     private Double z;
     private VerticalCrs vCrs;
     private DateTime time;
 
-    public MapDomainImpl(RectilinearGrid hGrid, Double z, VerticalCrs vCrs, DateTime time) {
+    public MapDomainImpl(RegularGrid hGrid, Double z, VerticalCrs vCrs, DateTime time) {
         this.hGrid = hGrid;
         this.z = z;
         this.vCrs = vCrs;
@@ -90,12 +90,12 @@ public class MapDomainImpl implements MapDomain {
     }
     
     @Override
-    public ReferenceableAxis<Double> getXAxis() {
+    public RegularAxis getXAxis() {
         return hGrid.getXAxis();
     }
     
     @Override
-    public ReferenceableAxis<Double> getYAxis() {
+    public RegularAxis getYAxis() {
         return hGrid.getYAxis();
     }
 

@@ -67,7 +67,7 @@ import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
+import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
@@ -107,7 +107,7 @@ public class RectilinearGridDatasetTest {
     private int tSize = 10;
     private int zSize = 11;
 
-    private RectilinearGrid rGrid;
+    private RegularGrid rGrid;
     private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
     private Chronology chronology;
     private VerticalCrs vCrs;
