@@ -87,8 +87,8 @@ public class Util {
 		// TODO MapFeature should inherit from GridFeature
 		
 		MapDomain domain = feature.getDomain();
-		VerticalAxis z = new VerticalAxisImpl("z", 
-				Arrays.asList(domain.getZ()), domain.getVerticalCrs());
+		VerticalAxis z = domain.getZ() != null ? new VerticalAxisImpl("z", 
+				Arrays.asList(domain.getZ()), domain.getVerticalCrs()) : null;
 		HorizontalGrid xy = domain;
 		DateTime time = domain.getTime();
 		TimeAxis t = time != null ? new TimeAxisImpl("t", Arrays.asList(time)) : null;
