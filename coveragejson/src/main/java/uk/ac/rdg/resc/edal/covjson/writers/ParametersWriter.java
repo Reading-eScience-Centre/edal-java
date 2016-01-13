@@ -84,7 +84,7 @@ public class ParametersWriter <T> {
 			for (Category category : parameter.getCategories().values()) {
 				MapEncoder<?> catMap = cats.startMap()
 				  .put("id", category.getId())
-				  .startMap("label").put("en", category.getLabel());
+				  .startMap("label").put("en", category.getLabel()).end();
 				if (category.getColour() != null) {
 					catMap.put("preferredColor", GraphicsUtils.colourToHtmlString(category.getColour()));
 				}
