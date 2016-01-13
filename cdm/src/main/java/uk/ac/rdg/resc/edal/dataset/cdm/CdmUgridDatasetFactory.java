@@ -421,7 +421,7 @@ public final class CdmUgridDatasetFactory extends CdmDatasetFactory {
         protected HZTDataSource openDataSource() throws DataReadingException {
             NetcdfDataset nc;
             try {
-                nc = NetcdfDatasetAggregator.openAndAggregateDataset(location);
+                nc = NetcdfDatasetAggregator.getDataset(location);
                 synchronized (this) {
                     /*
                      * If the getGridDataset method runs concurrently on the

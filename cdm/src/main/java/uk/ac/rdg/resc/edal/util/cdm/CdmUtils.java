@@ -120,18 +120,6 @@ public final class CdmUtils {
     }
 
     /**
-     * @param location
-     *            The location to test
-     * @return true if the given location represents an NcML aggregation.
-     *         dataset. This method simply checks to see if the location string
-     *         ends with ".xml" or ".ncml", following the same procedure as the
-     *         Java NetCDF library.
-     */
-    public static boolean isNcmlAggregation(String location) {
-        return location.endsWith(".xml") || location.endsWith(".ncml");
-    }
-
-    /**
      * Estimates the optimum {@link DataReadingStrategy} from the given
      * NetcdfDataset. Essentially, if the data are remote (e.g. OPeNDAP) or
      * compressed, this will return {@link DataReadingStrategy#BOUNDING_BOX},
@@ -355,71 +343,6 @@ public final class CdmUtils {
             List<Double> valsList = CollectionUtils.listFromDoubleArray(primVals);
             return new ReferenceableAxisImpl(name, valsList, isLongitude);
         }
-    }
-
-    /**
-     * Opens the NetCDF dataset at the given location, using the dataset cache
-     * if {@code location} represents an NcML aggregation. We cannot use the
-     * cache for OPeNDAP or single NetCDF files because the underlying data may
-     * have changed and the NetcdfDataset cache may cache a dataset forever. In
-     * the case of NcML we rely on the fact that server administrators ought to
-     * have set a "recheckEvery" parameter for NcML aggregations that may change
-     * with time. It is desirable to use the dataset cache for NcML aggregations
-     * because they can be time-consuming to assemble and we don't want to do
-     * this every time a map is drawn.
-     * 
-     * @param location
-     *            The location of the data: a local NetCDF file, an NcML
-     *            aggregation file or an OPeNDAP location, {@literal i.e.}
-     *            anything that can be passed to
-     *            NetcdfDataset.openDataset(location).
-     * 
-     * @return a {@link NetcdfDataset} object for accessing the data at the
-     *         given location.
-     * 
-     * @throws IOException
-     *             if there was an error reading from the data source.
-     */
-    public static NetcdfDataset openDataset(String location) throws DataReadingException {
-        NetcdfDataset nc;
-        try {
-            if (isNcmlAggregation(location)) {
-                /*
-                 * We use the cache of NetcdfDatasets to read NcML aggregations
-                 * as they can be time-consuming to put together. If the
-                 * underlying data can change we rely on the server admin
-                 * setting the "recheckEvery" parameter in the aggregation file.
-                 */
-                nc = NetcdfDataset.acquireDataset(location, null);
-            } else {
-                /*
-                 * For local single files and OPeNDAP datasets we don't use the
-                 * cache, to ensure that we are always reading the most
-                 * up-to-date data. There is a small possibility that the
-                 * dataset cache will have swallowed up all available file
-                 * handles, in which case the server admin will need to increase
-                 * the number of available handles on the server.
-                 */
-                nc = NetcdfDataset.openDataset(location);
-            }
-        } catch (IOException e) {
-            throw new DataReadingException("Problem reading underlying NetCDF dataset", e);
-        }
-        return nc;
-    }
-
-    /**
-     * Closes the given dataset, logging any exceptions at debug level
-     * 
-     * @param nc
-     *            The {@link NetcdfDataset} to close
-     * @throws IOException
-     *             if there is a problem closing the underlying dataset
-     */
-    public static void closeDataset(NetcdfDataset nc) throws IOException {
-        if (nc == null)
-            return;
-        nc.close();
     }
 
     /**

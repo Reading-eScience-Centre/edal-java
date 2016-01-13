@@ -109,9 +109,9 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
 
         @Override
         protected GridDataSource openDataSource() throws DataReadingException {
-            NetcdfDataset nc;
+            NetcdfDataset nc = null;
             try {
-                nc = NetcdfDatasetAggregator.openAndAggregateDataset(location);
+                nc = NetcdfDatasetAggregator.getDataset(location);
                 synchronized (this) {
                     /*
                      * If the getGridDataset method runs concurrently on the
@@ -119,9 +119,12 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                      * ConcurrentModificationException, so we synchronise this
                      * action to avoid the issue.
                      */
-                    return new CdmGridDataSource(CdmUtils.getGridDataset(nc));
+                    return new CdmGridDataSource(nc);
                 }
             } catch (EdalException | IOException e) {
+                if(nc != null) {
+                    NetcdfDatasetAggregator.releaseDataset(nc);
+                }
                 throw new DataReadingException("Problem aggregating datasets", e);
             }
         }
