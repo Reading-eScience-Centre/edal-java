@@ -11,7 +11,6 @@ import org.junit.Test;
 import ucar.nc2.dataset.NetcdfDataset;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.util.Array4D;
-import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 public class CdmGridDataSourceTest {
     private CdmGridDataSource datasource;
@@ -21,8 +20,8 @@ public class CdmGridDataSourceTest {
     public void setUp() throws Exception {
         URL url = this.getClass().getResource("/rectilinear_test_data.nc");
         String location = url.getPath();
-        NetcdfDataset nc = CdmUtils.openDataset(location);
-        datasource = new CdmGridDataSource(CdmUtils.getGridDataset(nc));
+        NetcdfDataset nc = NetcdfDatasetAggregator.getDataset(location);
+        datasource = new CdmGridDataSource(nc);
     }
 
     @Test

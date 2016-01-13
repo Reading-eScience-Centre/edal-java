@@ -57,7 +57,6 @@ import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
-import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import uk.ac.rdg.resc.edal.dataset.AbstractPointDataset;
@@ -182,6 +181,7 @@ public final class En3DatasetFactory extends DatasetFactory {
     @SuppressWarnings("unchecked")
     @Override
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
+        log.debug("IN createDataset Entering createDataset");
         long t1 = System.currentTimeMillis();
 
         /*
@@ -330,7 +330,7 @@ public final class En3DatasetFactory extends DatasetFactory {
 
             for (File file : files) {
                 id2File.put(fileId, file);
-                NetcdfDataset nc = CdmUtils.openDataset(file.getAbsolutePath());
+                NetcdfDataset nc = NetcdfDatasetAggregator.getDataset(file.getAbsolutePath());
 
                 Dimension nProfiles = nc.findDimension("N_PROF");
                 Dimension nLevels = nc.findDimension("N_LEVELS");
@@ -463,14 +463,13 @@ public final class En3DatasetFactory extends DatasetFactory {
                     }
                 }
 
-                CdmUtils.closeDataset(nc);
-
                 log.debug("Read " + nProfiles.getLength() + " profiles from file: "
                         + file.getAbsolutePath());
                 log.debug("Allocated memory " + (Runtime.getRuntime().totalMemory() / 1_000_000L)
                         + "/" + (Runtime.getRuntime().maxMemory() / 1_000_000L));
                 totalProfiles += nProfiles.getLength();
                 fileId++;
+                NetcdfDatasetAggregator.releaseDataset(nc);
             }
             log.debug("Read " + totalProfiles + " features.  Starting indexing...");
             /*
@@ -534,6 +533,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         long t2 = System.currentTimeMillis();
         log.debug("Time to create EN3 dataset: " + ((t2 - t1) / 1000.0) + "s");
 
+        log.debug("OUT createDataset Returning from createDataset");
         return new En3Dataset(id, metadata, indexer, hDomain.getBoundingBox(), zDomain.getExtent(),
                 tDomain.getExtent(), id2File);
     }
@@ -560,6 +560,7 @@ public final class En3DatasetFactory extends DatasetFactory {
 
         @Override
         public DiscreteFeatureReader<ProfileFeature> getFeatureReader() {
+            log.debug("Returning FeatureReader");
             return reader;
         }
 
@@ -585,6 +586,7 @@ public final class En3DatasetFactory extends DatasetFactory {
 
         @Override
         protected PointFeature convertFeature(ProfileFeature feature, PlottingDomainParams params) {
+            log.debug("Converting ProfileFeature to PointFeature");
             return convertProfileFeature(feature, params);
         }
     }
@@ -615,6 +617,9 @@ public final class En3DatasetFactory extends DatasetFactory {
         @Override
         public ProfileFeature readFeature(String id, Set<String> variableIds)
                 throws DataReadingException {
+            if (variableIds == null) {
+                variableIds = dataset.getVariableIds();
+            }
             /*
              * Find the file containing the ID, and the profile number within
              * the file
@@ -622,26 +627,22 @@ public final class En3DatasetFactory extends DatasetFactory {
             FileAndProfileNumber fileAndProfileNumber = deserialiseId(id);
 
             ProfileFeature profileFeature = null;
-            NetcdfFile nc = null;
+            NetcdfDataset nc = null;
             try {
                 /*
                  * Open the dataset, read the profile, and close the dataset
                  */
-                nc = NetcdfFile.open(fileAndProfileNumber.file.getAbsolutePath());
+                nc = NetcdfDatasetAggregator
+                        .getDataset(fileAndProfileNumber.file.getAbsolutePath());
                 profileFeature = doRead(id, nc, fileAndProfileNumber.profileNumber, variableIds);
-                nc.close();
             } catch (IOException e) {
+                log.debug("readFeature throwing exception");
                 throw new DataReadingException("Problem reading EN3 profile data", e);
             } catch (InvalidRangeException e) {
+                log.debug("readFeature throwing exception");
                 throw new DataReadingException("Problem reading EN3 profile data", e);
             } finally {
-                if (nc != null) {
-                    try {
-                        nc.close();
-                    } catch (IOException e) {
-                        log.error("Cannot close NetCDF dataset");
-                    }
-                }
+                NetcdfDatasetAggregator.releaseDataset(nc);
             }
             return profileFeature;
         }
@@ -660,13 +661,18 @@ public final class En3DatasetFactory extends DatasetFactory {
         @Override
         public Collection<ProfileFeature> readFeatures(Collection<String> ids,
                 Set<String> variableIds) throws DataReadingException {
+            log.debug("IN readFeatures Reading multiple features");
             List<ProfileFeature> ret = new ArrayList<ProfileFeature>();
+            if (variableIds == null) {
+                variableIds = dataset.getVariableIds();
+            }
 
             /*
              * Find the files containing each profile and map to a list of the
              * profile numbers needing to be read from each file.
              */
             Map<File, List<FeatureAndProfileId>> file2Ids = new HashMap<File, List<FeatureAndProfileId>>();
+            log.debug("readFeatures 1a Mapping files 2 IDs");
             for (String id : ids) {
                 FileAndProfileNumber fileAndProfileNumber = deserialiseId(id);
                 File file = fileAndProfileNumber.file.getAbsoluteFile();
@@ -678,288 +684,340 @@ public final class En3DatasetFactory extends DatasetFactory {
                 file2Ids.get(file).add(
                         new FeatureAndProfileId(id, fileAndProfileNumber.profileNumber));
             }
+            log.debug("readFeatures 1b Mapping files 2 IDs");
             /*
              * Now open each file in turn and read the profiles from them
              */
+            log.debug("readFeatures 2a reading from all files");
             for (Entry<File, List<FeatureAndProfileId>> entry : file2Ids.entrySet()) {
                 File file = entry.getKey();
                 NetcdfDataset nc = null;
                 try {
-                    nc = CdmUtils.openDataset(file.getAbsolutePath());
+                    log.debug("readFeatures 3a acquiring dataset: " + file.getAbsolutePath());
+                    nc = NetcdfDatasetAggregator.getDataset(file.getAbsolutePath());
+                    log.debug("readFeatures 3b acquiring dataset: " + file.getAbsolutePath());
 
                     List<FeatureAndProfileId> featureProfileIds = entry.getValue();
+                    /* For 100 simultaneous requests
+                     * 
+                     * 4a happens 100 times more than 4b
+                     */
+                    log.debug("readFeatures 4a reading all features from file "
+                            + file.getAbsolutePath());
                     for (FeatureAndProfileId featureProfileId : featureProfileIds) {
+                        /* 5a happens 100 times more than 5b */
+                        log.debug("readFeatures 5a");
+                        /* doRead entry log happens 49 times less than 5a */
                         ProfileFeature profileFeature = doRead(featureProfileId.featureId, nc,
                                 featureProfileId.profileId, variableIds);
+                        /* doRead exit log happens 50 times less than 5b
+                         *
+                         * i.e. doRead enters once more than it exits */
+                        log.debug("readFeatures 5b");
                         if (profileFeature != null) {
                             ret.add(profileFeature);
                         }
                     }
-
-                    CdmUtils.closeDataset(nc);
+                    log.debug("readFeatures 4b reading all features from file "
+                            + file.getAbsolutePath());
                 } catch (IOException e) {
+                    e.printStackTrace();
+                    log.debug("readFeatures EXCEPTION IO");
                     throw new DataReadingException("Problem reading EN3 profile data", e);
                 } catch (InvalidRangeException e) {
+                    log.debug("readFeatures EXCEPTION InvalidRange");
                     throw new DataReadingException("Problem reading EN3 profile data", e);
                 } finally {
-                    if (nc != null) {
-                        try {
-                            CdmUtils.closeDataset(nc);
-                        } catch (IOException e) {
-                            log.error("Cannot close NetCDF dataset");
-                        }
-                    }
+                    NetcdfDatasetAggregator.releaseDataset(nc);
                 }
             }
+            log.debug("readFeatures 2b reading from all files");
+            log.debug("OUT readFeatures Read collection of features.  Returning");
             return ret;
         }
+    }
 
-        /**
-         * Reads a single {@link ProfileFeature} from a {@link NetcdfDataset}
-         * 
-         * @param id
-         *            The desired ID of the returned {@link ProfileFeature}
-         * @param nc
-         *            The {@link NetcdfDataset} to read the
-         *            {@link ProfileFeature} from. The file must have the EN3
-         *            v2a format
-         * @param profNum
-         *            The profile number within the file
-         * @param variableIds
-         *            The variables to read from the file
-         * @return The desired {@link ProfileFeature}
-         * @throws IOException
-         *             If there is a problem reading data from the
-         *             {@link NetcdfDataset}
-         * @throws InvalidRangeException
+    /**
+     * Reads a single {@link ProfileFeature} from a {@link NetcdfDataset}
+     * 
+     * @param id
+     *            The desired ID of the returned {@link ProfileFeature}
+     * @param nc
+     *            The {@link NetcdfDataset} to read the {@link ProfileFeature}
+     *            from. The file must have the EN3 v2a format
+     * @param profNum
+     *            The profile number within the file
+     * @param variableIds
+     *            The variables to read from the file - may not be
+     *            <code>null</code>
+     * @return The desired {@link ProfileFeature}
+     * @throws IOException
+     *             If there is a problem reading data from the
+     *             {@link NetcdfDataset}
+     * @throws InvalidRangeException
+     */
+    private static synchronized ProfileFeature doRead(String id, NetcdfDataset nc, int profNum,
+            Set<String> variableIds) throws IOException, InvalidRangeException {
+        /*
+         * This method is synchronized because Variable objects can be shared
+         * between instances which leads to Bad Things
          */
-        private ProfileFeature doRead(String id, NetcdfFile nc, int profNum, Set<String> variableIds)
-                throws IOException, InvalidRangeException {
-            /*
-             * This is a fixed value. We could read the "STRING8" dimension and
-             * find its length, but that seems a little unnecessary, since it
-             * will be 8
-             */
-            int platformNameLength = 8;
-            Dimension nLevels = nc.findDimension("N_LEVELS");
+        log.debug("doRead IN");
+        String location = nc.getLocation();
+        /*
+         * This is a fixed value. We could read the "STRING8" dimension and find
+         * its length, but that seems a little unnecessary, since it will be 8
+         */
+        int platformNameLength = 8;
+        
 
-            /*
-             * Find the variables necessary to determine the 4D domain of this
-             * platform
-             */
-            Variable latitudeVar = nc.findVariable("LATITUDE");
-            Variable longitudeVar = nc.findVariable("LONGITUDE");
-            Variable timeVar = nc.findVariable("JULD");
-            Variable depthVar = nc.findVariable("DEPH_CORRECTED");
+        /*
+         * TODO removed this approach...it didn't fix the issue, but it might be
+         * good to put it back for speed reasons once we do track down the
+         * problem...
+         * 
+         * We synchronise the rest of this method on an object specific to the
+         * location of the NetcdfDataset we are reading.
+         * 
+         * This means that doRead() cannot be called simultaneously with the
+         * same NetcdfDataset object (this causes Ranges to be set incorrectly
+         * and leads to ArrayIndex errors), but CAN be called simultaneously to
+         * read features from different files (which is fine).
+         */
+        Dimension nLevels = nc.findDimension("N_LEVELS");
 
-            /*
-             * Set up some ranges to only read the pertinent part of the file
-             */
-            Range profileNumRange = new Range(profNum, profNum);
-            Range levelNumRange = new Range(nLevels.getLength());
+        /*
+         * Find the variables necessary to determine the 4D domain of this
+         * platform
+         */
+        Variable latitudeVar = nc.findVariable("LATITUDE");
+        Variable longitudeVar = nc.findVariable("LONGITUDE");
+        Variable timeVar = nc.findVariable("JULD");
+        Variable depthVar = nc.findVariable("DEPH_CORRECTED");
 
-            /*
-             * Determine the platform ID
-             */
-            List<Range> platformIdRangeList = new ArrayList<Range>();
-            platformIdRangeList.add(profileNumRange);
-            platformIdRangeList.add(new Range(8));
-            Array platformIdArr = nc.findVariable("PLATFORM_NUMBER").read(platformIdRangeList);
-            StringBuilder platformId = new StringBuilder();
-            for (int i = 0; i < platformNameLength; i++) {
-                platformId.append(platformIdArr.getChar(i));
+        log.debug("doRead 1 "+location);
+        /*
+         * Set up some ranges to only read the pertinent part of the file
+         */
+        Range profileNumRange = new Range(profNum, profNum);
+        Range levelNumRange = new Range(nLevels.getLength());
+
+        /*
+         * Determine the platform ID
+         */
+        List<Range> platformIdRangeList = new ArrayList<Range>();
+        platformIdRangeList.add(profileNumRange);
+        platformIdRangeList.add(new Range(8));
+        
+        log.debug("doRead 2 "+location);
+        
+        Array platformIdArr = nc.findVariable("PLATFORM_NUMBER").read(platformIdRangeList);
+        log.debug("doRead 3 "+location);
+        StringBuilder platformId = new StringBuilder();
+        for (int i = 0; i < platformNameLength; i++) {
+            platformId.append(platformIdArr.getChar(i));
+        }
+        log.debug("doRead 4 "+location);
+
+        /*
+         * Determine the reference time
+         */
+        Attribute timeUnits = timeVar.findAttribute("units");
+        String timeUnitsStr = timeUnits.getStringValue();
+        String[] timeUnitsParts = timeUnitsStr.split(" since ");
+        if (timeUnitsParts.length != 2) {
+            log.debug("doRead OUT - bad time units");
+            log.error("Expected time units of the form \"xxxs since yyyy-dd-mm hh:mm:ss utc\"");
+            return null;
+        }
+        int unitLength = TimeUtils.getUnitLengthSeconds(timeUnitsParts[0]);
+        DateTime refTime = EN3_DATE_TIME_FORMATTER.parseDateTime(timeUnitsParts[1]);
+        log.debug("doRead 5 "+location);
+
+        /*
+         * Read the appropriate parts of the required variables
+         */
+        List<Range> singleValPerPlatform = new ArrayList<Range>();
+        singleValPerPlatform.add(profileNumRange);
+        Array latValues = latitudeVar.read(singleValPerPlatform);
+        Array lonValues = longitudeVar.read(singleValPerPlatform);
+        Array timeValues = timeVar.read(singleValPerPlatform);
+        log.debug("doRead 6 "+location);
+
+        List<Range> allDepthsOnePlatform = new ArrayList<Range>();
+        allDepthsOnePlatform.add(profileNumRange);
+        allDepthsOnePlatform.add(levelNumRange);
+        Array depthValues = depthVar.read(allDepthsOnePlatform);
+        log.debug("doRead 7 "+location);
+
+        /*
+         * Now use the values read from file to create the domain for this
+         * feature
+         */
+        HorizontalPosition hPos = new HorizontalPosition(lonValues.getDouble(0),
+                latValues.getDouble(0), DefaultGeographicCRS.WGS84);
+
+        double seconds = (timeValues.getDouble(0) * unitLength);
+        DateTime time = refTime.plusSeconds((int) seconds);
+
+        /*
+         * Read the depth values, stopping when we hit NaNs
+         */
+        List<Double> zValues = new ArrayList<Double>();
+        for (int i = 0; i < nLevels.getLength(); i++) {
+            double depth = depthValues.getDouble(i);
+            if (!Double.isNaN(depth) && depth != 99999.0) {
+                zValues.add(depth);
+            } else {
+                break;
             }
-
+        }
+        log.debug("doRead 8 "+location);
+        VerticalAxisImpl domain = null;
+        try {
+            domain = new VerticalAxisImpl("Depth axis of profile", zValues, EN3_VERTICAL_CRS);
+        } catch (IllegalArgumentException e) {
             /*
-             * Determine the reference time
+             * This happens when the domain is non-monotonic. For now we ignore
+             * these profiles (1-2% of total) but later we may need to re-order
+             * the measurement values
              */
-            Attribute timeUnits = timeVar.findAttribute("units");
-            String timeUnitsStr = timeUnits.getStringValue();
-            String[] timeUnitsParts = timeUnitsStr.split(" since ");
-            if (timeUnitsParts.length != 2) {
-                log.error("Expected time units of the form \"xxxs since yyyy-dd-mm hh:mm:ss utc\"");
-                return null;
+            // log.error("Invalid domain in EN3 file", e);
+            log.debug("doRead OUT - bad vertical domain");
+            return null;
+        }
+        /*
+         * Store the number of depth values before a NaN appears (this is the
+         * true depth domain - once we get to NaN values there is no data)
+         */
+        int trueNumLevels = zValues.size();
+        log.debug("doRead 9 "+location);
+
+        Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
+        /*
+         * Read all of the actual data
+         */
+        Map<String, Parameter> parameters = new HashMap<String, Parameter>();
+        for (String varId : variableIds) {
+            Array varArray = nc.findVariable(varId).read(allDepthsOnePlatform);
+
+            Array1D<Number> varValues = new ValuesArray1D(trueNumLevels);
+            for (int i = 0; i < trueNumLevels; i++) {
+                double val = varArray.getDouble(i);
+                varValues.set(val, i);
             }
-            int unitLength = TimeUtils.getUnitLengthSeconds(timeUnitsParts[0]);
-            DateTime refTime = EN3_DATE_TIME_FORMATTER.parseDateTime(timeUnitsParts[1]);
+            values.put(varId, varValues);
+            parameters.put(varId, ALL_PARAMETERS.get(varId));
+        }
+        log.debug("doRead 10 "+location);
 
-            /*
-             * Read the appropriate parts of the required variables
-             */
-            List<Range> singleValPerPlatform = new ArrayList<Range>();
-            singleValPerPlatform.add(profileNumRange);
-            Array latValues = latitudeVar.read(singleValPerPlatform);
-            Array lonValues = longitudeVar.read(singleValPerPlatform);
-            Array timeValues = timeVar.read(singleValPerPlatform);
+        String platformIdStr = platformId.toString().trim();
 
-            List<Range> allDepthsOnePlatform = new ArrayList<Range>();
-            allDepthsOnePlatform.add(profileNumRange);
-            allDepthsOnePlatform.add(levelNumRange);
-            Array depthValues = depthVar.read(allDepthsOnePlatform);
+//        log.debug("Read data, creating ProfileFeature");
+        /*
+         * Create the ProfileFeature
+         */
+        ProfileFeature ret = new ProfileFeature(id, "EN3 platform " + platformIdStr,
+                "Profile data from platform " + platformIdStr + " in the EN3 database", domain,
+                hPos, time, parameters, values);
 
-            /*
-             * Now use the values read from file to create the domain for this
-             * feature
-             */
-            HorizontalPosition hPos = new HorizontalPosition(lonValues.getDouble(0),
-                    latValues.getDouble(0), DefaultGeographicCRS.WGS84);
+        log.debug("doRead 11 "+location);
+        /*
+         * Read the quality control flags and store in the properties of the
+         * profile feature
+         */
+        Variable qcPosVar = nc.findVariable("POSITION_QC");
+        Variable qcPotmCorrectedVar = nc.findVariable("PROFILE_POTM_QC");
+        Variable qcPsalCorrectedVar = nc.findVariable("PROFILE_PSAL_QC");
+        log.debug("doRead 12 "+location);
 
-            double seconds = (timeValues.getDouble(0) * unitLength);
-            DateTime time = refTime.plusSeconds((int) seconds);
+        //			Variable qcDepthVar = nc.findVariable("PROFILE_DEPH_QC");
+        //			Variable qcJuldVar = nc.findVariable("JULD_QC");
 
-            /*
-             * Read the depth values, stopping when we hit NaNs
-             */
-            List<Double> zValues = new ArrayList<Double>();
-            for (int i = 0; i < nLevels.getLength(); i++) {
-                double depth = depthValues.getDouble(i);
-                if (!Double.isNaN(depth) && depth != 99999.0) {
-                    zValues.add(depth);
-                } else {
-                    break;
-                }
-            }
-            VerticalAxisImpl domain = null;
-            try {
-                domain = new VerticalAxisImpl("Depth axis of profile", zValues, EN3_VERTICAL_CRS);
-            } catch (IllegalArgumentException e) {
-                /*
-                 * This happens when the domain is non-monotonic. For now we
-                 * ignore these profiles (1-2% of total) but later we may need
-                 * to re-order the measurement values
-                 */
-                // log.error("Invalid domain in EN3 file", e);
-                return null;
-            }
-            /*
-             * Store the number of depth values before a NaN appears (this is
-             * the true depth domain - once we get to NaN values there is no
-             * data)
-             */
-            int trueNumLevels = zValues.size();
+        Array qcPos = qcPosVar.read();
+        log.debug("doRead 13.1 "+location);
+        Array qcPotmCorrected = qcPotmCorrectedVar.read();
+        log.debug("doRead 13.2 "+location);
+        Array qcPsalCorrected = qcPsalCorrectedVar.read();
+        log.debug("doRead 13.3 "+location);
 
-            Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
-            if (variableIds == null) {
-                /*
-                 * If no variable IDs are specified, we want to read all of them
-                 */
-                variableIds = dataset.getVariableIds();
-            }
-            /*
-             * Read all of the actual data
-             */
-            Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-            for (String varId : variableIds) {
-                Array varArray = nc.findVariable(varId).read(allDepthsOnePlatform);
+        //			Array qcDepth = qcDepthVar.read();
+        //			Array qcJuld = qcJuldVar.read();
 
-                Array1D<Number> varValues = new ValuesArray1D(trueNumLevels);
-                for (int i = 0; i < trueNumLevels; i++) {
-                    double val = varArray.getDouble(i);
-                    varValues.set(val, i);
-                }
-                values.put(varId, varValues);
-                parameters.put(varId, ALL_PARAMETERS.get(varId));
-            }
+        Properties props = new Properties();
+        String key;
+        String value;
 
-            String platformIdStr = platformId.toString().trim();
+        key = "Position QC";
+        if (qcPos.getChar(profNum) == '1') {
+            value = "Accept";
+        } else if (qcPos.getChar(profNum) == '4') {
+            value = "Reject";
+        } else if (qcPos.getChar(profNum) == '0') {
+            value = "No QC data";
+        } else {
+            value = "N/A";
+        }
+        props.put(key, value);
+        log.debug("doRead 14 "+location);
 
-            /*
-             * Create the ProfileFeature
-             */
-            ProfileFeature ret = new ProfileFeature(id, "EN3 platform " + platformIdStr,
-                    "Profile data from platform " + platformIdStr + " in the EN3 database", domain,
-                    hPos, time, parameters, values);
-
-            /*
-             * Read the quality control flags and store in the properties of the
-             * profile feature
-             */
-            Variable qcPosVar = nc.findVariable("POSITION_QC");
-            Variable qcPotmCorrectedVar = nc.findVariable("PROFILE_POTM_QC");
-            Variable qcPsalCorrectedVar = nc.findVariable("PROFILE_PSAL_QC");
-
-            //			Variable qcDepthVar = nc.findVariable("PROFILE_DEPH_QC");
-            //			Variable qcJuldVar = nc.findVariable("JULD_QC");
-
-            Array qcPos = qcPosVar.read();
-            Array qcPotmCorrected = qcPotmCorrectedVar.read();
-            Array qcPsalCorrected = qcPsalCorrectedVar.read();
-
-            //			Array qcDepth = qcDepthVar.read();
-            //			Array qcJuld = qcJuldVar.read();
-
-            Properties props = new Properties();
-            String key;
-            String value;
-
-            key = "Position QC";
-            if (qcPos.getChar(profNum) == '1') {
+        if (variableIds.contains(POT_TEMP_PARAMETER.getVariableId())) {
+            key = "Potential temperature QC";
+            if (qcPotmCorrected.getChar(profNum) == '1') {
                 value = "Accept";
-            } else if (qcPos.getChar(profNum) == '4') {
+            } else if (qcPotmCorrected.getChar(profNum) == '4') {
                 value = "Reject";
-            } else if (qcPos.getChar(profNum) == '0') {
+            } else if (qcPotmCorrected.getChar(profNum) == '0') {
                 value = "No QC data";
             } else {
                 value = "N/A";
             }
             props.put(key, value);
-
-            if (variableIds.contains(POT_TEMP_PARAMETER.getVariableId())) {
-                key = "Potential temperature QC";
-                if (qcPotmCorrected.getChar(profNum) == '1') {
-                    value = "Accept";
-                } else if (qcPotmCorrected.getChar(profNum) == '4') {
-                    value = "Reject";
-                } else if (qcPotmCorrected.getChar(profNum) == '0') {
-                    value = "No QC data";
-                } else {
-                    value = "N/A";
-                }
-                props.put(key, value);
-            }
-
-            if (variableIds.contains(PSAL_PARAMETER.getVariableId())) {
-                key = "Practical salinity QC";
-                if (qcPsalCorrected.getChar(profNum) == '1') {
-                    value = "Accept";
-                } else if (qcPsalCorrected.getChar(profNum) == '4') {
-                    value = "Reject";
-                } else if (qcPsalCorrected.getChar(profNum) == '0') {
-                    value = "No QC data";
-                } else {
-                    value = "N/A";
-                }
-                props.put(key, value);
-            }
-
-            //			key = "Depth QC";
-            //			if (qcDepth.getChar(profNum) == '1') {
-            //				value = "Accept";
-            //			} else if (qcDepth.getChar(profNum) == '4') {
-            //				value = "Reject";
-            //			} else if (qcDepth.getChar(profNum) == '0') {
-            //				value = "No QC data";
-            //			} else {
-            //				value = "N/A";
-            //			}
-            //			props.put(key, value);
-            //			
-            //			key = "Date/time QC";
-            //			if (qcJuld.getChar(profNum) == '1') {
-            //				value = "Accept";
-            //			} else if (qcJuld.getChar(profNum) == '4') {
-            //				value = "Reject";
-            //			} else if (qcJuld.getChar(profNum) == '0') {
-            //				value = "No QC data";
-            //			} else {
-            //				value = "N/A";
-            //			}
-            //			props.put(key, value);
-
-            ret.getFeatureProperties().putAll(props);
-
-            return ret;
         }
+        log.debug("doRead 15 "+location);
 
+        if (variableIds.contains(PSAL_PARAMETER.getVariableId())) {
+            key = "Practical salinity QC";
+            if (qcPsalCorrected.getChar(profNum) == '1') {
+                value = "Accept";
+            } else if (qcPsalCorrected.getChar(profNum) == '4') {
+                value = "Reject";
+            } else if (qcPsalCorrected.getChar(profNum) == '0') {
+                value = "No QC data";
+            } else {
+                value = "N/A";
+            }
+            props.put(key, value);
+        }
+        log.debug("doRead 16 "+location);
+
+        //			key = "Depth QC";
+        //			if (qcDepth.getChar(profNum) == '1') {
+        //				value = "Accept";
+        //			} else if (qcDepth.getChar(profNum) == '4') {
+        //				value = "Reject";
+        //			} else if (qcDepth.getChar(profNum) == '0') {
+        //				value = "No QC data";
+        //			} else {
+        //				value = "N/A";
+        //			}
+        //			props.put(key, value);
+        //			
+        //			key = "Date/time QC";
+        //			if (qcJuld.getChar(profNum) == '1') {
+        //				value = "Accept";
+        //			} else if (qcJuld.getChar(profNum) == '4') {
+        //				value = "Reject";
+        //			} else if (qcJuld.getChar(profNum) == '0') {
+        //				value = "No QC data";
+        //			} else {
+        //				value = "N/A";
+        //			}
+        //			props.put(key, value);
+
+        ret.getFeatureProperties().putAll(props);
+        log.debug("doRead OUT");
+
+        return ret;
     }
 }
