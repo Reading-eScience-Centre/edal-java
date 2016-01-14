@@ -364,17 +364,11 @@ public class WmsServlet extends HttpServlet {
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
         
         /*
-         * Set the content type to be what was requested. If anything goes
-         * wrong, this will be overwritten to "text/xml" in the
-         * handleWmsException method.
-         */
-        httpServletResponse.setContentType(getMapParams.getFormatString());
-
-        /*
          * If the user has requested the actual data in coverageJSON format...
          */
         if (getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage+json") ||
                 getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage json")) {
+            httpServletResponse.setContentType("application/prs.coverage+json");
             String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
             LayerNameMapper layerNameMapper = catalogue.getLayerNameMapper();
             List<Feature<?>> features = new ArrayList<>();
@@ -403,7 +397,6 @@ public class WmsServlet extends HttpServlet {
             }
             return;
         }
-
 
         if (getMapParams.getImageFormat() instanceof KmzFormat) {
             if (!GISUtils
@@ -449,6 +442,13 @@ public class WmsServlet extends HttpServlet {
                     + catalogue.getServerInfo().getMaxImageHeight());
         }
 
+        /*
+         * Set the content type to be what was requested. If anything goes
+         * wrong, this will be overwritten to "text/xml" in the
+         * handleWmsException method.
+         */
+        httpServletResponse.setContentType(getMapParams.getFormatString());
+        
         MapImage imageGenerator = styleParameters.getImageGenerator(catalogue);
 
         List<BufferedImage> frames;
