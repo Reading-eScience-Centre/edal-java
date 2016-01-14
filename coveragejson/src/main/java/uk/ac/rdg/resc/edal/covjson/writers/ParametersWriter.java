@@ -67,7 +67,7 @@ public class ParametersWriter <T> {
 		}
 		  
 		if (parameter.getCategories() != null) {
-		  paramMap.startMap("unit").put("symbol", parameter.getUnits());
+		  paramMap.startMap("unit").put("symbol", parameter.getUnits()).end();
 		}
 		
 		String observedPropertyUri = null;
