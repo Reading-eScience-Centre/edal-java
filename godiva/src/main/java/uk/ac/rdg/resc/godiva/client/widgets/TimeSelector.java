@@ -46,7 +46,6 @@ import com.google.gwt.event.logical.shared.ShowRangeEvent;
 import com.google.gwt.event.logical.shared.ShowRangeHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.i18n.client.NumberFormat;
@@ -351,7 +350,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
             } else {
                 Collections.sort(availableDatetimes);
                 for (String item : availableDatetimes) {
-                    dates.addItem(item, URL.encodePathSegment(item));
+                    dates.addItem(item);
                 }
                 datesCalendar.setValue(DATE_FORMAT.parse(availableDatetimes.get(availableDatetimes
                         .size() - 1)));
@@ -370,7 +369,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         } else {
             Collections.sort(availableTimes);
             for (String item : availableTimes) {
-                times.addItem(item, URL.encodePathSegment(item));
+                times.addItem(item);
             }
             if (availableTimes.size() > 1) {
                 times.setEnabled(true);
@@ -437,8 +436,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         long range = Long.parseLong(rangeStr);
         Date startDate = new Date(centreDate.getTime() - range);
         Date endDate = new Date(centreDate.getTime() + range);
-        return URL.encodePathSegment(parser.format(startDate)) + "/"
-                + URL.encodePathSegment(parser.format(endDate));
+        return parser.format(startDate) + "/" + parser.format(endDate);
     }
 
     @Override
@@ -490,7 +488,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
         if (dateValid) {
             Date date = DATE_FORMAT.parse(timeString.substring(0, 10));
             datesCalendar.setValue(date);
-            String time = URL.encodePathSegment(timeString.substring(11));
+            String time = timeString.substring(11);
             for (int i = 0; i < times.getItemCount(); i++) {
                 if (times.getValue(i).equals(time)) {
                     times.setSelectedIndex(i);

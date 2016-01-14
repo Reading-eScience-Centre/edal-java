@@ -88,7 +88,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
  * 
  * time: A string representing the time
  * 
- * dataset: The URL of the WMS server
+ * server: The URL of the WMS server
  * 
  * layer: The WMS layer name of the layer on the above server
  * 
@@ -391,14 +391,14 @@ public class ScreenshotServlet extends HttpServlet {
             url.append(baseWmsUrl);
             url.append("&STYLES=");
         } else {
-            String dataset = params.getString("dataset");
-            if (dataset == null || dataset.equalsIgnoreCase("null")) {
+            String server = params.getString("server");
+            if (server == null || server.equalsIgnoreCase("null")) {
                 /*
-                 * If we don't have a dataset, we can't plot a layer
+                 * If we don't have a server, we can't plot a layer
                  */
                 return null;
             }
-            url.append(dataset + "?SERVICE=WMS&LAYERS=" + params.getString("layer"));
+            url.append(server + "?SERVICE=WMS&LAYERS=" + params.getString("layer"));
             String style = params.getString("style");
             String palette = params.getString("palette");
             if (style != null && palette != null) {
@@ -429,7 +429,7 @@ public class ScreenshotServlet extends HttpServlet {
                  * Yuck. But it seems to be necessary, otherwise "+" gets
                  * interpreted wrongly
                  */
-                url.append("&TIME=" + URLEncoder.encode(URLEncoder.encode(time, "UTF-8"), "UTF-8"));
+                url.append("&TIME=" + URLEncoder.encode(time, "UTF-8"));
             String elevation = params.getString("elevation");
             if (elevation != null)
                 url.append("&ELEVATION=" + elevation);
@@ -443,7 +443,7 @@ public class ScreenshotServlet extends HttpServlet {
                  * interpreted wrongly
                  */
                 url.append("&TARGETTIME="
-                        + URLEncoder.encode(URLEncoder.encode(targetTime, "UTF-8"), "UTF-8"));
+                        + URLEncoder.encode(targetTime, "UTF-8"));
         }
 
         url.append("&TRANSPARENT=true");
