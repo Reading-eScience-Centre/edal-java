@@ -28,8 +28,6 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -67,18 +65,14 @@ public class RequestParams {
         for (String name : httpParamMap.keySet()) {
             String[] values = httpParamMap.get(name);
             assert values.length >= 1;
-            try {
-                String key = URLDecoder.decode(name.trim(), "UTF-8").toLowerCase();
-                String value = URLDecoder.decode(values[0].trim(), "UTF-8");
-                this.paramMap.put(key, value);
-            } catch (UnsupportedEncodingException uee) {
-                /* Shouldn't happen: UTF-8 should always be supported */
-                throw new AssertionError(uee);
-            }
+            String key = name.trim().toLowerCase();
+            String value = values[0].trim();
+            this.paramMap.put(key, value);
         }
     }
-    
-    private RequestParams() {}
+
+    private RequestParams() {
+    }
 
     /**
      * Create a new {@link RequestParams} from this one, merging in new values
@@ -93,17 +87,12 @@ public class RequestParams {
     public RequestParams mergeParameters(Map<String, String> mergeParameters) {
         RequestParams ret = new RequestParams();
         ret.paramMap = paramMap;
-        
+
         for (String name : mergeParameters.keySet()) {
             String value = mergeParameters.get(name);
-            try {
-                String key = URLDecoder.decode(name.trim(), "UTF-8").toLowerCase();
-                value = URLDecoder.decode(value.trim(), "UTF-8");
-                ret.paramMap.put(key, value);
-            } catch (UnsupportedEncodingException uee) {
-                /* Shouldn't happen: UTF-8 should always be supported */
-                throw new AssertionError(uee);
-            }
+            String key = name.trim().toLowerCase();
+            value = value.trim();
+            ret.paramMap.put(key, value);
         }
         return ret;
     }
@@ -256,12 +245,12 @@ public class RequestParams {
                     + " must be a valid floating-point number");
         }
     }
-    
+
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder("Request Parameters:\n");
-        for(Entry<String, String> param : paramMap.entrySet()) {
-            ret.append("\t"+param.getKey()+": "+param.getValue()+"\n");
+        for (Entry<String, String> param : paramMap.entrySet()) {
+            ret.append("\t" + param.getKey() + ": " + param.getValue() + "\n");
         }
         return ret.toString();
     }

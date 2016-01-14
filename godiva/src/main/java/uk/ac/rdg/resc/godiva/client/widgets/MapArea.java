@@ -66,7 +66,6 @@ import org.gwtopenmaps.openlayers.client.util.JSObject;
 import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
-import uk.ac.rdg.resc.godiva.client.util.GodivaUtils;
 import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
 
@@ -277,7 +276,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
          * OpenLayers layer
          */
         animLayer = new Image("Animation Layer", wmsUrl + "?"
-                + GodivaUtils.encodeQueryString(url.toString()), map.getExtent(), map.getSize(),
+                + url.toString(), map.getExtent(), map.getSize(),
                 opts);
         animLayer.addLayerLoadStartListener(new LayerLoadStartListener() {
             @Override
@@ -608,8 +607,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                     proxyUrl
                                             + wmsUrl
                                             + "?"
-                                            + GodivaUtils.encodeQueryString(parameters
-                                                    + "&INFO_FORMAT=image/png"), "Vertical Profile");
+                                            + parameters
+                                            + "&INFO_FORMAT=image/png", "Vertical Profile");
                             pop.hide();
                         }
                     });
@@ -624,8 +623,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                         proxyUrl
                                                 + wmsUrl
                                                 + "?"
-                                                + GodivaUtils.encodeQueryString(parameters
-                                                        + "&INFO_FORMAT=text/csv"),
+                                                + parameters
+                                                + "&INFO_FORMAT=text/csv",
                                         "Vertical Profile Data", null);
                                 pop.hide();
                             }
@@ -668,10 +667,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                             proxyUrl
                                                     + wmsUrl
                                                     + "?"
-                                                    + GodivaUtils.encodeQueryString(parameters
-                                                            + "&TIME=" + startDateTime + "/"
-                                                            + endDateTime
-                                                            + "&INFO_FORMAT=image/png"),
+                                                    + parameters
+                                                    + "&TIME=" + startDateTime + "/"
+                                                    + endDateTime
+                                                    + "&INFO_FORMAT=image/png",
                                             "Time series");
                                     timeSelector.hide();
                                 }
@@ -707,10 +706,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                                 proxyUrl
                                                         + wmsUrl
                                                         + "?"
-                                                        + GodivaUtils.encodeQueryString(parameters
-                                                                + "&TIME=" + startDateTime + "/"
-                                                                + endDateTime
-                                                                + "&INFO_FORMAT=text/csv"),
+                                                        + parameters
+                                                        + "&TIME=" + startDateTime + "/"
+                                                        + endDateTime
+                                                        + "&INFO_FORMAT=text/csv",
                                                 "Time series data", null);
                                         timeSelector.hide();
                                     }
@@ -1336,7 +1335,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     }
                     displayImagePopup(
                             wmsAndParams.wmsUrl + "?"
-                                    + GodivaUtils.encodeQueryString(transectParams), "Transect");
+                                    + transectParams, "Transect");
                 }
             }
 
