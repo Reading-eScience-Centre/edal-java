@@ -46,7 +46,6 @@ import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.PaletteSelectorIF.OutOfRangeState;
 import uk.ac.rdg.resc.godiva.client.state.TimeSelectorIF;
 import uk.ac.rdg.resc.godiva.client.state.UnitsInfoIF;
-import uk.ac.rdg.resc.godiva.client.util.GodivaUtils;
 import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.AnimationButton;
 import uk.ac.rdg.resc.godiva.client.widgets.CopyrightInfo;
@@ -487,7 +486,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     public String getAviUrl(String times, String frameRate) {
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
-        String urlParams = "dataset=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
+        String urlParams = "server=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
                 + "&numColorBands=" + paletteSelector.getNumColorBands() + "&logScale="
                 + paletteSelector.isLogScale() + "&bbox=" + mapArea.getMap().getExtent();
 
@@ -762,7 +761,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String aboveMax = paletteSelector.getAboveMaxString();
         String belowMin = paletteSelector.getBelowMinString();
         String noData = paletteSelector.getNoDataColour();
-        String urlParams = "dataset=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
+        String urlParams = "server=" + widgetCollection.getWmsUrlProvider().getWmsUrl()
                 + "&numColorBands=" + paletteSelector.getNumColorBands() + "&logScale="
                 + paletteSelector.isLogScale() + "&bbox=" + mapArea.getMap().getExtent()
                 + "&abovemaxcolor=" + aboveMax + "&belowmincolor=" + belowMin + "&nodatacolor="
@@ -843,7 +842,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         /* Don't need to encode the query string, because we never decode it */
         permalink.setHref(URL.encode(baseurl + urlParams));
         email.setHref("mailto:?subject=MyOcean Data Link&body="
-                + URL.encodeQueryString(baseurl + GodivaUtils.encodeQueryString(urlParams)));
+                + URL.encodeQueryString(baseurl + urlParams));
 
         // Screenshot-only stuff
         urlParams += "&bbox=" + mapArea.getMap().getExtent().toBBox(6);
@@ -872,7 +871,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String godivaPath = Window.Location.getPath();
         screenshot.setHref("http://" + Window.Location.getHost() + "/"
                 + godivaPath.substring(0, godivaPath.lastIndexOf('/'))
-                + "/screenshots/createScreenshot?" + GodivaUtils.encodeQueryString(urlParams));
+                + "/screenshots/createScreenshot?" + urlParams);
     }
 
     /*
@@ -904,14 +903,16 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             }
             String currentLayer = permalinkParamsMap.get("layer");
             if (currentLayer != null) {
-                String datasetUrl = permalinkParamsMap.get("dataset");
-                if (datasetUrl == null || "".equals(datasetUrl)) {
+                String serverUrl = permalinkParamsMap.get("server");
+                if (serverUrl == null || "".equals(serverUrl)) {
                     String path = Window.Location.getHost() + Window.Location.getPath();
                     path = path.substring(0, path.lastIndexOf("/"));
                     final String wmsUrl = "http://" + path + "/wms";
+                    GWT.log("Permalinking without server argument.  Current WMS: "+wmsUrl);
                     layerSelector.selectLayer(currentLayer, wmsUrl, false);
                 } else {
-                    String currentWms = URL.decode(datasetUrl);
+                    String currentWms = URL.decode(serverUrl);
+                    GWT.log("Permalinking with server argument.  Current WMS: "+currentWms);
                     layerSelector.selectLayer(currentLayer, currentWms, false);
                 }
             }
