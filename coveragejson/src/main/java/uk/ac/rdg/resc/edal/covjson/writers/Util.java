@@ -62,6 +62,8 @@ public class Util {
 	public static final String CoverageJSONContext =
 			"https://rawgit.com/reading-escience-centre/coveragejson/master/contexts/coveragejson-base.jsonld";
 	
+	private static final String CRS84 = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
+	
 	public static <T> void  addJsonLdContext (MapEncoder<T> map) throws IOException {
 		map.put("@context", CoverageJSONContext);
 	}
@@ -73,8 +75,11 @@ public class Util {
 			if (crsUri == null) {
 				// geotoolkit doesn't return this URI yet
 				if (crs.getName().toString() == "WGS84(DD)") {
-					crsUri = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
+					crsUri = CRS84;
 				}
+			} else if (crsUri.equals("http://www.opengis.net/gml/srs/crs.xml#84")) {
+				// TODO where is this weird URI coming from?!
+				crsUri = CRS84;
 			}
 		} catch (FactoryException e) {
 			throw new RuntimeException(e); 
