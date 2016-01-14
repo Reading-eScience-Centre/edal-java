@@ -373,7 +373,8 @@ public class WmsServlet extends HttpServlet {
         /*
          * If the user has requested the actual data in coverageJSON format...
          */
-        if (getMapParams.getFormatString().equalsIgnoreCase("application/json")) {
+        if (getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage+json") ||
+                getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage json")) {
             String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
             LayerNameMapper layerNameMapper = catalogue.getLayerNameMapper();
             List<Feature<?>> features = new ArrayList<>();
