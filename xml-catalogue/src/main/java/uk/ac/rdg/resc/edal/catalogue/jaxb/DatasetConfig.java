@@ -232,12 +232,11 @@ public class DatasetConfig {
                 log.error(e.getClass().getName() + " loading metadata for dataset " + id, e);
             }
             err = e;
-            e.printStackTrace();
         }
     }
 
     public void createDataset(DatasetStorage datasetStorage) throws InstantiationException,
-            IllegalAccessException, ClassNotFoundException, IOException, EdalException {
+            IllegalAccessException, ClassNotFoundException, IOException, EdalException, Exception {
         loadingProgress.add("Starting loading");
 
         /*

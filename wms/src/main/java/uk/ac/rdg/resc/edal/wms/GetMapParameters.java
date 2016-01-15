@@ -91,7 +91,7 @@ public class GetMapParameters {
         if (!WmsUtils.SUPPORTED_VERSIONS.contains(this.wmsVersion)) {
             throw new EdalException("VERSION " + this.wmsVersion + " not supported");
         }
-        formatString = params.getMandatoryString("format");
+        formatString = params.getString("format", "image/png");
         animation = params.getBoolean("animation", false);
         frameRate = params.getPositiveInt("frameRate", 24);
         styleParameters = new GetMapStyleParams(params);
