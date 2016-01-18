@@ -29,9 +29,15 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 
 /**
  * 
@@ -71,8 +77,11 @@ public class FeatureWriter <T> {
 		domain.end();
 		
 		if (!skipParameters) {
+			Collection<Parameter> params = Util.withoutParameterGroups(feature.getParameterMap().values(), 
+					feature);
+			
 			MapEncoder<MapEncoder<T>> parameters = map.startMap("parameters");
-			new ParametersWriter<>(parameters).write(feature.getParameterMap().values());
+			new ParametersWriter<>(parameters).write(params);
 			parameters.end();
 		}
 		

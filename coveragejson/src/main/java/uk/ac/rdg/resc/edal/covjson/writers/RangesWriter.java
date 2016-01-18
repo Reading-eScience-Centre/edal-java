@@ -68,6 +68,10 @@ public class RangesWriter <T> {
 		
 		map.put("type", "RangeSet");
 		for (String paramId : feature.getParameterIds()) {
+			if (discreteFeature.getValues(paramId) == null) {
+				// this is a parameter group and does not have values
+				continue;
+			}
 			MapEncoder<?> rangeMap = map.startMap(paramId);
 			write(rangeMap, discreteFeature, paramId);
 			rangeMap.end();

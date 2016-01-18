@@ -65,7 +65,12 @@ public class FeatureCollectionWriter <T> {
 			
 			// TODO this may be slightly inefficient for big numbers of uniform coverages
 			//   -> with Collection<Feature<?>> there is no easy way to avoid it
-			parameters.putAll(feature.getParameterMap());
+			
+			for (Parameter param : Util.withoutParameterGroups(feature.getParameterMap().values(), feature)) {
+				if (!parameters.containsKey(param.getVariableId())) {
+					parameters.put(param.getVariableId(), param);
+				}
+			}
 		}
 		covs.end();
 		
