@@ -64,7 +64,7 @@ public class SimpleCoverageJsonConverterTest {
         mapFeature = (MapFeature) dataset.extractMapFeatures(dataset.getVariableIds(), params).get(0);
     }
     
-    //@Test
+    @Test
     public void testConversion() {
     	ByteArrayOutputStream out = new ByteArrayOutputStream();
     	new CoverageJsonConverterImpl().convertFeatureToJson(out, feature);
