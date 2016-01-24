@@ -188,10 +188,10 @@ public class DomainWriter <T> {
 		MapEncoder<MapEncoder<MapEncoder<T>>> axis = 
 		  map.startMap("axes")
 		    .startMap("composite")
-		      .put("compositeType", "Simple");
+		      .put("dataType", "Tuple");
 		
 		ArrayEncoder<?> comp = 
-		  axis.startArray("components")
+		  axis.startArray("dimensions")
 		    .add("t").add("x").add("y");
 		boolean hasZ = domain.getVerticalCrs() != null;
 		if (hasZ) {
@@ -264,7 +264,7 @@ public class DomainWriter <T> {
 		if (chronology == null) return;
 		// TODO what does Chronology actually tell us?
 		ref.startMap()
-		  .startArray("identifiers")
+		  .startArray("dimensions")
 		    .add("t")
 		  .end()
 		  .startMap("trs")
@@ -324,7 +324,7 @@ public class DomainWriter <T> {
 	
 	private <P> void  writeHorizontalReferencing (ArrayEncoder<P> ref, CoordinateReferenceSystem crs) throws IOException {
 		MapEncoder<MapEncoder<ArrayEncoder<P>>> srs = ref.startMap()
-		  .startArray("identifiers")
+		  .startArray("dimensions")
 		    .add("x").add("y")
 		  .end()
 		  .startMap("srs");
@@ -403,7 +403,7 @@ public class DomainWriter <T> {
 			}
 		}
 		ref.startMap()
-		  .startArray("identifiers")
+		  .startArray("dimensions")
 	        .add("z")
 	      .end()
 	      .startMap("srs")
