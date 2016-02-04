@@ -114,6 +114,10 @@ public class ColouredGlyphLayer extends ImageLayer {
             iconUrl = this.getClass().getResource("/img/square.png");
             iconImage = ImageIO.read(iconUrl);
             icons.put("square", new ColourableIcon(iconImage));
+            
+            iconUrl = this.getClass().getResource("/img/dot.png");
+            iconImage = ImageIO.read(iconUrl);
+            icons.put("dot", new ColourableIcon(iconImage));
         } catch (IOException e) {
             throw new EdalException(
                     "Cannot read required icons.  Ensure that JAR is packaged correctly, or that your project is set up correctly in your IDE");
