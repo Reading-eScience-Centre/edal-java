@@ -997,8 +997,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         WMS blueMarbleNP;
         WMS blueMarbleSP;
 
-//        String mapServerUrl = "http://godiva.reading.ac.uk/geoserver/ReSC/wms?";
-        String mapServerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?";
+        String mapServerUrl = "http://godiva.reading.ac.uk/geoserver/ReSC/wms?";
+//        String mapServerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?";
 
         WMSParams wmsParams;
         WMSOptions wmsOptions;
