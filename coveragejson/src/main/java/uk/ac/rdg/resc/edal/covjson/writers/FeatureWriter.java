@@ -70,6 +70,7 @@ public class FeatureWriter <T> {
 		}
 		map
 		  .put("type", "Coverage")
+		  .put("profile", Util.getDomainProfile(feature) + "Coverage")
 		  .startMap("title").put("en", feature.getName()).end();
 		
 		MapEncoder<MapEncoder<T>> domain = map.startMap("domain");

@@ -51,6 +51,9 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
+import uk.ac.rdg.resc.edal.feature.PointFeature;
+import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
@@ -145,5 +148,21 @@ public class Util {
 			}
 		}
 		return filteredParams;
+	}
+	
+	public static String getDomainProfile(Feature<?> feature) {
+		if (feature instanceof GridFeature) {
+			return "Grid";
+		} else if (feature instanceof MapFeature) {
+			return "Grid";
+		} else if (feature instanceof ProfileFeature) {
+			return "VerticalProfile";
+		} else if (feature instanceof PointFeature) {
+			return "Point";
+		} else if (feature instanceof TrajectoryFeature) {
+			return "Trajectory";
+		} else {
+			throw new EdalException("Unsupported feature type: " + feature.getClass().getSimpleName());
+		}
 	}
 }

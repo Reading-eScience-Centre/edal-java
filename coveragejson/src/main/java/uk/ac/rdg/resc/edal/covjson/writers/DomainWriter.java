@@ -30,8 +30,6 @@ package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
@@ -46,8 +44,6 @@ import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayHints;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
-import uk.ac.rdg.resc.edal.domain.MapDomain;
-import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
@@ -72,8 +68,6 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
-import uk.ac.rdg.resc.edal.util.Array2D;
-import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
  * 
@@ -89,6 +83,7 @@ public class DomainWriter <T> {
 
 	public void write(Feature<?> feature) throws IOException {
 		map.put("type", "Domain");
+		map.put("profile", Util.getDomainProfile(feature));
 		
 		if (feature instanceof GridFeature) {
 			doWrite((GridFeature) feature);
@@ -106,8 +101,6 @@ public class DomainWriter <T> {
 	}
 
 	private void doWrite(GridFeature feature) throws IOException {
-		map.put("profile", "Grid");
-		
 		GridDomain domain = feature.getDomain();
 		VerticalAxis z = domain.getVerticalAxis();
 		HorizontalGrid xy = domain.getHorizontalGrid();
@@ -138,9 +131,7 @@ public class DomainWriter <T> {
 		doWrite(Util.convertToGridFeature(feature));
 	}
 
-	private void doWrite(ProfileFeature feature) throws IOException {
-		map.put("profile", "Profile");
-		
+	private void doWrite(ProfileFeature feature) throws IOException {		
 		VerticalAxis z = feature.getDomain();
 		HorizontalPosition xy = feature.getHorizontalPosition();
 		DateTime time = feature.getTime();
@@ -158,8 +149,6 @@ public class DomainWriter <T> {
 	}
 	
 	private void doWrite(PointFeature feature) throws IOException {
-		map.put("profile", "Point");
-		
 		GeoPosition domain = feature.getGeoPosition();
 		VerticalPosition zpos = domain.getVerticalPosition();
 		VerticalAxis z = new VerticalAxisImpl("z", 
@@ -180,8 +169,6 @@ public class DomainWriter <T> {
 	}
 	
 	private void doWrite(TrajectoryFeature feature) throws IOException {
-		map.put("profile", "Trajectory");
-		
 		TrajectoryDomain domain = feature.getDomain();
 		Array1D<GeoPosition> points = domain.getDomainObjects();
 		

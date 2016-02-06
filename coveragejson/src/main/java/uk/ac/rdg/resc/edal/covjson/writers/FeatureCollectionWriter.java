@@ -54,6 +54,20 @@ public class FeatureCollectionWriter <T> {
 		Util.addJsonLdContext(map);
 		map.put("type", "CoverageCollection");
 		
+		if (!features.isEmpty()) {
+			String domainProfile = Util.getDomainProfile(features.iterator().next());
+			boolean sameProfile = true;
+			for (Feature<?> f : features) {
+				if (!Util.getDomainProfile(f).equals(domainProfile)) {
+					sameProfile = false;
+					break;
+				}
+			}
+			if (sameProfile) {
+				map.put("profile", domainProfile + "CoverageCollection");
+			}
+		}
+		
 		// IMPORTANT: this assumes that different parameters have different IDs
 		Map<String, Parameter> parameters = new HashMap<>();
 		
