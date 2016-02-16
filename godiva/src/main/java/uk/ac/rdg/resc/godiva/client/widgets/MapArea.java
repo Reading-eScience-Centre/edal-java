@@ -72,6 +72,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
@@ -597,8 +598,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             + ((int) map.getSize().getHeight()) + "&WIDTH="
                             + ((int) map.getSize().getWidth()) + "&X=" + mapXClick + "&Y="
                             + mapYClick + "&STYLES=default/default"
-                            + ((targetTimeStr != null) ? ("&TARGETTIME=" + targetTimeStr) : "")
-                            + ((timeStr != null) ? ("&TIME=" + timeStr) : "") + "&VERSION=1.1.1";
+                            + ((targetTimeStr != null) ? ("&TARGETTIME=" + URL.encodeQueryString(targetTimeStr)) : "")
+                            + ((timeStr != null) ? ("&TIME=" + URL.encodeQueryString(timeStr)) : "") + "&VERSION=1.1.1";
                     Anchor profilePlot = new Anchor("Vertical Profile Plot");
                     profilePlot.addClickHandler(new ClickHandler() {
                         @Override
