@@ -2346,6 +2346,12 @@ public class WmsServlet extends HttpServlet {
      */
     void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
+        if(exception instanceof EdalLayerNotFoundException) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        } else {
+            httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+        
         httpServletResponse.setContentType("text/xml");
         StackTraceElement element = exception.getStackTrace()[0];
         log.warn("Wms Exception caught: \"" + exception.getMessage() + "\" from:"
