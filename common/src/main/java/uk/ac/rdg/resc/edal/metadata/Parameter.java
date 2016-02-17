@@ -49,14 +49,14 @@ public class Parameter {
         private final String description;
 
         public Category(String id, String label, Color colour, String description) {
-            if(id == null) {
+            if (id == null) {
                 throw new IllegalArgumentException("The ID of a Category may not be null");
             }
             this.id = id;
-            if(label != null) {
+            if (label != null) {
                 this.label = label;
             } else {
-                this.label = "Category for "+id;
+                this.label = "Category for " + id;
             }
             this.colour = colour;
             this.description = description;
@@ -118,6 +118,10 @@ public class Parameter {
     public Parameter(String varId, String title, String description, String units,
             String standardName) {
         super();
+        if (varId == null || varId.matches("^.*[^a-zA-Z0-9_\\-:].*$")) {
+            throw new IllegalArgumentException(
+                    "A Parameter must have an ID consisting of only alphanumeric characters, underscores, hyphens, and colons");
+        }
         this.varId = varId;
         this.title = title;
         this.description = description;
