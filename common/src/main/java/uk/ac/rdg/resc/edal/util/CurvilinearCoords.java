@@ -33,6 +33,7 @@ import java.awt.geom.Point2D;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
@@ -86,6 +87,12 @@ public final class CurvilinearCoords {
 
         ni = lonVals.getShape()[1];
         nj = lonVals.getShape()[0];
+
+        if (ni < 3 || nj < 3) {
+            throw new IllegalArgumentException(
+                    "Curvilinear coordinates need at least 3 points in each dimension to function correctly");
+        }
+
         longitudes = new float[ni * nj];
         latitudes = new float[ni * nj];
 
@@ -533,6 +540,7 @@ public final class CurvilinearCoords {
          */
         public double findDistanceSq(double lon, double lat) {
             LonLatPosition centre = this.getCentre();
+            lon = harmonizeWithCentre(lon);
             double dx = lon - centre.getLongitude();
             double dy = lat - centre.getLatitude();
             return dx * dx + dy * dy;
@@ -582,6 +590,50 @@ public final class CurvilinearCoords {
             List<Point2D> corners = getCorners();
             return String.format("[%d,%d]: [%f,%f] %s", i, j, centre.getLongitude(),
                     centre.getLatitude(), corners);
+        }
+    }
+
+    public static void main(String[] args) {
+        Array2D<Number> latVals = new ValuesArray2D(3, 3);
+        Array2D<Number> lonVals = new ValuesArray2D(3, 3);
+        latVals.set(0.0, 0, 0);
+        latVals.set(0.0, 0, 1);
+        latVals.set(0.0, 0, 2);
+
+        latVals.set(1.0, 1, 0);
+        latVals.set(1.0, 1, 1);
+        latVals.set(1.0, 1, 2);
+
+        latVals.set(2.0, 2, 0);
+        latVals.set(2.0, 2, 1);
+        latVals.set(2.0, 2, 2);
+
+        lonVals.set(173.0, 0, 0);
+        lonVals.set(177.0, 0, 1);
+        lonVals.set(-179.0, 0, 2);
+
+        lonVals.set(173.0, 1, 0);
+        lonVals.set(177.0, 1, 1);
+        lonVals.set(-179.0, 1, 2);
+
+        lonVals.set(173.0, 2, 0);
+        lonVals.set(177.0, 2, 1);
+        lonVals.set(-179.0, 2, 2);
+
+        Iterator<Number> iterator = latVals.iterator();
+        while (iterator.hasNext()) {
+            System.out.println(iterator.next());
+        }
+        iterator = lonVals.iterator();
+        while (iterator.hasNext()) {
+            System.out.println(iterator.next());
+        }
+        CurvilinearCoords test1 = new CurvilinearCoords(lonVals, latVals);
+        for (Cell cell : test1.getCells()) {
+            for(Point2D p : cell.getCorners()) {
+                System.out.println(p);
+            }
+            System.out.println();
         }
     }
 }
