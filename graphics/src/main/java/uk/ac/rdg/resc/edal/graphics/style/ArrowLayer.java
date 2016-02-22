@@ -144,19 +144,19 @@ public class ArrowLayer extends GriddedImageLayer {
                                 g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
                             } else if (arrowStyle == ArrowStyle.THIN_ARROW) {
                                 /*
-                                 * The overall arrow size is 10 for things
+                                 * The overall arrow size is 11 for things
                                  * returned from the VectorFactory, so we
-                                 * multiply the arrow size by 0.1 to get the
+                                 * divide the arrow size by 11 to get the
                                  * scale factor.
                                  */
                                 VectorFactory.renderVector("LINEVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize * 0.1f, g);
+                                        / 180.0, i, j, arrowSize / 11f, g);
                             } else if (arrowStyle == ArrowStyle.FAT_ARROW) {
                                 VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                                        * Math.PI / 180.0, i, j, arrowSize / 11f, g);
                             } else if (arrowStyle == ArrowStyle.TRI_ARROW) {
                                 VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize * 0.1f, g);
+                                        / 180.0, i, j, arrowSize / 11f, g);
                             }
 
                         }

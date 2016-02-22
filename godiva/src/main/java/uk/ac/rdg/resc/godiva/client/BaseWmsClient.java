@@ -281,7 +281,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         params[0] = "request=" + request;
         int i = 1;
         for (String key : parameters.keySet()) {
-            params[i++] = key + "=" + parameters.get(key);
+            params[i++] = key + "=" + URL.encodeQueryString(parameters.get(key));
         }
         return getUrlFromGetArgs(wmsUrl, params);
     }
@@ -306,7 +306,9 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         }
         argPart.deleteCharAt(argPart.length() - 1);
 
-        return URL.encode(proxyUrl + baseUrl + argPart.toString());
+        String ret = URL.encode(proxyUrl + baseUrl) + argPart.toString();
+        GWT.log("encoded:"+ret);
+        return ret;
     }
 
     /**

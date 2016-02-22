@@ -372,6 +372,14 @@ public final class En3DatasetFactory extends DatasetFactory {
                      */
                     double lat = latValues.getDouble(profileNum);
                     double lon = lonValues.getDouble(profileNum);
+                    
+                    if(Double.isNaN(lat) || Double.isNaN(lon)) {
+                        /*
+                         * We have bad data for the position.  This reading must be ignored.
+                         */
+                        continue;
+                    }
+                    
                     /*
                      * All positions are in WGS84
                      */
@@ -381,6 +389,10 @@ public final class En3DatasetFactory extends DatasetFactory {
                      * Find the time of the current profile measurement
                      */
                     double seconds = (timeValues.getDouble(profileNum) * unitLength);
+                    if(Double.isNaN(seconds)) {
+                        continue;
+                    }
+                    
                     DateTime time = refTime.plusSeconds((int) seconds);
                     Extent<DateTime> tExtent = Extents.newExtent(time, time);
 

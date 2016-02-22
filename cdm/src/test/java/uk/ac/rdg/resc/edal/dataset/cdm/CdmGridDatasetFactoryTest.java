@@ -41,6 +41,7 @@ import java.util.Set;
 
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,7 +120,7 @@ public class CdmGridDatasetFactoryTest {
         for (Double zPos = 0.0; zPos <= 100; zPos += 10.0) {
             double expectedDepth = zPos;
             for (int daysFromStart = 0; daysFromStart < 10; daysFromStart++) {
-                DateTime time = new DateTime(2000, 01, 01 + daysFromStart, 00, 00);
+                DateTime time = new DateTime(2000, 01, 01 + daysFromStart, 00, 00, DateTimeZone.UTC);
                 float expectedTime = 100 * daysFromStart / 9.0f;
 
                 PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
