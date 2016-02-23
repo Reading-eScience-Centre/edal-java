@@ -73,11 +73,6 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Jon
  */
 public final class CdmUgridDatasetFactory extends CdmDatasetFactory {
-    public static void main(String[] args) throws EdalException, IOException {
-        CdmUgridDatasetFactory df = new CdmUgridDatasetFactory();
-        df.createDataset("test", "/home/guy/1step.nc");
-    }
-
     @Override
     protected Dataset generateDataset(String id, String location, NetcdfDataset nc)
             throws IOException {
