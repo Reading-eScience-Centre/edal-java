@@ -6,11 +6,15 @@ Added more perceptually linear colour palettes
 Optimisation of Polygon.contains()
 Uses new background map server
 Re-added datetime label on animations
+Support for explicitly-specified axis bounds (i.e. "bounds" attribute in NetCDF)
 Bugfixes:
     Animations respect log scale
     Metadata filters on ImageLayers now only get applied to the relevant layers (not all layers)
     Border around extraction area now only applies to glyph layers
     Handles environments where the user's home directory is non-writable
+    Handles curvilinear cells which cross the dateline
+    Changed title for EN3/4 extracted features
+    Widened clickable box for GFI on continuous domain.  Rounding errors meant that the current one was a little too small
 
 1.0.4
 =====
