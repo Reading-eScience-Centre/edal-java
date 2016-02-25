@@ -51,6 +51,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 import javax.naming.OperationNotSupportedException;
@@ -183,12 +184,16 @@ public class WmsServlet extends HttpServlet {
 
     private WmsCatalogue catalogue = null;
     private final VelocityEngine velocityEngine;
+    private final Set<String> advertisedPalettes = new TreeSet<>();
 
     /**
      * @see HttpServlet#HttpServlet()
      */
     public WmsServlet() {
         super();
+
+        advertisedPalettes.add(ColourPalette.DEFAULT_PALETTE_NAME);
+
         /*
          * Initialise the velocity templating engine ready for use in
          * GetFeatureInfo and GetCapabilities
@@ -224,6 +229,35 @@ public class WmsServlet extends HttpServlet {
      */
     public void setCatalogue(WmsCatalogue catalogue) {
         this.catalogue = catalogue;
+    }
+
+    /**
+     * Sets the palettes to be advertised in the GetCapabilities document.
+     * 
+     * In the capabilities document, each layer will advertise the available
+     * styles.
+     * 
+     * Since some styles can use palettes, this means that the capabilities
+     * document can get very large very quickly with the formula:
+     * 
+     * (styles which use palettes) x (number of palettes) x (number of layers)
+     * 
+     * being an approximation of how many Style tags are defined in the
+     * document. This is impractical, so we limit the number of advertised
+     * palettes. By default, this will only include the default palette name.
+     * 
+     * This method takes a {@link List} of palette names to advertise alongside
+     * the default.
+     * 
+     * @param paletteNames
+     *            The palettes to advertise alongside the default.
+     */
+    protected void setCapabilitiesAdvertisedPalettes(Collection<String> paletteNames) {
+        for (String palette : paletteNames) {
+            if (ColourPalette.getPredefinedPalettes().contains(palette)) {
+                advertisedPalettes.add(palette);
+            }
+        }
     }
 
     /**
@@ -585,7 +619,8 @@ public class WmsServlet extends HttpServlet {
         context.put("TimeUtils", TimeUtils.class);
         context.put("WmsUtils", WmsUtils.class);
         context.put("verbose", params.getBoolean("verbose", false));
-        context.put("availablePalettes", ColourPalette.getPredefinedPalettes());
+        context.put("allPalettes", ColourPalette.getPredefinedPalettes());
+        context.put("availablePalettes", advertisedPalettes);
 
         httpServletResponse.setContentType("text/xml");
         try {
@@ -1854,9 +1889,8 @@ public class WmsServlet extends HttpServlet {
              */
             boolean isVector = false;
             if (getMapStyleParameters.getNumLayers() == 1) {
-                VariableMetadata metadata = WmsUtils
-                        .getVariableMetadataFromLayerName(getMapStyleParameters.getLayerNames()[0],
-                                catalogue);
+                VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(
+                        getMapStyleParameters.getLayerNames()[0], catalogue);
                 categories = metadata.getParameter().getCategories();
                 isVector = metadata.getChildWithRole(VectorPlugin.DIR_ROLE) != null;
             }

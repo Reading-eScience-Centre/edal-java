@@ -104,6 +104,9 @@ public class GraphicsUtils {
      * 
      *            <li>"extend"
      * 
+     *            <li>A named colour. See
+     *            {@link GraphicsUtils#getNamedColours()} for a full list
+     * 
      * @return A {@link Color} representing the string, or <code>null</code> if
      *         "extend" was supplied
      * @throws EdalParseException
@@ -153,6 +156,13 @@ public class GraphicsUtils {
     }
 
     /**
+     * @return The available named colours
+     */
+    public static Collection<String> getNamedColours() {
+        return namedColors.keySet();
+    }
+
+    /**
      * Converts a {@link Color} to an HTML-like {@link String} (#AARRGGBB), with
      * additional cases for transparent / <code>null</code> values
      * 
@@ -169,10 +179,6 @@ public class GraphicsUtils {
             return "transparent";
         }
         return String.format("#%08X", colour.getRGB());
-    }
-
-    public static void main(String[] args) {
-        System.out.println(colourToHtmlString(Color.blue));
     }
 
     /**

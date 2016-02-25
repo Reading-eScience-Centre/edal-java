@@ -72,6 +72,8 @@ public class ColourPalette {
      * 
      * Equivalent to the string #081D58,#41B6C4,#FFFFD9
      * 
+     * Same as seq-BuYl
+     * 
      * @see ColourPalette#DEFAULT_PALETTE_NAME
      */
     private static final Color[] DEFAULT_COLOURS = new Color[] { new Color(8, 29, 88),
@@ -119,6 +121,30 @@ public class ColourPalette {
         }
     }
 
+    /**
+     * Overrides the default palette
+     * 
+     * @param paletteStr
+     *            The palette (pre-defined or otherwise) to use as the default
+     * @return Whether or not the operation was successful.
+     */
+    public static boolean setDefaultPalette(String paletteStr) {
+        Color[] colourSet = null;
+        if (getPredefinedPalettes().contains(paletteStr)) {
+            colourSet = loadedColourSets.get(paletteStr);
+        } else {
+            colourSet = colourSetFromString(paletteStr);
+        }
+        if (colourSet != null) {
+            loadedColourSets.put(DEFAULT_PALETTE_NAME, colourSet);
+            Color[] invColourSet = (Color[]) ArrayUtils.clone(colourSet);
+            ArrayUtils.reverse(invColourSet);
+            loadedColourSets.put(DEFAULT_PALETTE_NAME + INVERSE_SUFFIX, invColourSet);
+            return true;
+        }
+        return false;
+    }
+
     public static void addPaletteDirectory(File paletteDir) throws FileNotFoundException {
         if (paletteDir.isDirectory()) {
             for (String paletteFileName : paletteDir.list()) {
@@ -153,10 +179,12 @@ public class ColourPalette {
         }
         paletteString.deleteCharAt(paletteString.length() - 1);
         Color[] colourSet = colourSetFromString(paletteString.toString());
-        loadedColourSets.put(paletteName, colourSet);
-        Color[] invColourSet = (Color[]) ArrayUtils.clone(colourSet);
-        ArrayUtils.reverse(invColourSet);
-        loadedColourSets.put(paletteName + INVERSE_SUFFIX, invColourSet);
+        if (colourSet != null) {
+            loadedColourSets.put(paletteName, colourSet);
+            Color[] invColourSet = (Color[]) ArrayUtils.clone(colourSet);
+            ArrayUtils.reverse(invColourSet);
+            loadedColourSets.put(paletteName + INVERSE_SUFFIX, invColourSet);
+        }
     }
 
     private final Color[] colours;
@@ -192,6 +220,18 @@ public class ColourPalette {
         return this.colours[i];
     }
 
+    /**
+     * Gets a {@link ColourPalette} from a string representation of it
+     * 
+     * @param paletteString
+     *            Either the name of a predefined palette, or a string defining
+     *            a palette. This is a comma, colon, or newline separated list
+     *            of colours (see {@link GraphicsUtils#parseColour(String)} for
+     *            valid colour formats)
+     * @param nColourBands
+     *            The number of colour bands to use in the palette.
+     * @return The desired {@link ColourPalette}
+     */
     public static ColourPalette fromString(String paletteString, int nColourBands) {
         if (paletteString == null || "".equals(paletteString)) {
             paletteString = DEFAULT_PALETTE_NAME;
@@ -199,13 +239,12 @@ public class ColourPalette {
         if (loadedColourSets.containsKey(paletteString)) {
             return new ColourPalette(loadedColourSets.get(paletteString), nColourBands);
         } else {
-            try {
-                Color[] colours = colourSetFromString(paletteString);
-                return new ColourPalette(colours, nColourBands);
-            } catch (Exception e) {
+            Color[] colours = colourSetFromString(paletteString);
+            if (colours == null) {
                 throw new EdalException(paletteString
                         + " is not an existing palette name or a palette definition");
             }
+            return new ColourPalette(colours, nColourBands);
         }
     }
 
@@ -217,10 +256,12 @@ public class ColourPalette {
         String[] colourStrings = paletteString.split("[,\n:]");
         Color[] colours = new Color[colourStrings.length];
         for (int i = 0; i < colourStrings.length; i++) {
-            try {
-                colours[i] = cParser.unmarshal(colourStrings[i]);
-            } catch (Exception e) {
-                e.printStackTrace();
+            colours[i] = cParser.unmarshal(colourStrings[i]);
+            if (colours[i] == null) {
+                /*
+                 * Problem parsing the colour
+                 */
+                return null;
             }
         }
         return colours;
