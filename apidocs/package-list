@@ -17,6 +17,7 @@ uk.ac.rdg.resc.edal.graphics.style.sld
 uk.ac.rdg.resc.edal.graphics.style.util
 uk.ac.rdg.resc.edal.grid
 uk.ac.rdg.resc.edal.grid.cdm
+uk.ac.rdg.resc.edal.grid.kdtree
 uk.ac.rdg.resc.edal.metadata
 uk.ac.rdg.resc.edal.ncwms
 uk.ac.rdg.resc.edal.ncwms.config
