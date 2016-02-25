@@ -15,6 +15,9 @@ Bugfixes:
     Handles curvilinear cells which cross the dateline
     Changed title for EN3/4 extracted features
     Widened clickable box for GFI on continuous domain.  Rounding errors meant that the current one was a little too small
+    Arrow plots now use BGCOLOR parameter
+    Arrow plots have a default style
+    Changed default vector legend graphic to not include arrows
 
 1.0.4
 =====
