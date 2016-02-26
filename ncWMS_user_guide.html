@@ -89,6 +89,11 @@
             <h3>Adding datasets</h3>
             <p>On the admin page, new datasets can be added by filling in the information in the "Required Data" column of the Datasets section. All other fields are optional. Already-configured datasets can be modified here.</p>
 
+            <p>ncWMS2 is designed for visualising NetCDF datasets which use the <a href="http://cfconventions.org/">CF conventions</a> and optionally the <a href="http://ocefpaf.github.io/ugrid-conventions/">UGRID conventions</a>(2D and 3D-layered cases only).</p>
+
+            <h4>Categorical Datasets</h4>
+            <p>From ncWMS v2.1 onwards, there is support for reading categorical data from NetCDF files.  This uses the <code>flag_values</code> and <code>flag_meanings</code> attributes (as per the CF conventions) to map numerical values to categories.  There is additional support for categorical data by using the (non-standard) attribute <code>flag_colors</code>.  <code>flag_colors</code> takes the same form as <code>flag_meanings</code> but the values should be interpretable as colours (e.g. #RRGGBB).  These will be the colours used to plot categorical data.</p> 
+
             <h4>Required Data</h4>
             <p>
                 <ul>
