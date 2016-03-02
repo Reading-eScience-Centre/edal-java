@@ -81,7 +81,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              * Scans the NetcdfDataset for variables which pair up to make
              * vectors, and adds the appropriate VectorPlugins
              */
-            List<VectorPlugin> vectors = processVectors(nc);
+            List<VectorPlugin> vectors = processVectors(nc, dataset);
             for (VectorPlugin plugin : vectors) {
                 dataset.addVariablePlugin(plugin);
             }
@@ -193,7 +193,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                 standardName, catMap);
     }
 
-    private List<VectorPlugin> processVectors(NetcdfDataset nc) {
+    private List<VectorPlugin> processVectors(NetcdfDataset nc, Dataset ds) {
         /*
          * Store a map of component names. Key is the compound name, value is a
          * 2-element String array with x, y component IDs
@@ -205,70 +205,76 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         Map<String, Boolean> xyNameToTrueEN = new HashMap<String, Boolean>();
 
         for (Variable var : nc.getVariables()) {
-            Attribute stdNameAtt = var.findAttributeIgnoreCase("standard_name");
-            if (stdNameAtt != null) {
-                String varId = var.getFullName();
-                String stdName = stdNameAtt.getStringValue();
-                /*
-                 * Check for vector components
-                 */
-                if (stdName.contains("eastward_")) {
-                    String compoundName = stdName.replaceFirst("eastward_", "");
-                    String[] cData;
-                    if (!xyComponentPairs.containsKey(compoundName)) {
-                        cData = new String[2];
-                        xyComponentPairs.put(compoundName, cData);
-                        xyNameToTrueEN.put(compoundName, true);
-                    }
-                    cData = xyComponentPairs.get(compoundName);
+            String varId = var.getFullName();
+            if (ds.getVariableIds().contains(varId)) {
+                Attribute stdNameAtt = var.findAttributeIgnoreCase("standard_name");
+                if (stdNameAtt != null) {
+                    String stdName = stdNameAtt.getStringValue();
                     /*
-                     * By doing this, we will end up with the merged coverage
+                     * Check for vector components
                      */
-                    cData[0] = varId;
-                } else if (stdName.contains("northward_")) {
-                    String compoundName = stdName.replaceFirst("northward_", "");
-                    String[] cData;
-                    if (!xyComponentPairs.containsKey(compoundName)) {
-                        cData = new String[2];
-                        xyComponentPairs.put(compoundName, cData);
-                        xyNameToTrueEN.put(compoundName, true);
+                    if (stdName.contains("eastward_")) {
+                        String compoundName = stdName.replaceFirst("eastward_", "");
+                        String[] cData;
+                        if (!xyComponentPairs.containsKey(compoundName)) {
+                            cData = new String[2];
+                            xyComponentPairs.put(compoundName, cData);
+                            xyNameToTrueEN.put(compoundName, true);
+                        }
+                        cData = xyComponentPairs.get(compoundName);
+                        /*
+                         * By doing this, we will end up with the merged
+                         * coverage
+                         */
+                        cData[0] = varId;
+                    } else if (stdName.contains("northward_")) {
+                        String compoundName = stdName.replaceFirst("northward_", "");
+                        String[] cData;
+                        if (!xyComponentPairs.containsKey(compoundName)) {
+                            cData = new String[2];
+                            xyComponentPairs.put(compoundName, cData);
+                            xyNameToTrueEN.put(compoundName, true);
+                        }
+                        cData = xyComponentPairs.get(compoundName);
+                        /*
+                         * By doing this, we will end up with the merged
+                         * coverage
+                         */
+                        cData[1] = varId;
+                    } else if (stdName.matches("u-.*component")) {
+                        String compoundName = stdName.replaceFirst("u-(.*)component", "$1");
+                        String[] cData;
+                        if (!xyComponentPairs.containsKey(compoundName)) {
+                            cData = new String[2];
+                            xyComponentPairs.put(compoundName, cData);
+                            xyNameToTrueEN.put(compoundName, false);
+                        }
+                        cData = xyComponentPairs.get(compoundName);
+                        /*
+                         * By doing this, we will end up with the merged
+                         * coverage
+                         */
+                        cData[0] = varId;
+                    } else if (stdName.matches("v-.*component")) {
+                        String compoundName = stdName.replaceFirst("v-(.*)component", "$1");
+                        String[] cData;
+                        if (!xyComponentPairs.containsKey(compoundName)) {
+                            cData = new String[2];
+                            xyComponentPairs.put(compoundName, cData);
+                            xyNameToTrueEN.put(compoundName, false);
+                        }
+                        cData = xyComponentPairs.get(compoundName);
+                        /*
+                         * By doing this, we will end up with the merged
+                         * coverage
+                         */
+                        cData[1] = varId;
                     }
-                    cData = xyComponentPairs.get(compoundName);
                     /*
-                     * By doing this, we will end up with the merged coverage
+                     * We could potentially add a check for zonal/meridional
+                     * here if required.
                      */
-                    cData[1] = varId;
-                } else if (stdName.matches("u-.*component")) {
-                    String compoundName = stdName.replaceFirst("u-(.*)component", "$1");
-                    String[] cData;
-                    if (!xyComponentPairs.containsKey(compoundName)) {
-                        cData = new String[2];
-                        xyComponentPairs.put(compoundName, cData);
-                        xyNameToTrueEN.put(compoundName, false);
-                    }
-                    cData = xyComponentPairs.get(compoundName);
-                    /*
-                     * By doing this, we will end up with the merged coverage
-                     */
-                    cData[0] = varId;
-                } else if (stdName.matches("v-.*component")) {
-                    String compoundName = stdName.replaceFirst("v-(.*)component", "$1");
-                    String[] cData;
-                    if (!xyComponentPairs.containsKey(compoundName)) {
-                        cData = new String[2];
-                        xyComponentPairs.put(compoundName, cData);
-                        xyNameToTrueEN.put(compoundName, false);
-                    }
-                    cData = xyComponentPairs.get(compoundName);
-                    /*
-                     * By doing this, we will end up with the merged coverage
-                     */
-                    cData[1] = varId;
                 }
-                /*
-                 * We could potentially add a check for zonal/meridional here if
-                 * required.
-                 */
             }
         }
 
