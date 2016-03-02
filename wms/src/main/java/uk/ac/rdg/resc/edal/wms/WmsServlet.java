@@ -1949,6 +1949,7 @@ public class WmsServlet extends HttpServlet {
          */
         StringBuilder copyright = new StringBuilder();
         Map<String, String> varId2Title = new HashMap<>();
+        Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
@@ -1961,8 +1962,7 @@ public class WmsServlet extends HttpServlet {
             EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
-                copyright.append(layerCopyright);
-                copyright.append('\n');
+                copyrights.add(layerCopyright);
             }
             if (variableMetadata.isScalar()) {
                 varId2Title.put(variableMetadata.getId(), layerMetadata.getTitle());
@@ -1983,6 +1983,10 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
+        for(String layerCopyright : copyrights) {
+            copyright.append(layerCopyright);
+            copyright.append('\n');
+        }
         if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
@@ -2102,6 +2106,7 @@ public class WmsServlet extends HttpServlet {
         List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
         DiscreteLayeredDataset<?, ?> gridDataset = null;
         String varId = null;
+        Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layers) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             if (dataset instanceof DiscreteLayeredDataset<?, ?>) {
@@ -2110,8 +2115,7 @@ public class WmsServlet extends HttpServlet {
                 String layerCopyright = WmsUtils.getLayerMetadata(layerName, catalogue)
                         .getCopyright();
                 if (layerCopyright != null && !"".equals(layerCopyright)) {
-                    copyright.append(layerCopyright);
-                    copyright.append('\n');
+                    copyrights.add(layerCopyright);
                 }
 
                 VariableMetadata metadata = gridDataset.getVariableMetadata(varId);
@@ -2157,9 +2161,14 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
+        for(String layerCopyright : copyrights) {
+            copyright.append(layerCopyright);
+            copyright.append('\n');
+        }
         if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
+
         JFreeChart chart = Charting.createTransectPlot(pointCollectionFeatures, lineString, false,
                 copyright.toString());
 
@@ -2245,6 +2254,7 @@ public class WmsServlet extends HttpServlet {
          */
         StringBuilder copyright = new StringBuilder();
         Map<String, String> varId2Title = new HashMap<>();
+        Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
@@ -2257,8 +2267,7 @@ public class WmsServlet extends HttpServlet {
             EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
-                copyright.append(layerCopyright);
-                copyright.append('\n');
+                copyrights.add(layerCopyright);
             }
             if (variableMetadata.isScalar()) {
                 varId2Title.put(variableMetadata.getId(), layerMetadata.getTitle());
@@ -2279,9 +2288,14 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
+        for(String layerCopyright : copyrights) {
+            copyright.append(layerCopyright);
+            copyright.append('\n');
+        }
         if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
+
 
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
             Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
