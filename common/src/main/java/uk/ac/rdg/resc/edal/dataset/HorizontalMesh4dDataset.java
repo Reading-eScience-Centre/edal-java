@@ -99,8 +99,8 @@ public abstract class HorizontalMesh4dDataset extends
 
     @Override
     protected Array1D<Number> extractProfileData(HorizontalMesh4dVariableMetadata metadata,
-            List<Integer> zs, int tIndex, HorizontalPosition hPos,
-            HZTDataSource dataSource) throws DataReadingException {
+            List<Integer> zs, int tIndex, HorizontalPosition hPos, HZTDataSource dataSource)
+            throws DataReadingException {
         HorizontalMesh hDomain = metadata.getHorizontalDomain();
         int hIndex = hDomain.findIndexOf(hPos);
 
@@ -115,8 +115,8 @@ public abstract class HorizontalMesh4dDataset extends
 
     @Override
     protected Array1D<Number> extractTimeseriesData(HorizontalMesh4dVariableMetadata metadata,
-            List<Integer> ts, int zIndex, HorizontalPosition hPos,
-            HZTDataSource dataSource) throws DataReadingException {
+            List<Integer> ts, int zIndex, HorizontalPosition hPos, HZTDataSource dataSource)
+            throws DataReadingException {
         HorizontalMesh hDomain = metadata.getHorizontalDomain();
         int hIndex = hDomain.findIndexOf(hPos);
 
@@ -131,8 +131,7 @@ public abstract class HorizontalMesh4dDataset extends
 
     @Override
     protected Number extractPoint(HorizontalMesh4dVariableMetadata metadata, int t, int z,
-            HorizontalPosition hPos, HZTDataSource dataSource)
-            throws DataReadingException {
+            HorizontalPosition hPos, HZTDataSource dataSource) throws DataReadingException {
         HorizontalMesh hGrid = metadata.getHorizontalDomain();
         int hIndex = hGrid.findIndexOf(hPos);
         if (hIndex == -1) {

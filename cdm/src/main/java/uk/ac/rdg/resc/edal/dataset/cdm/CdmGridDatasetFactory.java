@@ -57,14 +57,18 @@ import uk.ac.rdg.resc.edal.dataset.HZTDataSource;
 import uk.ac.rdg.resc.edal.dataset.HorizontalMesh4dDataset;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.geometry.SimplePolygon;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.HorizontalMesh;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.HorizontalMesh4dVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
@@ -126,11 +130,8 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
             throws IOException {
         /*
          * Keep a list of non data variables. This will include the dummy
-         * variable for UGRID along with all of the co-ordinate variables.
-         * 
-         * We can't just check if variables are co-ordinate variables or not,
-         * because this seems to include variables which are not co-ordinate
-         * variables (e.g. a measurement of depth which is not an axis...)
+         * variable for UGRID along with all of the co-ordinate variables, and
+         * any data variables which are not only spatially-dependent
          */
         List<Variable> nonDataVars = new ArrayList<>();
 
@@ -194,57 +195,47 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
          * Now find the coordinate variables and determine which is latitude and
          * which is longitude.
          */
-        Variable coordVar1 = nc.findVariable(nodeCoordsSplit[0]);
-        Variable coordVar2 = nc.findVariable(nodeCoordsSplit[1]);
-        if (coordVar1 == null || coordVar2 == null) {
+        Variable nodeCoordVar1 = nc.findVariable(nodeCoordsSplit[0]);
+        Variable nodeCoordVar2 = nc.findVariable(nodeCoordsSplit[1]);
+        if (nodeCoordVar1 == null || nodeCoordVar2 == null) {
             throw new DataReadingException("Coordinate variables listed in " + dummyVarName
                     + ":node_coordinates must exist to be UGRID compliant");
         }
-        if (!coordVar1.getDimensions().equals(coordVar2.getDimensions())
-                || coordVar1.getDimensions().size() != 1) {
+        if (!nodeCoordVar1.getDimensions().equals(nodeCoordVar2.getDimensions())
+                || nodeCoordVar1.getDimensions().size() != 1) {
             throw new DataReadingException(
                     "Coordinate variables listed in "
                             + dummyVarName
                             + ":node_coordinates must share the same single dimension to be UGRID compliant");
         }
-        Attribute cv1UnitsAttr = coordVar1.findAttribute("units");
-        Attribute cv2UnitsAttr = coordVar2.findAttribute("units");
-        if (cv1UnitsAttr == null || cv2UnitsAttr == null || !cv1UnitsAttr.isString()
-                || !cv2UnitsAttr.isString()) {
+        Attribute ncv1UnitsAttr = nodeCoordVar1.findAttribute("units");
+        Attribute ncv2UnitsAttr = nodeCoordVar2.findAttribute("units");
+        if (ncv1UnitsAttr == null || ncv2UnitsAttr == null || !ncv1UnitsAttr.isString()
+                || !ncv2UnitsAttr.isString()) {
             throw new DataReadingException("Coordinate variables listed in " + dummyVarName
                     + ":node_coordinates must both contain the \"units\" attribute");
         }
 
-        String cv1Units = cv1UnitsAttr.getStringValue();
-        String cv2Units = cv2UnitsAttr.getStringValue();
-        Variable longitudeVar = null;
-        Variable latitudeVar = null;
-        if (cv1Units.equalsIgnoreCase("degrees_north") || cv1Units.equalsIgnoreCase("degree_north")
-                || cv1Units.equalsIgnoreCase("degrees_N") || cv1Units.equalsIgnoreCase("degree_N")
-                || cv1Units.equalsIgnoreCase("degreesN") || cv1Units.equalsIgnoreCase("degreeN")) {
-            latitudeVar = coordVar1;
-        } else if (cv1Units.equalsIgnoreCase("degrees_east")
-                || cv1Units.equalsIgnoreCase("degree_east")
-                || cv1Units.equalsIgnoreCase("degrees_E") || cv1Units.equalsIgnoreCase("degree_E")
-                || cv1Units.equalsIgnoreCase("degreesE") || cv1Units.equalsIgnoreCase("degreeE")) {
-            longitudeVar = coordVar1;
+        String ncv1Units = ncv1UnitsAttr.getStringValue();
+        String ncv2Units = ncv2UnitsAttr.getStringValue();
+        Variable nodeLongitudeVar = null;
+        Variable nodeLatitudeVar = null;
+        if (GISUtils.isLatitudeUnits(ncv1Units)) {
+            nodeLatitudeVar = nodeCoordVar1;
+        } else if (GISUtils.isLongitudeUnits(ncv1Units)) {
+            nodeLongitudeVar = nodeCoordVar1;
         }
-        if (cv2Units.equalsIgnoreCase("degrees_north") || cv2Units.equalsIgnoreCase("degree_north")
-                || cv2Units.equalsIgnoreCase("degrees_N") || cv2Units.equalsIgnoreCase("degree_N")
-                || cv2Units.equalsIgnoreCase("degreesN") || cv2Units.equalsIgnoreCase("degreeN")) {
-            latitudeVar = coordVar2;
-        } else if (cv2Units.equalsIgnoreCase("degrees_east")
-                || cv2Units.equalsIgnoreCase("degree_east")
-                || cv2Units.equalsIgnoreCase("degrees_E") || cv2Units.equalsIgnoreCase("degree_E")
-                || cv2Units.equalsIgnoreCase("degreesE") || cv2Units.equalsIgnoreCase("degreeE")) {
-            longitudeVar = coordVar2;
+        if (GISUtils.isLatitudeUnits(ncv2Units)) {
+            nodeLatitudeVar = nodeCoordVar2;
+        } else if (GISUtils.isLongitudeUnits(ncv2Units)) {
+            nodeLongitudeVar = nodeCoordVar2;
         }
-        if (longitudeVar == null || latitudeVar == null) {
+        if (nodeLongitudeVar == null || nodeLatitudeVar == null) {
             throw new DataReadingException(
                     "Currently only lat/lon coordinates for nodes are supported");
         }
-        nonDataVars.add(longitudeVar);
-        nonDataVars.add(latitudeVar);
+        nonDataVars.add(nodeLongitudeVar);
+        nonDataVars.add(nodeLatitudeVar);
 
         /*
          * Now ensure that the face_node_connectivity variable exists
@@ -259,16 +250,17 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         /*
          * Now we can read the node co-ordinates.
          */
-        Dimension hDim = latitudeVar.getDimension(0);
-        Array lonData = longitudeVar.read();
-        Array latData = latitudeVar.read();
-        List<HorizontalPosition> positions = new ArrayList<>();
-        for (int i = 0; i < lonData.getSize(); i++) {
+        Dimension nodeHDim = nodeLatitudeVar.getDimension(0);
+        Array nodeLonData = nodeLongitudeVar.read();
+        Array nodeLatData = nodeLatitudeVar.read();
+        List<HorizontalPosition> nodePositions = new ArrayList<>();
+        for (int i = 0; i < nodeLonData.getSize(); i++) {
             /*
              * We have already checked that these two are both 1D and share the
              * same dimensions
              */
-            positions.add(new HorizontalPosition(lonData.getDouble(i), latData.getDouble(i)));
+            nodePositions.add(new HorizontalPosition(nodeLonData.getDouble(i), nodeLatData
+                    .getDouble(i)));
         }
 
         /*
@@ -303,6 +295,17 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         }
         int nFaces = shape[0];
         int nEdges = shape[1];
+        boolean ijSwap = false;
+        if (nFaces < nEdges) {
+            /*
+             * The number of faces / number of edges per face have been
+             * specified the wrong way around
+             */
+            int temp = nFaces;
+            nFaces = nEdges;
+            nEdges = temp;
+            ijSwap = true;
+        }
         for (int i = 0; i < nFaces; i++) {
             int nEdgesThisFace;
             if (fillValue != null) {
@@ -324,14 +327,146 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
             }
             int[] face = new int[nEdgesThisFace];
             for (int j = 0; j < nEdgesThisFace; j++) {
-                index.set(i, j);
+                if (!ijSwap) {
+                    index.set(i, j);
+                } else {
+                    index.set(j, i);
+                }
                 face[j] = faceNodeData.getInt(index);
             }
             connections.add(face);
         }
 
-        HorizontalMesh hMesh = HorizontalMesh.fromConnections(positions, connections,
+        HorizontalMesh hNodeMesh = HorizontalMesh.fromConnections(nodePositions, connections,
                 connectionsStartFrom);
+
+        /*
+         * We may also have a co-incident mesh based on the face coordinates,
+         * which will require a similar treatment.
+         */
+        HorizontalMesh hFaceMesh = null;
+        Dimension faceHDim = null;
+        Attribute faceCoordsAttr = meshTopology.findAttribute("face_coordinates");
+        if (faceCoordsAttr != null && faceCoordsAttr.isString()) {
+            String[] faceCoordsSplit = faceCoordsAttr.getStringValue().split("\\s+");
+            if (faceCoordsSplit.length == 2) {
+                /*
+                 * Now find the coordinate variables specifying the locations of
+                 * the face centres and determine which is latitude and which is
+                 * longitude.
+                 */
+                Variable faceCoordVar1 = nc.findVariable(faceCoordsSplit[0]);
+                Variable faceCoordVar2 = nc.findVariable(faceCoordsSplit[1]);
+                if (faceCoordVar1 == null || faceCoordVar2 == null) {
+                    throw new DataReadingException("Coordinate variables listed in " + dummyVarName
+                            + ":face_coordinates must exist to be UGRID compliant");
+                }
+                if (!faceCoordVar1.getDimensions().equals(faceCoordVar2.getDimensions())
+                        || faceCoordVar1.getDimensions().size() != 1) {
+                    throw new DataReadingException(
+                            "Coordinate variables listed in "
+                                    + dummyVarName
+                                    + ":face_coordinates must share the same single dimension to be UGRID compliant");
+                }
+                Attribute fcv1UnitsAttr = faceCoordVar1.findAttribute("units");
+                Attribute fcv2UnitsAttr = faceCoordVar2.findAttribute("units");
+                if (fcv1UnitsAttr == null || fcv2UnitsAttr == null || !fcv1UnitsAttr.isString()
+                        || !fcv2UnitsAttr.isString()) {
+                    throw new DataReadingException("Coordinate variables listed in " + dummyVarName
+                            + ":node_coordinates must both contain the \"units\" attribute");
+                }
+
+                String fcv1Units = fcv1UnitsAttr.getStringValue();
+                String fcv2Units = fcv2UnitsAttr.getStringValue();
+                Variable faceLongitudeVar = null;
+                Variable faceLatitudeVar = null;
+                if (GISUtils.isLatitudeUnits(fcv1Units)) {
+                    faceLatitudeVar = faceCoordVar1;
+                } else if (GISUtils.isLongitudeUnits(fcv1Units)) {
+                    faceLongitudeVar = faceCoordVar1;
+                }
+                if (GISUtils.isLatitudeUnits(fcv2Units)) {
+                    faceLatitudeVar = faceCoordVar2;
+                } else if (GISUtils.isLongitudeUnits(fcv2Units)) {
+                    faceLongitudeVar = faceCoordVar2;
+                }
+                if (faceLongitudeVar == null || faceLatitudeVar == null
+                        || faceLatitudeVar.equals(faceLongitudeVar)) {
+                    throw new DataReadingException(
+                            "Currently only lat/lon coordinates for faces are supported");
+                }
+                faceHDim = faceLatitudeVar.getDimension(0);
+
+                nonDataVars.add(faceLongitudeVar);
+                nonDataVars.add(faceLatitudeVar);
+
+                /*
+                 * We can now generate the positions of all of the faces from
+                 * faceLongitudeVar and faceLatitudeVar. However, we also want
+                 * to know the cell bounds for each face.
+                 * 
+                 * We can get this from the combination of the face connectivity
+                 * and the node locations
+                 */
+                faceNodeData = faceNodeConnectivity.read();
+                index = faceNodeData.getIndex();
+
+                if (nFaces != faceLatitudeVar.getSize()) {
+                    throw new DataReadingException(
+                            "Faces latitudes/longitudes dimensions do not have the same dimension as the face connectivity.");
+                }
+
+                List<HorizontalPosition> facePositions = new ArrayList<>();
+                List<Polygon> faceBoundaries = new ArrayList<>();
+                Array faceLatVals = faceLatitudeVar.read();
+                Array faceLonVals = faceLongitudeVar.read();
+
+                for (int i = 0; i < nFaces; i++) {
+                    facePositions.add(new HorizontalPosition(faceLonVals.getDouble(i), faceLatVals
+                            .getDouble(i)));
+                    int nEdgesThisFace;
+                    if (fillValue != null) {
+                        /*
+                         * Normally we will have nEdges for each face, but in
+                         * actual fact this is a maximum, so we first calculate
+                         * how many of the values are populated with non-fill
+                         * values
+                         */
+                        for (int j = 0; j < nEdges; j++) {
+                            index.set(i, j);
+                            if (fillValue == faceNodeData.getInt(index)) {
+                                nEdgesThisFace = j;
+                                break;
+                            }
+                        }
+                        nEdgesThisFace = nEdges;
+                    } else {
+                        nEdgesThisFace = nEdges;
+                    }
+                    /*
+                     * Get the boundary for this cell
+                     */
+                    List<HorizontalPosition> facePoints = new ArrayList<>();
+                    for (int j = 0; j < nEdgesThisFace; j++) {
+                        if (!ijSwap) {
+                            index.set(i, j);
+                        } else {
+                            index.set(j, i);
+                        }
+                        int nodeId = faceNodeData.getInt(index);
+                        nodeId -= connectionsStartFrom;
+                        facePoints.add(nodePositions.get(nodeId));
+                    }
+                    SimplePolygon faceBoundary = new SimplePolygon(facePoints);
+                    faceBoundaries.add(faceBoundary);
+                }
+
+                /*
+                 * Generate the HorizontalMesh for this grid
+                 */
+                hFaceMesh = HorizontalMesh.fromBounds(facePositions, faceBoundaries);
+            }
+        }
 
         List<CoordinateAxis> coordinateAxes = nc.getCoordinateAxes();
         /*
@@ -343,12 +478,6 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         Dimension zDim = null;
         VerticalAxis zAxis = null;
         for (CoordinateAxis coordAxis : coordinateAxes) {
-            if (coordAxis.getRank() != 1) {
-                /*
-                 * Vertical axes are 1D
-                 */
-                continue;
-            }
             boolean zCoord = false;
             boolean positiveUp = false;
             Attribute positiveAttribute = coordAxis.findAttribute("positive");
@@ -367,12 +496,45 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                 zCoord = true;
             }
             if (zCoord) {
-                /*
-                 * We have a 1D axis so this cast should be fine.
-                 */
-                zAxis = CdmUtils.createVerticalAxis((CoordinateAxis1D) coordAxis, positiveUp);
-                nonDataVars.add(coordAxis);
-                zDim = coordAxis.getDimension(0);
+                if (coordAxis.getRank() == 1) {
+                    /*
+                     * We have a 1D axis so this cast should be fine.
+                     */
+                    zAxis = CdmUtils.createVerticalAxis((CoordinateAxis1D) coordAxis, positiveUp);
+                    nonDataVars.add(coordAxis);
+                    zDim = coordAxis.getDimension(0);
+                } else if (coordAxis.getRank() == 2) {
+                    /*
+                     * We have a 2D depth axis. IF this is an independent
+                     * z-dimension + a horizontal dimension we have a vertical
+                     * axis where the actual depths depend on the horizontal
+                     * position.
+                     * 
+                     * This doesn't fit nicely into our data model, but we can
+                     * model it with a 1D vertical axis with units "level".
+                     */
+                    List<Dimension> dimensions = coordAxis.getDimensions();
+                    boolean hasHDependency = false;
+                    boolean hasSelfDependency = false;
+                    for (Dimension dimension : dimensions) {
+                        if (dimension.getFullName().equals(coordAxis.getFullName())) {
+                            hasSelfDependency = true;
+                            zDim = dimension;
+                        }
+                        if (dimension.equals(nodeHDim) || dimension.equals(faceHDim)) {
+                            hasHDependency = true;
+                        }
+                    }
+                    if (hasHDependency && hasSelfDependency) {
+                        nonDataVars.add(coordAxis);
+                        List<Double> values = new ArrayList<>();
+                        for (int i = 0; i < zDim.getLength(); i++) {
+                            values.add((double) i);
+                        }
+                        zAxis = new VerticalAxisImpl("level", values, new VerticalCrsImpl("level",
+                                false, true, positiveUp));
+                    }
+                }
             }
         }
 
@@ -405,27 +567,45 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                  */
                 Parameter parameter = getParameter(var);
                 HorizontalMesh hDomain = null;
-                if (var.getDimensions().contains(hDim)) {
-                    hDomain = hMesh;
-                    hztIndices[0] = var.getDimensions().indexOf(hDim);
+                int variableSpatialDimensions = 0;
+                /*
+                 * Pick which grid it uses - either the mandatory node-based
+                 * grid, or the optional face-based grid (if it exists)
+                 */
+                if (var.getDimensions().contains(nodeHDim)) {
+                    hDomain = hNodeMesh;
+                    hztIndices[0] = var.getDimensions().indexOf(nodeHDim);
+                    variableSpatialDimensions++;
+                } else if (var.getDimensions().contains(faceHDim)) {
+                    hDomain = hFaceMesh;
+                    hztIndices[0] = var.getDimensions().indexOf(faceHDim);
+                    variableSpatialDimensions++;
                 }
                 VerticalAxis zDomain = null;
                 if (var.getDimensions().contains(zDim)) {
                     zDomain = zAxis;
                     hztIndices[1] = var.getDimensions().indexOf(zDim);
+                    variableSpatialDimensions++;
                 }
                 TimeAxis tDomain = null;
                 if (var.getDimensions().contains(tDim)) {
                     tDomain = tAxis;
                     hztIndices[2] = var.getDimensions().indexOf(tDim);
+                    variableSpatialDimensions++;
                 }
                 if (hDomain != null) {
-                    variableMetadata.add(new HorizontalMesh4dVariableMetadata(parameter, hDomain,
-                            zDomain, tDomain, true));
-                    varId2hztIndices.put(parameter.getVariableId(), hztIndices);
-                } else {
-                    if (zDomain != null || tDomain != null) {
-                        System.out.println(zDomain + "," + tDomain + ", but no h-domain");
+                    /*
+                     * If we don't have a horizontal domain, we just ignore this
+                     * variable.
+                     */
+                    if (var.getDimensions().size() <= variableSpatialDimensions) {
+                        /*
+                         * We make variables available if they are only
+                         * spatially-dependent
+                         */
+                        variableMetadata.add(new HorizontalMesh4dVariableMetadata(parameter,
+                                hDomain, zDomain, tDomain, true));
+                        varId2hztIndices.put(parameter.getVariableId(), hztIndices);
                     }
                 }
             }
@@ -498,7 +678,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
             return dataReadingStrategy;
         }
     }
-    
+
     private static final class CdmUgridDataset extends HorizontalMesh4dDataset {
         private final String location;
         private final Map<String, int[]> varId2hztIndices;

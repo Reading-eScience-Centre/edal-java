@@ -89,17 +89,17 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
          * ensure that edges which only appear once are the boundary of the
          * grid.
          */
-        Map<Edge, Integer> edgeOccurences = new HashMap<>();
+        Map<IndexEdge, Integer> edgeOccurences = new HashMap<>();
         for (int[] connection : connections) {
             for (int e = 0; e < connection.length - 1; e++) {
-                Edge edge = new Edge(connection[e], connection[e + 1]);
+                IndexEdge edge = new IndexEdge(connection[e], connection[e + 1]);
                 if (!edgeOccurences.containsKey(edge)) {
                     edgeOccurences.put(edge, 1);
                 } else {
                     edgeOccurences.put(edge, edgeOccurences.get(edge) + 1);
                 }
             }
-            Edge edge = new Edge(connection[connection.length - 1], connection[0]);
+            IndexEdge edge = new IndexEdge(connection[connection.length - 1], connection[0]);
             if (!edgeOccurences.containsKey(edge)) {
                 edgeOccurences.put(edge, 1);
             } else {
@@ -109,8 +109,8 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         /*
          * Find the edges which only occur once
          */
-        List<Edge> boundaryEdges = new ArrayList<>();
-        for (Entry<Edge, Integer> entry : edgeOccurences.entrySet()) {
+        List<IndexEdge> boundaryEdges = new ArrayList<>();
+        for (Entry<IndexEdge, Integer> entry : edgeOccurences.entrySet()) {
             if (entry.getValue() == 1) {
                 boundaryEdges.add(entry.getKey());
             }
@@ -139,7 +139,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
              * the boundary is fully defined
              */
             final List<HorizontalPosition> orderedVertices = new ArrayList<>();
-            Edge currentEdge = boundaryEdges.remove(0);
+            IndexEdge currentEdge = boundaryEdges.remove(0);
             boolean onI1 = true;
             boolean foundEdge = true;
             /*
@@ -160,7 +160,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
                  * smaller each time
                  */
                 foundEdge = false;
-                for (Edge testEdge : boundaryEdges) {
+                for (IndexEdge testEdge : boundaryEdges) {
                     if (testEdge.i1 == searchVertexIndex) {
                         onI1 = true;
                         currentEdge = testEdge;
@@ -273,15 +273,146 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
     public static HorizontalMesh fromBounds(List<HorizontalPosition> positions,
             List<Polygon> boundaries) {
         HorizontalMesh mesh = new HorizontalMesh(positions);
+
+        Map<HorizontalEdge, Integer> edgeOccurences = new HashMap<>();
+        for (Polygon cellBound : boundaries) {
+            List<HorizontalPosition> vertices = cellBound.getVertices();
+            for (int e = 0; e < vertices.size() - 1; e++) {
+                HorizontalEdge edge = new HorizontalEdge(vertices.get(e), vertices.get(e + 1));
+                if (!edgeOccurences.containsKey(edge)) {
+                    edgeOccurences.put(edge, 1);
+                } else {
+                    edgeOccurences.put(edge, edgeOccurences.get(edge) + 1);
+                }
+            }
+            HorizontalEdge edge = new HorizontalEdge(vertices.get(vertices.size() - 1),
+                    vertices.get(0));
+            if (!edgeOccurences.containsKey(edge)) {
+                edgeOccurences.put(edge, 1);
+            } else {
+                edgeOccurences.put(edge, edgeOccurences.get(edge) + 1);
+            }
+        }
         /*
-         * The set of boundaries seem to use slightly different values for
-         * coincident edges in the test data I had.
-         * 
-         * This means that there is no way to calculate the actual boundary of
-         * the data.
+         * Find the edges which only occur once
          */
+        List<HorizontalEdge> boundaryEdges = new ArrayList<>();
+        for (Entry<HorizontalEdge, Integer> entry : edgeOccurences.entrySet()) {
+            if (entry.getValue() == 1) {
+                boundaryEdges.add(entry.getKey());
+            }
+        }
+        /*
+         * We can now construct the boundaries of the mesh. There will be
+         * multiple boundaries if:
+         * 
+         * We have separate distinct areas in the mesh
+         * 
+         * We have cut-outs of the mesh (possibly with other meshes inside...)
+         * 
+         * We first construct a list of boundaries and then process them to get
+         * a list of NestedBoundarys which can be used to determine whether a
+         * point is truly within the mesh.
+         */
+        List<NestedBoundary> meshBoundaries = new ArrayList<>();
+        /*
+         * We remove edges from the list once a complete boundary has been
+         * found. Eventually we will have removed them all.
+         */
+        while (boundaryEdges.size() > 0) {
+            /*
+             * Pick a vertex to start at, and then walk along the edges until
+             * the boundary is fully defined
+             */
+            final List<HorizontalPosition> orderedVertices = new ArrayList<>();
+            HorizontalEdge currentEdge = boundaryEdges.remove(0);
+            boolean onI1 = true;
+            boolean foundEdge = true;
+            /*
+             * We keep searching the current path until no more edges are found
+             */
+            while (foundEdge) {
+                HorizontalPosition searchVertexIndex;
+                if (onI1) {
+                    orderedVertices.add(currentEdge.p1);
+                    searchVertexIndex = currentEdge.p2;
+                } else {
+                    orderedVertices.add(currentEdge.p2);
+                    searchVertexIndex = currentEdge.p1;
+                }
+
+                /*
+                 * By removing edges once they've been used, this loop gets
+                 * smaller each time
+                 */
+                foundEdge = false;
+                for (HorizontalEdge testEdge : boundaryEdges) {
+                    if (testEdge.p1.equals(searchVertexIndex)) {
+                        onI1 = true;
+                        currentEdge = testEdge;
+                        foundEdge = true;
+                        break;
+                    }
+                    if (testEdge.p2.equals(searchVertexIndex)) {
+                        onI1 = false;
+                        currentEdge = testEdge;
+                        foundEdge = true;
+                        break;
+                    }
+                }
+                boundaryEdges.remove(currentEdge);
+            }
+            Polygon boundary = new SimplePolygon(orderedVertices);
+            meshBoundaries.add(new NestedBoundary(boundary));
+        }
+        /*
+         * meshBoundaries now contains all of the boundaries of this mesh. Now
+         * find how (and if) they are nested.
+         */
+        for (NestedBoundary bound : meshBoundaries) {
+            for (NestedBoundary testBound : meshBoundaries) {
+                if (!bound.equals(testBound)) {
+                    if (boundFullyContains(bound.boundary, testBound.boundary)) {
+                        bound.addChildPolygon(testBound);
+                    }
+                }
+            }
+        }
+
+        /*
+         * Now find the top-level boundaries - i.e. those with no parent bounds
+         */
+        List<NestedBoundary> hasParent = new ArrayList<>();
+        for (NestedBoundary bound : meshBoundaries) {
+            for (NestedBoundary childBound : bound.childBounds) {
+                hasParent.add(childBound);
+            }
+        }
         mesh.topLevelBoundaries = new ArrayList<>();
-        mesh.topLevelBoundaries.add(new NestedBoundary(mesh.bbox));
+        for (NestedBoundary bound : meshBoundaries) {
+            if (!hasParent.contains(bound)) {
+                mesh.topLevelBoundaries.add(bound);
+            }
+        }
+
+        /*
+         * Now remove duplicates - at this point parent boundaries will have all
+         * the boundaries they contain as children, even those which are also
+         * contained by their direct children
+         */
+        for (NestedBoundary bound : mesh.topLevelBoundaries) {
+            removeLowerBounds(bound);
+        }
+
+//        /*
+//         * The set of boundaries seem to use slightly different values for
+//         * coincident edges in the test data I had.
+//         * 
+//         * This means that there is no way to calculate the actual boundary of
+//         * the data.
+//         */
+//        mesh.topLevelBoundaries = new ArrayList<>();
+//        mesh.topLevelBoundaries.add(new NestedBoundary(mesh.bbox));
         mesh.cellBounds = boundaries;
         return mesh;
     }
@@ -376,14 +507,52 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         if (!contains(position)) {
             return -1;
         }
-        /*
-         * Note that if we have a null boundary but a non-null cellBounds array,
-         * we could search each cell bounds and check if it contains the
-         * position. However, this is SLOW.
-         */
 
         Point nearestNeighbour = kdTree.nearestNeighbour(position);
-        return nearestNeighbour.getIndex();
+
+        int index = nearestNeighbour.getIndex();
+
+        if (cellBounds == null) {
+            /*
+             * If we have no cell bounds, we just want the nearest neighbour
+             * within the mesh bounds
+             */
+            return index;
+        } else {
+            /*
+             * If we have cell bounds, check to see if the nearest neighbour
+             * really contains the position
+             */
+            if (cellBounds.get(index).contains(position)) {
+                return index;
+            } else {
+                /*
+                 * If not, find all cells which are nearby (arbitrarily within a
+                 * bounding box which is 5x the size of the MBR of the cell but
+                 * centred on the same point)
+                 */
+                ArrayList<Point> possibles = kdTree.rangeQuery(GISUtils.getLargeBoundingBox(
+                        cellBounds.get(index).getBoundingBox(), 500));
+                /*
+                 * Now check all of these cells to see if the position is
+                 * contained in one of them
+                 */
+                for (Point p : possibles) {
+                    int pIndex = p.getIndex();
+                    if (cellBounds.get(pIndex).contains(position)) {
+                        return pIndex;
+                    }
+                }
+                /*
+                 * Position is not in the nearest neighbour cell bounds, or any
+                 * of the nearby cells...
+                 * 
+                 * This is unlikely to happen, but could be the case if there
+                 * are gaps between cells.
+                 */
+                return -1;
+            }
+        }
 
 //        /*
 //         * Linear search method. Not considerably slower than our KDTree
@@ -408,11 +577,10 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
      *
      * @author Guy Griffiths
      */
-    private static class Edge {
+    private static class IndexEdge {
         int i1, i2;
 
-        public Edge(int i1, int i2) {
-            super();
+        public IndexEdge(int i1, int i2) {
             /*
              * Order the points so that equivalent edges create identical
              * objects
@@ -443,7 +611,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
                 return false;
             if (getClass() != obj.getClass())
                 return false;
-            Edge other = (Edge) obj;
+            IndexEdge other = (IndexEdge) obj;
             if (i1 != other.i1)
                 return false;
             if (i2 != other.i2)
@@ -454,6 +622,65 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         @Override
         public String toString() {
             return i1 + "\t" + i2;
+        }
+    }
+
+    /**
+     * Definition of an edge between 2 vertices.
+     *
+     * @author Guy Griffiths
+     */
+    private static class HorizontalEdge {
+        HorizontalPosition p1, p2;
+
+        public HorizontalEdge(HorizontalPosition i1, HorizontalPosition i2) {
+            /*
+             * Order the points so that equivalent edges create identical
+             * objects
+             */
+            if (i1.getX() < i2.getX() || (i1.getX() == i2.getX() && i1.getY() < i2.getY())) {
+                this.p1 = i1;
+                this.p2 = i2;
+            } else {
+                this.p1 = i2;
+                this.p2 = i1;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((p1 == null) ? 0 : p1.hashCode());
+            result = prime * result + ((p2 == null) ? 0 : p2.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            HorizontalEdge other = (HorizontalEdge) obj;
+            if (p1 == null) {
+                if (other.p1 != null)
+                    return false;
+            } else if (!p1.equals(other.p1))
+                return false;
+            if (p2 == null) {
+                if (other.p2 != null)
+                    return false;
+            } else if (!p2.equals(other.p2))
+                return false;
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return p1.toString() + "\t" + p2.toString();
         }
     }
 

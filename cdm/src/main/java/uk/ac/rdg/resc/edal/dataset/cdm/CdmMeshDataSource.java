@@ -148,8 +148,7 @@ final class CdmMeshDataSource implements HZTDataSource {
                 return val;
             }
         } catch (ArrayIndexOutOfBoundsException | IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new DataReadingException("Problem reading data from data source", e);
         }
     }
 
@@ -157,5 +156,4 @@ final class CdmMeshDataSource implements HZTDataSource {
     public void close() throws DataReadingException {
         NetcdfDatasetAggregator.releaseDataset(nc);
     }
-
 }

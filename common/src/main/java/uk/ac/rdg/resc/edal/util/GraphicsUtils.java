@@ -52,7 +52,6 @@ import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -281,7 +280,7 @@ public class GraphicsUtils {
                     t2 = System.currentTimeMillis();
                     log.debug("Extracted data for range estimation: " + (t2 - t1) + "ms");
                 }
-            } catch (DataReadingException | VariableNotFoundException e) {
+            } catch (Exception e) {
                 log.error(
                         "Problem reading data whilst estimating scale range.  A default value will be used.",
                         e);
