@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.util.List;
+
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 
 /**
@@ -43,16 +45,67 @@ public interface HZTDataSource extends DataSource {
      * 
      * @param variableId
      *            The variable to read
-     * @param tIndex
-     *            The time index
-     * @param zIndex
-     *            The z index
-     * @param hIndex
-     *            The horizontal index
-     * @return The requested data
+     * @param coordsToRead
+     *            A {@link List} of co-ordinates to read
+     * @return A {@link List} of data corresponding to the provided coordinates
      * @throws DataReadingException
      *             If there is a problem reading the underlying data
      */
-    public Number read(String variableId, int tIndex, int zIndex, int hIndex)
+    public List<Number> read(String variableId, List<MeshCoordinates3D> coordsToRead)
             throws DataReadingException;
+
+    /**
+     * Class representing a set of 3 integer co-ordinates.
+     * 
+     * @author Guy Griffiths
+     */
+    public final class MeshCoordinates3D {
+        public final int h;
+        public final int z;
+        public final int t;
+
+        /**
+         * Create a new {@link MeshCoordinates3D} object
+         * 
+         * @param h
+         *            The horizontal index
+         * @param z
+         *            The z-index
+         * @param t
+         *            The t-index
+         */
+        public MeshCoordinates3D(int h, int z, int t) {
+            this.h = h;
+            this.z = z;
+            this.t = t;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + h;
+            result = prime * result + z;
+            result = prime * result + t;
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            MeshCoordinates3D other = (MeshCoordinates3D) obj;
+            if (h != other.h)
+                return false;
+            if (z != other.z)
+                return false;
+            if (t != other.t)
+                return false;
+            return true;
+        }
+    }
 }
