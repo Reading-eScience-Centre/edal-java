@@ -1,3 +1,14 @@
+1.1.1
+=====
+Changed default palette back to blues
+Added face-based grids for UGRID conventions
+Added workaround for 2D depth axes in UGRID
+Optimised UGRID data reading - was previously not fast enough to work with OPeNDAP reliably
+Bugfixes:
+    Fixed KDTree range search (didn't account for longitude wrapping)
+    Removed duplicate copyright messages from CSV download
+    
+
 1.1.0
 =====
 Support for unstructured grids which follow the UGRID conventions - includes refactor of dataset hierarchy
