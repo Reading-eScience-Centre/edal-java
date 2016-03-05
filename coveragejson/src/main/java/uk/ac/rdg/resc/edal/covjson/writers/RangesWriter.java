@@ -138,20 +138,23 @@ public class RangesWriter <T> {
 			throw new EdalException("Unsupported array class: " + valsArr.getClass().getSimpleName());
 		}
 		vals.end();
-		
-		if (isCategorical) {
-			int min = Collections.min(param.getCategories().keySet());
-			int max = Collections.max(param.getCategories().keySet());
-			rangeMap
-			  .put("validMin", min)
-			  .put("validMax", max);
-		} else {
-			if (validMin != Float.MAX_VALUE) {
-				rangeMap
-				  .put("validMin", validMin)
-				  .put("validMax", validMax);
-			}
-		}
+
+		// validMin/Max is relevant for CBOR only
+		// CovJSON does not define actualMin/Max yet
+		// see https://github.com/Reading-eScience-Centre/coveragejson/issues/48
+//		if (isCategorical) {
+//			int min = Collections.min(param.getCategories().keySet());
+//			int max = Collections.max(param.getCategories().keySet());
+//			rangeMap
+//			  .put("validMin", min)
+//			  .put("validMax", max);
+//		} else {
+//			if (validMin != Float.MAX_VALUE) {
+//				rangeMap
+//				  .put("validMin", validMin)
+//				  .put("validMax", validMax);
+//			}
+//		}
 	}
 	
 	private void writeValue(ArrayEncoder<?> vals, Number val, boolean isCategorical) throws IOException {
