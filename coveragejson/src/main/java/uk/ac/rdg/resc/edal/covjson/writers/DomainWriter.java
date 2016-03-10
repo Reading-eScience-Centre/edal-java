@@ -74,6 +74,9 @@ import uk.ac.rdg.resc.edal.util.Array1D;
  * @author Maik Riechert
  */
 public class DomainWriter <T> {
+	
+	public static final String COMPONENTS = "components";
+	public static final String SYSTEM = "system";
 
 	private final MapEncoder<T> map;
 
@@ -178,7 +181,7 @@ public class DomainWriter <T> {
 		      .put("dataType", "Tuple");
 		
 		ArrayEncoder<?> comp = 
-		  axis.startArray("dimensions")
+		  axis.startArray(COMPONENTS)
 		    .add("t").add("x").add("y");
 		boolean hasZ = domain.getVerticalCrs() != null;
 		if (hasZ) {
@@ -251,10 +254,10 @@ public class DomainWriter <T> {
 		if (chronology == null) return;
 		// TODO what does Chronology actually tell us?
 		ref.startMap()
-		  .startArray("dimensions")
+		  .startArray(COMPONENTS)
 		    .add("t")
 		  .end()
-		  .startMap("trs")
+		  .startMap(SYSTEM)
 		    .put("type", "TemporalRS")
 		    .put("calendar", "Gregorian")
 		  .end()
@@ -311,10 +314,10 @@ public class DomainWriter <T> {
 	
 	private <P> void  writeHorizontalReferencing (ArrayEncoder<P> ref, CoordinateReferenceSystem crs) throws IOException {
 		MapEncoder<MapEncoder<ArrayEncoder<P>>> srs = ref.startMap()
-		  .startArray("dimensions")
+		  .startArray(COMPONENTS)
 		    .add("x").add("y")
 		  .end()
-		  .startMap("srs");
+		  .startMap(SYSTEM);
 		writeCrs(srs, crs);
 		srs
 		  .end()
@@ -390,10 +393,10 @@ public class DomainWriter <T> {
 			}
 		}
 		ref.startMap()
-		  .startArray("dimensions")
+		  .startArray(COMPONENTS)
 	        .add("z")
 	      .end()
-	      .startMap("srs")
+	      .startMap(SYSTEM)
 	        .put("type", "VerticalCRS")
 	        .startMap("cs")
 	          .startArray("axes")
