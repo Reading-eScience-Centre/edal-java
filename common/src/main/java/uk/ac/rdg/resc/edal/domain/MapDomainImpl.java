@@ -38,7 +38,7 @@ import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
@@ -105,7 +105,7 @@ public class MapDomainImpl implements MapDomain {
     }
 
     @Override
-    public Array<GridCell2D> getDomainObjects() {
+    public Array2D<GridCell2D> getDomainObjects() {
         return hGrid.getDomainObjects();
     }
 

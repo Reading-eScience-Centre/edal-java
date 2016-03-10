@@ -56,8 +56,7 @@ import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
-import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
-import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
@@ -122,7 +121,7 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     private final ReferenceableAxis<Double> yAxis;
     private final BoundingBox bbox;
 
-    private transient Array<GridCell2D> domainObjs = null;
+    private transient Array2D<GridCell2D> domainObjs = null;
 
     /**
      * @param coordSys
@@ -194,9 +193,9 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     }
 
     @Override
-    public Array<GridCell2D> getDomainObjects() {
+    public Array2D<GridCell2D> getDomainObjects() {
         if (domainObjs == null) {
-            domainObjs = new AbstractImmutableArray<GridCell2D>(getYSize(), getXSize()) {
+            domainObjs = new Array2D<GridCell2D>(getYSize(), getXSize()) {
                 @Override
                 public GridCell2D get(final int... coords) {
                     double x = xAxis.getCoordinateValue(coords[1]);
