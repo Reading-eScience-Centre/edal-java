@@ -185,7 +185,7 @@ public final class En3DatasetFactory extends DatasetFactory {
     /* This is because we deserialise a HashMap which is a generic. */
     @SuppressWarnings("unchecked")
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
         log.debug("IN createDataset Entering createDataset");
         long t1 = System.currentTimeMillis();
 
@@ -219,7 +219,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         ObjectInputStream in = null;
         FileInputStream fileIn = null;
 
-        if (spatialIndexFile.exists()) {
+        if (spatialIndexFile.exists() && !forceRefresh) {
             /*-
              * We have an existing spatial index for this ID.
              * 

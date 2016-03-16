@@ -59,7 +59,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray4D;
 public class ModisLcDatasetFactory extends DatasetFactory {
 
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
         File file = new File(location);
         BufferedReader reader = new BufferedReader(new FileReader(file));
 

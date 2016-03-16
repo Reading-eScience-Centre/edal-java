@@ -82,7 +82,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 public class WaterMLDatasetFactory extends DatasetFactory {
 
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
         try {
             /*
              * First we read the GetSiteInfoFile.xml which maps site codes to

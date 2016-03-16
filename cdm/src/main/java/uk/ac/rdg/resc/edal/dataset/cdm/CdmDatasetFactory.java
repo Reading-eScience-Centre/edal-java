@@ -64,13 +64,13 @@ import uk.ac.rdg.resc.edal.util.GraphicsUtils;
  */
 public abstract class CdmDatasetFactory extends DatasetFactory {
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
         NetcdfDataset nc = null;
         try {
             /*
              * Open the NetcdfDataset, using the cache.
              */
-            nc = NetcdfDatasetAggregator.getDataset(location);
+            nc = NetcdfDatasetAggregator.getDataset(location, forceRefresh);
 
             /*
              * Generate a simple dataset - delegated to subclasses

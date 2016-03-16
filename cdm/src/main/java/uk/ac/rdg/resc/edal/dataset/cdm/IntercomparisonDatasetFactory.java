@@ -37,7 +37,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 public class IntercomparisonDatasetFactory extends DatasetFactory {
 
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
         try {
             return new IntercomparisonDataset(id,
                     DatasetFactory.forName("uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory"),
