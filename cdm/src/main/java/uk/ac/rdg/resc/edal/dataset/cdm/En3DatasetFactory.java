@@ -185,7 +185,7 @@ public final class En3DatasetFactory extends DatasetFactory {
     /* This is because we deserialise a HashMap which is a generic. */
     @SuppressWarnings("unchecked")
     @Override
-    public Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
+    public En3Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
         log.debug("IN createDataset Entering createDataset");
         long t1 = System.currentTimeMillis();
 
@@ -923,7 +923,10 @@ public final class En3DatasetFactory extends DatasetFactory {
 
             Array1D<Number> varValues = new ValuesArray1D(trueNumLevels);
             for (int i = 0; i < trueNumLevels; i++) {
-                double val = varArray.getDouble(i);
+                Double val = varArray.getDouble(i);
+                if(Double.isNaN(val)) {
+                    val = null;
+                }
                 varValues.set(val, i);
             }
             values.put(varId, varValues);
