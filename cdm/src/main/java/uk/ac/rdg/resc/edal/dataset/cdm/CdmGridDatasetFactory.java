@@ -31,8 +31,18 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import ucar.ma2.Array;
+import ucar.ma2.Index;
+import ucar.nc2.Attribute;
+import ucar.nc2.Dimension;
+import ucar.nc2.Variable;
+import ucar.nc2.dataset.CoordinateAxis;
+import ucar.nc2.dataset.CoordinateAxis1D;
+import ucar.nc2.dataset.CoordinateAxis1DTime;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
@@ -43,13 +53,23 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
+import uk.ac.rdg.resc.edal.dataset.HZTDataSource;
+import uk.ac.rdg.resc.edal.dataset.HorizontalMesh4dDataset;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.geometry.Polygon;
+import uk.ac.rdg.resc.edal.geometry.SimplePolygon;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.HorizontalMesh;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
+import uk.ac.rdg.resc.edal.metadata.HorizontalMesh4dVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
@@ -69,13 +89,23 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
     @Override
     protected Dataset generateDataset(String id, String location, NetcdfDataset nc)
             throws IOException {
+        if (isUgrid(nc)) {
+            return generateUnstructuredGridDataset(id, location, nc);
+        } else {
+            return generateGridDataset(id, location, nc);
+        }
+    }
+
+    private Dataset generateGridDataset(String id, String location, NetcdfDataset nc)
+            throws IOException {
         ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
         List<GridVariableMetadata> vars = new ArrayList<>();
 
         for (Gridset gridset : gridDataset.getGridsets()) {
             GridCoordSystem coordSys = gridset.getGeoCoordSystem();
             HorizontalGrid hDomain = CdmUtils.createHorizontalGrid(coordSys);
-            VerticalAxis zDomain = CdmUtils.createVerticalAxis(coordSys.getVerticalAxis(), coordSys.isZPositive());
+            VerticalAxis zDomain = CdmUtils.createVerticalAxis(coordSys.getVerticalAxis(),
+                    coordSys.isZPositive());
             TimeAxis tDomain = CdmUtils.createTimeAxis(coordSys.getTimeAxis1D());
 
             /*
@@ -94,6 +124,520 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
                 CdmUtils.getOptimumDataReadingStrategy(nc));
         return cdmGridDataset;
+    }
+
+    private Dataset generateUnstructuredGridDataset(String id, String location, NetcdfDataset nc)
+            throws IOException {
+        /*
+         * Keep a list of non data variables. This will include the dummy
+         * variable for UGRID along with all of the co-ordinate variables, and
+         * any data variables which are not only spatially-dependent
+         */
+        List<Variable> nonDataVars = new ArrayList<>();
+
+        /*
+         * First find the variable containing the "cf_role = mesh_topology"
+         * attribute. This is what defines that we are working with a UGRID
+         * dataset.
+         */
+        List<Variable> variables = nc.getVariables();
+        Variable meshTopology = null;
+        for (Variable var : variables) {
+            Attribute cfRole = var.findAttribute("cf_role");
+            if (cfRole != null && cfRole.isString()
+                    && cfRole.getStringValue().equalsIgnoreCase("mesh_topology")) {
+                meshTopology = var;
+                break;
+            }
+        }
+
+        if (meshTopology == null) {
+            throw new DataReadingException("This is not a UGRID compliant dataset");
+        }
+        nonDataVars.add(meshTopology);
+
+        /*
+         * Check the attributes of the variable to ensure that it is UGRID
+         * compliant
+         */
+        Attribute topologyDimAttr = meshTopology.findAttribute("topology_dimension");
+        Attribute nodeCoordsAttr = meshTopology.findAttribute("node_coordinates");
+        Attribute faceNodeConnectivityAttr = meshTopology.findAttribute("face_node_connectivity");
+        String dummyVarName = meshTopology.getFullName();
+        if (topologyDimAttr == null || topologyDimAttr.getNumericValue() == null) {
+            throw new DataReadingException(
+                    dummyVarName
+                            + " variable must contain the integer attribute \"topology_dimension\" to be UGRID compliant");
+        }
+        if (nodeCoordsAttr == null || !nodeCoordsAttr.isString()) {
+            throw new DataReadingException(
+                    dummyVarName
+                            + " variable must contain the string attribute \"node_coordinates\" to be UGRID compliant");
+        }
+        if (faceNodeConnectivityAttr == null || !faceNodeConnectivityAttr.isString()) {
+            throw new DataReadingException(
+                    dummyVarName
+                            + " variable must contain the string attribute \"face_node_connectivity\" to be UGRID compliant");
+        }
+
+        Number topologyDim = topologyDimAttr.getNumericValue();
+        if (topologyDim.intValue() != 2) {
+            throw new DataReadingException("Currently only 2D unstructured grids are supported");
+        }
+
+        String[] nodeCoordsSplit = nodeCoordsAttr.getStringValue().split("\\s+");
+        if (nodeCoordsSplit.length != 2) {
+            throw new DataReadingException(
+                    "Need exactly 2 coordinate variables to define the 2D mesh");
+        }
+
+        /*
+         * Now find the coordinate variables and determine which is latitude and
+         * which is longitude.
+         */
+        Variable nodeCoordVar1 = nc.findVariable(nodeCoordsSplit[0]);
+        Variable nodeCoordVar2 = nc.findVariable(nodeCoordsSplit[1]);
+        if (nodeCoordVar1 == null || nodeCoordVar2 == null) {
+            throw new DataReadingException("Coordinate variables listed in " + dummyVarName
+                    + ":node_coordinates must exist to be UGRID compliant");
+        }
+        if (!nodeCoordVar1.getDimensions().equals(nodeCoordVar2.getDimensions())
+                || nodeCoordVar1.getDimensions().size() != 1) {
+            throw new DataReadingException(
+                    "Coordinate variables listed in "
+                            + dummyVarName
+                            + ":node_coordinates must share the same single dimension to be UGRID compliant");
+        }
+        Attribute ncv1UnitsAttr = nodeCoordVar1.findAttribute("units");
+        Attribute ncv2UnitsAttr = nodeCoordVar2.findAttribute("units");
+        if (ncv1UnitsAttr == null || ncv2UnitsAttr == null || !ncv1UnitsAttr.isString()
+                || !ncv2UnitsAttr.isString()) {
+            throw new DataReadingException("Coordinate variables listed in " + dummyVarName
+                    + ":node_coordinates must both contain the \"units\" attribute");
+        }
+
+        String ncv1Units = ncv1UnitsAttr.getStringValue();
+        String ncv2Units = ncv2UnitsAttr.getStringValue();
+        Variable nodeLongitudeVar = null;
+        Variable nodeLatitudeVar = null;
+        if (GISUtils.isLatitudeUnits(ncv1Units)) {
+            nodeLatitudeVar = nodeCoordVar1;
+        } else if (GISUtils.isLongitudeUnits(ncv1Units)) {
+            nodeLongitudeVar = nodeCoordVar1;
+        }
+        if (GISUtils.isLatitudeUnits(ncv2Units)) {
+            nodeLatitudeVar = nodeCoordVar2;
+        } else if (GISUtils.isLongitudeUnits(ncv2Units)) {
+            nodeLongitudeVar = nodeCoordVar2;
+        }
+        if (nodeLongitudeVar == null || nodeLatitudeVar == null) {
+            throw new DataReadingException(
+                    "Currently only lat/lon coordinates for nodes are supported");
+        }
+        nonDataVars.add(nodeLongitudeVar);
+        nonDataVars.add(nodeLatitudeVar);
+
+        /*
+         * Now ensure that the face_node_connectivity variable exists
+         */
+        Variable faceNodeConnectivity = nc.findVariable(faceNodeConnectivityAttr.getStringValue());
+        if (faceNodeConnectivity == null) {
+            throw new DataReadingException("Coordinate variable referenced in " + dummyVarName
+                    + ":face_node_connectivity must exist to be UGRID compliant");
+        }
+        nonDataVars.add(faceNodeConnectivity);
+
+        /*
+         * Now we can read the node co-ordinates.
+         */
+        Dimension nodeHDim = nodeLatitudeVar.getDimension(0);
+        Array nodeLonData = nodeLongitudeVar.read();
+        Array nodeLatData = nodeLatitudeVar.read();
+        List<HorizontalPosition> nodePositions = new ArrayList<>();
+        for (int i = 0; i < nodeLonData.getSize(); i++) {
+            /*
+             * We have already checked that these two are both 1D and share the
+             * same dimensions
+             */
+            nodePositions.add(new HorizontalPosition(nodeLonData.getDouble(i), nodeLatData
+                    .getDouble(i)));
+        }
+
+        /*
+         * Find out if we have a fill value for the face node connectivity.
+         * 
+         * If so, we can have a variable number of edges per face
+         */
+        Integer fillValue = null;
+        Attribute fillValueAttr = faceNodeConnectivity.findAttribute("_FillValue");
+        if (fillValueAttr != null && fillValueAttr.getNumericValue() != null) {
+            fillValue = fillValueAttr.getNumericValue().intValue();
+        }
+
+        /*
+         * Find what index the face connectivity indices start from (i.e. 0- or
+         * 1-based indices)
+         */
+        int connectionsStartFrom = 0;
+        Attribute startIndexAttr = faceNodeConnectivity.findAttribute("start_index");
+        if (startIndexAttr != null && startIndexAttr.getNumericValue() != null) {
+            connectionsStartFrom = startIndexAttr.getNumericValue().intValue();
+        }
+        /*
+         * Now read the face connectivity
+         */
+        List<int[]> connections = new ArrayList<>();
+        Array faceNodeData = faceNodeConnectivity.read();
+        Index index = faceNodeData.getIndex();
+        int[] shape = faceNodeData.getShape();
+        if (shape.length != 2) {
+            throw new DataReadingException("Face node connectivity must be 2-dimensional");
+        }
+        int nFaces = shape[0];
+        int nEdges = shape[1];
+        boolean ijSwap = false;
+        if (nFaces < nEdges) {
+            /*
+             * The number of faces / number of edges per face have been
+             * specified the wrong way around
+             */
+            int temp = nFaces;
+            nFaces = nEdges;
+            nEdges = temp;
+            ijSwap = true;
+        }
+        for (int i = 0; i < nFaces; i++) {
+            int nEdgesThisFace;
+            if (fillValue != null) {
+                /*
+                 * Normally we will have nEdges for each face, but in actual
+                 * fact this is a maximum, so we first calculate how many of the
+                 * values are populated with non-fill values
+                 */
+                for (int j = 0; j < nEdges; j++) {
+                    index.set(i, j);
+                    if (fillValue == faceNodeData.getInt(index)) {
+                        nEdgesThisFace = j;
+                        break;
+                    }
+                }
+                nEdgesThisFace = nEdges;
+            } else {
+                nEdgesThisFace = nEdges;
+            }
+            int[] face = new int[nEdgesThisFace];
+            for (int j = 0; j < nEdgesThisFace; j++) {
+                if (!ijSwap) {
+                    index.set(i, j);
+                } else {
+                    index.set(j, i);
+                }
+                face[j] = faceNodeData.getInt(index);
+            }
+            connections.add(face);
+        }
+
+        HorizontalMesh hNodeMesh = HorizontalMesh.fromConnections(nodePositions, connections,
+                connectionsStartFrom);
+
+        /*
+         * We may also have a co-incident mesh based on the face coordinates,
+         * which will require a similar treatment.
+         */
+        HorizontalMesh hFaceMesh = null;
+        Dimension faceHDim = null;
+        Attribute faceCoordsAttr = meshTopology.findAttribute("face_coordinates");
+        if (faceCoordsAttr != null && faceCoordsAttr.isString()) {
+            String[] faceCoordsSplit = faceCoordsAttr.getStringValue().split("\\s+");
+            if (faceCoordsSplit.length == 2) {
+                /*
+                 * Now find the coordinate variables specifying the locations of
+                 * the face centres and determine which is latitude and which is
+                 * longitude.
+                 */
+                Variable faceCoordVar1 = nc.findVariable(faceCoordsSplit[0]);
+                Variable faceCoordVar2 = nc.findVariable(faceCoordsSplit[1]);
+                if (faceCoordVar1 == null || faceCoordVar2 == null) {
+                    throw new DataReadingException("Coordinate variables listed in " + dummyVarName
+                            + ":face_coordinates must exist to be UGRID compliant");
+                }
+                if (!faceCoordVar1.getDimensions().equals(faceCoordVar2.getDimensions())
+                        || faceCoordVar1.getDimensions().size() != 1) {
+                    throw new DataReadingException(
+                            "Coordinate variables listed in "
+                                    + dummyVarName
+                                    + ":face_coordinates must share the same single dimension to be UGRID compliant");
+                }
+                Attribute fcv1UnitsAttr = faceCoordVar1.findAttribute("units");
+                Attribute fcv2UnitsAttr = faceCoordVar2.findAttribute("units");
+                if (fcv1UnitsAttr == null || fcv2UnitsAttr == null || !fcv1UnitsAttr.isString()
+                        || !fcv2UnitsAttr.isString()) {
+                    throw new DataReadingException("Coordinate variables listed in " + dummyVarName
+                            + ":node_coordinates must both contain the \"units\" attribute");
+                }
+
+                String fcv1Units = fcv1UnitsAttr.getStringValue();
+                String fcv2Units = fcv2UnitsAttr.getStringValue();
+                Variable faceLongitudeVar = null;
+                Variable faceLatitudeVar = null;
+                if (GISUtils.isLatitudeUnits(fcv1Units)) {
+                    faceLatitudeVar = faceCoordVar1;
+                } else if (GISUtils.isLongitudeUnits(fcv1Units)) {
+                    faceLongitudeVar = faceCoordVar1;
+                }
+                if (GISUtils.isLatitudeUnits(fcv2Units)) {
+                    faceLatitudeVar = faceCoordVar2;
+                } else if (GISUtils.isLongitudeUnits(fcv2Units)) {
+                    faceLongitudeVar = faceCoordVar2;
+                }
+                if (faceLongitudeVar == null || faceLatitudeVar == null
+                        || faceLatitudeVar.equals(faceLongitudeVar)) {
+                    throw new DataReadingException(
+                            "Currently only lat/lon coordinates for faces are supported");
+                }
+                faceHDim = faceLatitudeVar.getDimension(0);
+
+                nonDataVars.add(faceLongitudeVar);
+                nonDataVars.add(faceLatitudeVar);
+
+                /*
+                 * We can now generate the positions of all of the faces from
+                 * faceLongitudeVar and faceLatitudeVar. However, we also want
+                 * to know the cell bounds for each face.
+                 * 
+                 * We can get this from the combination of the face connectivity
+                 * and the node locations
+                 */
+                faceNodeData = faceNodeConnectivity.read();
+                index = faceNodeData.getIndex();
+
+                if (nFaces != faceLatitudeVar.getSize()) {
+                    throw new DataReadingException(
+                            "Faces latitudes/longitudes dimensions do not have the same dimension as the face connectivity.");
+                }
+
+                List<HorizontalPosition> facePositions = new ArrayList<>();
+                List<Polygon> faceBoundaries = new ArrayList<>();
+                Array faceLatVals = faceLatitudeVar.read();
+                Array faceLonVals = faceLongitudeVar.read();
+
+                for (int i = 0; i < nFaces; i++) {
+                    facePositions.add(new HorizontalPosition(faceLonVals.getDouble(i), faceLatVals
+                            .getDouble(i)));
+                    int nEdgesThisFace;
+                    if (fillValue != null) {
+                        /*
+                         * Normally we will have nEdges for each face, but in
+                         * actual fact this is a maximum, so we first calculate
+                         * how many of the values are populated with non-fill
+                         * values
+                         */
+                        for (int j = 0; j < nEdges; j++) {
+                            index.set(i, j);
+                            if (fillValue == faceNodeData.getInt(index)) {
+                                nEdgesThisFace = j;
+                                break;
+                            }
+                        }
+                        nEdgesThisFace = nEdges;
+                    } else {
+                        nEdgesThisFace = nEdges;
+                    }
+                    /*
+                     * Get the boundary for this cell
+                     */
+                    List<HorizontalPosition> facePoints = new ArrayList<>();
+                    for (int j = 0; j < nEdgesThisFace; j++) {
+                        if (!ijSwap) {
+                            index.set(i, j);
+                        } else {
+                            index.set(j, i);
+                        }
+                        int nodeId = faceNodeData.getInt(index);
+                        nodeId -= connectionsStartFrom;
+                        facePoints.add(nodePositions.get(nodeId));
+                    }
+                    SimplePolygon faceBoundary = new SimplePolygon(facePoints);
+                    faceBoundaries.add(faceBoundary);
+                }
+
+                /*
+                 * Generate the HorizontalMesh for this grid
+                 */
+                hFaceMesh = HorizontalMesh.fromBounds(facePositions, faceBoundaries);
+            }
+        }
+
+        List<CoordinateAxis> coordinateAxes = nc.getCoordinateAxes();
+        /*
+         * Now find the vertical co-ordinate
+         * 
+         * This is a coordinate variable and will either have units of pressure,
+         * or the attribute "positive"
+         */
+        Dimension zDim = null;
+        VerticalAxis zAxis = null;
+        for (CoordinateAxis coordAxis : coordinateAxes) {
+            boolean zCoord = false;
+            boolean positiveUp = false;
+            Attribute positiveAttribute = coordAxis.findAttribute("positive");
+            if (positiveAttribute != null && positiveAttribute.isString()) {
+                String posStr = positiveAttribute.getStringValue();
+                if (posStr.equalsIgnoreCase("up")) {
+                    positiveUp = true;
+                    zCoord = true;
+                } else if (posStr.equalsIgnoreCase("down")) {
+                    positiveUp = false;
+                    zCoord = true;
+                }
+            }
+            String units = coordAxis.getUnitsString();
+            if (units != null && GISUtils.isPressureUnits(units)) {
+                zCoord = true;
+            }
+            if (zCoord) {
+                if (coordAxis.getRank() == 1) {
+                    /*
+                     * We have a 1D axis so this cast should be fine.
+                     */
+                    zAxis = CdmUtils.createVerticalAxis((CoordinateAxis1D) coordAxis, positiveUp);
+                    nonDataVars.add(coordAxis);
+                    zDim = coordAxis.getDimension(0);
+                } else if (coordAxis.getRank() == 2) {
+                    /*
+                     * We have a 2D depth axis. IF this is an independent
+                     * z-dimension + a horizontal dimension we have a vertical
+                     * axis where the actual depths depend on the horizontal
+                     * position.
+                     * 
+                     * This doesn't fit nicely into our data model, but we can
+                     * model it with a 1D vertical axis with units "level".
+                     */
+                    List<Dimension> dimensions = coordAxis.getDimensions();
+                    boolean hasHDependency = false;
+                    boolean hasSelfDependency = false;
+                    for (Dimension dimension : dimensions) {
+                        if (dimension.getFullName().equals(coordAxis.getFullName())) {
+                            hasSelfDependency = true;
+                            zDim = dimension;
+                        }
+                        if (dimension.equals(nodeHDim) || dimension.equals(faceHDim)) {
+                            hasHDependency = true;
+                        }
+                    }
+                    if (hasHDependency && hasSelfDependency) {
+                        nonDataVars.add(coordAxis);
+                        List<Double> values = new ArrayList<>();
+                        for (int i = 0; i < zDim.getLength(); i++) {
+                            values.add((double) i);
+                        }
+                        zAxis = new VerticalAxisImpl("level", values, new VerticalCrsImpl("level",
+                                false, true, positiveUp));
+                    }
+                }
+            }
+        }
+
+        /*
+         * Now find the time co-ordinate
+         */
+        Dimension tDim = null;
+        TimeAxis tAxis = null;
+        for (CoordinateAxis coordAxis : coordinateAxes) {
+            try {
+                tAxis = CdmUtils.createTimeAxis(CoordinateAxis1DTime.factory(nc, coordAxis, null));
+                nonDataVars.add(coordAxis);
+                tDim = coordAxis.getDimension(0);
+            } catch (Exception e) {
+                /*
+                 * If we can't create a time axis CoordinateAxis1DTime.factory()
+                 * will throw an Exception. That's fine
+                 */
+            }
+        }
+
+        Collection<HorizontalMesh4dVariableMetadata> variableMetadata = new ArrayList<>();
+        Map<String, int[]> varId2hztIndices = new HashMap<String, int[]>();
+        for (Variable var : variables) {
+            if (!nonDataVars.contains(var)) {
+                int[] hztIndices = new int[] { -1, -1, -1 };
+                /*
+                 * We have a data variable - i.e. one which should be available
+                 * in the Dataset
+                 */
+                Parameter parameter = getParameter(var);
+                HorizontalMesh hDomain = null;
+                int variableSpatialDimensions = 0;
+                /*
+                 * Pick which grid it uses - either the mandatory node-based
+                 * grid, or the optional face-based grid (if it exists)
+                 */
+                if (var.getDimensions().contains(nodeHDim)) {
+                    hDomain = hNodeMesh;
+                    hztIndices[0] = var.getDimensions().indexOf(nodeHDim);
+                    variableSpatialDimensions++;
+                } else if (var.getDimensions().contains(faceHDim)) {
+                    hDomain = hFaceMesh;
+                    hztIndices[0] = var.getDimensions().indexOf(faceHDim);
+                    variableSpatialDimensions++;
+                }
+                VerticalAxis zDomain = null;
+                if (var.getDimensions().contains(zDim)) {
+                    zDomain = zAxis;
+                    hztIndices[1] = var.getDimensions().indexOf(zDim);
+                    variableSpatialDimensions++;
+                }
+                TimeAxis tDomain = null;
+                if (var.getDimensions().contains(tDim)) {
+                    tDomain = tAxis;
+                    hztIndices[2] = var.getDimensions().indexOf(tDim);
+                    variableSpatialDimensions++;
+                }
+                if (hDomain != null) {
+                    /*
+                     * If we don't have a horizontal domain, we just ignore this
+                     * variable.
+                     */
+                    if (var.getDimensions().size() <= variableSpatialDimensions) {
+                        /*
+                         * We make variables available if they are only
+                         * spatially-dependent
+                         */
+                        variableMetadata.add(new HorizontalMesh4dVariableMetadata(parameter,
+                                hDomain, zDomain, tDomain, true));
+                        varId2hztIndices.put(parameter.getVariableId(), hztIndices);
+                    }
+                }
+            }
+        }
+        return new CdmUgridDataset(id, location, variableMetadata, varId2hztIndices);
+    }
+
+    /**
+     * Looks inside a NetCDF dataset to determine whether it follows the UGRID
+     * conventions.
+     * 
+     * @param nc
+     *            The dataset
+     * @return <code>true</code> if this is a UGRID dataset
+     */
+    private static boolean isUgrid(NetcdfDataset nc) {
+        /*
+         * First find the variable containing the "cf_role = mesh_topology"
+         * attribute. This is what defines that we are working with a UGRID
+         * dataset.
+         */
+        List<Variable> variables = nc.getVariables();
+        Variable meshTopology = null;
+        for (Variable var : variables) {
+            Attribute cfRole = var.findAttribute("cf_role");
+            if (cfRole != null && cfRole.isString()
+                    && cfRole.getStringValue().equalsIgnoreCase("mesh_topology")) {
+                meshTopology = var;
+                break;
+            }
+        }
+        return meshTopology != null;
     }
 
     private static final class CdmGridDataset extends GriddedDataset {
@@ -122,7 +666,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                     return new CdmGridDataSource(nc);
                 }
             } catch (EdalException | IOException e) {
-                if(nc != null) {
+                if (nc != null) {
                     NetcdfDatasetAggregator.releaseDataset(nc);
                 }
                 throw new DataReadingException("Problem aggregating datasets", e);
@@ -132,6 +676,53 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         @Override
         protected DataReadingStrategy getDataReadingStrategy() {
             return dataReadingStrategy;
+        }
+    }
+
+    private static final class CdmUgridDataset extends HorizontalMesh4dDataset {
+        private final String location;
+        private final Map<String, int[]> varId2hztIndices;
+
+        /**
+         * Construct a new {@link CdmUgridDataset}
+         * 
+         * @param id
+         *            The ID of the {@link CdmUgridDataset}
+         * @param location
+         *            The location of this dataset
+         * @param vars
+         *            A {@link Collection} of
+         *            {@link HorizontalMesh4dVariableMetadata} representing the
+         *            variables in this {@link CdmUgridDataset}
+         * @param varId2hztIndices
+         *            A {@link Map} of variable ID to the indices of the H, Z,
+         *            and T dimensions
+         */
+        public CdmUgridDataset(String id, String location,
+                Collection<HorizontalMesh4dVariableMetadata> vars,
+                Map<String, int[]> varId2hztIndices) {
+            super(id, vars);
+            this.location = location;
+            this.varId2hztIndices = varId2hztIndices;
+        }
+
+        @Override
+        protected HZTDataSource openDataSource() throws DataReadingException {
+            NetcdfDataset nc;
+            try {
+                nc = NetcdfDatasetAggregator.getDataset(location);
+                synchronized (this) {
+                    /*
+                     * If the getGridDataset method runs concurrently on the
+                     * same object, we can get a
+                     * ConcurrentModificationException, so we synchronise this
+                     * action to avoid the issue.
+                     */
+                    return new CdmMeshDataSource(nc, varId2hztIndices);
+                }
+            } catch (EdalException | IOException e) {
+                throw new DataReadingException("Problem aggregating datasets", e);
+            }
         }
     }
 }

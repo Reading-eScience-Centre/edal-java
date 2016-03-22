@@ -114,12 +114,12 @@ public class GetFeatureInfoParameters extends GetMapParameters {
              * only find feature info for grid cells whose centre is within 5
              * pixels of the clicked position
              * 
-             * Find the positions of a 9 pixel box surrounding the clicked point
+             * Find the positions of a 11 pixel box surrounding the clicked point
              */
             GridCell2D llGridCell = plottingDomainParams.getImageGrid().getDomainObjects()
-                    .get(j - 4, i - 4);
+                    .get(j - 5, i - 5);
             GridCell2D urGridCell = plottingDomainParams.getImageGrid().getDomainObjects()
-                    .get(j + 4, i + 4);
+                    .get(j + 5, i + 5);
             HorizontalPosition llPos = llGridCell.getCentre();
             HorizontalPosition urPos = urGridCell.getCentre();
 

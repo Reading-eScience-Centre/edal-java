@@ -173,7 +173,15 @@
         <Style>
             <Name>$style/$paletteName</Name>
             <Title>$style/$paletteName</Title>
+#if($paletteName.equalsIgnoreCase("default"))
+            <Abstract>$style style, using the default palette.  Available palettes are:
+#foreach($availablePalette in $allPalettes)
+            $availablePalette, 
+#end
+            </Abstract>
+#else
             <Abstract>$style style, using the $paletteName palette</Abstract>
+#end            
             <LegendURL width="110" height="264">
                 <Format>image/png</Format>
                 <OnlineResource xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$paletteName&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>

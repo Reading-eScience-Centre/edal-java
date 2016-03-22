@@ -33,8 +33,8 @@ import org.opengis.metadata.extent.GeographicBoundingBox;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
 import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
 import uk.ac.rdg.resc.edal.util.GISUtils;
@@ -52,7 +52,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
     protected final CurvilinearCoords curvCoords;
     private final BoundingBox latLonBbox;
-    private Array<GridCell2D> domainObjects = null;
+    private Array2D<GridCell2D> domainObjects = null;
 
     protected AbstractCurvilinearGrid(CurvilinearCoords curvCoords) {
         this.curvCoords = curvCoords;
@@ -136,10 +136,10 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
     }
 
     @Override
-    public Array<GridCell2D> getDomainObjects() {
+    public Array2D<GridCell2D> getDomainObjects() {
         if (domainObjects == null) {
-            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] { curvCoords.getNj(),
-                    curvCoords.getNi() }) {
+            domainObjects = new Array2D<GridCell2D>(curvCoords.getNj(),
+                    curvCoords.getNi()) {
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];

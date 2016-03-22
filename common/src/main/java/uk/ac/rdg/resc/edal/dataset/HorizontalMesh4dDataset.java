@@ -28,9 +28,12 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+import uk.ac.rdg.resc.edal.dataset.HZTDataSource.MeshCoordinates3D;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -46,6 +49,8 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
+
+;
 
 /**
  * Partial implementation of a {@link Dataset} where the horizontal layers are
@@ -85,60 +90,111 @@ public abstract class HorizontalMesh4dDataset extends
     protected Array2D<Number> extractHorizontalData(HorizontalMesh4dVariableMetadata metadata,
             int tIndex, int zIndex, HorizontalGrid targetGrid, HZTDataSource dataSource)
             throws DataReadingException {
-        Array2D<Number> data = new ValuesArray2D(targetGrid.getYSize(), targetGrid.getXSize());
         HorizontalMesh grid = metadata.getHorizontalDomain();
+
+        /*
+         * Create a list of coordinates to read to extract all of the horizontal
+         * data, and a corresponding list of 2D coordinates in which to store
+         * the output data
+         */
+        List<GridCoordinates2D> outputCoords = new ArrayList<>();
+        List<MeshCoordinates3D> coordsToRead = new ArrayList<>();
         for (GridCell2D cell : targetGrid.getDomainObjects()) {
             HorizontalPosition centre = cell.getCentre();
             GridCoordinates2D coordinates = cell.getGridCoordinates();
             int hIndex = grid.findIndexOf(centre);
-            data.set(dataSource.read(metadata.getId(), tIndex, zIndex, hIndex), coordinates.getY(),
-                    coordinates.getX());
+            MeshCoordinates3D meshCoords = new MeshCoordinates3D(hIndex, zIndex, tIndex);
+            outputCoords.add(coordinates);
+            coordsToRead.add(meshCoords);
+        }
+
+        /*
+         * Now perform the actual read
+         */
+        List<Number> dataVals = dataSource.read(metadata.getId(), coordsToRead);
+
+        /*
+         * And finally populate the output array with the read values
+         */
+        Array2D<Number> data = new ValuesArray2D(targetGrid.getYSize(), targetGrid.getXSize());
+        for (int i = 0; i < dataVals.size(); i++) {
+            GridCoordinates2D outputCoord = outputCoords.get(i);
+            data.set(dataVals.get(i), outputCoord.getY(), outputCoord.getX());
         }
         return data;
     }
 
     @Override
     protected Array1D<Number> extractProfileData(HorizontalMesh4dVariableMetadata metadata,
-            List<Integer> zs, int tIndex, HorizontalPosition hPos,
-            HZTDataSource dataSource) throws DataReadingException {
+            List<Integer> zs, int tIndex, HorizontalPosition hPos, HZTDataSource dataSource)
+            throws DataReadingException {
         HorizontalMesh hDomain = metadata.getHorizontalDomain();
         int hIndex = hDomain.findIndexOf(hPos);
 
-        Array1D<Number> data = new ValuesArray1D(zs.size());
-
-        int i = 0;
+        /*
+         * Populate the list of coordinates to read
+         */
+        List<MeshCoordinates3D> coordsToRead = new ArrayList<>();
         for (Integer z : zs) {
-            data.set(dataSource.read(metadata.getId(), tIndex, z, hIndex), new int[] { i++ });
+            coordsToRead.add(new MeshCoordinates3D(hIndex, z, tIndex));
+        }
+
+        /*
+         * Do the reading
+         */
+        List<Number> dataVals = dataSource.read(metadata.getId(), coordsToRead);
+
+        /*
+         * Populate the output array
+         */
+        int i = 0;
+        Array1D<Number> data = new ValuesArray1D(zs.size());
+        for (Number value : dataVals) {
+            data.set(value, new int[] { i++ });
         }
         return data;
     }
 
     @Override
     protected Array1D<Number> extractTimeseriesData(HorizontalMesh4dVariableMetadata metadata,
-            List<Integer> ts, int zIndex, HorizontalPosition hPos,
-            HZTDataSource dataSource) throws DataReadingException {
+            List<Integer> ts, int zIndex, HorizontalPosition hPos, HZTDataSource dataSource)
+            throws DataReadingException {
         HorizontalMesh hDomain = metadata.getHorizontalDomain();
         int hIndex = hDomain.findIndexOf(hPos);
 
-        Array1D<Number> data = new ValuesArray1D(ts.size());
-
-        int i = 0;
+        /*
+         * Populate the list of coordinates to read
+         */
+        List<MeshCoordinates3D> coordsToRead = new ArrayList<>();
         for (Integer t : ts) {
-            data.set(dataSource.read(metadata.getId(), t, zIndex, hIndex), new int[] { i++ });
+            coordsToRead.add(new MeshCoordinates3D(hIndex, zIndex, t));
+        }
+
+        /*
+         * Do the reading
+         */
+        List<Number> dataVals = dataSource.read(metadata.getId(), coordsToRead);
+
+        /*
+         * Populate the output array
+         */
+        int i = 0;
+        Array1D<Number> data = new ValuesArray1D(ts.size());
+        for (Number value : dataVals) {
+            data.set(value, new int[] { i++ });
         }
         return data;
     }
 
     @Override
     protected Number extractPoint(HorizontalMesh4dVariableMetadata metadata, int t, int z,
-            HorizontalPosition hPos, HZTDataSource dataSource)
-            throws DataReadingException {
+            HorizontalPosition hPos, HZTDataSource dataSource) throws DataReadingException {
         HorizontalMesh hGrid = metadata.getHorizontalDomain();
         int hIndex = hGrid.findIndexOf(hPos);
         if (hIndex == -1) {
             return null;
         }
-
-        return dataSource.read(metadata.getId(), t, z, hIndex);
+        return dataSource.read(metadata.getId(),
+                Collections.singletonList(new MeshCoordinates3D(hIndex, z, t))).get(0);
     }
 }

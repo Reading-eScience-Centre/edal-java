@@ -1323,4 +1323,20 @@ public final class GISUtils {
         }
         return false;
     }
+
+    public static boolean isLatitudeUnits(String units) {
+        if (units.equalsIgnoreCase("degrees_north") || units.equalsIgnoreCase("degree_north")
+                || units.equalsIgnoreCase("degrees_N") || units.equalsIgnoreCase("degree_N")
+                || units.equalsIgnoreCase("degreesN") || units.equalsIgnoreCase("degreeN"))
+            return true;
+        return false;
+    }
+
+    public static boolean isLongitudeUnits(String units) {
+        if (units.equalsIgnoreCase("degrees_east") || units.equalsIgnoreCase("degree_east")
+                || units.equalsIgnoreCase("degrees_E") || units.equalsIgnoreCase("degree_E")
+                || units.equalsIgnoreCase("degreesE") || units.equalsIgnoreCase("degreeE"))
+            return true;
+        return false;
+    }
 }

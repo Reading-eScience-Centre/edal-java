@@ -91,7 +91,7 @@ public class MapImage extends Drawable {
      *         {@link MapImage}
      */
     public BufferedImage getLegend(int componentSize) throws EdalException {
-        return getLegend(componentSize, componentSize, Color.black, Color.white, true);
+        return getLegend(componentSize, componentSize, Color.black, Color.white, true, false);
     }
 
     /**
@@ -111,7 +111,30 @@ public class MapImage extends Drawable {
      *         {@link MapImage}
      */
     public BufferedImage getLegend(int componentWidth, int componentHeight) throws EdalException {
-        return getLegend(componentWidth, componentHeight, Color.black, Color.white, true);
+        return getLegend(componentWidth, componentHeight, Color.black, Color.white, true, false);
+    }
+
+    /**
+     * Generate a legend for this {@link MapImage}.
+     * 
+     * @param componentWidth
+     *            A single integer specifying the width of each component of the
+     *            legend. The final image size will depend upon this number as
+     *            well as the number of unique data fields which this
+     *            {@link MapImage} depends upon
+     * @param componentHeight
+     *            A single integer specifying the height of each component of
+     *            the legend. The final image size will depend upon this number
+     *            as well as the number of unique data fields which this
+     *            {@link MapImage} depends upon
+     * @param force1D
+     *            Force this legend to only use the first field.
+     * @return An {@link BufferedImage} representing the legend for this
+     *         {@link MapImage}
+     */
+    public BufferedImage getLegend(int componentWidth, int componentHeight, boolean force1D)
+            throws EdalException {
+        return getLegend(componentWidth, componentHeight, Color.black, Color.white, true, true);
     }
 
     /**
@@ -133,13 +156,15 @@ public class MapImage extends Drawable {
      *            The {@link Color} of the background
      * @param layerNameLabels
      *            Whether or not to plot the ID of the layers on the legend
+     * @param force1D
+     *            Force this legend to only use the first field.
      * @return An {@link BufferedImage} representing the legend for this
      *         {@link MapImage}
      */
     public BufferedImage getLegend(int componentWidth, int componentHeight, Color textColour,
-            Color bgColour, boolean layerNameLabels) throws EdalException {
+            Color bgColour, boolean layerNameLabels, boolean force1D) throws EdalException {
         return getLegend(componentWidth, componentHeight, textColour, bgColour, layerNameLabels,
-                true, 0.1f, 0.05f);
+                true, force1D, 0.1f, 0.05f);
     }
 
     /**
@@ -165,6 +190,8 @@ public class MapImage extends Drawable {
      *            The width of a 1D colourbar
      * @param background
      *            Whether to draw a background map image for 2D legends
+     * @param force1D
+     *            Force this legend to only use the first field.
      * @param extraAmountOutOfRange
      *            This is the fraction of the colourbar which *gets added* as
      *            out-of-range data.
@@ -178,10 +205,10 @@ public class MapImage extends Drawable {
      *         {@link MapImage}
      */
     public BufferedImage getLegend(int componentWidth, int componentHeight, Color textColour,
-            Color bgColour, boolean layerNameLabels, boolean background,
+            Color bgColour, boolean layerNameLabels, boolean background, boolean force1D,
             float extraAmountOutOfRange, float fontProportion) throws EdalException {
         return getLegend(componentWidth, componentHeight, textColour, bgColour, layerNameLabels,
-                background, extraAmountOutOfRange, extraAmountOutOfRange, fontProportion);
+                background, force1D, extraAmountOutOfRange, extraAmountOutOfRange, fontProportion);
     }
 
     /**
@@ -207,6 +234,8 @@ public class MapImage extends Drawable {
      *            The width of a 1D colourbar
      * @param background
      *            Whether to draw a background map image for 2D legends
+     * @param force1D
+     *            Force this legend to only use the first field.
      * @param extraAmountOutOfRangeLow
      *            This is the fraction of the colourbar which *gets added* as
      *            out-of-range data below the minimum
@@ -226,7 +255,7 @@ public class MapImage extends Drawable {
      *         {@link MapImage}
      */
     public BufferedImage getLegend(int componentWidth, int componentHeight, Color textColour,
-            Color bgColour, boolean layerNameLabels, boolean background,
+            Color bgColour, boolean layerNameLabels, boolean background, boolean force1D,
             float extraAmountOutOfRangeLow, float extraAmountOutOfRangeHigh, float fontProportion)
             throws EdalException {
         BufferedImage finalImage;
@@ -243,7 +272,7 @@ public class MapImage extends Drawable {
              * Return an empty image - we have no data fields
              */
             return null;
-        } else if (noOfIndependentFields == 1) {
+        } else if (noOfIndependentFields == 1 || force1D) {
             /*
              * Case where we have a 1D colour bar
              */

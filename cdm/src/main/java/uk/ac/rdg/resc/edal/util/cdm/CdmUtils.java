@@ -196,34 +196,28 @@ public final class CdmUtils {
             final CoordinateAxis2D lonAxis = (CoordinateAxis2D) xAxis;
             final CoordinateAxis2D latAxis = (CoordinateAxis2D) yAxis;
 
-            Array2D<Number> lonVals = new Array2D<Number>(lonAxis.getShape(0), lonAxis.getShape(1)) {
-                @Override
-                public void set(Number value, int... coords) {
-                    throw new UnsupportedOperationException("This Array2D is immutable");
-                }
-
-                @Override
-                public Number get(int... coords) {
-                    return lonAxis.getCoordValue(coords[0], coords[1]);
-                }
-            };
-            Array2D<Number> latVals = new Array2D<Number>(latAxis.getShape(0), latAxis.getShape(1)) {
-                @Override
-                public void set(Number value, int... coords) {
-                    throw new UnsupportedOperationException("This Array2D is immutable");
-                }
-
-                @Override
-                public Number get(int... coords) {
-                    return latAxis.getCoordValue(coords[0], coords[1]);
-                }
-            };
+            Array2D<Number> lonVals = get2DCoordinateValues(lonAxis);
+            Array2D<Number> latVals = get2DCoordinateValues(latAxis);
 
             return LookUpTableGrid.generate(lonVals, latVals);
         } else {
             /* Shouldn't get here */
             throw new IllegalStateException("Inconsistent axis types");
         }
+    }
+    
+    public static Array2D<Number> get2DCoordinateValues(final CoordinateAxis2D axis) {
+        return new Array2D<Number>(axis.getShape(0), axis.getShape(1)) {
+            @Override
+            public void set(Number value, int... coords) {
+                throw new UnsupportedOperationException("This Array2D is immutable");
+            }
+            
+            @Override
+            public Number get(int... coords) {
+                return axis.getCoordValue(coords[0], coords[1]);
+            }
+        };
     }
 
     /**

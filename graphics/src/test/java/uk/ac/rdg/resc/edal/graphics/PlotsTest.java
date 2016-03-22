@@ -129,8 +129,7 @@ public class PlotsTest {
 
         catalogue = new FeatureCatalogue() {
             @Override
-            public FeaturesAndMemberName getFeaturesForLayer(String id,
-                    PlottingDomainParams params) {
+            public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params) {
                 if (id.equals("test")) {
                     return new FeaturesAndMemberName(testFeature, "testvar");
                 } else if (id.equals("xtest")) {
@@ -175,28 +174,28 @@ public class PlotsTest {
     }
 
     /**
-     * Accepts a buffered image as input and returns a boolean indicating if
-     * the image is entirely the same colour.
+     * Accepts a buffered image as input and returns a boolean indicating if the
+     * image is entirely the same colour.
      * 
      * @param image
      * @return blank
      */
     private boolean imageBlank(BufferedImage image) {
-    	int rgb = image.getRGB(0, 0);
-    	for (int i = 0; i < image.getWidth(); i++) {
+        int rgb = image.getRGB(0, 0);
+        for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {
-            	if (image.getRGB(i, j) != rgb) {
-            		return false;
-            	}
+                if (image.getRGB(i, j) != rgb) {
+                    return false;
+                }
             }
         }
-    	return true;
+        return true;
     }
 
     @Test
     public void testRaster() throws EdalException {
-        ColourScheme colourScheme = new SegmentColourScheme(scale, Color.blue,
-                Color.red, new Color(0, true), "#000000,#00ff00", 10);
+        ColourScheme colourScheme = new SegmentColourScheme(scale, Color.blue, Color.red,
+                new Color(0, true), "#000000,#00ff00", 10);
         RasterLayer rasterLayer = new RasterLayer("test", colourScheme);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(rasterLayer);
@@ -217,18 +216,18 @@ public class PlotsTest {
 
     @Test
     public void testStipple() throws EdalException {
-    	try {
-    		SLDRange range = new SLDRange(0f, 1f, Spacing.LINEAR);
-    		DensityMap function = new SegmentDensityMap(10, range, 0f, 1f, 0f, 1f, 0f);
-    		StippleLayer stippleLayer = new StippleLayer("test", function);
-    		MapImage mapImage = new MapImage();
-    		mapImage.getLayers().add(stippleLayer);
-    		BufferedImage image = mapImage.drawImage(params, catalogue);
-    		BufferedImage comparisonImage = getComparisonImage("stipple");
-    		compareImages(comparisonImage, image);
-    	} catch (SLDException slde) {
-    		throw new EdalException("Problem creating range.", slde);
-    	}
+        try {
+            SLDRange range = new SLDRange(0f, 1f, Spacing.LINEAR);
+            DensityMap function = new SegmentDensityMap(10, range, 0f, 1f, 0f, 1f, 0f);
+            StippleLayer stippleLayer = new StippleLayer("test", function);
+            MapImage mapImage = new MapImage();
+            mapImage.getLayers().add(stippleLayer);
+            BufferedImage image = mapImage.drawImage(params, catalogue);
+            BufferedImage comparisonImage = getComparisonImage("stipple");
+            compareImages(comparisonImage, image);
+        } catch (SLDException slde) {
+            throw new EdalException("Problem creating range.", slde);
+        }
     }
 
     @Test
@@ -251,7 +250,8 @@ public class PlotsTest {
 
     @Test
     public void testArrow() throws EdalException {
-        ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black, ArrowStyle.UPSTREAM);
+        ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black, new Color(0, true),
+                ArrowStyle.UPSTREAM);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(arrowLayer);
         BufferedImage image = mapImage.drawImage(params, catalogue);
@@ -320,7 +320,7 @@ public class PlotsTest {
 
         @Override
         public Number get(int... coords) {
-            return 360*((double) coords[1]) / WIDTH;
+            return 360 * ((double) coords[1]) / WIDTH;
         }
     };
 }

@@ -34,8 +34,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.util.AbstractImmutableArray;
-import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
@@ -47,7 +46,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 public class RectilinearGridImpl extends AbstractHorizontalGrid implements RectilinearGrid {
     protected ReferenceableAxis<Double> xAxis;
     protected ReferenceableAxis<Double> yAxis;
-    private Array<GridCell2D> domainObjects = null;
+    private Array2D<GridCell2D> domainObjects = null;
 
     /**
      * Single-argument constructor for subclasses who would rather create their
@@ -76,10 +75,9 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     }
 
     @Override
-    public Array<GridCell2D> getDomainObjects() {
+    public Array2D<GridCell2D> getDomainObjects() {
         if (domainObjects == null) {
-            domainObjects = new AbstractImmutableArray<GridCell2D>(new int[] { yAxis.size(),
-                    xAxis.size() }) {
+            domainObjects = new Array2D<GridCell2D>(yAxis.size(), xAxis.size()) {
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];
@@ -144,7 +142,7 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     public GridCoordinates2D findIndexOf(HorizontalPosition position) {
         int x;
         int y;
-        if(GISUtils.crsMatch(position.getCoordinateReferenceSystem(), crs)) {
+        if (GISUtils.crsMatch(position.getCoordinateReferenceSystem(), crs)) {
             x = xAxis.findIndexOf(position.getX());
             y = yAxis.findIndexOf(position.getY());
         } else {

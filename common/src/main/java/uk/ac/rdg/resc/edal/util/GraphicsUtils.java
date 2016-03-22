@@ -52,7 +52,6 @@ import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -104,6 +103,9 @@ public class GraphicsUtils {
      * 
      *            <li>"extend"
      * 
+     *            <li>A named colour. See
+     *            {@link GraphicsUtils#getNamedColours()} for a full list
+     * 
      * @return A {@link Color} representing the string, or <code>null</code> if
      *         "extend" was supplied
      * @throws EdalParseException
@@ -153,6 +155,13 @@ public class GraphicsUtils {
     }
 
     /**
+     * @return The available named colours
+     */
+    public static Collection<String> getNamedColours() {
+        return namedColors.keySet();
+    }
+
+    /**
      * Converts a {@link Color} to an HTML-like {@link String} (#AARRGGBB), with
      * additional cases for transparent / <code>null</code> values
      * 
@@ -169,10 +178,6 @@ public class GraphicsUtils {
             return "transparent";
         }
         return String.format("#%08X", colour.getRGB());
-    }
-
-    public static void main(String[] args) {
-        System.out.println(colourToHtmlString(Color.blue));
     }
 
     /**
@@ -275,7 +280,7 @@ public class GraphicsUtils {
                     t2 = System.currentTimeMillis();
                     log.debug("Extracted data for range estimation: " + (t2 - t1) + "ms");
                 }
-            } catch (DataReadingException | VariableNotFoundException e) {
+            } catch (Exception e) {
                 log.error(
                         "Problem reading data whilst estimating scale range.  A default value will be used.",
                         e);

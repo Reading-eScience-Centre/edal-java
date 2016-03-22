@@ -210,7 +210,7 @@ public class DatasetConfig {
              */
             state = lastSuccessfulUpdateTime == null ? DatasetState.LOADING : DatasetState.UPDATING;
 
-            createDataset(datasetStorage);
+            createDataset(datasetStorage, true);
 
             /*
              * Update the state of this dataset. If we've got this far there
@@ -236,7 +236,7 @@ public class DatasetConfig {
         }
     }
 
-    public void createDataset(DatasetStorage datasetStorage) throws InstantiationException,
+    public void createDataset(DatasetStorage datasetStorage, boolean forceRefresh) throws InstantiationException,
             IllegalAccessException, ClassNotFoundException, IOException, EdalException {
         loadingProgress.add("Starting loading");
 
@@ -251,7 +251,7 @@ public class DatasetConfig {
          * TODO In the old version, we dealt with OPeNDAP credentials here...
          */
 
-        Dataset dataset = factory.createDataset(id, location);
+        Dataset dataset = factory.createDataset(id, location, forceRefresh);
 
         loadingProgress.add("Dataset created");
         /*

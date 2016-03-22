@@ -91,7 +91,12 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 /**
  * {@link DatasetFactory} that creates {@link Dataset}s representing profile
- * data from the EN3 database read through the Unidata Common Data Model.
+ * data from the EN3/4 database read through the Unidata Common Data Model.
+ * 
+ * The data must be in either EN3 v2a or EN4 v4.1.1 format. Intermediate format
+ * versions will almost certainly work. Earlier versions of EN3 will not work.
+ * At the time of writing EN4 v4.1.1 is the latest version. As for future
+ * versions, who knows?
  * 
  * @author Guy Griffiths
  */
@@ -180,7 +185,7 @@ public final class En3DatasetFactory extends DatasetFactory {
     /* This is because we deserialise a HashMap which is a generic. */
     @SuppressWarnings("unchecked")
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public En3Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
         log.debug("IN createDataset Entering createDataset");
         long t1 = System.currentTimeMillis();
 
@@ -214,7 +219,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         ObjectInputStream in = null;
         FileInputStream fileIn = null;
 
-        if (spatialIndexFile.exists()) {
+        if (spatialIndexFile.exists() && !forceRefresh) {
             /*-
              * We have an existing spatial index for this ID.
              * 
@@ -242,7 +247,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                  * Log this error, but otherwise ignore it - we will just
                  * recreate the spatial index, so it's not a big problem.
                  */
-                log.warn("Problem reading EN3 serialisation index", e);
+                log.warn("Problem reading EN3/4 serialisation index", e);
             }
         }
 
@@ -275,7 +280,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                  * Problem reading spatial index/domain from file. Set the flag
                  * to regenerate it.
                  */
-                log.warn("Problem reading EN3 domain/spatial index", e);
+                log.warn("Problem reading EN3/4 domain/spatial index", e);
                 readExistingSpatialIndex = false;
             }
         }
@@ -372,14 +377,15 @@ public final class En3DatasetFactory extends DatasetFactory {
                      */
                     double lat = latValues.getDouble(profileNum);
                     double lon = lonValues.getDouble(profileNum);
-                    
-                    if(Double.isNaN(lat) || Double.isNaN(lon)) {
+
+                    if (Double.isNaN(lat) || Double.isNaN(lon)) {
                         /*
-                         * We have bad data for the position.  This reading must be ignored.
+                         * We have bad data for the position. This reading must
+                         * be ignored.
                          */
                         continue;
                     }
-                    
+
                     /*
                      * All positions are in WGS84
                      */
@@ -389,10 +395,10 @@ public final class En3DatasetFactory extends DatasetFactory {
                      * Find the time of the current profile measurement
                      */
                     double seconds = (timeValues.getDouble(profileNum) * unitLength);
-                    if(Double.isNaN(seconds)) {
+                    if (Double.isNaN(seconds)) {
                         continue;
                     }
-                    
+
                     DateTime time = refTime.plusSeconds((int) seconds);
                     Extent<DateTime> tExtent = Extents.newExtent(time, time);
 
@@ -543,7 +549,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         metadata.add(new VariableMetadata(PSAL_PARAMETER, hDomain, zDomain, tDomain));
 
         long t2 = System.currentTimeMillis();
-        log.debug("Time to create EN3 dataset: " + ((t2 - t1) / 1000.0) + "s");
+        log.debug("Time to create EN3/4 dataset: " + ((t2 - t1) / 1000.0) + "s");
 
         log.debug("OUT createDataset Returning from createDataset");
         return new En3Dataset(id, metadata, indexer, hDomain.getBoundingBox(), zDomain.getExtent(),
@@ -649,10 +655,10 @@ public final class En3DatasetFactory extends DatasetFactory {
                 profileFeature = doRead(id, nc, fileAndProfileNumber.profileNumber, variableIds);
             } catch (IOException e) {
                 log.debug("readFeature throwing exception");
-                throw new DataReadingException("Problem reading EN3 profile data", e);
+                throw new DataReadingException("Problem reading EN3/4 profile data", e);
             } catch (InvalidRangeException e) {
                 log.debug("readFeature throwing exception");
-                throw new DataReadingException("Problem reading EN3 profile data", e);
+                throw new DataReadingException("Problem reading EN3/4 profile data", e);
             } finally {
                 NetcdfDatasetAggregator.releaseDataset(nc);
             }
@@ -710,7 +716,8 @@ public final class En3DatasetFactory extends DatasetFactory {
                     log.debug("readFeatures 3b acquiring dataset: " + file.getAbsolutePath());
 
                     List<FeatureAndProfileId> featureProfileIds = entry.getValue();
-                    /* For 100 simultaneous requests
+                    /*
+                     * For 100 simultaneous requests
                      * 
                      * 4a happens 100 times more than 4b
                      */
@@ -722,9 +729,11 @@ public final class En3DatasetFactory extends DatasetFactory {
                         /* doRead entry log happens 49 times less than 5a */
                         ProfileFeature profileFeature = doRead(featureProfileId.featureId, nc,
                                 featureProfileId.profileId, variableIds);
-                        /* doRead exit log happens 50 times less than 5b
-                         *
-                         * i.e. doRead enters once more than it exits */
+                        /*
+                         * doRead exit log happens 50 times less than 5b
+                         * 
+                         * i.e. doRead enters once more than it exits
+                         */
                         log.debug("readFeatures 5b");
                         if (profileFeature != null) {
                             ret.add(profileFeature);
@@ -735,10 +744,10 @@ public final class En3DatasetFactory extends DatasetFactory {
                 } catch (IOException e) {
                     e.printStackTrace();
                     log.debug("readFeatures EXCEPTION IO");
-                    throw new DataReadingException("Problem reading EN3 profile data", e);
+                    throw new DataReadingException("Problem reading EN3/4 profile data", e);
                 } catch (InvalidRangeException e) {
                     log.debug("readFeatures EXCEPTION InvalidRange");
-                    throw new DataReadingException("Problem reading EN3 profile data", e);
+                    throw new DataReadingException("Problem reading EN3/4 profile data", e);
                 } finally {
                     NetcdfDatasetAggregator.releaseDataset(nc);
                 }
@@ -781,7 +790,6 @@ public final class En3DatasetFactory extends DatasetFactory {
          * its length, but that seems a little unnecessary, since it will be 8
          */
         int platformNameLength = 8;
-        
 
         /*
          * TODO removed this approach...it didn't fix the issue, but it might be
@@ -807,7 +815,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         Variable timeVar = nc.findVariable("JULD");
         Variable depthVar = nc.findVariable("DEPH_CORRECTED");
 
-        log.debug("doRead 1 "+location);
+        log.debug("doRead 1 " + location);
         /*
          * Set up some ranges to only read the pertinent part of the file
          */
@@ -820,16 +828,16 @@ public final class En3DatasetFactory extends DatasetFactory {
         List<Range> platformIdRangeList = new ArrayList<Range>();
         platformIdRangeList.add(profileNumRange);
         platformIdRangeList.add(new Range(8));
-        
-        log.debug("doRead 2 "+location);
-        
+
+        log.debug("doRead 2 " + location);
+
         Array platformIdArr = nc.findVariable("PLATFORM_NUMBER").read(platformIdRangeList);
-        log.debug("doRead 3 "+location);
+        log.debug("doRead 3 " + location);
         StringBuilder platformId = new StringBuilder();
         for (int i = 0; i < platformNameLength; i++) {
             platformId.append(platformIdArr.getChar(i));
         }
-        log.debug("doRead 4 "+location);
+        log.debug("doRead 4 " + location);
 
         /*
          * Determine the reference time
@@ -844,7 +852,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         }
         int unitLength = TimeUtils.getUnitLengthSeconds(timeUnitsParts[0]);
         DateTime refTime = EN3_DATE_TIME_FORMATTER.parseDateTime(timeUnitsParts[1]);
-        log.debug("doRead 5 "+location);
+        log.debug("doRead 5 " + location);
 
         /*
          * Read the appropriate parts of the required variables
@@ -854,13 +862,13 @@ public final class En3DatasetFactory extends DatasetFactory {
         Array latValues = latitudeVar.read(singleValPerPlatform);
         Array lonValues = longitudeVar.read(singleValPerPlatform);
         Array timeValues = timeVar.read(singleValPerPlatform);
-        log.debug("doRead 6 "+location);
+        log.debug("doRead 6 " + location);
 
         List<Range> allDepthsOnePlatform = new ArrayList<Range>();
         allDepthsOnePlatform.add(profileNumRange);
         allDepthsOnePlatform.add(levelNumRange);
         Array depthValues = depthVar.read(allDepthsOnePlatform);
-        log.debug("doRead 7 "+location);
+        log.debug("doRead 7 " + location);
 
         /*
          * Now use the values read from file to create the domain for this
@@ -884,7 +892,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 break;
             }
         }
-        log.debug("doRead 8 "+location);
+        log.debug("doRead 8 " + location);
         VerticalAxisImpl domain = null;
         try {
             domain = new VerticalAxisImpl("Depth axis of profile", zValues, EN3_VERTICAL_CRS);
@@ -894,7 +902,7 @@ public final class En3DatasetFactory extends DatasetFactory {
              * these profiles (1-2% of total) but later we may need to re-order
              * the measurement values
              */
-            // log.error("Invalid domain in EN3 file", e);
+            // log.error("Invalid domain in EN3/4 file", e);
             log.debug("doRead OUT - bad vertical domain");
             return null;
         }
@@ -903,7 +911,7 @@ public final class En3DatasetFactory extends DatasetFactory {
          * true depth domain - once we get to NaN values there is no data)
          */
         int trueNumLevels = zValues.size();
-        log.debug("doRead 9 "+location);
+        log.debug("doRead 9 " + location);
 
         Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
         /*
@@ -915,13 +923,16 @@ public final class En3DatasetFactory extends DatasetFactory {
 
             Array1D<Number> varValues = new ValuesArray1D(trueNumLevels);
             for (int i = 0; i < trueNumLevels; i++) {
-                double val = varArray.getDouble(i);
+                Double val = varArray.getDouble(i);
+                if(Double.isNaN(val)) {
+                    val = null;
+                }
                 varValues.set(val, i);
             }
             values.put(varId, varValues);
             parameters.put(varId, ALL_PARAMETERS.get(varId));
         }
-        log.debug("doRead 10 "+location);
+        log.debug("doRead 10 " + location);
 
         String platformIdStr = platformId.toString().trim();
 
@@ -929,11 +940,11 @@ public final class En3DatasetFactory extends DatasetFactory {
         /*
          * Create the ProfileFeature
          */
-        ProfileFeature ret = new ProfileFeature(id, "EN3 platform " + platformIdStr,
-                "Profile data from platform " + platformIdStr + " in the EN3 database", domain,
+        ProfileFeature ret = new ProfileFeature(id, "EN platform " + platformIdStr,
+                "Profile data from platform " + platformIdStr + " in the EN3/4 database", domain,
                 hPos, time, parameters, values);
 
-        log.debug("doRead 11 "+location);
+        log.debug("doRead 11 " + location);
         /*
          * Read the quality control flags and store in the properties of the
          * profile feature
@@ -941,17 +952,17 @@ public final class En3DatasetFactory extends DatasetFactory {
         Variable qcPosVar = nc.findVariable("POSITION_QC");
         Variable qcPotmCorrectedVar = nc.findVariable("PROFILE_POTM_QC");
         Variable qcPsalCorrectedVar = nc.findVariable("PROFILE_PSAL_QC");
-        log.debug("doRead 12 "+location);
+        log.debug("doRead 12 " + location);
 
         //			Variable qcDepthVar = nc.findVariable("PROFILE_DEPH_QC");
         //			Variable qcJuldVar = nc.findVariable("JULD_QC");
 
         Array qcPos = qcPosVar.read();
-        log.debug("doRead 13.1 "+location);
+        log.debug("doRead 13.1 " + location);
         Array qcPotmCorrected = qcPotmCorrectedVar.read();
-        log.debug("doRead 13.2 "+location);
+        log.debug("doRead 13.2 " + location);
         Array qcPsalCorrected = qcPsalCorrectedVar.read();
-        log.debug("doRead 13.3 "+location);
+        log.debug("doRead 13.3 " + location);
 
         //			Array qcDepth = qcDepthVar.read();
         //			Array qcJuld = qcJuldVar.read();
@@ -971,7 +982,7 @@ public final class En3DatasetFactory extends DatasetFactory {
             value = "N/A";
         }
         props.put(key, value);
-        log.debug("doRead 14 "+location);
+        log.debug("doRead 14 " + location);
 
         if (variableIds.contains(POT_TEMP_PARAMETER.getVariableId())) {
             key = "Potential temperature QC";
@@ -986,7 +997,7 @@ public final class En3DatasetFactory extends DatasetFactory {
             }
             props.put(key, value);
         }
-        log.debug("doRead 15 "+location);
+        log.debug("doRead 15 " + location);
 
         if (variableIds.contains(PSAL_PARAMETER.getVariableId())) {
             key = "Practical salinity QC";
@@ -1001,7 +1012,7 @@ public final class En3DatasetFactory extends DatasetFactory {
             }
             props.put(key, value);
         }
-        log.debug("doRead 16 "+location);
+        log.debug("doRead 16 " + location);
 
         //			key = "Depth QC";
         //			if (qcDepth.getChar(profNum) == '1') {

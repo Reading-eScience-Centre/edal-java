@@ -13,35 +13,44 @@ import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
 
-	/*
-	 * Parse symbolizer using XPath
-	 */
-	@Override
-	protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException, SLDException, EdalParseException {
-		// get the arrow properties
-		String arrowSizeText = (String) xPath.evaluate(
-				"./resc:ArrowSize", symbolizerNode, XPathConstants.STRING);
-		Integer arrowSize = 8;
-		if (!(arrowSizeText == null) && !(arrowSizeText.equals(""))) {
-			arrowSize = Integer.parseInt(arrowSizeText);
-		}
-		String arrowColourText = (String) xPath.evaluate(
-				"./resc:ArrowColour", symbolizerNode, XPathConstants.STRING);
-		Color arrowColour = Color.BLACK;
-		if (arrowColourText != null && !(arrowColourText.equals(""))) {
-			arrowColour = GraphicsUtils.parseColour(arrowColourText);
-		}
-		
-		ArrowStyle arrowStyle = ArrowStyle.THIN_ARROW;
-		String arrowStyleText = (String) xPath.evaluate(
-		        "./resc:ArrowStyle", symbolizerNode, XPathConstants.STRING);
-		if (arrowStyleText != null && !(arrowStyleText.equals(""))) {
-		    arrowStyle = ArrowStyle.valueOf(arrowStyleText);
-		}
-				
-		// instantiate a new arrow layer and add it to the image
-		ArrowLayer arrowLayer = new ArrowLayer(layerName, arrowSize, arrowColour, arrowStyle);
-		return arrowLayer;
-	}
+    /*
+     * Parse symbolizer using XPath
+     */
+    @Override
+    protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException,
+            SLDException, EdalParseException {
+        // get the arrow properties
+        String arrowSizeText = (String) xPath.evaluate("./resc:ArrowSize", symbolizerNode,
+                XPathConstants.STRING);
+        Integer arrowSize = 8;
+        if (!(arrowSizeText == null) && !(arrowSizeText.equals(""))) {
+            arrowSize = Integer.parseInt(arrowSizeText);
+        }
+        String arrowColourText = (String) xPath.evaluate("./resc:ArrowColour", symbolizerNode,
+                XPathConstants.STRING);
+        Color arrowColour = Color.BLACK;
+        if (arrowColourText != null && !(arrowColourText.equals(""))) {
+            arrowColour = GraphicsUtils.parseColour(arrowColourText);
+        }
+
+        String arrowBackgroundText = (String) xPath.evaluate("./resc:ArrowBackground",
+                symbolizerNode, XPathConstants.STRING);
+        Color arrowBackground = new Color(0, true);
+        if (arrowBackgroundText != null && !(arrowBackgroundText.equals(""))) {
+            arrowBackground = GraphicsUtils.parseColour(arrowBackgroundText);
+        }
+
+        ArrowStyle arrowStyle = ArrowStyle.THIN_ARROW;
+        String arrowStyleText = (String) xPath.evaluate("./resc:ArrowStyle", symbolizerNode,
+                XPathConstants.STRING);
+        if (arrowStyleText != null && !(arrowStyleText.equals(""))) {
+            arrowStyle = ArrowStyle.valueOf(arrowStyleText);
+        }
+
+        // instantiate a new arrow layer and add it to the image
+        ArrowLayer arrowLayer = new ArrowLayer(layerName, arrowSize, arrowColour, arrowBackground,
+                arrowStyle);
+        return arrowLayer;
+    }
 
 }
