@@ -280,19 +280,39 @@ public class DomainWriter <T> {
 	}
 	
 	private void writeHorizontalAxes(MapEncoder<?> axes, RegularGrid xy) throws IOException {
-		// TODO bounds
+		if (xy.getXSize() == 1) {
+			double halfstep = xy.getXAxis().getCoordinateSpacing() / 2;
+			double val = xy.getXAxis().getCoordinateValue(0);
+			axes
+			  .startMap("x")
+			    .startArray("values").add(val).end()
+			    .startArray("bounds").add(val-halfstep).add(val+halfstep).end()
+			  .end();
+		} else {
+			axes
+			  .startMap("x")
+			    .put("start", xy.getXAxis().getCoordinateValue(0))
+			    .put("stop", xy.getXAxis().getCoordinateValue(xy.getXSize()-1))
+			    .put("num", xy.getXSize())
+			  .end();
+		}
 		
-		axes
-		  .startMap("x")
-		    .put("start", xy.getXAxis().getCoordinateValue(0))
-		    .put("stop", xy.getXAxis().getCoordinateValue(xy.getXSize()-1))
-		    .put("num", xy.getXSize())
-		  .end()
-		  .startMap("y")
-		    .put("start", xy.getYAxis().getCoordinateValue(0))
-		    .put("stop", xy.getYAxis().getCoordinateValue(xy.getYSize()-1))
-		    .put("num", xy.getYSize())
-		  .end();
+		if (xy.getYSize() == 1) {
+			double halfstep = xy.getYAxis().getCoordinateSpacing() / 2;
+			double val = xy.getYAxis().getCoordinateValue(0);
+			axes
+			  .startMap("y")
+			    .startArray("values").add(val).end()
+			    .startArray("bounds").add(val-halfstep).add(val+halfstep).end()
+			  .end();
+		} else {
+			axes
+			  .startMap("y")
+			    .put("start", xy.getYAxis().getCoordinateValue(0))
+			    .put("stop", xy.getYAxis().getCoordinateValue(xy.getYSize()-1))
+			    .put("num", xy.getYSize())
+			  .end();
+		}
 	}
 	
 	private void writeHorizontalAxes(MapEncoder<?> axes, RectilinearGrid xy) throws IOException {
