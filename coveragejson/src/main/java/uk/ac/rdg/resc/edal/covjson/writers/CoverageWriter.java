@@ -29,71 +29,58 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayEncoder;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.metadata.Parameter;
-
 import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
 import uk.ac.rdg.resc.edal.covjson.writers.Constants.Vals;
 
 /**
  * 
  * @author Maik Riechert
+ *
  */
-public class FeatureCollectionWriter <T> {
+public class CoverageWriter <T> {
 
 	private final MapEncoder<T> map;
+	private final boolean root;
 
-	public FeatureCollectionWriter(MapEncoder<T> encoder) {
+	/**
+	 * 
+	 * @param encoder
+	 * @param root If true, then the feature is the root element in the document
+	 * 	that is written.
+	 */
+	public CoverageWriter(MapEncoder<T> encoder, boolean root) {
 		this.map = encoder;
+		this.root = root;
 	}
 
-	public void write(Collection<Feature<?>> features) throws IOException {
-		Util.addJsonLdContext(map);
-		map.put(Keys.TYPE, Vals.COVERAGECOLLECTION);
+	public void write(Coverage coverage) throws IOException {
+		write(coverage, false);
+	}
+	
+	public void write(Coverage coverage, boolean skipParameters) throws IOException {
+		if (root) {
+			Util.addJsonLdContext(map);
+		}
+		map
+		  .put(Keys.TYPE, Vals.COVERAGE)
+		  .put(Keys.PROFILE, coverage.domain.profile + Vals.COVERAGE)
+		  .startMap(Keys.TITLE).put(Keys.EN, coverage.feature.getName()).end();
 		
-		if (!features.isEmpty()) {
-			String domainProfile = Vals.getDomainProfile(features.iterator().next());
-			boolean sameProfile = true;
-			for (Feature<?> f : features) {
-				if (!Vals.getDomainProfile(f).equals(domainProfile)) {
-					sameProfile = false;
-					break;
-				}
-			}
-			if (sameProfile) {
-				map.put(Keys.PROFILE, domainProfile + Vals.COVERAGECOLLECTION);
-			}
+		MapEncoder<MapEncoder<T>> domain = map.startMap(Keys.DOMAIN);
+		new DomainWriter<>(domain).write(coverage.domain);
+		domain.end();
+		
+		if (!skipParameters) {
+			MapEncoder<MapEncoder<T>> parameters = map.startMap(Keys.PARAMETERS);
+			new ParametersWriter<>(parameters).write(coverage.parameters.values());
+			parameters.end();
 		}
 		
-		// IMPORTANT: this assumes that different parameters have different IDs
-		Map<String, Parameter> parameters = new HashMap<>();
-		
-		ArrayEncoder<?> covs = map.startArray(Keys.COVERAGES);
-		for (Feature<?> feature : features) {
-			MapEncoder<?> cov = covs.startMap();
-			new FeatureWriter<>(cov, false).write(feature, true);
-			cov.end();
-			
-			// TODO this may be slightly inefficient for big numbers of uniform coverages
-			//   -> with Collection<Feature<?>> there is no easy way to avoid it
-			
-			for (Parameter param : Util.withoutParameterGroups(feature.getParameterMap().values(), feature)) {
-				if (!parameters.containsKey(param.getVariableId())) {
-					parameters.put(param.getVariableId(), param);
-				}
-			}
-		}
-		covs.end();
-		
-		MapEncoder<?> params = map.startMap(Keys.PARAMETERS);
-		new ParametersWriter<>(params).write(parameters.values());
-		params.end();
+		MapEncoder<MapEncoder<T>> ranges = map.startMap(Keys.RANGES);
+		new RangesWriter<>(ranges).write(coverage);
+		ranges.end();
 	}
 
 }

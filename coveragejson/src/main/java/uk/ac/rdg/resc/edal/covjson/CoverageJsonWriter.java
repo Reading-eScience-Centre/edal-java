@@ -30,10 +30,12 @@ package uk.ac.rdg.resc.edal.covjson;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedList;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
-import uk.ac.rdg.resc.edal.covjson.writers.FeatureCollectionWriter;
-import uk.ac.rdg.resc.edal.covjson.writers.FeatureWriter;
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage;
+import uk.ac.rdg.resc.edal.covjson.writers.CoverageCollectionWriter;
+import uk.ac.rdg.resc.edal.covjson.writers.CoverageWriter;
 import uk.ac.rdg.resc.edal.feature.Feature;
 
 /**
@@ -50,14 +52,19 @@ public class CoverageJsonWriter {
 	
 	void write(Feature<?> feature) throws IOException {
 		MapEncoder<StreamingEncoder> map = encoder.startMap();
-		new FeatureWriter<>(map, true).write(feature);
+		Coverage coverage = new Coverage(feature);
+		new CoverageWriter<>(map, true).write(coverage);
 		map.end();
 		encoder.end();
 	}
 	
 	void write(Collection<Feature<?>> features) throws IOException {
 		MapEncoder<StreamingEncoder> map = encoder.startMap();
-		new FeatureCollectionWriter<>(map).write(features);
+		Collection<Coverage> coverages = new LinkedList<>();
+		for (Feature<?> feature : features) {
+			coverages.add(new Coverage(feature));
+		}
+		new CoverageCollectionWriter<>(map).write(coverages);
 		map.end();
 		encoder.end();
 	}

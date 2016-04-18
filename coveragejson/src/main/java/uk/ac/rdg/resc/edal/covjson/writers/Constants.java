@@ -5,14 +5,6 @@ import org.geotoolkit.referencing.IdentifiedObjects;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
 
-import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.feature.GridFeature;
-import uk.ac.rdg.resc.edal.feature.MapFeature;
-import uk.ac.rdg.resc.edal.feature.PointFeature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
-
 public final class Constants {
 	
 	/**
@@ -31,7 +23,8 @@ public final class Constants {
 		public static final String ID = "id";
 		public static final String PROFILE = "profile";
 		public static final String AXES = "axes";
-		public static final String RANGEAXISORDER = "rangeAxisOrder";
+		public static final String AXISNAMES = "axisNames";
+		public static final String SHAPE = "shape";
 		public static final String DATATYPE = "dataType";
 		public static final String VALUES = "values";
 		public static final String BOUNDS = "bounds";
@@ -90,7 +83,7 @@ public final class Constants {
 		public static final String COVERAGECOLLECTION = "CoverageCollection";
 		public static final String DOMAIN = "Domain";
 		public static final String PARAMETER = "Parameter";
-		public static final String RANGE = "Range";
+		public static final String NDARRAY = "NdArray";
 		public static final String TUPLE = "Tuple";
 		public static final String POLYGON = "Polygon";
 		public static final String INTEGER = "integer";
@@ -103,23 +96,7 @@ public final class Constants {
 		public static final String getStandardNameUri (String standardName) {
 			return "http://vocab.nerc.ac.uk/standard_name/" + standardName;
 		}
-		
-		public static String getDomainProfile(Feature<?> feature) {
-			if (feature instanceof GridFeature) {
-				return GRID;
-			} else if (feature instanceof MapFeature) {
-				return GRID;
-			} else if (feature instanceof ProfileFeature) {
-				return VERTICALPROFILE;
-			} else if (feature instanceof PointFeature) {
-				return POINT;
-			} else if (feature instanceof TrajectoryFeature) {
-				return TRAJECTORY;
-			} else {
-				throw new EdalException("Unsupported feature type: " + feature.getClass().getSimpleName());
-			}
-		}
-		
+				
 		public static String getCrsUri(CoordinateReferenceSystem crs) {
 			String crsUri;
 			try {
