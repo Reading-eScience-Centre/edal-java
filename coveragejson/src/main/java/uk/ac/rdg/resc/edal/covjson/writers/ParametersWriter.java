@@ -38,6 +38,9 @@ import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Vals;
+
 /**
  * 
  * @author Maik Riechert
@@ -60,33 +63,33 @@ public class ParametersWriter <T> {
 	
 	private void write(MapEncoder<?> paramMap, Parameter parameter) throws IOException {
 		paramMap
-		  .put("type", "Parameter");
+		  .put(Keys.TYPE, Vals.PARAMETER);
 		
 		if (parameter.getDescription() != null) {
-			paramMap.startMap("description").put("en", parameter.getDescription()).end();
+			paramMap.startMap(Keys.DESCRIPTION).put(Keys.EN, parameter.getDescription()).end();
 		}
 		  
 		if (parameter.getCategories() != null) {
-		  paramMap.startMap("unit").put("symbol", parameter.getUnits()).end();
+		  paramMap.startMap(Keys.UNIT).put(Keys.SYMBOL, parameter.getUnits()).end();
 		}
 		
 		String observedPropertyUri = null;
 		if (parameter.getStandardName() != null) {
-			observedPropertyUri = "http://vocab.nerc.ac.uk/standard_name/" + parameter.getStandardName();
+			observedPropertyUri = Vals.getStandardNameUri(parameter.getStandardName());
 		}
-		MapEncoder<?> obsProp = paramMap.startMap("observedProperty");
-		obsProp.startMap("label").put("en", parameter.getTitle()).end();
+		MapEncoder<?> obsProp = paramMap.startMap(Keys.OBSERVEDPROPERTY);
+		obsProp.startMap(Keys.LABEL).put(Keys.EN, parameter.getTitle()).end();
 		if (observedPropertyUri != null) {
-			obsProp.put("id", observedPropertyUri);
+			obsProp.put(Keys.ID, observedPropertyUri);
 		}
 		if (parameter.getCategories() != null) {
-			ArrayEncoder<?> cats = obsProp.startArray("categories");
+			ArrayEncoder<?> cats = obsProp.startArray(Keys.CATEGORIES);
 			for (Category category : parameter.getCategories().values()) {
 				MapEncoder<?> catMap = cats.startMap()
-				  .put("id", category.getId())
-				  .startMap("label").put("en", category.getLabel()).end();
+				  .put(Keys.ID, category.getId())
+				  .startMap(Keys.LABEL).put(Keys.EN, category.getLabel()).end();
 				if (category.getColour() != null) {
-					catMap.put("preferredColor", GraphicsUtils.colourToHtmlString(category.getColour()));
+					catMap.put(Keys.PREFERREDCOLOR, GraphicsUtils.colourToHtmlString(category.getColour()));
 				}
 				catMap.end();
 			}
@@ -95,7 +98,7 @@ public class ParametersWriter <T> {
 		obsProp.end();
 		
 		if (parameter.getCategories() != null) {
-			MapEncoder<?> catEnc = map.startMap("categoryEncoding");
+			MapEncoder<?> catEnc = map.startMap(Keys.CATEGORYENCODING);
 			for (Entry<Integer,Category> entry : parameter.getCategories().entrySet()) {
 				catEnc.put(entry.getValue().getId(), entry.getKey());
 			}

@@ -29,7 +29,6 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayEncoder;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayHints;
@@ -42,6 +41,9 @@ import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array4D;
+
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Vals;
 
 /**
  * 
@@ -80,17 +82,17 @@ public class RangesWriter <T> {
 	private void write(MapEncoder<?> rangeMap, DiscreteFeature<?,?> feature, String paramId) throws IOException {
 		Parameter param = feature.getParameter(paramId);
 		boolean isCategorical = param.getCategories() != null;
-		String dtype = isCategorical ? "integer" : "float";
+		String dtype = isCategorical ? Vals.INTEGER : Vals.FLOAT;
 		
 		rangeMap
-		  .put("type", "Range")
-		  .put("dataType", dtype);
+		  .put(Keys.TYPE, Vals.RANGE)
+		  .put(Keys.DATATYPE, dtype);
 		
 		Array<Number> valsArr = feature.getValues(paramId);
 		
 		// Note: a type hint for the array can only be given if it is a typed array (without null's)
 		// This will become relevant with CBOR encoding.
-		ArrayEncoder<?> vals = rangeMap.startArray("values", new ArrayHints(valsArr.size(), null));
+		ArrayEncoder<?> vals = rangeMap.startArray(Keys.VALUES, new ArrayHints(valsArr.size(), null));
 		
 		float validMin = Float.MAX_VALUE;
 		float validMax = Float.MIN_VALUE;

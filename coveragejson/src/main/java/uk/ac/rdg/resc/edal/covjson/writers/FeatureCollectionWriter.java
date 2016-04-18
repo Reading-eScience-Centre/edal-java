@@ -38,6 +38,9 @@ import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Vals;
+
 /**
  * 
  * @author Maik Riechert
@@ -52,26 +55,26 @@ public class FeatureCollectionWriter <T> {
 
 	public void write(Collection<Feature<?>> features) throws IOException {
 		Util.addJsonLdContext(map);
-		map.put("type", "CoverageCollection");
+		map.put(Keys.TYPE, Vals.COVERAGECOLLECTION);
 		
 		if (!features.isEmpty()) {
-			String domainProfile = Util.getDomainProfile(features.iterator().next());
+			String domainProfile = Vals.getDomainProfile(features.iterator().next());
 			boolean sameProfile = true;
 			for (Feature<?> f : features) {
-				if (!Util.getDomainProfile(f).equals(domainProfile)) {
+				if (!Vals.getDomainProfile(f).equals(domainProfile)) {
 					sameProfile = false;
 					break;
 				}
 			}
 			if (sameProfile) {
-				map.put("profile", domainProfile + "CoverageCollection");
+				map.put(Keys.PROFILE, domainProfile + Vals.COVERAGECOLLECTION);
 			}
 		}
 		
 		// IMPORTANT: this assumes that different parameters have different IDs
 		Map<String, Parameter> parameters = new HashMap<>();
 		
-		ArrayEncoder<?> covs = map.startArray("coverages");
+		ArrayEncoder<?> covs = map.startArray(Keys.COVERAGES);
 		for (Feature<?> feature : features) {
 			MapEncoder<?> cov = covs.startMap();
 			new FeatureWriter<>(cov, false).write(feature, true);
@@ -88,7 +91,7 @@ public class FeatureCollectionWriter <T> {
 		}
 		covs.end();
 		
-		MapEncoder<?> params = map.startMap("parameters");
+		MapEncoder<?> params = map.startMap(Keys.PARAMETERS);
 		new ParametersWriter<>(params).write(parameters.values());
 		params.end();
 	}

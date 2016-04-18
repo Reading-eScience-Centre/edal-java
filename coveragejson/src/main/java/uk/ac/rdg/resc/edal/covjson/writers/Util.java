@@ -36,13 +36,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.geotoolkit.metadata.iso.citation.Citations;
-import org.geotoolkit.referencing.IdentifiedObjects;
 import org.joda.time.DateTime;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.util.FactoryException;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
@@ -51,9 +48,6 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
-import uk.ac.rdg.resc.edal.feature.PointFeature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
@@ -71,30 +65,10 @@ import uk.ac.rdg.resc.edal.util.Array4D;
 public class Util {
 	public static final String CoverageJSONContext =
 			"https://rawgit.com/reading-escience-centre/coveragejson/master/contexts/coveragejson-base.jsonld";
-	
-	private static final String CRS84 = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
-	
+		
 	public static <T> void  addJsonLdContext (MapEncoder<T> map) throws IOException {
-		map.put("@context", CoverageJSONContext);
-	}
-	
-	public static String getCrsUri(CoordinateReferenceSystem crs) {
-		String crsUri;
-		try {
-			crsUri = IdentifiedObjects.lookupIdentifier(Citations.HTTP_OGC, crs, true);
-			if (crsUri == null) {
-				// geotoolkit doesn't return this URI yet
-				if (crs.getName().toString() == "WGS84(DD)") {
-					crsUri = CRS84;
-				}
-			} else if (crsUri.equals("http://www.opengis.net/gml/srs/crs.xml#84")) {
-				// TODO where is this weird URI coming from?!
-				crsUri = CRS84;
-			}
-		} catch (FactoryException e) {
-			throw new RuntimeException(e); 
-		}
-		return crsUri;
+		// skip for now
+		// map.put("@context", CoverageJSONContext);
 	}
 	
 	public static GridFeature convertToGridFeature(MapFeature feature) {
@@ -102,11 +76,11 @@ public class Util {
 		// TODO MapFeature should inherit from GridFeature
 		
 		MapDomain domain = feature.getDomain();
-		VerticalAxis z = domain.getZ() != null ? new VerticalAxisImpl("z", 
+		VerticalAxis z = domain.getZ() != null ? new VerticalAxisImpl(Keys.Z, 
 				Arrays.asList(domain.getZ()), domain.getVerticalCrs()) : null;
 		HorizontalGrid xy = domain;
 		DateTime time = domain.getTime();
-		TimeAxis t = time != null ? new TimeAxisImpl("t", Arrays.asList(time)) : null;
+		TimeAxis t = time != null ? new TimeAxisImpl(Keys.T, Arrays.asList(time)) : null;
 		
 		GridDomain gridDomain = new SimpleGridDomain(xy, z, t);
 		
@@ -149,20 +123,5 @@ public class Util {
 		}
 		return filteredParams;
 	}
-	
-	public static String getDomainProfile(Feature<?> feature) {
-		if (feature instanceof GridFeature) {
-			return "Grid";
-		} else if (feature instanceof MapFeature) {
-			return "Grid";
-		} else if (feature instanceof ProfileFeature) {
-			return "VerticalProfile";
-		} else if (feature instanceof PointFeature) {
-			return "Point";
-		} else if (feature instanceof TrajectoryFeature) {
-			return "Trajectory";
-		} else {
-			throw new EdalException("Unsupported feature type: " + feature.getClass().getSimpleName());
-		}
-	}
+
 }

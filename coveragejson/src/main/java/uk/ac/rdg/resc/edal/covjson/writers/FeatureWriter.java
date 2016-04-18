@@ -30,14 +30,13 @@ package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
-import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
+
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Vals;
 
 /**
  * 
@@ -69,11 +68,11 @@ public class FeatureWriter <T> {
 			Util.addJsonLdContext(map);
 		}
 		map
-		  .put("type", "Coverage")
-		  .put("profile", Util.getDomainProfile(feature) + "Coverage")
-		  .startMap("title").put("en", feature.getName()).end();
+		  .put(Keys.TYPE, Vals.COVERAGE)
+		  .put(Keys.PROFILE, Vals.getDomainProfile(feature) + Vals.COVERAGE)
+		  .startMap(Keys.TITLE).put(Keys.EN, feature.getName()).end();
 		
-		MapEncoder<MapEncoder<T>> domain = map.startMap("domain");
+		MapEncoder<MapEncoder<T>> domain = map.startMap(Keys.DOMAIN);
 		new DomainWriter<>(domain).write(feature);
 		domain.end();
 		
@@ -81,12 +80,12 @@ public class FeatureWriter <T> {
 			Collection<Parameter> params = Util.withoutParameterGroups(feature.getParameterMap().values(), 
 					feature);
 			
-			MapEncoder<MapEncoder<T>> parameters = map.startMap("parameters");
+			MapEncoder<MapEncoder<T>> parameters = map.startMap(Keys.PARAMETERS);
 			new ParametersWriter<>(parameters).write(params);
 			parameters.end();
 		}
 		
-		MapEncoder<MapEncoder<T>> ranges = map.startMap("ranges");
+		MapEncoder<MapEncoder<T>> ranges = map.startMap(Keys.RANGES);
 		new RangesWriter<>(ranges).write(feature);
 		ranges.end();
 	}
