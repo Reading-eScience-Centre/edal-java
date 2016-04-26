@@ -131,11 +131,14 @@ public class GetMapStyleParams {
             xmlSpecified = true;
         }
 
-        this.transparent = params.getBoolean("transparent", false);
-
         String bgcStr = params.getString("bgcolor", "0xffffff");
         backgroundColour = GraphicsUtils.parseColour(bgcStr);
 
+        this.transparent = params.getBoolean("transparent", false);
+        if(this.transparent) {
+            backgroundColour = new Color(0, true);
+        }
+        
         String bmcStr = params.getString("belowmincolor");
         if (bmcStr == null) {
             belowMinColour = Color.black;
