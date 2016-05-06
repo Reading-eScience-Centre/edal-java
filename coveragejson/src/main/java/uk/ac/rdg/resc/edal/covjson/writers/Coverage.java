@@ -57,13 +57,13 @@ public class Coverage {
 	Map<String, NdArray> ranges = new HashMap<>();
 	
 	static class Domain {
-		String profile;
+		String domainType;
 		Map<String, Axis> axes;
 		Set<ReferenceSystemConnection> refSystemConnections;
-		public Domain(Map<String, Axis> axes, Set<ReferenceSystemConnection> refSystemConnections, String profile) {
+		public Domain(Map<String, Axis> axes, Set<ReferenceSystemConnection> refSystemConnections, String domainType) {
 			this.axes = axes;
 			this.refSystemConnections = refSystemConnections;
-			this.profile = profile;
+			this.domainType = domainType;
 		}
 	}
 	

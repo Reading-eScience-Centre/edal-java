@@ -65,7 +65,6 @@ public class CoverageWriter <T> {
 		}
 		map
 		  .put(Keys.TYPE, Vals.COVERAGE)
-		  .put(Keys.PROFILE, coverage.domain.profile + Vals.COVERAGE)
 		  .startMap(Keys.TITLE).put(Keys.EN, coverage.feature.getName()).end();
 		
 		MapEncoder<MapEncoder<T>> domain = map.startMap(Keys.DOMAIN);

@@ -57,17 +57,17 @@ public class CoverageCollectionWriter <T> {
 		
 		if (!coverages.isEmpty()) {
 			Coverage firstCoverage = coverages.iterator().next();
-			String domainProfile = firstCoverage.domain.profile;
-			boolean sameProfile = true;
+			String domainType = firstCoverage.domain.domainType;
+			boolean sameDomainType = true;
 			for (Coverage coverage : coverages) {
-				String otherDomainProfile = coverage.domain.profile;
-				if (!otherDomainProfile.equals(domainProfile)) {
-					sameProfile = false;
+				String otherDomainType = coverage.domain.domainType;
+				if (!otherDomainType.equals(domainType)) {
+					sameDomainType = false;
 					break;
 				}
 			}
-			if (sameProfile) {
-				map.put(Keys.PROFILE, domainProfile + Vals.COVERAGECOLLECTION);
+			if (sameDomainType) {
+				map.put(Keys.DOMAINTYPE, domainType);
 			}
 		}
 		

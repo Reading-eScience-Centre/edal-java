@@ -69,7 +69,7 @@ public class DomainWriter <T> {
 
 	public void write(Domain domain) throws IOException {
 		map.put(Keys.TYPE, Vals.DOMAIN);
-		map.put(Keys.PROFILE, domain.profile);
+		map.put(Keys.DOMAINTYPE, domain.domainType);
 		
 		MapEncoder<?> axes = map.startMap(Keys.AXES);
 		writeAxes(axes, domain);

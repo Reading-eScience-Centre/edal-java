@@ -21,7 +21,7 @@ public final class Constants {
 		// Other properties
 		public static final String TYPE = "type";
 		public static final String ID = "id";
-		public static final String PROFILE = "profile";
+		public static final String DOMAINTYPE = "domainType";
 		public static final String AXES = "axes";
 		public static final String AXISNAMES = "axisNames";
 		public static final String SHAPE = "shape";
