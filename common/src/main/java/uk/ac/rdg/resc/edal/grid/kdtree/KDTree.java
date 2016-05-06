@@ -232,29 +232,10 @@ public class KDTree {
     }
 
     private final double squaredDistance(Point p, HorizontalPosition pos) {
-        if (!latLon) {
-            return Math.pow(p.getX() - pos.getX(), 2.0) + Math.pow(p.getY() - pos.getY(), 2.0);
-        } else {
-            return Math.pow(haversineDistance(p, pos), 2.0);
-        }
+        return (p.getX() - pos.getX()) * (p.getX() - pos.getX()) + (p.getY() - pos.getY())
+                * (p.getY() - pos.getY());
     }
-
-    private final static double haversineDistance(Point p, HorizontalPosition pos) {
-        return haversineDistance(p.getY(), p.getX(), pos.getY(), pos.getX());
-    }
-
-    public final static double haversineDistance(double la1, double lo1, double la2, double lo2) {
-        double earthRadius = 6371000; //m
-        double dLa = Math.toRadians(la2 - la1);
-        double dLo = Math.toRadians(lo2 - lo1);
-        double a = Math.sin(dLa / 2) * Math.sin(dLa / 2) + Math.cos(Math.toRadians(la1))
-                * Math.cos(Math.toRadians(la2)) * Math.sin(dLo / 2) * Math.sin(dLo / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = (earthRadius * c);
-
-        return distance;
-    }
-
+    
     public Point nearestNeighbour(HorizontalPosition pos) {
         /*
          * Transform position into correct CRS if necessary
