@@ -72,7 +72,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 public class HydromodelVtkDatasetFactory extends DatasetFactory {
 
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
         try {
             File vtkXmlFile = new File(location);
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

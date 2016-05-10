@@ -183,11 +183,11 @@ public class ScreenshotServlet extends HttpServlet {
          * geo-referenced images locally for this purpose...)
          */
         if (crs.equalsIgnoreCase("EPSG:5041")) {
-            baseLayerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-np";
+            baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-np";
         } else if (crs.equalsIgnoreCase("EPSG:5042")) {
-            baseLayerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-sp";
+            baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-sp";
         } else {
-            baseLayerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble";
+            baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble";
         }
 
         int mapHeight = params.getPositiveInt("mapHeight", 384);

@@ -725,7 +725,8 @@ public final class GISUtils {
 
             /*
              * Check for north/south polar stereographic - then we know that a
-             * pole is included which checking the border will not pick up
+             * pole is included which checking the border will not pick up, as
+             * well as all longitude values
              */
             ReferenceIdentifier crsId = bbox.getCoordinateReferenceSystem().getName();
 
@@ -733,16 +734,19 @@ public final class GISUtils {
                 if ("5041".equals(crsId.getCode()) || "32661".equals(crsId.getCode())
                         || crsId.getCode().contains("UPS North")) {
                     /*
-                     * North polar stereographic
+                     * North polar stereographic. We only need to find the min y
                      */
                     maxy = 90;
+                    maxx = 180;
+                    minx = -180;
                 } else if ("5042".equals(crsId.getCode()) || "32761".equals(crsId.getCode())
                         || crsId.getCode().contains("UPS South")) {
-                    System.out.println("SPS");
                     /*
-                     * South polar stereographic
+                     * South polar stereographic. We only need to find the max y
                      */
                     miny = -90;
+                    maxx = 180;
+                    minx = -180;
                 }
             }
             /*
@@ -751,7 +755,7 @@ public final class GISUtils {
              * points per side) transforming each position and find the bounding
              * box of these points
              */
-            for (double x = bbox.getMinX(); x < bbox.getMaxX(); x += (bbox.getWidth() / 10.0)) {
+            for (double x = bbox.getMinX(); x <= bbox.getMaxX(); x += (bbox.getWidth() / 10.0)) {
                 /*
                  * Top and bottom sides of bbox
                  */
@@ -772,7 +776,7 @@ public final class GISUtils {
                 miny = Math.min(transformPosition.getY(), miny);
                 maxy = Math.max(transformPosition.getY(), maxy);
             }
-            for (double y = bbox.getMinY(); y < bbox.getMaxY(); y += (bbox.getHeight() / 10.0)) {
+            for (double y = bbox.getMinY(); y <= bbox.getMaxY(); y += (bbox.getHeight() / 10.0)) {
                 /*
                  * Sides of bbox
                  */
@@ -1317,6 +1321,22 @@ public final class GISUtils {
                 || units.equalsIgnoreCase("atm") || units.equalsIgnoreCase("barye")) {
             return true;
         }
+        return false;
+    }
+
+    public static boolean isLatitudeUnits(String units) {
+        if (units.equalsIgnoreCase("degrees_north") || units.equalsIgnoreCase("degree_north")
+                || units.equalsIgnoreCase("degrees_N") || units.equalsIgnoreCase("degree_N")
+                || units.equalsIgnoreCase("degreesN") || units.equalsIgnoreCase("degreeN"))
+            return true;
+        return false;
+    }
+
+    public static boolean isLongitudeUnits(String units) {
+        if (units.equalsIgnoreCase("degrees_east") || units.equalsIgnoreCase("degree_east")
+                || units.equalsIgnoreCase("degrees_E") || units.equalsIgnoreCase("degree_E")
+                || units.equalsIgnoreCase("degreesE") || units.equalsIgnoreCase("degreeE"))
+            return true;
         return false;
     }
 }

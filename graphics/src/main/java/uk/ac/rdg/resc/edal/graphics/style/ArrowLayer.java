@@ -47,6 +47,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 public class ArrowLayer extends GriddedImageLayer {
     private String directionFieldName;
     private Color arrowColour = Color.black;
+    private Color arrowBackground = new Color(0, true);
 
     private Integer arrowSize = 8;
 
@@ -56,10 +57,11 @@ public class ArrowLayer extends GriddedImageLayer {
 
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
 
-    public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour,
+    public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour, Color arrowBackground,
             ArrowStyle arrowStyle) {
         this.directionFieldName = directionFieldName;
         this.arrowColour = arrowColour;
+        this.arrowBackground = arrowBackground;
         setArrowSize(arrowSize);
         this.arrowStyle = arrowStyle;
     }
@@ -93,6 +95,8 @@ public class ArrowLayer extends GriddedImageLayer {
         Array2D<Number> values = dataReader.getDataForLayerName(directionFieldName);
 
         Graphics2D g = image.createGraphics();
+        g.setColor(arrowBackground);
+        g.fillRect(0, 0, image.getWidth(), image.getHeight());
         g.setColor(arrowColour);
 
         int width = image.getWidth();
@@ -144,19 +148,19 @@ public class ArrowLayer extends GriddedImageLayer {
                                 g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
                             } else if (arrowStyle == ArrowStyle.THIN_ARROW) {
                                 /*
-                                 * The overall arrow size is 10 for things
+                                 * The overall arrow size is 11 for things
                                  * returned from the VectorFactory, so we
-                                 * multiply the arrow size by 0.1 to get the
+                                 * divide the arrow size by 11 to get the
                                  * scale factor.
                                  */
                                 VectorFactory.renderVector("LINEVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize * 0.1f, g);
+                                        / 180.0, i, j, arrowSize / 11f, g);
                             } else if (arrowStyle == ArrowStyle.FAT_ARROW) {
                                 VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                                        * Math.PI / 180.0, i, j, arrowSize / 11f, g);
                             } else if (arrowStyle == ArrowStyle.TRI_ARROW) {
                                 VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize * 0.1f, g);
+                                        / 180.0, i, j, arrowSize / 11f, g);
                             }
 
                         }

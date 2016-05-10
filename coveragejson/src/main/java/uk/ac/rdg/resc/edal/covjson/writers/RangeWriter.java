@@ -29,81 +29,93 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Map.Entry;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayEncoder;
+import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayHints;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
-import uk.ac.rdg.resc.edal.metadata.Parameter;
-import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
-
 import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
 import uk.ac.rdg.resc.edal.covjson.writers.Constants.Vals;
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage.DataType;
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage.NdArray;
 
 /**
  * 
  * @author Maik Riechert
  */
-public class ParametersWriter <T> {
+public class RangeWriter <T> {
 
 	private final MapEncoder<T> map;
 
-	public ParametersWriter(MapEncoder<T> encoder) {
-		this.map = encoder;
+	public RangeWriter(MapEncoder<T> map) {
+		this.map = map;
 	}
 
-	public void write(Collection<Parameter> parameters) throws IOException {
-		for (Parameter parameter : parameters) {
-			MapEncoder<?> paramMap = map.startMap(parameter.getVariableId());
-			write(paramMap, parameter);
-			paramMap.end();
+	public void write(NdArray ndarray) throws IOException {
+		map
+		  .put(Keys.TYPE, Vals.NDARRAY)
+		  .put(Keys.DATATYPE, ndarray.dataType == DataType.Float ? Vals.FLOAT : Vals.INTEGER);
+		
+		ArrayEncoder<?> axisNames = map.startArray(Keys.AXISNAMES);
+		for (String axisName : ndarray.axisNames) {
+			axisNames.add(axisName);
 		}
+		axisNames.end();
+		
+		ArrayEncoder<?> shape = map.startArray(Keys.SHAPE);
+		for (int size : ndarray.shape) {
+			shape.add(size);
+		}
+		shape.end();
+		
+		ArrayEncoder<?> vals = map.startArray(Keys.VALUES, new ArrayHints((long) ndarray.size, null));
+		
+		float validMin = Float.MAX_VALUE;
+		float validMax = Float.MIN_VALUE;
+		
+		boolean isInt = ndarray.dataType.equals(DataType.Integer);
+		
+		for (Number val : ndarray) {
+			writeValue(vals, val, isInt);
+			if (!isInt && val != null) {
+				float fval = val.floatValue();
+				if (fval < validMin) {
+					validMin = fval;
+				}
+				if (fval > validMax) {
+					validMax = fval;
+				}
+			}
+		}
+		
+		vals.end();
+		
+		// validMin/Max is relevant for CBOR only
+		// CovJSON does not define actualMin/Max yet
+		// see https://github.com/Reading-eScience-Centre/coveragejson/issues/48
+//			if (isCategorical) {
+//				int min = Collections.min(param.getCategories().keySet());
+//				int max = Collections.max(param.getCategories().keySet());
+//				rangeMap
+//				  .put("validMin", min)
+//				  .put("validMax", max);
+//			} else {
+//				if (validMin != Float.MAX_VALUE) {
+//					rangeMap
+//					  .put("validMin", validMin)
+//					  .put("validMax", validMax);
+//				}
+//			}
 	}
 	
-	private void write(MapEncoder<?> paramMap, Parameter parameter) throws IOException {
-		paramMap
-		  .put(Keys.TYPE, Vals.PARAMETER);
-		
-		if (parameter.getDescription() != null) {
-			paramMap.startMap(Keys.DESCRIPTION).put(Keys.EN, parameter.getDescription()).end();
-		}
-		  
-		if (parameter.getCategories() != null) {
-		  paramMap.startMap(Keys.UNIT).put(Keys.SYMBOL, parameter.getUnits()).end();
-		}
-		
-		String observedPropertyUri = null;
-		if (parameter.getStandardName() != null) {
-			observedPropertyUri = Vals.getStandardNameUri(parameter.getStandardName());
-		}
-		MapEncoder<?> obsProp = paramMap.startMap(Keys.OBSERVEDPROPERTY);
-		obsProp.startMap(Keys.LABEL).put(Keys.EN, parameter.getTitle()).end();
-		if (observedPropertyUri != null) {
-			obsProp.put(Keys.ID, observedPropertyUri);
-		}
-		if (parameter.getCategories() != null) {
-			ArrayEncoder<?> cats = obsProp.startArray(Keys.CATEGORIES);
-			for (Category category : parameter.getCategories().values()) {
-				MapEncoder<?> catMap = cats.startMap()
-				  .put(Keys.ID, category.getId())
-				  .startMap(Keys.LABEL).put(Keys.EN, category.getLabel()).end();
-				if (category.getColour() != null) {
-					catMap.put(Keys.PREFERREDCOLOR, GraphicsUtils.colourToHtmlString(category.getColour()));
-				}
-				catMap.end();
-			}
-			cats.end();
-		}
-		obsProp.end();
-		
-		if (parameter.getCategories() != null) {
-			MapEncoder<?> catEnc = map.startMap(Keys.CATEGORYENCODING);
-			for (Entry<Integer,Category> entry : parameter.getCategories().entrySet()) {
-				catEnc.put(entry.getValue().getId(), entry.getKey());
-			}
-			catEnc.end();
+	private void writeValue(ArrayEncoder<?> vals, Number val, boolean isInt) throws IOException {
+		if (val == null) {
+			vals.add(null);
+		} else if (isInt) {
+			vals.add(val.intValue());
+		} else if (val instanceof Float) {
+			vals.add((float) val);
+		} else {
+			vals.add(val.floatValue());
 		}
 	}
-
 }

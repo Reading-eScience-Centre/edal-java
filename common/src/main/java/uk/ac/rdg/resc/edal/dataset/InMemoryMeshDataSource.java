@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
@@ -46,16 +48,23 @@ public class InMemoryMeshDataSource implements HZTDataSource {
     }
 
     @Override
-    public Number read(String variableId, int tIndex, int zIndex, int hIndex)
+    public List<Number> read(String variableId, List<MeshCoordinates3D> coordsToRead)
             throws DataReadingException {
-        if (data.containsKey(variableId) && tIndex >= 0 && zIndex >= 0 && hIndex >= 0) {
-            return data.get(variableId)[tIndex][zIndex][(int) hIndex];
-        } else {
-            return null;
+        List<Number> ret = new ArrayList<>();
+        
+        for(MeshCoordinates3D coords : coordsToRead) {
+            if (data.containsKey(variableId) && coords.t >= 0 && coords.z >= 0 && coords.h >= 0) {
+                ret.add(data.get(variableId)[coords.t][coords.z][coords.h]);
+            } else {
+                ret.add(null);
+            }
+            
         }
+        return ret;
     }
-
+    
     @Override
     public void close() throws DataReadingException {
     }
+
 }

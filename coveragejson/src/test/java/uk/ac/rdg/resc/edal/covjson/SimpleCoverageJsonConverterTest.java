@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory;
+import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
@@ -49,6 +50,7 @@ public class SimpleCoverageJsonConverterTest {
         String location = url.getPath();
         CdmGridDatasetFactory datasetFactory = new CdmGridDatasetFactory();
         Dataset dataset = datasetFactory.createDataset("testdataset", location);
+        dataset.addVariablePlugin(new VectorPlugin("vLon", "vLat", "Test Vector Field", true));
         feature = dataset.readFeature(dataset.getFeatureIds().iterator().next());
         
         // from CdmGridDatasetFactoryTest

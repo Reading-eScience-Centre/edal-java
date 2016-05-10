@@ -127,8 +127,37 @@ public class NetcdfDatasetAggregator {
      */
     public static synchronized NetcdfDataset getDataset(String location) throws IOException,
             EdalException {
+        return getDataset(location, false);
+    }
+
+    /**
+     * Opens the NetCDF dataset at the given location, using the dataset cache.
+     * Once acquired, this should be marked as finished with by calling
+     * {@link NetcdfDatasetAggregator#releaseDataset(NetcdfDataset)}
+     * 
+     * @param location
+     *            The location of the data: a local NetCDF file, an NcML
+     *            aggregation file or an OPeNDAP location, {@literal i.e.}
+     *            anything that can be passed to
+     *            NetcdfDataset.openDataset(location).
+     * @param forceRefresh
+     *            Set to <code>true</code> if cached data should be ignored
+     * 
+     * @return a {@link NetcdfDataset} object for accessing the data at the
+     *         given location. This should NEVER be CLOSED. Instead
+     *         {@link NetcdfDatasetAggregator#releaseDataset(NetcdfDataset)}
+     *         MUST be called when the resource is finished with. This will
+     *         allow the {@link NetcdfDatasetAggregator} to release it from the
+     *         cache and close it if necessary. To re-obtain the same dataset,
+     *         call this method again.
+     * 
+     * @throws IOException
+     *             if there was an error reading from the data source.
+     */
+    public static synchronized NetcdfDataset getDataset(String location, boolean forceRefresh)
+            throws IOException, EdalException {
         NetcdfDataset nc;
-        if (datasetCache.containsKey(location)) {
+        if (datasetCache.containsKey(location) && !forceRefresh) {
             nc = datasetCache.get(location);
         } else {
             if (location.startsWith("dods://") || location.startsWith("http://")) {
@@ -164,13 +193,14 @@ public class NetcdfDatasetAggregator {
                      * just use that.
                      */
                     String ncmlString;
-                    if (ncmlStringCache.containsKey(location)) {
+                    if (ncmlStringCache.containsKey(location) && !forceRefresh) {
                         ncmlString = ncmlStringCache.get(location);
                     } else {
                         /*
                          * Find the name of the time dimension
                          */
-                        NetcdfDataset first = getDataset(files.get(0).getAbsolutePath());
+                        NetcdfDataset first = getDataset(files.get(0).getAbsolutePath(),
+                                forceRefresh);
                         if(first.getFileTypeId().startsWith("GRIB")) {
                             throw new EdalException("Cannot automatically aggregate GRIB files.");
                         }

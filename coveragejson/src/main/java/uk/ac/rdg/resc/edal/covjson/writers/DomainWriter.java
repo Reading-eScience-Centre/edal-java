@@ -29,9 +29,7 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Map.Entry;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
@@ -44,194 +42,180 @@ import org.opengis.referencing.crs.ProjectedCRS;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayEncoder;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayHints;
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Vals;
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage.Axis;
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage.Domain;
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage.ReferenceSystemConnection;
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage.TupleAxis;
 import uk.ac.rdg.resc.edal.domain.Extent;
-import uk.ac.rdg.resc.edal.domain.GridDomain;
-import uk.ac.rdg.resc.edal.domain.MapDomain;
-import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
-import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
-import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.feature.GridFeature;
-import uk.ac.rdg.resc.edal.feature.MapFeature;
-import uk.ac.rdg.resc.edal.feature.PointFeature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
-import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
-import uk.ac.rdg.resc.edal.grid.AbstractTransformedGrid;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
-import uk.ac.rdg.resc.edal.grid.RegularGrid;
-import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
+import uk.ac.rdg.resc.edal.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
-import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
-import uk.ac.rdg.resc.edal.position.GeoPosition;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
-import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.Array1D;
-import uk.ac.rdg.resc.edal.util.Array2D;
-import uk.ac.rdg.resc.edal.util.Array4D;
 
 /**
  * 
  * @author Maik Riechert
  */
 public class DomainWriter <T> {
-
+	
 	private final MapEncoder<T> map;
 
 	public DomainWriter(MapEncoder<T> encoder) {
 		this.map = encoder;
 	}
 
-	public void write(Feature<?> feature) throws IOException {
-		map.put("type", "Domain");
+	public void write(Domain domain) throws IOException {
+		map.put(Keys.TYPE, Vals.DOMAIN);
+		map.put(Keys.DOMAINTYPE, domain.domainType);
 		
-		if (feature instanceof GridFeature) {
-			doWrite((GridFeature) feature);
-		} else if (feature instanceof MapFeature) {
-			doWrite((MapFeature) feature);
-		} else if (feature instanceof ProfileFeature) {
-			doWrite((ProfileFeature) feature);
-		} else if (feature instanceof PointFeature) {
-			doWrite((PointFeature) feature);
-		} else if (feature instanceof TrajectoryFeature) {
-			doWrite((TrajectoryFeature) feature);
-		} else {
-			throw new EdalException("Unsupported feature type: " + feature.getClass().getSimpleName());
-		}
-	}
-
-	private void doWrite(GridFeature feature) throws IOException {
-		map.put("profile", "Grid");
-		
-		GridDomain domain = feature.getDomain();
-		VerticalAxis z = domain.getVerticalAxis();
-		HorizontalGrid xy = domain.getHorizontalGrid();
-		TimeAxis t = domain.getTimeAxis();
-		
-		MapEncoder<?> axes = map.startMap("axes");
-		writeTimeAxis(axes, t);
-		writeHorizontalAxes(axes, xy);
-		writeVerticalAxis(axes, z);
+		MapEncoder<?> axes = map.startMap(Keys.AXES);
+		writeAxes(axes, domain);
 		axes.end();
 		
-		ArrayEncoder<?> order = map.startArray("rangeAxisOrder");
-		if (t != null) {
-			order.add("t");
-		}
-		if (z != null) {
-			order.add("z");
-		}
-		order.add("y").add("x");
-		order.end();
-		
-		writeReferencing(t != null ? t.getChronology() : null, 
-				xy.getCoordinateReferenceSystem(),
-				z != null ? z.getVerticalCrs(): null);
+		ArrayEncoder<?> referencing = map.startArray(Keys.REFERENCING);
+		writeReferencing(referencing, domain);
+		referencing.end();
 	}
 	
-	private void doWrite(MapFeature feature) throws IOException {
-		doWrite(Util.convertToGridFeature(feature));
-	}
-
-	private void doWrite(ProfileFeature feature) throws IOException {
-		map.put("profile", "Profile");
-		
-		VerticalAxis z = feature.getDomain();
-		HorizontalPosition xy = feature.getHorizontalPosition();
-		DateTime time = feature.getTime();
-		TimeAxis t = time != null ? new TimeAxisImpl("t", Arrays.asList(time)) : null;
-		
-		MapEncoder<?> axes = map.startMap("axes");
-		writeTimeAxis(axes, t);
-		writeHorizontalAxes(axes, xy);
-		writeVerticalAxis(axes, z);
-		axes.end();
-		
-		writeReferencing(t != null ? t.getChronology() : null,
-				xy.getCoordinateReferenceSystem(),
-				z.getVerticalCrs());
-	}
-	
-	private void doWrite(PointFeature feature) throws IOException {
-		map.put("profile", "Point");
-		
-		GeoPosition domain = feature.getGeoPosition();
-		VerticalPosition zpos = domain.getVerticalPosition();
-		VerticalAxis z = new VerticalAxisImpl("z", 
-				Arrays.asList(zpos.getZ()), zpos.getCoordinateReferenceSystem());
-		HorizontalPosition xy = domain.getHorizontalPosition();
-		DateTime time = domain.getTime();
-		TimeAxis t = time != null ? new TimeAxisImpl("time", Arrays.asList(domain.getTime())) : null;
-		
-		MapEncoder<?> axes = map.startMap("axes");
-		writeTimeAxis(axes, t);
-		writeHorizontalAxes(axes, xy);
-		writeVerticalAxis(axes, z);
-		axes.end();
-		
-		writeReferencing(t != null ? t.getChronology() : null, 
-				xy.getCoordinateReferenceSystem(), 
-				z != null ? z.getVerticalCrs() : null);
-	}
-	
-	private void doWrite(TrajectoryFeature feature) throws IOException {
-		map.put("profile", "Trajectory");
-		
-		TrajectoryDomain domain = feature.getDomain();
-		Array1D<GeoPosition> points = domain.getDomainObjects();
-		
-		MapEncoder<MapEncoder<MapEncoder<T>>> axis = 
-		  map.startMap("axes")
-		    .startMap("composite")
-		      .put("compositeType", "Simple");
-		
-		ArrayEncoder<?> comp = 
-		  axis.startArray("components")
-		    .add("t").add("x").add("y");
-		boolean hasZ = domain.getVerticalCrs() != null;
-		if (hasZ) {
-			comp.add("z");
-		}
-		comp.end();
-		
-		ArrayEncoder<?> vals = axis.startArray("values", new ArrayHints((long) domain.size(), null));
-		long componentSize = hasZ ? 4 : 3;
-		for (GeoPosition point : points) {
-			ArrayEncoder<?> val = vals.startArray(new ArrayHints(componentSize, null))
-			  .add(dateToString(point.getTime()))
-			  .add(point.getHorizontalPosition().getX())
-			  .add(point.getHorizontalPosition().getY());
-			if (hasZ) {
-				val.add(point.getVerticalPosition().getZ());
+	private static void writeReferencing(ArrayEncoder<?> referencing, Domain domain) throws IOException {
+		for (ReferenceSystemConnection refSysConnection : domain.refSystemConnections) {
+			MapEncoder<?> connection = referencing.startMap();
+			ArrayEncoder<?> components = connection.startArray(Keys.COMPONENTS);
+			for (String component : refSysConnection.components) {
+				components.add(component);
 			}
-			val.end();
+			components.end();
+			
+			MapEncoder<?> system = connection.startMap(Keys.SYSTEM);
+			
+			if (refSysConnection.system instanceof Chronology) {
+				writeTemporalReferenceSystem(system, (Chronology) refSysConnection.system);
+			} else if (refSysConnection.system instanceof VerticalCrs) {
+				writeVerticalCRS(system, (VerticalCrs) refSysConnection.system);
+			} else if (refSysConnection.system instanceof CoordinateReferenceSystem) {
+				writeHorizontalCrs(system, (CoordinateReferenceSystem) refSysConnection.system);
+			} else {
+				throw new RuntimeException();
+			}
+			
+			system.end();		
+			connection.end();
+		}
+	}
+	
+	private static void writeAxes(MapEncoder<?> axes, Domain domain) throws IOException {
+		for (Entry<String, Axis> entry: domain.axes.entrySet()) {
+			String axisName = entry.getKey();
+			Axis axis = entry.getValue();
+			MapEncoder<?> axisMap = axes.startMap(axisName);
+			
+			if (axis.wrappedAxis instanceof TupleAxis) {
+				axisMap.put(Keys.DATATYPE, Vals.TUPLE);
+			}
+			
+			if (axis.components != null) {
+				ArrayEncoder<?> comp = axisMap.startArray(Keys.COMPONENTS);
+				for (String component : axis.components) {
+					comp.add(component);
+				}
+				comp.end();
+			}
+			
+			if (axis.wrappedAxis instanceof ReferenceableAxis<?>) {
+				ReferenceableAxis<?> refAxis = (ReferenceableAxis<?>) axis.wrappedAxis;
+				writeReferenceableAxisValues(axisMap, refAxis);
+			} else if (axis.wrappedAxis instanceof TupleAxis) {
+				TupleAxis tupleAxis = (TupleAxis) axis.wrappedAxis;
+				writeTupleAxisValues(axisMap, tupleAxis);
+			} else {
+				throw new RuntimeException("Unsupported axis type");
+			}
+			
+			axisMap.end();
+		}
+	}
+
+	private static void writeReferenceableAxisValues(MapEncoder<?> axisMap, ReferenceableAxis<?> axis) throws IOException {
+		if (axis instanceof TimeAxis) {
+			writeTimeAxisValues(axisMap, (TimeAxis) axis);
+		} else if (axis instanceof VerticalAxis) {
+			writeNumericAxisValues(axisMap, (VerticalAxis) axis);
+		} else if (axis.getCoordinateValue(0) instanceof Double) {
+			@SuppressWarnings("unchecked")
+			ReferenceableAxis<Double> numericAxis = (ReferenceableAxis<Double>) axis;
+			writeNumericAxisValues(axisMap, numericAxis);
+		} else {
+			throw new RuntimeException();
+		}		
+	}
+	
+	private static void writeTupleAxisValues(MapEncoder<?> axisMap, TupleAxis axis) throws IOException {
+		int axisSize = axis.size;
+		int tupleSize = axis.nestedAxes.size();
+		
+		ArrayEncoder<?> vals = axisMap.startArray(Keys.VALUES, new ArrayHints((long) axisSize, null));
+		for (int i=0; i < axisSize; i++) {
+			ArrayEncoder<?> tuple = vals.startArray(new ArrayHints((long) tupleSize, null));
+			for (ReferenceableAxis<?> nestedAxis : axis.nestedAxes) {
+				if (nestedAxis instanceof TimeAxis) {
+					DateTime time = ((TimeAxis)nestedAxis).getCoordinateValue(i);
+					tuple.add(dateToString(time));
+				} else {
+					Object val = nestedAxis.getCoordinateValue(i);
+					if (val instanceof Double) {
+						tuple.add((double) val);
+					} else {
+						throw new RuntimeException();
+					}
+				}
+			}
+			tuple.end();
 		}
 		vals.end();
-		
-		axis.end().end();
-		
-		writeReferencing(domain.getChronology(), domain.getHorizontalCrs(), domain.getVerticalCrs());
 	}
 	
-	private void writeReferencing(Chronology t, CoordinateReferenceSystem xy, VerticalCrs z) throws IOException {
-		ArrayEncoder<?> ref = map.startArray("referencing");
-		writeTimeReferencing(ref, t);
-		writeHorizontalReferencing(ref, xy);
-		writeVerticalReferencing(ref, z);
-		ref.end();
+	private static void writeNumericAxisValues(MapEncoder<?> axis, ReferenceableAxis<Double> ax) throws IOException {		
+		long size = ax.size();
+		
+		if (ax instanceof RegularAxis) {
+			if (size == 1) {
+				double halfstep = ((RegularAxis) ax).getCoordinateSpacing() / 2;
+				double val = ax.getCoordinateValue(0);
+				axis
+				    .startArray(Keys.VALUES).add(val).end()
+				    .startArray(Keys.BOUNDS).add(val-halfstep).add(val+halfstep).end();
+			} else {
+				axis
+				    .put(Keys.START, ax.getCoordinateValue(0))
+				    .put(Keys.STOP, ax.getCoordinateValue(ax.size()-1))
+				    .put(Keys.NUM, size);			
+			}
+		} else {
+			ArrayEncoder<?> vals = axis.startArray(Keys.VALUES, new ArrayHints(size, Double.class));
+			for (double val : ax.getCoordinateValues()) {
+				vals.add(val);
+			}
+			vals.end();
+			
+			Extent<Double> testExtent = ax.getDomainObjects().get(0);
+			boolean hasBounds = !testExtent.getLow().equals(testExtent.getHigh());
+			
+			if (hasBounds) {
+				ArrayEncoder<?> bounds = axis.startArray(Keys.BOUNDS, new ArrayHints(size*2, Double.class));
+				for (Extent<Double> extent : ax.getDomainObjects()) {
+					bounds.add(extent.getLow());
+					bounds.add(extent.getHigh());
+				}
+				bounds.end();
+			}
+		}
 	}
 	
-	private <P> void writeTimeAxis(MapEncoder<P> axes, TimeAxis t) throws IOException {
-		if (t == null) return;
-		
-		MapEncoder<?> axis = axes.startMap("t");
-		
-		ArrayEncoder<?> vals = axis.startArray("values", new ArrayHints((long) t.size(), null));
+	private static void writeTimeAxisValues(MapEncoder<?> axis, TimeAxis t) throws IOException {				
+		ArrayEncoder<?> vals = axis.startArray(Keys.VALUES, new ArrayHints((long) t.size(), null));
 		for (DateTime date : t.getCoordinateValues()) {
 			vals.add(dateToString(date));
 		}
@@ -241,15 +225,13 @@ public class DomainWriter <T> {
 		boolean hasBounds = !testExtent.getLow().equals(testExtent.getHigh());
 		
 		if (hasBounds) {
-			ArrayEncoder<?> bounds = axis.startArray("bounds");
+			ArrayEncoder<?> bounds = axis.startArray(Keys.BOUNDS);
 			for (Extent<DateTime> extent : t.getDomainObjects()) {
 				bounds.add(dateToString(extent.getLow()));
 				bounds.add(dateToString(extent.getHigh()));
 			}
 			bounds.end();
 		}
-		
-		axis.end();
 	}
 	
 	private static String dateToString(DateTime date) {
@@ -260,164 +242,58 @@ public class DomainWriter <T> {
 		}
 	}
 	
-	private void writeTimeReferencing(ArrayEncoder<?> ref, Chronology chronology) throws IOException {
-		if (chronology == null) return;
+	private static void writeTemporalReferenceSystem(MapEncoder<?> system, Chronology chronology) throws IOException {
 		// TODO what does Chronology actually tell us?
-		ref.startMap()
-		  .startArray("identifiers")
-		    .add("t")
-		  .end()
-		  .startMap("trs")
-		    .put("type", "TemporalRS")
-		    .put("calendar", "Gregorian")
-		  .end()
-		.end();
+		system
+		  .put(Keys.TYPE, Vals.TEMPORALRS)
+		  .put(Keys.CALENDAR, Vals.GREGORIAN);
 	}
 	
-	private void writeHorizontalAxes(MapEncoder<?> axes, HorizontalGrid xy) throws IOException {
-		if (xy instanceof RegularGrid) {
-			writeHorizontalAxes(axes, (RegularGrid) xy);
-		} else if (xy instanceof RectilinearGrid) {
-			writeHorizontalAxes(axes, (RectilinearGrid) xy);
-		} else if (xy instanceof AbstractTransformedGrid) {
-			RegularGrid grid = new RegularGridImpl(
-					new BoundingBoxImpl(0, 0, xy.getXSize()-1, xy.getYSize()-1, null),
-					xy.getXSize(), xy.getYSize());
-			writeHorizontalAxes(axes, grid);
-		} else {
-			throw new RuntimeException("Unknown grid type: " + xy.getClass().getSimpleName());
-		}
-	}
-	
-	private void writeHorizontalAxes(MapEncoder<?> axes, RegularGrid xy) throws IOException {
-		// TODO bounds
-		
-		axes
-		  .startMap("x")
-		    .put("start", xy.getXAxis().getCoordinateValue(0))
-		    .put("stop", xy.getXAxis().getCoordinateValue(xy.getXSize()-1))
-		    .put("num", xy.getXSize())
-		  .end()
-		  .startMap("y")
-		    .put("start", xy.getYAxis().getCoordinateValue(0))
-		    .put("stop", xy.getYAxis().getCoordinateValue(xy.getYSize()-1))
-		    .put("num", xy.getYSize())
-		  .end();
-	}
-	
-	private void writeHorizontalAxes(MapEncoder<?> axes, RectilinearGrid xy) throws IOException {
-		writeNumericAxis(axes, "x", xy.getXAxis());
-		writeNumericAxis(axes, "y", xy.getYAxis());
-	}
-	
-	private void writeHorizontalAxes(MapEncoder<?> axes, HorizontalPosition xy) throws IOException {
-		axes
-		  .startMap("x")
-		    .startArray("values").add(xy.getX()).end()
-		  .end()
-		  .startMap("y")
-		    .startArray("values").add(xy.getY()).end()
-		  .end()
-		.end();
-		
-	}
-	
-	private <P> void  writeHorizontalReferencing (ArrayEncoder<P> ref, CoordinateReferenceSystem crs) throws IOException {
-		MapEncoder<MapEncoder<ArrayEncoder<P>>> srs = ref.startMap()
-		  .startArray("identifiers")
-		    .add("x").add("y")
-		  .end()
-		  .startMap("srs");
-		writeCrs(srs, crs);
-		srs
-		  .end()
-		.end();
-	}
-	
-	private void writeCrs(MapEncoder<?> map, CoordinateReferenceSystem crs) throws IOException {				
+	private static void writeHorizontalCrs(MapEncoder<?> map, CoordinateReferenceSystem crs) throws IOException {				
 		String crsType;
 		if (crs instanceof GeodeticCRS) {
-			crsType = "GeodeticCRS";
+			crsType = Vals.GEODETICCRS;
 		} else if (crs instanceof ProjectedCRS) {
-			crsType = "ProjectedCRS";
+			crsType = Vals.PROJECTEDCRS;
 		} else {
 			throw new RuntimeException("Unsupported CRS type: " + crs.getClass().getSimpleName());
 		}
-		map.put("type", crsType);
+		map.put(Keys.TYPE, crsType);
 		
 		if (crs instanceof DerivedCRS) {
 			CoordinateReferenceSystem baseCrs = ((DerivedCRS) crs).getBaseCRS();
-			MapEncoder<?> baseMap = map.startMap("baseCRS");
-			writeCrs(baseMap, baseCrs);
+			MapEncoder<?> baseMap = map.startMap(Keys.BASECRS);
+			writeHorizontalCrs(baseMap, baseCrs);
 			baseMap.end();
 		}
 		
-		String crsUri = Util.getCrsUri(crs);
+		String crsUri = Vals.getCrsUri(crs);
 		if (crsUri != null) {
-			map.put("id", crsUri);
+			map.put(Keys.ID, crsUri);
 		}
 	}
 	
-	private void writeVerticalAxis(MapEncoder<?> axes, VerticalAxis z) throws IOException {
-		writeNumericAxis(axes, "z", z);
-	}
-	
-	private void writeNumericAxis(MapEncoder<?> axes, String key, ReferenceableAxis<Double> ax) throws IOException {
-		if (ax == null) return;
-		
-		MapEncoder<?> axis = axes.startMap(key);
-		
-		long size = ax.size();
-		ArrayEncoder<?> vals = axis.startArray("values", new ArrayHints(size, Double.class));
-		for (double val : ax.getCoordinateValues()) {
-			vals.add(val);
-		}
-		vals.end();
-		
-		Extent<Double> testExtent = ax.getDomainObjects().get(0);
-		boolean hasBounds = !testExtent.getLow().equals(testExtent.getHigh());
-		
-		if (hasBounds) {
-			ArrayEncoder<?> bounds = axis.startArray("bounds", new ArrayHints(size*2, Double.class));
-			for (Extent<Double> extent : ax.getDomainObjects()) {
-				bounds.add(extent.getLow());
-				bounds.add(extent.getHigh());
-			}
-			bounds.end();
-		}
-		
-		axis.end();
-	}
-	
-	private void writeVerticalReferencing(ArrayEncoder<?> ref, VerticalCrs crs) throws IOException {
-		if (crs == null) return;
-
-		String axisName = "Vertical";
+	private static void writeVerticalCRS(MapEncoder<?> system, VerticalCrs crs) throws IOException {
+		String axisName = Vals.VERTICAL;
 		if (crs.isPressure()) {
-			axisName = "Pressure";
+			axisName = Vals.PRESSURE;
 		} else if ("m".equals(crs.getUnits())) {
 			if (crs.isPositiveUpwards()) {
-				axisName = "Height";
+				axisName = Vals.HEIGHT;
 			} else {
-				axisName = "Depth";
+				axisName = Vals.DEPTH;
 			}
 		}
-		ref.startMap()
-		  .startArray("identifiers")
-	        .add("z")
-	      .end()
-	      .startMap("srs")
-	        .put("type", "VerticalCRS")
-	        .startMap("cs")
-	          .startArray("axes")
+		system
+	        .put(Keys.TYPE, Vals.VERTICALCRS)
+	        .startMap(Keys.CS)
+	          .startArray(Keys.AXES)
 	            .startMap()
-	              .startMap("name").put("en", axisName).end()
-	              .put("direction", crs.isPositiveUpwards() ? "up" : "down")
-	              .startMap("unit").put("symbol", crs.getUnits()).end()
+	              .startMap(Keys.NAME).put(Keys.EN, axisName).end()
+	              .put(Keys.DIRECTION, crs.isPositiveUpwards() ? Vals.UP : Vals.DOWN)
+	              .startMap(Keys.UNIT).put(Keys.SYMBOL, crs.getUnits()).end()
 				.end()
 			  .end()
-		    .end()
-		  .end()
-		.end();
+		    .end();
 	}
 }

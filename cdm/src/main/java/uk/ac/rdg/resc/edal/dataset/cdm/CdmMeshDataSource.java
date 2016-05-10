@@ -29,11 +29,14 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import ucar.ma2.Array;
 import ucar.ma2.Index;
+import ucar.ma2.InvalidRangeException;
+import ucar.ma2.Range;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
@@ -48,8 +51,6 @@ import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
  * @author Jon
  */
 final class CdmMeshDataSource implements HZTDataSource {
-    public static Integer instances = 0;
-    public int instance = 0;
     /*
      * This is used to synchronize the actual reading. This is necessary because
      * we have the following model:
@@ -77,85 +78,168 @@ final class CdmMeshDataSource implements HZTDataSource {
      */
     private static Object syncObj = new Object();
     private NetcdfDataset nc;
-    private Map<String, Array> cachedArrays = new HashMap<>();
     private Map<String, int[]> varId2hztIndices;
 
     public CdmMeshDataSource(NetcdfDataset nc, Map<String, int[]> varId2hztIndices) {
         this.nc = nc;
-        synchronized (instances) {
-            this.instance = instances++;
-        }
         this.varId2hztIndices = varId2hztIndices;
     }
 
     @Override
-    public Number read(String variableId, int tIndex, int zIndex, int hIndex)
+    public List<Number> read(String variableId, List<MeshCoordinates3D> coordsToRead)
             throws DataReadingException {
         int[] hztIndices = varId2hztIndices.get(variableId);
-        if ((hIndex < 0 && hztIndices[0] >= 0) || (hztIndices[2] >= 0 && tIndex < 0)
-                || (hztIndices[1] >= 0 && zIndex < 0)) {
-            return null;
-        }
-        try {
-            /*
-             * See definition of syncObj for explanation of synchronization
-             */
-            synchronized (syncObj) {
-                Array arr;
-                if (!cachedArrays.containsKey(variableId)) {
-                    Variable var = nc.findVariable(variableId);
-                    arr = var.read();
-                    cachedArrays.put(variableId, arr);
-                } else {
-                    arr = cachedArrays.get(variableId);
-                }
 
-                Index index = arr.getIndex();
-                if (hztIndices[2] >= 0) {
-                    index.setDim(hztIndices[2], tIndex);
+        /*
+         * First find the range of co-ordinates to read
+         */
+        int minH = Integer.MAX_VALUE;
+        int maxH = -1;
+        int minZ = Integer.MAX_VALUE;
+        int maxZ = -1;
+        int minT = Integer.MAX_VALUE;
+        int maxT = -1;
+        boolean[] hztRangesSet = new boolean[] { false, false, false };
+        for (MeshCoordinates3D coords : coordsToRead) {
+            if (hztIndices[0] >= 0) {
+                if (coords.h < minH && coords.h >= 0) {
+                    minH = coords.h;
+                    hztRangesSet[0] = true;
                 }
-                if (hztIndices[1] >= 0) {
-                    index.setDim(hztIndices[1], zIndex);
+                if (coords.h > maxH) {
+                    maxH = coords.h;
+                    hztRangesSet[0] = true;
                 }
-                if (hztIndices[0] >= 0) {
-                    index.setDim(hztIndices[0], hIndex);
-                }
-
-                Number val = null;
-                switch (arr.getDataType()) {
-                case BYTE:
-                    val = arr.getByte(index);
-                    break;
-                case DOUBLE:
-                    val = arr.getDouble(index);
-                    break;
-                case FLOAT:
-                    val = arr.getFloat(index);
-                    break;
-                case INT:
-                    val = arr.getInt(index);
-                    break;
-                case LONG:
-                    val = arr.getLong(index);
-                    break;
-                case SHORT:
-                    val = arr.getShort(index);
-                    break;
-                default:
-                    break;
-                }
-
-                return val;
             }
-        } catch (ArrayIndexOutOfBoundsException | IOException e) {
-            e.printStackTrace();
-            return null;
+            if (hztIndices[1] >= 0) {
+                if (coords.z < minZ && coords.z >= 0) {
+                    minZ = coords.z;
+                    hztRangesSet[1] = true;
+                }
+                if (coords.z > maxZ) {
+                    maxZ = coords.z;
+                    hztRangesSet[1] = true;
+                }
+            }
+            if (hztIndices[2] >= 0) {
+                if (coords.t < minT && coords.t >= 0) {
+                    minT = coords.t;
+                    hztRangesSet[2] = true;
+                }
+                if (coords.t > maxT) {
+                    maxT = coords.t;
+                    hztRangesSet[2] = true;
+                }
+            }
         }
+
+        List<Number> ret = new ArrayList<>();
+        boolean rangeSet = (hztIndices[0] < 0 || hztRangesSet[0])
+                && (hztIndices[1] < 0 || hztRangesSet[1]) && (hztIndices[2] < 0 || hztRangesSet[2]);
+        if (!rangeSet) {
+            /*
+             * If we have not set a valid range, then it means we don't have any
+             * data at all in this area. Fill the return list with nulls
+             */
+            for (int i = 0; i < coordsToRead.size(); i++) {
+                ret.add(null);
+            }
+        } else {
+            /*
+             * Find the dimensionality of this variable
+             */
+            int numDims = 0;
+            for (int hztIndex : hztIndices) {
+                if (hztIndex >= 0) {
+                    numDims++;
+                }
+            }
+
+            List<Range> ranges = new ArrayList<>();
+            for (int i = 0; i < numDims; i++) {
+                ranges.add(null);
+            }
+
+            try {
+                if (hztIndices[0] >= 0) {
+                    ranges.set(hztIndices[0], new Range(minH, maxH));
+                }
+
+                if (hztIndices[1] >= 0) {
+                    ranges.set(hztIndices[1], new Range(minZ, maxZ));
+                }
+
+                if (hztIndices[2] >= 0) {
+                    ranges.set(hztIndices[2], new Range(minT, maxT));
+                }
+
+                /*
+                 * See definition of syncObj for explanation of synchronization
+                 */
+                synchronized (syncObj) {
+                    Variable var = nc.findVariable(variableId);
+                    Array arr = var.read(ranges);
+
+                    for (MeshCoordinates3D coords : coordsToRead) {
+                        if (coords.h < 0 || coords.z < 0 || coords.t < 0) {
+                            ret.add(null);
+                            continue;
+                        }
+                        Index index = arr.getIndex();
+                        if (hztIndices[2] >= 0) {
+                            index.setDim(hztIndices[2], coords.t - minT);
+                        }
+                        if (hztIndices[1] >= 0) {
+                            index.setDim(hztIndices[1], coords.z - minZ);
+                        }
+                        if (hztIndices[0] >= 0) {
+                            try {
+                                index.setDim(hztIndices[0], coords.h - minH);
+                            } catch (ArrayIndexOutOfBoundsException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        ret.add(readNumber(arr, index));
+                    }
+                }
+            } catch (ArrayIndexOutOfBoundsException | IOException | InvalidRangeException e) {
+                e.printStackTrace();
+                throw new DataReadingException("Problem reading data from data source", e);
+            }
+        }
+        return ret;
+    }
+
+    private Number readNumber(Array arr, Index index) {
+        Number val = null;
+        switch (arr.getDataType()) {
+        case BYTE:
+            val = arr.getByte(index);
+            break;
+        case DOUBLE:
+            val = arr.getDouble(index);
+            break;
+        case FLOAT:
+            val = arr.getFloat(index);
+            break;
+        case INT:
+            val = arr.getInt(index);
+            break;
+        case LONG:
+            val = arr.getLong(index);
+            break;
+        case SHORT:
+            val = arr.getShort(index);
+            break;
+        default:
+            break;
+        }
+        return val;
     }
 
     @Override
     public void close() throws DataReadingException {
         NetcdfDatasetAggregator.releaseDataset(nc);
     }
-
 }

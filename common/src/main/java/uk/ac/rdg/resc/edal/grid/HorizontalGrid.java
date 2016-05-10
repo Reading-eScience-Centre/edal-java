@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.grid;
 
 import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
@@ -41,6 +42,9 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * @author Jon Blower
  */
 public interface HorizontalGrid extends DiscreteHorizontalDomain<GridCell2D> {
+    
+    @Override
+    public Array2D<GridCell2D> getDomainObjects();
 
     /**
      * Returns the size of this domain. Equivalent to

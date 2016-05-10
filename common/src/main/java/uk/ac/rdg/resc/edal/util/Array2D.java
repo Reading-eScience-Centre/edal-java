@@ -90,6 +90,14 @@ public abstract class Array2D<T> implements Array<T> {
     }
 
     @Override
+    public void set(T value, int... coords) {
+        /*
+         * Default implementation - can be overridden by subclasses
+         */
+        throw new UnsupportedOperationException("This array is immutable");
+    }
+
+    @Override
     public long size() {
         return shape[X_IND] * shape[Y_IND];
     }
@@ -98,14 +106,14 @@ public abstract class Array2D<T> implements Array<T> {
     public int[] getShape() {
         return shape;
     }
-    
+
     /**
      * Convenience method to get the size in the x-direction
      */
     public int getXSize() {
         return shape[X_IND];
     }
-    
+
     /**
      * Convenience method to get the size in the y-direction
      */

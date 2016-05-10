@@ -78,7 +78,7 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.PushButton;
-import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -265,7 +265,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         /*
          * Now get the layout and add it to the main window
          */
-        RootLayoutPanel mainWindow = RootLayoutPanel.get();
+        RootPanel mainWindow = RootPanel.get("godiva3-main");
+        
         mainWindow.add(getLayout());
 
         /*

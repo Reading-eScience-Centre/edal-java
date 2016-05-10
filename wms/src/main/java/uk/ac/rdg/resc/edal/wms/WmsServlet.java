@@ -51,6 +51,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 import javax.naming.OperationNotSupportedException;
@@ -90,6 +91,7 @@ import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverter;
 import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverterImpl;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
+import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.PointCollectionDomain;
@@ -186,12 +188,16 @@ public class WmsServlet extends HttpServlet {
 
     private WmsCatalogue catalogue = null;
     private final VelocityEngine velocityEngine;
+    private final Set<String> advertisedPalettes = new TreeSet<>();
 
     /**
      * @see HttpServlet#HttpServlet()
      */
     public WmsServlet() {
         super();
+
+        advertisedPalettes.add(ColourPalette.DEFAULT_PALETTE_NAME);
+
         /*
          * Initialise the velocity templating engine ready for use in
          * GetFeatureInfo and GetCapabilities
@@ -227,6 +233,35 @@ public class WmsServlet extends HttpServlet {
      */
     public void setCatalogue(WmsCatalogue catalogue) {
         this.catalogue = catalogue;
+    }
+
+    /**
+     * Sets the palettes to be advertised in the GetCapabilities document.
+     * 
+     * In the capabilities document, each layer will advertise the available
+     * styles.
+     * 
+     * Since some styles can use palettes, this means that the capabilities
+     * document can get very large very quickly with the formula:
+     * 
+     * (styles which use palettes) x (number of palettes) x (number of layers)
+     * 
+     * being an approximation of how many Style tags are defined in the
+     * document. This is impractical, so we limit the number of advertised
+     * palettes. By default, this will only include the default palette name.
+     * 
+     * This method takes a {@link List} of palette names to advertise alongside
+     * the default.
+     * 
+     * @param paletteNames
+     *            The palettes to advertise alongside the default.
+     */
+    protected void setCapabilitiesAdvertisedPalettes(Collection<String> paletteNames) {
+        for (String palette : paletteNames) {
+            if (ColourPalette.getPredefinedPalettes().contains(palette)) {
+                advertisedPalettes.add(palette);
+            }
+        }
     }
 
     /**
@@ -623,7 +658,8 @@ public class WmsServlet extends HttpServlet {
         context.put("TimeUtils", TimeUtils.class);
         context.put("WmsUtils", WmsUtils.class);
         context.put("verbose", params.getBoolean("verbose", false));
-        context.put("availablePalettes", ColourPalette.getPredefinedPalettes());
+        context.put("allPalettes", ColourPalette.getPredefinedPalettes());
+        context.put("availablePalettes", advertisedPalettes);
 
         httpServletResponse.setContentType("text/xml");
         try {
@@ -1886,10 +1922,16 @@ public class WmsServlet extends HttpServlet {
              * different style of legend
              */
             Map<Integer, Category> categories = null;
+            /*
+             * We want to treat vector layers as a special case - we don't want
+             * to generate a full 2D legend
+             */
+            boolean isVector = false;
             if (getMapStyleParameters.getNumLayers() == 1) {
-                categories = WmsUtils
-                        .getVariableMetadataFromLayerName(getMapStyleParameters.getLayerNames()[0],
-                                catalogue).getParameter().getCategories();
+                VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(
+                        getMapStyleParameters.getLayerNames()[0], catalogue);
+                categories = metadata.getParameter().getCategories();
+                isVector = metadata.getChildWithRole(VectorPlugin.DIR_ROLE) != null;
             }
             MapImage imageGenerator = getMapStyleParameters.getImageGenerator(catalogue);
             if (categories != null) {
@@ -1904,12 +1946,12 @@ public class WmsServlet extends HttpServlet {
                  */
                 int height = params.getPositiveInt("height", 200);
                 int width;
-                if (imageGenerator.getFieldsWithScales().size() > 1) {
+                if (imageGenerator.getFieldsWithScales().size() > 1 && !isVector) {
                     width = params.getPositiveInt("width", height);
                 } else {
                     width = params.getPositiveInt("width", 50);
                 }
-                legend = imageGenerator.getLegend(width, height);
+                legend = imageGenerator.getLegend(width, height, isVector);
             }
         }
         httpServletResponse.setContentType("image/png");
@@ -1946,6 +1988,7 @@ public class WmsServlet extends HttpServlet {
          */
         StringBuilder copyright = new StringBuilder();
         Map<String, String> varId2Title = new HashMap<>();
+        Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
@@ -1958,8 +2001,7 @@ public class WmsServlet extends HttpServlet {
             EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
-                copyright.append(layerCopyright);
-                copyright.append('\n');
+                copyrights.add(layerCopyright);
             }
             if (variableMetadata.isScalar()) {
                 varId2Title.put(variableMetadata.getId(), layerMetadata.getTitle());
@@ -1980,6 +2022,10 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
+        for(String layerCopyright : copyrights) {
+            copyright.append(layerCopyright);
+            copyright.append('\n');
+        }
         if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
@@ -2099,6 +2145,7 @@ public class WmsServlet extends HttpServlet {
         List<HorizontalPosition> verticalSectionHorizontalPositions = new ArrayList<HorizontalPosition>();
         DiscreteLayeredDataset<?, ?> gridDataset = null;
         String varId = null;
+        Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layers) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             if (dataset instanceof DiscreteLayeredDataset<?, ?>) {
@@ -2107,8 +2154,7 @@ public class WmsServlet extends HttpServlet {
                 String layerCopyright = WmsUtils.getLayerMetadata(layerName, catalogue)
                         .getCopyright();
                 if (layerCopyright != null && !"".equals(layerCopyright)) {
-                    copyright.append(layerCopyright);
-                    copyright.append('\n');
+                    copyrights.add(layerCopyright);
                 }
 
                 VariableMetadata metadata = gridDataset.getVariableMetadata(varId);
@@ -2154,9 +2200,14 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
+        for(String layerCopyright : copyrights) {
+            copyright.append(layerCopyright);
+            copyright.append('\n');
+        }
         if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
+
         JFreeChart chart = Charting.createTransectPlot(pointCollectionFeatures, lineString, false,
                 copyright.toString());
 
@@ -2242,6 +2293,7 @@ public class WmsServlet extends HttpServlet {
          */
         StringBuilder copyright = new StringBuilder();
         Map<String, String> varId2Title = new HashMap<>();
+        Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
@@ -2254,8 +2306,7 @@ public class WmsServlet extends HttpServlet {
             EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
             if (layerCopyright != null && !"".equals(layerCopyright)) {
-                copyright.append(layerCopyright);
-                copyright.append('\n');
+                copyrights.add(layerCopyright);
             }
             if (variableMetadata.isScalar()) {
                 varId2Title.put(variableMetadata.getId(), layerMetadata.getTitle());
@@ -2276,9 +2327,14 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
+        for(String layerCopyright : copyrights) {
+            copyright.append(layerCopyright);
+            copyright.append('\n');
+        }
         if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
+
 
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
             Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
@@ -2385,6 +2441,12 @@ public class WmsServlet extends HttpServlet {
      */
     void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
+        if (exception instanceof EdalLayerNotFoundException) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        } else {
+            httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+
         httpServletResponse.setContentType("text/xml");
         StackTraceElement element = exception.getStackTrace()[0];
         log.warn("Wms Exception caught: \"" + exception.getMessage() + "\" from:"

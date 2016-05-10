@@ -43,6 +43,14 @@ public interface CoverageJsonConverter {
 	 * @param feature The feature to serialize.
 	 */
     public void convertFeatureToJson(OutputStream out, Feature<?> feature);
+    
+    /**
+     * Checks whether the converter will be able to convert the given feature successfully.
+     * 
+     * @param feature The feature to check.
+     * @throws RuntimeException If the feature cannot be converted.
+     */
+    public void checkFeatureSupported(Feature<?> feature);
 
 	/**
 	 * Writes a collection of Features as a CoverageJSON document to the given OutputStream.
@@ -53,4 +61,12 @@ public interface CoverageJsonConverter {
 	 * @param feature The features to serialize.
 	 */
     public void convertFeaturesToJson(OutputStream out, Collection<Feature<?>> features);
+    
+    /**
+     * Checks whether the converter will be able to convert the given features successfully.
+     * 
+     * @param features The features to check.
+     * @throws RuntimeException If the features cannot be converted.
+     */
+    public void checkFeaturesSupported(Collection<Feature<?>> features);
 }

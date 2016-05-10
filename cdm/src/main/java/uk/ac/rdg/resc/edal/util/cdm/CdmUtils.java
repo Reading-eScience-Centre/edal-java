@@ -56,7 +56,9 @@ import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.grid.GridDataset;
 import ucar.nc2.time.CalendarDate;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
+import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.grid.DefinedBoundsAxis;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.LookUpTableGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
@@ -76,6 +78,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
@@ -107,7 +110,8 @@ public final class CdmUtils {
      *             If the given {@link NetcdfDataset} doesn't contain any
      *             {@link GridDataset}s
      */
-    public static GridDataset getGridDataset(NetcdfDataset ncDataset) throws DataReadingException, IOException {
+    public static GridDataset getGridDataset(NetcdfDataset ncDataset) throws DataReadingException,
+            IOException {
         /*
          * TODO Convert this to return Coverage objects once netcdf-5 is more
          * stable
@@ -192,34 +196,28 @@ public final class CdmUtils {
             final CoordinateAxis2D lonAxis = (CoordinateAxis2D) xAxis;
             final CoordinateAxis2D latAxis = (CoordinateAxis2D) yAxis;
 
-            Array2D<Number> lonVals = new Array2D<Number>(lonAxis.getShape(0), lonAxis.getShape(1)) {
-                @Override
-                public void set(Number value, int... coords) {
-                    throw new UnsupportedOperationException("This Array2D is immutable");
-                }
-
-                @Override
-                public Number get(int... coords) {
-                    return lonAxis.getCoordValue(coords[0], coords[1]);
-                }
-            };
-            Array2D<Number> latVals = new Array2D<Number>(latAxis.getShape(0), latAxis.getShape(1)) {
-                @Override
-                public void set(Number value, int... coords) {
-                    throw new UnsupportedOperationException("This Array2D is immutable");
-                }
-
-                @Override
-                public Number get(int... coords) {
-                    return latAxis.getCoordValue(coords[0], coords[1]);
-                }
-            };
+            Array2D<Number> lonVals = get2DCoordinateValues(lonAxis);
+            Array2D<Number> latVals = get2DCoordinateValues(latAxis);
 
             return LookUpTableGrid.generate(lonVals, latVals);
         } else {
             /* Shouldn't get here */
             throw new IllegalStateException("Inconsistent axis types");
         }
+    }
+    
+    public static Array2D<Number> get2DCoordinateValues(final CoordinateAxis2D axis) {
+        return new Array2D<Number>(axis.getShape(0), axis.getShape(1)) {
+            @Override
+            public void set(Number value, int... coords) {
+                throw new UnsupportedOperationException("This Array2D is immutable");
+            }
+            
+            @Override
+            public Number get(int... coords) {
+                return axis.getCoordValue(coords[0], coords[1]);
+            }
+        };
     }
 
     /**
@@ -334,8 +332,36 @@ public final class CdmUtils {
         if (axis == null)
             throw new NullPointerException();
         String name = axis.getFullName();
-        // TODO: generate coordinate system axes if appropriate
-        if (axis.isRegular()) {
+
+        Attribute boundsAttr = axis.findAttribute("bounds");
+        if (boundsAttr != null) {
+            /*
+             * The cell bounds are specified by another variable in the data
+             * file.
+             */
+            List<Double> axisValues = new ArrayList<>();
+            List<Extent<Double>> axisBounds = new ArrayList<>();
+            for (int i = 0; i < axis.getSize(); i++) {
+                double[] coordBounds = axis.getCoordBounds(i);
+                if (coordBounds.length != 2) {
+                    throw new IllegalArgumentException(
+                            "You must specify exactly 2 boundary points for each axis point.  "
+                                    + coordBounds.length + " have been supplied");
+                }
+                double min = coordBounds[0];
+                double max = coordBounds[1];
+                Extent<Double> cellBounds;
+                if(min < max) {
+                    cellBounds = Extents.newExtent(min, max);
+                } else {
+                    cellBounds = Extents.newExtent(max, min);
+                }
+                axisBounds.add(cellBounds);
+                
+                axisValues.add(axis.getCoordValue(i));
+            }
+            return new DefinedBoundsAxis(name, axisValues, axisBounds, isLongitude);
+        } else if (axis.isRegular()) {
             return new RegularAxisImpl(name, axis.getStart(), axis.getIncrement(),
                     (int) axis.getSize(), isLongitude);
         } else {

@@ -9,6 +9,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
@@ -304,14 +305,20 @@ public class KDTree {
         }
     }
 
-    public ArrayList<Point> rangeQuery(double minX, double maxX, double minY, double maxY) {
+    public ArrayList<Point> rangeQuery(BoundingBox bbox) {
         ArrayList<Point> results = new ArrayList<Point>();
-        rangeQueryRecurse(minX, maxX, minY, maxY, results, 0);
+        rangeQueryRecurse(bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(), bbox.getMaxY(), results,
+                0);
         return results;
     }
 
     private final void rangeQueryRecurse(double minX, double maxX, double minY, double maxY,
             ArrayList<Point> results, int treeCurrentIndex) {
+        if (latLon) {
+            minX = GISUtils.constrainLongitude360(minX);
+            maxX = GISUtils.constrainLongitude360(maxX);
+        }
+
         if (tree[treeCurrentIndex] instanceof Point) {
             /* Terminal - return this point if it's within bounds */
             Point terminalPoint = (Point) tree[treeCurrentIndex];

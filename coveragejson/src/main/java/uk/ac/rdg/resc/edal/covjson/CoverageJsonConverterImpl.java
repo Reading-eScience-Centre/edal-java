@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.Feature;
 
@@ -63,6 +64,19 @@ public class CoverageJsonConverterImpl implements CoverageJsonConverter {
 			writer.write(features);
 		} catch (IOException e) {
 			throw new EdalException("Error writing CoverageJSON", e);
+		}
+	}
+
+	@Override
+	public void checkFeatureSupported(Feature<?> feature) {
+		// wrapping a Feature into a Coverage object will throw exceptions if unsupported
+		new Coverage(feature);
+	}
+
+	@Override
+	public void checkFeaturesSupported(Collection<Feature<?>> features) {
+		for (Feature<?> feature : features) {
+			new Coverage(feature);
 		}
 	}
 
