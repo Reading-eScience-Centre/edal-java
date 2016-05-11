@@ -1,13 +1,14 @@
 1.1.2
 =====
 Updated licence conditions to require use of ReSC logo in Godiva3
-Fixed KDTree to use haversine distance for lat/lon coords
 Bugfixes:
     Remove data from cache when (if) it refreshes periodically - this was causing no data update
     Correct handling of NaN in EN3/4 datasets
     Fixed NullPointerException when dataset title is missing from admin interface
     Godiva3 works properly on HTTPS
-    Made http://server/ncWMS2/admin redirect to http://server/ncWMS2/admin/ 
+    Made http://server/ncWMS2/admin redirect to http://server/ncWMS2/admin/
+    Fixed redirect issue on config update with Tomcat 8+
+    Fixed TRANSPARENT/BGCOLOR clash - TRANSPARENT always implies BGCOLOR=transparent
 
 1.1.1
 =====
