@@ -2,6 +2,8 @@
 =====
 Moved configuration to web.xml where it can be overridden so that it persists across deployments
 (TODO - Update User Guide with instructions on how to do this - but only after a release...)
+Bugfixes:
+    WMS deals with out-of-range TIME/ELEVATION values properly (i.e. with an XML ServiceException)
 
 1.1.2
 =====
