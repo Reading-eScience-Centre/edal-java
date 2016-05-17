@@ -99,8 +99,6 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  */
 public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extends AbstractDataset {
     private static final Logger log = LoggerFactory.getLogger(AbstractPluginEnabledDataset.class);
-    private static final String NO_Z_AXIS_CODE = "NO_Z_AXIS";
-    private static final String NO_T_AXIS_CODE = "NO_T_AXIS";
 
     public AbstractPluginEnabledDataset(String id, Collection<? extends VariableMetadata> vars) {
         super(id, vars);
@@ -321,7 +319,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
 
     @Override
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException {
+            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException,
+            IncorrectDomainException {
         List<ProfileFeature> features = new ArrayList<>();
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -341,19 +340,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
         /*
          * Find a common z-axis
          */
-        VerticalAxis zAxis;
-        try {
-            zAxis = getVerticalAxis(varIds);
-        } catch (IncorrectDomainException e) {
-            if (NO_Z_AXIS_CODE.equals(e.getCode())) {
-                log.error("Cannot extract profiles for variables without vertical information", e);
-                throw new UnsupportedOperationException(
-                        "Extraction of vertical profile features is only supported when all requested variables have a vertical domain",
-                        e);
-            } else {
-                throw new DataReadingException("Problem finding common z-axis", e);
-            }
-        }
+        VerticalAxis zAxis = getVerticalAxis(varIds);
 
         if (zAxis == null) {
             /*
@@ -524,8 +511,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                  * will not work
                  */
                 throw new IncorrectDomainException(
-                        "All variables must have a vertical domain to extract profile features",
-                        NO_Z_AXIS_CODE);
+                        "All variables must have a vertical domain to extract profile features");
             }
 
             if (verticalDomain instanceof VerticalAxis) {
@@ -706,7 +692,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
 
     @Override
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException {
+            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException,
+            IncorrectDomainException {
         List<PointSeriesFeature> features = new ArrayList<>();
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -726,19 +713,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
         /*
          * Find a common time-axis
          */
-        TimeAxis tAxis;
-        try {
-            tAxis = getTimeAxis(varIds);
-        } catch (IncorrectDomainException e) {
-            if (NO_T_AXIS_CODE.equals(e.getCode())) {
-                log.error("Cannot extract timeseries for variables without time information", e);
-                throw new UnsupportedOperationException(
-                        "Extraction of time-series features is only supported when all requested variables have a time domain",
-                        e);
-            } else {
-                throw new DataReadingException("Problem finding common t-axis", e);
-            }
-        }
+        TimeAxis tAxis = getTimeAxis(varIds);
+
         if (tAxis == null) {
             /*
              * No time axis within given limits. Return empty collection
@@ -907,8 +883,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                  * will not work
                  */
                 throw new IncorrectDomainException(
-                        "All variables must have a temporal domain to extract point series features",
-                        NO_T_AXIS_CODE);
+                        "All variables must have a temporal domain to extract point series features");
             }
 
             if (temporalDomain instanceof TimeAxis) {
@@ -1370,7 +1345,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
             tIndex = tAxis.findIndexOf(time);
         }
         if (tIndex < 0) {
-            throw new IllegalArgumentException(time
+            throw new IncorrectDomainException(time
                     + " is not part of the temporal domain for the variable " + varId);
         }
         return tIndex;
@@ -1385,7 +1360,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
             zIndex = zAxis.findIndexOf(zPos);
         }
         if (zIndex < 0) {
-            throw new IllegalArgumentException(zPos
+            throw new IncorrectDomainException(zPos
                     + " is not part of the vertical domain for the variable " + varId);
         }
         return zIndex;
