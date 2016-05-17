@@ -12,4 +12,4 @@ ncWMS v2 is build on top of the [EDAL](edal_user_guide.html) libraries developed
 
 This guide provides instructions on installing, setting up, and using ncWMS v2.
 
-Hosted on github, etc., etc.
+Hosted on github, etc.
