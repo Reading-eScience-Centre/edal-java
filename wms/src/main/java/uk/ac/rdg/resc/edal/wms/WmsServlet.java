@@ -397,12 +397,12 @@ public class WmsServlet extends HttpServlet {
 
         PlottingDomainParams plottingParameters = getMapParams.getPlottingDomainParameters();
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
-        
+
         /*
          * If the user has requested the actual data in coverageJSON format...
          */
-        if (getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage+json") ||
-                getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage json")) {
+        if (getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage+json")
+                || getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage json")) {
             httpServletResponse.setContentType("application/prs.coverage+json");
             String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
             LayerNameMapper layerNameMapper = catalogue.getLayerNameMapper();
@@ -410,10 +410,20 @@ public class WmsServlet extends HttpServlet {
             for (String layerName : layerNames) {
                 Dataset dataset = catalogue.getDatasetFromId(layerNameMapper
                         .getDatasetIdFromLayerName(layerName));
-
-                features.addAll(dataset.extractMapFeatures(CollectionUtils.setOf(layerNameMapper
-                        .getVariableIdFromLayerName(layerName)), getMapParams
-                        .getPlottingDomainParameters()));
+                VariableMetadata metadata = dataset.getVariableMetadata(layerNameMapper
+                        .getVariableIdFromLayerName(layerName));
+                if (metadata.isScalar()) {
+                    features.addAll(dataset.extractMapFeatures(CollectionUtils
+                            .setOf(layerNameMapper.getVariableIdFromLayerName(layerName)),
+                            getMapParams.getPlottingDomainParameters()));
+                } else {
+                    Set<VariableMetadata> children = metadata.getChildren();
+                    for (VariableMetadata child : children) {
+                        features.addAll(dataset.extractMapFeatures(
+                                CollectionUtils.setOf(child.getParameter().getVariableId()),
+                                getMapParams.getPlottingDomainParameters()));
+                    }
+                }
             }
             CoverageJsonConverter converter = new CoverageJsonConverterImpl();
 
@@ -427,7 +437,8 @@ public class WmsServlet extends HttpServlet {
                  * Can't handle a thrown exception here - it won't be handled
                  * properly, since the output stream has already been opened
                  * 
-                 * Need a method to check that the conversion will be successful first.
+                 * Need a method to check that the conversion will be successful
+                 * first.
                  */
             }
             return;
@@ -483,7 +494,7 @@ public class WmsServlet extends HttpServlet {
          * handleWmsException method.
          */
         httpServletResponse.setContentType(getMapParams.getFormatString());
-        
+
         MapImage imageGenerator = styleParameters.getImageGenerator(catalogue);
 
         List<BufferedImage> frames;
@@ -2022,7 +2033,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
@@ -2200,7 +2211,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
@@ -2327,14 +2338,13 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
         if (copyright.length() > 0) {
             copyright.deleteCharAt(copyright.length() - 1);
         }
-
 
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
             Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
