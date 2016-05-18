@@ -48,7 +48,7 @@ public interface CoverageJsonConverter {
      * Checks whether the converter will be able to convert the given feature successfully.
      * 
      * @param feature The feature to check.
-     * @throws RuntimeException If the feature cannot be converted.
+     * @throws EdalException If the feature cannot be converted.
      */
     public void checkFeatureSupported(Feature<?> feature);
 
@@ -66,7 +66,7 @@ public interface CoverageJsonConverter {
      * Checks whether the converter will be able to convert the given features successfully.
      * 
      * @param features The features to check.
-     * @throws RuntimeException If the features cannot be converted.
+     * @throws EdalException If the features cannot be converted.
      */
     public void checkFeaturesSupported(Collection<Feature<?>> features);
 }

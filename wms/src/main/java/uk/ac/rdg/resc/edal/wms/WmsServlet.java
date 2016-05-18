@@ -427,20 +427,13 @@ public class WmsServlet extends HttpServlet {
             }
             CoverageJsonConverter converter = new CoverageJsonConverterImpl();
 
+            converter.checkFeaturesSupported(features);
             try {
-                converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
-            } catch (IOException e) {
-                log.error("Problem writing coverage JSON to output stream", e);
-            } catch (Exception e) {
-                e.printStackTrace();
-                /*
-                 * Can't handle a thrown exception here - it won't be handled
-                 * properly, since the output stream has already been opened
-                 * 
-                 * Need a method to check that the conversion will be successful
-                 * first.
-                 */
-            }
+				converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+			} catch (IOException e) {
+				log.error("Problem writing coverage JSON to output stream", e);
+			}
+            
             return;
         }
 
