@@ -1,6 +1,4 @@
-# Introduction
-Some more introductory material here (see how it looks online first)
-
+# For ncWMS 1.x Users
 
 ## Changes from ncWMS 1.x {#changes}
 
@@ -20,9 +18,9 @@ The following is a list of some of the major changes from ncWMS 1.x:
 *   GetFeatureInfo now only returns text/XML
 *   GetTimeseries, GetVerticalProfile, are new methods which replace the previous PNG implementations for GetFeatureInfo
 
-## Migrating from ncWMS 1.x
+## Migrating from ncWMS 1.x {#migration}
 
 Configuration for ncWMS v2 is very similar to that for ncWMS v1.x. Whilst the dataset configuration has changed quite a bit, old `config.xml` files from 1.x versions can be used on v2 (but not the other way around). Therefore, to migrate from v1.x to v2, only two steps need to be taken:
 
-*   Copy the `config.xml` file from its old location (`~/.ncWMS/`) to the v2 location (`~/.ncWMS2` by default - see below for configuration)
-*   Configure your servlet container to add a security role for the ncWMS admin user (see below)
+*   Copy the `config.xml` file from its old location (`~/.ncWMS/`) to the v2 location (`~/.ncWMS2/` by default - see [configuration](./03-config.md) for details on how to change this)
+*   Configure your servlet container to add a security role for the ncWMS admin user (see [installation](./02-installation.md))
