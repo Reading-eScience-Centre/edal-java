@@ -1,6 +1,6 @@
 # Development
 
-## Adding new colour palettes
+## Adding new colour palettes {#palettes}
 
 To add new colour palettes to ncWMS, you must create palette files. These are text files with the extension ".pal". The name of the file will be the name of the palette. This files must contain one line for each colour in the palette. Intermediate colours will be interpolated. A colour is either of the form `#RRGGBB` or `#AARRGGBB` ('AA' representing the alpha-component), where values are in hexadecimal notation.
 
@@ -15,7 +15,7 @@ The palette files can be placed in a directory named `.palettes` within the main
 Note that you can use the variables `$CONFIGDIR` and `$HOME` which represent the config directory for ncWMS and the home directory of the user running the servlet container respectively.  These are special values - other environment variables cannot be used here. Since this setting is at the servlet container level, it will persist across redeployment of ncWMS2.
 
 
-## Defining new style templates
+## Defining new style templates {#styles}
 
 To create a new style for plotting, you will need to create an SLD template. The documentation for SLD can be found in the root directory of the source code, and is named "ncWMS-sld_specification". Within this template, you may use the following placeholders:
 
@@ -36,7 +36,7 @@ For further examples, see the existing style templates in the [edal-graphics mod
 
 Once you have created these templates, you may either place them in a subdirectory of the main config directory named `.styles`, or override the `styleDirs` context parameter, similar to the palettes directory above.
 
-## Adding new data readers
+## Adding new data readers {#datareaders}
 
 By default ncWMS supports reading of gridded NetCDF/GRIB/OPeNDAP data, and in-situ data from the EN3/4 UK Met Office dataset. To read additional types of data, a new data reader must be written. To do this, you must extend the class `uk.ac.rdg.resc.edal.dataset.DatasetFactory`. This has a single abstract method which returns a `uk.ac.rdg.resc.edal.dataset.Dataset` object given an ID and location.
 

@@ -1,10 +1,10 @@
 # Installation
 
-## Standalone version
+## Standalone version {#standalone}
 
 The standalone version of ncWMS requires no installation. It can be run from the command-line with the command `java -jar ncWMS2-standalone.jar` . This will run the WMS server locally with no security for administration and configuration. It will be available at [http://localhost:8080/](http://localhost:8080/). All configuration data is stored in a directory named `.ncWMS2` in the home directory of the user running the software.
 
-## Servlet Container
+## Servlet Container {#servlet}
 
 ncWMS is a Java servlet which runs on a servlet container such as Tomcat, JBoss, or Glassfish.  Tomcat is the recommended servlet container and is what ncWMS is written and tested on. Installation is servlet-container dependent, but there are no ncWMS-specific procedures for installation.
 

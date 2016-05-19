@@ -4,7 +4,7 @@ Configuration of ncWMS is performed by either accessing the administration web i
 
 Once any changes have been made on this page, click the "Save configuration" button to apply them.
 
-## Adding datasets
+## Adding datasets {#datasets}
 
 On the admin page, new datasets can be added by filling in the information in the "Required Data" column of the Datasets section. All other fields are optional. Already-configured datasets can be modified here.
 
@@ -36,7 +36,7 @@ Status information about the dataset will appear here
 
 ### Data reading class:
 
-This is the Java class which should be used to read the data. This should be left blank to use the default gridded NetCDF data reader. ncWMS2 also provides the reader `uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory` for reading data from the UK Met Office EN3/EN4 dataset ([http://www.metoffice.gov.uk/hadobs/en4/](http://www.metoffice.gov.uk/hadobs/en4/)). For custom data types you specify their class name here (see [Development](./05-development.md) section for more information)
+This is the Java class which should be used to read the data. This should be left blank to use the default gridded NetCDF data reader. ncWMS2 also provides the reader `uk.ac.rdg.resc.edal.dataset.cdm.En3DatasetFactory` for reading data from the UK Met Office EN3/EN4 dataset ([http://www.metoffice.gov.uk/hadobs/en4/](http://www.metoffice.gov.uk/hadobs/en4/)). For custom data types you specify their class name here (see [Development](./06-development.md) section for more information)
 
 ![](images/godiva-en3.png)
 
@@ -44,7 +44,7 @@ This is the Java class which should be used to read the data. This should be lef
 
 Tick this box to completely remove this dataset from the configuration
 
-## Configuring variables
+## Configuring variables {#variables}
 
 Once a dataset has been added, a link will appear in the "Edit variables" column. By clicking this, all of the variables within the dataset can be individually configured. The properties which can be adjusted are:
 
@@ -54,11 +54,11 @@ Once a dataset has been added, a link will appear in the "Edit variables" column
 * Default number of colour bands: The number of gradations of colour to use when plotting the variable. Must be between 2 and 250.
 * Default scaling: Whether to plot data on a linear or a logarithmic colour scale.
 
-## Dynamic services
+## Dynamic services {#dynamic}
 
 Dynamic services are equivalent to datasets but are not pre-indexed. This allows users to access potentially very large numbers of files without having to configure them. An explanation of dynamic services is provided on the administration interface and their configuration is very similar to that of standard datasets.
 
-## Other server settings
+## Other server settings {#server}
 
 ### Cache
 

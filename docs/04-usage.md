@@ -1,6 +1,6 @@
 # Usage
 
-## Standard WMS
+## Standard WMS {#wms}
 
 ncWMS provides the three mandatory methods of the WMS specification and should work with any standard WMS client. However, it also accepts a number of additional parameters for finer control of the images produced.
 
@@ -44,7 +44,7 @@ The GetCapabilities request works as per the standard WMS, with the following ad
 
 * DATASET: If this is present, a capabilities document will be returned containing only layers which are present within the given dataset ID
 
-## Custom ncWMS methods
+## ncWMS Extensions {#extensions}
 
 In additional to the standard WMS methods, ncWMS provides a number of additional requests. These all take the standard WMS parameters of `SERVICE=WMS`, `VERSION`, and `REQUEST`. The following are the valid values for the `REQUEST` parameter:
 
@@ -104,7 +104,7 @@ For a full legend, the additional parameters `LAYERS` and either `STYLES`, `SLD`
 
 Note that for full legends, the supplied width and height are NOT the final height of the image, but rather the width and height of each individual coloured plot area (i.e. the 1d/2d colourbar)
 
-## Godiva3
+## Godiva3 {#godiva3}
 
 Normal access to the WMS is done using a web client. ncWMS comes with Godiva3 - a WMS client written to take advantage of all of the extended WMS methods in ncWMS. It is accessed at [http://serveraddress/ncWMS/Godiva.html](http://serveraddress/ncWMS/Godiva.html)
 
