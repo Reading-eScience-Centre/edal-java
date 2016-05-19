@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 .h2/
 .settings/
 .project
@@ -10,3 +11,43 @@ ncwms/
 target/
 wms/
 xml-catalogue/
+||||||| merged common ancestors
+# General
+target/
+.classpath
+.project
+.settings/
+.metadata/
+*.log
+.h2/
+gwt-unitCache/
+
+# Ignore apidocs
+apidocs/
+
+# Module specific
+ncwms/src/main/webapp/godiva3/
+ncwms/src/main/webapp/WEB-INF/deploy/
+
+graphics/dependency-reduced-pom.xml
+/pom-backup.xml
+/pom.xml.bak
+=======
+# General
+target/
+.classpath
+.project
+.settings/
+.metadata/
+*.log
+.h2/
+gwt-unitCache/
+
+# Module specific
+ncwms/src/main/webapp/godiva3/
+ncwms/src/main/webapp/WEB-INF/deploy/
+
+graphics/dependency-reduced-pom.xml
+/pom-backup.xml
+/pom.xml.bak
+>>>>>>> Stashed changes
