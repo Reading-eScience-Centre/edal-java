@@ -1,0 +1,12 @@
+.h2/
+.settings/
+.project
+cdm/
+common/
+coveragejson/
+godiva/
+graphics/
+ncwms/
+target/
+wms/
+xml-catalogue/
