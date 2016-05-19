@@ -36,7 +36,7 @@ Maven needs to be installed to build the software, but to release it needs some 
 Release Procedure
 -----------------
 
-Once all code is ready to be released, and all tests pass, the following steps should be taken:
+Once all code is ready to be released, all tests pass, **and all documentation is updated**, the following steps should be taken:
 
 ### Create a branch to do the release on:
 ```
@@ -57,7 +57,6 @@ cd ..
 ```
 mvn clean install
 mvn javadoc:aggregate
-[build other site docs]
 ```
 
 ### Commit and tag the release:
@@ -84,6 +83,7 @@ git push --tags
 Go to [the project page on github](https://github.com/Reading-eScience-Centre/edal-java) and click the "Releases" link.  Go to the edal-VERSION release and click the "Edit tag" button.  You should now fill in the appropriate boxes and upload the ncWMS.war and the ncWMS-standalone.jar files as binary attachments.
 
 ### Upload the site documents
+Pushing the release to master will trigger a build of the ncWMS User Guide onto gitbooks.com.
 
 TODO This still needs a description.  The basic idea will be to use the maven-pdf-plugin to generate PDFs for the user guides etc, as well as HTML(?).  See http://maven.40175.n5.nabble.com/Maven-PDF-support-td5778995.html for PDF generation.
 

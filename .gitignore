@@ -8,6 +8,9 @@ target/
 .h2/
 gwt-unitCache/
 
+# NOT gh-pages branch, but all other branches
+apidocs/
+
 # Module specific
 ncwms/src/main/webapp/godiva3/
 ncwms/src/main/webapp/WEB-INF/deploy/

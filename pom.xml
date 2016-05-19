@@ -80,6 +80,18 @@
                 </configuration>
                 <version>2.9</version>
             </plugin>
+            <plugin>
+                <!-- Create aggregated javadoc for all modules -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
+                <configuration>
+                    <!-- Output the apidocs to the base directory. These 
+                        are ignored in .gitignore for most branches, but NOT in the gh-pages branch. 
+                        This makes documentation deployment very simple -->
+                    <reportOutputDirectory>${project.basedir}</reportOutputDirectory>
+                </configuration>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -180,8 +192,8 @@
         </profile>
     </profiles>
     <issueManagement>
-        <system>Trac</system>
-        <url>http://www.resc.reading.ac.uk/trac/edal</url>
+        <system>GitHub Issues</system>
+        <url>https://github.com/Reading-eScience-Centre/edal-java/issues</url>
     </issueManagement>
     <reporting>
         <plugins>
@@ -189,6 +201,7 @@
                 <!-- Create aggregated javadoc for all modules -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
                 <configuration>
                     <goal>javadoc:aggregate</goal>
                     <!-- These links really belong in the child POMs but 
@@ -201,7 +214,6 @@
                         <link>http://www.geoapi.org/3.0/javadoc/</link>
                     </links>
                 </configuration>
-                <version>2.9</version>
             </plugin>
             <plugin>
                 <!-- This means that we only generate javadocs for the site -->

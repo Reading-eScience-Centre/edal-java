@@ -22,10 +22,11 @@ Additionally we define another 2 optional attributes for use with categorical da
 The second optional attribute is the `flag_colours` attribute, which should contain a list of space-separated colour definitions. These will be used as the default colours for visualising categorical data in ncWMS.  A full set of categorical attributes will appear similar to this in the CDL description of the dataset:
 
 ```
-    land_cover:flag_values = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ;
-    land_cover:flag_namespace = "http://melodiesproject.eu/datasets/WP3/land-cover/def#" ;
-    land_cover:flag_meanings = "Broadleaf_Woodland Coniferous_Woodland Arable_and_Horticulture Improved_Grassland Rough_Grassland Neutral_Grassland Calcareous_Grassland Acid_Grassland Fen_Marsh_and_Swamp Heather Heather_Grassland Bog Montane_Habitats Inland_Rock Saltwater Freshwater Supra-littoral_Rock Supra-littoral_Sediment Littoral_Rock Littoral_Sediment Saltmarsh Urban Suburban" ;
-    land_cover:flag_colors = "#FF0000 #006600 #732600 #00FF00 #FAAA00 #7FE57F #70A800 #998100 #FFFF00 #801A80 #E68CA6 #008073 #00FFFF #D2D2FF #000080 #0000FF #CCB300 #CCB300 #FFFF80 #FFFF80 #8080FF #000000 #808080" ;
+land_cover:flag_values = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ;
+land_cover:flag_namespace = "http://melodiesproject.eu/datasets/WP3/land-cover/def#" ;
+land_cover:flag_meanings = "Broadleaf_Woodland Coniferous_Woodland Arable_and_Horticulture Improved_Grassland Rough_Grassland Neutral_Grassland Calcareous_Grassland Acid_Grassland Fen_Marsh_and_Swamp Heather Heather_Grassland Bog Montane_Habitats Inland_Rock Saltwater Freshwater Supra-littoral_Rock Supra-littoral_Sediment Littoral_Rock Littoral_Sediment Saltmarsh Urban Suburban" ;
+land_cover:flag_colors = "#FF0000 #006600 #732600 #00FF00 #FAAA00 #7FE57F #70A800 #998100 #FFFF00 #801A80 #E68CA6 #008073 #00FFFF #D2D2FF #000080 #0000FF #CCB300 #CCB300 #FFFF80 #FFFF80 #8080FF #000000 #808080" ;
 ``` 
 
+Which will appear in Godiva3 as:
 ![Categorical data as viewed in Godiva3](images/godiva-land_cover.png)
