@@ -287,7 +287,7 @@ public class DomainWriter <T> {
 		system
 	        .put(Keys.TYPE, Vals.VERTICALCRS)
 	        .startMap(Keys.CS)
-	          .startArray(Keys.AXES)
+	          .startArray(Keys.CSAXES)
 	            .startMap()
 	              .startMap(Keys.NAME).put(Keys.EN, axisName).end()
 	              .put(Keys.DIRECTION, crs.isPositiveUpwards() ? Vals.UP : Vals.DOWN)

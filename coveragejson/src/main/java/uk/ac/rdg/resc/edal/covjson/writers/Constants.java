@@ -37,6 +37,7 @@ public final class Constants {
 		public static final String CALENDAR = "calendar";
 		public static final String BASECRS = "baseCRS";
 		public static final String CS = "cs";
+		public static final String CSAXES = "csAxes";
 		public static final String NAME = "name";
 		public static final String EN = "en";
 		public static final String DIRECTION = "direction";
