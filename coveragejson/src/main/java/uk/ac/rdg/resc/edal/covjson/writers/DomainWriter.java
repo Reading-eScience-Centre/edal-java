@@ -113,7 +113,7 @@ public class DomainWriter <T> {
 			MapEncoder<?> axisMap = axes.startMap(axisName);
 			
 			if (axis.wrappedAxis instanceof TupleAxis) {
-				axisMap.put(Keys.DATATYPE, Vals.TUPLE);
+				axisMap.put(Keys.DATATYPE, Vals.TUPLEDATATYPE);
 			}
 			
 			if (axis.components != null) {

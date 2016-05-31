@@ -85,8 +85,7 @@ public final class Constants {
 		public static final String DOMAIN = "Domain";
 		public static final String PARAMETER = "Parameter";
 		public static final String NDARRAY = "NdArray";
-		public static final String TUPLE = "Tuple";
-		public static final String POLYGON = "Polygon";
+		public static final String TUPLEDATATYPE = "tuple";
 		public static final String INTEGER = "integer";
 		public static final String FLOAT = "float";
 		public static final String GRID = "Grid";
