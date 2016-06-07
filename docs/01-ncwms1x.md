@@ -13,10 +13,9 @@ The following is a list of some of the major changes from ncWMS 1.x:
 *   Moved build system to Maven - this makes it easier for 3rd parties to build the project and use the EDAL libraries in their own projects
 *   Updated to the latest NetCDF libraries from Unidata
 *   Some changes to the API:
-
-*   GetMap only produces animations with the addition of an extra URL parameter: "animation"
-*   GetFeatureInfo now only returns text/XML
-*   GetTimeseries, GetVerticalProfile, are new methods which replace the previous PNG implementations for GetFeatureInfo
+    *   GetMap only produces animations with the addition of an extra URL parameter: "animation"
+    *   GetFeatureInfo now only returns text/XML
+    *   GetTimeseries, GetVerticalProfile, are new methods which replace the previous PNG implementations for GetFeatureInfo
 
 ## Migrating from ncWMS 1.x {#migration}
 
