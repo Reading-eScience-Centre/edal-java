@@ -1,5 +1,11 @@
 # Installation
 
+## Getting ncWMS {#download}
+
+ncWMS can be downloaded as either a Java webapp (to be run in a servlet container such as Tomcat), or as a standalone Java application. Generally speaking, the webapp version is recommended for most uses. However, the standalone version is recommended for users who wish to only use ncWMS on their own machine for exploring data, or for testing ncWMS to explore its functionality prior to installing the webapp version.
+
+The latest release of ncWMS can be downloaded [here](https://github.com/Reading-eScience-Centre/edal-java/releases/latest).
+
 ## Standalone version {#standalone}
 
 The standalone version of ncWMS requires no installation. It can be run from the command-line with the command `java -jar ncWMS2-standalone.jar` . This will run the WMS server locally with no security for administration and configuration. It will be available at [http://localhost:8080/](http://localhost:8080/). All configuration data is stored in a directory named `.ncWMS2` in the home directory of the user running the software.
