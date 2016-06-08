@@ -79,7 +79,7 @@ git push --tags
 ```
 
 ### Create a release on github:
-Go to [the project page on github](https://github.com/Reading-eScience-Centre/edal-java) and click the "Releases" link.  Go to the edal-VERSION release and click the "Edit tag" button.  You should now fill in the appropriate boxes and upload the ncWMS.war and the ncWMS-standalone.jar files as binary attachments.
+Go to [the project page on github](https://github.com/Reading-eScience-Centre/edal-java) and click the "Releases" link.  Go to the edal-VERSION release and click the "Edit tag" button.  You should now fill in the appropriate boxes and upload ncWMS.war, ncWMS-standalone.jar, and licence.txt as binary attachments.
 
 ### Upload the site documents
 Pushing the release to master will trigger a build of the ncWMS User Guide onto gitbooks.com.
