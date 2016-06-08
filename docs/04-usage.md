@@ -6,6 +6,11 @@ ncWMS provides the three mandatory methods of the WMS specification and should w
 
 In ncWMS, the WMS layer names are of the form `datasetId/variableId`.
 
+When colours can be specified, there are three main ways of describing them:
+* 0xRRGGBB: Hexadecimal representation of the red, green, and blue components of the colour respectively.  For example 0x000000 represents black, 0xFF0000 represents 100% red, etc.
+* 0xAARRGGBB: Hexadecimal representation of the alpha, red, green, and blue components
+* Named colours. The special value "transparent" is supported, as are another 865 named colours. The full list of these can be found [here](https://github.com/Reading-eScience-Centre/edal-java/blob/master/common/src/main/resources/colors.csv)
+
 ### GetMap
 
 All of the standard parameters for GetMap are supported on ncWMS. Additional notes on some of these:
