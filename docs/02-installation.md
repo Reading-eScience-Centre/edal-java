@@ -18,10 +18,17 @@ ncWMS is a Java servlet which runs on a servlet container such as Tomcat, JBoss,
 
 Once ncWMS is up-and-running, on first launch it will create a configuration file and logging directory. By default this is located in a directory named `.ncWMS2` in the home directory of the user running the servlet container. **Note that the user running the servlet container must have write access to their home directory. This is not always the case for system users such as `tomcat7` or `nobody`.**
 
-To change the location of the server configuration, you need to redefine the context parameter `configDir`. To do this on Tomcat, you should create a file named `$CATALINA_BASE/conf/[enginename]/[hostname]/[webappname].xml`.  For example, with the default webapp name running on localhost this is `$CATALINA_BASE/conf/Catalina/localhost/ncWMS2.xml`. Inside this file, create an entry of the form:
+To change the location of the server configuration, you need to redefine the context parameter `configDir`. To do this on Tomcat, you should create a file named `$CATALINA_BASE/conf/[enginename]/[hostname]/[webappname].xml`.  For example, with the default webapp name running on localhost this is `$CATALINA_BASE/conf/Catalina/localhost/ncWMS2.xml`. Below is an example config with several options set, including `configDir`:
 
 ```
-<Parameter name="configDir" value="$HOME/.ncWMS2-testserver" override="false"/>
+<?xml version='1.0' encoding='utf-8'?>
+<Context>
+    <Parameter name="configDir" value="$HOME/.ncWMS2-testserver" override="false"/>
+    <Parameter name="paletteDirs" value="$HOME/.ncWMS2-testserver/palettes" override="false"/>
+    <Parameter name="styleDirs" value="$HOME/.ncWMS2-testserver/styles" override="false"/>
+    <Parameter name="defaultPalette" value="[whatever]" override="false"/>
+    <Parameter name="advertisedPalettes" value="[whatever]" override="false"/>
+</Context>
 ```
 
 Note that `$HOME` represents the home directory of the user running **the servlet container** and is a special value - other environment variables cannot be used here. Since this setting is at the servlet container level, it will persist across redeploys of ncWMS2.
