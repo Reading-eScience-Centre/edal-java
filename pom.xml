@@ -267,6 +267,7 @@
         <module>wms</module>
         <module>cdm</module>
         <module>ncwms</module>
+        <module>examples</module>
     </modules>
     <repositories>
         <repository>

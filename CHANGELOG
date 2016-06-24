@@ -1,7 +1,8 @@
 1.1.3
 =====
 Moved configuration to web.xml where it can be overridden so that it persists across deployments
-(TODO - Update User Guide with instructions on how to do this - but only after a release...)
+Moved User Guide into source tree, and setup gitbooks.com to automatically generate it on push.
+Added examples module for example code using EDAL
 Bugfixes:
     WMS deals with out-of-range TIME/ELEVATION values properly (i.e. with an XML ServiceException)
 

@@ -23,6 +23,9 @@ All of the standard parameters for GetMap are supported on ncWMS. Additional not
     * application/vnd.google-earth.kmz
 * TIME: For gridded data with a discrete time axis this takes a single value. For in-situ data which is spread over a range, it is more useful to provide a time range in the form `starttime/endtime`. This should ideally be used in conjunction with the TARGETTIME parameter (see below)
 * ELEVATION: For gridded data with a discrete vertical axis this takes a single value. For in-situ data which is spread over a range, it is more useful to provide an elevation range in the form `startelevation/endelevation`. This should ideally be used in conjunction with the TARGETELEVATION parameter (see below)
+* STYLES: Available styles can be found from the Capabilities document.  Generally styles are of the form `stylename/palettename`, and the style name `default` is always available.  The available palettes can be seen in the following image, and additional palettes can be added by following the instructions [here](06-development.md#palettes):
+
+![Available colour palettes in ncWMS](images/palettes.png)
 
 In additional to the standard GetMap parameters, ncWMS accepts the following optional additional parameters. If not specified, the server-configured defaults are used:
 
