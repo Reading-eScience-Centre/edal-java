@@ -50,8 +50,8 @@ import java.util.jar.JarFile;
 import org.apache.commons.lang.ArrayUtils;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils.ColorAdapter;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils.ColorAdapter;
 
 public class ColourPalette {
     /**

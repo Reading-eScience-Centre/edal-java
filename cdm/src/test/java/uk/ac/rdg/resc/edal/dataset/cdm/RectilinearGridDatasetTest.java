@@ -50,13 +50,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
-import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
@@ -80,7 +82,6 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * This test class mainly is for {@link RectiLinearGridDataset} and its ancestor
@@ -96,7 +97,7 @@ public class RectilinearGridDatasetTest {
     // the comparison accuracy parameter used by assert equal statement
     private static final double delta = 1e-5;
 
-    private Dataset dataset;
+    private HorizontallyDiscreteDataset<? extends DataSource> dataset;
 
     /*
      * The below four parameters are about the used test dataset. they're the
@@ -216,10 +217,8 @@ public class RectilinearGridDatasetTest {
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
             // one cell only so both xSize and ySize are 1.
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
-                    datasetTExtent, hPos, zPos, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                    .extractTimeseriesFeatures(null, params);
+                    .extractTimeseriesFeatures(null, null, null, datasetTExtent, hPos, zPos);
             PointSeriesFeature data = timeSeriesFeatures.iterator().next();
             Array1D<Number> magValues = data.getValues("vLon:vLat-mag");
             Array1D<Number> dirValues = data.getValues("vLon:vLat-dir");
@@ -279,10 +278,8 @@ public class RectilinearGridDatasetTest {
             for (GridCell2D cell : samplePoints) {
                 HorizontalPosition hPos = cell.getCentre();
                 // tExtent is out scope of dataset tExtent
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null, tExtent,
-                        hPos, zPos, null);
                 Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                        .extractTimeseriesFeatures(null, params);
+                        .extractTimeseriesFeatures(null, null, null, tExtent, hPos, zPos);
                 // the size of an empty feature is ZERO.
                 assertEquals(0, timeSeriesFeatures.size());
             }
@@ -295,10 +292,8 @@ public class RectilinearGridDatasetTest {
             for (GridCell2D cell : samplePoints) {
                 HorizontalPosition hPos = cell.getCentre();
                 // tExtent is out scope of dataset tExtent
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null, tExtent,
-                        hPos, zPos, null);
                 Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                        .extractTimeseriesFeatures(null, params);
+                        .extractTimeseriesFeatures(null, null, null, tExtent, hPos, zPos);
                 assertEquals(0, timeSeriesFeatures.size());
             }
         }
@@ -310,10 +305,8 @@ public class RectilinearGridDatasetTest {
         for (GridCell2D cell : samplePoints) {
             HorizontalPosition hPos = cell.getCentre();
             // zExtent is out scope of dataset zExtent
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent, tExtent,
-                    hPos, null, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                    .extractTimeseriesFeatures(null, params);
+                    .extractTimeseriesFeatures(null, null, zExtent, tExtent, hPos, null);
             assertEquals(0, timeSeriesFeatures.size());
         }
 
@@ -321,10 +314,8 @@ public class RectilinearGridDatasetTest {
         for (GridCell2D cell : samplePoints) {
             HorizontalPosition hPos = cell.getCentre();
             // zExtent is out scope of dataset zExtent
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, zExtent, tExtent,
-                    hPos, null, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                    .extractTimeseriesFeatures(null, params);
+                    .extractTimeseriesFeatures(null, null, zExtent, tExtent, hPos, null);
             assertEquals(0, timeSeriesFeatures.size());
         }
     }
@@ -338,7 +329,7 @@ public class RectilinearGridDatasetTest {
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IncorrectDomainException.class)
     public void testMapFeaturesWithWrongParams() throws DataReadingException,
             VariableNotFoundException {
         // date value is out bound of tAxis
@@ -349,15 +340,12 @@ public class RectilinearGridDatasetTest {
         int i = 5;
 
         GridCell2D cell = samplePoints.get(i);
-        HorizontalPosition hPos = cell.getCentre();
         BoundingBox bbox = (BoundingBox) cell.getFootprint();
         // have to use bbox. replace it with null throw NullPointerExcpetion,
-        PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
-                datasetTExtent, hPos, zPos, tValue);
         Exception caughtEx = null;
         // the statement below catches an IllegalArgumentException
         try {
-            dataset.extractMapFeatures(null, params);
+            dataset.extractMapFeatures(null, new MapDomain(bbox, 1, 1, zPos, tValue));
         } catch (VariableNotFoundException e) {
             caughtEx = e;
         }
@@ -367,12 +355,9 @@ public class RectilinearGridDatasetTest {
         tValue = new DateTime(2000, 01, 02, 15, 00, chronology);
         i = 3;
         cell = samplePoints.get(i);
-        hPos = cell.getCentre();
         bbox = (BoundingBox) cell.getFootprint();
-        params = new PlottingDomainParams(1, 1, bbox, datasetZExtent, datasetTExtent, hPos, zPos,
-                tValue);
         // the statement below throws a VariableNotFoundException
-        dataset.extractMapFeatures(null, params);
+        dataset.extractMapFeatures(null, new MapDomain(bbox, 1, 1, zPos, tValue));
     }
 
     /**
@@ -391,15 +376,12 @@ public class RectilinearGridDatasetTest {
         DateTime tValue = new DateTime(2000, 01, 02, 15, 00, chronology);
         for (Double zPos = 0.0; zPos <= 100; zPos += 20.0) {
             for (GridCell2D cell : samplePoints) {
-                HorizontalPosition hPos = cell.getCentre();
                 GridCoordinates2D gCoordinate = cell.getGridCoordinates();
                 int xIndex = gCoordinate.getX();
                 int yIndex = gCoordinate.getY();
                 BoundingBox bbox = (BoundingBox) cell.getFootprint();
-                PlottingDomainParams params = new PlottingDomainParams(1, 1, bbox, datasetZExtent,
-                        datasetTExtent, hPos, zPos, tValue);
                 Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset
-                        .extractMapFeatures(null, params);
+                        .extractMapFeatures(null, new MapDomain(bbox, 1, 1, zPos, tValue));
                 // mapFeature responds to one Geo-position
                 assertEquals(1, mapFeature.size());
 
@@ -460,10 +442,8 @@ public class RectilinearGridDatasetTest {
             GridCoordinates2D gCoordinate = cell.getGridCoordinates();
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, null,
-                    datasetTExtent, hPos, zPos, null);
             Collection<? extends PointSeriesFeature> timeSeriesFeatures = dataset
-                    .extractTimeseriesFeatures(null, params);
+                    .extractTimeseriesFeatures(null, null, null, datasetTExtent, hPos, zPos);
             assertEquals(1, timeSeriesFeatures.size());
             PointSeriesFeature data = timeSeriesFeatures.iterator().next();
             Array1D<Number> lonValues = data.getValues("vLon");
@@ -843,10 +823,8 @@ public class RectilinearGridDatasetTest {
      */
     private void bboxTest(BoundingBox bbox, double xstep, double ystep)
             throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
-        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, bbox, null, null,
-                null, null, null);
         Collection<? extends ProfileFeature> profileFeatures = dataset.extractProfileFeatures(null,
-                params);
+                bbox, null, null, null, null);
 
         // y-side need to be considered since x-side can be wrapped up
         Extent<Double> bboxY = Extents.newExtent(bbox.getMinY(), bbox.getMaxY());
@@ -1048,10 +1026,8 @@ public class RectilinearGridDatasetTest {
             int xIndex = gCoordinate.getX();
             int yIndex = gCoordinate.getY();
             HorizontalPosition hPos = cell.getCentre();
-            PlottingDomainParams params = new PlottingDomainParams(1, 1, null, datasetZExtent,
-                    tExtent, hPos, null, targetT);
             Collection<? extends ProfileFeature> profileFeatures = dataset.extractProfileFeatures(
-                    null, params);
+                    null, null, datasetZExtent, tExtent, hPos, targetT);
             if (tExtent == null && targetT == null) {
                 assertEquals(tSize, profileFeatures.size());
                 for (ProfileFeature feature : profileFeatures) {
@@ -1138,34 +1114,28 @@ public class RectilinearGridDatasetTest {
         DateTime start = new DateTime(2011, 01, 15, 00, 00, chronology);
         DateTime end = new DateTime(2012, 02, 03, 00, 00, chronology);
         Extent<DateTime> tExtent = Extents.newExtent(start, end);
-        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize, null, datasetZExtent,
-                tExtent, null, null, null);
         Collection<? extends ProfileFeature> profileFeatures = dataset.extractProfileFeatures(null,
-                params);
+                null, datasetZExtent, tExtent, null, null);
         assertEquals(0, profileFeatures.size());
 
         start = new DateTime(1990, 01, 15, 00, 00, chronology);
         end = new DateTime(1998, 02, 03, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
-        params = new PlottingDomainParams(xSize, ySize, null, datasetZExtent, tExtent, null, null,
-                null);
-        profileFeatures = dataset.extractProfileFeatures(null, params);
+        profileFeatures = dataset.extractProfileFeatures(null, null, datasetZExtent, tExtent, null, null);
         assertEquals(0, profileFeatures.size());
 
         start = new DateTime(2000, 1, 1, 00, 00, chronology);
         end = new DateTime(2000, 1, 10, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         Extent<Double> zExtent = Extents.newExtent(200.0, 500.0);
-        params = new PlottingDomainParams(xSize, ySize, null, zExtent, tExtent, null, null, null);
-        profileFeatures = dataset.extractProfileFeatures(null, params);
+        profileFeatures = dataset.extractProfileFeatures(null, null, zExtent, tExtent, null, null);
         assertEquals(0, profileFeatures.size());
 
         start = new DateTime(2000, 1, 1, 00, 00, chronology);
         end = new DateTime(2000, 1, 10, 00, 00, chronology);
         tExtent = Extents.newExtent(start, end);
         zExtent = Extents.newExtent(-200.0, -50.0);
-        params = new PlottingDomainParams(xSize, ySize, null, zExtent, tExtent, null, null, null);
-        profileFeatures = dataset.extractProfileFeatures(null, params);
+        profileFeatures = dataset.extractProfileFeatures(null, null, zExtent, tExtent, null, null);
         assertEquals(0, profileFeatures.size());
     }
 
@@ -1215,7 +1185,7 @@ public class RectilinearGridDatasetTest {
         // T and Z values are fixed
         double zValue = 60.0;
         DateTime tValue = new DateTime(2000, 01, 01, 00, 00, chronology);
-        MapDomain mapdomain = new MapDomainImpl(rGrid, zValue, vCrs, tValue);
+        MapDomain mapdomain = new MapDomain(rGrid, zValue, vCrs, tValue);
 
         MapFeature mapfeature = feature.extractMapFeature(ids, rGrid, zValue, tValue);
         assertEquals(mapdomain, mapfeature.getDomain());

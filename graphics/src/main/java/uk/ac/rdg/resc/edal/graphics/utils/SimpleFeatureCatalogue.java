@@ -29,17 +29,22 @@
 package uk.ac.rdg.resc.edal.graphics.style.util;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import uk.ac.rdg.resc.edal.dataset.PointDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 public class SimpleFeatureCatalogue<D extends Dataset> implements FeatureCatalogue {
     protected boolean cacheEnabled = false;
@@ -86,8 +91,22 @@ public class SimpleFeatureCatalogue<D extends Dataset> implements FeatureCatalog
         if (varCache.containsKey(params)) {
             return varCache.get(params);
         } else {
-            List<? extends DiscreteFeature<?, ?>> extractedFeatures = dataset.extractMapFeatures(
-                    CollectionUtils.setOf(varId), params);
+            List<? extends DiscreteFeature<?, ?>> extractedFeatures = new ArrayList<>();
+            if (dataset instanceof HorizontallyDiscreteDataset<?>) {
+                HorizontallyDiscreteDataset<?> discreteDataset = (HorizontallyDiscreteDataset<?>) dataset;
+                extractedFeatures = discreteDataset
+                        .extractMapFeatures(
+                                CollectionUtils.setOf(varId),
+                                new MapDomain(new RegularGridImpl(params.getBbox(), params
+                                        .getWidth(), params.getHeight()), params.getTargetZ(),
+                                        null, params.getTargetT()));
+            } else if (dataset instanceof PointDataset<?>) {
+                PointDataset<?> pointDataset = (PointDataset<?>) dataset;
+                extractedFeatures = pointDataset.extractMapFeatures(CollectionUtils.setOf(varId),
+                        params.getBbox(), params.getZExtent(), params.getTExtent(),
+                        params.getTargetZ(), params.getTargetT());
+
+            }
             if (cache) {
                 varCache.put(params, extractedFeatures);
             }

@@ -32,8 +32,8 @@ import java.awt.Color;
 import java.util.Collections;
 import java.util.Map;
 
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 public class MappedColourScheme extends ColourScheme {
 

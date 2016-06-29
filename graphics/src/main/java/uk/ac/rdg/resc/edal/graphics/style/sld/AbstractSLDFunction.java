@@ -9,7 +9,7 @@ import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Node;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 
 public abstract class AbstractSLDFunction<T> implements SLDFunction<T> {
 

@@ -67,9 +67,9 @@ import uk.ac.rdg.resc.edal.graphics.style.util.DatasetCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.style.util.LayerNameMapper;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * A catalogues which implements {@link DatasetCatalogue},
@@ -366,7 +366,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
     private Collection<? extends DiscreteFeature<?, ?>> doExtraction(String layerName,
             String variable, PlottingDomainParams params) {
         Dataset dataset = getDatasetFromLayerName(layerName);
-        return dataset.extractMapFeatures(CollectionUtils.setOf(variable), params);
+        return GraphicsUtils.extractGeneralMapFeatures(dataset, variable, params);
     }
 
     private Dataset getDatasetFromLayerName(String layerName) {

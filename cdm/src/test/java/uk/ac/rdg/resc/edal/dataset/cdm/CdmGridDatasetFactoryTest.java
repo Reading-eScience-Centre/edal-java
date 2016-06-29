@@ -46,19 +46,22 @@ import org.junit.Before;
 import org.junit.Test;
 
 import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
-import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.DataSource;
+import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
+import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * These tests perform various operations on a test dataset (originally
@@ -69,7 +72,7 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  */
 public class CdmGridDatasetFactoryTest {
 
-    private Dataset dataset;
+    private DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> dataset;
     private int xSize;
     private int ySize;
     private HorizontalGrid hGrid;
@@ -123,10 +126,10 @@ public class CdmGridDatasetFactoryTest {
                 DateTime time = new DateTime(2000, 01, 01 + daysFromStart, 00, 00, DateTimeZone.UTC);
                 float expectedTime = 100 * daysFromStart / 9.0f;
 
-                PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
-                        hGrid.getBoundingBox(), null, null, null, zPos, time);
                 Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset
-                        .extractMapFeatures(null, params);
+                        .extractMapFeatures(null,
+                                new MapDomain(new RegularGridImpl(hGrid.getBoundingBox(), xSize,
+                                        ySize), zPos, time));
                 assertEquals(mapFeatures.size(), 1);
                 DiscreteFeature<?, ?> feature = mapFeatures.iterator().next();
                 assertTrue(feature instanceof MapFeature);
@@ -176,28 +179,28 @@ public class CdmGridDatasetFactoryTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testThrowsExceptionForInvalidZ() throws DataReadingException, VariableNotFoundException {
+    @Test(expected = IncorrectDomainException.class)
+    public void testThrowsExceptionForInvalidZ() throws DataReadingException,
+            VariableNotFoundException {
         /*
          * The z-value is invalid
          */
-        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
-                hGrid.getBoundingBox(), null, null, null, 999., new DateTime(2000, 01, 01, 00, 00));
         @SuppressWarnings("unused")
         Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(null,
-                params);
+                new MapDomain(new RegularGridImpl(hGrid.getBoundingBox(), xSize, ySize), 999.,
+                        new DateTime(2000, 01, 01, 00, 00)));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testThrowsExceptionForInvalidTime() throws DataReadingException, VariableNotFoundException {
+    @Test(expected = IncorrectDomainException.class)
+    public void testThrowsExceptionForInvalidTime() throws DataReadingException,
+            VariableNotFoundException {
         /*
          * The time-value is invalid
          */
-        PlottingDomainParams params = new PlottingDomainParams(xSize, ySize,
-                hGrid.getBoundingBox(), null, null, null, 0.0, new DateTime(1999, 01, 01, 00, 00));
         @SuppressWarnings("unused")
         Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(null,
-                params);
+                new MapDomain(new RegularGridImpl(hGrid.getBoundingBox(), xSize, ySize), 0.0,
+                        new DateTime(1999, 01, 01, 00, 00)));
     }
 
     @Test
