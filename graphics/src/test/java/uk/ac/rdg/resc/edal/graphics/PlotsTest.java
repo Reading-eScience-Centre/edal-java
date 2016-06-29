@@ -69,7 +69,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;

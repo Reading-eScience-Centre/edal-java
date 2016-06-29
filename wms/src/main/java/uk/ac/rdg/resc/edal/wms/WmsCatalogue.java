@@ -29,10 +29,10 @@
 package uk.ac.rdg.resc.edal.wms;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.LayerNameMapper;
-import uk.ac.rdg.resc.edal.graphics.style.util.DatasetCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.StyleCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.DatasetCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.LayerNameMapper;
+import uk.ac.rdg.resc.edal.graphics.utils.StyleCatalogue;
 import uk.ac.rdg.resc.edal.wms.util.ContactInfo;
 import uk.ac.rdg.resc.edal.wms.util.ServerInfo;
 

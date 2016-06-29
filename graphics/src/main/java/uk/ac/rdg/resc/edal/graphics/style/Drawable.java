@@ -33,7 +33,7 @@ import java.util.Set;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 
 public abstract class Drawable {

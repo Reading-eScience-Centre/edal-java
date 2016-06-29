@@ -63,11 +63,11 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
-import uk.ac.rdg.resc.edal.graphics.style.util.DatasetCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.LayerNameMapper;
+import uk.ac.rdg.resc.edal.graphics.utils.DatasetCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.LayerNameMapper;
 import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 

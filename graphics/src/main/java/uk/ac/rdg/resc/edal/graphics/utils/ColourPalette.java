@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.graphics.style.util;
+package uk.ac.rdg.resc.edal.graphics.utils;
 
 import java.awt.Color;
 import java.io.BufferedReader;
@@ -50,7 +50,6 @@ import java.util.jar.JarFile;
 import org.apache.commons.lang.ArrayUtils;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils.ColorAdapter;
 
 public class ColourPalette {

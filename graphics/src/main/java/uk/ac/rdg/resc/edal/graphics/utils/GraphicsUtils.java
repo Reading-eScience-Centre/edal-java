@@ -326,7 +326,7 @@ public class GraphicsUtils {
                         "Problem reading data whilst estimating scale range.  A default value will be used.",
                         e);
             }
-        } else {
+        } else if (dataset instanceof AbstractContinuousDomainDataset) {
             /*
              * We can have any number of features in a dataset with a continuous
              * domain. We can't just extract all features at low resolution

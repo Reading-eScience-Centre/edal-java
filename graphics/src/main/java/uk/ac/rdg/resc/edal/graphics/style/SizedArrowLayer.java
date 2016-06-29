@@ -37,7 +37,7 @@ import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
-import uk.ac.rdg.resc.edal.graphics.style.util.VectorFactory;
+import uk.ac.rdg.resc.edal.graphics.utils.VectorFactory;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
