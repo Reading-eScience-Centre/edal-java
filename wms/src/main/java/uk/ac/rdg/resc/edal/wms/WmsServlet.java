@@ -429,9 +429,15 @@ public class WmsServlet extends HttpServlet {
 
             converter.checkFeaturesSupported(features);
             try {
-				converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+            	if (features.size() == 1) {
+            		converter.convertFeatureToJson(httpServletResponse.getOutputStream(), features.get(0));
+            	} else {
+            		// vectors are currently multiple features each with one parameter
+            		// TODO group features with identical domain into single feature
+            		converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+            	}
 			} catch (IOException e) {
-				log.error("Problem writing coverage JSON to output stream", e);
+				log.error("Problem writing CoverageJSON to output stream", e);
 			}
             
             return;
