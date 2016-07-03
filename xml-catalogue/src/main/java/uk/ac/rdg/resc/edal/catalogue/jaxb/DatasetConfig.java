@@ -82,7 +82,7 @@ public class DatasetConfig {
 
     /* Title for this dataset */
     @XmlAttribute(name = "title", required = true)
-    private String title;
+    private String title = "";
 
     /* Location of this dataset (NcML file, OPeNDAP location etc) */
     @XmlAttribute(name = "location", required = true)

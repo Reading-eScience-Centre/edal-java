@@ -36,18 +36,14 @@ package uk.ac.rdg.resc.edal.exceptions;
  * @author Guy Griffiths
  */
 public class IncorrectDomainException extends EdalException {
-
     private static final long serialVersionUID = 1L;
+    private static final String INVALID_DIMENSION = "InvalidDimensionValue";
 
     public IncorrectDomainException(String message) {
-        super(message);
-    }
-
-    public IncorrectDomainException(String message, String code) {
-        super(message, code);
+        super(message, INVALID_DIMENSION);
     }
 
     public IncorrectDomainException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, INVALID_DIMENSION, cause);
     }
 }

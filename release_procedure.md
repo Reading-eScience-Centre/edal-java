@@ -36,7 +36,7 @@ Maven needs to be installed to build the software, but to release it needs some 
 Release Procedure
 -----------------
 
-Once all code is ready to be released, and all tests pass, the following steps should be taken:
+Once all code is ready to be released, all tests pass, **and all documentation is updated**, the following steps should be taken:
 
 ### Create a branch to do the release on:
 ```
@@ -56,8 +56,6 @@ cd ..
 ### Build the software:
 ```
 mvn clean install
-mvn javadoc:aggregate
-[build other site docs]
 ```
 
 ### Commit and tag the release:
@@ -81,13 +79,24 @@ git push --tags
 ```
 
 ### Create a release on github:
-Go to [the project page on github](https://github.com/Reading-eScience-Centre/edal-java) and click the "Releases" link.  Go to the edal-VERSION release and click the "Edit tag" button.  You should now fill in the appropriate boxes and upload the ncWMS.war and the ncWMS-standalone.jar files as binary attachments.
+Go to [the project page on github](https://github.com/Reading-eScience-Centre/edal-java) and click the "Releases" link.  Go to the edal-VERSION release and click the "Edit tag" button.  You should now fill in the appropriate boxes and upload ncWMS.war, ncWMS-standalone.jar, and licence.txt as binary attachments.
 
 ### Upload the site documents
+Pushing the release to master will trigger a build of the ncWMS User Guide onto gitbooks.com.
 
-TODO This still needs a description.  The basic idea will be to use the maven-pdf-plugin to generate PDFs for the user guides etc, as well as HTML(?).  See http://maven.40175.n5.nabble.com/Maven-PDF-support-td5778995.html for PDF generation.
+The github website is stored in the gh-pages branch, and will always point to the latest release and the current version of the ncWMS User Guide.  The only thing which should need updating is the API documents, which you do by:  
 
-Once it's all generated, use the github site plugin to commit to the gh-pages branch (https://github.github.com/maven-plugins/site-plugin/quickstart.html) then push it to the origin.  This should ideally all be attached to the site/site-deploy goals, but we want to configure maven to ignore actual site generation first.
+```
+mvn javadoc:aggregate
+git add apidocs
+git stash save
+git checkout gh-pages
+```
+a merge will happen here.  If there are any conflicts, ALWAYS go with the freshly-generated version.
+```
+git commit -a
+git push origin gh-pages
+```
 
 Prepare for next development iteration
 --------------------------------------

@@ -266,7 +266,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          * Now get the layout and add it to the main window
          */
         RootPanel mainWindow = RootPanel.get("godiva3-main");
-        
+
         mainWindow.add(getLayout());
 
         /*
@@ -305,12 +305,13 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
              * This is where we define the fact that we are working with a
              * single local server
              */
-            String path = Window.Location.getHost() + Window.Location.getPath();
+            String path = Window.Location.getProtocol() + "//" + Window.Location.getHost()
+                    + Window.Location.getPath();
             path = path.substring(0, path.lastIndexOf("/"));
             if (dataset != null) {
-                wmsUrl = "http://" + path + "/wms/" + dataset;
+                wmsUrl = path + "/wms/" + dataset;
             } else {
-                wmsUrl = "http://" + path + "/wms";
+                wmsUrl = path + "/wms";
             }
         } else {
             wmsUrl = wmsPath;
@@ -754,8 +755,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
         kmzLink.setHref(mapArea.getKMZUrl());
 
-        String baseurl = "http://" + Window.Location.getHost() + Window.Location.getPath()
-                + "?permalinking=true&bgmap=" + mapArea.getBackgroundMapName() + "&";
+        String baseurl = Window.Location.getProtocol() + "//" + Window.Location.getHost()
+                + Window.Location.getPath() + "?permalinking=true&bgmap="
+                + mapArea.getBackgroundMapName() + "&";
 
         PaletteSelectorIF paletteSelector = widgetCollection.getPaletteSelector();
 
@@ -833,7 +835,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             urlParams += "&displayScaleRange=" + displayScaleRange;
         }
         urlParams += "&opacity=" + paletteSelector.getOpacity();
-        if(paletteSelector.isLogScale()) {
+        if (paletteSelector.isLogScale()) {
             logScale = true;
         }
 
@@ -870,7 +872,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         urlParams += "&baseLayers=" + mapArea.getBaseLayerLayers();
 
         String godivaPath = Window.Location.getPath();
-        screenshot.setHref("http://" + Window.Location.getHost() + "/"
+        screenshot.setHref(Window.Location.getProtocol() + "//" + Window.Location.getHost() + "/"
                 + godivaPath.substring(0, godivaPath.lastIndexOf('/'))
                 + "/screenshots/createScreenshot?" + urlParams);
     }
@@ -906,14 +908,15 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             if (currentLayer != null) {
                 String serverUrl = permalinkParamsMap.get("server");
                 if (serverUrl == null || "".equals(serverUrl)) {
-                    String path = Window.Location.getHost() + Window.Location.getPath();
+                    String path = Window.Location.getProtocol() + "//" + Window.Location.getHost()
+                            + Window.Location.getPath();
                     path = path.substring(0, path.lastIndexOf("/"));
-                    final String wmsUrl = "http://" + path + "/wms";
-                    GWT.log("Permalinking without server argument.  Current WMS: "+wmsUrl);
+                    final String wmsUrl = path + "/wms";
+                    GWT.log("Permalinking without server argument.  Current WMS: " + wmsUrl);
                     layerSelector.selectLayer(currentLayer, wmsUrl, false);
                 } else {
                     String currentWms = URL.decode(serverUrl);
-                    GWT.log("Permalinking with server argument.  Current WMS: "+currentWms);
+                    GWT.log("Permalinking with server argument.  Current WMS: " + currentWms);
                     layerSelector.selectLayer(currentLayer, currentWms, false);
                 }
             }
