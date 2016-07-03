@@ -94,7 +94,7 @@ public final class Constants {
 		public static final String TRAJECTORY = "Trajectory";		
 	
 		public static final String getStandardNameUri (String standardName) {
-			return "http://vocab.nerc.ac.uk/standard_name/" + standardName;
+			return "http://vocab.nerc.ac.uk/standard_name/" + standardName + "/";
 		}
 				
 		public static String getCrsUri(CoordinateReferenceSystem crs) {
