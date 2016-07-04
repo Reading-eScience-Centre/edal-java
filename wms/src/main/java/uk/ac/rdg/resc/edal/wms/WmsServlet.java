@@ -403,11 +403,14 @@ public class WmsServlet extends HttpServlet {
          */
         if (getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage+json")
                 || getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage json")) {
-            httpServletResponse.setContentType("application/prs.coverage+json");
             String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
             LayerNameMapper layerNameMapper = catalogue.getLayerNameMapper();
             List<Feature<?>> features = new ArrayList<>();
             for (String layerName : layerNames) {
+                if (!catalogue.isDownloadable(layerName)) {
+                    throw new InvalidFormatException(
+                            "The format \"application/prs.coverage+json\" is not enabled for this layer.\nIf you think this is an error, please contact the server administrator and get them to enable Download for this dataset");
+                }
                 Dataset dataset = catalogue.getDatasetFromId(layerNameMapper
                         .getDatasetIdFromLayerName(layerName));
                 VariableMetadata metadata = dataset.getVariableMetadata(layerNameMapper
@@ -428,6 +431,8 @@ public class WmsServlet extends HttpServlet {
                     }
                 }
             }
+
+            httpServletResponse.setContentType("application/prs.coverage+json");
             CoverageJsonConverter converter = new CoverageJsonConverterImpl();
 
             try {

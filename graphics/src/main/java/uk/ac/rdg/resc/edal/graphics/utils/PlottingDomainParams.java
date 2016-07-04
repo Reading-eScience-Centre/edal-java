@@ -53,38 +53,17 @@ public class PlottingDomainParams {
 
     private volatile RegularGrid imageGrid = null;
 
+    public static PlottingDomainParams paramsForGriddedDataset(int width, int height,
+            BoundingBox bbox, Double targetZ, DateTime targetT) {
+        return new PlottingDomainParams(width, height, bbox, null, null, null, targetZ, targetT);
+    }
+
     public PlottingDomainParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
             Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ, DateTime targetT) {
         super();
         this.width = width;
         this.height = height;
         this.bbox = bbox;
-        this.targetPos = targetPos;
-        this.zExtent = zExtent;
-        this.targetZ = targetZ;
-        this.tExtent = tExtent;
-        this.targetT = targetT;
-
-        if (zExtent == null && targetZ != null) {
-            zExtent = Extents.newExtent(targetZ, targetZ);
-        }
-
-        if (tExtent == null) {
-            if (targetT != null) {
-                tExtent = Extents.newExtent(targetT, targetT);
-            } else {
-                tExtent = Extents.emptyExtent();
-            }
-        }
-    }
-
-    public PlottingDomainParams(RegularGrid imageGrid, Extent<Double> zExtent,
-            Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ, DateTime targetT) {
-        super();
-        this.imageGrid = imageGrid;
-        this.width = imageGrid.getXSize();
-        this.height = imageGrid.getYSize();
-        this.bbox = imageGrid.getBoundingBox();
         this.targetPos = targetPos;
         this.zExtent = zExtent;
         this.targetZ = targetZ;
@@ -207,7 +186,7 @@ public class PlottingDomainParams {
             return false;
         return true;
     }
-    
+
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();

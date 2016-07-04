@@ -51,11 +51,10 @@ import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.utils.ColourableIcon;
 import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue.FeaturesAndMemberName;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
-import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
@@ -114,7 +113,7 @@ public class ColouredGlyphLayer extends ImageLayer {
             iconUrl = this.getClass().getResource("/img/square.png");
             iconImage = ImageIO.read(iconUrl);
             icons.put("square", new ColourableIcon(iconImage));
-            
+
             iconUrl = this.getClass().getResource("/img/dot.png");
             iconImage = ImageIO.read(iconUrl);
             icons.put("dot", new ColourableIcon(iconImage));
@@ -153,10 +152,10 @@ public class ColouredGlyphLayer extends ImageLayer {
          */
         BoundingBox bbox = params.getBbox();
         BoundingBox largeBoundingBox = GISUtils.getLargeBoundingBox(bbox, 5);
-        PlottingDomainParams extractParams = new PlottingDomainParams(new RegularGridImpl(largeBoundingBox,
-                (int) (params.getWidth() * 1.05), (int) (params.getHeight() * 1.05)),
-                params.getZExtent(), params.getTExtent(), params.getTargetHorizontalPosition(),
-                params.getTargetZ(), params.getTargetT());
+        PlottingDomainParams extractParams = new PlottingDomainParams(
+                (int) (params.getWidth() * 1.05), (int) (params.getHeight() * 1.05),
+                largeBoundingBox, params.getZExtent(), params.getTExtent(),
+                params.getTargetHorizontalPosition(), params.getTargetZ(), params.getTargetT());
 
         FeaturesAndMemberName featuresForLayer = catalogue.getFeaturesForLayer(dataFieldName,
                 extractParams);

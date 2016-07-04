@@ -182,10 +182,25 @@ public class GeneratePng {
         BoundingBox bbox = new BoundingBoxImpl(crs);
 
         /*
-         * Now we create the domain parameters
+         * Now we create the domain parameters. These define the domain which
+         * will be plotted.
+         * 
+         * The general constructor for PlottingDomainParameters defines a 4D box
+         * with a single (4D) target point. This is useful for the general case
+         * which may include extracting point data from a range and colouring
+         * according to the closest measurement to the target point.
+         * 
+         * For gridded data however, the paramsForGriddedDataset method can be
+         * used. This takes the output size of the image, the horizontal
+         * bounding box of the data, and target Z and T values.
+         * 
+         * Here we have set the Z and T values to null. In the case where there
+         * is both a time and depth axis, this will be interpreted as
+         * "the closest elevation to the surface of the earth" and
+         * "the closest time to the current time".
          */
-        PlottingDomainParams params = new PlottingDomainParams(1024, 1024, bbox, null, null, null,
-                null, null);
+        PlottingDomainParams params = PlottingDomainParams.paramsForGriddedDataset(1024, 1024,
+                bbox, null, null);
 
         /*
          * A general FeatureCatalogue is an object which when supplied with a

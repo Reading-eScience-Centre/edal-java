@@ -205,8 +205,8 @@ public class LegendDataGenerator {
      *         {@link LegendDataGenerator#getFeatureCatalogue(NameAndRange, NameAndRange)}
      */
     public PlottingDomainParams getPlottingDomainParams() {
-        return new PlottingDomainParams(xAxis.size(), yAxis.size(), domain.getBoundingBox(), null,
-                null, null, null, null);
+        return PlottingDomainParams.paramsForGriddedDataset(xAxis.size(), yAxis.size(),
+                domain.getBoundingBox(), null, null);
     }
 
     /**
