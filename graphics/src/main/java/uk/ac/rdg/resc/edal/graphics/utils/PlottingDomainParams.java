@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.util;
+package uk.ac.rdg.resc.edal.graphics.utils;
 
 import org.joda.time.DateTime;
 
@@ -35,6 +35,8 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.TimeUtils;
 
 public class PlottingDomainParams {
     final private int width;

@@ -59,7 +59,7 @@ import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
-import uk.ac.rdg.resc.edal.dataset.AbstractPointDataset;
+import uk.ac.rdg.resc.edal.dataset.PointDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
@@ -84,7 +84,6 @@ import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
@@ -185,7 +184,8 @@ public final class En3DatasetFactory extends DatasetFactory {
     /* This is because we deserialise a HashMap which is a generic. */
     @SuppressWarnings("unchecked")
     @Override
-    public En3Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
+    public En3Dataset createDataset(String id, String location, boolean forceRefresh)
+            throws IOException, EdalException {
         log.debug("IN createDataset Entering createDataset");
         long t1 = System.currentTimeMillis();
 
@@ -556,7 +556,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                 tDomain.getExtent(), id2File);
     }
 
-    private final class En3Dataset extends AbstractPointDataset<ProfileFeature> {
+    private final class En3Dataset extends PointDataset<ProfileFeature> {
         private En3DatabaseReader reader = new En3DatabaseReader(this);
 
         private Map<Integer, File> fileMap;
@@ -603,9 +603,10 @@ public final class En3DatasetFactory extends DatasetFactory {
         }
 
         @Override
-        protected PointFeature convertFeature(ProfileFeature feature, PlottingDomainParams params) {
+        protected PointFeature convertFeature(ProfileFeature feature, BoundingBox hExtent,
+                Extent<Double> zExtent, Extent<DateTime> tExtent, Double targetZ, DateTime targetT) {
             log.debug("Converting ProfileFeature to PointFeature");
-            return convertProfileFeature(feature, params);
+            return convertProfileFeature(feature, zExtent, targetZ);
         }
     }
 
@@ -924,7 +925,7 @@ public final class En3DatasetFactory extends DatasetFactory {
             Array1D<Number> varValues = new ValuesArray1D(trueNumLevels);
             for (int i = 0; i < trueNumLevels; i++) {
                 Double val = varArray.getDouble(i);
-                if(Double.isNaN(val)) {
+                if (Double.isNaN(val)) {
                     val = null;
                 }
                 varValues.set(val, i);

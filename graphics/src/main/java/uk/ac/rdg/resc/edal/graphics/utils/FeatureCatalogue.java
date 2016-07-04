@@ -26,14 +26,13 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.graphics.style.util;
+package uk.ac.rdg.resc.edal.graphics.utils;
 
 import java.util.Collection;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * An interface defining a catalogue which can extract {@link DiscreteFeature}s

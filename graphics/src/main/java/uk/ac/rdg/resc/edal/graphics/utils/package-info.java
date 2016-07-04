@@ -29,4 +29,4 @@
  * Utilities to serialise/deserialise the styles in the parent package, as well as other shared classes
  * @author Guy
  */
-package uk.ac.rdg.resc.edal.graphics.style.util;
+package uk.ac.rdg.resc.edal.graphics.utils;

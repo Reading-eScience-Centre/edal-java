@@ -29,7 +29,7 @@
 package uk.ac.rdg.resc.edal.wms;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 
 /**
  * Class to parse parameters for GetTimeseries and GetVerticalProfile requests

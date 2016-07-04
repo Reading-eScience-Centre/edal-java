@@ -120,10 +120,12 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
-import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
+import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingStyleParameters;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -135,9 +137,7 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
@@ -683,8 +683,8 @@ public class WmsServlet extends HttpServlet {
              * GetFeatureInfoParameters works, features are searched for in a
              * 9-pixel box surrounding the clicked position on the map
              */
-            Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(
-                    CollectionUtils.setOf(variableId), plottingParameters);
+            Collection<? extends DiscreteFeature<?, ?>> mapFeatures = GraphicsUtils
+                    .extractGeneralMapFeatures(dataset, variableId, plottingParameters);
 
             /*
              * We only want to return a layer name if there are more than one
@@ -1983,7 +1983,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
@@ -1994,7 +1994,10 @@ public class WmsServlet extends HttpServlet {
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
             Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
             List<? extends PointSeriesFeature> extractedTimeseriesFeatures = dataset
-                    .extractTimeseriesFeatures(entry.getValue(), plottingParameters);
+                    .extractTimeseriesFeatures(entry.getValue(), plottingParameters.getBbox(),
+                            plottingParameters.getZExtent(), plottingParameters.getTExtent(),
+                            plottingParameters.getTargetHorizontalPosition(),
+                            plottingParameters.getTargetZ());
             timeseriesFeatures.addAll(extractedTimeseriesFeatures);
         }
 
@@ -2161,7 +2164,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
@@ -2202,7 +2205,9 @@ public class WmsServlet extends HttpServlet {
                 PlottingDomainParams plottingParams = new PlottingDomainParams(1, 1, null, null,
                         null, pos, null, time);
                 List<? extends ProfileFeature> features = gridDataset.extractProfileFeatures(
-                        CollectionUtils.setOf(varId), plottingParams);
+                        CollectionUtils.setOf(varId), plottingParams.getBbox(),
+                        plottingParams.getZExtent(), plottingParams.getTExtent(),
+                        plottingParams.getTargetHorizontalPosition(), plottingParams.getTargetT());
                 profileFeatures.addAll(features);
             }
             JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(profileFeatures,
@@ -2288,7 +2293,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
@@ -2296,11 +2301,13 @@ public class WmsServlet extends HttpServlet {
             copyright.deleteCharAt(copyright.length() - 1);
         }
 
-
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
             Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
             List<? extends ProfileFeature> extractedProfileFeatures = dataset
-                    .extractProfileFeatures(entry.getValue(), plottingParameters);
+                    .extractProfileFeatures(entry.getValue(), plottingParameters.getBbox(),
+                            plottingParameters.getZExtent(), plottingParameters.getTExtent(),
+                            plottingParameters.getTargetHorizontalPosition(),
+                            plottingParameters.getTargetT());
             profileFeatures.addAll(extractedProfileFeatures);
         }
 

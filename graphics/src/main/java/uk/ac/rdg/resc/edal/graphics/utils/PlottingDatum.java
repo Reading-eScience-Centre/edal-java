@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 The University of Reading
+ * Copyright (c) 2013 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -26,46 +26,25 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.graphics.style.util;
+package uk.ac.rdg.resc.edal.graphics.utils;
 
-import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
-/**
- * Interface defining the mapping of image layer names (i.e. single
- * {@link String} identifiers) to a {@link Dataset} ID and a Variable ID
- *
- * @author Guy Griffiths
- */
-public interface LayerNameMapper {
-    /**
-     * Returns a {@link Dataset} based on a given image layer name
-     * 
-     * @param layerName
-     *            The name of the image layer
-     * @return The ID of the desired dataset
-     */
-    public String getDatasetIdFromLayerName(String layerName) throws EdalLayerNotFoundException;
+public class PlottingDatum {
+    private GridCoordinates2D gridCoords;
+    private Number value;
 
-    /**
-     * Returns a variable ID based on a given image layer name
-     * 
-     * @param layerName
-     *            The name of the image layer
-     * @return The ID of the variable (within its {@link Dataset})
-     * @throws EdalLayerNotFoundException
-     *             if the given layer name does not exist within this catalogue
-     */
-    public String getVariableIdFromLayerName(String layerName) throws EdalLayerNotFoundException;
+    public PlottingDatum(GridCoordinates2D gridCoords, Number value) {
+        super();
+        this.gridCoords = gridCoords;
+        this.value = value;
+    }
 
-    /**
-     * Returns the image layer name based on the dataset and variable ID
-     * 
-     * @param datasetId
-     *            The ID of dataset containing the layer
-     * @param variableId
-     *            The ID of the variable within the dataset
-     * @return The WMS layer name of this variable
-     */
-    public String getLayerName(String datasetId, String variableId);
+    public GridCoordinates2D getGridCoords() {
+        return gridCoords;
+    }
+
+    public Number getValue() {
+        return value;
+    }
 }

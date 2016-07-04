@@ -30,7 +30,7 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
 
 public class SegmentColourScheme extends ColourScheme {
 

@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.graphics.style.util;
+package uk.ac.rdg.resc.edal.graphics.utils;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -44,7 +44,6 @@ import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
-import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
@@ -58,7 +57,6 @@ import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * A class to generate the correct data for a legend. This provides methods to
@@ -174,7 +172,7 @@ public class LegendDataGenerator {
         yAxis = new RegularAxisImpl("", 0, 0.001, height, false);
 
         RegularGrid hGrid = new RegularGridImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84);
-        domain = new MapDomainImpl(hGrid, null, null, null);
+        domain = new MapDomain(hGrid, null, null, null);
 
         this.fractionExtraXLow = fractionExtraXLow;
         this.fractionExtraXHigh = fractionExtraXHigh;

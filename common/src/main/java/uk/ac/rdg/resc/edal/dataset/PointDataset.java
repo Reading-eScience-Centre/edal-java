@@ -56,30 +56,28 @@ import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * An {@link AbstractContinuousDomainDataset} whose map features are
  * {@link PointFeature}s. Subclasses must provide a method to convert from their
- * underlying feature type to a {@link PointFeature}, given a set of
- * {@link PlottingDomainParams}.
+ * underlying feature type to a {@link PointFeature}, given a set of parameters.
  * 
  * @param <F>
  *            The type of {@link DiscreteFeature} which this
- *            {@link AbstractPointDataset} reads natively (i.e. the same type of
+ *            {@link PointDataset} reads natively (i.e. the same type of
  *            {@link DiscreteFeature} which is returned by the
  *            {@link DiscreteFeatureReader} associated with this
- *            {@link AbstractPointDataset}).
+ *            {@link PointDataset}).
  * 
  * @author Guy Griffiths
  */
-public abstract class AbstractPointDataset<F extends DiscreteFeature<?, ?>> extends
+public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
         AbstractContinuousDomainDataset {
     private BoundingBox bbox;
     private Extent<Double> zExtent;
     private Extent<DateTime> tExtent;
 
-    public AbstractPointDataset(String id, Collection<? extends VariableMetadata> vars,
+    public PointDataset(String id, Collection<? extends VariableMetadata> vars,
             FeatureIndexer featureIndexer, BoundingBox bbox, Extent<Double> zExtent,
             Extent<DateTime> tExtent) {
         super(id, vars, featureIndexer);
@@ -88,7 +86,7 @@ public abstract class AbstractPointDataset<F extends DiscreteFeature<?, ?>> exte
         this.tExtent = tExtent;
     }
 
-    public AbstractPointDataset(String id, Collection<? extends VariableMetadata> vars,
+    public PointDataset(String id, Collection<? extends VariableMetadata> vars,
             FeatureIndexer featureIndexer) {
         super(id, vars, featureIndexer);
         double minX = Double.MAX_VALUE;
@@ -133,11 +131,11 @@ public abstract class AbstractPointDataset<F extends DiscreteFeature<?, ?>> exte
         }
     }
 
-    @Override
-    public List<PointFeature> extractMapFeatures(Set<String> varIds, PlottingDomainParams params)
-            throws DataReadingException {
+    public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+            BoundingBox hExtent, Extent<Double> zExtent, Extent<DateTime> tExtent, Double targetZ,
+            DateTime targetT) throws DataReadingException {
         List<? extends DiscreteFeature<?, ?>> extractedMapFeatures = super.extractMapFeatures(
-                varIds, params);
+                varIds, hExtent, zExtent, tExtent);
         List<PointFeature> pointFeatures = new ArrayList<>();
         for (DiscreteFeature<?, ?> feature : extractedMapFeatures) {
             /*
@@ -150,7 +148,8 @@ public abstract class AbstractPointDataset<F extends DiscreteFeature<?, ?>> exte
              * features of type F
              */
             @SuppressWarnings("unchecked")
-            PointFeature pointFeature = convertFeature((F) feature, params);
+            PointFeature pointFeature = convertFeature((F) feature, hExtent, zExtent, tExtent,
+                    targetZ, targetT);
             if (pointFeature != null) {
                 pointFeatures.add(pointFeature);
             }
@@ -200,13 +199,14 @@ public abstract class AbstractPointDataset<F extends DiscreteFeature<?, ?>> exte
      *         if the supplied {@link PlottingDomainParams} specify a location
      *         where no {@link PointFeature} is present.
      */
-    protected abstract PointFeature convertFeature(F feature, PlottingDomainParams params);
+    protected abstract PointFeature convertFeature(F feature, BoundingBox hExtent,
+            Extent<Double> zExtent, Extent<DateTime> tExtent, Double targetZ, DateTime targetT);
 
     /**
      * Convenience method to convert a {@link ProfileFeature} to a
      * {@link PointFeature}. Can be used by subclasses which only handle
      * {@link ProfileFeature}s to implement
-     * {@link AbstractPointDataset#convertFeature(DiscreteFeature, PlottingDomainParams)}
+     * {@link PointDataset#convertFeature(DiscreteFeature, PlottingDomainParams)}
      * 
      * @param feature
      *            The {@link ProfileFeature} to convert.
@@ -217,29 +217,29 @@ public abstract class AbstractPointDataset<F extends DiscreteFeature<?, ?>> exte
      *         if the supplied {@link PlottingDomainParams} specify a location
      *         where no {@link PointFeature} is present.
      */
-    protected PointFeature convertProfileFeature(ProfileFeature feature, PlottingDomainParams params) {
+    protected PointFeature convertProfileFeature(ProfileFeature feature, Extent<Double> zExtent,
+            Double targetZ) {
         HorizontalPosition position = feature.getHorizontalPosition();
 
         /*
          * Get the z-index of the target depth within the vertical domain
          */
         int zIndex;
-        if (params.getTargetZ() == null) {
+        if (targetZ == null) {
             /*
              * If no target z is provided, pick the value closest to the surface
              */
             zIndex = feature.getDomain().findIndexOf(
                     GISUtils.getClosestElevationToSurface(feature.getDomain()));
         } else {
-            zIndex = GISUtils
-                    .getIndexOfClosestElevationTo(params.getTargetZ(), feature.getDomain());
+            zIndex = GISUtils.getIndexOfClosestElevationTo(targetZ, feature.getDomain());
         }
         if (zIndex < 0) {
             return null;
         }
 
         Double zValue = feature.getDomain().getCoordinateValue(zIndex);
-        if (params.getZExtent() != null && !params.getZExtent().contains(zValue)) {
+        if (zExtent != null && !zExtent.contains(zValue)) {
             /*
              * If we have specified a z-extent, make sure that the z-value is
              * actually contained within that extent.
@@ -271,7 +271,7 @@ public abstract class AbstractPointDataset<F extends DiscreteFeature<?, ?>> exte
      * Convenience method to convert a {@link PointSeriesFeature} to a
      * {@link PointFeature}. Can be used by subclasses which only handle
      * {@link PointSeriesFeature}s to implement
-     * {@link AbstractPointDataset#convertFeature(DiscreteFeature, PlottingDomainParams)}
+     * {@link PointDataset#convertFeature(DiscreteFeature, PlottingDomainParams)}
      * 
      * @param feature
      *            The {@link PointSeriesFeature} to convert.
@@ -283,28 +283,28 @@ public abstract class AbstractPointDataset<F extends DiscreteFeature<?, ?>> exte
      *         where no {@link PointFeature} is present.
      */
     protected PointFeature convertPointSeriesFeature(PointSeriesFeature feature,
-            PlottingDomainParams params) {
+            Extent<DateTime> tExtent, DateTime targetT) {
         HorizontalPosition position = feature.getHorizontalPosition();
 
         /*
          * Get the t-index of the target depth within the vertical domain
          */
         int tIndex;
-        if (params.getTargetT() == null) {
+        if (targetT == null) {
             /*
              * If no target time is provided, pick the time closest to now
              */
             tIndex = feature.getDomain().findIndexOf(
                     GISUtils.getClosestToCurrentTime(feature.getDomain()));
         } else {
-            tIndex = GISUtils.getIndexOfClosestTimeTo(params.getTargetT(), feature.getDomain());
+            tIndex = GISUtils.getIndexOfClosestTimeTo(targetT, feature.getDomain());
         }
         if (tIndex < 0) {
             return null;
         }
 
         DateTime time = feature.getDomain().getCoordinateValue(tIndex);
-        if (params.getTExtent() != null && !params.getTExtent().contains(time)) {
+        if (tExtent != null && !tExtent.contains(time)) {
             /*
              * If we have specified a time-extent, make sure that the time is
              * actually contained within that extent.

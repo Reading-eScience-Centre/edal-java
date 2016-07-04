@@ -63,7 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.graphics.style.util.DatasetCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.DatasetCatalogue;
 
 /**
  * Deals purely with the (de)serialisation of an XML config file for a

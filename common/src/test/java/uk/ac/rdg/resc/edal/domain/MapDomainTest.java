@@ -55,7 +55,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
- * Test class for {@link MapDomainImpl}.
+ * Test class for {@link MapDomain}.
  * 
  * @author Nan Lin
  * */
@@ -92,11 +92,11 @@ public class MapDomainTest {
         ReferenceableAxis<Double> latAxis = new RegularAxisImpl("latitude", 51.0, resolution,
                 ySize, false);
         hGrid = new RectilinearGridImpl(longAxis, latAxis, crs);
-        mapdomain = new MapDomainImpl(hGrid, z, vCrs, time);
+        mapdomain = new MapDomain(hGrid, z, vCrs, time);
     }
 
     /**
-     * Test get methods in {@link MapDomainImpl}.
+     * Test get methods in {@link MapDomain}.
      * */
     @Test
     public void test() {

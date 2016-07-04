@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
-import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.domain.PointCollectionDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
@@ -67,8 +66,6 @@ import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -83,7 +80,6 @@ import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
 /**
@@ -97,10 +93,10 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extends AbstractDataset {
-    private static final Logger log = LoggerFactory.getLogger(AbstractPluginEnabledDataset.class);
+public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends AbstractDataset {
+    private static final Logger log = LoggerFactory.getLogger(HorizontallyDiscreteDataset.class);
 
-    public AbstractPluginEnabledDataset(String id, Collection<? extends VariableMetadata> vars) {
+    public HorizontallyDiscreteDataset(String id, Collection<? extends VariableMetadata> vars) {
         super(id, vars);
     }
 
@@ -113,8 +109,21 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
         return getVariableIds();
     }
 
-    @Override
-    public final List<MapFeature> extractMapFeatures(Set<String> varIds, PlottingDomainParams params)
+    /**
+     * Extracts {@link MapFeature}s ready to be plotted on a map
+     * 
+     * @param varIds
+     *            The IDs of the variables to extract from the dataset
+     * @param domain
+     *            The domain on which to extract the data.
+     * @return A {@link List} of {@link MapFeature}s on the supplied domain
+     * @throws DataReadingException
+     *             if there is a problem reading the underlying data
+     * @throws VariableNotFoundException
+     *             if one or more of the supplied variable IDs does not exist in
+     *             the dataset
+     */
+    public final List<MapFeature> extractMapFeatures(Set<String> varIds, final MapDomain domain)
             throws DataReadingException, VariableNotFoundException {
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -131,11 +140,6 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
          */
         List<String> variableIds = new ArrayList<String>(varIds);
 
-        final RectilinearGrid targetGrid = params.getImageGrid();
-        Double zPos = params.getTargetZ();
-
-        DateTime time = params.getTargetT();
-
         DS dataSource = null;
         try {
             /*
@@ -145,16 +149,13 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
 
             Map<String, Array2D<Number>> values = new HashMap<String, Array2D<Number>>();
 
-            /*
-             * We need a vertical CRS. This should be the same for all variables
-             * in this dataset, so we can set it from any one of them
-             */
-            VerticalCrs vCrs = null;
             StringBuilder name = new StringBuilder("Map of ");
 
+            VerticalCrs vCrs = null;
             for (int i = 0; i < variableIds.size(); i++) {
                 String varId = variableIds.get(i);
-                if (!getVariableMetadata(varId).isScalar()) {
+                VariableMetadata metadata = getVariableMetadata(varId);
+                if (!metadata.isScalar()) {
                     /*
                      * Don't read data for unplottable variables, but add any
                      * children
@@ -168,32 +169,33 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                     continue;
                 }
 
+                if (vCrs == null && metadata.getVerticalDomain() != null) {
+                    vCrs = metadata.getVerticalDomain().getVerticalCrs();
+                }
+
                 name.append(varId + ", ");
 
                 /*
                  * Do the actual data reading
                  */
-                Array2D<Number> data = readHorizontalData(varId, targetGrid, zPos, time, dataSource);
+                Array2D<Number> data = readHorizontalData(varId, domain, dataSource);
 
                 values.put(varId, data);
             }
 
-            /*
-             * Construct the GridFeature from the t and z values, the horizontal
-             * grid and the VariableMetadata objects
-             */
-            MapDomain domain = new MapDomainImpl(targetGrid, zPos, vCrs, time);
             name.delete(name.length() - 2, name.length() - 1);
 
             String description = generateDescription("Map of variables:", varIds);
-            if (time != null) {
-                description += "Time: " + time + "\n";
+            if (domain.getTime() != null) {
+                description += "Time: " + domain.getTime() + "\n";
             }
-            if (zPos != null) {
-                description += "Elevation: " + zPos;
+            if (domain.getZ() != null) {
+                description += "Elevation: " + domain.getZ();
             }
 
-            MapFeature mapFeature = new MapFeature(generateId(varIds, params), name.toString(),
+            domain.setVerticalCrs(vCrs);
+            MapFeature mapFeature = new MapFeature(generateId(varIds, domain.getBoundingBox(),
+                    null, null, null, domain.getZ(), domain.getTime()), name.toString(),
                     description, domain, getParameters(varIds), values);
 
             return Collections.singletonList(mapFeature);
@@ -211,14 +213,33 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
         }
     }
 
-    private String generateId(Set<String> varIds, PlottingDomainParams params) {
+    private String generateId(Set<String> varIds, BoundingBox bbox, Extent<Double> zExtent,
+            Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ,
+            DateTime targetTime) {
         StringBuilder id = new StringBuilder("uk.ac.rdg.resc.edal.feature.");
         id.append(getId());
         id.append(":");
         for (String varId : varIds) {
             id.append(varId);
         }
-        id.append(params.toString());
+        if (bbox != null) {
+            id.append(bbox.toString());
+        }
+        if (zExtent != null) {
+            id.append(zExtent.toString());
+        }
+        if (tExtent != null) {
+            id.append(tExtent.toString());
+        }
+        if (targetPos != null) {
+            id.append(targetPos.toString());
+        }
+        if (targetZ != null) {
+            id.append(targetZ.toString());
+        }
+        if (targetTime != null) {
+            id.append(targetTime.toString());
+        }
         return UUID.nameUUIDFromBytes(id.toString().getBytes()).toString();
     }
 
@@ -246,12 +267,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      * 
      * @param varId
      *            The ID of the variable to read
-     * @param targetGrid
-     *            The {@link HorizontalGrid} on which to read data
-     * @param zPos
-     *            The z-position to read at
-     * @param time
-     *            The time to read at
+     * @param domain
+     *            The {@link MapDomain} on which to read data
      * @param dataSource
      *            The {@link DS} to read data from
      * @return
@@ -261,12 +278,11 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      *             If there is a problem reading the data
      * @throws VariableNotFoundException
      */
-    private Array2D<Number> readHorizontalData(String varId, final HorizontalGrid targetGrid,
-            Double zPos, DateTime time, DS dataSource) throws IOException, DataReadingException,
-            VariableNotFoundException {
+    private Array2D<Number> readHorizontalData(String varId, final MapDomain domain, DS dataSource)
+            throws IOException, DataReadingException, VariableNotFoundException {
         VariablePlugin plugin = isDerivedVariable(varId);
         if (plugin == null) {
-            return readUnderlyingHorizontalData(varId, targetGrid, zPos, time, dataSource);
+            return readUnderlyingHorizontalData(varId, domain, dataSource);
         } else {
             @SuppressWarnings("unchecked")
             Array2D<Number>[] pluginSourceData = new Array2D[plugin.usesVariables().length];
@@ -280,23 +296,22 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
              */
             for (int i = 0; i < pluginSourceData.length; i++) {
                 String pluginSourceVarId = plugin.usesVariables()[i];
-                pluginSourceData[i] = readHorizontalData(pluginSourceVarId, targetGrid, zPos, time,
-                        dataSource);
+                pluginSourceData[i] = readHorizontalData(pluginSourceVarId, domain, dataSource);
                 pluginSourceMetadata[i] = getVariableMetadata(pluginSourceVarId);
             }
 
-            return plugin.generateArray2D(varId,
-                    new Array2D<HorizontalPosition>(targetGrid.getYSize(), targetGrid.getXSize()) {
-                        @Override
-                        public HorizontalPosition get(int... coords) {
-                            return targetGrid.getDomainObjects().get(coords).getCentre();
-                        }
+            return plugin.generateArray2D(varId, new Array2D<HorizontalPosition>(domain.getYSize(),
+                    domain.getXSize()) {
+                @Override
+                public HorizontalPosition get(int... coords) {
+                    return domain.getDomainObjects().get(coords).getCentre();
+                }
 
-                        @Override
-                        public void set(HorizontalPosition value, int... coords) {
-                            throw new UnsupportedOperationException("This array is immutable");
-                        }
-                    }, pluginSourceData);
+                @Override
+                public void set(HorizontalPosition value, int... coords) {
+                    throw new UnsupportedOperationException("This array is immutable");
+                }
+            }, pluginSourceData);
         }
     }
 
@@ -319,8 +334,9 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
 
     @Override
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException,
-            IncorrectDomainException {
+            BoundingBox bbox, Extent<Double> zExtent, Extent<DateTime> tExtent,
+            final HorizontalPosition targetPos, DateTime targetTime) throws DataReadingException,
+            UnsupportedOperationException, VariableNotFoundException {
         List<ProfileFeature> features = new ArrayList<>();
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -336,6 +352,12 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
          * abstract, so this is the safest way.
          */
         List<String> variableIds = new ArrayList<String>(varIds);
+        for (String varId : variableIds) {
+            if (!supportsProfileFeatureExtraction(varId)) {
+                throw new UnsupportedOperationException(
+                        "Profile extraction not supported for the variable: " + varId);
+            }
+        }
 
         /*
          * Find a common z-axis
@@ -349,7 +371,6 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
             return features;
         }
 
-        Extent<Double> zExtent = params.getZExtent();
         if (zExtent != null) {
             /*
              * The given z extent does not overlap with the z-extent for the
@@ -372,12 +393,10 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
         /*
          * Find a bounding box to extract all profiles from
          */
-        BoundingBox bbox = params.getBbox();
-        final HorizontalPosition pos = params.getTargetHorizontalPosition();
         if (bbox == null) {
-            if (pos != null) {
-                bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
-                        pos.getCoordinateReferenceSystem());
+            if (targetPos != null) {
+                bbox = new BoundingBoxImpl(targetPos.getX(), targetPos.getY(), targetPos.getX(),
+                        targetPos.getY(), targetPos.getCoordinateReferenceSystem());
             } else {
                 bbox = null;
             }
@@ -420,8 +439,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                  */
                 Map<ProfileLocation, Array1D<Number>> data;
                 try {
-                    data = readVerticalData(varId, zAxis, bbox, params.getTargetT(),
-                            params.getTExtent(), dataSource);
+                    data = readVerticalData(varId, zAxis, bbox, targetTime, tExtent, dataSource);
                 } catch (IOException e) {
                     throw new DataReadingException("Problem reading profile feature", e);
                 }
@@ -452,20 +470,20 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
              */
             for (ProfileLocation location : location2Var2Values.keySet()) {
                 Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
-                ProfileFeature feature = new ProfileFeature(generateId(varIds, params),
-                        "Extracted Profile Feature",
+                ProfileFeature feature = new ProfileFeature(generateId(varIds, bbox, zExtent,
+                        tExtent, targetPos, null, targetTime), "Extracted Profile Feature",
                         generateDescription("Profile feature", varIds), zAxis, location.hPos,
                         location.time, getParameters(varIds), var2Values);
                 features.add(feature);
             }
 
-            if (pos != null) {
+            if (targetPos != null) {
                 Collections.sort(features, new Comparator<ProfileFeature>() {
                     @Override
                     public int compare(ProfileFeature o1, ProfileFeature o2) {
                         return Double.compare(
-                                GISUtils.getDistSquared(o1.getHorizontalPosition(), pos),
-                                GISUtils.getDistSquared(o2.getHorizontalPosition(), pos));
+                                GISUtils.getDistSquared(o1.getHorizontalPosition(), targetPos),
+                                GISUtils.getDistSquared(o2.getHorizontalPosition(), targetPos));
                     }
                 });
             }
@@ -692,8 +710,9 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
 
     @Override
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException, VariableNotFoundException,
-            IncorrectDomainException {
+            BoundingBox bbox, Extent<Double> zExtent, Extent<DateTime> tExtent,
+            final HorizontalPosition targetPos, Double targetZ) throws DataReadingException,
+            UnsupportedOperationException, VariableNotFoundException {
         List<PointSeriesFeature> features = new ArrayList<>();
         /*
          * If the user has passed in null for the variable IDs, they want all
@@ -709,6 +728,12 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
          * abstract, so this is the safest way.
          */
         List<String> variableIds = new ArrayList<String>(varIds);
+        for (String varId : variableIds) {
+            if (!supportsTimeseriesExtraction(varId)) {
+                throw new UnsupportedOperationException(
+                        "Timeseries extraction not supported for the variable: " + varId);
+            }
+        }
 
         /*
          * Find a common time-axis
@@ -722,7 +747,6 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
             return features;
         }
 
-        Extent<DateTime> tExtent = params.getTExtent();
         if (tExtent != null) {
             /*
              * The given time extent does not overlap with the time-extent for
@@ -745,12 +769,10 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
         /*
          * Find a bounding box to extract all profiles from
          */
-        BoundingBox bbox = params.getBbox();
-        final HorizontalPosition pos = params.getTargetHorizontalPosition();
         if (bbox == null) {
-            if (pos != null) {
-                bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
-                        pos.getCoordinateReferenceSystem());
+            if (targetPos != null) {
+                bbox = new BoundingBoxImpl(targetPos.getX(), targetPos.getY(), targetPos.getX(),
+                        targetPos.getY(), targetPos.getCoordinateReferenceSystem());
             }
         }
 
@@ -792,8 +814,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
                  */
                 Map<PointSeriesLocation, Array1D<Number>> data;
                 try {
-                    data = readTemporalData(varId, tAxis, bbox, params.getTargetZ(),
-                            params.getZExtent(), dataSource);
+                    data = readTemporalData(varId, tAxis, bbox, targetZ, zExtent, dataSource);
                 } catch (IOException e) {
                     log.error("Problem reading data", e);
                     throw new DataReadingException("Problem reading timeseries feature", e);
@@ -829,19 +850,20 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
              */
             for (PointSeriesLocation location : location2Var2Values.keySet()) {
                 Map<String, Array1D<Number>> var2Values = location2Var2Values.get(location);
-                PointSeriesFeature feature = new PointSeriesFeature(generateId(varIds, params),
-                        "Extracted Profile Feature", generateDescription("Point series", varIds),
-                        tAxis, location.hPos, location.elevation, getParameters(varIds), var2Values);
+                PointSeriesFeature feature = new PointSeriesFeature(generateId(varIds, bbox,
+                        zExtent, tExtent, targetPos, targetZ, null), "Extracted Profile Feature",
+                        generateDescription("Point series", varIds), tAxis, location.hPos,
+                        location.elevation, getParameters(varIds), var2Values);
                 features.add(feature);
             }
 
-            if (pos != null) {
+            if (targetPos != null) {
                 Collections.sort(features, new Comparator<PointSeriesFeature>() {
                     @Override
                     public int compare(PointSeriesFeature o1, PointSeriesFeature o2) {
                         return Double.compare(
-                                GISUtils.getDistSquared(o1.getHorizontalPosition(), pos),
-                                GISUtils.getDistSquared(o2.getHorizontalPosition(), pos));
+                                GISUtils.getDistSquared(o1.getHorizontalPosition(), targetPos),
+                                GISUtils.getDistSquared(o2.getHorizontalPosition(), targetPos));
                     }
                 });
             }
@@ -1065,7 +1087,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      *             If there is a problem reading the underlying data
      * @throws VariableNotFoundException
      *             If one or more of the supplied variable IDs is not present in
-     *             this {@link AbstractPluginEnabledDataset}
+     *             this {@link HorizontallyDiscreteDataset}
      */
     public PointCollectionFeature extractPointCollection(Set<String> varIds,
             final PointCollectionDomain domain) throws DataReadingException,
@@ -1110,7 +1132,7 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      *             If there is a problem reading the underlying data
      * @throws VariableNotFoundException
      *             If one or more of the supplied variable IDs is not present in
-     *             this {@link AbstractPluginEnabledDataset}
+     *             this {@link HorizontallyDiscreteDataset}
      */
     public TrajectoryFeature extractTrajectoryFeature(Set<String> varIds,
             final TrajectoryDomain domain) throws DataReadingException, VariableNotFoundException {
@@ -1410,8 +1432,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
             return true;
         }
 
-        private AbstractPluginEnabledDataset<DS> getOuterType() {
-            return AbstractPluginEnabledDataset.this;
+        private HorizontallyDiscreteDataset<DS> getOuterType() {
+            return HorizontallyDiscreteDataset.this;
         }
     }
 
@@ -1459,8 +1481,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
             return true;
         }
 
-        private AbstractPluginEnabledDataset<DS> getOuterType() {
-            return AbstractPluginEnabledDataset.this;
+        private HorizontallyDiscreteDataset<DS> getOuterType() {
+            return HorizontallyDiscreteDataset.this;
         }
     }
 
@@ -1494,8 +1516,8 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      * 
      * @param varId
      *            The ID of the variable to read
-     * @param targetGrid
-     *            The {@link HorizontalGrid} on which to read data
+     * @param domain
+     *            The {@link MapDomain} on which to read data
      * @param zPos
      *            The z-position to read at
      * @param time
@@ -1503,16 +1525,15 @@ public abstract class AbstractPluginEnabledDataset<DS extends DataSource> extend
      * @param dataSource
      *            The {@link DS} to read data from
      * @return An {@link Array2D} containing the data corresponding to the
-     *         supplied {@link HorizontalGrid}
+     *         supplied {@link MapDomain}
      * @throws DataReadingException
      *             If there is a problem reading the data
      * @throws VariableNotFoundException
      *             If the requested variable is not present in the
      *             {@link Dataset}
      */
-    protected abstract Array2D<Number> readUnderlyingHorizontalData(String varId,
-            HorizontalGrid targetGrid, Double zPos, DateTime time, DS dataSource)
-            throws DataReadingException, VariableNotFoundException;
+    protected abstract Array2D<Number> readUnderlyingHorizontalData(String varId, MapDomain domain,
+            DS dataSource) throws DataReadingException, VariableNotFoundException;
 
     /**
      * Reads profile data for a given non-derived variable

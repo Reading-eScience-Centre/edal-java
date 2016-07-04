@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
-import java.awt.Color;
 import java.util.Map;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
@@ -45,10 +44,10 @@ public class Parameter {
     public static class Category {
         private final String id;
         private final String label;
-        private final Color colour;
+        private final String colour;
         private final String description;
 
-        public Category(String id, String label, Color colour, String description) {
+        public Category(String id, String label, String colour, String description) {
             if (id == null) {
                 throw new IllegalArgumentException("The ID of a Category may not be null");
             }
@@ -79,10 +78,10 @@ public class Parameter {
         }
 
         /**
-         * @return The preferred {@link Color} to be used for this
-         *         {@link Category}. May return <code>null</code>
+         * @return A {@link String} representing the preferred colour to be used
+         *         for this {@link Category}. May return <code>null</code>
          */
-        public Color getColour() {
+        public String getColour() {
             return colour;
         }
 

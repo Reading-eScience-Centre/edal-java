@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.util;
+package uk.ac.rdg.resc.edal.graphics.utils;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -34,6 +34,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,14 +50,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
+import uk.ac.rdg.resc.edal.dataset.PointDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
+import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.VerticalCrs;
+import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Class containing static utility methods for dealing with graphics
@@ -83,6 +92,37 @@ public class GraphicsUtils {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Convenience method to extract map features for a since variable in a
+     * generic dataset.
+     * 
+     * @param dataset
+     *            The Dataset to extract features from
+     * @param varId
+     *            The variable ID to extract
+     * @param params
+     *            The {@link PlottingDomainParams} representing the domain to
+     *            extract onto
+     * @return A {@link Collection} of {@link DiscreteFeature}s
+     */
+    public static Collection<? extends DiscreteFeature<?, ?>> extractGeneralMapFeatures(
+            Dataset dataset, String varId, PlottingDomainParams params) {
+        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = new ArrayList<>();
+        if (dataset instanceof HorizontallyDiscreteDataset<?>) {
+            HorizontallyDiscreteDataset<?> discreteDataset = (HorizontallyDiscreteDataset<?>) dataset;
+            mapFeatures = discreteDataset.extractMapFeatures(
+                    CollectionUtils.setOf(varId),
+                    new MapDomain(new RegularGridImpl(params.getBbox(), params.getWidth(), params
+                            .getHeight()), params.getTargetZ(), params.getTargetT()));
+        } else if (dataset instanceof PointDataset<?>) {
+            PointDataset<?> pointDataset = (PointDataset<?>) dataset;
+            mapFeatures = pointDataset.extractMapFeatures(CollectionUtils.setOf(varId),
+                    params.getBbox(), params.getZExtent(), params.getTExtent(),
+                    params.getTargetZ(), params.getTargetT());
+        }
+        return mapFeatures;
     }
 
     /**
@@ -246,36 +286,37 @@ public class GraphicsUtils {
         }
 
         Double zPos = null;
-        Extent<Double> zExtent = null;
 
         float min = Float.MAX_VALUE;
         float max = -Float.MAX_VALUE;
         Collection<? extends DiscreteFeature<?, ?>> mapFeatures = null;
-        if (!(dataset instanceof AbstractContinuousDomainDataset)) {
+        if ((dataset instanceof HorizontallyDiscreteDataset<?>)) {
             /*
              * Extract map features at a low resolution over the entire domain
              * of the dataset. This will give a good approximation of the values
              * present (albeit at a specific time/depth)
              */
+            HorizontallyDiscreteDataset<?> discreteDataset = (HorizontallyDiscreteDataset<?>) dataset;
             if (variableMetadata.getVerticalDomain() != null) {
                 zPos = variableMetadata.getVerticalDomain().getExtent().getLow();
-                zExtent = variableMetadata.getVerticalDomain().getExtent();
             }
             DateTime time = null;
-            Extent<DateTime> tExtent = null;
             if (variableMetadata.getTemporalDomain() != null) {
                 time = variableMetadata.getTemporalDomain().getExtent().getHigh();
-                tExtent = variableMetadata.getTemporalDomain().getExtent();
             }
-            PlottingDomainParams params = new PlottingDomainParams(100, 100, variableMetadata
-                    .getHorizontalDomain().getBoundingBox(), zExtent, tExtent, null, zPos, time);
             try {
                 long t1 = 0L, t2 = 0L;
                 if (log.isDebugEnabled()) {
                     log.debug("Extracting data for range estimation");
                     t1 = System.currentTimeMillis();
                 }
-                mapFeatures = dataset.extractMapFeatures(CollectionUtils.setOf(varId), params);
+                VerticalCrs vCrs = null;
+                if (variableMetadata.getVerticalDomain() != null) {
+                    vCrs = variableMetadata.getVerticalDomain().getVerticalCrs();
+                }
+                mapFeatures = discreteDataset.extractMapFeatures(CollectionUtils.setOf(varId),
+                        new MapDomain(new RegularGridImpl(variableMetadata.getHorizontalDomain()
+                                .getBoundingBox(), 100, 100), zPos, vCrs, time));
                 if (log.isDebugEnabled()) {
                     t2 = System.currentTimeMillis();
                     log.debug("Extracted data for range estimation: " + (t2 - t1) + "ms");
@@ -285,7 +326,7 @@ public class GraphicsUtils {
                         "Problem reading data whilst estimating scale range.  A default value will be used.",
                         e);
             }
-        } else {
+        } else if (dataset instanceof AbstractContinuousDomainDataset) {
             /*
              * We can have any number of features in a dataset with a continuous
              * domain. We can't just extract all features at low resolution
@@ -505,7 +546,7 @@ public class GraphicsUtils {
             if (entry.getValue().getColour() == null) {
                 colours.put(entry.getKey(), fallback[i]);
             } else {
-                colours.put(entry.getKey(), entry.getValue().getColour());
+                colours.put(entry.getKey(), parseColour(entry.getValue().getColour()));
             }
             i++;
         }

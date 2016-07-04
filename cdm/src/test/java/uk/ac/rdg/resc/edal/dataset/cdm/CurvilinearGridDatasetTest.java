@@ -31,8 +31,8 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
@@ -48,9 +48,11 @@ import ucar.ma2.ArrayDouble;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
+import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
-import uk.ac.rdg.resc.edal.dataset.Dataset;
+import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
@@ -58,11 +60,11 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 
 /**
@@ -76,7 +78,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 public class CurvilinearGridDatasetTest {
     // accuracy value set for assert equal method for comparison.
     private static final double delta = 1e-5;
-    private Dataset dataset;
+    private HorizontallyDiscreteDataset<? extends DataSource> dataset;
     private NetcdfFile cdf;
     private String location;
     // parameters about the used test dataset
@@ -118,19 +120,17 @@ public class CurvilinearGridDatasetTest {
         HorizontalDomain hDomain = dataset.getVariableMetadata("allx_u").getHorizontalDomain();
 
         BoundingBox bbox = hDomain.getBoundingBox();
-        PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
-                null, null, null);
 
         Exception caughtEx = null;
         // the statement below catches UnsupportedOperationException.
         try {
-            dataset.extractTimeseriesFeatures(null, params);
+            dataset.extractTimeseriesFeatures(null, bbox, null, null, null, null);
         } catch (UnsupportedOperationException e) {
             caughtEx = e;
         }
         assertNotNull(caughtEx);
         // the statement below throws UnsupportedOperationException.
-        dataset.extractProfileFeatures(null, params);
+        dataset.extractProfileFeatures(null, bbox, null, null, null, null);
     }
 
     /**
@@ -251,10 +251,8 @@ public class CurvilinearGridDatasetTest {
         HorizontalDomain hDomain = dataset.getVariableMetadata("allx_u").getHorizontalDomain();
 
         BoundingBox bbox = hDomain.getBoundingBox();
-        PlottingDomainParams params = new PlottingDomainParams(etaSize, xiSize, bbox, null, null,
-                null, null, null);
         Collection<? extends DiscreteFeature<?, ?>> mapFeature = dataset.extractMapFeatures(null,
-                params);
+                new MapDomain(new RegularGridImpl(bbox, etaSize, xiSize), null, null));
         DiscreteFeature<?, ?> feature = mapFeature.iterator().next();
         MapFeature data = (MapFeature) feature;
 
