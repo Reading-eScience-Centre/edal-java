@@ -26,48 +26,60 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.examples;
+package uk.ac.rdg.resc.edal.covjson.writers;
 
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 
-import javax.imageio.ImageIO;
-
-import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
+import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Keys;
+import uk.ac.rdg.resc.edal.covjson.writers.Constants.Vals;
 
 /**
- * Example code to draw an image displaying all of the available colour
- * palettes.
  * 
- * This also gets run during a build, and sends the output to the documentation
- * directory for inclusion in the user manual.
+ * @author Maik Riechert
  *
- * @author Guy Griffiths
  */
-public class DrawPalettes {
-    public static void main(String[] args) throws IOException {
-        Set<String> paletteNames = ColourPalette.getPredefinedPalettes();
-        BufferedImage image = new BufferedImage(700, 30 * paletteNames.size(), BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = image.createGraphics();
-        
-        int vOffset = 0;
-        for(String paletteName : paletteNames) {
-            ColourPalette palette = ColourPalette.fromString(paletteName, 250);
-            for(int i=0;i<500;i++) {
-                for(int j=0;j<30;j++) {
-                    image.setRGB(i, vOffset+j, palette.getColor(i/500f).getRGB());
-                }
-            }
-            g.drawString(paletteName, 510, vOffset + 20);
-            vOffset += 30;
-        }
-        String fileLocation = "./palettes.png";
-        if(args != null && args.length > 0) {
-            fileLocation = args[0];
-        }
-        ImageIO.write(image, "png", new File(fileLocation));
-    }
+public class CoverageWriter <T> {
+
+	private final MapEncoder<T> map;
+	private final boolean root;
+
+	/**
+	 * 
+	 * @param encoder
+	 * @param root If true, then the feature is the root element in the document
+	 * 	that is written.
+	 */
+	public CoverageWriter(MapEncoder<T> encoder, boolean root) {
+		this.map = encoder;
+		this.root = root;
+	}
+
+	public void write(Coverage coverage) throws IOException {
+		write(coverage, false);
+	}
+	
+	public void write(Coverage coverage, boolean skipParameters) throws IOException {
+		if (root) {
+			Util.addJsonLdContext(map);
+		}
+		map
+		  .put(Keys.TYPE, Vals.COVERAGE)
+		  .startMap(Keys.TITLE).put(Keys.EN, coverage.feature.getName()).end();
+		
+		MapEncoder<MapEncoder<T>> domain = map.startMap(Keys.DOMAIN);
+		new DomainWriter<>(domain).write(coverage.domain);
+		domain.end();
+		
+		if (!skipParameters) {
+			MapEncoder<MapEncoder<T>> parameters = map.startMap(Keys.PARAMETERS);
+			new ParametersWriter<>(parameters).write(coverage.parameters.values());
+			parameters.end();
+		}
+		
+		MapEncoder<MapEncoder<T>> ranges = map.startMap(Keys.RANGES);
+		new RangesWriter<>(ranges).write(coverage);
+		ranges.end();
+	}
+
 }

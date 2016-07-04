@@ -26,48 +26,47 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.examples;
+package uk.ac.rdg.resc.edal.covjson;
 
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
+import java.io.OutputStream;
+import java.util.Collection;
 
-import javax.imageio.ImageIO;
+import uk.ac.rdg.resc.edal.feature.Feature;
 
-import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
+public interface CoverageJsonConverter {
+	/**
+	 * Writes a Feature as a CoverageJSON document to the given OutputStream.
+	 * 
+	 * Note that the OutputStream is *not* closed at the end.
+	 * 
+	 * @param out The stream to write to.
+	 * @param feature The feature to serialize.
+	 */
+    public void convertFeatureToJson(OutputStream out, Feature<?> feature);
+    
+    /**
+     * Checks whether the converter will be able to convert the given feature successfully.
+     * 
+     * @param feature The feature to check.
+     * @throws RuntimeException If the feature cannot be converted.
+     */
+    public void checkFeatureSupported(Feature<?> feature);
 
-/**
- * Example code to draw an image displaying all of the available colour
- * palettes.
- * 
- * This also gets run during a build, and sends the output to the documentation
- * directory for inclusion in the user manual.
- *
- * @author Guy Griffiths
- */
-public class DrawPalettes {
-    public static void main(String[] args) throws IOException {
-        Set<String> paletteNames = ColourPalette.getPredefinedPalettes();
-        BufferedImage image = new BufferedImage(700, 30 * paletteNames.size(), BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = image.createGraphics();
-        
-        int vOffset = 0;
-        for(String paletteName : paletteNames) {
-            ColourPalette palette = ColourPalette.fromString(paletteName, 250);
-            for(int i=0;i<500;i++) {
-                for(int j=0;j<30;j++) {
-                    image.setRGB(i, vOffset+j, palette.getColor(i/500f).getRGB());
-                }
-            }
-            g.drawString(paletteName, 510, vOffset + 20);
-            vOffset += 30;
-        }
-        String fileLocation = "./palettes.png";
-        if(args != null && args.length > 0) {
-            fileLocation = args[0];
-        }
-        ImageIO.write(image, "png", new File(fileLocation));
-    }
+	/**
+	 * Writes a collection of Features as a CoverageJSON document to the given OutputStream.
+	 * 
+	 * Note that the OutputStream is *not* closed at the end.
+	 * 
+	 * @param out The stream to write to.
+	 * @param feature The features to serialize.
+	 */
+    public void convertFeaturesToJson(OutputStream out, Collection<Feature<?>> features);
+    
+    /**
+     * Checks whether the converter will be able to convert the given features successfully.
+     * 
+     * @param features The features to check.
+     * @throws RuntimeException If the features cannot be converted.
+     */
+    public void checkFeaturesSupported(Collection<Feature<?>> features);
 }

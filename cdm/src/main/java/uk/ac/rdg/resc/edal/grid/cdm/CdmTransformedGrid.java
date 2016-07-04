@@ -159,7 +159,23 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
         if (Double.isNaN(latMax)) {
             latMax = 90.0;
         }
-        bbox = new BoundingBoxImpl(lonMin, latMin, lonMax, latMax, DefaultGeographicCRS.WGS84);
+
+        if (latMin != latMax && lonMin != lonMax) {
+            /*
+             * The normal situation - use the bounds to create the bounding box
+             */
+            bbox = new BoundingBoxImpl(lonMin, latMin, lonMax, latMax, DefaultGeographicCRS.WGS84);
+        } else {
+            /*
+             * Some projections (MSGnavigation as returned by GRIB is the only
+             * one I've actually found so far) end up returning a bounding box
+             * with identical latitude (and potentially longitude) values when
+             * it's not appropriate.
+             * 
+             * It seems to be the case that the projection just doesn't work.
+             */
+            bbox = BoundingBoxImpl.global();
+        }
     }
 
     @Override

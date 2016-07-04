@@ -201,6 +201,9 @@ public class NetcdfDatasetAggregator {
                          */
                         NetcdfDataset first = getDataset(files.get(0).getAbsolutePath(),
                                 forceRefresh);
+                        if(first.getFileTypeId().startsWith("GRIB")) {
+                            throw new EdalException("Cannot automatically aggregate GRIB files.");
+                        }
                         String timeDimName = null;
                         for (Variable var : first.getVariables()) {
                             if (var.isCoordinateVariable()) {

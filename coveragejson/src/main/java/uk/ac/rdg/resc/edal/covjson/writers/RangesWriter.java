@@ -26,48 +26,34 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.examples;
+package uk.ac.rdg.resc.edal.covjson.writers;
 
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.util.Set;
+import java.util.Map.Entry;
 
-import javax.imageio.ImageIO;
-
-import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
+import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.MapEncoder;
+import uk.ac.rdg.resc.edal.covjson.writers.Coverage.NdArray;
 
 /**
- * Example code to draw an image displaying all of the available colour
- * palettes.
  * 
- * This also gets run during a build, and sends the output to the documentation
- * directory for inclusion in the user manual.
- *
- * @author Guy Griffiths
+ * @author Maik Riechert
  */
-public class DrawPalettes {
-    public static void main(String[] args) throws IOException {
-        Set<String> paletteNames = ColourPalette.getPredefinedPalettes();
-        BufferedImage image = new BufferedImage(700, 30 * paletteNames.size(), BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = image.createGraphics();
-        
-        int vOffset = 0;
-        for(String paletteName : paletteNames) {
-            ColourPalette palette = ColourPalette.fromString(paletteName, 250);
-            for(int i=0;i<500;i++) {
-                for(int j=0;j<30;j++) {
-                    image.setRGB(i, vOffset+j, palette.getColor(i/500f).getRGB());
-                }
-            }
-            g.drawString(paletteName, 510, vOffset + 20);
-            vOffset += 30;
-        }
-        String fileLocation = "./palettes.png";
-        if(args != null && args.length > 0) {
-            fileLocation = args[0];
-        }
-        ImageIO.write(image, "png", new File(fileLocation));
-    }
+public class RangesWriter <T> {
+
+	private final MapEncoder<T> map;
+
+	public RangesWriter(MapEncoder<T> encoder) {
+		this.map = encoder;
+	}
+
+	public void write(Coverage coverage) throws IOException {				
+		for (Entry<String, NdArray> entry : coverage.ranges.entrySet()) {
+			String paramKey = entry.getKey();
+			NdArray ndarray = entry.getValue();
+
+			MapEncoder<?> rangeMap = map.startMap(paramKey);
+			new RangeWriter<>(rangeMap).write(ndarray);
+			rangeMap.end();
+		}
+	}
 }

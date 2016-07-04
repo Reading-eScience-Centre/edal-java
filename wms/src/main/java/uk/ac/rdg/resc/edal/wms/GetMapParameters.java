@@ -44,6 +44,7 @@ import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
 import uk.ac.rdg.resc.edal.graphics.formats.ImageFormat;
+import uk.ac.rdg.resc.edal.graphics.formats.InvalidFormatException;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
@@ -63,7 +64,7 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  */
 public class GetMapParameters {
     protected String wmsVersion;
-    private String imageFormatString;
+    private String formatString;
     private boolean animation;
     private List<DateTime> animationTimesteps = new ArrayList<>();
     private int frameRate;
@@ -90,7 +91,7 @@ public class GetMapParameters {
         if (!WmsUtils.SUPPORTED_VERSIONS.contains(this.wmsVersion)) {
             throw new EdalException("VERSION " + this.wmsVersion + " not supported");
         }
-        imageFormatString = params.getString("format");
+        formatString = params.getString("format", "image/png");
         animation = params.getBoolean("animation", false);
         frameRate = params.getPositiveInt("frameRate", 24);
         styleParameters = new GetMapStyleParams(params);
@@ -154,14 +155,25 @@ public class GetMapParameters {
         return frameRate;
     }
     
-    public ImageFormat getImageFormat() throws EdalException {
-        if (imageFormatString == null) {
-            throw new EdalException("Parameter FORMAT was not supplied");
-        } else {
-            return ImageFormat.get(imageFormatString);
-        }
+    /**
+     * @return The {@link ImageFormat} corresponding to the supplied FORMAT
+     *         argument
+     * @throws InvalidFormatException
+     *             if the supplied FORMAT does not represent a supported
+     *             {@link ImageFormat}
+     */
+    public ImageFormat getImageFormat() throws InvalidFormatException {
+        return ImageFormat.get(formatString);
     }
 
+    /**
+     * @return The supplied format string, regardless of whether it represents a
+     *         supported image type
+     */
+    public String getFormatString() {
+        return formatString;
+    }
+    
     private static PlottingDomainParams parsePlottingParams(RequestParams params,
             Chronology chronology, String wmsVersion) throws EdalException {
         String timeString = params.getString("time");

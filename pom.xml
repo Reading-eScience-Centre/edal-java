@@ -263,6 +263,7 @@
         <module>common</module>
         <module>graphics</module>
         <module>godiva</module>
+        <module>coveragejson</module>
         <module>xml-catalogue</module>
         <module>wms</module>
         <module>cdm</module>

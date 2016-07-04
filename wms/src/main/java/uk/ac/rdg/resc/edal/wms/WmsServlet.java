@@ -87,6 +87,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverter;
+import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverterImpl;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
@@ -102,6 +104,7 @@ import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
@@ -122,10 +125,11 @@ import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.LayerNameMapper;
 import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.graphics.utils.PlottingStyleParameters;
-import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -395,11 +399,53 @@ public class WmsServlet extends HttpServlet {
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
 
         /*
-         * Set the content type to be what was requested. If anything goes
-         * wrong, this will be overwritten to "text/xml" in the
-         * handleWmsException method.
+         * If the user has requested the actual data in coverageJSON format...
          */
-        httpServletResponse.setContentType(getMapParams.getImageFormat().getMimeType());
+        if (getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage+json")
+                || getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage json")) {
+            httpServletResponse.setContentType("application/prs.coverage+json");
+            String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
+            LayerNameMapper layerNameMapper = catalogue.getLayerNameMapper();
+            List<Feature<?>> features = new ArrayList<>();
+            for (String layerName : layerNames) {
+                Dataset dataset = catalogue.getDatasetFromId(layerNameMapper
+                        .getDatasetIdFromLayerName(layerName));
+                VariableMetadata metadata = dataset.getVariableMetadata(layerNameMapper
+                        .getVariableIdFromLayerName(layerName));
+                if (metadata.isScalar()) {
+                    Collection<? extends DiscreteFeature<?, ?>> mapFeatures = GraphicsUtils
+                            .extractGeneralMapFeatures(dataset,
+                                    layerNameMapper.getVariableIdFromLayerName(layerName),
+                                    plottingParameters);
+                    features.addAll(mapFeatures);
+                } else {
+                    Set<VariableMetadata> children = metadata.getChildren();
+                    for (VariableMetadata child : children) {
+                        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = GraphicsUtils
+                                .extractGeneralMapFeatures(dataset, child.getParameter()
+                                        .getVariableId(), plottingParameters);
+                        features.addAll(mapFeatures);
+                    }
+                }
+            }
+            CoverageJsonConverter converter = new CoverageJsonConverterImpl();
+
+            try {
+                converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+            } catch (IOException e) {
+                log.error("Problem writing coverage JSON to output stream", e);
+            } catch (Exception e) {
+                e.printStackTrace();
+                /*
+                 * Can't handle a thrown exception here - it won't be handled
+                 * properly, since the output stream has already been opened
+                 * 
+                 * Need a method to check that the conversion will be successful
+                 * first.
+                 */
+            }
+            return;
+        }
 
         if (getMapParams.getImageFormat() instanceof KmzFormat) {
             if (!GISUtils
@@ -444,6 +490,13 @@ public class WmsServlet extends HttpServlet {
                     + catalogue.getServerInfo().getMaxImageWidth() + "x"
                     + catalogue.getServerInfo().getMaxImageHeight());
         }
+
+        /*
+         * Set the content type to be what was requested. If anything goes
+         * wrong, this will be overwritten to "text/xml" in the
+         * handleWmsException method.
+         */
+        httpServletResponse.setContentType(getMapParams.getFormatString());
 
         MapImage imageGenerator = styleParameters.getImageGenerator(catalogue);
 

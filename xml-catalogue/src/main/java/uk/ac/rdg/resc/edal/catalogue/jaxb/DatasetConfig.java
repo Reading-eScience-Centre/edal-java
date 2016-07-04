@@ -232,7 +232,6 @@ public class DatasetConfig {
                 log.error(e.getClass().getName() + " loading metadata for dataset " + id, e);
             }
             err = e;
-            e.printStackTrace();
         }
     }
 
