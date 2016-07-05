@@ -267,8 +267,8 @@
         <module>xml-catalogue</module>
         <module>wms</module>
         <module>cdm</module>
-        <module>ncwms</module>
         <module>examples</module>
+        <module>ncwms</module>
     </modules>
     <repositories>
         <repository>
