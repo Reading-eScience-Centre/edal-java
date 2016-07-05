@@ -22,9 +22,6 @@ target/
 .h2/
 gwt-unitCache/
 
-# Ignore apidocs
-apidocs/
-
 # Module specific
 ncwms/src/main/webapp/godiva3/
 ncwms/src/main/webapp/WEB-INF/deploy/
