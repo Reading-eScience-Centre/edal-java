@@ -42,10 +42,12 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import thredds.client.catalog.ServiceType;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
+import ucar.nc2.dataset.DatasetUrl;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.ncml.NcMLReader;
 import ucar.nc2.units.DateUnit;
@@ -374,7 +376,7 @@ public class NetcdfDatasetAggregator {
                  * underlying data can change we rely on the server admin
                  * setting the "recheckEvery" parameter in the aggregation file.
                  */
-                nc = NetcdfDataset.acquireDataset(location, null);
+                nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, location), true, null);
             } else {
                 /*
                  * For local single files and OPeNDAP datasets we don't use the

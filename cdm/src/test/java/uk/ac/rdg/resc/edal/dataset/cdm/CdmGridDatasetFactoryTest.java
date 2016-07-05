@@ -45,7 +45,6 @@ import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
-import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
 import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;

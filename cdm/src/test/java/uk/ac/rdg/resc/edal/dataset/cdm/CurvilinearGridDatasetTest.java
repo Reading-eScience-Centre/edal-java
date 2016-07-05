@@ -47,7 +47,6 @@ import org.junit.Test;
 import ucar.ma2.ArrayDouble;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
-import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
 import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
