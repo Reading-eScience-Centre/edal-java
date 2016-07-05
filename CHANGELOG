@@ -7,6 +7,7 @@ Moved PlottingDomainParameters to the graphics module
 Implemented CoverageJSON as output format for WMS GetMap (disabled by default)
 Bugfixes:
     WMS deals with out-of-range TIME/ELEVATION values properly (i.e. with an XML ServiceException)
+    Moved to (specific) SNAPSHOT version of NetCDF Java libs - the old ones were only in the repo by mistake
 
 1.1.2
 =====
