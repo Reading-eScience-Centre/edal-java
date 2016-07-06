@@ -162,7 +162,7 @@ public class NetcdfDatasetAggregator {
         if (datasetCache.containsKey(location) && !forceRefresh) {
             nc = datasetCache.get(location);
         } else {
-            if (location.startsWith("dods://") || location.startsWith("http://")) {
+            if (isRemote(location)) {
                 /*
                  * We have a remote dataset
                  */
@@ -203,7 +203,7 @@ public class NetcdfDatasetAggregator {
                          */
                         NetcdfDataset first = getDataset(files.get(0).getAbsolutePath(),
                                 forceRefresh);
-                        if(first.getFileTypeId().startsWith("GRIB")) {
+                        if (first.getFileTypeId().startsWith("GRIB")) {
                             throw new EdalException("Cannot automatically aggregate GRIB files.");
                         }
                         String timeDimName = null;
@@ -376,7 +376,11 @@ public class NetcdfDatasetAggregator {
                  * underlying data can change we rely on the server admin
                  * setting the "recheckEvery" parameter in the aggregation file.
                  */
-                nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, location), true, null);
+                if (!isRemote(location)) {
+                    location = "file://" + location;
+                }
+                nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, location), true,
+                        null);
             } else {
                 /*
                  * For local single files and OPeNDAP datasets we don't use the
@@ -392,6 +396,10 @@ public class NetcdfDatasetAggregator {
             throw new DataReadingException("Problem reading underlying NetCDF dataset", e);
         }
         return nc;
+    }
+
+    private static boolean isRemote(String location) {
+        return location.startsWith("dods://") || location.startsWith("http://");
     }
 
     /**
