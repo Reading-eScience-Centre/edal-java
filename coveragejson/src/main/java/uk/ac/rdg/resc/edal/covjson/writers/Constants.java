@@ -37,6 +37,7 @@ public final class Constants {
 		public static final String CALENDAR = "calendar";
 		public static final String BASECRS = "baseCRS";
 		public static final String CS = "cs";
+		public static final String CSAXES = "csAxes";
 		public static final String NAME = "name";
 		public static final String EN = "en";
 		public static final String DIRECTION = "direction";
@@ -84,8 +85,7 @@ public final class Constants {
 		public static final String DOMAIN = "Domain";
 		public static final String PARAMETER = "Parameter";
 		public static final String NDARRAY = "NdArray";
-		public static final String TUPLE = "Tuple";
-		public static final String POLYGON = "Polygon";
+		public static final String TUPLEDATATYPE = "tuple";
 		public static final String INTEGER = "integer";
 		public static final String FLOAT = "float";
 		public static final String GRID = "Grid";
@@ -94,7 +94,7 @@ public final class Constants {
 		public static final String TRAJECTORY = "Trajectory";		
 	
 		public static final String getStandardNameUri (String standardName) {
-			return "http://vocab.nerc.ac.uk/standard_name/" + standardName;
+			return "http://vocab.nerc.ac.uk/standard_name/" + standardName + "/";
 		}
 				
 		public static String getCrsUri(CoordinateReferenceSystem crs) {

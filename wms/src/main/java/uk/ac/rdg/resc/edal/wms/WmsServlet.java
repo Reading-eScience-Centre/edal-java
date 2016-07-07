@@ -435,20 +435,19 @@ public class WmsServlet extends HttpServlet {
             httpServletResponse.setContentType("application/prs.coverage+json");
             CoverageJsonConverter converter = new CoverageJsonConverterImpl();
 
+            converter.checkFeaturesSupported(features);
             try {
-                converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
-            } catch (IOException e) {
-                log.error("Problem writing coverage JSON to output stream", e);
-            } catch (Exception e) {
-                e.printStackTrace();
-                /*
-                 * Can't handle a thrown exception here - it won't be handled
-                 * properly, since the output stream has already been opened
-                 * 
-                 * Need a method to check that the conversion will be successful
-                 * first.
-                 */
-            }
+            	if (features.size() == 1) {
+            		converter.convertFeatureToJson(httpServletResponse.getOutputStream(), features.get(0));
+            	} else {
+            		// vectors are currently multiple features each with one parameter
+            		// TODO group features with identical domain into single feature
+            		converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+            	}
+			} catch (IOException e) {
+				log.error("Problem writing CoverageJSON to output stream", e);
+			}
+            
             return;
         }
 
