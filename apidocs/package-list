@@ -1,10 +1,13 @@
 org.khelekore.prtree
 uk.ac.rdg.resc.edal.catalogue
 uk.ac.rdg.resc.edal.catalogue.jaxb
+uk.ac.rdg.resc.edal.covjson
+uk.ac.rdg.resc.edal.covjson.writers
 uk.ac.rdg.resc.edal.dataset
 uk.ac.rdg.resc.edal.dataset.cdm
 uk.ac.rdg.resc.edal.dataset.plugins
 uk.ac.rdg.resc.edal.domain
+uk.ac.rdg.resc.edal.examples
 uk.ac.rdg.resc.edal.exceptions
 uk.ac.rdg.resc.edal.feature
 uk.ac.rdg.resc.edal.geometry
@@ -14,7 +17,7 @@ uk.ac.rdg.resc.edal.graphics.formats
 uk.ac.rdg.resc.edal.graphics.pcolor.examples
 uk.ac.rdg.resc.edal.graphics.style
 uk.ac.rdg.resc.edal.graphics.style.sld
-uk.ac.rdg.resc.edal.graphics.style.util
+uk.ac.rdg.resc.edal.graphics.utils
 uk.ac.rdg.resc.edal.grid
 uk.ac.rdg.resc.edal.grid.cdm
 uk.ac.rdg.resc.edal.grid.kdtree
