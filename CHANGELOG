@@ -1,3 +1,10 @@
+1.2.1
+=====
+Bugfixes:
+    Fixed issue with NcML + SNAPSHOT NetCDF libs
+    Handle single-item collection in CoverageJSON as a coverage, not a collection
+    Fixed trailing slash issue on URI in CoverageJSON
+
 1.2.0
 =====
 Moved configuration to web.xml where it can be overridden so that it persists across deployments
