@@ -12,7 +12,7 @@ public abstract class AbstractSLDSymbolizer1D extends AbstractSLDSymbolizer {
 			throw new SLDException("Found " + varNames.size() + " variable names, " +
 					"expected one.");
 		}
-		this.layerName = varNames.get(0);
+		this.layerName = varNames.get(0).trim();
 	}
 
 }

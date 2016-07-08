@@ -39,7 +39,7 @@ public class ColorSLDInterpolateFunction extends
 					throw new SLDException("Each interpolation point must contain a value element.");
 				}
 				interpolationPoints.add(new InterpolationPoint<Color>(
-						Float.parseFloat(dataNode.getTextContent()),
+						Float.parseFloat(dataNode.getTextContent().trim()),
 						GraphicsUtils.parseColour(valueNode.getTextContent())));
 			}
 		} catch(Exception e) {

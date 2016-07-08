@@ -13,8 +13,8 @@ public abstract class AbstractSLDSymbolizer2D extends AbstractSLDSymbolizer {
 			throw new SLDException("Found " + varNames.size() + " variable names, " +
 					"expected two.");
 		}
-		this.xVarName = varNames.get(0);
-		this.yVarName = varNames.get(1);
+		this.xVarName = varNames.get(0).trim();
+		this.yVarName = varNames.get(1).trim();
 	}
 
 }

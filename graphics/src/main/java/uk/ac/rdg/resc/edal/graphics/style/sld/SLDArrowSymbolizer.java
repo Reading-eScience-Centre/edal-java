@@ -20,11 +20,11 @@ public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
     protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException,
             SLDException, EdalParseException {
         // get the arrow properties
-        String arrowSizeText = (String) xPath.evaluate("./resc:ArrowSize", symbolizerNode,
-                XPathConstants.STRING);
+        String arrowSizeText = ((String) xPath.evaluate("./resc:ArrowSize", symbolizerNode,
+                XPathConstants.STRING));
         Integer arrowSize = 8;
-        if (!(arrowSizeText == null) && !(arrowSizeText.equals(""))) {
-            arrowSize = Integer.parseInt(arrowSizeText);
+        if (!(arrowSizeText == null) && !(arrowSizeText.trim().isEmpty())) {
+            arrowSize = Integer.parseInt(arrowSizeText.trim());
         }
         String arrowColourText = (String) xPath.evaluate("./resc:ArrowColour", symbolizerNode,
                 XPathConstants.STRING);

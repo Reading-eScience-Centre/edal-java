@@ -54,7 +54,7 @@ public class AbstractSLDCategorize2DFunction<T> extends AbstractSLDFunction<T> {
 		xThresholds = new ArrayList<Float>();
 		for (int j = 0; j < xThresholdNodes.getLength(); j++) {
 			Node thresholdNode = xThresholdNodes.item(j);
-			xThresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
+			xThresholds.add(Float.parseFloat(thresholdNode.getTextContent().trim()));
 		}
 		
 		//get list of y thresholds
@@ -67,7 +67,7 @@ public class AbstractSLDCategorize2DFunction<T> extends AbstractSLDFunction<T> {
 		yThresholds = new ArrayList<Float>();
 		for (int j = 0; j < yThresholdNodes.getLength(); j++) {
 			Node thresholdNode = yThresholdNodes.item(j);
-			yThresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
+			yThresholds.add(Float.parseFloat(thresholdNode.getTextContent().trim()));
 		}
 	}
 

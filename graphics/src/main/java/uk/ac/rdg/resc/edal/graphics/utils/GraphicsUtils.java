@@ -153,6 +153,7 @@ public class GraphicsUtils {
      *             above categories
      */
     public static Color parseColour(String colourString) throws EdalParseException {
+        colourString = colourString.trim();
         if ("transparent".equalsIgnoreCase(colourString)) {
             return new Color(0, true);
         }
@@ -190,7 +191,7 @@ public class GraphicsUtils {
             int alpha = Integer.parseInt(colourString.substring(2, 4), 16);
             return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
         } else {
-            throw new EdalParseException("Invalid format for colour");
+            throw new EdalParseException("Invalid format for colour: "+colourString);
         }
     }
 

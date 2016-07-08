@@ -71,21 +71,21 @@ public class SLDDensityMapParser {
 			String lookupValue = (String) xPath.evaluate(
 					"./se:Categorize/se:LookupValue", node, XPathConstants.STRING);
 			if (!(lookupValue == null) && !(lookupValue.equals(""))) {
-				return lookupValue;
+				return lookupValue.trim();
 			}			
 
 			// parse Interpolate function
 			lookupValue = (String) xPath.evaluate(
 					"./se:Interpolate/se:LookupValue", node, XPathConstants.STRING);
 			if (!(lookupValue == null) && !(lookupValue.equals(""))) {
-				return lookupValue;
+				return lookupValue.trim();
 			}
 
 			// parse Segment function
 			lookupValue = (String) xPath.evaluate(
 					"./resc:Segment/se:LookupValue", node, XPathConstants.STRING);
 			if (!(lookupValue == null) && !(lookupValue.equals(""))) {
-				return lookupValue;
+				return lookupValue.trim();
 			}
 			
 			throw new SLDException("A lookup value must be specified within a " +

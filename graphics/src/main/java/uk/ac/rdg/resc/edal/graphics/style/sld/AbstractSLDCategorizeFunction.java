@@ -49,7 +49,7 @@ public class AbstractSLDCategorizeFunction<T> extends AbstractSLDFunction<T> {
 		thresholds = new ArrayList<Float>();
 		for (int j = 0; j < thresholdNodes.getLength(); j++) {
 			Node thresholdNode = thresholdNodes.item(j);
-			thresholds.add(Float.parseFloat(thresholdNode.getTextContent()));
+			thresholds.add(Float.parseFloat(thresholdNode.getTextContent().trim()));
 		}
 	}
 

@@ -40,7 +40,7 @@ public class StyleSLDParser {
     public static class FlatOpacityAdapter extends XmlAdapter<String, FlatOpacity> {
         @Override
         public FlatOpacity unmarshal(String v) throws Exception {
-            return new FlatOpacity(Float.parseFloat(v));
+            return new FlatOpacity(Float.parseFloat(v.trim()));
         }
 
         @Override
@@ -102,6 +102,7 @@ public class StyleSLDParser {
             MapImage image = parseSLD(xmlDocument);
             return image;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new SLDException(e);
         }
     }

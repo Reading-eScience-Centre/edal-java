@@ -26,13 +26,13 @@ public class SLDSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
                 XPathConstants.STRING);
         Integer arrowMinSize = 4;
         if (!(arrowMinSizeText == null) && !(arrowMinSizeText.equals(""))) {
-            arrowMinSize = Integer.parseInt(arrowMinSizeText);
+            arrowMinSize = Integer.parseInt(arrowMinSizeText.trim());
         }
         String arrowMaxSizeText = (String) xPath.evaluate("./resc:ArrowMaxSize", symbolizerNode,
                 XPathConstants.STRING);
         Integer arrowMaxSize = 12;
         if (!(arrowMaxSizeText == null) && !(arrowMaxSizeText.equals(""))) {
-            arrowMaxSize = Integer.parseInt(arrowMaxSizeText);
+            arrowMaxSize = Integer.parseInt(arrowMaxSizeText.trim());
         }
         String arrowSizeField = (String) xPath.evaluate("./resc:ArrowSizeField", symbolizerNode,
                 XPathConstants.STRING);

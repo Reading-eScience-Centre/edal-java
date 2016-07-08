@@ -45,7 +45,7 @@ public abstract class AbstractSLDFunction<T> implements SLDFunction<T> {
                 XPathConstants.STRING);
         Float noDataValue = null;
         if (!(fallbackValue == null) && !(fallbackValue.equals(""))) {
-            noDataValue = Float.parseFloat(fallbackValue);
+            noDataValue = Float.parseFloat(fallbackValue.trim());
         }
         return noDataValue;
     }

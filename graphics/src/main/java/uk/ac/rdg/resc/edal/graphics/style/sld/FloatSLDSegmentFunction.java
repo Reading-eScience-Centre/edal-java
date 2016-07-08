@@ -21,7 +21,7 @@ public class FloatSLDSegmentFunction extends AbstractSLDSegmentFunction<Float> {
 			if (values != null) {
 				valueList = new ArrayList<Float>();
 				for (int i = 0; i < values.getLength(); i++) {
-					valueList.add(Float.parseFloat(values.item(i).getTextContent()));
+					valueList.add(Float.parseFloat(values.item(i).getTextContent().trim()));
 				}
 			}
 			
@@ -31,14 +31,14 @@ public class FloatSLDSegmentFunction extends AbstractSLDSegmentFunction<Float> {
 			if (belowMinValueText.equals("")) {
 				belowMinValue = null;
 			} else {
-				belowMinValue = Float.parseFloat(belowMinValueText);
+				belowMinValue = Float.parseFloat(belowMinValueText.trim());
 			}
 			String aboveMaxValueText = (String) xPath.evaluate(
 					"./resc:AboveMaxValue", function, XPathConstants.STRING);
 			if (aboveMaxValueText.equals("")) {
 				aboveMaxValue = null;
 			} else {
-				aboveMaxValue = Float.parseFloat(aboveMaxValueText);
+				aboveMaxValue = Float.parseFloat(aboveMaxValueText.trim());
 			}
 			
 			// get the number of segments

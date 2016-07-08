@@ -37,7 +37,7 @@ public class ColorSLDMapFunction extends AbstractSLDMapFunction<Color> {
             categories = new HashMap<>();
             for (int j = 0; j < colourNodes.getLength(); j++) {
                 Node colourNode = colourNodes.item(j);
-                String mapValue = xPath.evaluate("./@dataValue", colourNode);
+                String mapValue = xPath.evaluate("./@dataValue", colourNode).trim();
                 String catLabel = xPath.evaluate("./@dataLabel", colourNode);
                 if (!mapValue.isEmpty()) {
                     valueMap.put(Integer.parseInt(mapValue),
