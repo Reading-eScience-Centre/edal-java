@@ -134,7 +134,7 @@ public class MapImage extends Drawable {
      */
     public BufferedImage getLegend(int componentWidth, int componentHeight, boolean force1D)
             throws EdalException {
-        return getLegend(componentWidth, componentHeight, Color.black, Color.white, true, true);
+        return getLegend(componentWidth, componentHeight, Color.black, Color.white, true, force1D);
     }
 
     /**

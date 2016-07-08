@@ -34,12 +34,15 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
+import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
 import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
@@ -57,8 +60,6 @@ public class GetMapStyleParams {
     private String[] layers;
     private String[] styles;
 
-    private String xmlStyle;
-
     private boolean transparent = false;
     private Color backgroundColour = new Color(0, true);
     private Color belowMinColour;
@@ -73,7 +74,7 @@ public class GetMapStyleParams {
     private Extent<Float> colourScaleRange = null;
 
     /* true if we are using an XML style specification */
-    private boolean xmlSpecified = false;
+    private MapImage xmlMapImage = null;
 
     public GetMapStyleParams(RequestParams params) throws EdalException {
         String layersStr = params.getString("layers");
@@ -93,6 +94,7 @@ public class GetMapStyleParams {
         }
 
         String xmlLoc = params.getString("sld");
+        String xmlStyle = null;
         if (xmlLoc != null) {
             /*
              * We have the SLD parameter, which points to the location of the
@@ -118,7 +120,6 @@ public class GetMapStyleParams {
         }
 
         if (xmlStyle == null) {
-            xmlSpecified = false;
             if (layers == null || styles == null) {
                 throw new EdalException(
                         "You must specify either SLD, SLD_BODY or LAYERS and STYLES");
@@ -128,17 +129,22 @@ public class GetMapStyleParams {
                         + "or use the default style for each layer with STYLES=");
             }
         } else {
-            xmlSpecified = true;
+            xmlMapImage = StyleSLDParser.createImage(xmlStyle);
+            Set<String> imageLayers = new HashSet<>();
+            for (NameAndRange field : xmlMapImage.getFieldsWithScales()) {
+                imageLayers.add(field.getFieldLabel());
+            }
+            layers = imageLayers.toArray(new String[0]);
         }
 
         String bgcStr = params.getString("bgcolor", "0xffffff");
         backgroundColour = GraphicsUtils.parseColour(bgcStr);
 
         this.transparent = params.getBoolean("transparent", false);
-        if(this.transparent) {
+        if (this.transparent) {
             backgroundColour = new Color(0, true);
         }
-        
+
         String bmcStr = params.getString("belowmincolor");
         if (bmcStr == null) {
             belowMinColour = Color.black;
@@ -217,9 +223,9 @@ public class GetMapStyleParams {
      *             issues with generating a {@link MapImage} object
      */
     public MapImage getImageGenerator(WmsCatalogue catalogue) throws EdalException {
-        if (xmlStyle != null) {
+        if (xmlMapImage != null) {
             try {
-                return StyleSLDParser.createImage(xmlStyle);
+                return xmlMapImage;
             } catch (SLDException e) {
                 e.printStackTrace();
                 throw new EdalException("Problem parsing XML style.  Check logs for stack trace");
@@ -409,7 +415,7 @@ public class GetMapStyleParams {
     }
 
     public boolean isXmlDefined() {
-        return xmlSpecified;
+        return xmlMapImage != null;
     }
 
     public String[] getLayerNames() {
