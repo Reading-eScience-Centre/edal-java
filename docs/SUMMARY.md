@@ -29,10 +29,10 @@
     * [Using the EDAL libraries](edal/01-usage.md)
     * [Plotting Gridded Data](edal/plot_gridded.md)
     * [Extracting Point Data](edal/read_point_data.md)
-* [Appendices]
-    * Available named colours(appendices/named_colours.md)
-    * The EDAL SLD specification(appendices/sld_spec/introduction.md)
-        * [Description of XML tags]
+* Appendices
+    * [Available named colours](appendices/named_colours.md)
+    * [The EDAL SLD specification](appendices/sld_spec/introduction.md)
+        * Description of XML tags
           * [General principles](appendices/sld_spec/xml_description/general_principles.md)
           * [Functions](appendices/sld_spec/xml_description/functions.md)
             * [Categorize](appendices/sld_spec/xml_description/functions.md#categorize)
@@ -54,7 +54,7 @@
           * [Opacity transforms](appendices/sld_spec/xml_description/opacity_transforms.md)
             * [Flat](appendices/sld_spec/xml_description/opacity_transforms.md#flat)
             * [Opacity Map](appendices/sld_spec/xml_description/opacity_transforms.md#opacity-map)
-        * [Examples of usage of XML tags]
+        * Examples of usage of XML tags
           * [Thresholds and interpolation](appendices/sld_spec/xml_usage/thresholds.md)
           * [Palette](appendices/sld_spec/xml_usage/palette.md)
           * [Bivariate colour map](appendices/sld_spec/xml_usage/bivariate.md)

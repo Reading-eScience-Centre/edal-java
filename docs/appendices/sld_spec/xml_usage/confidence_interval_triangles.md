@@ -4,8 +4,7 @@ This example XML file plots sea surface temperature using confidence interval tr
 
 [include](confidence_interval_triangles.xml)
 
-The resulting output image is shown below:
+The resulting output image and its legend are shown below:
 ![](../images/triangles.png)
 
-The legend for the map is below:
 ![](../images/triangles-legend.png)
