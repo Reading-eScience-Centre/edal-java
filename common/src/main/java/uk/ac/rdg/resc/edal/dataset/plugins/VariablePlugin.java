@@ -315,7 +315,7 @@ public abstract class VariablePlugin {
      *            The suffix used to identify the generated variable.
      * @return The full ID
      */
-    protected String getFullId(String suffix) {
+    protected final String getFullId(String suffix) {
         StringBuilder sb = new StringBuilder(combinedName);
         sb.append('-');
         sb.append(suffix);

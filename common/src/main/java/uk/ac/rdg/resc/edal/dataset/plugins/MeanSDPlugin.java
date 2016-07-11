@@ -41,6 +41,8 @@ public class MeanSDPlugin extends VariablePlugin {
 
     public final static String MEAN_ROLE = "mean";
     public final static String STDDEV_ROLE = "stddev";
+    public final static String UPPER_ROLE = "upperbound";
+    public final static String LOWER_ROLE = "lowerbound";
 
     public final static String GROUP = "stats_group";
     private String title;
@@ -56,7 +58,8 @@ public class MeanSDPlugin extends VariablePlugin {
      *            The title of the quantity which the components represent
      */
     public MeanSDPlugin(String meanComponentId, String sdComponentId, String title) {
-        super(new String[] { meanComponentId, sdComponentId }, new String[] { GROUP });
+        super(new String[] { meanComponentId, sdComponentId }, new String[] { UPPER_ROLE,
+                LOWER_ROLE, GROUP });
         this.title = title;
     }
 
@@ -76,6 +79,19 @@ public class MeanSDPlugin extends VariablePlugin {
         VariableMetadata parentMetadata = meanMetadata.getParent();
 
         /*
+         * Create new metadata for the upper and lower bounds
+         */
+        VariableMetadata upperMetadata = newVariableMetadataFromMetadata(new Parameter(
+                getFullId(UPPER_ROLE), title + " upper bound", "The upper error bound of " + title
+                        + " i.e. mean + 1 std dev", meanMetadata.getParameter().getUnits(),
+                meanMetadata.getParameter().getStandardName()), true, meanMetadata, sdMetadata);
+
+        VariableMetadata lowerMetadata = newVariableMetadataFromMetadata(new Parameter(
+                getFullId(LOWER_ROLE), title + " lower bound", "The lower error bound of " + title
+                        + " i.e. mean - 1 std dev", meanMetadata.getParameter().getUnits(),
+                meanMetadata.getParameter().getStandardName()), true, meanMetadata, sdMetadata);
+
+        /*
          * Create a new container metadata object
          */
         VariableMetadata containerMetadata = newVariableMetadataFromMetadata(new Parameter(
@@ -87,6 +103,8 @@ public class MeanSDPlugin extends VariablePlugin {
          */
         meanMetadata.setParent(containerMetadata, MEAN_ROLE);
         sdMetadata.setParent(containerMetadata, STDDEV_ROLE);
+        upperMetadata.setParent(containerMetadata, UPPER_ROLE);
+        lowerMetadata.setParent(containerMetadata, LOWER_ROLE);
 
         /*
          * Add the container to the original parent
@@ -96,21 +114,41 @@ public class MeanSDPlugin extends VariablePlugin {
         /*
          * Return the newly-added VariableMetadata objects, as required
          */
-        return new VariableMetadata[] { containerMetadata };
+        return new VariableMetadata[] { upperMetadata, lowerMetadata, containerMetadata };
+    }
+
+    @Override
+    protected String combineIds(String... partsToUse) {
+        /*
+         * We override this, such that the combined ID is just the mean field.
+         * 
+         * That way we will have things like:
+         * 
+         * mean_quantity-stats_group
+         * mean_quantity-upperbound
+         * mean_quantity-lowerbound
+         */
+        return partsToUse[0];
     }
 
     @Override
     protected Number generateValue(String varSuffix, HorizontalPosition pos, Number... sourceValues) {
         /*
-         * We are not generating new values with this plugin - it is just there
-         * to group the mean and SD together. We have introduced a new grouping
-         * variable, but this has no values.
-         * 
-         * That means that this method should never end up being called.
-         * 
-         * Even if it were called, it could only be validly called for the
-         * grouping variable which has no values anyway. Therefore we just...
+         * We only generate new values for the upper and lower bounds
          */
+        if (UPPER_ROLE.equals(varSuffix)) {
+            Number meanValue = sourceValues[0];
+            Number sdValue = sourceValues[1];
+            if (meanValue != null && sdValue != null) {
+                return meanValue.doubleValue() + sdValue.doubleValue();
+            }
+        } else if (LOWER_ROLE.equals(varSuffix)) {
+            Number meanValue = sourceValues[0];
+            Number sdValue = sourceValues[1];
+            if (meanValue != null && sdValue != null) {
+                return meanValue.doubleValue() - sdValue.doubleValue();
+            }
+        }
         return null;
     }
 
