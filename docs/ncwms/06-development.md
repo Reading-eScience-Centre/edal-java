@@ -17,7 +17,7 @@ Note that you can use the variables `$CONFIGDIR` and `$HOME` which represent the
 
 ## Defining new style templates {#styles}
 
-To create a new style for plotting, you will need to create an SLD template. The documentation for SLD can be found in the root directory of the source code, and is named "ncWMS-sld_specification". Within this template, you may use the following placeholders:
+To create a new style for plotting, you will need to create an SLD template. The specification for EDAL-specific SLD documents can be found in [the appendix](../appendices/sld_spec.md). Within this template, you may use the following placeholders:
 
 * $layerName
 * $paletteName

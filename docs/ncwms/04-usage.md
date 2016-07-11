@@ -9,7 +9,7 @@ In ncWMS, the WMS layer names are of the form `datasetId/variableId`.
 When colours can be specified, there are three main ways of describing them:
 * 0xRRGGBB: Hexadecimal representation of the red, green, and blue components of the colour respectively.  For example 0x000000 represents black, 0xFF0000 represents 100% red, etc.
 * 0xAARRGGBB: Hexadecimal representation of the alpha, red, green, and blue components
-* Named colours. The special value "transparent" is supported, as are another 865 named colours. The full list of these can be found [here](https://github.com/Reading-eScience-Centre/edal-java/blob/master/common/src/main/resources/colors.csv)
+* Named colours. The special value "transparent" is supported, as are another 865 named colours. The full list of these can be found [here](../appendices/named_colours.md)
 
 ### GetMap
 
@@ -31,8 +31,8 @@ In additional to the standard GetMap parameters, ncWMS accepts the following opt
 
 * COLORSCALERANGE: Of the form `min,max` this is the scale range used for plotting the data.
 * NUMCOLORBANDS: The number of discrete colours to plot the data. Must be between 2 and 250
-* ABOVEMAXCOLOR: The colour to plot values which are above the maximum end of the scale range. Colours are of the form 0xRRGGBB or 0xAARRGGBB, and it also accepts "transparent" and "extend"
-* BELOWMINCOLOR: The colour to plot values which are below the minimum end of the scale range. Colours are of the form 0xRRGGBB or 0xAARRGGBB, and it also accepts "transparent" and "extend"
+* ABOVEMAXCOLOR: The colour to plot values which are above the maximum end of the scale range. Colours are as defined above, with the addition of "extend", which will use the maximum value of the palette.
+* BELOWMINCOLOR: The colour to plot values which are below the minimum end of the scale range. Colours are as defined above, with the addition of "extend", which will use the minimum value of the palette.
 * LOGSCALE: "true" or "false" - whether to plot data with a logarithmic scale
 * TARGETTIME: For in-situ data, all points which fall within the time range (specified in the TIME parameter) will be plotted. In the case that an in-situ point has multiple time readings within that range, the colour used to plot them will depend on the time value which is closest to this given value
 * TARGETELEVATION: For in-situ data, all points which fall within the elevation range (specified in the ELEVATION parameter) will be plotted. In the case that an in-situ point has multiple elevation readings within that range, the colour used to plot them will depend on the elevation value which is closest to this given value
@@ -114,7 +114,7 @@ Note that for full legends, the supplied width and height are NOT the final heig
 
 ## Godiva3 {#godiva3}
 
-Normal access to the WMS is done using a web client. ncWMS comes with Godiva3 - a WMS client written to take advantage of all of the extended WMS methods in ncWMS. It is accessed at [http://serveraddress/ncWMS/Godiva.html](http://serveraddress/ncWMS/Godiva.html)
+Normal access to the WMS is done using a web client. ncWMS comes with Godiva3 - a WMS client written to take advantage of all of the extended WMS methods in ncWMS. It is accessed at [http://serveraddress/ncWMS2/Godiva.html](http://serveraddress/ncWMS2/Godiva.html)
 
 Most of the controls on the Godiva3 interface have tool tips to help you: hover the mouse over the control in question to find out what it does.
 

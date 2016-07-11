@@ -81,8 +81,8 @@ public class ReadPointData {
          * extracted
          */
         List<HorizontalPosition> positions = new ArrayList<>();
-        for (int i = -170; i <= 170; i += 10) {
-            for (int j = -80; j <= 80; j += 10) {
+        for (int i = -170; i <= 170; i += 20) {
+            for (int j = -80; j <= 80; j += 20) {
                 positions.add(new HorizontalPosition(i, j, DefaultGeographicCRS.WGS84));
             }
         }

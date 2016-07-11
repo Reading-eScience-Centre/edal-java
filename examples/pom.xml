@@ -45,19 +45,32 @@
                 <version>1.5.0</version>
                 <executions>
                     <execution>
-                        <id>generate-png</id>
+                        <id>generate-palettes</id>
                         <phase>package</phase>
                         <goals>
                             <goal>java</goal>
                         </goals>
+                        <configuration>
+                            <mainClass>uk.ac.rdg.resc.edal.examples.DrawPalettes</mainClass>
+                            <arguments>
+                                <argument>${basedir}/../docs/ncwms/images/palettes.png</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-gridded-plot</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>uk.ac.rdg.resc.edal.examples.GeneratePng</mainClass>
+                            <arguments>
+                                <argument>${basedir}/../docs/edal/images/gridded.png</argument>
+                            </arguments>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <mainClass>uk.ac.rdg.resc.edal.examples.DrawPalettes</mainClass>
-                    <arguments>
-                        <argument>${basedir}/../docs/images/palettes.png</argument>
-                    </arguments>
-                </configuration>
             </plugin>
         </plugins>
     </build>

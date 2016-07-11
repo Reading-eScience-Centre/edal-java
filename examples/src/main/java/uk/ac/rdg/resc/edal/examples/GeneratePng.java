@@ -199,7 +199,7 @@ public class GeneratePng {
          * "the closest elevation to the surface of the earth" and
          * "the closest time to the current time".
          */
-        PlottingDomainParams params = PlottingDomainParams.paramsForGriddedDataset(1024, 1024,
+        PlottingDomainParams params = PlottingDomainParams.paramsForGriddedDataset(1024, 768,
                 bbox, null, null);
 
         /*
@@ -223,6 +223,10 @@ public class GeneratePng {
         /*
          * Write the image to disk
          */
-        ImageIO.write(image, "png", new File("output.png"));
+        String fileLocation = "./output.png";
+        if(args != null && args.length > 0) {
+            fileLocation = args[0];
+        }
+        ImageIO.write(image, "png", new File(fileLocation));
     }
 }
