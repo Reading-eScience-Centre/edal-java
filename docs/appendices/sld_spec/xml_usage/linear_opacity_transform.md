@@ -4,6 +4,6 @@ The following example XML shows a reanalysis of sea surface temperature as a col
 [include](linear_opacity_transform.xml)
 
 The resulting output image and its legend are shown below:
-![](../image/lo_transform.png)
+![](../images/lo_transform.png)
 
-![](../image/lo_transform-legend.png)
+![](../images/lo_transform-legend.png)
