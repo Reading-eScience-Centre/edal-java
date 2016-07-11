@@ -4,6 +4,6 @@ The following example XML file shows a reanalysis of sea surface temperature as 
 [include](contours.xml)
 
 The resulting output image and its legend are shown below:
-![](contours.png)
+![](../images/contours.png)
 
-![](contours-legend.png)
+![](../images/contours-legend.png)
