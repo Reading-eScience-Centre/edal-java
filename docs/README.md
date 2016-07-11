@@ -4,7 +4,7 @@ This book contains documentation for both [ncWMS](ncwms/README.md), a [Web Map S
 
 The [source code of this book](https://github.com/Reading-eScience-Centre/edal-java/tree/master/docs) is hosted on GitHub alongside the source code of EDAL/ncWMS2. If you have any suggestions for improvement or want to contribute content (to either this guide or ncWMS itself), please create [an issue](https://github.com/Reading-eScience-Centre/edal-java/issues).
 
-![Global sea-surface temperature created by EDAL libraries](images/sst.png)
+![Global sea-surface temperature created by EDAL libraries](ncwms/images/sst.png)
 
 ## Licence
 Copyright (c) 2010-2016 The University of Reading
