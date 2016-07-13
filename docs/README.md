@@ -38,4 +38,4 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Authors and Contributors
 
-[@guygriffiths](https://github.com/guygriffiths), [@jonblower](https://github.com/jonblower)
+[@guygriffiths](https://github.com/guygriffiths), [@jonblower](https://github.com/jonblower), Charles Roberts (SLD spec)
