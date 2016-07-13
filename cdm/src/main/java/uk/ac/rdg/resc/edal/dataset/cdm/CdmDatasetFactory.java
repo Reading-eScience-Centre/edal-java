@@ -42,7 +42,7 @@ import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
-import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
+import uk.ac.rdg.resc.edal.dataset.plugins.ValueErrorPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
@@ -99,8 +99,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              * Scans the NetcdfDataset for variables which pair up as
              * mean/stddev, and adds the appropriate MeanSDPlugins
              */
-            List<MeanSDPlugin> uncerts = processUncertainty(nc);
-            for (MeanSDPlugin plugin : uncerts) {
+            List<ValueErrorPlugin> uncerts = processUncertainty(nc);
+            for (ValueErrorPlugin plugin : uncerts) {
                 dataset.addVariablePlugin(plugin);
             }
 
@@ -295,7 +295,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         return ret;
     }
 
-    private List<MeanSDPlugin> processUncertainty(NetcdfDataset nc) {
+    private List<ValueErrorPlugin> processUncertainty(NetcdfDataset nc) {
         /*
          * We look for NetCDF-U variables to group mean/standard-deviation.
          * 
@@ -350,25 +350,28 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
             }
         }
 
-        List<MeanSDPlugin> ret = new ArrayList<>();
+        List<ValueErrorPlugin> ret = new ArrayList<>();
         for (String statsCollectionId : varId2AncillaryVars.keySet()) {
             String[] ids = varId2AncillaryVars.get(statsCollectionId);
-            String meanId = null;
-            String stddevId = null;
+            String valueId = null;
+            String errorId = null;
             for (String statsVarIds : ids) {
                 String uncertRef = varId2UncertMLRefs.get(statsVarIds);
-                if (uncertRef != null
-                        && uncertRef.equalsIgnoreCase("http://www.uncertml.org/statistics/mean")) {
-                    meanId = statsVarIds;
+                if (valueId == null
+                        && ("http://www.uncertml.org/statistics/mean".equalsIgnoreCase(uncertRef)
+                                || "http://www.uncertml.org/statistics/median".equalsIgnoreCase(uncertRef)
+                                || "http://www.uncertml.org/statistics/mode".equalsIgnoreCase(uncertRef) 
+                                || "http://www.uncertml.org/statistics/moment".equalsIgnoreCase(uncertRef))) {
+                    valueId = statsVarIds;
                 }
-                if (uncertRef != null
-                        && uncertRef
-                                .equalsIgnoreCase("http://www.uncertml.org/statistics/standard-deviation")) {
-                    stddevId = statsVarIds;
+                if (errorId == null
+                        && ("http://www.uncertml.org/statistics/standard-deviation".equalsIgnoreCase(uncertRef)
+                                || "http://www.uncertml.org/statistics/variance".equalsIgnoreCase(uncertRef))) {
+                    errorId = statsVarIds;
                 }
             }
-            if (meanId != null && stddevId != null) {
-                MeanSDPlugin meanSDPlugin = new MeanSDPlugin(meanId, stddevId,
+            if (valueId != null && errorId != null) {
+                ValueErrorPlugin meanSDPlugin = new ValueErrorPlugin(valueId, errorId,
                         parentVarId2Title.get(statsCollectionId));
                 ret.add(meanSDPlugin);
             }
@@ -379,8 +382,9 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
     /**
      * Generate a {@link DiscreteLayeredDataset} for the given ID, location, and
      * {@link NetcdfDataset}. Subclasses should use this to generate a simple
-     * {@link DiscreteLayeredDataset} - i.e. one with no additional plugins etc. All required
-     * {@link VariablePlugin}s will be detected and handled by this class.
+     * {@link DiscreteLayeredDataset} - i.e. one with no additional plugins etc.
+     * All required {@link VariablePlugin}s will be detected and handled by this
+     * class.
      * 
      * @param id
      *            The ID of the {@link Dataset}

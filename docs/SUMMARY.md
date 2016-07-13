@@ -21,6 +21,7 @@
         * [CF Conventions](ncwms/05-data_formats.md#cf)
         * [Vector Data](ncwms/05-data_formats.md#vector)
         * [Categorical Data](ncwms/05-data_formats.md#categorical)
+        * [Uncertainty Data](ncwms/05-data_formats.md#uncertain)
     * [Development](ncwms/06-development.md)
         * [Adding new colour palettes](ncwms/06-development.md#palettes)
         * [Defining new style templates](ncwms/06-development.md#styles)

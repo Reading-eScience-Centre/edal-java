@@ -33,32 +33,35 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * A plugin to group mean and standard deviation of a single variable
+ * A plugin to group the value of a single variable with an associated error /
+ * uncertainty
  * 
  * @author Guy Griffiths
  */
-public class MeanSDPlugin extends VariablePlugin {
+public class ValueErrorPlugin extends VariablePlugin {
 
-    public final static String MEAN_ROLE = "mean";
-    public final static String STDDEV_ROLE = "stddev";
+    public final static String VALUE_ROLE = "value";
+    public final static String ERROR_ROLE = "error";
     public final static String UPPER_ROLE = "upperbound";
     public final static String LOWER_ROLE = "lowerbound";
 
-    public final static String GROUP = "stats_group";
+    public final static String GROUP = "uncertainty_group";
     private String title;
 
     /**
-     * Construct a new {@link MeanSDPlugin}
+     * Construct a new {@link ValueErrorPlugin}
      * 
-     * @param meanComponentId
+     * @param parentId
+     *            The ID of the parent group
+     * @param valueComponentId
      *            The ID of the variable representing the x-component
-     * @param sdComponentId
+     * @param errorComponentId
      *            The ID of the variable representing the y-component
      * @param title
      *            The title of the quantity which the components represent
      */
-    public MeanSDPlugin(String meanComponentId, String sdComponentId, String title) {
-        super(new String[] { meanComponentId, sdComponentId }, new String[] { UPPER_ROLE,
+    public ValueErrorPlugin(String valueComponentId, String errorComponentId, String title) {
+        super(new String[] { valueComponentId, errorComponentId }, new String[] { UPPER_ROLE,
                 LOWER_ROLE, GROUP });
         this.title = title;
     }
@@ -69,40 +72,40 @@ public class MeanSDPlugin extends VariablePlugin {
          * We get the same components we supply in the constructor, so this is
          * safe.
          */
-        VariableMetadata meanMetadata = metadata[0];
-        VariableMetadata sdMetadata = metadata[1];
+        VariableMetadata valueMetadata = metadata[0];
+        VariableMetadata errorMetadata = metadata[1];
 
         /*
-         * Find the original parent which the mean component belongs to (and
-         * almost certainly the sd component)
+         * Find the original parent which the value component belongs to (and
+         * almost certainly the error component)
          */
-        VariableMetadata parentMetadata = meanMetadata.getParent();
+        VariableMetadata parentMetadata = valueMetadata.getParent();
 
         /*
          * Create new metadata for the upper and lower bounds
          */
         VariableMetadata upperMetadata = newVariableMetadataFromMetadata(new Parameter(
                 getFullId(UPPER_ROLE), title + " upper bound", "The upper error bound of " + title
-                        + " i.e. mean + 1 std dev", meanMetadata.getParameter().getUnits(),
-                meanMetadata.getParameter().getStandardName()), true, meanMetadata, sdMetadata);
+                        + " i.e. value + error", valueMetadata.getParameter().getUnits(),
+                valueMetadata.getParameter().getStandardName()), true, valueMetadata, errorMetadata);
 
         VariableMetadata lowerMetadata = newVariableMetadataFromMetadata(new Parameter(
                 getFullId(LOWER_ROLE), title + " lower bound", "The lower error bound of " + title
-                        + " i.e. mean - 1 std dev", meanMetadata.getParameter().getUnits(),
-                meanMetadata.getParameter().getStandardName()), true, meanMetadata, sdMetadata);
+                        + " i.e. value - error", valueMetadata.getParameter().getUnits(),
+                valueMetadata.getParameter().getStandardName()), true, valueMetadata, errorMetadata);
 
         /*
          * Create a new container metadata object
          */
         VariableMetadata containerMetadata = newVariableMetadataFromMetadata(new Parameter(
                 getFullId(GROUP), title, "Statistics for " + title, null, null), false,
-                meanMetadata, sdMetadata);
+                valueMetadata, errorMetadata);
 
         /*
          * Set all components to have a new parent
          */
-        meanMetadata.setParent(containerMetadata, MEAN_ROLE);
-        sdMetadata.setParent(containerMetadata, STDDEV_ROLE);
+        valueMetadata.setParent(containerMetadata, VALUE_ROLE);
+        errorMetadata.setParent(containerMetadata, ERROR_ROLE);
         upperMetadata.setParent(containerMetadata, UPPER_ROLE);
         lowerMetadata.setParent(containerMetadata, LOWER_ROLE);
 
@@ -119,14 +122,13 @@ public class MeanSDPlugin extends VariablePlugin {
 
     @Override
     protected String combineIds(String... partsToUse) {
-        /*
-         * We override this, such that the combined ID is just the mean field.
+        /*-
+         * We override this, such that the combined ID is just the ID of the value component.
          * 
          * That way we will have things like:
-         * 
-         * mean_quantity-stats_group
-         * mean_quantity-upperbound
-         * mean_quantity-lowerbound
+         * quantity-stats_group
+         * quantity-upperbound
+         * quantity-lowerbound
          */
         return partsToUse[0];
     }

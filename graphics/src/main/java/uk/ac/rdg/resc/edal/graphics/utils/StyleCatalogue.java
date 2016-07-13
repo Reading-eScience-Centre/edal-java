@@ -68,8 +68,10 @@ public interface StyleCatalogue {
      *         <li>An empty string if the named layer is scaled
      * 
      *         <li>The child role which scaling is applied to
+     *         
+     *         TODO DOCUMENT MULTIPLE ROLES CASE
      */
-    public String getScaledRoleForStyle(String styleName);
+    public List<String> getScaledRoleForStyle(String styleName);
 
     /**
      * Returns a concrete {@link MapImage} for a given style

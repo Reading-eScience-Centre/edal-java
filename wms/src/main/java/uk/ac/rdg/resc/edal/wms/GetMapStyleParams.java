@@ -33,8 +33,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -50,6 +52,8 @@ import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 import uk.ac.rdg.resc.edal.graphics.utils.PlottingStyleParameters;
+import uk.ac.rdg.resc.edal.graphics.utils.StyleCatalogue;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.StyleNotSupportedException;
@@ -71,7 +75,7 @@ public class GetMapStyleParams {
     /* True if we're using a log scale */
     private Boolean logarithmic = null;
 
-    private Extent<Float> colourScaleRange = null;
+    private List<Extent<Float>> colourScaleRange = new ArrayList<>();
 
     /* true if we are using an XML style specification */
     private MapImage xmlMapImage = null;
@@ -172,7 +176,7 @@ public class GetMapStyleParams {
             opacity = 100;
         }
 
-        colourScaleRange = getColorScaleRange(params);
+        colourScaleRange = getColorScaleRanges(params);
 
         logarithmic = params.getBoolean("logscale", null);
 
@@ -185,29 +189,42 @@ public class GetMapStyleParams {
     /**
      * Gets the ColorScaleRange object requested by the client
      */
-    public static Extent<Float> getColorScaleRange(RequestParams params) throws EdalException {
+    public static List<Extent<Float>> getColorScaleRanges(RequestParams params)
+            throws EdalException {
+        List<Extent<Float>> ranges = new ArrayList<>();
         String csr = params.getString("colorscalerange");
-        if (csr == null || csr.equalsIgnoreCase("default")) {
-            /* The client wants the layer's default scale range to be used */
-            return Extents.emptyExtent();
-        } else if (csr.equalsIgnoreCase("auto")) {
+        if (csr == null) {
             /*
-             * The client wants the image to be scaled according to the image's
-             * own min and max values (giving maximum contrast)
+             * No scale range supplied - we want to use the default range
              */
-            return null;
-        } else {
-            /* The client has specified an explicit colour scale range */
-            String[] scaleEls = csr.split(",");
-            if (scaleEls.length == 0) {
-                return Extents.emptyExtent();
-            }
-            Float scaleMin = Float.parseFloat(scaleEls[0]);
-            Float scaleMax = Float.parseFloat(scaleEls[1]);
-            if (scaleMin > scaleMax)
-                throw new EdalException("Min > Max in COLORSCALERANGE");
-            return Extents.newExtent(scaleMin, scaleMax);
+            ranges.add(Extents.emptyExtent());
+            return ranges;
         }
+        String[] rangeStrings = csr.split(";");
+        for (String range : rangeStrings) {
+            if (range.isEmpty() || range.equalsIgnoreCase("default")) {
+                /* The client wants this layer's default scale range to be used */
+                ranges.add(Extents.emptyExtent());
+            } else if (range.equalsIgnoreCase("auto")) {
+                /*
+                 * The client wants to auto scale the range on this layer
+                 */
+                ranges.add(null);
+            } else {
+                /* The client has specified an explicit colour scale range */
+                String[] scaleEls = range.split(",");
+                if (scaleEls.length == 0) {
+                    ranges.add(Extents.emptyExtent());
+                } else {
+                    Float scaleMin = Float.parseFloat(scaleEls[0]);
+                    Float scaleMax = Float.parseFloat(scaleEls[1]);
+                    if (scaleMin > scaleMax)
+                        throw new EdalException("Min > Max in COLORSCALERANGE");
+                    ranges.add(Extents.newExtent(scaleMin, scaleMax));
+                }
+            }
+        }
+        return ranges;
     }
 
     /**
@@ -328,36 +345,90 @@ public class GetMapStyleParams {
          * b) the server-configured default scale range for this layer, or failing that
          * c) auto-scale
          */
-        Extent<Float> colourScaleRange;
-        if (this.colourScaleRange == null) {
-            /*
-             * This is the case where this.colorScaleRange is null and we want
-             * auto-scaling
-             */
-            colourScaleRange = null;
-        } else if (this.colourScaleRange.isEmpty()) {
-            /*
-             * We want to use the default scale range if possible
-             */
-            Extent<Float> defaultColourScaleRange = defaults.getColorScaleRange();
-            if (defaultColourScaleRange == null || defaultColourScaleRange.isEmpty()) {
+        List<Extent<Float>> colourScaleRanges = new ArrayList<>();
+
+        StyleCatalogue styleCatalogue = catalogue.getStyleCatalogue();
+        List<String> scaledRolesForStyle = styleCatalogue.getScaledRoleForStyle(plotStyleName);
+        for (int i = 0; i < scaledRolesForStyle.size(); i++) {
+            Extent<Float> colourScaleRange;
+            String scaledRole = scaledRolesForStyle.get(i);
+            if (i >= this.colourScaleRange.size()) {
                 /*
-                 * We have to auto-scale
+                 * We don't have a URL-defined colour scale range for this
+                 * element. This means that we must auto-scale this layer - i.e.
+                 * leave it null for now
                  */
                 colourScaleRange = null;
             } else {
-                colourScaleRange = defaultColourScaleRange;
+                Extent<Float> urlScaleRange = this.colourScaleRange.get(i);
+                if (urlScaleRange == null) {
+                    /*
+                     * This is the case where the URL-defined colour scale range
+                     * is specifically set to "auto". Again, we leave
+                     * colourScaleRange as null
+                     */
+                    colourScaleRange = null;
+                } else if (urlScaleRange.isEmpty()) {
+                    /*
+                     * We want to use the default scale range (if possible).
+                     * Currently we can only define a default range for the
+                     * first scaled layer.
+                     * 
+                     * TODO Add configuration for multiple default scale ranges
+                     */
+                    if (i == 0) {
+                        List<Extent<Float>> defaultColourScaleRange = defaults
+                                .getColorScaleRanges();
+                        if (defaultColourScaleRange == null || defaultColourScaleRange.isEmpty()) {
+                            /*
+                             * We have to auto-scale
+                             */
+                            colourScaleRange = null;
+                        } else {
+                            colourScaleRange = defaultColourScaleRange.get(0);
+                        }
+                    } else {
+                        /*
+                         * This is not the first scaled layer, so there is no
+                         * default - auto-scale it
+                         */
+                        colourScaleRange = null;
+                    }
+                } else {
+                    /*
+                     * We have a specified range to use
+                     */
+                    colourScaleRange = urlScaleRange;
+                }
             }
-        } else {
             /*
-             * We have a specified range to use
+             * If we now (for whatever reason) want to auto-scale this layer, do
+             * it.
              */
-            colourScaleRange = this.colourScaleRange;
-        }
-        if (colourScaleRange == null) {
-            colourScaleRange = GraphicsUtils.estimateValueRange(WmsUtils.getDatasetFromLayerName(
-                    layerName, catalogue), catalogue.getLayerNameMapper()
-                    .getVariableIdFromLayerName(layerName));
+            if (colourScaleRange == null) {
+                String varId;
+                if (scaledRole == null || scaledRole.isEmpty()) {
+                    /*
+                     * The layer to auto-scale is the named one.
+                     */
+                    varId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
+                } else {
+                    /*
+                     * The layer to auto-scale is a child layer with a given
+                     * role.
+                     */
+                    VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
+                            layerName, catalogue);
+                    VariableMetadata childWithRole = variableMetadata.getChildWithRole(scaledRole);
+                    varId = childWithRole.getId();
+                }
+                /*
+                 * Calculate the scale to use
+                 */
+                colourScaleRange = GraphicsUtils.estimateValueRange(
+                        WmsUtils.getDatasetFromLayerName(layerName, catalogue), varId);
+            }
+            colourScaleRanges.add(colourScaleRange);
         }
 
         /*-
@@ -390,13 +461,11 @@ public class GetMapStyleParams {
             numColourBands = ColourPalette.MAX_NUM_COLOURS;
         }
 
-        return catalogue.getStyleCatalogue().getMapImageFromStyle(
-                plotStyleName,
-                new PlottingStyleParameters(colourScaleRange, paletteName, aboveMaxColour,
-                        belowMinColour, backgroundColour, logarithmic, numColourBands,
-                        opacity / 100f),
-                WmsUtils.getVariableMetadataFromLayerName(layerName, catalogue),
-                catalogue.getLayerNameMapper());
+        return styleCatalogue.getMapImageFromStyle(plotStyleName, new PlottingStyleParameters(
+                colourScaleRanges, paletteName, aboveMaxColour, belowMinColour, backgroundColour,
+                logarithmic, numColourBands, opacity / 100f), WmsUtils
+                .getVariableMetadataFromLayerName(layerName, catalogue), catalogue
+                .getLayerNameMapper());
     }
 
     public boolean isTransparent() {

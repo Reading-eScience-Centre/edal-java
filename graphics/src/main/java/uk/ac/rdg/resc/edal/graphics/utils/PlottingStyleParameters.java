@@ -29,8 +29,10 @@
 package uk.ac.rdg.resc.edal.graphics.utils;
 
 import java.awt.Color;
+import java.util.List;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
  * Class defining the parameters which affect the style of a plot and which can
@@ -39,7 +41,7 @@ import uk.ac.rdg.resc.edal.domain.Extent;
  * @author Guy Griffiths
  */
 public class PlottingStyleParameters {
-    private final Extent<Float> scaleRange;
+    private final List<Extent<Float>> scaleRanges;
     private final String palette;
     private final Color aboveMaxColour;
     private final Color belowMinColour;
@@ -48,10 +50,10 @@ public class PlottingStyleParameters {
     private final Integer numColourBands;
     private final Float opacity;
 
-    public PlottingStyleParameters(Extent<Float> scaleRange, String palette, Color aboveMaxColour,
+    public PlottingStyleParameters(List<Extent<Float>> scaleRanges, String palette, Color aboveMaxColour,
             Color belowMinColour, Color noDataColour, Boolean logScaling, Integer numColourBands,
             Float opacity) {
-        this.scaleRange = scaleRange;
+        this.scaleRanges = scaleRanges;
         this.palette = palette;
         this.aboveMaxColour = aboveMaxColour;
         this.belowMinColour = belowMinColour;
@@ -60,12 +62,21 @@ public class PlottingStyleParameters {
         this.numColourBands = numColourBands;
         this.opacity = opacity;
     }
-
+    
     /**
-     * @return The scale range of this layer
+     * @return The first defined scale range of this layer
      */
     public Extent<Float> getColorScaleRange() {
-        return scaleRange;
+        if(scaleRanges == null || scaleRanges.isEmpty())
+            return Extents.emptyExtent();
+        return scaleRanges.get(0);
+    }
+
+    /**
+     * @return The scale ranges of this layer
+     */
+    public List<Extent<Float>> getColorScaleRanges() {
+        return scaleRanges;
     }
 
     /**

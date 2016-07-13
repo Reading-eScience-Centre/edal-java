@@ -4,7 +4,7 @@ StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://
 xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
   <NamedLayer>
-    <se:Name>$layerName-mean</se:Name>
+    <se:Name>$layerName-value</se:Name>
     <UserStyle>
       <se:CoverageStyle>
         <se:Rule>
@@ -32,7 +32,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
     </UserStyle>
   </NamedLayer>
   <NamedLayer>
-    <se:Name>$layerName-stddev</se:Name>
+    <se:Name>$layerName-error</se:Name>
     <UserStyle>
       <se:CoverageStyle>
         <se:Rule>
@@ -48,8 +48,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
                 </resc:ValueList>
                 <resc:AboveMaxValue>#FF000000</resc:AboveMaxValue>
                 <resc:Range>
-                  <resc:Minimum>0</resc:Minimum>
-                  <resc:Maximum>5</resc:Maximum>
+                  <resc:Minimum>$scaleMin1</resc:Minimum>
+                  <resc:Maximum>$scaleMax1</resc:Maximum>
                   <resc:Spacing>$logarithmic</resc:Spacing>
                 </resc:Range>
                 <resc:NumberOfSegments>$numColorBands</resc:NumberOfSegments>

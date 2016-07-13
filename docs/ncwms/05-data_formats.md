@@ -30,3 +30,28 @@ land_cover:flag_colors = "#FF0000 #006600 #732600 #00FF00 #FAAA00 #7FE57F #70A80
 
 Which will appear in Godiva3 as:
 ![Categorical data as viewed in Godiva3](images/godiva-land_cover.png)
+
+## Uncertainty Data {#uncertain}
+There is also support for visualising gridded uncertainty data in ncWMS.  To group uncertainty data, a subset of the [NetCDF-U conventions](https://portal.opengeospatial.org/files/46702) is used.  Specifically, in the dataset containing the data, a variable with associated uncertainty should be organised as follows:
+* There should be a parent grouping variable which contains no data, but has the following attributes:
+    * An attribute named `ref` with the value `http://www.uncertml.org/statistics/statistics-collection`
+    * An attribute named `ancillary_variables` whose values is a string with the space-separated IDs of the variables which represent the value and the error
+* The variable which represents the value which has an attached uncertainty must have an attribute named `ref`, which can take the following values:
+    * `http://www.uncertml.org/statistics/mean`
+    * `http://www.uncertml.org/statistics/median`
+    * `http://www.uncertml.org/statistics/mode`
+    * `http://www.uncertml.org/statistics/moment`
+* The variable which represents the uncertainty of the above value must have an attribute named `ref`, which can take the following values:
+    * `http://www.uncertml.org/statistics/standard-deviation`
+    * `http://www.uncertml.org/statistics/variance`
+    
+Data defined in this way will be automatically made available as a grouped set of variables, along with 2 additional variables representing the upper and lower bounds of the value (i.e. the value +/- its associated error).
+
+By default, visualisation of the parent group will result in the standard raster representation of the data overlaid with a black layer whose opacity depends on the uncertainty.  In Godiva3, the uncertainty is automatically scaled.  However, for finer control, the `COLORSCALERANGE` URL parameter in `GetMap` can be extended by appending a second scale range after a semicolon.  For example: `COLORSCALERANGE=270,310;0,2` will give the main colour range as 270-310, and the uncertainty scale as 0-2.
+
+![The default uncertainty visualisation](images/godiva-uncert.png)
+
+There are also several other supported styles for visualising uncertainty:
+* `uncert-confidencebounds` - This plots a series of 8x8 pixel glyphs, where the upper-left half is coloured according to the upper bound of the value, and the lower-right half is coloured accoring to the lower bound of the value.  This has the effect of producing a smooth effect in areas of low uncertainty, and a more jagged disconnected effect in areas of high uncertainty
+* `uncert-contours` - This plots the values in the standard raster representation with the uncertainty values shown as contours over the top.  10 contour lines will be displayed, and the contour value range is sensitive to the `COLORSCALERANGE` extension.
+* `uncert-stippled` - This plots the values in the standard raster representation with the uncertainty values shown as stippling over the top.  There are 9 levels of stippling, and the range is again sensitive to the `COLORSCALERANGE` extension.

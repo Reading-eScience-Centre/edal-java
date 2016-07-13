@@ -321,6 +321,7 @@ public class WmsServlet extends HttpServlet {
         } catch (Exception e) {
             log.error("Problem with GET request", e);
             /* An unexpected (internal) error has occurred */
+            e.printStackTrace();
             throw new IOException(e);
         }
     }
@@ -437,17 +438,19 @@ public class WmsServlet extends HttpServlet {
 
             converter.checkFeaturesSupported(features);
             try {
-            	if (features.size() == 1) {
-            		converter.convertFeatureToJson(httpServletResponse.getOutputStream(), features.get(0));
-            	} else {
-            		// vectors are currently multiple features each with one parameter
-            		// TODO group features with identical domain into single feature
-            		converter.convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
-            	}
-			} catch (IOException e) {
-				log.error("Problem writing CoverageJSON to output stream", e);
-			}
-            
+                if (features.size() == 1) {
+                    converter.convertFeatureToJson(httpServletResponse.getOutputStream(),
+                            features.get(0));
+                } else {
+                    // vectors are currently multiple features each with one parameter
+                    // TODO group features with identical domain into single feature
+                    converter
+                            .convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+                }
+            } catch (IOException e) {
+                log.error("Problem writing CoverageJSON to output stream", e);
+            }
+
             return;
         }
 
@@ -1089,10 +1092,7 @@ public class WmsServlet extends HttpServlet {
         String units = variableMetadata.getParameter().getUnits();
         BoundingBox boundingBox = GISUtils.constrainBoundingBox(variableMetadata
                 .getHorizontalDomain().getBoundingBox());
-        Extent<Float> scaleRange = defaultProperties.getColorScaleRange();
-        if (scaleRange == null) {
-            scaleRange = Extents.emptyExtent();
-        }
+
         Integer numColorBands = defaultProperties.getNumColorBands();
         if (numColorBands == null) {
             numColorBands = 250;
@@ -1177,10 +1177,31 @@ public class WmsServlet extends HttpServlet {
         bboxJson.add(boundingBox.getMaxY());
         layerDetails.put("bbox", bboxJson);
 
-        JSONArray scaleRangeJson = new JSONArray();
-        scaleRangeJson.add(scaleRange.getLow());
-        scaleRangeJson.add(scaleRange.getHigh());
-        layerDetails.put("scaleRange", scaleRangeJson);
+        List<Extent<Float>> scaleRanges = defaultProperties.getColorScaleRanges();
+        if (scaleRanges == null || scaleRanges.isEmpty()) {
+            scaleRanges = new ArrayList<>();
+            scaleRanges.add(Extents.emptyExtent());
+        }
+        int s = 0;
+        for (Extent<Float> scaleRange : scaleRanges) {
+            /*
+             * This writes out the main scaleRange followed by scaleRangeX
+             * objects for additional configured default scale ranges. At the
+             * time of writing this comment, only one default scale range can be
+             * configured, but this may change in future (since multiple scale
+             * ranges are permitted on the URL for those layers which support
+             * them - currently just uncertainty images)
+             */
+            JSONArray scaleRangeJson = new JSONArray();
+            scaleRangeJson.add(scaleRange.getLow());
+            scaleRangeJson.add(scaleRange.getHigh());
+            if (s == 0) {
+                layerDetails.put("scaleRange", scaleRangeJson);
+            } else {
+                layerDetails.put("scaleRange" + s, scaleRangeJson);
+            }
+            s++;
+        }
 
         layerDetails.put("numColorBands", numColorBands);
 
@@ -1646,7 +1667,12 @@ public class WmsServlet extends HttpServlet {
         /*
          * Now find which layer the scale is being applied to
          */
-        String scaledLayerRole = catalogue.getStyleCatalogue().getScaledRoleForStyle(styleName);
+        List<String> scaledLayerRoles = catalogue.getStyleCatalogue().getScaledRoleForStyle(
+                styleName);
+        String scaledLayerRole = null;
+        if (scaledLayerRoles.size() > 0) {
+            scaledLayerRole = scaledLayerRoles.get(0);
+        }
         if (scaledLayerRole == null) {
             /*
              * No layer has scaling - we can return anything
@@ -1800,10 +1826,6 @@ public class WmsServlet extends HttpServlet {
                 throw new MetadataException("Time string is not ISO8601 formatted");
             }
             if (startIndex < 0 || endIndex < 0) {
-                /*
-                 * TODO This was previous behavious in ncWMS, but there's no
-                 * strong reason for it
-                 */
                 throw new MetadataException(
                         "For animation timesteps, both start and end times must be part of the axis");
             }
@@ -2240,9 +2262,15 @@ public class WmsServlet extends HttpServlet {
             String paletteName = params.getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
             int numColourBands = params.getPositiveInt("numcolorbands",
                     ColourPalette.MAX_NUM_COLOURS);
-            Extent<Float> scaleRange = GetMapStyleParams.getColorScaleRange(params);
-            if (scaleRange == null || scaleRange.isEmpty()) {
-                scaleRange = Extents.newExtent(270f, 300f);
+            List<Extent<Float>> scaleRanges = GetMapStyleParams.getColorScaleRanges(params);
+            Extent<Float> scaleRange;
+            if (scaleRanges == null || scaleRanges.isEmpty()) {
+                scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
+            } else {
+                scaleRange = scaleRanges.get(0);
+                if(scaleRange == null || scaleRange.isEmpty()) {
+                    scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
+                }
             }
             ScaleRange colourScale = new ScaleRange(scaleRange.getLow(), scaleRange.getHigh(),
                     params.getBoolean("logscale", false));

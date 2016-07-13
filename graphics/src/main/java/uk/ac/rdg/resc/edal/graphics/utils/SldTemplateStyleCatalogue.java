@@ -38,6 +38,7 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -266,8 +267,8 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
     }
 
     @Override
-    public String getScaledRoleForStyle(String styleName) {
-        return styleDefs.get(styleName).scaledLayerRole;
+    public List<String> getScaledRoleForStyle(String styleName) {
+        return styleDefs.get(styleName).scaledLayerRoles;
     }
 
     @Override
@@ -316,9 +317,17 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          */
         VelocityContext context = new VelocityContext();
         context.put("paletteName", templateProperties.getPalette());
-        Extent<Float> colourScaleRange = templateProperties.getColorScaleRange();
-        context.put("scaleMin", colourScaleRange.getLow());
-        context.put("scaleMax", colourScaleRange.getHigh());
+        List<Extent<Float>> colourScaleRanges = templateProperties.getColorScaleRanges();
+        for (int i = 0; i < colourScaleRanges.size(); i++) {
+            Extent<Float> scaleRange = colourScaleRanges.get(i);
+            if(i == 0) {
+                context.put("scaleMin", scaleRange.getLow());
+                context.put("scaleMax", scaleRange.getHigh());
+            } else {
+                context.put("scaleMin" + i, scaleRange.getLow());
+                context.put("scaleMax" + i, scaleRange.getHigh());
+            }
+        }
         context.put("logarithmic", templateProperties.isLogScaling() ? "logarithmic" : "linear");
         context.put("numColorBands", templateProperties.getNumColorBands());
         context.put("bgColor", GraphicsUtils.colourToString(templateProperties.getNoDataColour()));
@@ -465,18 +474,21 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         Document doc = builder.parse(IOUtils.toInputStream(xmlString));
         NodeList xmlNodes = doc.getChildNodes();
 
-        String scaledLayer = null;
         boolean usesPalette = false;
         boolean needsNamedLayer = false;
         Set<String> requiredChildren = new HashSet<String>();
 
         /*
-         * Find the layer name which uses the scaling URL arguments (if any)
+         * Find the layer names which uses the scaling URL arguments (if any)
          */
-        Node scaleMinNode = findScaleMinNode(xmlNodes);
-        if (scaleMinNode != null) {
-            scaledLayer = getScaledLayerName(scaleMinNode);
+        Map<Integer, Node> scaleMinNodes = findScaleMinNodes(xmlNodes);
+        List<String> scaledLayers = new ArrayList<>();
+        List<Integer> scaleIndices = new ArrayList<>(scaleMinNodes.keySet());
+        Collections.sort(scaleIndices);
+        for (Integer scaleIndex : scaleIndices) {
+            scaledLayers.add(getScaledLayerName(scaleMinNodes.get(scaleIndex)));
         }
+
         /*
          * Find out whether this style uses a palette
          */
@@ -504,6 +516,10 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          * arbitrary text) with real values (for example, if we try to parse the
          * XML fragment <scaleMin>$scaleMin</scaleMin> we should get an error,
          * since the <scaleMin> tag needs a numerical value.
+         * 
+         * The fact that we allow additional $scaleMin/Max tags is fine. They
+         * will get replaced with tags which are also numerical. e.g. $scaleMax2
+         * would go to $scaleMax210, which still parses fine.
          */
 
         xmlString = xmlString.replaceAll("\\$scaleMin", "0");
@@ -572,7 +588,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         }
 
         return new StyleDef(name, requiredChildren, usesPalette, isCategorical, needsNamedLayer,
-                scaledLayer, roles2FeatureType, metadataFilters);
+                scaledLayers, roles2FeatureType, metadataFilters);
     }
 
     /**
@@ -584,7 +600,8 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
      * @return The {@link Node} containing "$scaleMin", or <code>null</code> if
      *         none exists
      */
-    private static Node findScaleMinNode(NodeList nodes) {
+    private static Map<Integer, Node> findScaleMinNodes(NodeList nodes) {
+        Map<Integer, Node> retNodes = new HashMap<>();
         /*
          * Recursively search through the tree for the tag "$scaleMin"
          */
@@ -594,9 +611,9 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 /*
                  * Search all child nodes first
                  */
-                Node scaleMinNode = findScaleMinNode(node.getChildNodes());
-                if (scaleMinNode != null) {
-                    return scaleMinNode;
+                Map<Integer, Node> scaleMinNodes = findScaleMinNodes(node.getChildNodes());
+                if (scaleMinNodes.size() > 0) {
+                    retNodes.putAll(scaleMinNodes);
                 }
             }
             /*
@@ -604,13 +621,15 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
              */
             String nodeText = node.getTextContent();
             if (nodeText != null && nodeText.matches(".*\\$scaleMin.*")) {
-                return node;
+                String numericalText = nodeText.replace("$scaleMin", "").trim();
+                if (numericalText.isEmpty()) {
+                    retNodes.put(0, node);
+                } else {
+                    retNodes.put(Integer.parseInt(numericalText), node);
+                }
             }
         }
-        /*
-         * Nothing found in any of this NodeList, return null
-         */
-        return null;
+        return retNodes;
     }
 
     /**
@@ -782,7 +801,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          *         empty string if the parent layer is the scaled one, and
          *         <code>null</code> if no layers use the scale information.
          */
-        private String scaledLayerRole;
+        private List<String> scaledLayerRoles;
         private Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType;
         private Map<String, MetadataFilter> role2MetadataFilter;
 
@@ -802,7 +821,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          *            Whether this style needs the requested layer to plot. For
          *            example, a vector style <i>only</i> needs child members to
          *            plot, so this would be <code>false</code>
-         * @param scaledLayerRole
+         * @param scaledLayers
          *            If this style uses child layers, which child role should
          *            scale info apply to
          * @param roles2FeatureType
@@ -819,7 +838,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          *            plottable
          */
         public StyleDef(String styleName, Collection<String> requiredChildren, boolean usesPalette,
-                boolean isCategorical, boolean needsNamedLayer, String scaledLayerRole,
+                boolean isCategorical, boolean needsNamedLayer, List<String> scaledLayers,
                 Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType,
                 Map<String, MetadataFilter> role2MetadataFilter) {
             super();
@@ -827,7 +846,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             this.requiredChildRoles = new ArrayList<String>(requiredChildren);
             this.usesPalette = usesPalette;
             this.needsNamedLayer = needsNamedLayer;
-            this.scaledLayerRole = scaledLayerRole;
+            this.scaledLayerRoles = scaledLayers;
             this.roles2FeatureType = roles2FeatureType;
             this.role2MetadataFilter = role2MetadataFilter;
         }

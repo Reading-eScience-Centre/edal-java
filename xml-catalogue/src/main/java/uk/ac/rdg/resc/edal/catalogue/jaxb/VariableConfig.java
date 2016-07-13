@@ -29,6 +29,8 @@
 package uk.ac.rdg.resc.edal.catalogue.jaxb;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -42,8 +44,8 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
 import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
-import uk.ac.rdg.resc.edal.graphics.utils.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils.ColorAdapter;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 /**
@@ -151,8 +153,12 @@ public class VariableConfig implements EnhancedVariableMetadata {
         /*
          * TODO make opacity a configurable property? Or just controllable from
          * WMS URL parameters (currently the case)
+         * 
+         * TODO Support configuration of multiple default scale ranges
          */
-        return new PlottingStyleParameters(colorScaleRange, paletteName, aboveMaxColour,
+        List<Extent<Float>> scaleRanges = new ArrayList<>();
+        scaleRanges.add(colorScaleRange);
+        return new PlottingStyleParameters(scaleRanges, paletteName, aboveMaxColour,
                 belowMinColour, noDataColour, logScale, numColorBands, 1f);
     }
 
