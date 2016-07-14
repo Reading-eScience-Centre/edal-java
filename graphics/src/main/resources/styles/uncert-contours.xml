@@ -39,16 +39,15 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
           <resc:ContourSymbolizer>
             <se:Opacity>1.0</se:Opacity>
             <resc:NumberOfContours>10</resc:NumberOfContours>
-            <resc:ContourLineColour>#FF000000</resc:ContourLineColour>
+            <resc:ContourLineColour>black</resc:ContourLineColour>
             <resc:ContourLineWidth>1</resc:ContourLineWidth>
-            <resc:ContourLineStyle>DASHED</resc:ContourLineStyle>
+            <resc:ContourLineStyle>SOLID</resc:ContourLineStyle>
             <resc:LabelEnabled>true</resc:LabelEnabled>
             <resc:Range>
               <resc:Minimum>$scaleMin1</resc:Minimum>
               <resc:Maximum>$scaleMax1</resc:Maximum>
               <resc:Spacing>$logarithmic</resc:Spacing>
             </resc:Range>
-            <resc:AutoRangeEnabled>false</resc:AutoRangeEnabled>
           </resc:ContourSymbolizer>
         </se:Rule>
       </se:CoverageStyle>
