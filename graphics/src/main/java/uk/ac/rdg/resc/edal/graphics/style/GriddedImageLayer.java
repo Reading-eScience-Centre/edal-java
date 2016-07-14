@@ -41,13 +41,13 @@ import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * An {@link ImageLayer} which handles a single {@link GridFeature} for every

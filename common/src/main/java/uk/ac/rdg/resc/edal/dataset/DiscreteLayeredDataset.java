@@ -38,6 +38,7 @@ import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
@@ -55,7 +56,7 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
- * A partial implementation of an {@link AbstractPluginEnabledDataset} based on
+ * A partial implementation of an {@link HorizontallyDiscreteDataset} based on
  * a 4D dataset where the z- and t-dimensions are discrete axes. The horizontal
  * dimension is not necessarily separable into 2 axes. This class is a parent
  * class for both {@link GriddedDataset} (a full 4d grid) and
@@ -72,14 +73,14 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Jon Blower
  */
 public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends DiscreteLayeredVariableMetadata>
-        extends AbstractPluginEnabledDataset<DS> {
+        extends HorizontallyDiscreteDataset<DS> {
     public DiscreteLayeredDataset(String id, Collection<VM> vars) {
         super(id, vars);
     }
 
     @Override
     protected final Array2D<Number> readUnderlyingHorizontalData(String varId,
-            HorizontalGrid targetGrid, Double zPos, DateTime time, DS dataSource)
+            MapDomain domain, DS dataSource)
             throws DataReadingException, VariableNotFoundException {
         VM metadata = getNonDerivedVariableMetadata(varId);
 
@@ -92,10 +93,10 @@ public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends D
         /*
          * Use these objects to convert natural coordinates to grid indices
          */
-        int tIndex = getTimeIndex(time, tAxis, varId);
-        int zIndex = getVerticalIndex(zPos, zAxis, varId);
+        int tIndex = getTimeIndex(domain.getTime(), tAxis, varId);
+        int zIndex = getVerticalIndex(domain.getZ(), zAxis, varId);
 
-        return extractHorizontalData(metadata, tIndex, zIndex, targetGrid, dataSource);
+        return extractHorizontalData(metadata, tIndex, zIndex, domain, dataSource);
     }
 
     @Override

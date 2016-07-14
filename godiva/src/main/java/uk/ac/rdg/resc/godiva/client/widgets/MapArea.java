@@ -276,9 +276,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
          * Because the animation is just an animated GIF, we use Image for our
          * OpenLayers layer
          */
-        animLayer = new Image("Animation Layer", wmsUrl + "?"
-                + url.toString(), map.getExtent(), map.getSize(),
-                opts);
+        animLayer = new Image("Animation Layer", wmsUrl + "?" + url.toString(), map.getExtent(),
+                map.getSize(), opts);
         animLayer.addLayerLoadStartListener(new LayerLoadStartListener() {
             @Override
             public void onLoadStart(LoadStartEvent eventObject) {
@@ -334,7 +333,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
              */
             if (animLayerLoading) {
                 /*
-                 * The layer is still loading, but is no longer required.  Cancel it.
+                 * The layer is still loading, but is no longer required. Cancel
+                 * it.
                  */
                 animLayerLoading = false;
                 loadEndListener.onLoadEnd(null);
@@ -540,8 +540,13 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             public void onGetFeatureInfo(GetFeatureInfoEvent eventObject) {
                 String pixels[] = eventObject.getJSObject().getProperty("xy").toString().split(",");
 
-                final int mapXClick = Integer.parseInt(pixels[0].substring(2));
-                final int mapYClick = Integer.parseInt(pixels[1].substring(2));
+                /*
+                 * Parse as float and then cast to int. This is because if a
+                 * browser-based zoom is applied, we can get floating point
+                 * values for pixels due to rounding errors
+                 */
+                final int mapXClick = (int) Float.parseFloat(pixels[0].substring(2));
+                final int mapYClick = (int) Float.parseFloat(pixels[1].substring(2));
 
                 int x = mapXClick + MapArea.this.getAbsoluteLeft();
                 int y = mapYClick + MapArea.this.getAbsoluteTop();
@@ -592,24 +597,35 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                      * If we have multiple depths, we can plot a vertical
                      * profile here
                      */
-                    final String parameters = "REQUEST=GetVerticalProfile" + "&LAYERS=" + layer
-                            + "&QUERY_LAYERS=" + layer + "&BBOX=" + map.getExtent().toBBox(4)
-                            + "&SRS=" + currentProjection + "&FEATURE_COUNT=5" + "&HEIGHT="
-                            + ((int) map.getSize().getHeight()) + "&WIDTH="
-                            + ((int) map.getSize().getWidth()) + "&X=" + mapXClick + "&Y="
-                            + mapYClick + "&STYLES=default/default"
-                            + ((targetTimeStr != null) ? ("&TARGETTIME=" + URL.encodeQueryString(targetTimeStr)) : "")
-                            + ((timeStr != null) ? ("&TIME=" + URL.encodeQueryString(timeStr)) : "") + "&VERSION=1.1.1";
+                    final String parameters = "REQUEST=GetVerticalProfile"
+                            + "&LAYERS="
+                            + layer
+                            + "&QUERY_LAYERS="
+                            + layer
+                            + "&BBOX="
+                            + map.getExtent().toBBox(4)
+                            + "&SRS="
+                            + currentProjection
+                            + "&FEATURE_COUNT=5"
+                            + "&HEIGHT="
+                            + ((int) map.getSize().getHeight())
+                            + "&WIDTH="
+                            + ((int) map.getSize().getWidth())
+                            + "&X="
+                            + mapXClick
+                            + "&Y="
+                            + mapYClick
+                            + "&STYLES=default/default"
+                            + ((targetTimeStr != null) ? ("&TARGETTIME=" + URL
+                                    .encodeQueryString(targetTimeStr)) : "")
+                            + ((timeStr != null) ? ("&TIME=" + URL.encodeQueryString(timeStr)) : "")
+                            + "&VERSION=1.1.1";
                     Anchor profilePlot = new Anchor("Vertical Profile Plot");
                     profilePlot.addClickHandler(new ClickHandler() {
                         @Override
                         public void onClick(ClickEvent event) {
-                            displayImagePopup(
-                                    proxyUrl
-                                            + wmsUrl
-                                            + "?"
-                                            + parameters
-                                            + "&INFO_FORMAT=image/png", "Vertical Profile");
+                            displayImagePopup(proxyUrl + wmsUrl + "?" + parameters
+                                    + "&INFO_FORMAT=image/png", "Vertical Profile");
                             pop.hide();
                         }
                     });
@@ -620,13 +636,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         profileDownload.addClickHandler(new ClickHandler() {
                             @Override
                             public void onClick(ClickEvent event) {
-                                Window.open(
-                                        proxyUrl
-                                                + wmsUrl
-                                                + "?"
-                                                + parameters
-                                                + "&INFO_FORMAT=text/csv",
-                                        "Vertical Profile Data", null);
+                                Window.open(proxyUrl + wmsUrl + "?" + parameters
+                                        + "&INFO_FORMAT=text/csv", "Vertical Profile Data", null);
                                 pop.hide();
                             }
                         });
@@ -664,15 +675,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                             timeSelector.setTimeSelectionHandler(new StartEndTimeHandler() {
                                 @Override
                                 public void timesReceived(String startDateTime, String endDateTime) {
-                                    displayImagePopup(
-                                            proxyUrl
-                                                    + wmsUrl
-                                                    + "?"
-                                                    + parameters
-                                                    + "&TIME=" + startDateTime + "/"
-                                                    + endDateTime
-                                                    + "&INFO_FORMAT=image/png",
-                                            "Time series");
+                                    displayImagePopup(proxyUrl + wmsUrl + "?" + parameters
+                                            + "&TIME=" + startDateTime + "/" + endDateTime
+                                            + "&INFO_FORMAT=image/png", "Time series");
                                     timeSelector.hide();
                                 }
                             });
@@ -703,15 +708,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                                     @Override
                                     public void timesReceived(String startDateTime,
                                             String endDateTime) {
-                                        Window.open(
-                                                proxyUrl
-                                                        + wmsUrl
-                                                        + "?"
-                                                        + parameters
-                                                        + "&TIME=" + startDateTime + "/"
-                                                        + endDateTime
-                                                        + "&INFO_FORMAT=text/csv",
-                                                "Time series data", null);
+                                        Window.open(proxyUrl + wmsUrl + "?" + parameters + "&TIME="
+                                                + startDateTime + "/" + endDateTime
+                                                + "&INFO_FORMAT=text/csv", "Time series data", null);
                                         timeSelector.hide();
                                     }
                                 });
@@ -1334,9 +1333,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                         getFeatureInfo.deactivate();
                         getFeatureInfo.activate();
                     }
-                    displayImagePopup(
-                            wmsAndParams.wmsUrl + "?"
-                                    + transectParams, "Transect");
+                    displayImagePopup(wmsAndParams.wmsUrl + "?" + transectParams, "Transect");
                 }
             }
 

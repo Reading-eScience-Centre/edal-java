@@ -9,7 +9,7 @@ import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Node;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 
 public abstract class AbstractSLDFunction<T> implements SLDFunction<T> {
 
@@ -45,7 +45,7 @@ public abstract class AbstractSLDFunction<T> implements SLDFunction<T> {
                 XPathConstants.STRING);
         Float noDataValue = null;
         if (!(fallbackValue == null) && !(fallbackValue.equals(""))) {
-            noDataValue = Float.parseFloat(fallbackValue);
+            noDataValue = Float.parseFloat(fallbackValue.trim());
         }
         return noDataValue;
     }

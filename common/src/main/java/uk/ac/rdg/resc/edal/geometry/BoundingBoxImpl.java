@@ -32,7 +32,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.geotoolkit.referencing.CRS;
 import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.opengis.geometry.Envelope;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystem;
@@ -102,6 +104,21 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
     public BoundingBoxImpl(GeographicBoundingBox gbb) {
         this(gbb.getWestBoundLongitude(), gbb.getSouthBoundLatitude(), gbb.getEastBoundLongitude(),
                 gbb.getNorthBoundLatitude(), DefaultGeographicCRS.WGS84);
+    }
+
+    /**
+     * Creates a {@link BoundingBox} from a {@link CoordinateReferenceSystem},
+     * where the bounds are the limits of validity of the CRS
+     * 
+     * @param crs
+     */
+    public BoundingBoxImpl(CoordinateReferenceSystem crs) {
+        Envelope envelope = CRS.getEnvelope(crs);
+        this.minx = envelope.getMinimum(0);
+        this.maxx = envelope.getMaximum(0);
+        this.miny = envelope.getMinimum(1);
+        this.maxy = envelope.getMaximum(1);
+        this.crs = crs;
     }
 
     @Override

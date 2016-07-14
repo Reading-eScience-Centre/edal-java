@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<StyledLayerDescriptor version="1.1.0"
+  xsi:schemaLocation="http://www.opengis.net/sld
+StyledLayerDescriptor.xsd"
+  xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc"
+  xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
+  <NamedLayer>
+    <se:Name>$layerName-value</se:Name>
+    <UserStyle>
+      <se:CoverageStyle>
+        <se:Rule>
+          <se:RasterSymbolizer>
+            <se:Opacity>$opacity</se:Opacity>
+            <se:ColorMap>
+              <resc:Segment fallbackValue="$bgColor">
+                <se:LookupValue>Rasterdata</se:LookupValue>
+                <resc:BelowMinValue>$belowMinColor</resc:BelowMinValue>
+                <resc:ValueList>
+                  <se:Name>$paletteName</se:Name>
+                </resc:ValueList>
+                <resc:AboveMaxValue>$aboveMaxColor</resc:AboveMaxValue>
+                <resc:Range>
+                  <resc:Minimum>$scaleMin</resc:Minimum>
+                  <resc:Maximum>$scaleMax</resc:Maximum>
+                  <resc:Spacing>$logarithmic</resc:Spacing>
+                </resc:Range>
+                <resc:NumberOfSegments>$numColorBands</resc:NumberOfSegments>
+              </resc:Segment>
+            </se:ColorMap>
+          </se:RasterSymbolizer>
+        </se:Rule>
+      </se:CoverageStyle>
+    </UserStyle>
+  </NamedLayer>
+  <NamedLayer>
+    <se:Name>$layerName-error</se:Name>
+    <UserStyle>
+      <se:Name>Stippling showing error</se:Name>
+      <se:CoverageStyle>
+        <se:Rule>
+          <resc:StippleSymbolizer>
+            <se:Opacity>$opacity</se:Opacity>
+            <resc:Segment fallbackValue="0.0">
+              <se:LookupValue>Rasterdata</se:LookupValue>
+              <resc:ValueList>
+                <se:Value>0.0</se:Value>
+                <se:Value>1.0</se:Value>
+              </resc:ValueList>
+              <resc:Range>
+                <resc:Minimum>$scaleMin1</resc:Minimum>
+                <resc:Maximum>$scaleMax1</resc:Maximum>
+                <resc:Spacing>$logarithmic</resc:Spacing>
+              </resc:Range>
+              <resc:NumberOfSegments>9</resc:NumberOfSegments>
+            </resc:Segment>
+          </resc:StippleSymbolizer>
+        </se:Rule>
+      </se:CoverageStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>

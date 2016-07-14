@@ -10,7 +10,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import uk.ac.rdg.resc.edal.graphics.style.InterpolationPoint;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 
 public class ColorSLDInterpolateFunction extends
 		AbstractSLDInterpolateFunction<Color> {
@@ -39,7 +39,7 @@ public class ColorSLDInterpolateFunction extends
 					throw new SLDException("Each interpolation point must contain a value element.");
 				}
 				interpolationPoints.add(new InterpolationPoint<Color>(
-						Float.parseFloat(dataNode.getTextContent()),
+						Float.parseFloat(dataNode.getTextContent().trim()),
 						GraphicsUtils.parseColour(valueNode.getTextContent())));
 			}
 		} catch(Exception e) {

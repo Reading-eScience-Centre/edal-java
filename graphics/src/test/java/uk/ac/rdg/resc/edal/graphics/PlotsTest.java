@@ -47,7 +47,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import uk.ac.rdg.resc.edal.domain.MapDomain;
-import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
@@ -70,11 +69,11 @@ import uk.ac.rdg.resc.edal.graphics.style.ThresholdColourScheme2D;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDException;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * These tests plot a predictable (in-memory) dataset with missing values, and
@@ -109,7 +108,7 @@ public class PlotsTest {
         BoundingBox bbox = new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84);
 
         RegularGrid hGrid = new RegularGridImpl(bbox, WIDTH, HEIGHT);
-        MapDomain domain = new MapDomainImpl(hGrid, null, null, null);
+        MapDomain domain = new MapDomain(hGrid, null, null, null);
         Map<String, Array2D<Number>> valuesMap = new HashMap<String, Array2D<Number>>();
 
         /*

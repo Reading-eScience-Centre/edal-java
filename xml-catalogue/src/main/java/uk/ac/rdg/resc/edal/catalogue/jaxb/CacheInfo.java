@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
 
 /**
  * The required information to configure an in-memory cache in a

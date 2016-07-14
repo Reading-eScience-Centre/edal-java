@@ -11,7 +11,7 @@ import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SizedArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 
 public class SLDSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
 
@@ -26,13 +26,13 @@ public class SLDSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
                 XPathConstants.STRING);
         Integer arrowMinSize = 4;
         if (!(arrowMinSizeText == null) && !(arrowMinSizeText.equals(""))) {
-            arrowMinSize = Integer.parseInt(arrowMinSizeText);
+            arrowMinSize = Integer.parseInt(arrowMinSizeText.trim());
         }
         String arrowMaxSizeText = (String) xPath.evaluate("./resc:ArrowMaxSize", symbolizerNode,
                 XPathConstants.STRING);
         Integer arrowMaxSize = 12;
         if (!(arrowMaxSizeText == null) && !(arrowMaxSizeText.equals(""))) {
-            arrowMaxSize = Integer.parseInt(arrowMaxSizeText);
+            arrowMaxSize = Integer.parseInt(arrowMaxSizeText.trim());
         }
         String arrowSizeField = (String) xPath.evaluate("./resc:ArrowSizeField", symbolizerNode,
                 XPathConstants.STRING);

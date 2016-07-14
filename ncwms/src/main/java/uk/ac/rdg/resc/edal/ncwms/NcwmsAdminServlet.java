@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.CacheInfo;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.DatasetConfig;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.VariableConfig;
-import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
 import uk.ac.rdg.resc.edal.ncwms.config.NcwmsContact;
 import uk.ac.rdg.resc.edal.ncwms.config.NcwmsDynamicService;
 import uk.ac.rdg.resc.edal.ncwms.config.NcwmsServerInfo;
@@ -93,7 +93,7 @@ public class NcwmsAdminServlet extends HttpServlet {
             throw new ServletException(
                     "ncWMS configuration object is incorrect type.  The \"NcwmsCatalogue\" attribute of the ServletContext has been incorrectly set.");
         }
-        
+
         /*
          * Retrieve the pre-loaded velocity engine
          */
@@ -123,6 +123,15 @@ public class NcwmsAdminServlet extends HttpServlet {
          * Parse the request
          */
         String path = request.getPathInfo();
+
+        /*
+         * Redirect URLs of the form http://hostname/ncWMS2/admin to
+         * http://hostname/ncWMS2/admin/
+         */
+        if (path == null) {
+            response.sendRedirect(request.getRequestURI() + "/");
+            return;
+        }
 
         if ("/".equals(path)) {
             /*
@@ -338,10 +347,15 @@ public class NcwmsAdminServlet extends HttpServlet {
         int i = 0;
         while (request.getParameter("dataset.new" + i + ".id") != null) {
             /* Look for non-blank ID fields */
-            if (!request.getParameter("dataset.new" + i + ".id").trim().equals("")) {
+            String id = request.getParameter("dataset.new" + i + ".id");
+            if (id != null && !id.trim().equals("")) {
                 DatasetConfig ds = new DatasetConfig();
-                ds.setId(request.getParameter("dataset.new" + i + ".id"));
-                ds.setTitle(request.getParameter("dataset.new" + i + ".title"));
+                ds.setId(id);
+                String title = request.getParameter("dataset.new" + i + ".title");
+                if (title == null || title.trim().equals("")) {
+                    title = id;
+                }
+                ds.setTitle(title);
                 ds.setLocation(request.getParameter("dataset.new" + i + ".location"));
                 ds.setDataReaderClass(request.getParameter("dataset.new" + i + ".reader"));
                 ds.setDisabled(request.getParameter("dataset.new" + i + ".disabled") != null);
@@ -468,7 +482,7 @@ public class NcwmsAdminServlet extends HttpServlet {
          * information.
          */
         try {
-            response.sendRedirect("");
+            response.sendRedirect("./");
         } catch (IOException e) {
             /*
              * This error isn't really important
@@ -528,7 +542,7 @@ public class NcwmsAdminServlet extends HttpServlet {
          * information.
          */
         try {
-            response.sendRedirect("");
+            response.sendRedirect("./");
         } catch (IOException e) {
             /*
              * This error isn't really important

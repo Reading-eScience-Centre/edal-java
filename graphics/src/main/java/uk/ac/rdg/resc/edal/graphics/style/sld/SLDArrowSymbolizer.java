@@ -9,7 +9,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 
 public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
 
@@ -20,11 +20,11 @@ public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
     protected ImageLayer parseSymbolizer() throws NumberFormatException, XPathExpressionException,
             SLDException, EdalParseException {
         // get the arrow properties
-        String arrowSizeText = (String) xPath.evaluate("./resc:ArrowSize", symbolizerNode,
-                XPathConstants.STRING);
+        String arrowSizeText = ((String) xPath.evaluate("./resc:ArrowSize", symbolizerNode,
+                XPathConstants.STRING));
         Integer arrowSize = 8;
-        if (!(arrowSizeText == null) && !(arrowSizeText.equals(""))) {
-            arrowSize = Integer.parseInt(arrowSizeText);
+        if (!(arrowSizeText == null) && !(arrowSizeText.trim().isEmpty())) {
+            arrowSize = Integer.parseInt(arrowSizeText.trim());
         }
         String arrowColourText = (String) xPath.evaluate("./resc:ArrowColour", symbolizerNode,
                 XPathConstants.STRING);

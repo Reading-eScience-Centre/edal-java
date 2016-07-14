@@ -54,16 +54,16 @@ public class SLDRange {
 		try {
 			String rangeMinText = (String) xPath.evaluate(
 					"./resc:Range/resc:Minimum", function, XPathConstants.STRING);
-			if (rangeMinText == null || rangeMinText.equals("")) {
+			if (rangeMinText == null || rangeMinText.trim().equals("")) {
 				throw new SLDException("The minimum of the range must be specified.");
 			}
-			Float rangeMin = Float.parseFloat(rangeMinText);
+			Float rangeMin = Float.parseFloat(rangeMinText.trim());
 			String rangeMaxText = (String) xPath.evaluate(
 					"./resc:Range/resc:Maximum", function, XPathConstants.STRING);
-			if (rangeMaxText == null || rangeMaxText.equals("")) {
+			if (rangeMaxText == null || rangeMaxText.trim().equals("")) {
 				throw new SLDException("The maximum of the range must be specified.");
 			}
-			Float rangeMax = Float.parseFloat(rangeMaxText);
+			Float rangeMax = Float.parseFloat(rangeMaxText.trim());
 			String spacingText = (String) xPath.evaluate(
 					"./resc:Range/resc:Spacing", function, XPathConstants.STRING);
 			Spacing spacing;

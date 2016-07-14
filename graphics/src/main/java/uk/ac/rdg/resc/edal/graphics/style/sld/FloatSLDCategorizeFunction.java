@@ -23,7 +23,7 @@ public class FloatSLDCategorizeFunction extends
 			values = new ArrayList<Float>();
 			for (int j = 0; j < valueNodes.getLength(); j++) {
 				Node valueNode = valueNodes.item(j);
-				values.add(Float.parseFloat(valueNode.getTextContent()));
+				values.add(Float.parseFloat(valueNode.getTextContent().trim()));
 			}
 			
 			// parse list of thresholds

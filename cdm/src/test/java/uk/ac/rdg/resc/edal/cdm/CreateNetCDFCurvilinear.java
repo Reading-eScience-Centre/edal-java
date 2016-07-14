@@ -37,7 +37,7 @@ import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
-import ucar.nc2.NetcdfFileWriteable;
+import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
 /**
@@ -52,17 +52,15 @@ import ucar.nc2.Variable;
  * output contains whatever variables are desired. Paths etc. will need
  * changing.
  */
-@SuppressWarnings("deprecation")
 public class CreateNetCDFCurvilinear {
     public static void main(String args[]) throws IOException {
         /*
          * The dataset to copy the projection stuff from.
          */
-        NetcdfFileWriteable existingDataset = NetcdfFileWriteable
-                .openExisting("input-curvilinear.nc");
+        NetcdfFileWriter existingDataset = NetcdfFileWriter.openExisting("input-curvilinear.nc");
 
         String filename = "output-curvilinear.nc";
-        NetcdfFileWriteable dataFile = null;
+        NetcdfFileWriter dataFile = null;
         try {
 
             Dimension etaDimension = existingDataset.findDimension("eta_rho");
@@ -74,18 +72,18 @@ public class CreateNetCDFCurvilinear {
             Array lonrhoData = lonrhoVariable.read();
             Array latrhoData = latrhoVariable.read();
 
-            dataFile = NetcdfFileWriteable.createNew(filename, false);
-            dataFile.addDimension(null, etaDimension);
-            dataFile.addDimension(null, xiDimension);
+            dataFile = NetcdfFileWriter.createNew(filename, false);
+            dataFile.addDimension(etaDimension.getFullName(), etaDimension.getLength());
+            dataFile.addDimension(xiDimension.getFullName(), xiDimension.getLength());
 
             ArrayList<Dimension> dims = new ArrayList<Dimension>();
             dims.add(etaDimension);
             dims.add(xiDimension);
 
-            dataFile.addVariable(null, lonrhoVariable);
-            dataFile.addVariable(null, latrhoVariable);
+            dataFile.addVariable(lonrhoVariable.getShortName(), lonrhoVariable.getDataType(), lonrhoVariable.getDimensions());
+            dataFile.addVariable(latrhoVariable.getShortName(), latrhoVariable.getDataType(), latrhoVariable.getDimensions());
 
-            dataFile.addAttribute(null, new Attribute("Conventions", "CF-1.0"));
+            dataFile.addGlobalAttribute(new Attribute("Conventions", "CF-1.0"));
 
             /*
              * Add extra variables here, including attributes
@@ -146,6 +144,6 @@ public class CreateNetCDFCurvilinear {
                 }
             }
         }
-        System.out.println("Test file written to: " + dataFile.getLocation());
+        System.out.println("Test file written to: " + dataFile.getNetcdfFile().getLocation());
     }
 }

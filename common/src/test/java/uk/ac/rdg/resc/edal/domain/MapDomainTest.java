@@ -43,10 +43,10 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
-import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
-import uk.ac.rdg.resc.edal.grid.RectilinearGridImpl;
-import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
+import uk.ac.rdg.resc.edal.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
+import uk.ac.rdg.resc.edal.grid.RegularGrid;
+import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
@@ -55,7 +55,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
- * Test class for {@link MapDomainImpl}.
+ * Test class for {@link MapDomain}.
  * 
  * @author Nan Lin
  * */
@@ -73,7 +73,7 @@ public class MapDomainTest {
     double lowX = -10.0;
     // latitude position of lower left point of the HorizontalGrid
     double lowY = 51.0;
-    private RectilinearGrid hGrid;
+    private RegularGrid hGrid;
 
     /**
      * Initialize a map domain.
@@ -87,16 +87,16 @@ public class MapDomainTest {
         VerticalCrs vCrs = new VerticalCrsImpl("m", false, false, false);
         Chronology chrnology = ISOChronology.getInstance();
         DateTime time = new DateTime(2000, 01, 01, 00, 00, chrnology);
-        ReferenceableAxis<Double> longAxis = new RegularAxisImpl("longitude", -10.0, resolution,
+        RegularAxis longAxis = new RegularAxisImpl("longitude", -10.0, resolution,
                 xSize, true);
-        ReferenceableAxis<Double> latAxis = new RegularAxisImpl("latitude", 51.0, resolution,
+        RegularAxis latAxis = new RegularAxisImpl("latitude", 51.0, resolution,
                 ySize, false);
-        hGrid = new RectilinearGridImpl(longAxis, latAxis, crs);
-        mapdomain = new MapDomainImpl(hGrid, z, vCrs, time);
+        hGrid = new RegularGridImpl(longAxis, latAxis, crs);
+        mapdomain = new MapDomain(hGrid, z, vCrs, time);
     }
 
     /**
-     * Test get methods in {@link MapDomainImpl}.
+     * Test get methods in {@link MapDomain}.
      * */
     @Test
     public void test() {

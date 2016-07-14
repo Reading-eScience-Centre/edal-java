@@ -18,6 +18,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * (where it was uncredited) and modified to meet coding standards etc.
  *
  * @author Guy Griffiths
+ * @author Paul Karaenke
  */
 public class KDTree {
     private static final Logger log = LoggerFactory.getLogger(KDTree.class);
@@ -230,10 +231,11 @@ public class KDTree {
                 sourceData);
     }
 
-    private final static double squaredDistance(Point p, HorizontalPosition pos) {
-        return Math.pow(p.getX() - pos.getX(), 2.0) + Math.pow(p.getY() - pos.getY(), 2.0);
+    private final double squaredDistance(Point p, HorizontalPosition pos) {
+        return (p.getX() - pos.getX()) * (p.getX() - pos.getX()) + (p.getY() - pos.getY())
+                * (p.getY() - pos.getY());
     }
-
+    
     public Point nearestNeighbour(HorizontalPosition pos) {
         /*
          * Transform position into correct CRS if necessary

@@ -79,12 +79,12 @@ public abstract class AbstractSLDSegmentFunction<T> extends AbstractSLDFunction<
 	 */
 	protected void parseNumberOfSegments()
 			throws XPathExpressionException {
-		String segmentsText = (String) xPath.evaluate(
-				"./resc:NumberOfSegments", function, XPathConstants.STRING);
+		String segmentsText = ((String) xPath.evaluate(
+				"./resc:NumberOfSegments", function, XPathConstants.STRING));
 		if (segmentsText == null || segmentsText.equals("")) {
 			numberOfSegments = 254;
 		} else {
-			numberOfSegments = Integer.parseInt(segmentsText);
+			numberOfSegments = Integer.parseInt(segmentsText.trim());
 		}
 	}
 

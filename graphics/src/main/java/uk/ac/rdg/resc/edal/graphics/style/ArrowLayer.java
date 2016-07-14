@@ -36,7 +36,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.graphics.style.util.VectorFactory;
+import uk.ac.rdg.resc.edal.graphics.utils.VectorFactory;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;

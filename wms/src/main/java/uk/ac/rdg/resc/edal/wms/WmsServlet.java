@@ -87,6 +87,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverter;
+import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverterImpl;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
@@ -102,6 +104,7 @@ import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
@@ -120,10 +123,13 @@ import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
-import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
-import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue.FeaturesAndMemberName;
-import uk.ac.rdg.resc.edal.graphics.style.util.PlottingStyleParameters;
+import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue.FeaturesAndMemberName;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.LayerNameMapper;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingStyleParameters;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -135,9 +141,7 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
@@ -317,6 +321,7 @@ public class WmsServlet extends HttpServlet {
         } catch (Exception e) {
             log.error("Problem with GET request", e);
             /* An unexpected (internal) error has occurred */
+            e.printStackTrace();
             throw new IOException(e);
         }
     }
@@ -395,11 +400,59 @@ public class WmsServlet extends HttpServlet {
         GetMapStyleParams styleParameters = getMapParams.getStyleParameters();
 
         /*
-         * Set the content type to be what was requested. If anything goes
-         * wrong, this will be overwritten to "text/xml" in the
-         * handleWmsException method.
+         * If the user has requested the actual data in coverageJSON format...
          */
-        httpServletResponse.setContentType(getMapParams.getImageFormat().getMimeType());
+        if (getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage+json")
+                || getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage json")) {
+            String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
+            LayerNameMapper layerNameMapper = catalogue.getLayerNameMapper();
+            List<Feature<?>> features = new ArrayList<>();
+            for (String layerName : layerNames) {
+                if (!catalogue.isDownloadable(layerName)) {
+                    throw new InvalidFormatException(
+                            "The format \"application/prs.coverage+json\" is not enabled for this layer.\nIf you think this is an error, please contact the server administrator and get them to enable Download for this dataset");
+                }
+                Dataset dataset = catalogue.getDatasetFromId(layerNameMapper
+                        .getDatasetIdFromLayerName(layerName));
+                VariableMetadata metadata = dataset.getVariableMetadata(layerNameMapper
+                        .getVariableIdFromLayerName(layerName));
+                if (metadata.isScalar()) {
+                    Collection<? extends DiscreteFeature<?, ?>> mapFeatures = GraphicsUtils
+                            .extractGeneralMapFeatures(dataset,
+                                    layerNameMapper.getVariableIdFromLayerName(layerName),
+                                    plottingParameters);
+                    features.addAll(mapFeatures);
+                } else {
+                    Set<VariableMetadata> children = metadata.getChildren();
+                    for (VariableMetadata child : children) {
+                        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = GraphicsUtils
+                                .extractGeneralMapFeatures(dataset, child.getParameter()
+                                        .getVariableId(), plottingParameters);
+                        features.addAll(mapFeatures);
+                    }
+                }
+            }
+
+            httpServletResponse.setContentType("application/prs.coverage+json");
+            CoverageJsonConverter converter = new CoverageJsonConverterImpl();
+
+            converter.checkFeaturesSupported(features);
+            try {
+                if (features.size() == 1) {
+                    converter.convertFeatureToJson(httpServletResponse.getOutputStream(),
+                            features.get(0));
+                } else {
+                    // vectors are currently multiple features each with one parameter
+                    // TODO group features with identical domain into single feature
+                    converter
+                            .convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+                }
+            } catch (IOException e) {
+                log.error("Problem writing CoverageJSON to output stream", e);
+            }
+
+            return;
+        }
 
         if (getMapParams.getImageFormat() instanceof KmzFormat) {
             if (!GISUtils
@@ -444,6 +497,13 @@ public class WmsServlet extends HttpServlet {
                     + catalogue.getServerInfo().getMaxImageWidth() + "x"
                     + catalogue.getServerInfo().getMaxImageHeight());
         }
+
+        /*
+         * Set the content type to be what was requested. If anything goes
+         * wrong, this will be overwritten to "text/xml" in the
+         * handleWmsException method.
+         */
+        httpServletResponse.setContentType(getMapParams.getFormatString());
 
         MapImage imageGenerator = styleParameters.getImageGenerator(catalogue);
 
@@ -683,8 +743,8 @@ public class WmsServlet extends HttpServlet {
              * GetFeatureInfoParameters works, features are searched for in a
              * 9-pixel box surrounding the clicked position on the map
              */
-            Collection<? extends DiscreteFeature<?, ?>> mapFeatures = dataset.extractMapFeatures(
-                    CollectionUtils.setOf(variableId), plottingParameters);
+            Collection<? extends DiscreteFeature<?, ?>> mapFeatures = GraphicsUtils
+                    .extractGeneralMapFeatures(dataset, variableId, plottingParameters);
 
             /*
              * We only want to return a layer name if there are more than one
@@ -1032,10 +1092,7 @@ public class WmsServlet extends HttpServlet {
         String units = variableMetadata.getParameter().getUnits();
         BoundingBox boundingBox = GISUtils.constrainBoundingBox(variableMetadata
                 .getHorizontalDomain().getBoundingBox());
-        Extent<Float> scaleRange = defaultProperties.getColorScaleRange();
-        if (scaleRange == null) {
-            scaleRange = Extents.emptyExtent();
-        }
+
         Integer numColorBands = defaultProperties.getNumColorBands();
         if (numColorBands == null) {
             numColorBands = 250;
@@ -1120,10 +1177,31 @@ public class WmsServlet extends HttpServlet {
         bboxJson.add(boundingBox.getMaxY());
         layerDetails.put("bbox", bboxJson);
 
-        JSONArray scaleRangeJson = new JSONArray();
-        scaleRangeJson.add(scaleRange.getLow());
-        scaleRangeJson.add(scaleRange.getHigh());
-        layerDetails.put("scaleRange", scaleRangeJson);
+        List<Extent<Float>> scaleRanges = defaultProperties.getColorScaleRanges();
+        if (scaleRanges == null || scaleRanges.isEmpty()) {
+            scaleRanges = new ArrayList<>();
+            scaleRanges.add(Extents.emptyExtent());
+        }
+        int s = 0;
+        for (Extent<Float> scaleRange : scaleRanges) {
+            /*
+             * This writes out the main scaleRange followed by scaleRangeX
+             * objects for additional configured default scale ranges. At the
+             * time of writing this comment, only one default scale range can be
+             * configured, but this may change in future (since multiple scale
+             * ranges are permitted on the URL for those layers which support
+             * them - currently just uncertainty images)
+             */
+            JSONArray scaleRangeJson = new JSONArray();
+            scaleRangeJson.add(scaleRange.getLow());
+            scaleRangeJson.add(scaleRange.getHigh());
+            if (s == 0) {
+                layerDetails.put("scaleRange", scaleRangeJson);
+            } else {
+                layerDetails.put("scaleRange" + s, scaleRangeJson);
+            }
+            s++;
+        }
 
         layerDetails.put("numColorBands", numColorBands);
 
@@ -1589,7 +1667,12 @@ public class WmsServlet extends HttpServlet {
         /*
          * Now find which layer the scale is being applied to
          */
-        String scaledLayerRole = catalogue.getStyleCatalogue().getScaledRoleForStyle(styleName);
+        List<String> scaledLayerRoles = catalogue.getStyleCatalogue().getScaledRoleForStyle(
+                styleName);
+        String scaledLayerRole = null;
+        if (scaledLayerRoles.size() > 0) {
+            scaledLayerRole = scaledLayerRoles.get(0);
+        }
         if (scaledLayerRole == null) {
             /*
              * No layer has scaling - we can return anything
@@ -1743,10 +1826,6 @@ public class WmsServlet extends HttpServlet {
                 throw new MetadataException("Time string is not ISO8601 formatted");
             }
             if (startIndex < 0 || endIndex < 0) {
-                /*
-                 * TODO This was previous behavious in ncWMS, but there's no
-                 * strong reason for it
-                 */
                 throw new MetadataException(
                         "For animation timesteps, both start and end times must be part of the axis");
             }
@@ -1983,7 +2062,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
@@ -1994,7 +2073,10 @@ public class WmsServlet extends HttpServlet {
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
             Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
             List<? extends PointSeriesFeature> extractedTimeseriesFeatures = dataset
-                    .extractTimeseriesFeatures(entry.getValue(), plottingParameters);
+                    .extractTimeseriesFeatures(entry.getValue(), plottingParameters.getBbox(),
+                            plottingParameters.getZExtent(), plottingParameters.getTExtent(),
+                            plottingParameters.getTargetHorizontalPosition(),
+                            plottingParameters.getTargetZ());
             timeseriesFeatures.addAll(extractedTimeseriesFeatures);
         }
 
@@ -2161,7 +2243,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
@@ -2180,9 +2262,15 @@ public class WmsServlet extends HttpServlet {
             String paletteName = params.getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
             int numColourBands = params.getPositiveInt("numcolorbands",
                     ColourPalette.MAX_NUM_COLOURS);
-            Extent<Float> scaleRange = GetMapStyleParams.getColorScaleRange(params);
-            if (scaleRange == null || scaleRange.isEmpty()) {
-                scaleRange = Extents.newExtent(270f, 300f);
+            List<Extent<Float>> scaleRanges = GetMapStyleParams.getColorScaleRanges(params);
+            Extent<Float> scaleRange;
+            if (scaleRanges == null || scaleRanges.isEmpty()) {
+                scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
+            } else {
+                scaleRange = scaleRanges.get(0);
+                if(scaleRange == null || scaleRange.isEmpty()) {
+                    scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
+                }
             }
             ScaleRange colourScale = new ScaleRange(scaleRange.getLow(), scaleRange.getHigh(),
                     params.getBoolean("logscale", false));
@@ -2202,7 +2290,9 @@ public class WmsServlet extends HttpServlet {
                 PlottingDomainParams plottingParams = new PlottingDomainParams(1, 1, null, null,
                         null, pos, null, time);
                 List<? extends ProfileFeature> features = gridDataset.extractProfileFeatures(
-                        CollectionUtils.setOf(varId), plottingParams);
+                        CollectionUtils.setOf(varId), plottingParams.getBbox(),
+                        plottingParams.getZExtent(), plottingParams.getTExtent(),
+                        plottingParams.getTargetHorizontalPosition(), plottingParams.getTargetT());
                 profileFeatures.addAll(features);
             }
             JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(profileFeatures,
@@ -2288,7 +2378,7 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
-        for(String layerCopyright : copyrights) {
+        for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
         }
@@ -2296,11 +2386,13 @@ public class WmsServlet extends HttpServlet {
             copyright.deleteCharAt(copyright.length() - 1);
         }
 
-
         for (Entry<String, Set<String>> entry : datasets2VariableIds.entrySet()) {
             Dataset dataset = catalogue.getDatasetFromId(entry.getKey());
             List<? extends ProfileFeature> extractedProfileFeatures = dataset
-                    .extractProfileFeatures(entry.getValue(), plottingParameters);
+                    .extractProfileFeatures(entry.getValue(), plottingParameters.getBbox(),
+                            plottingParameters.getZExtent(), plottingParameters.getTExtent(),
+                            plottingParameters.getTargetHorizontalPosition(),
+                            plottingParameters.getTargetT());
             profileFeatures.addAll(extractedProfileFeatures);
         }
 

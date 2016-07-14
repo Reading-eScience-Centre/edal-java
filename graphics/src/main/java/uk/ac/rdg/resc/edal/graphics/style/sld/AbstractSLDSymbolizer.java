@@ -97,7 +97,7 @@ public abstract class AbstractSLDSymbolizer implements SLDSymbolizer {
                 throw new SLDException("A symbolizer can only contain one opacity transform");
             }
             String opacity = opacityNode.getTextContent();
-            imageLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity)));
+            imageLayer.setOpacityTransform(new FlatOpacity(Float.parseFloat(opacity.trim())));
             return;
         }
 

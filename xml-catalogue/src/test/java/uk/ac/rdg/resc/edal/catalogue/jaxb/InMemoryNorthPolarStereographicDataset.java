@@ -44,7 +44,7 @@ import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
-import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;

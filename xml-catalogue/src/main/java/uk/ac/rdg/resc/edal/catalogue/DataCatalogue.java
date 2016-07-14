@@ -51,6 +51,8 @@ import net.sf.ehcache.config.SizeOfPolicyConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.catalogue.jaxb.CacheInfo;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.CatalogueConfig;
@@ -61,13 +63,13 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
-import uk.ac.rdg.resc.edal.graphics.style.util.DatasetCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.LayerNameMapper;
+import uk.ac.rdg.resc.edal.graphics.utils.DatasetCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.LayerNameMapper;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * A catalogues which implements {@link DatasetCatalogue},
@@ -81,6 +83,8 @@ import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
  * @author Guy Griffiths
  */
 public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureCatalogue {
+    private static final Logger log = LoggerFactory.getLogger(DataCatalogue.class);
+
     private static final String CACHE_NAME = "featureCache";
 
     private boolean cachingEnabled = false;
@@ -133,8 +137,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
          * and doesn't impact performance noticeably.
          */
         cacheManager = CacheManager.create(new Configuration().name("EDAL-WMS-CacheManager")
-                .sizeOfPolicy(
-                        new SizeOfPolicyConfiguration().maxDepth(2_000_000)));
+                .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(2_000_000)));
 
         setCache(config.getCacheSettings());
     }
@@ -242,12 +245,28 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
          */
         List<Map.Entry<String, Dataset>> entryList = new ArrayList<Map.Entry<String, Dataset>>(
                 datasets.entrySet());
-        Collections.sort(entryList, new Comparator<Map.Entry<String, Dataset>>() {
-            public int compare(Map.Entry<String, Dataset> d1, Map.Entry<String, Dataset> d2) {
-                return config.getDatasetInfo(d1.getKey()).getTitle()
-                        .compareTo(config.getDatasetInfo(d2.getKey()).getTitle());
-            }
-        });
+        try {
+            Collections.sort(entryList, new Comparator<Map.Entry<String, Dataset>>() {
+                public int compare(Map.Entry<String, Dataset> d1, Map.Entry<String, Dataset> d2) {
+                    return config.getDatasetInfo(d1.getKey()).getTitle()
+                            .compareTo(config.getDatasetInfo(d2.getKey()).getTitle());
+                }
+            });
+        } catch (NullPointerException e) {
+            log.error("Problem when sorting datasets", e);
+            /*
+             * Sometimes this gives a NullPointerException with remote datasets
+             * which are unavailable (?)
+             * 
+             * It's been seen a couple of times on the issue tracker, but I've
+             * been unable to reproduce it. I think it may be that the title is
+             * not getting set correctly (or at all?). Perhaps this needs some
+             * more robust checking in the CatalogueConfig object?
+             * 
+             * Since sorting the datasets by title isn't critical, we can ignore
+             * the error.
+             */
+        }
 
         datasets = new LinkedHashMap<String, Dataset>();
         for (Map.Entry<String, Dataset> entry : entryList) {
@@ -347,7 +366,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
     private Collection<? extends DiscreteFeature<?, ?>> doExtraction(String layerName,
             String variable, PlottingDomainParams params) {
         Dataset dataset = getDatasetFromLayerName(layerName);
-        return dataset.extractMapFeatures(CollectionUtils.setOf(variable), params);
+        return GraphicsUtils.extractGeneralMapFeatures(dataset, variable, params);
     }
 
     private Dataset getDatasetFromLayerName(String layerName) {

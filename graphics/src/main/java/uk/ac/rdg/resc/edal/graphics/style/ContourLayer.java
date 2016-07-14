@@ -32,7 +32,6 @@ import gov.noaa.pmel.sgt.CartesianGraph;
 import gov.noaa.pmel.sgt.CartesianRenderer;
 import gov.noaa.pmel.sgt.ContourLevels;
 import gov.noaa.pmel.sgt.ContourLineAttribute;
-import gov.noaa.pmel.sgt.DefaultContourLineAttribute;
 import gov.noaa.pmel.sgt.GridAttribute;
 import gov.noaa.pmel.sgt.JPane;
 import gov.noaa.pmel.sgt.Layer;
@@ -223,21 +222,19 @@ public class ContourLayer extends GriddedImageLayer {
 
         double contourSpacing = (scaleMax - scaleMin) / numberOfContours;
 
-        Range2D contourValues = new Range2D(scaleMin, scaleMax, contourSpacing);
-
-        ContourLevels clevels = ContourLevels.getDefault(contourValues);
-
-        DefaultContourLineAttribute defAttr = new DefaultContourLineAttribute();
-
-        defAttr.setColor(contourLineColour);
-        if (contourLineStyle != null) {
-            defAttr.setStyle(contourLineStyle.getLineStyleInteger());
+        ContourLevels levels = new ContourLevels();
+        for (double val = scaleMin; val <= scaleMax; val += contourSpacing) {
+            ContourLineAttribute lineStyle = new ContourLineAttribute();
+            lineStyle.setColor(contourLineColour);
+            if (contourLineStyle != null) {
+                lineStyle.setStyle(contourLineStyle.getLineStyleInteger());
+            }
+            lineStyle.setWidth(contourLineWidth);
+            lineStyle.setLabelEnabled(labelEnabled);
+            levels.addLevel(val, lineStyle);
         }
-        defAttr.setWidth(contourLineWidth);
-        defAttr.setLabelEnabled(labelEnabled);
-        clevels.setDefaultContourLineAttribute(defAttr);
 
-        GridAttribute attr = new GridAttribute(clevels);
+        GridAttribute attr = new GridAttribute(levels);
         attr.setStyle(GridAttribute.CONTOUR);
 
         CartesianRenderer renderer = CartesianRenderer.getRenderer(cg, sgtGrid, attr);

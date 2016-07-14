@@ -37,7 +37,7 @@ import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
-import ucar.nc2.NetcdfFileWriteable;
+import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
 /**
@@ -48,16 +48,15 @@ import ucar.nc2.Variable;
  * (src/test/resources/input-rotated.nc) and clears the variables, replacing
  * them with more useful vector components. Paths etc. will need changing.
  */
-@SuppressWarnings("deprecation")
 public class CreateNetCDFRotated {
     public static void main(String args[]) throws IOException {
         /*
          * The dataset to copy the projection stuff from.
          */
-        NetcdfFileWriteable existingDataset = NetcdfFileWriteable.openExisting("input-rotated.nc");
+        NetcdfFileWriter existingDataset = NetcdfFileWriter.openExisting("input-rotated.nc");
 
         String filename = "output-rotated.nc";
-        NetcdfFileWriteable dataFile = null;
+        NetcdfFileWriter dataFile = null;
         try {
 
             Dimension rlonDimension = existingDataset.findDimension("rlon");
@@ -75,21 +74,21 @@ public class CreateNetCDFRotated {
             Array navlonData = navlonVariable.read();
             Array navlatData = navlatVariable.read();
 
-            dataFile = NetcdfFileWriteable.createNew(filename, false);
-            dataFile.addDimension(null, rlonDimension);
-            dataFile.addDimension(null, rlatDimension);
+            dataFile = NetcdfFileWriter.createNew(filename, false);
+            dataFile.addDimension(rlonDimension.getFullName(), rlonDimension.getLength());
+            dataFile.addDimension(rlatDimension.getFullName(), rlatDimension.getLength());
 
             ArrayList<Dimension> dims = new ArrayList<Dimension>();
             dims.add(rlatDimension);
             dims.add(rlonDimension);
 
-            dataFile.addVariable(null, rpoleVariable);
-            dataFile.addVariable(null, rlonVariable);
-            dataFile.addVariable(null, rlatVariable);
-            dataFile.addVariable(null, navlonVariable);
-            dataFile.addVariable(null, navlatVariable);
+            dataFile.addVariable(rpoleVariable.getShortName(), rpoleVariable.getDataType(), rpoleVariable.getDimensions());
+            dataFile.addVariable(rlonVariable.getShortName(), rlonVariable.getDataType(), rlonVariable.getDimensions());
+            dataFile.addVariable(rlatVariable.getShortName(), rlatVariable.getDataType(), rlatVariable.getDimensions());
+            dataFile.addVariable(navlonVariable.getShortName(), navlonVariable.getDataType(), navlonVariable.getDimensions());
+            dataFile.addVariable(navlatVariable.getShortName(), navlatVariable.getDataType(), navlatVariable.getDimensions());
 
-            dataFile.addAttribute(null, new Attribute("Conventions", "CF-1.0"));
+            dataFile.addGlobalAttribute(new Attribute("Conventions", "CF-1.0"));
 
             /*
              * Add extra variables here, including attributes
@@ -162,6 +161,6 @@ public class CreateNetCDFRotated {
                 }
             }
         }
-        System.out.println("Test file written to: " + dataFile.getLocation());
+        System.out.println("Test file written to: " + dataFile.getNetcdfFile().getLocation());
     }
 }

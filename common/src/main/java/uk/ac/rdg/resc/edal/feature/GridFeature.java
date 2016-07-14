@@ -40,11 +40,9 @@ import uk.ac.rdg.resc.edal.dataset.Domain2DMapper;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
-import uk.ac.rdg.resc.edal.domain.MapDomainImpl;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.grid.GridCell4D;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
-import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
+import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
@@ -81,7 +79,7 @@ public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D
      *            The variable IDs to extract. If <code>null</code>, all
      *            variables are extracted.
      * @param targetGrid
-     *            The desired {@link HorizontalGrid} of the resulting
+     *            The desired {@link RegularGrid} of the resulting
      *            {@link MapFeature}
      * @param elevation
      *            The elevation at which to extract data, can be
@@ -94,7 +92,7 @@ public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D
      * @throws DataReadingException
      *             If there is a problem reading the required data
      */
-    public MapFeature extractMapFeature(Set<String> varIds, RectilinearGrid targetGrid,
+    public MapFeature extractMapFeature(Set<String> varIds, RegularGrid targetGrid,
             Double elevation, DateTime time) throws DataReadingException {
         GridDomain domain = getDomain();
 
@@ -165,7 +163,7 @@ public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D
             values.put(varId, readMapData);
         }
 
-        MapDomain mapDomain = new MapDomainImpl(targetGrid, elevation, zAxis == null ? null
+        MapDomain mapDomain = new MapDomain(targetGrid, elevation, zAxis == null ? null
                 : zAxis.getVerticalCrs(), time);
         MapFeature feature = new MapFeature(getId() + "_subfeature", getName(), getDescription(),
                 mapDomain, parameters, values);

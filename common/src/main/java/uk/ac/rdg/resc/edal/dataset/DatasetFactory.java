@@ -125,6 +125,24 @@ public abstract class DatasetFactory {
      * @throws EdalException
      *             If there is a problem creating the dataset
      */
-    public abstract Dataset createDataset(String id, String location) throws IOException,
-            EdalException;
+    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+        return createDataset(id, location, false);
+    }
+
+    /**
+     * Returns a Dataset object representing the data at the given location.
+     * 
+     * @param id
+     *            The ID to assign to this dataset
+     * @param location
+     *            The location of the source data: this may be a file, database
+     *            connection string or a remote server address.
+     * @param forceRefresh
+     *            Set to <code>true</code> to ensure that any cached information
+     *            is not used
+     * @throws EdalException
+     *             If there is a problem creating the dataset
+     */
+    public abstract Dataset createDataset(String id, String location, boolean forceRefresh)
+            throws IOException, EdalException;
 }

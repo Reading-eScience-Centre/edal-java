@@ -39,6 +39,7 @@ import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
@@ -48,7 +49,6 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 /**
  * Partial implementation of a {@link Dataset} with a continuous domain which
@@ -75,13 +75,30 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         return featureIndexer.getAllFeatureIds();
     }
 
-    @Override
+    /**
+     * Extracts features to be plotted on a map.
+     * 
+     * @param varIds
+     *            The IDs of the variables to be extracted. If this is
+     *            <code>null</code> then all variable IDs will be plotted. Any
+     *            non-scalar parent variables will have all of their child
+     *            variables extracted.
+     * @param hExtent
+     *            The {@link BoundingBox} describing the horizontal domain from
+     *            which to extract features
+     * @param zExtent
+     *            The vertical extent from which to extract features
+     * @param tExtent
+     *            The time range from which to extract features
+     * @return A {@link Collection} of {@link DiscreteFeature}s which can be
+     *         plotted
+     * @throws DataReadingException
+     *             If there is a problem reading the underlying data
+     * @throws VariableNotFoundException
+     */
     public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
-        BoundingBox hExtent = params.getBbox();
-        Extent<Double> zExtent = params.getZExtent();
-        Extent<DateTime> tExtent = params.getTExtent();
-
+            BoundingBox hExtent, Extent<Double> zExtent, Extent<DateTime> tExtent)
+            throws DataReadingException {
         if (hExtent == null) {
             hExtent = getDatasetBoundingBox();
         }
@@ -92,16 +109,17 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
             tExtent = getDatasetTimeExtent();
         }
         List<DiscreteFeature<?, ?>> features = new ArrayList<>();
-        Collection<String> featureIds = featureIndexer.findFeatureIds(hExtent, zExtent,
-                tExtent, varIds);
+        Collection<String> featureIds = featureIndexer.findFeatureIds(hExtent, zExtent, tExtent,
+                varIds);
         features.addAll(getFeatureReader().readFeatures(featureIds, varIds));
         return features;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
+            BoundingBox bbox, Extent<Double> zExtent, Extent<DateTime> tExtent,
+            final HorizontalPosition targetPos, DateTime targetTime) throws DataReadingException,
+            UnsupportedOperationException, VariableNotFoundException {
         for (String varId : varIds) {
             if (!supportsProfileFeatureExtraction(varId)) {
                 throw new UnsupportedOperationException(
@@ -110,47 +128,46 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         }
         List<ProfileFeature> features = new ArrayList<ProfileFeature>();
 
-        BoundingBox bbox = params.getBbox();
-        final HorizontalPosition pos = params.getTargetHorizontalPosition();
         if (bbox == null) {
-            if (pos != null) {
-                bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
-                        pos.getCoordinateReferenceSystem());
+            if (targetPos != null) {
+                bbox = new BoundingBoxImpl(targetPos.getX(), targetPos.getY(), targetPos.getX(),
+                        targetPos.getY(), targetPos.getCoordinateReferenceSystem());
             } else {
                 bbox = getDatasetBoundingBox();
             }
         }
-        Extent<DateTime> timeExtent;
-        if (params.getTExtent() != null) {
-            timeExtent = params.getTExtent();
-        } else {
-            if (params.getTargetT() != null) {
-                timeExtent = Extents.newExtent(params.getTargetT(), params.getTargetT());
+        if (tExtent == null) {
+            if (targetTime != null) {
+                tExtent = Extents.newExtent(targetTime, targetTime);
             } else {
-                timeExtent = getDatasetTimeExtent();
+                tExtent = getDatasetTimeExtent();
             }
         }
-        Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, params.getZExtent(),
-                timeExtent, varIds);
-        features.addAll((Collection<? extends ProfileFeature>) getFeatureReader().readFeatures(
-                featureIds, varIds));
+        Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, zExtent, tExtent,
+                varIds);
+        @SuppressWarnings("unchecked")
+        Collection<? extends ProfileFeature> readFeatures = (Collection<? extends ProfileFeature>) getFeatureReader()
+                .readFeatures(featureIds, varIds);
+        features.addAll(readFeatures);
 
-        if (pos != null) {
+        if (targetPos != null) {
             Collections.sort(features, new Comparator<ProfileFeature>() {
                 @Override
                 public int compare(ProfileFeature o1, ProfileFeature o2) {
-                    return Double.compare(GISUtils.getDistSquared(o1.getHorizontalPosition(), pos),
-                            GISUtils.getDistSquared(o2.getHorizontalPosition(), pos));
+                    return Double.compare(
+                            GISUtils.getDistSquared(o1.getHorizontalPosition(), targetPos),
+                            GISUtils.getDistSquared(o2.getHorizontalPosition(), targetPos));
                 }
             });
         }
         return features;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
-            PlottingDomainParams params) throws DataReadingException {
+            BoundingBox bbox, Extent<Double> zExtent, Extent<DateTime> tExtent,
+            final HorizontalPosition targetPos, Double targetZ) throws DataReadingException,
+            UnsupportedOperationException, VariableNotFoundException {
         for (String varId : varIds) {
             if (!supportsTimeseriesExtraction(varId)) {
                 throw new UnsupportedOperationException(
@@ -159,37 +176,35 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
         }
         List<PointSeriesFeature> features = new ArrayList<PointSeriesFeature>();
 
-        BoundingBox bbox = params.getBbox();
-        final HorizontalPosition pos = params.getTargetHorizontalPosition();
         if (bbox == null) {
-            if (pos != null) {
-                bbox = new BoundingBoxImpl(pos.getX(), pos.getY(), pos.getX(), pos.getY(),
-                        pos.getCoordinateReferenceSystem());
+            if (targetPos != null) {
+                bbox = new BoundingBoxImpl(targetPos.getX(), targetPos.getY(), targetPos.getX(),
+                        targetPos.getY(), targetPos.getCoordinateReferenceSystem());
             } else {
                 bbox = getDatasetBoundingBox();
             }
         }
-        Extent<Double> zExtent;
-        if (params.getZExtent() != null) {
-            zExtent = params.getZExtent();
-        } else {
-            if (params.getTargetZ() != null) {
-                zExtent = Extents.newExtent(params.getTargetZ(), params.getTargetZ());
+        if (zExtent == null) {
+            if (targetZ != null) {
+                zExtent = Extents.newExtent(targetZ, targetZ);
             } else {
                 zExtent = getDatasetVerticalExtent();
             }
         }
 
-        Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, zExtent,
-                params.getTExtent(), varIds);
-        features.addAll((Collection<? extends PointSeriesFeature>) getFeatureReader().readFeatures(
-                featureIds, varIds));
-        if (pos != null) {
+        Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, zExtent, tExtent,
+                varIds);
+        @SuppressWarnings("unchecked")
+        Collection<? extends PointSeriesFeature> readFeatures = (Collection<? extends PointSeriesFeature>) getFeatureReader()
+                .readFeatures(featureIds, varIds);
+        features.addAll(readFeatures);
+        if (targetPos != null) {
             Collections.sort(features, new Comparator<PointSeriesFeature>() {
                 @Override
                 public int compare(PointSeriesFeature o1, PointSeriesFeature o2) {
-                    return Double.compare(GISUtils.getDistSquared(o1.getHorizontalPosition(), pos),
-                            GISUtils.getDistSquared(o2.getHorizontalPosition(), pos));
+                    return Double.compare(
+                            GISUtils.getDistSquared(o1.getHorizontalPosition(), targetPos),
+                            GISUtils.getDistSquared(o2.getHorizontalPosition(), targetPos));
                 }
             });
         }

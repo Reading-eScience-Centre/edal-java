@@ -13,9 +13,9 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.graphics.style.sld.StyleSLDParser;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.ncwms.NcwmsCatalogue;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 
 public class SLDParserTester {
 
@@ -25,7 +25,7 @@ public class SLDParserTester {
 			final int WIDTH = 1024;
 			final int HEIGHT = 512;
 	        BoundingBox bbox = new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84);
-			PlottingDomainParams params = new PlottingDomainParams(WIDTH, HEIGHT, bbox, null, null, null, null, null);
+			PlottingDomainParams params = PlottingDomainParams.paramsForGriddedDataset(WIDTH, HEIGHT, bbox, null, null);
 
 			// load the datasets from a config file
 			DatasetFactory.setDefaultDatasetFactoryClass(CdmGridDatasetFactory.class);

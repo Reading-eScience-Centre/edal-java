@@ -21,7 +21,7 @@ public class SLDConfidenceIntervalSymbolizer extends AbstractSLDSymbolizer2D {
 				"./resc:GlyphSize", symbolizerNode, XPathConstants.STRING);
 		Integer glyphSize = 9;
 		if (!(glyphSizeText == null) && ! (glyphSizeText.equals(""))) {
-			glyphSize = Integer.parseInt(glyphSizeText);
+			glyphSize = Integer.parseInt(glyphSizeText.trim());
 		}
 
 		ColourScheme colourScheme = parseColorMap(xPath, symbolizerNode);

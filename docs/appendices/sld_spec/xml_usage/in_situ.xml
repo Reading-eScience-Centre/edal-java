@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<StyledLayerDescriptor version="1.1.0"
+    xsi:schemaLocation="http://www.opengis.net/sld
+StyledLayerDescriptor.xsd"
+    xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc"
+    xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
+    <NamedLayer>
+        <se:Name>en4/POTM_CORRECTED</se:Name>
+        <UserStyle>
+            <se:Name>Red-blue palette showing SST with basic glyphs
+            </se:Name>
+            <se:CoverageStyle>
+                <se:Rule>
+                    <resc:ColoredGlyphSymbolizer>
+                        <se:Opacity>1.0</se:Opacity>
+                        <resc:IconName>circle</resc:IconName>
+                        <se:ColorMap>
+                            <resc:Segment fallbackValue="transparent">
+                                <se:LookupValue>Rasterdata
+                                </se:LookupValue>
+                                <resc:BelowMinValue>extend
+                                </resc:BelowMinValue>
+                                <resc:ValueList>
+                                    <se:Name>div-BuRd2</se:Name>
+                                </resc:ValueList>
+                                <resc:AboveMaxValue>extend
+                                </resc:AboveMaxValue>
+                                <resc:Range>
+                                    <resc:Minimum>-5.0</resc:Minimum>
+                                    <resc:Maximum>40.0</resc:Maximum>
+                                    <resc:Spacing>linear</resc:Spacing>
+                                </resc:Range>
+                                <resc:NumberOfSegments>250
+                                </resc:NumberOfSegments>
+                            </resc:Segment>
+                        </se:ColorMap>
+                    </resc:ColoredGlyphSymbolizer>
+                </se:Rule>
+            </se:CoverageStyle>
+        </UserStyle>
+    </NamedLayer>
+</StyledLayerDescriptor>

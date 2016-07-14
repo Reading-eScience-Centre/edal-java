@@ -11,8 +11,8 @@ import javax.xml.xpath.XPath;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 public class ColorSLDMapFunction extends AbstractSLDMapFunction<Color> {
 
@@ -37,7 +37,7 @@ public class ColorSLDMapFunction extends AbstractSLDMapFunction<Color> {
             categories = new HashMap<>();
             for (int j = 0; j < colourNodes.getLength(); j++) {
                 Node colourNode = colourNodes.item(j);
-                String mapValue = xPath.evaluate("./@dataValue", colourNode);
+                String mapValue = xPath.evaluate("./@dataValue", colourNode).trim();
                 String catLabel = xPath.evaluate("./@dataLabel", colourNode);
                 if (!mapValue.isEmpty()) {
                     valueMap.put(Integer.parseInt(mapValue),
@@ -45,10 +45,8 @@ public class ColorSLDMapFunction extends AbstractSLDMapFunction<Color> {
                     if (catLabel == null || catLabel.isEmpty()) {
                         catLabel = "No label";
                     }
-                    categories.put(
-                            Integer.parseInt(mapValue),
-                            new Category(catLabel, catLabel, GraphicsUtils.parseColour(colourNode
-                                    .getTextContent()), catLabel));
+                    categories.put(Integer.parseInt(mapValue), new Category(catLabel, catLabel,
+                            colourNode.getTextContent(), catLabel));
                 } else {
                     throw new SLDException(
                             "For a int-colour map, each element must contain the attribute \"dataValue\"");

@@ -42,10 +42,12 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import thredds.client.catalog.ServiceType;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
+import ucar.nc2.dataset.DatasetUrl;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.ncml.NcMLReader;
 import ucar.nc2.units.DateUnit;
@@ -127,11 +129,40 @@ public class NetcdfDatasetAggregator {
      */
     public static synchronized NetcdfDataset getDataset(String location) throws IOException,
             EdalException {
+        return getDataset(location, false);
+    }
+
+    /**
+     * Opens the NetCDF dataset at the given location, using the dataset cache.
+     * Once acquired, this should be marked as finished with by calling
+     * {@link NetcdfDatasetAggregator#releaseDataset(NetcdfDataset)}
+     * 
+     * @param location
+     *            The location of the data: a local NetCDF file, an NcML
+     *            aggregation file or an OPeNDAP location, {@literal i.e.}
+     *            anything that can be passed to
+     *            NetcdfDataset.openDataset(location).
+     * @param forceRefresh
+     *            Set to <code>true</code> if cached data should be ignored
+     * 
+     * @return a {@link NetcdfDataset} object for accessing the data at the
+     *         given location. This should NEVER be CLOSED. Instead
+     *         {@link NetcdfDatasetAggregator#releaseDataset(NetcdfDataset)}
+     *         MUST be called when the resource is finished with. This will
+     *         allow the {@link NetcdfDatasetAggregator} to release it from the
+     *         cache and close it if necessary. To re-obtain the same dataset,
+     *         call this method again.
+     * 
+     * @throws IOException
+     *             if there was an error reading from the data source.
+     */
+    public static synchronized NetcdfDataset getDataset(String location, boolean forceRefresh)
+            throws IOException, EdalException {
         NetcdfDataset nc;
-        if (datasetCache.containsKey(location)) {
+        if (datasetCache.containsKey(location) && !forceRefresh) {
             nc = datasetCache.get(location);
         } else {
-            if (location.startsWith("dods://") || location.startsWith("http://")) {
+            if (isRemote(location)) {
                 /*
                  * We have a remote dataset
                  */
@@ -164,13 +195,17 @@ public class NetcdfDatasetAggregator {
                      * just use that.
                      */
                     String ncmlString;
-                    if (ncmlStringCache.containsKey(location)) {
+                    if (ncmlStringCache.containsKey(location) && !forceRefresh) {
                         ncmlString = ncmlStringCache.get(location);
                     } else {
                         /*
                          * Find the name of the time dimension
                          */
-                        NetcdfDataset first = getDataset(files.get(0).getAbsolutePath());
+                        NetcdfDataset first = getDataset(files.get(0).getAbsolutePath(),
+                                forceRefresh);
+                        if (first.getFileTypeId().startsWith("GRIB")) {
+                            throw new EdalException("Cannot automatically aggregate GRIB files.");
+                        }
                         String timeDimName = null;
                         for (Variable var : first.getVariables()) {
                             if (var.isCoordinateVariable()) {
@@ -341,7 +376,11 @@ public class NetcdfDatasetAggregator {
                  * underlying data can change we rely on the server admin
                  * setting the "recheckEvery" parameter in the aggregation file.
                  */
-                nc = NetcdfDataset.acquireDataset(location, null);
+                if (!isRemote(location)) {
+                    location = "file://" + location;
+                }
+                nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, location), true,
+                        null);
             } else {
                 /*
                  * For local single files and OPeNDAP datasets we don't use the
@@ -357,6 +396,10 @@ public class NetcdfDatasetAggregator {
             throw new DataReadingException("Problem reading underlying NetCDF dataset", e);
         }
         return nc;
+    }
+
+    private static boolean isRemote(String location) {
+        return location.startsWith("dods://") || location.startsWith("http://");
     }
 
     /**

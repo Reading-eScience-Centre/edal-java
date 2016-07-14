@@ -54,10 +54,10 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.graphics.style.util.ColourPalette;
-import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.utils.ColourPalette;
+import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 /**
  * A class representing a dataset in the XML config. This contains all of the
@@ -82,7 +82,7 @@ public class DatasetConfig {
 
     /* Title for this dataset */
     @XmlAttribute(name = "title", required = true)
-    private String title;
+    private String title = "";
 
     /* Location of this dataset (NcML file, OPeNDAP location etc) */
     @XmlAttribute(name = "location", required = true)
@@ -210,7 +210,7 @@ public class DatasetConfig {
              */
             state = lastSuccessfulUpdateTime == null ? DatasetState.LOADING : DatasetState.UPDATING;
 
-            createDataset(datasetStorage);
+            createDataset(datasetStorage, true);
 
             /*
              * Update the state of this dataset. If we've got this far there
@@ -232,11 +232,10 @@ public class DatasetConfig {
                 log.error(e.getClass().getName() + " loading metadata for dataset " + id, e);
             }
             err = e;
-            e.printStackTrace();
         }
     }
 
-    public void createDataset(DatasetStorage datasetStorage) throws InstantiationException,
+    public void createDataset(DatasetStorage datasetStorage, boolean forceRefresh) throws InstantiationException,
             IllegalAccessException, ClassNotFoundException, IOException, EdalException {
         loadingProgress.add("Starting loading");
 
@@ -251,7 +250,7 @@ public class DatasetConfig {
          * TODO In the old version, we dealt with OPeNDAP credentials here...
          */
 
-        Dataset dataset = factory.createDataset(id, location);
+        Dataset dataset = factory.createDataset(id, location, forceRefresh);
 
         loadingProgress.add("Dataset created");
         /*

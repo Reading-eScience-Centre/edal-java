@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
-import uk.ac.rdg.resc.edal.graphics.style.util.EnhancedVariableMetadata;
+import uk.ac.rdg.resc.edal.graphics.utils.EnhancedVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
@@ -273,8 +273,7 @@ public class WmsUtils {
      *            The name of the layer
      * @param catalogue
      *            The {@link WmsCatalogue} which holds the variable
-     * @return A {@link List} of {@link StyleDef}s representing the supported
-     *         styles
+     * @return A {@link Collection} of the names of the supported styles
      * @throws EdalLayerNotFoundException
      *             If the given layer name doesn't map to an available
      *             {@link Dataset} and Variable combination

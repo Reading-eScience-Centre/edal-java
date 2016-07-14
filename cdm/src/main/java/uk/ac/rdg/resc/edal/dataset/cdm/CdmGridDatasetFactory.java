@@ -53,8 +53,10 @@ import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset.Gridset;
 import ucar.nc2.dt.GridDatatype;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
+import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
+import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.dataset.HZTDataSource;
@@ -68,6 +70,7 @@ import uk.ac.rdg.resc.edal.grid.HorizontalMesh;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
+import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.HorizontalMesh4dVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
@@ -91,8 +94,8 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  */
 public final class CdmGridDatasetFactory extends CdmDatasetFactory {
     @Override
-    protected Dataset generateDataset(String id, String location, NetcdfDataset nc)
-            throws IOException {
+    protected DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateDataset(
+            String id, String location, NetcdfDataset nc) throws IOException {
         if (isUgrid(nc)) {
             return generateUnstructuredGridDataset(id, location, nc);
         } else if (isSgrid(nc)) {
@@ -102,7 +105,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         }
     }
 
-    private Dataset generateGridDataset(String id, String location, NetcdfDataset nc)
+    private CdmGridDataset generateGridDataset(String id, String location, NetcdfDataset nc)
             throws IOException {
         ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
         List<GridVariableMetadata> vars = new ArrayList<>();
@@ -164,7 +167,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
 
     }
 
-    private Dataset generateStaggeredGridDataset(String id, String location, NetcdfDataset nc)
+    private DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateStaggeredGridDataset(String id, String location, NetcdfDataset nc)
             throws IOException {
         List<Variable> variables = nc.getVariables();
 
@@ -264,7 +267,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
             List<CoordinateAxis> coordinateAxes = coordSys.getCoordinateAxes();
             System.out.println("X axis name:"+coordSys.getXHorizAxis().getFullName());
             System.out.println("Y axis name:"+coordSys.getYHorizAxis().getFullName());
-            List<Dimension> domain = coordSys.getDomain();
+            Collection<Dimension> domain = coordSys.getDomain();
             for (Dimension dim : domain) {
                 String dimName = dim.getFullName();
                 if (dimName.equalsIgnoreCase(nodeCoordVals[0])) {
@@ -320,7 +323,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         return cdmGridDataset;
     }
 
-    private Dataset generateUnstructuredGridDataset(String id, String location, NetcdfDataset nc)
+    private CdmUgridDataset generateUnstructuredGridDataset(String id, String location, NetcdfDataset nc)
             throws IOException {
         /*
          * Keep a list of non data variables. This will include the dummy

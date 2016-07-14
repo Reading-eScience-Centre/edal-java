@@ -45,9 +45,9 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.graphics.style.util.FeatureCatalogue;
-import uk.ac.rdg.resc.edal.graphics.style.util.LegendDataGenerator;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
+import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
+import uk.ac.rdg.resc.edal.graphics.utils.LegendDataGenerator;
+import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 
 public class MapImage extends Drawable {
     private List<Drawable> layers = new ArrayList<Drawable>();
@@ -134,7 +134,7 @@ public class MapImage extends Drawable {
      */
     public BufferedImage getLegend(int componentWidth, int componentHeight, boolean force1D)
             throws EdalException {
-        return getLegend(componentWidth, componentHeight, Color.black, Color.white, true, true);
+        return getLegend(componentWidth, componentHeight, Color.black, Color.white, true, force1D);
     }
 
     /**

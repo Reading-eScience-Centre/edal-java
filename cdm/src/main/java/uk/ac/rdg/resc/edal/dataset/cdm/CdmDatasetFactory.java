@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,16 +38,18 @@ import java.util.Map.Entry;
 import ucar.nc2.Attribute;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
+import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
-import uk.ac.rdg.resc.edal.dataset.plugins.MeanSDPlugin;
+import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
+import uk.ac.rdg.resc.edal.dataset.plugins.ValueErrorPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
 
 /**
  * {@link DatasetFactory} that creates {@link Dataset}s representing gridded
@@ -64,18 +65,26 @@ import uk.ac.rdg.resc.edal.util.GraphicsUtils;
  */
 public abstract class CdmDatasetFactory extends DatasetFactory {
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> createDataset(
+            String id, String location) throws IOException, EdalException {
+        return createDataset(id, location, false);
+    }
+
+    @Override
+    public DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> createDataset(
+            String id, String location, boolean forceRefresh) throws IOException, EdalException {
         NetcdfDataset nc = null;
         try {
             /*
              * Open the NetcdfDataset, using the cache.
              */
-            nc = NetcdfDatasetAggregator.getDataset(location);
+            nc = NetcdfDatasetAggregator.getDataset(location, forceRefresh);
 
             /*
              * Generate a simple dataset - delegated to subclasses
              */
-            Dataset dataset = generateDataset(id, location, nc);
+            DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> dataset = generateDataset(
+                    id, location, nc);
 
             /*
              * Scans the NetcdfDataset for variables which pair up to make
@@ -90,8 +99,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              * Scans the NetcdfDataset for variables which pair up as
              * mean/stddev, and adds the appropriate MeanSDPlugins
              */
-            List<MeanSDPlugin> uncerts = processUncertainty(nc);
-            for (MeanSDPlugin plugin : uncerts) {
+            List<ValueErrorPlugin> uncerts = processUncertainty(nc);
+            for (ValueErrorPlugin plugin : uncerts) {
                 dataset.addVariablePlugin(plugin);
             }
 
@@ -145,17 +154,13 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                             + meaningsArray.length + " category meanings.");
                 }
             }
-            Color[] coloursArray = null;
+            String[] coloursArray = null;
             if (flagColours != null) {
-                String[] split = ((String) flagColours.getValue(0)).split("\\s+");
-                if (split.length != flagValues.getLength()) {
+                coloursArray = ((String) flagColours.getValue(0)).split("\\s+");
+                if (coloursArray.length != flagValues.getLength()) {
                     throw new DataReadingException("Categorical data detected, but there are "
-                            + flagValues.getLength() + " category values and " + split.length
-                            + " category colours.");
-                }
-                coloursArray = new Color[split.length];
-                for (int i = 0; i < split.length; i++) {
-                    coloursArray[i] = GraphicsUtils.parseColour(split[i]);
+                            + flagValues.getLength() + " category values and "
+                            + coloursArray.length + " category colours.");
                 }
             }
             /*
@@ -183,7 +188,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                 if (flagNamespace != null) {
                     id = flagNamespace + id;
                 }
-                Color colour = coloursArray == null ? null : coloursArray[i];
+                String colour = coloursArray == null ? null : coloursArray[i];
                 catMap.put(flagValues.getNumericValue(i).intValue(), new Category(id, label,
                         colour, null));
             }
@@ -290,7 +295,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         return ret;
     }
 
-    private List<MeanSDPlugin> processUncertainty(NetcdfDataset nc) {
+    private List<ValueErrorPlugin> processUncertainty(NetcdfDataset nc) {
         /*
          * We look for NetCDF-U variables to group mean/standard-deviation.
          * 
@@ -345,25 +350,28 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
             }
         }
 
-        List<MeanSDPlugin> ret = new ArrayList<>();
+        List<ValueErrorPlugin> ret = new ArrayList<>();
         for (String statsCollectionId : varId2AncillaryVars.keySet()) {
             String[] ids = varId2AncillaryVars.get(statsCollectionId);
-            String meanId = null;
-            String stddevId = null;
+            String valueId = null;
+            String errorId = null;
             for (String statsVarIds : ids) {
                 String uncertRef = varId2UncertMLRefs.get(statsVarIds);
-                if (uncertRef != null
-                        && uncertRef.equalsIgnoreCase("http://www.uncertml.org/statistics/mean")) {
-                    meanId = statsVarIds;
+                if (valueId == null
+                        && ("http://www.uncertml.org/statistics/mean".equalsIgnoreCase(uncertRef)
+                                || "http://www.uncertml.org/statistics/median".equalsIgnoreCase(uncertRef)
+                                || "http://www.uncertml.org/statistics/mode".equalsIgnoreCase(uncertRef) 
+                                || "http://www.uncertml.org/statistics/moment".equalsIgnoreCase(uncertRef))) {
+                    valueId = statsVarIds;
                 }
-                if (uncertRef != null
-                        && uncertRef
-                                .equalsIgnoreCase("http://www.uncertml.org/statistics/standard-deviation")) {
-                    stddevId = statsVarIds;
+                if (errorId == null
+                        && ("http://www.uncertml.org/statistics/standard-deviation".equalsIgnoreCase(uncertRef)
+                                || "http://www.uncertml.org/statistics/variance".equalsIgnoreCase(uncertRef))) {
+                    errorId = statsVarIds;
                 }
             }
-            if (meanId != null && stddevId != null) {
-                MeanSDPlugin meanSDPlugin = new MeanSDPlugin(meanId, stddevId,
+            if (valueId != null && errorId != null) {
+                ValueErrorPlugin meanSDPlugin = new ValueErrorPlugin(valueId, errorId,
                         parentVarId2Title.get(statsCollectionId));
                 ret.add(meanSDPlugin);
             }
@@ -372,10 +380,11 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
     }
 
     /**
-     * Generate a {@link Dataset} for the given ID, location, and
+     * Generate a {@link DiscreteLayeredDataset} for the given ID, location, and
      * {@link NetcdfDataset}. Subclasses should use this to generate a simple
-     * {@link Dataset} - i.e. one with no additional plugins etc. All required
-     * {@link VariablePlugin}s will be detected and handled by this class.
+     * {@link DiscreteLayeredDataset} - i.e. one with no additional plugins etc.
+     * All required {@link VariablePlugin}s will be detected and handled by this
+     * class.
      * 
      * @param id
      *            The ID of the {@link Dataset}
@@ -383,13 +392,13 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
      *            The location of the {@link Dataset} (either on disk or online)
      * @param nc
      *            The {@link NetcdfDataset} representing the {@link Dataset}
-     * @return A {@link Dataset}
+     * @return A {@link DiscreteLayeredDataset}
      * @throws IOException
      *             If there is a problem reading the underlying
      *             {@link NetcdfDataset}
      */
-    protected abstract Dataset generateDataset(String id, String location, NetcdfDataset nc)
-            throws IOException;
+    protected abstract DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateDataset(
+            String id, String location, NetcdfDataset nc) throws IOException;
 
     /**
      * @return the phenomenon that the given variable represents.

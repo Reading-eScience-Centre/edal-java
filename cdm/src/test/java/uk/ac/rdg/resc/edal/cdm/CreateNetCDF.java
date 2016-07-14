@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.cdm;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.joda.time.DateTime;
 
@@ -38,7 +39,7 @@ import ucar.ma2.ArrayInt;
 import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Dimension;
-import ucar.nc2.NetcdfFileWriteable;
+import ucar.nc2.NetcdfFileWriter;
 
 /**
  * This class is not part of the test suite, but may be run to generate the test
@@ -46,7 +47,6 @@ import ucar.nc2.NetcdfFileWriteable;
  * portable way, so this class doesn't attempt this. Test data should generally
  * only need generating once anyway.
  */
-@SuppressWarnings("deprecation")
 public class CreateNetCDF {
     public static void main(String args[]) {
         /*
@@ -57,9 +57,9 @@ public class CreateNetCDF {
         final int NZ = 11;
         final int NT = 10;
         String filename = "test.nc";
-        NetcdfFileWriteable dataFile = null;
+        NetcdfFileWriter dataFile = null;
         try {
-            dataFile = NetcdfFileWriteable.createNew(filename, false);
+            dataFile = NetcdfFileWriter.createNew(filename, false);
             ArrayList<Dimension> dims = new ArrayList<Dimension>();
             Dimension latDim = dataFile.addDimension("latitude", NLAT);
             Dimension lonDim = dataFile.addDimension("longitude", NLON);
@@ -73,10 +73,13 @@ public class CreateNetCDF {
             dims.add(latDim);
             dims.add(lonDim);
 
-            dataFile.addVariable("latitude", DataType.FLOAT, new Dimension[] { latDim });
-            dataFile.addVariable("longitude", DataType.FLOAT, new Dimension[] { lonDim });
-            dataFile.addVariable("depth", DataType.FLOAT, new Dimension[] { depthDim });
-            dataFile.addVariable("time", DataType.INT, new Dimension[] { timeDim });
+            dataFile.addVariable("latitude", DataType.FLOAT,
+                    Arrays.asList(new Dimension[] { latDim }));
+            dataFile.addVariable("longitude", DataType.FLOAT,
+                    Arrays.asList(new Dimension[] { lonDim }));
+            dataFile.addVariable("depth", DataType.FLOAT,
+                    Arrays.asList(new Dimension[] { depthDim }));
+            dataFile.addVariable("time", DataType.INT, Arrays.asList(new Dimension[] { timeDim }));
             /*
              * Define units attributes for coordinate vars.
              */
@@ -142,7 +145,7 @@ public class CreateNetCDF {
             ArrayFloat.D1 dataLat = new ArrayFloat.D1(latDim.getLength());
             ArrayFloat.D1 dataLon = new ArrayFloat.D1(lonDim.getLength());
             ArrayFloat.D1 dataDepth = new ArrayFloat.D1(depthDim.getLength());
-            ArrayInt.D1 dataTime = new ArrayInt.D1(timeDim.getLength());
+            ArrayInt.D1 dataTime = new ArrayInt.D1(timeDim.getLength(), false);
             for (int i = 0; i < latDim.getLength(); i++) {
                 dataLat.set(i, -90f + (190f / NLAT) * i);
             }
@@ -279,6 +282,6 @@ public class CreateNetCDF {
                 }
             }
         }
-        System.out.println("Test file written to: " + dataFile.getLocation());
+        System.out.println("Test file written to: " + dataFile.getNetcdfFile().getLocation());
     }
 }

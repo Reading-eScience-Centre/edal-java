@@ -44,92 +44,72 @@ import uk.ac.rdg.resc.edal.util.Extents;
  */
 public class ConfidenceIntervalLayer extends GriddedImageLayer {
 
-	// The name of the variable to use for the lower bounds
+    // The name of the variable to use for the lower bounds
     protected String lowerFieldName;
-	// The name of the variable to use for the upper bounds
+    // The name of the variable to use for the upper bounds
     protected String upperFieldName;
     // The size of the glyphs
-    private Integer glyphSize = 9;
-	// The colour scheme to use
+    private Integer glyphSize = 8;
+    // The colour scheme to use
     protected ColourScheme colourScheme;
 
-	public ConfidenceIntervalLayer(String lowerFieldName, String upperFieldName,
-			int glyphSize, ColourScheme colourSceme) {
-		this.lowerFieldName = lowerFieldName;
-		this.upperFieldName = upperFieldName;
-		this.glyphSize = glyphSize;
-		this.colourScheme = colourSceme;
-		
-		if(glyphSize < 1) {
-		    throw new IllegalArgumentException("Glyph size must be > 0");
-		}        
-	}
+    public ConfidenceIntervalLayer(String lowerFieldName, String upperFieldName, int glyphSize,
+            ColourScheme colourSceme) {
+        this.lowerFieldName = lowerFieldName;
+        this.upperFieldName = upperFieldName;
+        this.glyphSize = glyphSize;
+        this.colourScheme = colourSceme;
 
-	@Override
-	protected void drawIntoImage(BufferedImage image,
-			MapFeatureDataReader dataReader) throws EdalException {
+        if (glyphSize < 1) {
+            throw new IllegalArgumentException("Glyph size must be > 0");
+        }
+    }
+
+    @Override
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader)
+            throws EdalException {
         /*
          * The graphics object for drawing
          */
         Graphics2D g = image.createGraphics();
-        
-		/*
-         * Plot the lower triangles. Start by extracting the data from the
-         * catalogue. 
-         */
-        Array2D<Number> values = dataReader.getDataForLayerName(lowerFieldName);
-        /*
-         * The iterator iterates over the x-dimension first.
-         */
-        int index = 0;
-        for (Number value : values) {
-            if (value != null && !Float.isNaN(value.floatValue())) {
-            	int j = index/image.getWidth();
-            	int i = index - j*image.getWidth();
-            	if (j%glyphSize == 0 && i%glyphSize == 0) {
-	            	Color color = colourScheme.getColor(value);
-	        		int[] xPoints = {i - glyphSize / 2, i + glyphSize / 2, i + glyphSize / 2};
-	        		int[] yPoints = {j + glyphSize / 2, j + glyphSize / 2, j - glyphSize / 2};
-	        		g.setColor(color);
-	            	g.fillPolygon(xPoints, yPoints, 3);	
-            	}
-            }
-        	index++;
-        }
-        
-		/*
-         * Plot the upper triangles. Start by extracting the data from the
-         * catalogue. 
-         */
-        values = dataReader.getDataForLayerName(upperFieldName);
-        /*
-         * The iterator iterates over the x-dimension first.
-         */
-        index = 0;
-        for (Number value : values) {
-            if (value != null && !Float.isNaN(value.floatValue())) {
-            	int j = index/image.getWidth();
-            	int i = index - j*image.getWidth();
-            	if (j%glyphSize == 0 && i%glyphSize == 0) {
-            		Color color = colourScheme.getColor(value);
-            		int[] xPoints = {i - glyphSize / 2, i - glyphSize / 2, i + glyphSize / 2};
-            		int[] yPoints = {j + glyphSize / 2, j - glyphSize / 2, j - glyphSize / 2};
-            		g.setColor(color);
-            		g.fillPolygon(xPoints, yPoints, 3);
-            	}
-            }
-        	index++;
-        }
-	}
 
-	@Override
-	public Set<NameAndRange> getFieldsWithScales() {
+        /*
+         * Plot the lower triangles. Start by extracting the data from the
+         * catalogue.
+         */
+        Array2D<Number> lowerValues = dataReader.getDataForLayerName(lowerFieldName);
+        Array2D<Number> upperValues = dataReader.getDataForLayerName(upperFieldName);
+        for (int i = glyphSize/2; i <= lowerValues.getXSize()-glyphSize/2; i += glyphSize) {
+            for (int j = glyphSize/2; j <= lowerValues.getYSize()-glyphSize/2; j += glyphSize) {
+                Number lowVal = lowerValues.get(j, i);
+                Number highVal = upperValues.get(j, i);
+                if ((lowVal != null && !Float.isNaN(lowVal.floatValue()))
+                        || (highVal != null && !Float.isNaN(highVal.floatValue()))) {
+                    Color lowCol = colourScheme.getColor(lowVal);
+                    Color upCol = colourScheme.getColor(highVal);
+                    
+                    int[] xPoints = { i - glyphSize / 2, i + glyphSize / 2, i + glyphSize / 2 };
+                    int[] yPoints = { j + glyphSize / 2, j + glyphSize / 2, j - glyphSize / 2 };
+                    g.setColor(lowCol);
+                    g.fillPolygon(xPoints, yPoints, 3);
+                    
+                    xPoints = new int[]{ i - glyphSize / 2, i - glyphSize / 2, i + glyphSize / 2 };
+                    yPoints = new int[]{ j + glyphSize / 2, j - glyphSize / 2, j - glyphSize / 2 };
+                    g.setColor(upCol);
+                    g.fillPolygon(xPoints, yPoints, 3);
+                }
+            }
+        }
+    }
+
+    @Override
+    public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
-        ret.add(new NameAndRange(lowerFieldName, Extents.newExtent(
-                colourScheme.getScaleMin(), colourScheme.getScaleMax())));
-        ret.add(new NameAndRange(upperFieldName, Extents.newExtent(
-                colourScheme.getScaleMin(), colourScheme.getScaleMax())));
+        ret.add(new NameAndRange(lowerFieldName, Extents.newExtent(colourScheme.getScaleMin(),
+                colourScheme.getScaleMax())));
+        ret.add(new NameAndRange(upperFieldName, Extents.newExtent(colourScheme.getScaleMin(),
+                colourScheme.getScaleMax())));
         return ret;
-	}
+    }
 
 }

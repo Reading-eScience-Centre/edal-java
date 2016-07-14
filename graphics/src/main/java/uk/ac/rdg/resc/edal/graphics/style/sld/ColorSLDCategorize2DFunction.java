@@ -8,7 +8,7 @@ import javax.xml.xpath.XPath;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import uk.ac.rdg.resc.edal.util.GraphicsUtils;
+import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 
 public class ColorSLDCategorize2DFunction extends
 		AbstractSLDCategorize2DFunction<Color> {

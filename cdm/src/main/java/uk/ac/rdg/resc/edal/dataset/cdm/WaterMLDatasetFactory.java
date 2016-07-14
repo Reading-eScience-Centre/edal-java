@@ -54,13 +54,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import uk.ac.rdg.resc.edal.dataset.AbstractPointDataset;
+import uk.ac.rdg.resc.edal.dataset.PointDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
 import uk.ac.rdg.resc.edal.dataset.FeatureIndexer;
 import uk.ac.rdg.resc.edal.dataset.FeatureIndexer.FeatureBounds;
 import uk.ac.rdg.resc.edal.dataset.PRTreeFeatureIndexer;
+import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleHorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
@@ -69,20 +70,21 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
 public class WaterMLDatasetFactory extends DatasetFactory {
 
     @Override
-    public Dataset createDataset(String id, String location) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location, boolean forceRefresh)
+            throws IOException, EdalException {
         try {
             /*
              * First we read the GetSiteInfoFile.xml which maps site codes to
@@ -210,7 +212,7 @@ public class WaterMLDatasetFactory extends DatasetFactory {
         }
     }
 
-    class WaterMLDataset extends AbstractPointDataset<PointSeriesFeature> {
+    class WaterMLDataset extends PointDataset<PointSeriesFeature> {
         private WaterMLFeatureReader featureReader;
 
         public WaterMLDataset(String id, Collection<VariableMetadata> vars,
@@ -235,9 +237,9 @@ public class WaterMLDatasetFactory extends DatasetFactory {
         }
 
         @Override
-        protected PointFeature convertFeature(PointSeriesFeature feature,
-                PlottingDomainParams params) {
-            return convertPointSeriesFeature(feature, params);
+        protected PointFeature convertFeature(PointSeriesFeature feature, BoundingBox hExtent,
+                Extent<Double> zExtent, Extent<DateTime> tExtent, Double targetZ, DateTime targetT) {
+            return convertPointSeriesFeature(feature, tExtent, targetT);
         }
 
         @Override

@@ -37,8 +37,8 @@ public class FloatSLDInterpolateFunction extends
 					throw new SLDException("Each interpolation point must contain a value element.");
 				}
 				interpolationPoints.add(new InterpolationPoint<Float>(
-						Float.parseFloat(dataNode.getTextContent()),
-						Float.parseFloat(valueNode.getTextContent())));
+						Float.parseFloat(dataNode.getTextContent().trim()),
+						Float.parseFloat(valueNode.getTextContent().trim())));
 			}
 		} catch(Exception e) {
 			throw new SLDException(e);
