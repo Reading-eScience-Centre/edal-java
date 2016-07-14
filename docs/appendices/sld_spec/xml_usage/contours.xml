@@ -48,19 +48,16 @@ StyledLayerDescriptor.xsd"
                         <se:Opacity>1.0</se:Opacity>
                         <resc:NumberOfContours>10
                         </resc:NumberOfContours>
-                        <resc:ContourLineColour>#FF000000
+                        <resc:ContourLineColour>black
                         </resc:ContourLineColour>
-                        <resc:ContourLineWidth>1</resc:ContourLineWidth>
-                        <resc:ContourLineStyle>DASHED
+                        <resc:ContourLineStyle>SOLID
                         </resc:ContourLineStyle>
-                        <resc:LabelEnabled>true</resc:LabelEnabled>
+                        <resc:ContourLineWidth>1</resc:ContourLineWidth>
                         <resc:Range>
-                            <resc:Minimum>0.5</resc:Minimum>
+                            <resc:Minimum>0</resc:Minimum>
                             <resc:Maximum>2.5</resc:Maximum>
                             <resc:Spacing>linear</resc:Spacing>
                         </resc:Range>
-                        <resc:AutoRangeEnabled>false
-                        </resc:AutoRangeEnabled>
                     </resc:ContourSymbolizer>
                 </se:Rule>
             </se:CoverageStyle>

@@ -63,22 +63,14 @@ public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
         }
         String contourLineStyleText = (String) xPath.evaluate("./resc:ContourLineStyle",
                 symbolizerNode, XPathConstants.STRING);
-        ContourLineStyle contourLineStyle = ContourLineStyle.DASHED;
+        ContourLineStyle contourLineStyle = ContourLineStyle.HEAVY;
         if (!(contourLineStyleText == null) && !(contourLineStyleText.trim().equals(""))) {
             contourLineStyleText = contourLineStyleText.trim();
-            if (contourLineStyleText.equalsIgnoreCase("DASHED")) {
-                contourLineStyle = ContourLineStyle.DASHED;
-            } else if (contourLineStyleText.equalsIgnoreCase("HEAVY")) {
+            if (contourLineStyleText.equalsIgnoreCase("SOLID")) {
                 contourLineStyle = ContourLineStyle.HEAVY;
             } else if (contourLineStyleText.equalsIgnoreCase("HIGHLIGHT")) {
                 contourLineStyle = ContourLineStyle.HIGHLIGHT;
-            } else if (contourLineStyleText.equalsIgnoreCase("MARK")) {
-                contourLineStyle = ContourLineStyle.MARK;
-            } else if (contourLineStyleText.equalsIgnoreCase("MARK_LINE")) {
-                contourLineStyle = ContourLineStyle.MARK_LINE;
-            } else if (contourLineStyleText.equalsIgnoreCase("SOLID")) {
-                contourLineStyle = ContourLineStyle.SOLID;
-            } else if (contourLineStyleText.equalsIgnoreCase("STROKE")) {
+            } else if (contourLineStyleText.equalsIgnoreCase("DASHED")) {
                 contourLineStyle = ContourLineStyle.STROKE;
             } else {
                 throw new SLDException("Contour line style not recognized.");

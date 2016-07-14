@@ -6,6 +6,8 @@ Arrows are designed to represent the direction of vectors. The `<resc:ArrowSymbo
 | --- | --- | --- | --- |
 | `<resc:ArrowSize>` | Integer | 8 | Size of arrows |
 | `<resc:ArrowColour>` | String | #FF000000 (Black) | Colour of arrows |
+| `<resc:ArrowBackground>` | String | transparent | Colour of the background |
+| `<resc:ArrowStyle>` | String | THIN_ARROW | Style of the arrows to plot.  Accepts the values "THIN_ARROW" (a normal arrow), "FAT_ARROW" (a wider version), "TRI_ARROW" (a long isosceles triangle), "UPSTREAM" (dots with a line pointing in the desired direction) |
 
 For example:
 
@@ -14,5 +16,7 @@ For example:
     <se:Opacity>1.0</se:Opacity>
     <resc:ArrowSize>8</resc:ArrowSize>
     <resc:ArrowColour>#FF000000</resc:ArrowColour>
+    <resc:ArrowStyle>UPSTREAM</resc:ArrowStyle>
+    <resc:ArrowBackground>transparent</resc:ArrowBackground>
 </resc:ArrowSymbolizer>
 ```

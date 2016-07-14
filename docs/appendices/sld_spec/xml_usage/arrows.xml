@@ -48,6 +48,8 @@ StyledLayerDescriptor.xsd"
                         <se:Opacity>1.0</se:Opacity>
                         <resc:ArrowSize>8</resc:ArrowSize>
                         <resc:ArrowColour>#FF000000</resc:ArrowColour>
+                        <resc:ArrowBackground>transparent</resc:ArrowBackground>
+                        <resc:ArrowStyle>TRI_ARROW</resc:ArrowStyle>
                     </resc:ArrowSymbolizer>
                 </se:Rule>
             </se:CoverageStyle>
