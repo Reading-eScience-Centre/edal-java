@@ -2,7 +2,7 @@
 
 The example below illustrates how to extract point data from a gridded dataset and print it to the screen. 
 
-[include](../../examples/src/main/java/uk/ac/rdg/resc/edal/examples/ReadPointData.java)
+[include](../examples/src/main/java/uk/ac/rdg/resc/edal/examples/ReadPointData.java)
 
 Example output:
 ```
