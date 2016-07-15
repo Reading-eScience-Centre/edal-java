@@ -22,7 +22,7 @@
     <description>EDAL (Environmental Data Abstraction Library) is a set of Java libararies that provide a consistent means for accessing and manipulating environmental data. The core concepts are based on the standards-compliant data model of the Climate Science Modelling Language.</description>
     <organization>
         <name>Reading e-Science Centre, University of Reading, UK</name>
-        <url>http://www.resc.reading.ac.uk</url>
+        <url>http://www.met.reading.ac.uk/resc/home/</url>
     </organization>
     <licenses>
         <license>
@@ -253,10 +253,6 @@
             <id>edal-snapshots</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
-        <site>
-            <id>sweeney</id>
-            <url>scp://sweeney.nerc-essc.ac.uk/users/resc/website/edal</url>
-        </site>
     </distributionManagement>
     <modules>
         <!-- Note that these are relative directory paths, not artifactIds! -->
@@ -268,7 +264,6 @@
         <module>wms</module>
         <module>cdm</module>
         <module>examples</module>
-        <module>ncwms</module>
     </modules>
     <repositories>
         <repository>
