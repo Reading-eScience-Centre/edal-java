@@ -1,3 +1,7 @@
+1.2.2
+=====
+Removed ncWMS from EDAL to its own repository
+
 1.2.1
 =====
 Bugfixes:
