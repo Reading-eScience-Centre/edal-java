@@ -1,7 +1,7 @@
 Environmental Data Abstraction Layer (EDAL)
 ===========================================
 
-The EDAL project comprises a set of libraries to deal with the manipulation and visualisation of environmental data, as well as the ncWMS Web Map Service for exposing this data.
+The EDAL project comprises a set of libraries to deal with the manipulation and visualisation of environmental data.  They were originally created as part of [ncWMS](https://github.com/Reading-eScience-Centre/ncwms) but are standalone libraries which ncWMS uses. 
 
 EDAL consists of a number of modules, each focused on a different task.  These modules are outlined below
 
@@ -26,24 +26,23 @@ The edal-wms module contains an implementation of the WMS (Web Map Service) stan
 
 This module depends on the edal-common module and the edal-graphics module
 
+### EDAL XML Catalogue
+The edal-xml-catalogue module contains an implementation of a data catalogue in an XML format. This allows configuration of a set of datasets through XML for provision to the graphics module.
+
+This module depends on the edal-common module and the edal-graphics module
+
 ### Godiva 3
 The edal-godiva module is a Google Web Toolkit (GWT) based WMS client.  It supports all of the extended WMS requests supplied by the edal-wms module.
 
 This module does not depend on any others.
 
-### ncWMS
-ncWMS is a full implementation of an environmental data WMS.  It uses all of the above modules and adds its own data catalogue and related configuration.  It is packaged as both a WAR file which can be deployed on an application server such as Tomcat or Glassfish, and as a standalone application which runs its own embedded application server.
-
 EDAL was developed primarily to factor out common functionality from the original ncWMS (http://sourceforge.net/projects/ncwms/)
 
 Documentation
 -------------
-Further documentation on using ncWMS and EDAL can be found in the following locations:
-* [EDAL homepage](http://reading-escience-centre.github.io/edal-java/)
-* [EDAL code](https://github.com/Reading-eScience-Centre/edal-java)
-* [ncWMS user guide](http://reading-escience-centre.github.io/edal-java/ncWMS_user_guide.html)
+Further documentation on using EDAL can be found in the [EDAL User Guide](https://reading-escience-centre.gitbooks.io/edal-user-guide/content/)
 
 Authors
 -------
-The EDAL libraries and ncWMS are developed by the [Reading e-Science Centre](http://www.resc.reading.ac.uk)
+The EDAL libraries are developed by the [Reading e-Science Centre](http://www.met.reading.ac.uk/resc/home/)
 

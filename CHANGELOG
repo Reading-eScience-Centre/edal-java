@@ -1,3 +1,9 @@
+1.2.2
+=====
+Removed ncWMS from EDAL to its own repository
+Added EDAL guide + SLD specification to docs
+Made uncertainty visualisation work in WMS with option for specifying multiple colour scale ranges
+
 1.2.1
 =====
 Bugfixes:

@@ -4,4 +4,4 @@ The code below shows an example of how to extract gridded data from a dataset on
 
 ![](images/gridded.png)
 
-[include](../../examples/src/main/java/uk/ac/rdg/resc/edal/examples/GeneratePng.java)  
+[include](../examples/src/main/java/uk/ac/rdg/resc/edal/examples/GeneratePng.java)  
