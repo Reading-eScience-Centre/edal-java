@@ -847,6 +847,9 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             this.usesPalette = usesPalette;
             this.needsNamedLayer = needsNamedLayer;
             this.scaledLayerRoles = scaledLayers;
+            if(this.scaledLayerRoles == null) {
+                this.scaledLayerRoles = new ArrayList<>();
+            }
             this.roles2FeatureType = roles2FeatureType;
             this.role2MetadataFilter = role2MetadataFilter;
         }
