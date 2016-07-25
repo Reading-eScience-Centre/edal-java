@@ -55,7 +55,6 @@ import uk.ac.rdg.resc.edal.grid.GridCell2DImpl;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.position.LonLatPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
@@ -218,16 +217,16 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
                     double y = yAxis.getCoordinateValue(coords[0]);
                     /* Translate this point to lon-lat coordinates */
                     LatLonPoint latLon = proj.projToLatLon(x, y);
-                    HorizontalPosition centre = new LonLatPosition(latLon.getLongitude(),
+                    HorizontalPosition centre = new HorizontalPosition(latLon.getLongitude(),
                             latLon.getLatitude());
 
                     Extent<Double> xExtent = xAxis.getCoordinateBounds(coords[1]);
                     Extent<Double> yExtent = yAxis.getCoordinateBounds(coords[0]);
                     List<HorizontalPosition> vertices = new ArrayList<HorizontalPosition>(4);
-                    vertices.add(new LonLatPosition(xExtent.getLow(), yExtent.getLow()));
-                    vertices.add(new LonLatPosition(xExtent.getHigh(), yExtent.getLow()));
-                    vertices.add(new LonLatPosition(xExtent.getHigh(), yExtent.getHigh()));
-                    vertices.add(new LonLatPosition(xExtent.getLow(), yExtent.getHigh()));
+                    vertices.add(new HorizontalPosition(xExtent.getLow(), yExtent.getLow()));
+                    vertices.add(new HorizontalPosition(xExtent.getHigh(), yExtent.getLow()));
+                    vertices.add(new HorizontalPosition(xExtent.getHigh(), yExtent.getHigh()));
+                    vertices.add(new HorizontalPosition(xExtent.getLow(), yExtent.getHigh()));
                     final List<HorizontalPosition> iVertices = Collections
                             .unmodifiableList(vertices);
 

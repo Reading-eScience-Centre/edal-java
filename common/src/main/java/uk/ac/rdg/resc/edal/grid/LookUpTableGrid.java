@@ -112,6 +112,10 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
         if(!GISUtils.isWgs84LonLat(position.getCoordinateReferenceSystem())) {
             position = GISUtils.transformPosition(position, DefaultGeographicCRS.WGS84);
         }
+        if(!getBoundingBox().contains(position)) {
+            return null;
+        }
+        
         double x = position.getX();
         double y = position.getY();
         /*

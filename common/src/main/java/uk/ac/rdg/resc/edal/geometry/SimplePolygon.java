@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.geometry;
 
 import java.awt.geom.Path2D;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -197,6 +198,44 @@ public class SimplePolygon extends AbstractPolygon {
                     return 0;
                 }
             });
+        } else if (vertices.size() == 4) {
+            if ((vertices.get(0).getX() == vertices.get(1).getX()
+                    && vertices.get(1).getY() == vertices.get(2).getY()
+                    && vertices.get(2).getX() == vertices.get(3).getX() && vertices.get(3).getY() == vertices
+                    .get(0).getY())
+                    || (vertices.get(0).getY() == vertices.get(1).getY()
+                            && vertices.get(1).getX() == vertices.get(2).getX()
+                            && vertices.get(2).getY() == vertices.get(3).getY() && vertices.get(3)
+                            .getX() == vertices.get(0).getX())) {
+                /*
+                 * If this is the case, we have a rectangular polygon aligned to
+                 * the axes of its CRS. i.e. a simple bounding box.
+                 */
+                List<Double> xs = new AbstractList<Double>() {
+                    @Override
+                    public Double get(int index) {
+                        return vertices.get(index).getX();
+                    }
+
+                    @Override
+                    public int size() {
+                        return vertices.size();
+                    }
+                };
+                List<Double> ys = new AbstractList<Double>() {
+                    @Override
+                    public Double get(int index) {
+                        return vertices.get(index).getY();
+                    }
+
+                    @Override
+                    public int size() {
+                        return vertices.size();
+                    }
+                };
+                inBounds.add(new BoundingBoxImpl(Collections.min(xs), Collections.min(ys),
+                        Collections.max(xs), Collections.max(ys), crs));
+            }
         }
     }
 

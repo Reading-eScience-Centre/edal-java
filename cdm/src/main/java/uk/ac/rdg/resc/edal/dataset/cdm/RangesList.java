@@ -79,6 +79,51 @@ final class RangesList {
         }
     }
 
+    /**
+     * Instantiate a new {@link RangesList} with defined dimension indices
+     * 
+     * @param xIndex
+     *            The index of the x-dimension
+     * @param yIndex
+     *            The index of the y-dimension
+     * @param zIndex
+     *            The index of the z-dimension
+     * @param tIndex
+     *            The index of the t-dimension
+     */
+    public RangesList(int xIndex, int yIndex, int zIndex, int tIndex) {
+        int rank = 0;
+        if (xIndex >= 0) {
+            xAxisIndex = xIndex;
+            rank++;
+        }
+        if (yIndex >= 0) {
+            yAxisIndex = yIndex;
+            rank++;
+        }
+        if (zIndex >= 0) {
+            zAxisIndex = zIndex;
+            rank++;
+        }
+        if (tIndex >= 0) {
+            tAxisIndex = tIndex;
+            rank++;
+        }
+        ranges = new ArrayList<Range>(rank);
+        for (int i = 0; i < rank; i++) {
+            ranges.add(ZERO_RANGE);
+        }
+    }
+
+    /**
+     * Instantiate a new {@link RangesList} based on a given
+     * {@link GridDatatype}
+     * 
+     * @param grid
+     *            The {@link GridDatatype} which contains information about
+     *            which axes are present and which index corresponds to which
+     *            dimension
+     */
     public RangesList(GridDatatype grid) {
         Variable var = grid.getVariable();
         int rank = var.getRank();

@@ -40,7 +40,7 @@ import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
-import uk.ac.rdg.resc.edal.position.LonLatPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
  * A horizontal (2D) grid that is defined by explicitly specifying the longitude
@@ -191,15 +191,15 @@ public final class CurvilinearCoords {
 
     /**
      * Gets the location of the midpoint of the cell at indices i, j. The
-     * {@link LonLatPosition#getLongitude() longitude coordinate} of the
+     * {@link HorizontalPosition#getLongitude() longitude coordinate} of the
      * midpoint will be in the range [-180,180].
      * 
      * @throws ArrayIndexOutOfBoundsException
      *             if i and j combine to give a point outside the grid.
      */
-    public LonLatPosition getMidpoint(int i, int j) {
+    public HorizontalPosition getMidpoint(int i, int j) {
         int index = getIndex(i, j);
-        return new LonLatPosition(longitudes[index], latitudes[index]);
+        return new HorizontalPosition(longitudes[index], latitudes[index]);
     }
 
     private int getIndex(int i, int j) {
@@ -212,8 +212,8 @@ public final class CurvilinearCoords {
      * @throws ArrayIndexOutOfBoundsException
      *             if i and j combine to give a point outside the grid.
      */
-    private List<LonLatPosition> getCorners(int i, int j) {
-        List<LonLatPosition> corners = new ArrayList<LonLatPosition>(4);
+    private List<HorizontalPosition> getCorners(int i, int j) {
+        List<HorizontalPosition> corners = new ArrayList<HorizontalPosition>(4);
         corners.add(getCorner(i, j));
         corners.add(getCorner(i + 1, j));
         corners.add(getCorner(i + 1, j + 1));
@@ -225,8 +225,8 @@ public final class CurvilinearCoords {
      * Gets the coordinates of the corner with the given indices <i>in the
      * arrays of corner coordinates</i> (not in the arrays of midpoints).
      */
-    private LonLatPosition getCorner(int cornerI, int cornerJ) {
-        return new LonLatPosition(cornerLons.get(cornerJ, cornerI).doubleValue(), cornerLats.get(
+    private HorizontalPosition getCorner(int cornerI, int cornerJ) {
+        return new HorizontalPosition(cornerLons.get(cornerJ, cornerI).doubleValue(), cornerLats.get(
                 cornerJ, cornerI).doubleValue());
     }
 
@@ -384,7 +384,7 @@ public final class CurvilinearCoords {
          * the cell cannot be used or plotted: it exists in the grid simply for
          * structural convenience).
          */
-        public LonLatPosition getCentre() {
+        public HorizontalPosition getCentre() {
             return CurvilinearCoords.this.getMidpoint(i, j);
         }
 
@@ -406,11 +406,11 @@ public final class CurvilinearCoords {
          * </p>
          */
         public List<Point2D> getCorners() {
-            List<LonLatPosition> corners = CurvilinearCoords.this.getCorners(i, j);
+            List<HorizontalPosition> corners = CurvilinearCoords.this.getCorners(i, j);
             List<Point2D> cornerPoints = new ArrayList<Point2D>(corners.size());
-            for (LonLatPosition corner : corners) {
+            for (HorizontalPosition corner : corners) {
                 Point2D cornerPoint = new Point2D.Double(
-                        harmonizeWithCentre(corner.getLongitude()), corner.getLatitude());
+                        harmonizeWithCentre(corner.getX()), corner.getY());
                 cornerPoints.add(cornerPoint);
             }
             return cornerPoints;
@@ -536,13 +536,13 @@ public final class CurvilinearCoords {
 
         /**
          * Finds the square of the distance between the centre of this cell and
-         * the given LonLatPosition
+         * the given HorizontalPosition
          */
         public double findDistanceSq(double lon, double lat) {
-            LonLatPosition centre = this.getCentre();
+            HorizontalPosition centre = this.getCentre();
             lon = harmonizeWithCentre(lon);
-            double dx = lon - centre.getLongitude();
-            double dy = lat - centre.getLatitude();
+            double dx = lon - centre.getX();
+            double dy = lat - centre.getY();
             return dx * dx + dy * dy;
         }
 
@@ -563,7 +563,7 @@ public final class CurvilinearCoords {
          * centre of this cell.
          */
         private double harmonizeWithCentre(double lon) {
-            return GISUtils.getNearestEquivalentLongitude(getCentre().getLongitude(), lon);
+            return GISUtils.getNearestEquivalentLongitude(getCentre().getX(), lon);
         }
 
         @Override
@@ -586,10 +586,10 @@ public final class CurvilinearCoords {
 
         @Override
         public String toString() {
-            LonLatPosition centre = getCentre();
+            HorizontalPosition centre = getCentre();
             List<Point2D> corners = getCorners();
-            return String.format("[%d,%d]: [%f,%f] %s", i, j, centre.getLongitude(),
-                    centre.getLatitude(), corners);
+            return String.format("[%d,%d]: [%f,%f] %s", i, j, centre.getX(),
+                    centre.getY(), corners);
         }
     }
 

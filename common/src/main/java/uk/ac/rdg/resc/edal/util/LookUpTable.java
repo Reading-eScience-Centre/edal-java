@@ -166,7 +166,7 @@ public final class LookUpTable {
              * We paint a second copy of the cell, shifted by 360 degrees, to
              * handle the anti-meridian
              */
-            double shiftLon = cell.getCentre().getLongitude() > 0.0 ? -360.0 : 360.0;
+            double shiftLon = cell.getCentre().getX() > 0.0 ? -360.0 : 360.0;
             path.transform(AffineTransform.getTranslateInstance(shiftLon, 0.0));
             ig2d.fill(path);
             jg2d.fill(path);

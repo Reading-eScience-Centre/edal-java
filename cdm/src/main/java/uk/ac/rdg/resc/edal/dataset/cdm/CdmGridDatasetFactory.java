@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,19 +40,27 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ucar.ma2.Array;
 import ucar.ma2.Index;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.Variable;
+import ucar.nc2.constants.AxisType;
+import ucar.nc2.constants.CF;
 import ucar.nc2.dataset.CoordinateAxis;
 import ucar.nc2.dataset.CoordinateAxis1D;
 import ucar.nc2.dataset.CoordinateAxis1DTime;
+import ucar.nc2.dataset.CoordinateAxis2D;
+import ucar.nc2.dataset.CoordinateSystem;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset.Gridset;
 import ucar.nc2.dt.GridDatatype;
+import ucar.nc2.dt.grid.GridCoordSys;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
@@ -61,12 +70,14 @@ import uk.ac.rdg.resc.edal.dataset.GridDataSource;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.dataset.HZTDataSource;
 import uk.ac.rdg.resc.edal.dataset.HorizontalMesh4dDataset;
+import uk.ac.rdg.resc.edal.dataset.cdm.StaggeredHorizontalGrid.SGridPadding;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.geometry.Polygon;
 import uk.ac.rdg.resc.edal.geometry.SimplePolygon;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.HorizontalMesh;
+import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
@@ -93,6 +104,8 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Jon Blower
  */
 public final class CdmGridDatasetFactory extends CdmDatasetFactory {
+    private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
+
     @Override
     protected DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateDataset(
             String id, String location, NetcdfDataset nc) throws IOException {
@@ -107,6 +120,19 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
 
     private CdmGridDataset generateGridDataset(String id, String location, NetcdfDataset nc)
             throws IOException {
+        /*
+         * This is factored out since it is also used for extracting metadata
+         * from the non-staggered parts of staggered grid datasets
+         */
+        List<GridVariableMetadata> vars = getGriddedVariableMetadata(nc);
+
+        CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
+                CdmUtils.getOptimumDataReadingStrategy(nc));
+        return cdmGridDataset;
+    }
+
+    private List<GridVariableMetadata> getGriddedVariableMetadata(NetcdfDataset nc)
+            throws DataReadingException, IOException {
         ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
         List<GridVariableMetadata> vars = new ArrayList<>();
 
@@ -129,202 +155,461 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                 vars.add(metadata);
             }
         }
-
-        CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
-                CdmUtils.getOptimumDataReadingStrategy(nc));
-        return cdmGridDataset;
+        return vars;
     }
 
-    public static void main(String[] args) throws EdalException, IOException {
-        CdmGridDatasetFactory df = new CdmGridDatasetFactory();
-        df.createDataset("test", "/home/guy/Data/sgrid/sgrid_example.nc");
-    }
-
-    private enum SGridPadding {
-        LOW, HIGH, BOTH, NONE, NO_OFFSET;
-        public static SGridPadding fromString(String s) {
-            if (s.equalsIgnoreCase("low")) {
-                return LOW;
-            }
-            if (s.equalsIgnoreCase("high")) {
-                return HIGH;
-            }
-            if (s.equalsIgnoreCase("both")) {
-                return BOTH;
-            }
-            return NONE;
-        }
-    };
-
-    private class RelativeDimPadding {
-        private final String relativeDim;
-        private final SGridPadding padding;
-
-        public RelativeDimPadding(String relativeDim, SGridPadding padding) {
-            this.relativeDim = relativeDim;
-            this.padding = padding;
+    private DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateStaggeredGridDataset(
+            String id, String location, NetcdfDataset nc) throws IOException {
+        /*
+         * Get the metadata for the non-staggered variables (if there are any).
+         * 
+         * This uses the NetCDF-Java libs to extract the grids. This approach
+         * cannot be used for staggered grids - we essentially need to build the
+         * grids up ourselves from scratch. The rest of this method does that.
+         */
+        List<GridVariableMetadata> varMetadata;
+        try {
+            varMetadata = getGriddedVariableMetadata(nc);
+        } catch (DataReadingException e) {
+            /*
+             * The most likely cause here is that we don't have any "grids" (in
+             * the Unidata CDM sense) in the dataset.
+             * 
+             * This means that all of the data variables are defined on grids
+             * which are staggered. That's a bit weird, but it's not actually a
+             * problem.
+             * 
+             * If the DataReadingException was caused by something else, then
+             * we'll hit problems further down anyway.
+             */
+            varMetadata = new ArrayList<>();
         }
 
-    }
-
-    private DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateStaggeredGridDataset(String id, String location, NetcdfDataset nc)
-            throws IOException {
         List<Variable> variables = nc.getVariables();
 
         /*
-         * First find the definitions of the staggered grids. In the (vast?)
-         * majority of cases, there will only be one of these.
+         * First loop through all variables to find:
+         * 
+         * Definitions of the staggered grids. In the (vast?) majority of cases,
+         * there will only be one of these.
+         * 
+         * Coordinate variables which describe vertical and time axes
+         * 
+         * Coordinate variables which describe horizontal axes
+         * 
+         * Which variables are non-data variables and can be ignored when adding
+         * variables to the dataset later. (i.e. all of the above things)
          */
-//        Map<String, Variable> gridDefinitions = new HashMap<>();
-        Variable gridTopology = null;
+        List<Variable> gridDefinitions = new ArrayList<>();
+        Set<String> nonDataVariables = new HashSet<>();
+        Map<String, ReferenceableAxis<?>> nonHorizontalAxes = new HashMap<>();
+        Map<String, CoordinateAxis> horizontalCoordinateAxes = new HashMap<>();
         for (Variable var : variables) {
+            /*
+             * The staggered grid definition
+             */
             Attribute cfRole = var.findAttribute("cf_role");
             if (cfRole != null && cfRole.isString()
                     && cfRole.getStringValue().equalsIgnoreCase("grid_topology")) {
+                gridDefinitions.add(var);
+                nonDataVariables.add(var.getFullName());
+                continue;
+            }
+
+            if (var instanceof CoordinateAxis1DTime) {
                 /*
-                 * This is what we will do
+                 * Time axis
                  */
-//                gridDefinitions.put(var.getFullName(), var);
+                TimeAxis timeAxis = CdmUtils.createTimeAxis((CoordinateAxis1DTime) var);
+                nonHorizontalAxes.put(var.getFullName(), timeAxis);
+                nonDataVariables.add(var.getFullName());
+            } else if (var instanceof CoordinateAxis1D) {
                 /*
-                 * This is for a single SGRID, for testing.
+                 * Check if it's x, y, z, or t
                  */
-                gridTopology = var;
-                break;
+                CoordinateAxis1D coordinateAxis1D = (CoordinateAxis1D) var;
+                if (coordinateAxis1D.getAxisType() == AxisType.GeoZ
+                        || coordinateAxis1D.getAxisType() == AxisType.Height
+                        || coordinateAxis1D.getAxisType() == AxisType.Pressure
+                        || coordinateAxis1D.getAxisType() == AxisType.RadialElevation) {
+                    /*
+                     * Create a vertical axis and store it
+                     */
+                    VerticalAxis zAxis = CdmUtils.createVerticalAxis(coordinateAxis1D,
+                            isZPositive(coordinateAxis1D));
+                    nonHorizontalAxes.put(var.getFullName(), zAxis);
+                } else if (coordinateAxis1D.getAxisType() == AxisType.Time) {
+                    /*
+                     * Create a time axis and store it. Time axes don't always
+                     * appear as CoordinateAxis1DTime
+                     */
+                    CoordinateAxis1DTime axis = CoordinateAxis1DTime.factory(nc, (VariableDS) var,
+                            null);
+                    TimeAxis timeAxis = CdmUtils.createTimeAxis(axis);
+                    nonHorizontalAxes.put(var.getFullName(), timeAxis);
+                } else if (coordinateAxis1D.getAxisType() == AxisType.GeoX
+                        || coordinateAxis1D.getAxisType() == AxisType.GeoY
+                        || coordinateAxis1D.getAxisType() == AxisType.Lon
+                        || coordinateAxis1D.getAxisType() == AxisType.Lat) {
+                    /*
+                     * This is a 1D horizontal axis
+                     */
+                    horizontalCoordinateAxes.put(var.getFullName(), coordinateAxis1D);
+                }
+
+                nonDataVariables.add(var.getFullName());
+            } else if (var instanceof CoordinateAxis2D) {
+                /*
+                 * This is a 2D horizontal axis
+                 */
+                CoordinateAxis2D coordinateAxis = (CoordinateAxis2D) var;
+                horizontalCoordinateAxes.put(var.getFullName(), coordinateAxis);
+                nonDataVariables.add(var.getFullName());
             }
         }
 
-        /*
-         * Now process the grid topologies, checking for the required
-         * attributes:
-         * 
-         * For 2D grids the cf_role, topology_dimension, node_dimensions, and
-         * face_dimensions are required.
-         * 
-         * For 3D grids the cf_role, topology_dimension, node_dimensions, and
-         * volume_dimensions are required.
-         */
-        Attribute nodeCoords = gridTopology.findAttribute("node_coordinates");
-        Attribute nodeDims = gridTopology.findAttribute("node_dimensions");
-        Attribute faceDims = gridTopology.findAttribute("face_dimensions");
-        if (nodeCoords == null || nodeDims == null || faceDims == null) {
+        Map<String, Map<String, StaggeredHorizontalGrid>> sgridDefinitions = new HashMap<>();
+        for (Variable gridTopology : gridDefinitions) {
             /*
-             * TODO Fix this
+             * Now process the grid topologies, checking for the required
+             * attributes:
              * 
-             * Check for the mandatory attributes (many of which are not
-             * mandatory)
+             * cf_role, topology_dimension, node_dimensions, and face_dimensions
+             * are required.
+             * 
+             * We only support 2D grids
              */
-            throw new UnsupportedOperationException(
-                    "Currently, only Staggered grids with defined node_coordinates are supported");
-        }
+            Attribute nodeDimsAttr = gridTopology.findAttribute("node_dimensions");
+            Attribute faceDimsAttr = gridTopology.findAttribute("face_dimensions");
+            Attribute topology = gridTopology.findAttribute("topology_dimension");
+            if (nodeDimsAttr == null || faceDimsAttr == null || topology == null) {
+                /*
+                 * Check for the mandatory attributes (many of which are not
+                 * mandatory)
+                 */
+                throw new UnsupportedOperationException(
+                        "Staggered grid definitions must contain the attributes: node_dimensions, face_dimensions, and topology_dimension");
+            } else if (topology.getNumericValue() != null
+                    && topology.getNumericValue().intValue() != 2) {
+                throw new UnsupportedOperationException(
+                        "Currently, only 2D Staggered grids are supported");
+            }
 
-        String[] nodeCoordVals = nodeCoords.getStringValue().split("\\s+");
-        String[] nodeDimVals = nodeDims.getStringValue().split("\\s+");
-//        Pattern p =  Pattern.compile("(.*)\\:(.*)\\(padding\\:(.*)\\)(.*)\\:(.*)\\(padding\\:(.*)\\)");
-        System.out.println(faceDims.getStringValue());
-        Pattern p = Pattern.compile("(.*):(.*)\\(padding:(.*)\\)(.*):(.*)\\(padding:(.*)\\)");
-        Matcher matcher = p.matcher(faceDims.getStringValue());
-        Map<String, RelativeDimPadding> nodesToFaces = new HashMap<>();
-        if (matcher.find()) {
+            Attribute nodeCoordsAttr = gridTopology.findAttribute("node_coordinates");
+            String nodeCoordsStr;
+            if (nodeCoordsAttr != null) {
+                nodeCoordsStr = nodeCoordsAttr.getStringValue();
+            } else {
+                /*
+                 * We don't have explicitly defined node_coordinates. In this
+                 * case, we assume that 1d coordinate variables are used. Since
+                 * coordinate variables share their name with the dimension
+                 * which defines them, we can equate the two.
+                 */
+                nodeCoordsStr = nodeDimsAttr.getStringValue();
+            }
+
             /*
-             * TODO Adjust for n, n+1, n+2, & check for topology
+             * Now we will create StaggeredHorizontalGrids for each location
+             * (face, edge1, edge2). The face grid must be explicitly defined,
+             * but the edge1/2 grids have default values (matching the face
+             * definitions)
              */
-            nodesToFaces.put(matcher.group(1).trim(), new RelativeDimPadding(matcher.group(2)
-                    .trim(), SGridPadding.fromString(matcher.group(3).trim())));
-            nodesToFaces.put(matcher.group(4).trim(), new RelativeDimPadding(matcher.group(5)
-                    .trim(), SGridPadding.fromString(matcher.group(6).trim())));
+            Map<String, StaggeredHorizontalGrid> locations2Sgrids = new HashMap<>();
+
+            /*
+             * First create the grid for the nodes. Staggered grids will be
+             * based on these.
+             */
+            String[] nodeCoordVals = nodeCoordsStr.split("\\s+");
+            HorizontalGrid nodeGrid = getGridFromCoords(nodeCoordVals[0], nodeCoordVals[1],
+                    horizontalCoordinateAxes, nc);
+
+            /*
+             * Now check to see if any other grids are explicitly defined. If
+             * so, we'll use them, rather than approximating the staggering of
+             * the node-based grid
+             */
+            Attribute faceCoordAttr = gridTopology.findAttribute("face_coordinates");
+            HorizontalGrid faceGrid = null;
+            if (faceCoordAttr != null) {
+                String[] faceCoordVals = faceCoordAttr.getStringValue().split("\\s+");
+                faceGrid = getGridFromCoords(faceCoordVals[0], faceCoordVals[1],
+                        horizontalCoordinateAxes, nc);
+            } else {
+                faceGrid = nodeGrid;
+            }
+
+            Attribute edge1CoordAttr = gridTopology.findAttribute("edge1_coordinates");
+            HorizontalGrid edge1Grid = null;
+            if (edge1CoordAttr != null) {
+                String[] edge1CoordVals = edge1CoordAttr.getStringValue().split("\\s+");
+                edge1Grid = getGridFromCoords(edge1CoordVals[0], edge1CoordVals[1],
+                        horizontalCoordinateAxes, nc);
+            } else {
+                edge1Grid = nodeGrid;
+            }
+
+            Attribute edge2CoordAttr = gridTopology.findAttribute("edge2_coordinates");
+            HorizontalGrid edge2Grid = null;
+            if (edge2CoordAttr != null) {
+                String[] edge2CoordVals = edge2CoordAttr.getStringValue().split("\\s+");
+                edge2Grid = getGridFromCoords(edge2CoordVals[0], edge2CoordVals[1],
+                        horizontalCoordinateAxes, nc);
+            } else {
+                edge2Grid = nodeGrid;
+            }
+
+            /*
+             * Find the padding on the faces. This must be defined. We will also
+             * use these padding definitions to define the padding on the edges
+             * if that's not explicitly defined.
+             */
+            Attribute edge1DimsAttr = gridTopology.findAttribute("edge1_dimensions");
+            Attribute edge2DimsAttr = gridTopology.findAttribute("edge2_dimensions");
+
+            String[] nodeDimVals = nodeDimsAttr.getStringValue().split("\\s+");
+            Pattern p = Pattern.compile("(.*):(.*)\\(padding:(.*)\\)(.*):(.*)\\(padding:(.*)\\)");
+            Matcher matcher = p.matcher(faceDimsAttr.getStringValue());
+            if (matcher.find()) {
+                SGridPadding xPadding;
+                SGridPadding yPadding;
+
+                String paddingDim1 = matcher.group(2).trim();
+                String paddingDim2 = matcher.group(5).trim();
+
+                SGridPadding padding1 = SGridPadding.fromString(matcher.group(3).trim());
+                SGridPadding padding2 = SGridPadding.fromString(matcher.group(6).trim());
+                if (paddingDim1.equalsIgnoreCase(nodeDimVals[0])
+                        && paddingDim2.equalsIgnoreCase(nodeDimVals[1])) {
+                    xPadding = padding1;
+                    yPadding = padding2;
+                } else if (paddingDim1.equalsIgnoreCase(nodeDimVals[1])
+                        && paddingDim2.equalsIgnoreCase(nodeDimVals[0])) {
+                    /*
+                     * I don't *think* this should ever happen, but it's
+                     * possible
+                     */
+                    xPadding = padding2;
+                    yPadding = padding1;
+                } else {
+                    throw new IllegalArgumentException(
+                            "face_dimensions needs to refer to the node dimensions");
+                }
+
+                /*
+                 * If we have an explicitly-defined face grid, use that,
+                 * otherwise derive the staggered grid from the original
+                 */
+                if (faceGrid != null) {
+                    locations2Sgrids.put("face", new DefinedStaggeredGrid(faceGrid, nodeGrid,
+                            xPadding, yPadding));
+                } else {
+                    locations2Sgrids.put("face", new DerivedStaggeredGrid(nodeGrid, xPadding,
+                            yPadding));
+                }
+
+                /*
+                 * If there are no edge dimensions defined, use the defaults
+                 */
+                if (edge1DimsAttr == null) {
+                    /*
+                     * If we have an explicitly-defined edge1 grid, use that,
+                     * otherwise derive the staggered grid from the original
+                     */
+                    if (edge1Grid != null) {
+                        locations2Sgrids.put("edge1", new DefinedStaggeredGrid(edge1Grid, nodeGrid,
+                                SGridPadding.NO_OFFSET, yPadding));
+                    } else {
+                        locations2Sgrids.put("edge1", new DerivedStaggeredGrid(nodeGrid,
+                                SGridPadding.NO_OFFSET, yPadding));
+                    }
+                }
+                if (edge2DimsAttr == null) {
+                    /*
+                     * If we have an explicitly-defined edge2 grid, use that,
+                     * otherwise derive the staggered grid from the original
+                     */
+                    if (edge2Grid != null) {
+                        locations2Sgrids.put("edge2", new DefinedStaggeredGrid(edge2Grid, nodeGrid,
+                                xPadding, SGridPadding.NO_OFFSET));
+                    } else {
+                        locations2Sgrids.put("edge2", new DerivedStaggeredGrid(nodeGrid, xPadding,
+                                SGridPadding.NO_OFFSET));
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("face_dimensions is not properly formed: "
+                        + faceDimsAttr.getStringValue());
+            }
+
+            /*
+             * If there are edge dimensions defined, process the padding here
+             */
+            if (edge1DimsAttr != null) {
+                p = Pattern.compile("(.*):(.*)\\s+(.*):(.*)\\(padding:(.*)\\)");
+                matcher = p.matcher(edge1DimsAttr.getStringValue());
+                if (matcher.find()) {
+                    /*
+                     * If we have an explicitly-defined edge1 grid, use that,
+                     * otherwise derive the staggered grid from the original
+                     */
+                    if (edge1Grid != null) {
+                        locations2Sgrids.put(
+                                "edge1",
+                                new DefinedStaggeredGrid(edge1Grid, nodeGrid,
+                                        SGridPadding.NO_OFFSET, SGridPadding.fromString(matcher
+                                                .group(5).trim())));
+                    } else {
+                        locations2Sgrids.put("edge1",
+                                new DerivedStaggeredGrid(nodeGrid, SGridPadding.NO_OFFSET,
+                                        SGridPadding.fromString(matcher.group(5).trim())));
+                    }
+                } else {
+                    throw new IllegalArgumentException("edge1_dimensions is not properly formed: "
+                            + edge1DimsAttr.getStringValue());
+                }
+            }
+
+            if (edge2DimsAttr != null) {
+                p = Pattern.compile("(.*):(.*)\\(padding:(.*)\\)(.*):(.*)");
+                matcher = p.matcher(edge2DimsAttr.getStringValue());
+                if (matcher.find()) {
+                    /*
+                     * If we have an explicitly-defined edge2 grid, use that,
+                     * otherwise derive the staggered grid from the original
+                     */
+                    if (edge2Grid != null) {
+                        locations2Sgrids.put("edge2", new DefinedStaggeredGrid(edge2Grid, nodeGrid,
+                                SGridPadding.fromString(matcher.group(3).trim()),
+                                SGridPadding.NO_OFFSET));
+                    } else {
+                        locations2Sgrids.put("edge2", new DerivedStaggeredGrid(nodeGrid,
+                                SGridPadding.fromString(matcher.group(3).trim()),
+                                SGridPadding.NO_OFFSET));
+                    }
+                } else {
+                    throw new IllegalArgumentException("edge2_dimensions is not properly formed: "
+                            + edge1DimsAttr.getStringValue());
+                }
+            }
+
+            /*
+             * Store the locations -> staggered grid definitions for this grid.
+             */
+            sgridDefinitions.put(gridTopology.getFullName(), locations2Sgrids);
         }
-        nodesToFaces.put(nodeDimVals[0], new RelativeDimPadding(nodeDimVals[0],
-                SGridPadding.NO_OFFSET));
-        nodesToFaces.put(nodeDimVals[1], new RelativeDimPadding(nodeDimVals[1],
-                SGridPadding.NO_OFFSET));
 
-        Map<String, HorizontalGrid> xNodeCoords = new HashMap<>();
-        Map<String, HorizontalGrid> yNodeCoords = new HashMap<>();
-
-        ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
-        List<GridVariableMetadata> vars = new ArrayList<>();
-
-        Set<Variable> natives = new HashSet<>();
         /*
-         * TODO - This will cause issues if none of the variables is actually
-         * defined on the grid...
-         * 
-         * We should probably loop through all of the variables here instead.  Or as well?
-         * 
-         * We can use the node_coordinates attribute to find coordinate variables.
+         * Now create the variable metadata for the staggered data variables
          */
-        for (Gridset gridset : gridDataset.getGridsets()) {
-//            System.out.println("Gridset found");
-            GridCoordSystem coordSys = gridset.getGeoCoordSystem();
-            HorizontalGrid hDomain = CdmUtils.createHorizontalGrid(coordSys);
-            VerticalAxis zDomain = CdmUtils.createVerticalAxis(coordSys.getVerticalAxis(),
-                    coordSys.isZPositive());
-            TimeAxis tDomain = CdmUtils.createTimeAxis(coordSys.getTimeAxis1D());
-
-            /*
-             * If node_coordinate is mandatory, we can check the coordinate axis names...
-             */
-            List<CoordinateAxis> coordinateAxes = coordSys.getCoordinateAxes();
-            System.out.println("X axis name:"+coordSys.getXHorizAxis().getFullName());
-            System.out.println("Y axis name:"+coordSys.getYHorizAxis().getFullName());
-            Collection<Dimension> domain = coordSys.getDomain();
-            for (Dimension dim : domain) {
-                String dimName = dim.getFullName();
-                if (dimName.equalsIgnoreCase(nodeCoordVals[0])) {
-                    xNodeCoords.put(dimName, hDomain);
-                }
-                if (dimName.equalsIgnoreCase(nodeCoordVals[1])) {
-                    yNodeCoords.put(dimName, hDomain);
-                }
-            }
-
-            /*
-             * Create a VariableMetadata object for each GridDatatype
-             */
-            for (GridDatatype grid : gridset.getGrids()) {
-                VariableDS variable = grid.getVariable();
-                natives.add(variable);
-//                System.out.println(variable.getFullName());
-
-                Parameter parameter = getParameter(variable);
-                GridVariableMetadata metadata = new GridVariableMetadata(parameter, hDomain,
-                        zDomain, tDomain, true);
-                vars.add(metadata);
-            }
-        }
-
+        /*
+         * Necessary because we can't construct this from the GridDataset
+         */
+        Map<String, RangesList> rangesList = new HashMap<>();
         for (Variable var : nc.getVariables()) {
+            if (nonDataVariables.contains(var.getFullName())) {
+                /*
+                 * Ignore any non-data variables
+                 */
+                continue;
+            }
             Attribute gridAttribute = var.findAttribute("grid");
-            if (gridAttribute != null) {
+            Attribute locationAttribute = var.findAttribute("location");
+            if (gridAttribute != null && locationAttribute != null) {
                 /*
                  * We have a variable on the staggered grid
                  */
-                System.out.println(var.getFullName() + " is a staggered variable");
+                String gridId = gridAttribute.getStringValue();
+
+                Map<String, StaggeredHorizontalGrid> location2grid = sgridDefinitions.get(gridId);
+
+                StaggeredHorizontalGrid staggeredGrid = location2grid.get(locationAttribute
+                        .getStringValue());
+
                 List<Dimension> dimensions = var.getDimensions();
-                for (Dimension dim : dimensions) {
-                    System.out.println(dim);
-                    RelativeDimPadding relativeDimPadding = nodesToFaces.get(dim.getFullName());
-                    if (relativeDimPadding != null) {
-                        System.out.println(relativeDimPadding.relativeDim + ","
-                                + relativeDimPadding.padding);
-                        HorizontalGrid grid = xNodeCoords.get(relativeDimPadding.relativeDim);
-                        /*
-                         * Find a way of wrapping a generic HorizontalGrid so
-                         * that the coordinates get shifted by the appropriate
-                         * amount...
-                         */
+                if (dimensions.size() < 2) {
+                    /*
+                     * Not a grid. This shouldn't actually happen, but if it
+                     * does, we should catch it and ignore this variable.
+                     */
+                    log.error("The variable "
+                            + var.getFullName()
+                            + " links to an SGRID variable, but it is not gridded.  Ignoring this variable");
+                    continue;
+                }
+
+                Collections.reverse(dimensions);
+
+                VerticalAxis zAxis = null;
+                TimeAxis tAxis = null;
+                for (Dimension dim : dimensions.subList(2, dimensions.size())) {
+                    ReferenceableAxis<?> axis = nonHorizontalAxes.get(dim.getFullName());
+                    if (axis instanceof VerticalAxis) {
+                        zAxis = (VerticalAxis) axis;
+                    } else if (axis instanceof TimeAxis) {
+                        tAxis = (TimeAxis) axis;
                     }
                 }
+
+                int x, y, z = -1, t = -1;
+                if (tAxis == null) {
+                    if (zAxis == null) {
+                        x = 1;
+                        y = 0;
+                    } else {
+                        x = 2;
+                        y = 1;
+                        z = 0;
+                    }
+                } else {
+                    if (zAxis == null) {
+                        x = 2;
+                        y = 1;
+                        t = 0;
+                    } else {
+                        x = 3;
+                        y = 2;
+                        z = 1;
+                        t = 0;
+                    }
+                }
+                rangesList.put(var.getFullName(), new RangesList(x, y, z, t));
+
+                GridVariableMetadata metadata = new GridVariableMetadata(getParameter(var),
+                        staggeredGrid, zAxis, tAxis, true);
+                varMetadata.add(metadata);
             }
         }
 
-        CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
-                CdmUtils.getOptimumDataReadingStrategy(nc));
+        CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, varMetadata,
+                CdmUtils.getOptimumDataReadingStrategy(nc), rangesList);
         return cdmGridDataset;
     }
 
-    private CdmUgridDataset generateUnstructuredGridDataset(String id, String location, NetcdfDataset nc)
-            throws IOException {
+    private boolean isZPositive(CoordinateAxis1D zAxis) {
+        if (zAxis == null)
+            return false;
+        if (zAxis.getPositive() != null) {
+            return zAxis.getPositive().equalsIgnoreCase(CF.POSITIVE_UP);
+        }
+        if (zAxis.getAxisType() == AxisType.Height)
+            return true;
+        return zAxis.getAxisType() != AxisType.Pressure;
+    }
+
+    private HorizontalGrid getGridFromCoords(String coord1, String coord2,
+            Map<String, CoordinateAxis> horizontalCoordinateAxes, NetcdfDataset nc) {
+        Collection<CoordinateAxis> axes = new ArrayList<>();
+        axes.add(horizontalCoordinateAxes.get(coord1.trim()));
+        axes.add(horizontalCoordinateAxes.get(coord2.trim()));
+        CoordinateSystem coordSys = new CoordinateSystem(nc, axes, null);
+        GridCoordSys gridCoordSys = new GridCoordSys(coordSys, null);
+        return CdmUtils.createHorizontalGrid(gridCoordSys);
+    }
+
+    private CdmUgridDataset generateUnstructuredGridDataset(String id, String location,
+            NetcdfDataset nc) throws IOException {
         /*
          * Keep a list of non data variables. This will include the dummy
          * variable for UGRID along with all of the co-ordinate variables, and
@@ -867,12 +1152,21 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
     private static final class CdmGridDataset extends GriddedDataset {
         private final String location;
         private final DataReadingStrategy dataReadingStrategy;
+        private Map<String, RangesList> rangesList = null;
 
         public CdmGridDataset(String id, String location, Collection<GridVariableMetadata> vars,
                 DataReadingStrategy dataReadingStrategy) {
             super(id, vars);
             this.location = location;
             this.dataReadingStrategy = dataReadingStrategy;
+        }
+
+        public CdmGridDataset(String id, String location, Collection<GridVariableMetadata> vars,
+                DataReadingStrategy dataReadingStrategy, Map<String, RangesList> rangesList) {
+            super(id, vars);
+            this.location = location;
+            this.dataReadingStrategy = dataReadingStrategy;
+            this.rangesList = rangesList;
         }
 
         @Override
@@ -887,7 +1181,15 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                      * ConcurrentModificationException, so we synchronise this
                      * action to avoid the issue.
                      */
-                    return new CdmGridDataSource(nc);
+                    if (rangesList != null && !rangesList.isEmpty()) {
+                        /*
+                         * We have explicitly defined which index corresponds to
+                         * which axis
+                         */
+                        return new CdmGridDataSource(nc, rangesList);
+                    } else {
+                        return new CdmGridDataSource(nc);
+                    }
                 }
             } catch (EdalException | IOException e) {
                 if (nc != null) {

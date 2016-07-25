@@ -47,6 +47,7 @@ import org.junit.Test;
 import ucar.ma2.ArrayDouble;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
+import uk.ac.rdg.resc.edal.cdm.CreateNetCDF;
 import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
@@ -60,7 +61,7 @@ import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
-import uk.ac.rdg.resc.edal.position.LonLatPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords.Cell;
@@ -171,7 +172,7 @@ public class CurvilinearGridDatasetTest {
         // pick up a horizontal position with id=15000
 
         int index = 15000;
-        LonLatPosition expectedPos = new LonLatPosition(longitudeData.getDouble(index),
+        HorizontalPosition expectedPos = new HorizontalPosition(longitudeData.getDouble(index),
                 latitudeData.getDouble(index));
         int cCoords_i = index % etaSize;
         int cCoords_j = index / etaSize;

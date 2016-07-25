@@ -214,12 +214,12 @@ public final class GISUtils {
         if (pos == null) {
             return null;
         }
-        if (targetCrs == null) {
-            throw new NullPointerException("Target CRS cannot be null");
-        }
         CoordinateReferenceSystem sourceCrs = pos.getCoordinateReferenceSystem();
         if (sourceCrs == null) {
             return new HorizontalPosition(pos.getX(), pos.getY(), targetCrs);
+        }
+        if (targetCrs == null) {
+            throw new NullPointerException("Target CRS cannot be null");
         }
         /*
          * CRS.findMathTransform() caches recently-used transform objects so we

@@ -89,9 +89,36 @@ final class CdmGridDataSource implements GridDataSource {
      */
     private static Object syncObj = new Object();
 
-    public CdmGridDataSource(NetcdfDataset nc) throws DataReadingException, IOException {
+    /**
+     * Instantiate a {@link CdmGridDataSource} from a {@link NetcdfDataset}
+     * 
+     * @param nc
+     *            The {@link NetcdfDataset} to read data from
+     * @throws IOException
+     *             If there is a problem opening the dataset
+     */
+    public CdmGridDataSource(NetcdfDataset nc) throws IOException {
         this.gridDataset = CdmUtils.getGridDataset(nc);
         this.nc = nc;
+    }
+
+    /**
+     * Instantiate a {@link CdmGridDataSource} from a {@link NetcdfDataset},
+     * manually specifying the {@link RangesList}s to use
+     * 
+     * @param nc
+     *            The {@link NetcdfDataset} to read data from
+     * @param rangeList
+     *            A {@link Map} of variable IDs to {@link RangesList}s. Does not
+     *            need to be complete.
+     * @throws IOException
+     *             If there is a problem opening the dataset
+     */
+    public CdmGridDataSource(NetcdfDataset nc, Map<String, RangesList> rangeList)
+            throws IOException {
+        this.gridDataset = CdmUtils.getGridDataset(nc);
+        this.nc = nc;
+        this.rangeListCache = rangeList;
     }
 
     @Override
@@ -101,7 +128,25 @@ final class CdmGridDataSource implements GridDataSource {
          * Get hold of the variable from which we want to read data
          */
         GridDatatype gridDatatype = gridDataset.findGridDatatype(variableId);
-        VariableDS var = gridDatatype.getVariable();
+        VariableDS var;
+        if (gridDatatype != null) {
+            /*
+             * This is the ideal option, but in the case of staggered grids, we
+             * may not have any grid datatypes
+             */
+            var = gridDatatype.getVariable();
+        } else {
+            /*
+             * In this case, just find the original variable and either cast it
+             * or create a new VariableDS, as required
+             */
+            Variable origVar = nc.findVariable(variableId);
+            if (origVar instanceof VariableDS) {
+                var = (VariableDS) origVar;
+            } else {
+                var = new VariableDS(null, origVar, false);
+            }
+        }
 
         /*
          * Create RangesList object from GridDatatype object This will lead to
@@ -150,12 +195,13 @@ final class CdmGridDataSource implements GridDataSource {
                 }
             }
         } catch (InvalidRangeException ire) {
+            ire.printStackTrace();
+            System.out.println(xmin + " -> " + xmax);
+            System.out.println(ymin + " -> " + ymax);
+            System.out.println(zmin + " -> " + zmax);
+            System.out.println(ymin + " -> " + tmax);
             throw new DataReadingException("Cannot read data - invalid range specified", ire);
         } catch (ArrayIndexOutOfBoundsException e) {
-//            System.out.println(xmin+" -> "+xmax);
-//            System.out.println(ymin+" -> "+ymax);
-//            System.out.println(zmin+" -> "+zmax);
-//            System.out.println(ymin+" -> "+tmax);
             System.out.println(this + " caused out of bounds");
             throw e;
         }
