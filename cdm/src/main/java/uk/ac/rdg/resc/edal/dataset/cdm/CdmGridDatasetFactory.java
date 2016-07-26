@@ -336,8 +336,6 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                 String[] faceCoordVals = faceCoordAttr.getStringValue().split("\\s+");
                 faceGrid = getGridFromCoords(faceCoordVals[0], faceCoordVals[1],
                         horizontalCoordinateAxes, nc);
-            } else {
-                faceGrid = nodeGrid;
             }
 
             Attribute edge1CoordAttr = gridTopology.findAttribute("edge1_coordinates");
@@ -346,8 +344,6 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                 String[] edge1CoordVals = edge1CoordAttr.getStringValue().split("\\s+");
                 edge1Grid = getGridFromCoords(edge1CoordVals[0], edge1CoordVals[1],
                         horizontalCoordinateAxes, nc);
-            } else {
-                edge1Grid = nodeGrid;
             }
 
             Attribute edge2CoordAttr = gridTopology.findAttribute("edge2_coordinates");
@@ -356,8 +352,6 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                 String[] edge2CoordVals = edge2CoordAttr.getStringValue().split("\\s+");
                 edge2Grid = getGridFromCoords(edge2CoordVals[0], edge2CoordVals[1],
                         horizontalCoordinateAxes, nc);
-            } else {
-                edge2Grid = nodeGrid;
             }
 
             /*
@@ -591,8 +585,10 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
             }
         }
 
+//        CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, varMetadata,
+//                CdmUtils.getOptimumDataReadingStrategy(nc), rangesList);
         CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, varMetadata,
-                CdmUtils.getOptimumDataReadingStrategy(nc), rangesList);
+                DataReadingStrategy.BOUNDING_BOX, rangesList);
         return cdmGridDataset;
     }
 
