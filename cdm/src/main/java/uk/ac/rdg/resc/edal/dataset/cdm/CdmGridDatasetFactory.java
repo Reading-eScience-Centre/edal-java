@@ -502,9 +502,13 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
 
         /*
          * Now create the variable metadata for the staggered data variables
-         */
-        /*
-         * Necessary because we can't construct this from the GridDataset
+         * 
+         * Often, these staggered variables will not be part of a GridDataset,
+         * and so we won't be able to generate the RangesList for them in the
+         * CdmGridDataSource. Therefore, here we manually create RangesList
+         * objects for each of the variables and add them to a Map. When we
+         * create a new CdmGridDataSource, this Map will be used to pre-load the
+         * cache of RangesList to avoid the issue.
          */
         Map<String, RangesList> rangesList = new HashMap<>();
         for (Variable var : nc.getVariables()) {
@@ -527,7 +531,12 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                 StaggeredHorizontalGrid staggeredGrid = location2grid.get(locationAttribute
                         .getStringValue());
 
-                List<Dimension> dimensions = var.getDimensions();
+                /*
+                 * We reverse this list (in place), so we DO NOT want to just
+                 * get a shallow copy of it. That can screw things up further
+                 * down the line.
+                 */
+                List<Dimension> dimensions = new ArrayList<>(var.getDimensions());
                 if (dimensions.size() < 2) {
                     /*
                      * Not a grid. This shouldn't actually happen, but if it

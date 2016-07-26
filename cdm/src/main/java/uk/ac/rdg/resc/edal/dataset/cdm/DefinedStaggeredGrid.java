@@ -129,4 +129,41 @@ public class DefinedStaggeredGrid implements StaggeredHorizontalGrid {
     public SGridPadding getYPadding() {
         return yPadding;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((originalGrid == null) ? 0 : originalGrid.hashCode());
+        result = prime * result + ((staggeredGrid == null) ? 0 : staggeredGrid.hashCode());
+        result = prime * result + ((xPadding == null) ? 0 : xPadding.hashCode());
+        result = prime * result + ((yPadding == null) ? 0 : yPadding.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DefinedStaggeredGrid other = (DefinedStaggeredGrid) obj;
+        if (originalGrid == null) {
+            if (other.originalGrid != null)
+                return false;
+        } else if (!originalGrid.equals(other.originalGrid))
+            return false;
+        if (staggeredGrid == null) {
+            if (other.staggeredGrid != null)
+                return false;
+        } else if (!staggeredGrid.equals(other.staggeredGrid))
+            return false;
+        if (xPadding != other.xPadding)
+            return false;
+        if (yPadding != other.yPadding)
+            return false;
+        return true;
+    }
 }

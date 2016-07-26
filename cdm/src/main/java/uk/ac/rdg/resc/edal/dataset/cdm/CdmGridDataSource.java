@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import ucar.ma2.Array;
@@ -118,7 +119,31 @@ final class CdmGridDataSource implements GridDataSource {
             throws IOException {
         this.gridDataset = CdmUtils.getGridDataset(nc);
         this.nc = nc;
-        this.rangeListCache = rangeList;
+        /*
+         * OK, this is necessary because if we just *use* the supplied rangeList
+         * as the rangeListCache it can end up getting shared across multiple
+         * instances of this class. And that causes problems.
+         * 
+         * Previously I had this:
+         * 
+         * this.rangeListCache = new HashMap<>(rangeList);
+         * 
+         * But that means that the objects in the cache (the RangesList ones)
+         * just get a shallow copy and so problems still happen. This code does
+         * a full deep-copy of the RangesList objects which then works.
+         * 
+         * Note: We could just accept an argument of Map<String, int[]> which
+         * would save a little time on initially creating the Map (in
+         * CdmGridDatasetFactory) and would be slightly more memory-efficient.
+         * But this way is clearer.
+         */
+        for (Entry<String, RangesList> entry : rangeList.entrySet()) {
+            int x = entry.getValue().getXAxisIndex();
+            int y = entry.getValue().getYAxisIndex();
+            int z = entry.getValue().getZAxisIndex();
+            int t = entry.getValue().getTAxisIndex();
+            rangeListCache.put(entry.getKey(), new RangesList(x, y, z, t));
+        }
     }
 
     @Override
