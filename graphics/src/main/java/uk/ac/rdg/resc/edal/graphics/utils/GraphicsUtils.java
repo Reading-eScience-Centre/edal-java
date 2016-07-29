@@ -50,15 +50,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
-import uk.ac.rdg.resc.edal.dataset.PointDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
 import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
+import uk.ac.rdg.resc.edal.dataset.PointDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
+import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
+import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import uk.ac.rdg.resc.edal.graphics.style.RasterLayer;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
+import uk.ac.rdg.resc.edal.graphics.style.SegmentColourScheme;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
@@ -191,7 +198,7 @@ public class GraphicsUtils {
             int alpha = Integer.parseInt(colourString.substring(2, 4), 16);
             return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
         } else {
-            throw new EdalParseException("Invalid format for colour: "+colourString);
+            throw new EdalParseException("Invalid format for colour: " + colourString);
         }
     }
 
@@ -603,6 +610,48 @@ public class GraphicsUtils {
         g.fillRect(0, 0, ret.getWidth(), ret.getHeight());
         g.drawImage(canvas, 0, 0, null);
         return ret;
+    }
+
+    /**
+     * Draws a raster image from the supplied dataset and variable
+     * 
+     * @param dataset
+     *            The dataset containing the data
+     * @param varId
+     *            The ID of the variable to plot
+     * @param width
+     *            The desired width of the output image
+     * @param height
+     *            The desired height of the output image
+     * @return A {@link BufferedImage} containing the plot
+     */
+    public static BufferedImage plotDefaultImage(Dataset dataset, String varId, int width,
+            int height) {
+        /*
+         * Estimate the value range
+         */
+        ScaleRange scaleRange = new ScaleRange(estimateValueRange(dataset, varId), false);
+
+        /*
+         * Use the default colour scheme, transparent background
+         */
+        ColourScheme colourScheme = new SegmentColourScheme(scaleRange, null, null, new Color(0,
+                true), "default", 250);
+
+        MapImage imageGenerator = new MapImage();
+        RasterLayer rasterLayer = new RasterLayer(varId, colourScheme);
+        imageGenerator.getLayers().add(rasterLayer);
+
+        BoundingBox bbox = new BoundingBoxImpl(dataset.getVariableMetadata(varId)
+                .getHorizontalDomain().getGeographicBoundingBox());
+
+        PlottingDomainParams params = PlottingDomainParams.paramsForGriddedDataset(width, height,
+                bbox, null, null);
+
+        SimpleFeatureCatalogue<Dataset> featureCatalogue = new SimpleFeatureCatalogue<Dataset>(
+                dataset, true);
+
+        return imageGenerator.drawImage(params, featureCatalogue);
     }
 
     /**
