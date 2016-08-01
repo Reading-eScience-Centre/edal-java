@@ -46,8 +46,10 @@ import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
-import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 /**
  * <p>
@@ -116,20 +118,19 @@ public final class NcDiag {
             dataset = df.createDataset("dataset" + (id++), filename);
         } catch (Exception e) {
             ps.println("<h2>File could not be read as a dataset:</h2>");
-            ps.println("<h2>"+filename+"</h2>");
+            ps.println("<h2>" + filename + "</h2>");
             ps.println("<h2>Stack trace follows:</h2>\n");
             e.printStackTrace(ps);
             return;
         }
         Set<String> variableIds = dataset.getVariableIds();
         for (String variableId : variableIds) {
-            GridVariableMetadata variableMetadata = (GridVariableMetadata) dataset
-                    .getVariableMetadata(variableId);
+            VariableMetadata variableMetadata = dataset.getVariableMetadata(variableId);
             try {
                 printInfo(ps, variableMetadata, dataset, filename, imageDir);
             } catch (Exception e) {
                 ps.println("<h2>Variable could not be read:</h2>");
-                ps.println("<h2>"+variableId+"</h2>");
+                ps.println("<h2>" + variableId + "</h2>");
                 ps.println("<h2>Stack trace follows:</h2>\n");
                 e.printStackTrace(ps);
             }
@@ -148,42 +149,59 @@ public final class NcDiag {
     /**
      * Prints information about the given variable.
      */
-    private static void printInfo(PrintStream ps, GridVariableMetadata vm, Dataset dataset,
-            String filename, String imageDir) throws IOException {
+    private static void printInfo(PrintStream ps, VariableMetadata variableMetadata,
+            Dataset dataset, String filename, String imageDir) throws IOException {
         ps.println("<hr />");
-        ps.printf("<h2>Variable: %s</h2>%n", vm.getId());
+        ps.printf("<h2>Variable: %s</h2>%n", variableMetadata.getId());
         ps.println("<table>");
         ps.println("<tbody>");
-        printTableLine(ps, "Title", vm.getParameter().getTitle());
-        printTableLine(ps, "Units", vm.getParameter().getUnits());
-        printTableLine(ps, "Description", vm.getParameter().getDescription());
-        GeographicBoundingBox bbox = vm.getHorizontalDomain().getGeographicBoundingBox();
+        printTableLine(ps, "Title", variableMetadata.getParameter().getTitle());
+        printTableLine(ps, "Units", variableMetadata.getParameter().getUnits());
+        printTableLine(ps, "Description", variableMetadata.getParameter().getDescription());
+        GeographicBoundingBox bbox = variableMetadata.getHorizontalDomain()
+                .getGeographicBoundingBox();
         printTableLine(
                 ps,
                 "Geographic Bounding box",
                 String.format("%f,%f,%f,%f", bbox.getWestBoundLongitude(),
                         bbox.getSouthBoundLatitude(), bbox.getEastBoundLongitude(),
                         bbox.getNorthBoundLatitude()));
-        if (vm.getVerticalDomain() != null) {
-            printTableLine(ps, "Elevation axis",
-                    String.format("%d values", vm.getVerticalDomain().size()));
+        if (variableMetadata.getVerticalDomain() != null) {
+            if (variableMetadata.getVerticalDomain() instanceof VerticalAxis) {
+                printTableLine(
+                        ps,
+                        "Elevation axis",
+                        String.format("%d values",
+                                ((VerticalAxis) variableMetadata.getVerticalDomain()).size()));
+            }
         }
-        if (vm.getTemporalDomain() != null) {
-            printTableLine(ps, "Time axis (" + vm.getTemporalDomain().getChronology() + ")",
-                    String.format("%d values", vm.getTemporalDomain().size()));
+        if (variableMetadata.getTemporalDomain() != null) {
+            if (variableMetadata.getTemporalDomain() instanceof TimeAxis) {
+                printTableLine(ps, "Time axis ("
+                        + variableMetadata.getTemporalDomain().getChronology() + ")",
+                        String.format("%d values",
+                                ((TimeAxis) variableMetadata.getTemporalDomain()).size()));
+            }
         }
         ps.println("</tbody>");
         ps.println("</table>");
 
-        int width = 256;
-        int height = 256;
-        BufferedImage im = GraphicsUtils.plotDefaultImage(dataset, vm.getId(), width, height);
-        Extent<Float> dataRange = GraphicsUtils.estimateValueRange(dataset, vm.getId());
-        String imageFilename = imageDir + "/" + dataset.getId() + "-" + vm.getId() + ".png";
-        ImageIO.write(im, "png", new File(imageFilename));
-        ps.printf("<p>Data min: %f, max: %f<br />", dataRange.getLow(), dataRange.getHigh());
-        ps.printf("<img src=\"%s\" width=\"%d\" height=\"%d\" /></p>%n", imageFilename, width,
-                height);
+        if (variableMetadata.isScalar()) {
+            int width = 256;
+            int height = 256;
+            BufferedImage im = GraphicsUtils.plotDefaultImage(dataset, variableMetadata.getId(),
+                    width, height);
+            Extent<Float> dataRange = GraphicsUtils.estimateValueRange(dataset,
+                    variableMetadata.getId());
+            String imageFilename = imageDir + "/" + dataset.getId() + "-"
+                    + variableMetadata.getId() + ".png";
+            ImageIO.write(im, "png", new File(imageFilename));
+            ps.printf("<p>Data min: %f, max: %f<br />", dataRange.getLow(), dataRange.getHigh());
+            ps.printf("<img src=\"%s\" width=\"%d\" height=\"%d\" /></p>%n", imageFilename, width,
+                    height);
+        } else {
+            ps.println("Not a scalar field - plotting is more complex, but there is no reason to think this won't work in ncWMS2");
+        }
     }
 
     private static void printTableLine(PrintStream ps, String title, String value) {
