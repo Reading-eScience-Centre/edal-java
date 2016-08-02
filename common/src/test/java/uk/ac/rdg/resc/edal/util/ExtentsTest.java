@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.util;
 import static org.junit.Assert.*;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -215,7 +216,7 @@ public class ExtentsTest {
         
         Extent<DateTime> datetimeOpenExtent = Extents.newExtent(null, null);
         for (int i = 0; i < 3000; i++) {
-            testDate = new DateTime(i, 1, 1, 0, 0);
+            testDate = new DateTime(i, 1, 1, 0, 0, DateTimeZone.UTC);
             assertTrue(datetimeOpenExtent.contains(testDate));
         }
 

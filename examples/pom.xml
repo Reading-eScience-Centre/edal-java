@@ -25,6 +25,12 @@
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>uk.ac.rdg.resc</groupId>
+            <artifactId>edal-xml-catalogue</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -56,6 +62,31 @@
                                 <argument>${basedir}/../docs/images/gridded.png</argument>
                             </arguments>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>uk.ac.rdg.resc.edal.examples.NcDiag</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>assemble-all</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

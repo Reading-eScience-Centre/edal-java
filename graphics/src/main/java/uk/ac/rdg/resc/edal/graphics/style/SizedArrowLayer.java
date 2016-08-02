@@ -28,13 +28,6 @@
 
 package uk.ac.rdg.resc.edal.graphics.style;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.util.HashSet;
-import java.util.Set;
-
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.utils.VectorFactory;
@@ -43,6 +36,11 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SizedArrowLayer extends GriddedImageLayer {
     private String directionFieldName;
@@ -70,6 +68,10 @@ public class SizedArrowLayer extends GriddedImageLayer {
         this.arrowStyle = arrowStyle;
     }
 
+    protected Color getArrowColour(Number magnitude){
+        return this.arrowColour;
+    }
+
     @Override
     protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader)
             throws EdalException {
@@ -77,7 +79,6 @@ public class SizedArrowLayer extends GriddedImageLayer {
         Array2D<Number> magnitudes = dataReader.getDataForLayerName(magnitudeFieldName);
 
         Graphics2D g = image.createGraphics();
-        g.setColor(arrowColour);
 
         int width = image.getWidth();
         int height = image.getHeight();
@@ -125,6 +126,12 @@ public class SizedArrowLayer extends GriddedImageLayer {
 
                             int arrowSize = (int) (minArrowSize + scaleZeroToOne
                                     * (maxArrowSize - minArrowSize));
+
+                            /*
+                             * get colour depending on size
+                             */
+                            g.setColor(getArrowColour(magnitude));
+
                             if (arrowStyle == ArrowStyle.UPSTREAM) {
                                 /* Convert from degrees to radians */
                                 angle = angle * GISUtils.DEG2RAD;

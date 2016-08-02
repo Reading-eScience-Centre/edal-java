@@ -28,15 +28,14 @@
 
 package uk.ac.rdg.resc.edal.graphics.utils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import uk.ac.rdg.resc.edal.dataset.PointDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
+import uk.ac.rdg.resc.edal.dataset.PointDataset;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
@@ -50,8 +49,7 @@ public class SimpleFeatureCatalogue<D extends Dataset> implements FeatureCatalog
     private Map<String, Map<PlottingDomainParams, List<? extends DiscreteFeature<?, ?>>>> features = null;
     private D dataset;
 
-    public SimpleFeatureCatalogue(D dataset, boolean cacheEnabled) throws IOException,
-            EdalException {
+    public SimpleFeatureCatalogue(D dataset, boolean cacheEnabled) {
         this.dataset = dataset;
         this.cacheEnabled = cacheEnabled;
         features = new HashMap<>();
