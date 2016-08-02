@@ -26,9 +26,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.dataset.cdm;
+package uk.ac.rdg.resc.edal.grid;
 
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 
 /**
  * A {@link HorizontalGrid} which has a staggered relationship to another grid.
