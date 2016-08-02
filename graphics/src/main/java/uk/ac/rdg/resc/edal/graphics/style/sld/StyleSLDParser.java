@@ -1,17 +1,13 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import uk.ac.rdg.resc.edal.graphics.style.FlatOpacity;
+import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
+import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.parsers.DocumentBuilder;
@@ -21,16 +17,12 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import uk.ac.rdg.resc.edal.graphics.style.FlatOpacity;
-import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
-import uk.ac.rdg.resc.edal.graphics.style.MapImage;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Reads in an XML file encoded with Styled Layer Descriptor and Symbology
@@ -64,6 +56,7 @@ public class StyleSLDParser {
         registerSymbolizer("StippleSymbolizer", SLDStippleSymbolizer.class);
         registerSymbolizer("ArrowSymbolizer", SLDArrowSymbolizer.class);
         registerSymbolizer("SizedArrowSymbolizer", SLDSizedArrowSymbolizer.class);
+        registerSymbolizer("ColoredSizedArrowSymbolizer", SLDColoredSizedArrowSymbolizer.class);
         registerSymbolizer("ColoredGlyphSymbolizer", SLDColoredGlyphSymbolizer.class);
         //		registerSymbolizer("SubsampledIconSymbolizer", SLDSubsampledIconSymbolizer.class);
         registerSymbolizer("ConfidenceIntervalSymbolizer", SLDConfidenceIntervalSymbolizer.class);
