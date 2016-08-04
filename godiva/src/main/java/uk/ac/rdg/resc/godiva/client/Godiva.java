@@ -267,6 +267,15 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          */
         RootPanel mainWindow = RootPanel.get("godiva3-main");
 
+        if (mainWindow == null) {
+            /*
+             * If no "godiva3-main" element is defined, we'll use the whole HTML
+             * body
+             */
+            GWT.log("You should generally define a <div> element with the ID: \"godiva3-main\".  Using the entire HTML body for Godiva3 this time.");
+            mainWindow = RootPanel.get();
+        }
+
         mainWindow.add(getLayout());
 
         /*
