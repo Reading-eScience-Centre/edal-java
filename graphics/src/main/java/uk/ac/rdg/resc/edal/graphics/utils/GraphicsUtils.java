@@ -389,7 +389,8 @@ public class GraphicsUtils {
             /*
              * We've hit an area of uniform data. Make sure that max > min
              */
-            max += 1.0f;
+            min -= 0.5f;
+            max += 0.5f;
         } else {
             float diff = max - min;
             min -= 0.05 * diff;
