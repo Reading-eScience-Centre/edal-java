@@ -80,16 +80,17 @@ import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.HorizontalMesh;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.grid.StaggeredHorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.StaggeredHorizontalGrid.SGridPadding;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
-import uk.ac.rdg.resc.edal.grid.StaggeredHorizontalGrid.SGridPadding;
 import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.HorizontalMesh4dVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
+import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
@@ -108,6 +109,12 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  */
 public final class CdmGridDatasetFactory extends CdmDatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
+    private static final String UNSTAGGERED_SUFFIX = ":interpolated";
+
+    public static void main(String[] args) throws EdalException, IOException {
+        CdmGridDatasetFactory df = new CdmGridDatasetFactory();
+        df.createDataset("test", "/home/guy/Data/sgrid/sgrid_real.nc");
+    }
 
     @Override
     protected DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateDataset(
@@ -508,6 +515,13 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
          * cache of RangesList to avoid the issue.
          */
         Map<String, RangesList> rangesList = new HashMap<>();
+        /*
+         * We are going to create dynamic variables which represent the
+         * staggered variables interpolated onto their original grids. To do
+         * this we need to save the paddings so that they can be passed to the
+         * CdmSgridDataSource.
+         */
+        Map<String, SGridPadding[]> paddings = new HashMap<>();
         for (Variable var : nc.getVariables()) {
             if (nonDataVariables.contains(var.getFullName())) {
                 /*
@@ -585,13 +599,35 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                 GridVariableMetadata metadata = new GridVariableMetadata(getParameter(var),
                         staggeredGrid, zAxis, tAxis, true);
                 varMetadata.add(metadata);
+
+                /*
+                 * Now create another version of this variable which will be
+                 * interpolated onto the original unstaggered parent grid.
+                 * 
+                 * Note that for vectors, these variables will appear AFTER the
+                 * original ones in the list. That means that they when
+                 * processed as vectors, they will overwrite the original
+                 * (staggered) variables for vectors (since they share the same
+                 * standard names).
+                 * 
+                 * This is the desired behaviour.
+                 */
+                Parameter p = getParameter(var);
+                Parameter unstaggeredParameter = new Parameter(p.getVariableId()
+                        + UNSTAGGERED_SUFFIX, p.getTitle(), p.getDescription(), p.getUnits(),
+                        p.getStandardName());
+                GridVariableMetadata unstaggeredMetadata = new GridVariableMetadata(
+                        unstaggeredParameter, staggeredGrid.getOriginalGrid(), zAxis, tAxis, true);
+                paddings.put(
+                        unstaggeredMetadata.getId(),
+                        new SGridPadding[] { staggeredGrid.getXPadding(),
+                                staggeredGrid.getYPadding() });
+                varMetadata.add(unstaggeredMetadata);
             }
         }
 
-//        CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, varMetadata,
-//                CdmUtils.getOptimumDataReadingStrategy(nc), rangesList);
-        CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, varMetadata,
-                DataReadingStrategy.BOUNDING_BOX, rangesList);
+        CdmSgridDataset cdmGridDataset = new CdmSgridDataset(id, location, varMetadata,
+                CdmUtils.getOptimumDataReadingStrategy(nc), rangesList, paddings);
         return cdmGridDataset;
     }
 
@@ -1157,24 +1193,15 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         return gridTopology != null;
     }
 
-    private static final class CdmGridDataset extends GriddedDataset {
-        private final String location;
+    private static class CdmGridDataset extends GriddedDataset {
+        protected final String location;
         private final DataReadingStrategy dataReadingStrategy;
-        private Map<String, RangesList> rangesList = null;
 
         public CdmGridDataset(String id, String location, Collection<GridVariableMetadata> vars,
                 DataReadingStrategy dataReadingStrategy) {
             super(id, vars);
             this.location = location;
             this.dataReadingStrategy = dataReadingStrategy;
-        }
-
-        public CdmGridDataset(String id, String location, Collection<GridVariableMetadata> vars,
-                DataReadingStrategy dataReadingStrategy, Map<String, RangesList> rangesList) {
-            super(id, vars);
-            this.location = location;
-            this.dataReadingStrategy = dataReadingStrategy;
-            this.rangesList = rangesList;
         }
 
         @Override
@@ -1189,15 +1216,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                      * ConcurrentModificationException, so we synchronise this
                      * action to avoid the issue.
                      */
-                    if (rangesList != null && !rangesList.isEmpty()) {
-                        /*
-                         * We have explicitly defined which index corresponds to
-                         * which axis
-                         */
-                        return new CdmGridDataSource(nc, rangesList);
-                    } else {
-                        return new CdmGridDataSource(nc);
-                    }
+                    return new CdmGridDataSource(nc);
                 }
             } catch (EdalException | IOException e) {
                 if (nc != null) {
@@ -1210,6 +1229,191 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         @Override
         protected DataReadingStrategy getDataReadingStrategy() {
             return dataReadingStrategy;
+        }
+    }
+
+    private static final class CdmSgridDataset extends CdmGridDataset {
+        private Map<String, RangesList> rangesList = null;
+        private Map<String, SGridPadding[]> paddings;
+
+        public CdmSgridDataset(String id, String location, Collection<GridVariableMetadata> vars,
+                DataReadingStrategy dataReadingStrategy, Map<String, RangesList> rangesList,
+                Map<String, SGridPadding[]> paddings) {
+            super(id, location, vars, dataReadingStrategy);
+            this.rangesList = rangesList;
+            this.paddings = paddings;
+        }
+
+        @Override
+        protected GridDataSource openDataSource() throws DataReadingException {
+            NetcdfDataset nc = null;
+            try {
+                nc = NetcdfDatasetAggregator.getDataset(location);
+                synchronized (this) {
+                    /*
+                     * If the getGridDataset method runs concurrently on the
+                     * same object, we can get a
+                     * ConcurrentModificationException, so we synchronise this
+                     * action to avoid the issue.
+                     * 
+                     * Since we are dealing with an SGRID dataset, we have
+                     * explicitly defined which index corresponds to which axis
+                     * for the staggered variables
+                     */
+                    return new CdmSgridDataSource(nc, rangesList, paddings);
+                }
+            } catch (EdalException | IOException e) {
+                if (nc != null) {
+                    NetcdfDatasetAggregator.releaseDataset(nc);
+                }
+                throw new DataReadingException("Problem aggregating datasets", e);
+            }
+        }
+    }
+
+    private static final class CdmSgridDataSource implements GridDataSource {
+        private CdmGridDataSource cdmGridDataSource;
+        private Map<String, SGridPadding[]> paddings;
+
+        public CdmSgridDataSource(NetcdfDataset nc, Map<String, RangesList> rangesList,
+                Map<String, SGridPadding[]> paddings) throws IOException {
+            cdmGridDataSource = new CdmGridDataSource(nc, rangesList);
+            this.paddings = paddings;
+        }
+
+        @SuppressWarnings("incomplete-switch")
+        @Override
+        public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax,
+                int ymin, int ymax, int xmin, int xmax) throws IOException, DataReadingException {
+            if (variableId.endsWith(UNSTAGGERED_SUFFIX)) {
+                /*
+                 * We need to average the staggering
+                 */
+                SGridPadding xPadding = paddings.get(variableId)[0];
+                SGridPadding yPadding = paddings.get(variableId)[1];
+
+                /*
+                 * First use the staggering information to set new limits
+                 */
+                switch (xPadding) {
+                case NO_PADDING:
+                case HIGH:
+                    xmin -= 1;
+                    break;
+                case BOTH:
+                case LOW:
+                    xmax += 1;
+                    break;
+                }
+                switch (yPadding) {
+                case NO_PADDING:
+                case HIGH:
+                    ymin -= 1;
+                    break;
+                case BOTH:
+                case LOW:
+                    ymax += 1;
+                    break;
+                }
+
+                /*
+                 * Then remove the suffix from the variable and read the
+                 * required data
+                 */
+                String origVarId = variableId.replace(UNSTAGGERED_SUFFIX, "");
+                final Array4D<Number> origData = cdmGridDataSource.read(origVarId, tmin, tmax,
+                        zmin, zmax, ymin, ymax, xmin, xmax);
+
+                /*
+                 * Now wrap the result in a 4D array which takes the appropriate
+                 * average
+                 */
+                return new Array4D<Number>(tmax - tmin + 1, zmax - zmin + 1, ymax - ymin + 1, xmax
+                        - xmin + 1) {
+                    @Override
+                    public Number get(int... coords) {
+                        int x = coords[3];
+                        int y = coords[2];
+                        int numDimsToAverage = 0;
+
+                        switch (xPadding) {
+                        case NO_PADDING:
+                        case HIGH:
+                            x -= 1;
+                            numDimsToAverage++;
+                            break;
+                        case BOTH:
+                        case LOW:
+                            x += 1;
+                            numDimsToAverage++;
+                            break;
+                        }
+                        switch (yPadding) {
+                        case NO_PADDING:
+                        case HIGH:
+                            y -= 1;
+                            numDimsToAverage++;
+                            break;
+                        case BOTH:
+                        case LOW:
+                            y += 1;
+                            numDimsToAverage++;
+                            break;
+                        }
+                        if (x < 0 || y < 0 || x >= origData.getXSize() || y >= origData.getYSize()) {
+                            return null;
+                        }
+
+                        if (numDimsToAverage == 1) {
+                            /*
+                             * One of the dimensions has an offset - we are
+                             * averaging 2 edges
+                             */
+                            Number v1 = origData.get(coords);
+                            Number v2 = origData.get(coords[0], coords[1], y, x);
+                            if (v1 == null || v2 == null) {
+                                return null;
+                            }
+                            return (v1.doubleValue() + v2.doubleValue()) / 2.0;
+                        } else if (numDimsToAverage == 2) {
+                            /*
+                             * Both of the dimensions has an offset - we are
+                             * averaging 4 faces
+                             */
+                            Number v1 = origData.get(coords);
+                            Number v2 = origData.get(coords[0], coords[1], coords[2], x);
+                            Number v3 = origData.get(coords[0], coords[1], y, coords[3]);
+                            Number v4 = origData.get(coords[0], coords[1], y, x);
+                            if (v1 == null || v2 == null || v3 == null || v4 == null) {
+                                return null;
+                            }
+                            return (v1.doubleValue() + v2.doubleValue() + v3.doubleValue() + v4
+                                    .doubleValue()) / 4.0;
+                        } else if (numDimsToAverage == 0) {
+                            /*
+                             * This was marked as a staggered grid, but had both
+                             * axes set as NO_OFFSET. We shouldn't get here, but
+                             * it's an easy case to handle if we do...
+                             */
+                            return origData.get(coords);
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public void set(Number value, int... coords) {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            } else {
+                return cdmGridDataSource.read(variableId, tmin, tmax, zmin, zmax, ymin, ymax, xmin,
+                        xmax);
+            }
+        }
+
+        @Override
+        public void close() throws DataReadingException {
+            cdmGridDataSource.close();
         }
     }
 

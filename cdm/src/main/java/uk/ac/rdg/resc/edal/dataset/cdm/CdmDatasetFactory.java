@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ucar.nc2.Attribute;
 import ucar.nc2.Variable;
@@ -50,6 +51,7 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
+import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 /**
  * {@link DatasetFactory} that creates {@link Dataset}s representing gridded
@@ -90,7 +92,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              * Scans the NetcdfDataset for variables which pair up to make
              * vectors, and adds the appropriate VectorPlugins
              */
-            List<VectorPlugin> vectors = processVectors(nc, dataset);
+            List<VectorPlugin> vectors = processVectors(dataset);
             for (VectorPlugin plugin : vectors) {
                 dataset.addVariablePlugin(plugin);
             }
@@ -198,7 +200,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                 standardName, catMap);
     }
 
-    private List<VectorPlugin> processVectors(NetcdfDataset nc, Dataset ds) {
+    private List<VectorPlugin> processVectors(Dataset ds) {
         /*
          * Store a map of component names. Key is the compound name, value is a
          * 2-element String array with x, y component IDs
@@ -209,76 +211,31 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         Map<String, String[]> xyComponentPairs = new HashMap<String, String[]>();
         Map<String, Boolean> xyNameToTrueEN = new HashMap<String, Boolean>();
 
-        for (Variable var : nc.getVariables()) {
-            String varId = var.getFullName();
-            if (ds.getVariableIds().contains(varId)) {
-                Attribute stdNameAtt = var.findAttributeIgnoreCase("standard_name");
-                if (stdNameAtt != null) {
-                    String stdName = stdNameAtt.getStringValue();
+        Set<String> variableIds = ds.getVariableIds();
+        for (String varId : variableIds) {
+            VariableMetadata metadata = ds.getVariableMetadata(varId);
+            String stdName = metadata.getParameter().getStandardName();
+            if (stdName != null) {
+                /*
+                 * Check for vector components
+                 */
+                IdComponentEastNorth vectorInfo = determineVectorIdAndComponent(stdName);
+                if(vectorInfo != null) {
+                    String[] cData;
+                    if (!xyComponentPairs.containsKey(vectorInfo.id)) {
+                        cData = new String[2];
+                        xyComponentPairs.put(vectorInfo.id, cData);
+                        xyNameToTrueEN.put(vectorInfo.id, vectorInfo.isEastNorth);
+                    }
+                    cData = xyComponentPairs.get(vectorInfo.id);
                     /*
-                     * Check for vector components
+                     * By doing this, we will end up with the merged coverage
                      */
-                    if (stdName.contains("eastward_")) {
-                        String compoundName = stdName.replaceFirst("eastward_", "");
-                        String[] cData;
-                        if (!xyComponentPairs.containsKey(compoundName)) {
-                            cData = new String[2];
-                            xyComponentPairs.put(compoundName, cData);
-                            xyNameToTrueEN.put(compoundName, true);
-                        }
-                        cData = xyComponentPairs.get(compoundName);
-                        /*
-                         * By doing this, we will end up with the merged
-                         * coverage
-                         */
+                    if(vectorInfo.isX) {
                         cData[0] = varId;
-                    } else if (stdName.contains("northward_")) {
-                        String compoundName = stdName.replaceFirst("northward_", "");
-                        String[] cData;
-                        if (!xyComponentPairs.containsKey(compoundName)) {
-                            cData = new String[2];
-                            xyComponentPairs.put(compoundName, cData);
-                            xyNameToTrueEN.put(compoundName, true);
-                        }
-                        cData = xyComponentPairs.get(compoundName);
-                        /*
-                         * By doing this, we will end up with the merged
-                         * coverage
-                         */
-                        cData[1] = varId;
-                    } else if (stdName.matches("u-.*component")) {
-                        String compoundName = stdName.replaceFirst("u-(.*)component", "$1");
-                        String[] cData;
-                        if (!xyComponentPairs.containsKey(compoundName)) {
-                            cData = new String[2];
-                            xyComponentPairs.put(compoundName, cData);
-                            xyNameToTrueEN.put(compoundName, false);
-                        }
-                        cData = xyComponentPairs.get(compoundName);
-                        /*
-                         * By doing this, we will end up with the merged
-                         * coverage
-                         */
-                        cData[0] = varId;
-                    } else if (stdName.matches("v-.*component")) {
-                        String compoundName = stdName.replaceFirst("v-(.*)component", "$1");
-                        String[] cData;
-                        if (!xyComponentPairs.containsKey(compoundName)) {
-                            cData = new String[2];
-                            xyComponentPairs.put(compoundName, cData);
-                            xyNameToTrueEN.put(compoundName, false);
-                        }
-                        cData = xyComponentPairs.get(compoundName);
-                        /*
-                         * By doing this, we will end up with the merged
-                         * coverage
-                         */
+                    } else {
                         cData[1] = varId;
                     }
-                    /*
-                     * We could potentially add a check for zonal/meridional
-                     * here if required.
-                     */
                 }
             }
         }
@@ -293,6 +250,39 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
             }
         }
         return ret;
+    }
+
+    private IdComponentEastNorth determineVectorIdAndComponent(String stdName) {
+        /*
+         * We could potentially add a check for zonal/meridional here if
+         * required.
+         */
+        if (stdName.contains("eastward_")) {
+            return new IdComponentEastNorth(stdName.replaceFirst("eastward_", ""), true, true);
+        } else if (stdName.contains("northward_")) {
+            return new IdComponentEastNorth(stdName.replaceFirst("northward_", ""), false, true);
+        } else if (stdName.matches("u-.*component")) {
+            return new IdComponentEastNorth(stdName.replaceFirst("u-(.*)component", "$1"), true, false);
+        } else if (stdName.matches("v-.*component")) {
+            return new IdComponentEastNorth(stdName.replaceFirst("v-(.*)component", "$1"), false, false);
+        } else if (stdName.matches(".*x_.*velocity")) {
+            return new IdComponentEastNorth(stdName.replaceFirst("(.*)x_(.*velocity)", "$1$2"), true, false);
+        } else if (stdName.matches(".*y_.*velocity")) {
+            return new IdComponentEastNorth(stdName.replaceFirst("(.*)y_(.*velocity)", "$1$2"), false, false);
+        }
+        return null;
+    }
+    
+    private class IdComponentEastNorth {
+        String id;
+        boolean isX;
+        boolean isEastNorth;
+
+        public IdComponentEastNorth(String id, boolean isX, boolean isEastNorth) {
+            this.id = id;
+            this.isX = isX;
+            this.isEastNorth = isEastNorth;
+        }
     }
 
     private List<ValueErrorPlugin> processUncertainty(NetcdfDataset nc) {
@@ -359,14 +349,17 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                 String uncertRef = varId2UncertMLRefs.get(statsVarIds);
                 if (valueId == null
                         && ("http://www.uncertml.org/statistics/mean".equalsIgnoreCase(uncertRef)
-                                || "http://www.uncertml.org/statistics/median".equalsIgnoreCase(uncertRef)
-                                || "http://www.uncertml.org/statistics/mode".equalsIgnoreCase(uncertRef) 
-                                || "http://www.uncertml.org/statistics/moment".equalsIgnoreCase(uncertRef))) {
+                                || "http://www.uncertml.org/statistics/median"
+                                        .equalsIgnoreCase(uncertRef)
+                                || "http://www.uncertml.org/statistics/mode"
+                                        .equalsIgnoreCase(uncertRef) || "http://www.uncertml.org/statistics/moment"
+                                    .equalsIgnoreCase(uncertRef))) {
                     valueId = statsVarIds;
                 }
                 if (errorId == null
-                        && ("http://www.uncertml.org/statistics/standard-deviation".equalsIgnoreCase(uncertRef)
-                                || "http://www.uncertml.org/statistics/variance".equalsIgnoreCase(uncertRef))) {
+                        && ("http://www.uncertml.org/statistics/standard-deviation"
+                                .equalsIgnoreCase(uncertRef) || "http://www.uncertml.org/statistics/variance"
+                                .equalsIgnoreCase(uncertRef))) {
                     errorId = statsVarIds;
                 }
             }

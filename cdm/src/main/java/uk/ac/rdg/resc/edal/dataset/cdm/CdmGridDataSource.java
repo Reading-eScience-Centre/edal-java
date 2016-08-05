@@ -137,12 +137,14 @@ final class CdmGridDataSource implements GridDataSource {
          * CdmGridDatasetFactory) and would be slightly more memory-efficient.
          * But this way is clearer.
          */
-        for (Entry<String, RangesList> entry : rangeList.entrySet()) {
-            int x = entry.getValue().getXAxisIndex();
-            int y = entry.getValue().getYAxisIndex();
-            int z = entry.getValue().getZAxisIndex();
-            int t = entry.getValue().getTAxisIndex();
-            rangeListCache.put(entry.getKey(), new RangesList(x, y, z, t));
+        if (rangeList != null) {
+            for (Entry<String, RangesList> entry : rangeList.entrySet()) {
+                int x = entry.getValue().getXAxisIndex();
+                int y = entry.getValue().getYAxisIndex();
+                int z = entry.getValue().getZAxisIndex();
+                int t = entry.getValue().getTAxisIndex();
+                rangeListCache.put(entry.getKey(), new RangesList(x, y, z, t));
+            }
         }
     }
 
