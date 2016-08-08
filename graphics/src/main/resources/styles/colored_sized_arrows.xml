@@ -11,8 +11,14 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
           <resc:ColoredSizedArrowSymbolizer>
             <se:Opacity>$opacity</se:Opacity>
             <resc:ArrowSizeField>$layerName-mag</resc:ArrowSizeField>
+            <resc:ArrowColourField>$layerName-mag</resc:ArrowColourField>
             <resc:ArrowMinSize>4</resc:ArrowMinSize>
             <resc:ArrowMaxSize>12</resc:ArrowMaxSize>
+            <resc:Range>
+              <resc:Minimum>$scaleMin</resc:Minimum>
+              <resc:Maximum>$scaleMax</resc:Maximum>
+              <resc:Spacing>$logarithmic</resc:Spacing>
+            </resc:Range>
             <se:ColorMap>
               <resc:Segment fallbackValue="$bgColor">
                 <se:LookupValue>Rasterdata</se:LookupValue>
@@ -30,11 +36,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
               </resc:Segment>
             </se:ColorMap>
             <resc:ArrowStyle>FAT_ARROW</resc:ArrowStyle>
-            <resc:Range>
-              <resc:Minimum>$scaleMin</resc:Minimum>
-              <resc:Maximum>$scaleMax</resc:Maximum>
-              <resc:Spacing>$logarithmic</resc:Spacing>
-            </resc:Range>
           </resc:ColoredSizedArrowSymbolizer>
         </se:Rule>
       </se:CoverageStyle>

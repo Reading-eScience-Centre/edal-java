@@ -37,7 +37,15 @@ public class SLDColoredSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
         String arrowSizeField = (String) xPath.evaluate("./resc:ArrowSizeField", symbolizerNode,
                 XPathConstants.STRING);
         if (arrowSizeField == null || arrowSizeField.isEmpty()) {
-            throw new SLDException("Must have an ArrowSizeField element for a sized arrow layer");
+            throw new SLDException(
+                    "Must have an ArrowSizeField element for a sized + coloured arrow layer");
+        }
+
+        String arrowColourField = (String) xPath.evaluate("./resc:ArrowColourField",
+                symbolizerNode, XPathConstants.STRING);
+        if (arrowSizeField == null || arrowSizeField.isEmpty()) {
+            throw new SLDException(
+                    "Must have an ArrowColourField element for a sized + coloured arrow layer");
         }
 
         ColourScheme arrowColourScheme = parseColorMap(xPath, symbolizerNode);
@@ -54,8 +62,8 @@ public class SLDColoredSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
                 range.getSpacing() == Spacing.LOGARITHMIC);
 
         // instantiate a new arrow layer and add it to the image
-        ColouredSizedArrowLayer arrowLayer = new ColouredSizedArrowLayer(layerName, arrowSizeField, arrowMinSize,
-                arrowMaxSize, scale, arrowColourScheme, arrowStyle);
+        ColouredSizedArrowLayer arrowLayer = new ColouredSizedArrowLayer(layerName, arrowSizeField,
+                arrowColourField, arrowMinSize, arrowMaxSize, scale, arrowColourScheme, arrowStyle);
         return arrowLayer;
     }
 }
