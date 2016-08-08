@@ -31,7 +31,7 @@ public final class Constants {
 		public static final String START = "start";
 		public static final String STOP = "stop";
 		public static final String NUM = "num";
-		public static final String COMPONENTS = "components";		
+		public static final String COORDINATES = "coordinates";		
 		public static final String REFERENCING = "referencing";
 		public static final String SYSTEM = "system";
 		public static final String CALENDAR = "calendar";
@@ -67,6 +67,8 @@ public final class Constants {
 		public static final String TEMPORALRS = "TemporalRS";
 		public static final String GREGORIAN = "Gregorian";
 		public static final String GEODETICCRS = "GeodeticCRS";
+		public static final String GEOGRAPHICCRS = "GeographicCRS";
+		public static final String GEOCENTRICCRS = "GeocentricCRS";
 		public static final String PROJECTEDCRS = "ProjectedCRS";
 		public static final String VERTICALCRS = "VerticalCRS";
 		public static final String UP = "up";
