@@ -72,4 +72,19 @@ public interface EnhancedVariableMetadata {
      *         returned {@link PlottingStyleParameters} object may do.
      */
     public PlottingStyleParameters getDefaultPlottingParameters();
+
+    /**
+     * @return Whether or not this layer can be queried with GetFeatureInfo requests
+     */
+    public boolean isQueryable();
+
+    /**
+     * @return Whether or not this layer can be downloaded in CSV/CoverageJSON format
+     */
+    public boolean isDownloadable();
+
+    /**
+     * @return Whether this layer is disabled
+     */
+    public boolean isDisabled();
 }
