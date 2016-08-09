@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
@@ -61,14 +60,14 @@ import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
  * An {@link AbstractContinuousDomainDataset} whose map features are
  * {@link PointFeature}s. Subclasses must provide a method to convert from their
  * underlying feature type to a {@link PointFeature}, given a set of parameters.
- * 
+ *
  * @param <F>
  *            The type of {@link DiscreteFeature} which this
  *            {@link PointDataset} reads natively (i.e. the same type of
  *            {@link DiscreteFeature} which is returned by the
  *            {@link DiscreteFeatureReader} associated with this
  *            {@link PointDataset}).
- * 
+ *
  * @author Guy Griffiths
  */
 public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
@@ -118,7 +117,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
             }
         }
 
-        this.bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, DefaultGeographicCRS.WGS84);
+        this.bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, GISUtils.defaultGeographicCRS());
         if (minZ != Double.MAX_VALUE) {
             this.zExtent = Extents.newExtent(minZ, maxZ);
         } else {
@@ -140,10 +139,10 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
         for (DiscreteFeature<?, ?> feature : extractedMapFeatures) {
             /*
              * This conversion is safe because:
-             * 
+             *
              * AbstractContinuousDomainDataset reads all features with
              * getFeatureReader().readFeatures()
-             * 
+             *
              * This class overrides getFeatureReader() to ensure that it returns
              * features of type F
              */
@@ -159,7 +158,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * <p>
      * Always returns a PointFeature - this is the point of this class. For
      * mixed feature types, extend directly from
@@ -189,7 +188,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
 
     /**
      * Convert a {@link DiscreteFeature} of type F to a {@link PointFeature}
-     * 
+     *
      * @param feature
      *            The feature to convert
      * @param params
@@ -207,7 +206,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
      * {@link PointFeature}. Can be used by subclasses which only handle
      * {@link ProfileFeature}s to implement
      * {@link PointDataset#convertFeature(DiscreteFeature, PlottingDomainParams)}
-     * 
+     *
      * @param feature
      *            The {@link ProfileFeature} to convert.
      * @param params
@@ -243,7 +242,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
             /*
              * If we have specified a z-extent, make sure that the z-value is
              * actually contained within that extent.
-             * 
+             *
              * This is to avoid the case where a feature may have an overall
              * extent which overlaps the supplied extent, but has no actual
              * measurements within that range.
@@ -272,7 +271,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
      * {@link PointFeature}. Can be used by subclasses which only handle
      * {@link PointSeriesFeature}s to implement
      * {@link PointDataset#convertFeature(DiscreteFeature, PlottingDomainParams)}
-     * 
+     *
      * @param feature
      *            The {@link PointSeriesFeature} to convert.
      * @param params
@@ -308,7 +307,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
             /*
              * If we have specified a time-extent, make sure that the time is
              * actually contained within that extent.
-             * 
+             *
              * This is to avoid the case where a feature may have an overall
              * extent which overlaps the supplied extent, but has no actual
              * measurements within that range.

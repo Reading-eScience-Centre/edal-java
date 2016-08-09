@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.geometry;
 
 import static org.junit.Assert.*;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -41,7 +40,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 /**
  * Test class for {@link BoundingBox} and {@link AbstractPolygon}. Only methods
  * {@link AbstractPolygon#contains} is tested.
- * 
+ *
  * @author Nan
  */
 public class BoundingBoxImplTest {
@@ -52,14 +51,14 @@ public class BoundingBoxImplTest {
      */
     @Before
     public void setUp() {
-        bbox = new BoundingBoxImpl(137.47, -20.0, 180.0, 60.0, DefaultGeographicCRS.WGS84);
+        bbox = new BoundingBoxImpl(137.47, -20.0, 180.0, 60.0, GISUtils.defaultGeographicCRS());
     }
 
     /**
      * Test {@link BoundingBox#contains}. Pick up positions inside, outside, or
      * on the edges of the bounding box. The positions may use different
      * CoordinateReferenceSystem from the bounding box.
-     * 
+     *
      * @throws InvalidCrsException
      *             if a wrong EPSG code is provided.
      * */
@@ -67,10 +66,10 @@ public class BoundingBoxImplTest {
     @Test
     public void testContains() throws InvalidCrsException {
         // pick up points on the edges of the grid
-        HorizontalPosition hPos = new HorizontalPosition(160.0, -20.0, DefaultGeographicCRS.WGS84);
+        HorizontalPosition hPos = new HorizontalPosition(160.0, -20.0, GISUtils.defaultGeographicCRS());
         assertTrue(bbox.contains(hPos));
 
-        hPos = new HorizontalPosition(150.0, 50.0, DefaultGeographicCRS.WGS84);
+        hPos = new HorizontalPosition(150.0, 50.0, GISUtils.defaultGeographicCRS());
         assertTrue(bbox.contains(hPos));
 
         assertTrue(bbox.contains(137.47, -20.0));

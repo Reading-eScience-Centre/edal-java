@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -37,12 +37,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.geotoolkit.factory.Hints;
-import org.geotoolkit.geometry.DirectPosition2D;
-import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
-import org.geotoolkit.referencing.CRS;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-import org.geotoolkit.referencing.factory.epsg.EpsgInstaller;
+import org.apache.sis.geometry.DirectPosition2D;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.apache.sis.referencing.CommonCRS;
+import org.apache.sis.referencing.CRS;
+import org.apache.sis.referencing.crs.AbstractCRS;
+import org.apache.sis.referencing.cs.AxesConvention;
+import org.apache.sis.util.Utilities;
 import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
@@ -76,9 +77,9 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
  * A class containing static methods which are useful for GIS operations.
- * 
+ *
  * @author Guy
- * 
+ *
  */
 public final class GISUtils {
 
@@ -89,8 +90,44 @@ public final class GISUtils {
     }
 
     /**
+     * Returns the default Lon-Lat geographic CRS.
+     * This method guarantees that the returned CRS complies to the following conditions:
+     *
+     * <ul>
+     *   <li>is geographic</li>
+     *   <li>has axes in <var>longitude</var>, <var>latitude</var> order</li>
+     *   <li>has longitude in degrees increasing toward East</li>
+     *   <li>has latitude in degrees increasing toward North</li>
+     *   <li>use the Greenwich prime meridian.</li>
+     * </ul>
+     *
+     * This method makes no guarantees about the geodetic datum.
+     * The current implementation delegates to {@link CommonCRS#defaultGeographic()},
+     * which itself delegates to a geographic CRS based on the WGS84 datum.
+     * However the default may change in future versions,
+     * for example using a spherical CRS instead of WGS84.
+     *
+     * @return the default geographic CRS with Lon-Lat axes in degrees.
+     */
+    public static CoordinateReferenceSystem defaultGeographicCRS() {
+        return CommonCRS.defaultGeographic();
+    }
+
+    /**
+     * Tests if a coordinate reference system is equivalent to the default geographic CRS.
+     *
+     * @param coordinateReferenceSystem
+     *            The {@link CoordinateReferenceSystem} to test
+     * @return <code>true</code> if the supplied
+     *         {@link CoordinateReferenceSystem} is equivalent to {@link #defaultGeographicCRS()}
+     */
+    public static boolean isDefaultGeographicCRS(CoordinateReferenceSystem coordinateReferenceSystem) {
+        return Utilities.equalsIgnoreMetadata(defaultGeographicCRS(), coordinateReferenceSystem);
+    }
+
+    /**
      * Tests if a coordinate reference system is equivalent to WGS84 Lon-Lat
-     * 
+     *
      * @param coordinateReferenceSystem
      *            The {@link CoordinateReferenceSystem} to test
      * @return <code>true</code> if the supplied
@@ -98,8 +135,8 @@ public final class GISUtils {
      */
     public static boolean isWgs84LonLat(CoordinateReferenceSystem coordinateReferenceSystem) {
         try {
-            return CRS.findMathTransform(coordinateReferenceSystem, DefaultGeographicCRS.WGS84)
-                    .isIdentity();
+            return CRS.findOperation(coordinateReferenceSystem, CommonCRS.WGS84.normalizedGeographic(), null)
+                    .getMathTransform().isIdentity();
         } catch (Exception e) {
             return false;
         }
@@ -108,7 +145,7 @@ public final class GISUtils {
     /**
      * Finds the next longitude which is greater than the reference longitude
      * and equivalent to the target longitude
-     * 
+     *
      * @param reference
      *            The reference longitude
      * @param target
@@ -146,7 +183,7 @@ public final class GISUtils {
     /**
      * Given a target longitude and a longitude, this returns the longitude
      * value which is nearest to the target, taking wrapping into account
-     * 
+     *
      * @param target
      *            The longitude which we are aiming to be nearest to
      * @param longitude
@@ -164,7 +201,7 @@ public final class GISUtils {
     /**
      * Constrains a lat-lon bounding box to have all longitude values in the
      * range (-180:180]
-     * 
+     *
      * @param bbox
      *            The {@link BoundingBox} to constrain
      * @return The constrained {@link BoundingBox}. If the {@link BoundingBox}
@@ -197,7 +234,7 @@ public final class GISUtils {
     /**
      * Transforms the given HorizontalPosition to a new position in the given
      * coordinate reference system.
-     * 
+     *
      * @param pos
      *            The position to translate.
      * @param targetCrs
@@ -226,7 +263,7 @@ public final class GISUtils {
          * should incur no large penalty for multiple invocations
          */
         try {
-            MathTransform transform = CRS.findMathTransform(sourceCrs, targetCrs, true);
+            MathTransform transform = CRS.findOperation(sourceCrs, targetCrs, null).getMathTransform();
             if (transform.isIdentity())
                 return pos;
             double[] point = new double[] { pos.getX(), pos.getY() };
@@ -240,7 +277,7 @@ public final class GISUtils {
     /**
      * Transforms the given lat-lon heading to a different
      * {@link CoordinateReferenceSystem}
-     * 
+     *
      * @param heading
      *            The heading in degrees
      * @param position
@@ -249,7 +286,7 @@ public final class GISUtils {
      *            {@link HorizontalPosition#getCoordinateReferenceSystem()} will
      *            be the {@link CoordinateReferenceSystem} in which the heading
      *            is valid.
-     * 
+     *
      * @return The heading, in degrees clockwise from "upwards" (i.e. y-positive
      *         in the target CRS)
      */
@@ -265,8 +302,8 @@ public final class GISUtils {
          * should incur no large penalty for multiple invocations
          */
         try {
-            MathTransform wgs2crs = CRS.findMathTransform(DefaultGeographicCRS.WGS84,
-                    position.getCoordinateReferenceSystem());
+            MathTransform wgs2crs = CRS.findOperation(CommonCRS.WGS84.normalizedGeographic(),
+                    position.getCoordinateReferenceSystem(), null).getMathTransform();
             if (wgs2crs.isIdentity())
                 return heading.doubleValue();
             heading = heading.doubleValue() * DEG2RAD;
@@ -300,7 +337,7 @@ public final class GISUtils {
 
     /**
      * Tests whether 2 {@link CoordinateReferenceSystem}s are equivalent
-     * 
+     *
      * @param sourceCrs
      *            The first {@link CoordinateReferenceSystem} to test
      * @param targetCrs
@@ -320,7 +357,7 @@ public final class GISUtils {
 
         MathTransform transform;
         try {
-            transform = CRS.findMathTransform(sourceCrs, targetCrs);
+            transform = CRS.findOperation(sourceCrs, targetCrs, null).getMathTransform();
             return transform.isIdentity();
         } catch (FactoryException e) {
             /*
@@ -334,7 +371,7 @@ public final class GISUtils {
     /**
      * Finds a {@link CoordinateReferenceSystem} with the given code, forcing
      * longitude-first axis order.
-     * 
+     *
      * @param crsCode
      *            The code for the CRS
      * @return a coordinate reference system with the longitude axis first
@@ -347,8 +384,9 @@ public final class GISUtils {
         if (crsCode == null)
             throw new NullPointerException("CRS code cannot be null");
         try {
-            /* The "true" means "force longitude first" */
-            return CRS.decode(crsCode, true);
+            CoordinateReferenceSystem crs = CRS.forCode(crsCode);
+            crs = AbstractCRS.castOrCopy(crs).forConvention(AxesConvention.RIGHT_HANDED);
+            return crs;
         } catch (Exception e) {
             throw new InvalidCrsException(crsCode);
         }
@@ -356,7 +394,7 @@ public final class GISUtils {
 
     /**
      * Converts a string of the form "a1,b1,a2,b2" into a {@link BoundingBox}
-     * 
+     *
      * @param bboxStr
      *            A string of the form "a1,b1,a2,b2". If xFirst is
      *            <code>true</code>, then a1, a2 represent the x-coordinates and
@@ -367,7 +405,7 @@ public final class GISUtils {
      * @param crs
      *            A string representing the {@link CoordinateReferenceSystem} of
      *            the {@link BoundingBox}
-     * 
+     *
      * @throws EdalException
      *             if the format of the bounding box is invalid
      */
@@ -418,7 +456,7 @@ public final class GISUtils {
 
     /**
      * Returns the closest time to the current time from a list of values
-     * 
+     *
      * @param tDomain
      *            The list of times to check
      * @return The closest from the list to the current time.
@@ -429,7 +467,7 @@ public final class GISUtils {
 
     /**
      * Returns the closest time within a temporal domain to the given time.
-     * 
+     *
      * @param targetTime
      *            The target time
      * @param tDomain
@@ -505,7 +543,7 @@ public final class GISUtils {
     /**
      * Returns the closest elevation to the surface of the given
      * {@link VerticalDomain}
-     * 
+     *
      * @param vDomain
      *            The {@link VerticalDomain} to test
      * @return The uppermost elevation, or null if no {@link VerticalDomain} is
@@ -561,7 +599,7 @@ public final class GISUtils {
     /**
      * Returns the closest elevation within a vertical domain to the given
      * elevation.
-     * 
+     *
      * @param targetZ
      *            The target elevation
      * @param zDomain
@@ -700,11 +738,11 @@ public final class GISUtils {
     /**
      * Converts a {@link BoundingBox} into a {@link GeographicBoundingBox} (i.e.
      * one which is in lat/lon WGS84).
-     * 
+     *
      * This method is not guaranteed to be exact. Its aim is to choose bounding
      * boxes which contain all of the data - there is no requirement that the
      * bounding box is a tight fit.
-     * 
+     *
      * @param bbox
      *            The bounding box
      * @return A {@link GeographicBoundingBox} which contains the supplied
@@ -761,7 +799,7 @@ public final class GISUtils {
                  */
                 double y = bbox.getMinY();
                 HorizontalPosition transformPosition = transformPosition(new HorizontalPosition(x,
-                        y, bbox.getCoordinateReferenceSystem()), DefaultGeographicCRS.WGS84);
+                        y, bbox.getCoordinateReferenceSystem()), defaultGeographicCRS());
                 minx = Math.min(transformPosition.getX(), minx);
                 maxx = Math.max(transformPosition.getX(), maxx);
                 miny = Math.min(transformPosition.getY(), miny);
@@ -770,7 +808,7 @@ public final class GISUtils {
                 y = bbox.getMaxY();
                 transformPosition = transformPosition(
                         new HorizontalPosition(x, y, bbox.getCoordinateReferenceSystem()),
-                        DefaultGeographicCRS.WGS84);
+                        defaultGeographicCRS());
                 minx = Math.min(transformPosition.getX(), minx);
                 maxx = Math.max(transformPosition.getX(), maxx);
                 miny = Math.min(transformPosition.getY(), miny);
@@ -782,7 +820,7 @@ public final class GISUtils {
                  */
                 double x = bbox.getMinX();
                 HorizontalPosition transformPosition = transformPosition(new HorizontalPosition(x,
-                        y, bbox.getCoordinateReferenceSystem()), DefaultGeographicCRS.WGS84);
+                        y, bbox.getCoordinateReferenceSystem()), defaultGeographicCRS());
                 minx = Math.min(transformPosition.getX(), minx);
                 maxx = Math.max(transformPosition.getX(), maxx);
                 miny = Math.min(transformPosition.getY(), miny);
@@ -791,7 +829,7 @@ public final class GISUtils {
                 x = bbox.getMaxX();
                 transformPosition = transformPosition(
                         new HorizontalPosition(x, y, bbox.getCoordinateReferenceSystem()),
-                        DefaultGeographicCRS.WGS84);
+                        defaultGeographicCRS());
                 minx = Math.min(transformPosition.getX(), minx);
                 maxx = Math.max(transformPosition.getX(), maxx);
                 miny = Math.min(transformPosition.getY(), miny);
@@ -819,7 +857,7 @@ public final class GISUtils {
 
     /**
      * Increases the size of a {@link BoundingBox} by a given factor
-     * 
+     *
      * @param bbox
      *            The {@link BoundingBox} to increase the size of
      * @param percentageIncrease
@@ -866,7 +904,7 @@ public final class GISUtils {
 
     /**
      * Gets the intersection of a number of {@link HorizontalDomain}s
-     * 
+     *
      * @param domains
      *            The {@link HorizontalDomain}s to find a intersection of
      * @return A new {@link HorizontalDomain} whose {@link BoundingBox}
@@ -961,13 +999,13 @@ public final class GISUtils {
             return comparison;
         }
         CoordinateReferenceSystem crs = sameCrs ? comparison.getCoordinateReferenceSystem()
-                : DefaultGeographicCRS.WGS84;
+                : defaultGeographicCRS();
         return new SimpleHorizontalDomain(minX, minY, maxX, maxY, crs);
     }
 
     /**
      * Gets the intersection of a number of {@link VerticalDomain}s
-     * 
+     *
      * @param domains
      *            The {@link VerticalDomain}s to find a intersection of. They
      *            must all share the same {@link VerticalCrs}
@@ -1050,7 +1088,7 @@ public final class GISUtils {
 
     /**
      * Gets the intersection of a number of {@link TemporalDomain}s
-     * 
+     *
      * @param domains
      *            The {@link TemporalDomain}s to find a intersection of
      * @return A new {@link TemporalDomain} whose extent represents the range
@@ -1135,9 +1173,9 @@ public final class GISUtils {
      * shouldn't be used for anything critical, since two results may not
      * accurately reflect the true distance (e.g. two points near the pole may
      * incorrectly report a smaller distance apart than two near the equator).
-     * 
+     *
      * No check that the positions have the same CRS is performed (for speed).
-     * 
+     *
      * @param pos1
      *            The first position
      * @param pos2
@@ -1156,7 +1194,7 @@ public final class GISUtils {
 
     /**
      * Limits a z-axis to include a range as tightly as possible
-     * 
+     *
      * @param axis
      *            The axis to limit
      * @param limits
@@ -1202,7 +1240,7 @@ public final class GISUtils {
 
     /**
      * Limits a t-axis to include a range as tightly as possible
-     * 
+     *
      * @param axis
      *            The axis to limit
      * @param limits
@@ -1248,7 +1286,7 @@ public final class GISUtils {
      * Contains a single static flag. This can be used to set the path for the
      * EPSG database directory. If not set, it will use the system's temporary
      * directory.
-     * 
+     *
      * This is in a separate class because the static{} block in GISUtils will
      * get executed before the class can be used, so setting something like
      * GISUtils.DB_PATH would have no effect - it gets set too late.
@@ -1278,18 +1316,18 @@ public final class GISUtils {
             dataSource.setURL("jdbc:h2:" + path + "/.h2/epsg.db;AUTO_SERVER=TRUE");
             Connection conn = dataSource.getConnection();
             conn.setAutoCommit(true);
-            Hints.putSystemDefault(Hints.EPSG_DATA_SOURCE, dataSource);
-            EpsgInstaller i = new EpsgInstaller();
-            i.setDatabase(conn);
-            if (!i.exists()) {
-                i.call();
-            }
+// TODO     Hints.putSystemDefault(Hints.EPSG_DATA_SOURCE, dataSource);
+            /*
+             * There is no need to use a specific method for installing the EPSG database.
+             * Just asking for a CRS will trig the installation.
+             */
+            CRS.forCode("EPSG:3395");
         } catch (FactoryException e) {
             if (!e.getMessage().contains("Schema \"EPSG\" already exists")) {
                 /*
                  * For some reason the i.exists() method fails to detect an
                  * existing database if we are using server mode.
-                 * 
+                 *
                  * This causes an exception, but there is no real problem - it's
                  * just that the i.exists() method should have returned true
                  */

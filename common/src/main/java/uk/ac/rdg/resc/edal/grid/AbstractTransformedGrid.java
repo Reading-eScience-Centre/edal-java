@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -28,13 +28,13 @@
 
 package uk.ac.rdg.resc.edal.grid;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * This is an abstract implementation of a {@link HorizontalGrid} for which
  * there exists a transformation to convert WGS84 to the native CRS.
- * 
+ *
  * This transformation is invisible externally - i.e.
  * {@link AbstractTransformedGrid#getCoordinateReferenceSystem()} will return
  * {@link DefaultGeographicCRS#WGS84} and all operations behave as though this
@@ -48,7 +48,7 @@ public abstract class AbstractTransformedGrid implements HorizontalGrid {
      * Transforms a heading in native grid co-ordinates (degrees clockwise from
      * positive y-direction) into a heading in WGS84 (degrees clockwise from
      * north).
-     * 
+     *
      * @param xComp
      *            The x-component of the heading
      * @param yComp
@@ -68,6 +68,6 @@ public abstract class AbstractTransformedGrid implements HorizontalGrid {
      */
     @Override
     public final CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return DefaultGeographicCRS.WGS84;
+        return GISUtils.defaultGeographicCRS();
     }
 }

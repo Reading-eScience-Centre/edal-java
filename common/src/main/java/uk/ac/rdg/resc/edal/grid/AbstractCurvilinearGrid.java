@@ -27,8 +27,7 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.grid;
 
-import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
@@ -45,7 +44,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * curvilinear coordinate system ({@literal i.e.} one which is defined by
  * explicitly specifying the latitude and longitude coordinates of each grid
  * point.
- * 
+ *
  * @author Guy Griffiths
  * @author Jon Blower
  */
@@ -63,7 +62,7 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
      * Transforms a heading in native grid co-ordinates (degrees clockwise from
      * positive y-direction) into a heading in WGS84 (degrees clockwise from
      * north).
-     * 
+     *
      * @param xComp
      *            The x-component of the heading
      * @param yComp
@@ -83,7 +82,7 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
          * arrows
          */
         GridCoordinates2D posIndex = findIndexOf(new HorizontalPosition(lon, lat,
-                DefaultGeographicCRS.WGS84));
+                GISUtils.defaultGeographicCRS()));
         Array<GridCell2D> curvGridDomain = getDomainObjects();
         int[] shape = curvGridDomain.getShape();
         int gridX = posIndex.getX();

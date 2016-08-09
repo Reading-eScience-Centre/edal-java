@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -39,7 +39,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -66,7 +65,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * These tests perform various operations on a test dataset (originally
  * generated from {@link CreateNetCDF}). These involve reading map data from the
  * NetCDF file and checking that the values obtained are those expected
- * 
+ *
  * @author Guy
  */
 public class CdmGridDatasetFactoryTest {
@@ -80,14 +79,14 @@ public class CdmGridDatasetFactoryTest {
     public void setup() throws IOException, EdalException {
         /*-
          * The test NetCDF dataset is 4D, and contains 4 variables:
-         * 
+         *
          * vLon
          * vLat
          * vDepth
          * vTime
-         * 
+         *
          * each of which covers [0,100] along one single dimension.
-         * 
+         *
          * The latitude covers [-180,170] at a resolution of 10 degrees
          * The longitude covers [-90, 90] at a resolution of 10 degrees
          * The depth covers [0,100] at a resolution of 10m
@@ -107,13 +106,13 @@ public class CdmGridDatasetFactoryTest {
         /*
          * This grid shares the same domain as the source data file
          */
-        hGrid = new RegularGridImpl(-180.5, -90.5, 179.5, 90.5, DefaultGeographicCRS.WGS84, xSize,
+        hGrid = new RegularGridImpl(-180.5, -90.5, 179.5, 90.5, GISUtils.defaultGeographicCRS(), xSize,
                 ySize);
     }
 
     @Test
     public void testCorrectData() throws DataReadingException, VariableNotFoundException {
-        /*- 
+        /*-
          * This test covers:
          * Reading the data from the location
          * Extracting each variable at every depth and time onto its native grid
@@ -207,9 +206,9 @@ public class CdmGridDatasetFactoryTest {
         Set<VariableMetadata> topLevelVariables = dataset.getTopLevelVariables();
         /*
          * This should contain vDepth, vTime, and vLonvLat-group
-         * 
+         *
          * vLonvLat-group should then contain:
-         * 
+         *
          * vLat vLon vLonvLatmag vLonvLatdir
          */
         assertEquals(3, topLevelVariables.size());

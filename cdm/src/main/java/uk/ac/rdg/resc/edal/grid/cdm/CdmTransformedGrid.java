@@ -31,8 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -64,7 +63,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 /**
  * A two-dimensional {@link HorizontalGrid} that uses a {@link Projection} to
  * convert from lat-lon coordinates to grid coordinates.
- * 
+ *
  * @author Jon Blower
  * @author Guy Griffiths
  */
@@ -164,14 +163,14 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
             /*
              * The normal situation - use the bounds to create the bounding box
              */
-            bbox = new BoundingBoxImpl(lonMin, latMin, lonMax, latMax, DefaultGeographicCRS.WGS84);
+            bbox = new BoundingBoxImpl(lonMin, latMin, lonMax, latMax, GISUtils.defaultGeographicCRS());
         } else {
             /*
              * Some projections (MSGnavigation as returned by GRIB is the only
              * one I've actually found so far) end up returning a bounding box
              * with identical latitude (and potentially longitude) values when
              * it's not appropriate.
-             * 
+             *
              * It seems to be the case that the projection just doesn't work.
              */
             bbox = BoundingBoxImpl.global();
@@ -245,7 +244,7 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
                              */
                             GridCoordinates2D posCoords = CdmTransformedGrid.this
                                     .findIndexOf(new HorizontalPosition(x, y,
-                                            DefaultGeographicCRS.WGS84));
+                                            GISUtils.defaultGeographicCRS()));
                             if (posCoords == null)
                                 return false;
                             return (posCoords.getX() == coords[1] && posCoords.getY() == coords[0]);

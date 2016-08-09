@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.domain;
 
 import static org.junit.Assert.*;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -41,7 +40,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 /**
  * Test class for {@link SimpleHorizontalDomain}. Only
  * {@link SimpleHorizontalDomain#contains} is tested.
- * 
+ *
  * @author Nan
  */
 public class SimpleHorizontalDomainTest {
@@ -51,48 +50,48 @@ public class SimpleHorizontalDomainTest {
      * inside or outside SimpeHorizontalDomain. In particular, some of these
      * positions are on the edge of the domain; some use different from
      * CoordinateReferenceSystem.
-     * 
+     *
      * @throws InvalidCrsException
      *             if a unknown epsg code is provide.
-     * 
+     *
      */
     @Test
     public void testContains() throws InvalidCrsException {
         SimpleHorizontalDomain sdm = new SimpleHorizontalDomain(120, 30, 150, 40);
-        HorizontalPosition position = new HorizontalPosition(125, 32, DefaultGeographicCRS.WGS84);
+        HorizontalPosition position = new HorizontalPosition(125, 32, GISUtils.defaultGeographicCRS());
         assertTrue(sdm.contains(position));
 
         // positions below are on the edge
-        position = new HorizontalPosition(120, 30, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(120, 30, GISUtils.defaultGeographicCRS());
         assertTrue(sdm.contains(position));
 
-        position = new HorizontalPosition(120, 40, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(120, 40, GISUtils.defaultGeographicCRS());
         assertTrue(sdm.contains(position));
 
-        position = new HorizontalPosition(150, 30, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(150, 30, GISUtils.defaultGeographicCRS());
         assertTrue(sdm.contains(position));
 
-        position = new HorizontalPosition(150, 40, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(150, 40, GISUtils.defaultGeographicCRS());
         assertTrue(sdm.contains(position));
 
-        position = new HorizontalPosition(150, 35, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(150, 35, GISUtils.defaultGeographicCRS());
         assertTrue(sdm.contains(position));
 
         // position is inside domain
-        position = new HorizontalPosition(130, 35, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(130, 35, GISUtils.defaultGeographicCRS());
         assertTrue(sdm.contains(position));
 
         // positions are outside domain
-        position = new HorizontalPosition(125, 42, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(125, 42, GISUtils.defaultGeographicCRS());
         assertFalse(sdm.contains(position));
 
-        position = new HorizontalPosition(305, 32, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(305, 32, GISUtils.defaultGeographicCRS());
         assertFalse(sdm.contains(position));
 
-        position = new HorizontalPosition(295, -20, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(295, -20, GISUtils.defaultGeographicCRS());
         assertFalse(sdm.contains(position));
 
-        position = new HorizontalPosition(-60, 20.7, DefaultGeographicCRS.WGS84);
+        position = new HorizontalPosition(-60, 20.7, GISUtils.defaultGeographicCRS());
         assertFalse(sdm.contains(position));
 
         // position using different epsg code is outside domain

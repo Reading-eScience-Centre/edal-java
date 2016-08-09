@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -42,7 +42,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
@@ -81,16 +80,17 @@ import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * This test class mainly is for {@link RectiLinearGridDataset} and its ancestor
  * {@link Dataset}. In addition, the {@link VectorPlugin} class is tested as the
  * netCDF library is available in this package.
- * 
+ *
  * TODO This needs rewriting from scratch. It is badly commented and very
  * difficult to follow.
- * 
+ *
  * @author Nan Lin
  * */
 public class RectilinearGridDatasetTest {
@@ -109,7 +109,7 @@ public class RectilinearGridDatasetTest {
     private int zSize = 11;
 
     private RegularGrid rGrid;
-    private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+    private CoordinateReferenceSystem crs = GISUtils.defaultGeographicCRS();
     private Chronology chronology;
     private VerticalCrs vCrs;
     private Extent<DateTime> datasetTExtent;
@@ -127,7 +127,7 @@ public class RectilinearGridDatasetTest {
      * Initialize the testing environment. First, read the data in. Then create
      * a rectilinear grid object. Next pick up points in the grid as the
      * sampling points. Finally, initialize values for T and Z axis.
-     * 
+     *
      * @throws IOException
      *             if there is a problem when creating the dataset
      * @throws EdalException
@@ -193,7 +193,7 @@ public class RectilinearGridDatasetTest {
 
     /**
      * Test {@link VectorPlugin}.
-     * 
+     *
      * @throws DataReadingExcpetion
      *             if there is a problem reading the underlying data
      * @throws EdalException
@@ -240,7 +240,7 @@ public class RectilinearGridDatasetTest {
      * Test some get methods (getDatasetChronology, getDatasetVerticalCrs,
      * getMapFeatureType, getVariableMetadata) in {@link Dataset} by evaluating
      * the metadata of the test dataset.
-     * 
+     *
      * @throws VariableNotFoundException
      **/
     @Test
@@ -260,7 +260,7 @@ public class RectilinearGridDatasetTest {
      * Test if the extracted TimeSeriesFeatures method return empty when
      * arguments in the constructor {@link PlottingDomainParams} are set out of
      * the domains of T and Z.
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      * @throws UnsupportedOperationException
@@ -323,9 +323,9 @@ public class RectilinearGridDatasetTest {
     /**
      * Test if it throws IllegalArgumentException when the constructor of
      * {@link PlottingDomainParams} contains meaningless parameters.
-     * 
+     *
      * @throws VariableNotFoundException
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */
@@ -364,9 +364,9 @@ public class RectilinearGridDatasetTest {
      * General test {@link Dataset#extractMapFeatures} method. When the values
      * for para of the constructor {@link PlottingDomainParams} are set
      * properly, it returns expected results.
-     * 
+     *
      * @throws VariableNotFoundException
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */
@@ -420,10 +420,10 @@ public class RectilinearGridDatasetTest {
      * General test {@link Dataset#extractTimeSeriesFeatures} method. When the
      * values for para of the constructor {@link PlottingDomainParams} are set
      * properly, it returns expected results.
-     * 
+     *
      * @throws VariableNotFoundException
      * @throws UnsupportedOperationException
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */
@@ -482,14 +482,14 @@ public class RectilinearGridDatasetTest {
 //     * A helper method to generate {@link PlottingDomainParams} object by using
 //     * a given zExtent object. The result is used to evaluating the
 //     * {@link Dataset#extractTimeseriesFeatures} behaviour.
-//     * 
+//     *
 //     * @param zExtent
 //     *            which is used as a para of the constructor of
 //     *            {@link PlottingDomainParams}in the calling method
 //     * @throws DataReadingException
 //     *             If there is a problem reading the underlying data
-//     * @throws VariableNotFoundException 
-//     * @throws UnsupportedOperationException 
+//     * @throws VariableNotFoundException
+//     * @throws UnsupportedOperationException
 //     */
 //    private void getFeatureByZExtent(Extent<Double> zExtent) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
 //        for (GridCell2D cell : samplePoints) {
@@ -518,7 +518,7 @@ public class RectilinearGridDatasetTest {
 //    /**
 //     * A helper method which is used to evaluate the returned TimeSeriesFeature
 //     * object.
-//     * 
+//     *
 //     * @param data
 //     *            the evaluated TimeSeriesFeature
 //     * @param hPos
@@ -564,14 +564,14 @@ public class RectilinearGridDatasetTest {
 //     * A helper method to generate {@link PlottingDomainParams} object by using
 //     * a given targetZ object. The result is used to evaluate the returned
 //     * {@link Dataset#extractTimeseriesFeatures} behaviour.
-//     * 
+//     *
 //     * @param targetZ
 //     *            Which is used as a para of PlottingDomainParams object in the
 //     *            calling method
 //     * @throws DataReadingException
 //     *             If there is a problem reading the underlying data
-//     * @throws VariableNotFoundException 
-//     * @throws UnsupportedOperationException 
+//     * @throws VariableNotFoundException
+//     * @throws UnsupportedOperationException
 //     */
 //    private void getFeatureByTargetZ(double targetZ) throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
 //        if (vAxis.contains(targetZ)) {
@@ -609,9 +609,9 @@ public class RectilinearGridDatasetTest {
 //     * In this test, the para of zExtent and targetZ in the constructor
 //     * {@link PlottingDomainParams} are set to various values in order to
 //     * evaluating returned {@link TimeSeriesFeatures} objects.
-//     * @throws VariableNotFoundException 
-//     * @throws UnsupportedOperationException 
-//     * 
+//     * @throws VariableNotFoundException
+//     * @throws UnsupportedOperationException
+//     *
 //     * @throws DataReadingExcpetion
 //     *             If there is a problem reading the underlying data
 //     */
@@ -650,9 +650,9 @@ public class RectilinearGridDatasetTest {
 //     * In this test, the para of tExtent and targetT in the constructor
 //     * {@link PlottingDomainParams} are set to various values in order to
 //     * evaluating returned {@link TimeSeriesFeatures} objects.
-//     * @throws VariableNotFoundException 
-//     * @throws UnsupportedOperationException 
-//     * 
+//     * @throws VariableNotFoundException
+//     * @throws UnsupportedOperationException
+//     *
 //     * @throws DataReadingExcpetion
 //     *             If there is a problem reading the underlying data
 //     */
@@ -698,12 +698,12 @@ public class RectilinearGridDatasetTest {
 //
 //    /**
 //     * A helper method is to evaluate TimeSeriesFeatures objects
-//     * 
+//     *
 //     * @param tExtent
 //     *            the para of tExtent in the constructor of
 //     *            {@link PlottingDomainParams} object
-//     * @throws VariableNotFoundException 
-//     * @throws UnsupportedOperationException 
+//     * @throws VariableNotFoundException
+//     * @throws UnsupportedOperationException
 //     * @throws DataReadingExcpetion
 //     *             If there is a problem reading the underlying data
 //     */
@@ -731,10 +731,10 @@ public class RectilinearGridDatasetTest {
     /**
      * General test to extract profile features by calling
      * {@link Dataset#extraceProfileFeatures} method.
-     * 
+     *
      * @throws VariableNotFoundException
      * @throws UnsupportedOperationException
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */
@@ -760,10 +760,10 @@ public class RectilinearGridDatasetTest {
     /**
      * Test to extract features by setting the para of BoundingBox in
      * {@link Dataset} extraceXXXFeatures methods.
-     * 
+     *
      * @throws VariableNotFoundException
      * @throws UnsupportedOperationException
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */
@@ -807,7 +807,7 @@ public class RectilinearGridDatasetTest {
     /**
      * A helper method is to evaluate returned feature objects based on the
      * given bounding box objects.
-     * 
+     *
      * @param bbox
      *            the boundingbox
      * @param xstep
@@ -858,9 +858,9 @@ public class RectilinearGridDatasetTest {
 
     /**
      * This only works for lat/lon grid.
-     * 
+     *
      * Decide how many midpoints in a given distance extent
-     * 
+     *
      * @param low
      *            the low point of the given distance extent
      * @param high
@@ -885,12 +885,12 @@ public class RectilinearGridDatasetTest {
 //    /**
 //     * A helper method is to evaluate returned ProfileFeature objects based on
 //     * given zExtent values.
-//     * 
+//     *
 //     * @param zExtent
 //     *            the corresponding param of zExtent in PlottingDomainParams
 //     *            object
-//     * @throws VariableNotFoundException 
-//     * @throws UnsupportedOperationException 
+//     * @throws VariableNotFoundException
+//     * @throws UnsupportedOperationException
 //     * @throws DataReadingExcpetion
 //     *             If there is a problem reading the underlying data
 //     */
@@ -919,9 +919,9 @@ public class RectilinearGridDatasetTest {
 //    /**
 //     * Test {@link Dataset#extractProfileFeatures} method by setting various
 //     * values for zExtent
-//     * @throws VariableNotFoundException 
-//     * @throws UnsupportedOperationException 
-//     * 
+//     * @throws VariableNotFoundException
+//     * @throws UnsupportedOperationException
+//     *
 //     * @throws DataReadingExcpetion
 //     *             If there is a problem reading the underlying data
 //     */
@@ -964,10 +964,10 @@ public class RectilinearGridDatasetTest {
      * Test {@link Dataset#extractProfileFeatures} method by setting various
      * values of tExtent and targetT for the constructor
      * {@link PlottingDomainParams}.
-     * 
+     *
      * @throws VariableNotFoundException
      * @throws UnsupportedOperationException
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */
@@ -1009,7 +1009,7 @@ public class RectilinearGridDatasetTest {
 
     /**
      * A helper method is to evaluate ProfileFeatures objects.
-     * 
+     *
      * @param tExtent
      *            the corresponding param tExtent in PlottingDomainParams
      * @param targetT
@@ -1055,7 +1055,7 @@ public class RectilinearGridDatasetTest {
 
     /**
      * A helper method to evaluate ProfileFeatures object.
-     * 
+     *
      * @param data
      *            the extracted Profilefeature
      * @param hPos
@@ -1100,10 +1100,10 @@ public class RectilinearGridDatasetTest {
      * Test {@link Dataset#extractProfileFeatures} method return empty when
      * values in the constructor of {@link PlottingDomainParams} are out of the
      * scopes of X, Y, Z, T domains.
-     * 
+     *
      * @throws VariableNotFoundException
      * @throws UnsupportedOperationException
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */
@@ -1142,9 +1142,9 @@ public class RectilinearGridDatasetTest {
     /**
      * By testing {@link Dataset#readFeature}, two classes {@link GridFeature}
      * and {@link MapFeature} are tested.
-     * 
+     *
      * @throws VariableNotFoundException
-     * 
+     *
      * @throws DataReadingExcpetion
      *             If there is a problem reading the underlying data
      */

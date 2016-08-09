@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -28,9 +28,8 @@
 
 package uk.ac.rdg.resc.edal.dataset.plugins;
 
-import org.geotoolkit.geometry.DirectPosition2D;
-import org.geotoolkit.referencing.CRS;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.apache.sis.geometry.DirectPosition2D;
+import org.apache.sis.referencing.CRS;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
@@ -51,10 +50,10 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 /**
  * A plugin to generate magnitude and direction fields from x- and y-components,
  * and to group them logically.
- * 
+ *
  * Direction fields are always generated as headings, in degrees, in WGS84 (i.e.
  * lat-lon), regardless of the CRS of the original data.
- * 
+ *
  * @author Guy Griffiths
  */
 public class VectorPlugin extends VariablePlugin {
@@ -81,7 +80,7 @@ public class VectorPlugin extends VariablePlugin {
 
     /**
      * Construct a new {@link VectorPlugin}
-     * 
+     *
      * @param xComponentId
      *            The ID of the variable representing the x-component
      * @param yComponentId
@@ -174,7 +173,7 @@ public class VectorPlugin extends VariablePlugin {
         if (!eastNorthComps) {
             CoordinateReferenceSystem sourceCrs = xDomain.getCoordinateReferenceSystem();
             try {
-                trans = CRS.findMathTransform(sourceCrs, DefaultGeographicCRS.WGS84, true);
+                trans = CRS.findOperation(sourceCrs, GISUtils.defaultGeographicCRS(), null).getMathTransform();
             } catch (FactoryException e) {
                 throw new EdalException("Cannot calculate transform between 2 CRSs", e);
             }
@@ -182,16 +181,16 @@ public class VectorPlugin extends VariablePlugin {
                 /*
                  * The transform is an identity one. This means that we either
                  * have:
-                 * 
+                 *
                  * A ProjectedGrid which is reporting WGS84, but which actually
                  * works in its own native system
-                 * 
+                 *
                  * A CurvlinearGrid which is reporting WGS84, for which there is
                  * no mathematical transform to WGS84 (using e.g. a lookup
                  * table)
-                 * 
+                 *
                  * A WGS84 grid
-                 * 
+                 *
                  * Whichever, we don't need the transform object any more.
                  */
                 trans = null;
@@ -220,7 +219,7 @@ public class VectorPlugin extends VariablePlugin {
         } else {
             /*
              * Unnecessary - just here for clarity.
-             * 
+             *
              * We have specified that components are east/north, not just x/y.
              * We don't need to do any transformation to calculate vector
              * directions.
@@ -290,19 +289,19 @@ public class VectorPlugin extends VariablePlugin {
                  * MathTransform object, or a
                  * ProjectedGrid/AbstractCurvilinearGrid, which can perform its
                  * own transformations
-                 * 
+                 *
                  * Transform the position to WGS84 (if required). This is
                  * necessary since we always want to return the direction as a
                  * heading in WGS84-space
                  */
-                position = GISUtils.transformPosition(position, DefaultGeographicCRS.WGS84);
+                position = GISUtils.transformPosition(position, GISUtils.defaultGeographicCRS());
                 double lon = position.getX();
                 double lat = position.getY();
                 if (trans != null) {
                     try {
                         /*
                          * We have a mathematical transform
-                         * 
+                         *
                          * This means that the native grid is non-lat-lon but
                          * contains a Geotoolkit mathematical transform
                          */

@@ -1,23 +1,23 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
-import org.geotoolkit.metadata.iso.citation.Citations;
-import org.geotoolkit.referencing.IdentifiedObjects;
+import java.util.Locale;
+import org.apache.sis.referencing.IdentifiedObjects;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
 
 public final class Constants {
-	
+
 	/**
 	 * Property names.
 	 */
-	public static final class Keys {			
+	public static final class Keys {
 		// Axis names
 		public static final String X = "x";
 		public static final String Y = "y";
 		public static final String Z = "z";
 		public static final String T = "t";
 		public static final String COMPOSITE = "composite";
-		
+
 		// Other properties
 		public static final String TYPE = "type";
 		public static final String ID = "id";
@@ -31,7 +31,7 @@ public final class Constants {
 		public static final String START = "start";
 		public static final String STOP = "stop";
 		public static final String NUM = "num";
-		public static final String COMPONENTS = "components";		
+		public static final String COMPONENTS = "components";
 		public static final String REFERENCING = "referencing";
 		public static final String SYSTEM = "system";
 		public static final String CALENDAR = "calendar";
@@ -52,13 +52,13 @@ public final class Constants {
 		public static final String OBSERVEDPROPERTY = "observedProperty";
 		public static final String CATEGORIES = "categories";
 		public static final String CATEGORYENCODING = "categoryEncoding";
-		
+
 		// Extension properties
 		public static final String TITLE = "title";
 		public static final String PREFERREDCOLOR = "preferredColor";
-	
+
 	}
-	
+
 	/**
 	 * Property values.
 	 */
@@ -72,14 +72,14 @@ public final class Constants {
 		public static final String UP = "up";
 		public static final String DOWN = "down";
 		public static final String CRS84 = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
-		
+
 		// Labels
 		public static final String VERTICAL = "Vertical";
 		public static final String PRESSURE = "Pressure";
 		public static final String HEIGHT = "Height";
 		public static final String DEPTH = "Depth";
-		
-		// Other values	
+
+		// Other values
 		public static final String COVERAGE = "Coverage";
 		public static final String COVERAGECOLLECTION = "CoverageCollection";
 		public static final String DOMAIN = "Domain";
@@ -91,30 +91,24 @@ public final class Constants {
 		public static final String GRID = "Grid";
 		public static final String VERTICALPROFILE = "VerticalProfile";
 		public static final String POINT = "Point";
-		public static final String TRAJECTORY = "Trajectory";		
-	
+		public static final String TRAJECTORY = "Trajectory";
+
 		public static final String getStandardNameUri (String standardName) {
 			return "http://vocab.nerc.ac.uk/standard_name/" + standardName + "/";
 		}
-				
+
 		public static String getCrsUri(CoordinateReferenceSystem crs) {
 			String crsUri;
 			try {
-				crsUri = IdentifiedObjects.lookupIdentifier(Citations.HTTP_OGC, crs, true);
-				if (crsUri == null) {
-					// geotoolkit doesn't return this URI yet
-					if (crs.getName().toString() == "WGS84(DD)") {
-						crsUri = CRS84;
-					}
-				} else if (crsUri.equals("http://www.opengis.net/gml/srs/crs.xml#84")) {
-					// TODO where is this weird URI coming from?!
-					crsUri = CRS84;
-				}
+				crsUri = IdentifiedObjects.lookupURN(crs, null);
 			} catch (FactoryException e) {
-				throw new RuntimeException(e); 
+				throw new RuntimeException(e);
 			}
+            if (crsUri != null && crsUri.startsWith("urn:ogc:")) {
+                crsUri = "http://www.opengis.net/" + crsUri.substring(8).replace(':', '/').toLowerCase(Locale.US);
+            }
 			return crsUri;
 		}
 	}
-	
+
 }

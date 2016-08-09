@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -50,9 +49,9 @@ import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 
 /**
  * Test class for {@link GISUtils}.
- * 
+ *
  * @author Guy
- * 
+ *
  */
 public class GISUtilsTest {
 
@@ -137,21 +136,21 @@ public class GISUtilsTest {
      */
     @Test
     public void testConstrainBoundingBox() {
-        BoundingBox bbox = new BoundingBoxImpl(10, -80, 20, 79, DefaultGeographicCRS.WGS84);
+        BoundingBox bbox = new BoundingBoxImpl(10, -80, 20, 79, GISUtils.defaultGeographicCRS());
         BoundingBox constrainedBbox = GISUtils.constrainBoundingBox(bbox);
         assertEquals(10, constrainedBbox.getMinX(), 1e-8);
         assertEquals(20, constrainedBbox.getMaxX(), 1e-8);
         assertEquals(-80, constrainedBbox.getMinY(), 1e-8);
         assertEquals(79, constrainedBbox.getMaxY(), 1e-8);
 
-        bbox = new BoundingBoxImpl(370, -80, 380, 79, DefaultGeographicCRS.WGS84);
+        bbox = new BoundingBoxImpl(370, -80, 380, 79, GISUtils.defaultGeographicCRS());
         constrainedBbox = GISUtils.constrainBoundingBox(bbox);
         assertEquals(10, constrainedBbox.getMinX(), 1e-8);
         assertEquals(20, constrainedBbox.getMaxX(), 1e-8);
         assertEquals(-80, constrainedBbox.getMinY(), 1e-8);
         assertEquals(79, constrainedBbox.getMaxY(), 1e-8);
 
-        bbox = new BoundingBoxImpl(179, -80, 181, 79, DefaultGeographicCRS.WGS84);
+        bbox = new BoundingBoxImpl(179, -80, 181, 79, GISUtils.defaultGeographicCRS());
         constrainedBbox = GISUtils.constrainBoundingBox(bbox);
         assertEquals(-180, constrainedBbox.getMinX(), 1e-8);
         assertEquals(180, constrainedBbox.getMaxX(), 1e-8);

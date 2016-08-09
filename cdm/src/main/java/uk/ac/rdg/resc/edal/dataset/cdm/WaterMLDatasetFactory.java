@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2015 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -46,7 +46,6 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 import org.w3c.dom.Document;
@@ -118,11 +117,11 @@ public class WaterMLDatasetFactory extends DatasetFactory {
                 Double latitude = (Double) latitudeExpr.evaluate(site, XPathConstants.NUMBER);
                 Double longitude = (Double) longitudeExpr.evaluate(site, XPathConstants.NUMBER);
                 sites.put(siteCode, new HorizontalPosition(longitude, latitude,
-                        DefaultGeographicCRS.WGS84));
+                        GISUtils.defaultGeographicCRS()));
             }
             /*
              * We now have a Map of site code to physical location.
-             * 
+             *
              * Now read the ExportValues file which contains the actual
              * timeseries
              */

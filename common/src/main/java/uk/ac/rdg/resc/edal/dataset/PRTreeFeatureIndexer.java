@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -34,7 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 import org.khelekore.prtree.MBR;
 import org.khelekore.prtree.MBRConverter;
@@ -50,11 +49,11 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * This uses a {@link PRTree} to index features spatially.
- * 
+ *
  * All features within this {@link PRTree} have their positions specified in
  * WGS84 with longitudes in the range (-180:180] - this is guaranteed by the
  * {@link PRTreeFeatureIndexer#addFeatures} method.
- * 
+ *
  * @author Guy Griffiths
  */
 public class PRTreeFeatureIndexer implements FeatureIndexer,
@@ -79,7 +78,7 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
              */
             if (!GISUtils.isWgs84LonLat(feature.horizontalPosition.getCoordinateReferenceSystem())) {
                 feature.horizontalPosition = GISUtils.transformPosition(feature.horizontalPosition,
-                        DefaultGeographicCRS.WGS84);
+                        GISUtils.defaultGeographicCRS());
             }
 
             /*
@@ -107,13 +106,13 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
             horizontalExtent = new BoundingBoxImpl(geographicBoundingBox.getWestBoundLongitude(),
                     geographicBoundingBox.getSouthBoundLatitude(),
                     geographicBoundingBox.getEastBoundLongitude(),
-                    geographicBoundingBox.getNorthBoundLatitude(), DefaultGeographicCRS.WGS84);
+                    geographicBoundingBox.getNorthBoundLatitude(), GISUtils.defaultGeographicCRS());
         }
 
         /*
          * Transform bounding box to lat-lon here with min value in range
          * (-180:180].
-         * 
+         *
          * We do this manually rather than using GISUtils.constrainLongitude180
          * because we want to shift both sides of the bounding box by the same
          * amount.

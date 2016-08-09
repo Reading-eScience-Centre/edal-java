@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -31,22 +31,21 @@ package uk.ac.rdg.resc.edal.util;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import uk.ac.rdg.resc.edal.position.*;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * Test class for {@link ImmutableArray}.
- * 
+ *
  * @author Guy
- * 
+ *
  */
 public class ImmutableArrayTest {
     private final int SIZE = 5;
 
     @Test
     public void test() {
-        CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+        CoordinateReferenceSystem crs = GISUtils.defaultGeographicCRS();
         HorizontalPosition[] hPosArray = new HorizontalPosition[SIZE];
         for (int i = 0; i < SIZE; i++) {
             HorizontalPosition hPos = new HorizontalPosition(100.0 + i * 0.2, 120.0 + i * 0.3, crs);

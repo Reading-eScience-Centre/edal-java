@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -28,12 +28,12 @@
 
 package uk.ac.rdg.resc.edal.position;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * A two-dimensional {@link HorizontalPosition} that describes a point as
  * longitude and latitude using the WGS84 datum.
- * 
+ *
  * @author Jon Blower
  * @author Guy
  */
@@ -41,7 +41,7 @@ public class LonLatPosition extends HorizontalPosition {
     private static final long serialVersionUID = 1L;
 
     public LonLatPosition(double lon, double lat) {
-        super(lon, lat, DefaultGeographicCRS.WGS84);
+        super(lon, lat, GISUtils.defaultGeographicCRS());
     }
 
     /**

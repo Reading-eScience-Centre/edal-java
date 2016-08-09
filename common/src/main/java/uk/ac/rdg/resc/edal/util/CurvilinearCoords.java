@@ -36,8 +36,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.LonLatPosition;
@@ -49,7 +47,7 @@ import uk.ac.rdg.resc.edal.position.LonLatPosition;
  * latitude, but does not modify them or provide any public methods to modify
  * them. Modification of these arrays outside this class will cause undefined
  * behaviour.
- * 
+ *
  * @author Guy Griffiths
  * @author Jon Blower
  */
@@ -130,7 +128,7 @@ public final class CurvilinearCoords {
             throw new IllegalStateException("Invalid bounding box");
         }
 
-        lonLatBbox = new BoundingBoxImpl(minLon, minLat, maxLon, maxLat, DefaultGeographicCRS.WGS84);
+        lonLatBbox = new BoundingBoxImpl(minLon, minLat, maxLon, maxLat, GISUtils.defaultGeographicCRS());
 
         /* Calculate the corners of the grid cells */
         cornerLons = makeCorners(longitudes, true);
@@ -156,7 +154,7 @@ public final class CurvilinearCoords {
                 if (isLongitude) {
                     /*-
                      * Make sure that all corners are as close together as
-                     * possible 
+                     * possible
                      * e.g. see whether we need to use -179 or +181.
                      */
                     midpoint2 = GISUtils.getNearestEquivalentLongitude(midpoint1, midpoint2);
@@ -193,7 +191,7 @@ public final class CurvilinearCoords {
      * Gets the location of the midpoint of the cell at indices i, j. The
      * {@link LonLatPosition#getLongitude() longitude coordinate} of the
      * midpoint will be in the range [-180,180].
-     * 
+     *
      * @throws ArrayIndexOutOfBoundsException
      *             if i and j combine to give a point outside the grid.
      */
@@ -208,7 +206,7 @@ public final class CurvilinearCoords {
 
     /**
      * Gets the location of the four corners of the cell at indices i, j.
-     * 
+     *
      * @throws ArrayIndexOutOfBoundsException
      *             if i and j combine to give a point outside the grid.
      */
@@ -232,9 +230,9 @@ public final class CurvilinearCoords {
 
     /**
      * Gets the [i,j]th cell in this grid.
-     * 
+     *
      * TODO cache or precompute the cells?
-     * 
+     *
      * @throws IllegalArgumentException
      *             if i,j is not a valid cell in this grid.
      */
@@ -529,7 +527,7 @@ public final class CurvilinearCoords {
                     minY = Math.min(minY, corner.getY());
                     maxY = Math.max(maxY, corner.getY());
                 }
-                mbr = new BoundingBoxImpl(minX, minY, maxX, maxY, DefaultGeographicCRS.WGS84);
+                mbr = new BoundingBoxImpl(minX, minY, maxX, maxY, GISUtils.defaultGeographicCRS());
             }
             return mbr;
         }
@@ -549,7 +547,7 @@ public final class CurvilinearCoords {
         /**
          * Returns true if this cell's {@link #getBoundaryPath() boundary}
          * contains the given longitude-latitude point.
-         * 
+         *
          * TODO what happens if this cell is represented by NaNs?
          */
         public boolean contains(double lon, double lat) {

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -32,7 +32,6 @@ import static org.junit.Assert.*;
 
 import java.util.*;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -40,22 +39,23 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidLineStringException;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Test class for {@link LineString}.
- * 
+ *
  * @author Nan
  */
 public class LineStringTest {
     private ArrayList<LineString> lineStrings = new ArrayList<LineString>();
-    private final CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+    private final CoordinateReferenceSystem crs = GISUtils.defaultGeographicCRS();
     // accuracy constant for comparing double numbers
     private final double delta = 1e-6;
 
     /**
      * Setting up testing environment: three line strings are put into a
      * container.
-     * 
+     *
      * @throws InvalidCrsException
      *             if a invalid EPSG is provided.
      * @throws InvalidLineStringException

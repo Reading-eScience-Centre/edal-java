@@ -6,7 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +19,7 @@ import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 public class SimpleCoverageJsonConverterTest {
 
@@ -30,14 +30,14 @@ public class SimpleCoverageJsonConverterTest {
     public void setup() throws IOException, EdalException {
         /*-
          * The test NetCDF dataset is 4D, and contains 4 variables:
-         * 
+         *
          * vLon
          * vLat
          * vDepth
          * vTime
-         * 
+         *
          * each of which covers [0,100] along one single dimension.
-         * 
+         *
          * The latitude covers [-180,170] at a resolution of 10 degrees
          * The longitude covers [-90, 90] at a resolution of 10 degrees
          * The depth covers [0,100] at a resolution of 10m
@@ -55,7 +55,7 @@ public class SimpleCoverageJsonConverterTest {
         int xSize = 36;
         int ySize = 19;
         HorizontalGrid hGrid = new RegularGridImpl(-180.5, -90.5, 179.5, 90.5,
-                DefaultGeographicCRS.WGS84, xSize, ySize);
+                GISUtils.defaultGeographicCRS(), xSize, ySize);
         DateTime time = new DateTime(2000, 01, 01, 00, 00);
         mapFeature = dataset.extractMapFeatures(dataset.getVariableIds(),
                 new MapDomain(hGrid.getBoundingBox(), xSize, ySize, 0.0, time)).get(0);
