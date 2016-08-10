@@ -109,7 +109,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  */
 public final class CdmGridDatasetFactory extends CdmDatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
-    private static final String UNSTAGGERED_SUFFIX = ":interpolated";
+    private static final String UNSTAGGERED_SUFFIX = ":face";
 
     public static void main(String[] args) throws EdalException, IOException {
         CdmGridDatasetFactory df = new CdmGridDatasetFactory();
