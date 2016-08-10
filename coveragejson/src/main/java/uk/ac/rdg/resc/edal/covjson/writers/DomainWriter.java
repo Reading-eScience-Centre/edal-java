@@ -36,7 +36,9 @@ import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.DerivedCRS;
+import org.opengis.referencing.crs.GeocentricCRS;
 import org.opengis.referencing.crs.GeodeticCRS;
+import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 
 import uk.ac.rdg.resc.edal.covjson.StreamingEncoder.ArrayEncoder;
@@ -83,11 +85,11 @@ public class DomainWriter <T> {
 	private static void writeReferencing(ArrayEncoder<?> referencing, Domain domain) throws IOException {
 		for (ReferenceSystemConnection refSysConnection : domain.refSystemConnections) {
 			MapEncoder<?> connection = referencing.startMap();
-			ArrayEncoder<?> components = connection.startArray(Keys.COMPONENTS);
-			for (String component : refSysConnection.components) {
-				components.add(component);
+			ArrayEncoder<?> coordinateIds = connection.startArray(Keys.COORDINATES);
+			for (String coordinateId : refSysConnection.coordinates) {
+				coordinateIds.add(coordinateId);
 			}
-			components.end();
+			coordinateIds.end();
 			
 			MapEncoder<?> system = connection.startMap(Keys.SYSTEM);
 			
@@ -116,10 +118,10 @@ public class DomainWriter <T> {
 				axisMap.put(Keys.DATATYPE, Vals.TUPLEDATATYPE);
 			}
 			
-			if (axis.components != null) {
-				ArrayEncoder<?> comp = axisMap.startArray(Keys.COMPONENTS);
-				for (String component : axis.components) {
-					comp.add(component);
+			if (axis.coordinateIds != null) {
+				ArrayEncoder<?> comp = axisMap.startArray(Keys.COORDINATES);
+				for (String coordinateId : axis.coordinateIds) {
+					comp.add(coordinateId);
 				}
 				comp.end();
 			}
@@ -251,7 +253,11 @@ public class DomainWriter <T> {
 	
 	private static void writeHorizontalCrs(MapEncoder<?> map, CoordinateReferenceSystem crs) throws IOException {				
 		String crsType;
-		if (crs instanceof GeodeticCRS) {
+		if (crs instanceof GeographicCRS) {
+			crsType = Vals.GEOGRAPHICCRS;
+		} else if (crs instanceof GeocentricCRS) {
+			crsType = Vals.GEOCENTRICCRS;
+		} else if (crs instanceof GeodeticCRS) {
 			crsType = Vals.GEODETICCRS;
 		} else if (crs instanceof ProjectedCRS) {
 			crsType = Vals.PROJECTEDCRS;

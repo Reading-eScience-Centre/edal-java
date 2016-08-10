@@ -73,11 +73,11 @@ public class Coverage {
 		 */
 		Object wrappedAxis;
 		
-		List<String> components;
+		List<String> coordinateIds;
 		
-		public Axis(Object wrappedAxis, List<String> components) {
+		public Axis(Object wrappedAxis, List<String> coordinateIds) {
 			this.wrappedAxis = wrappedAxis;
-			this.components = components;
+			this.coordinateIds = coordinateIds;
 		}
 		
 		int size() {
@@ -105,10 +105,10 @@ public class Coverage {
 	}
 	
 	static class ReferenceSystemConnection {
-		List<String> components;
+		List<String> coordinates;
 		Object system;
-		public ReferenceSystemConnection(List<String> components, Object system) {
-			this.components = components;
+		public ReferenceSystemConnection(List<String> coordinateIds, Object system) {
+			this.coordinates = coordinateIds;
 			this.system = system;
 		}
 	}
@@ -284,13 +284,13 @@ public class Coverage {
 	}
 	
 	private static Map<String, Axis> getAxes(TrajectoryDomain trajectoryDomain) {
-		List<String> components = new LinkedList<>();
-		components.add(Keys.T);
-		components.add(Keys.X);
-		components.add(Keys.Y);
+		List<String> coordinateIds = new LinkedList<>();
+		coordinateIds.add(Keys.T);
+		coordinateIds.add(Keys.X);
+		coordinateIds.add(Keys.Y);
 		boolean hasZ = trajectoryDomain.getVerticalCrs() != null;
 		if (hasZ) {
-			components.add(Keys.Z);
+			coordinateIds.add(Keys.Z);
 		}
 		
 		int size = trajectoryDomain.size();
@@ -325,7 +325,7 @@ public class Coverage {
 		TupleAxis tupleAxis = new TupleAxis(nestedAxes, size);
 		
 		Map<String, Axis> axes = new HashMap<>();
-		axes.put(Keys.COMPOSITE, new Axis(tupleAxis, components));
+		axes.put(Keys.COMPOSITE, new Axis(tupleAxis, coordinateIds));
 		return axes;
 	}
 }
