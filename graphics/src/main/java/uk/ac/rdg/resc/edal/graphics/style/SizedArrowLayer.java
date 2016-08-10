@@ -43,32 +43,32 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SizedArrowLayer extends GriddedImageLayer {
-    private String directionFieldName;
-    private String magnitudeFieldName;
+    protected String directionFieldName;
+    protected String arrowSizeFieldName;
     private Color arrowColour = Color.black;
 
     private int minArrowSize = 4;
     private int maxArrowSize = 12;
 
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
-    private ScaleRange magnitudeScaleRange;
+    private ScaleRange arriwSizeScaleRange;
 
     public SizedArrowLayer(String directionFieldName, String magnitudeFieldName,
             Integer minArrowSize, Integer maxArrowSize, ScaleRange magnitudeScaleRange,
             Color arrowColour, ArrowStyle arrowStyle) {
         this.directionFieldName = directionFieldName;
-        this.magnitudeFieldName = magnitudeFieldName;
+        this.arrowSizeFieldName = magnitudeFieldName;
 
         this.minArrowSize = minArrowSize;
         this.maxArrowSize = maxArrowSize;
 
-        this.magnitudeScaleRange = magnitudeScaleRange;
+        this.arriwSizeScaleRange = magnitudeScaleRange;
 
         this.arrowColour = arrowColour;
         this.arrowStyle = arrowStyle;
     }
 
-    protected Color getArrowColour(Number magnitude){
+    protected Color getArrowColour(Number magnitude) {
         return this.arrowColour;
     }
 
@@ -76,8 +76,12 @@ public class SizedArrowLayer extends GriddedImageLayer {
     protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader)
             throws EdalException {
         Array2D<Number> directions = dataReader.getDataForLayerName(directionFieldName);
-        Array2D<Number> magnitudes = dataReader.getDataForLayerName(magnitudeFieldName);
+        Array2D<Number> magnitudes = dataReader.getDataForLayerName(arrowSizeFieldName);
+        drawArrows(image, dataReader, directions, magnitudes, magnitudes);
+    }
 
+    protected void drawArrows(BufferedImage image, MapFeatureDataReader dataReader,
+            Array2D<Number> directions, Array2D<Number> sizeData, Array2D<Number> colourData) {
         Graphics2D g = image.createGraphics();
 
         int width = image.getWidth();
@@ -110,13 +114,13 @@ public class SizedArrowLayer extends GriddedImageLayer {
                         /*
                          * We are at a point where we need to draw an arrow
                          */
-                        Number magnitude = magnitudes.get(j, i);
+                        Number sizeValue = sizeData.get(j, i);
                         Double angle = GISUtils.transformWgs84Heading(directions.get(j, i),
                                 domainObjects.get(j, i));
-                        if (magnitude != null && !Float.isNaN(magnitude.floatValue())
+                        if (sizeValue != null && !Float.isNaN(sizeValue.floatValue())
                                 && angle != null && !Float.isNaN(angle.floatValue())) {
 
-                            double scaleZeroToOne = magnitudeScaleRange.scaleZeroToOne(magnitude);
+                            double scaleZeroToOne = arriwSizeScaleRange.scaleZeroToOne(sizeValue);
                             if (scaleZeroToOne < 0) {
                                 scaleZeroToOne = 0.0;
                             }
@@ -130,7 +134,7 @@ public class SizedArrowLayer extends GriddedImageLayer {
                             /*
                              * get colour depending on size
                              */
-                            g.setColor(getArrowColour(magnitude));
+                            g.setColor(getArrowColour(colourData.get(j, i)));
 
                             if (arrowStyle == ArrowStyle.UPSTREAM) {
                                 /* Convert from degrees to radians */
@@ -165,7 +169,6 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                 VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
                                         / 180.0, i, j, arrowSize * 0.1f, g);
                             }
-
                         }
                     }
                     xLoc += 1.0;

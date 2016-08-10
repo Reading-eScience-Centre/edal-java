@@ -23,6 +23,8 @@
           * [Glyphs](appendices/sld_spec/xml_description/glyphs.md)
             * [In-situ Coloured Glyphs](appendices/sld_spec/xml_description/glyphs.md#in-situ)
           * [Arrows](appendices/sld_spec/xml_description/arrows.md)
+          * [Sized Arrows](appendices/sld_spec/xml_description/sized_arrows.md)
+          * [Coloured Sized Arrows](appendices/sld_spec/xml_description/coloured_sized_arrows.md)
           * [Confidence interval triangles](appendices/sld_spec/xml_description/confidence_interval_triangles.md)
           * [Contours](appendices/sld_spec/xml_description/contours.md)
           * [Stippling](appendices/sld_spec/xml_description/patterns.md)

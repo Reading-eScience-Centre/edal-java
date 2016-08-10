@@ -162,14 +162,17 @@ public class VariableConfig implements EnhancedVariableMetadata {
                 belowMinColour, noDataColour, logScale, numColorBands, 1f);
     }
 
+    @Override
     public boolean isQueryable() {
         return dataset.isQueryable();
     }
 
+    @Override
     public boolean isDownloadable() {
         return dataset.isDownloadable();
     }
 
+    @Override
     public boolean isDisabled() {
         return disabled == null ? false : disabled;
     }
