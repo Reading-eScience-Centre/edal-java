@@ -137,12 +137,7 @@ import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.Array;
-import uk.ac.rdg.resc.edal.util.CollectionUtils;
-import uk.ac.rdg.resc.edal.util.Extents;
-import uk.ac.rdg.resc.edal.util.GISUtils;
-import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
-import uk.ac.rdg.resc.edal.util.TimeUtils;
+import uk.ac.rdg.resc.edal.util.*;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
@@ -2262,41 +2257,54 @@ public class WmsServlet extends HttpServlet {
             String paletteName = params.getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
             int numColourBands = params.getPositiveInt("numcolorbands",
                     ColourPalette.MAX_NUM_COLOURS);
-            List<Extent<Float>> scaleRanges = GetMapStyleParams.getColorScaleRanges(params);
-            Extent<Float> scaleRange;
-            if (scaleRanges == null || scaleRanges.isEmpty()) {
-                scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
-            } else {
-                scaleRange = scaleRanges.get(0);
-                if(scaleRange == null || scaleRange.isEmpty()) {
-                    scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
-                }
-            }
-            ScaleRange colourScale = new ScaleRange(scaleRange.getLow(), scaleRange.getHigh(),
-                    params.getBoolean("logscale", false));
-            ColourScheme colourScheme = new SegmentColourScheme(colourScale,
-                    GraphicsUtils.parseColour(params.getString("belowmincolor", "0x000000")),
-                    GraphicsUtils.parseColour(params.getString("abovemaxcolor", "0x000000")),
-                    GraphicsUtils.parseColour(params.getString("bgcolor", "transparent")),
-                    paletteName, numColourBands);
-            List<ProfileFeature> profileFeatures = new ArrayList<ProfileFeature>();
+
+            /*
+             * define an extent for the vertical section if parameter present
+             */
+            String sectionElevationStr = params.getString("section-elevation");
+            Extent<Double> zExtent = extractSectionElevation(sectionElevationStr);
+
+            List<ProfileFeature> profileFeatures = new ArrayList<>();
             TemporalDomain temporalDomain = gridDataset.getVariableMetadata(varId)
-                    .getTemporalDomain();
+                .getTemporalDomain();
             DateTime time = null;
             if (timeStr != null) {
                 time = TimeUtils.iso8601ToDateTime(timeStr, temporalDomain.getChronology());
             }
             for (HorizontalPosition pos : verticalSectionHorizontalPositions) {
                 PlottingDomainParams plottingParams = new PlottingDomainParams(1, 1, null, null,
-                        null, pos, null, time);
+                    null, pos, null, time);
                 List<? extends ProfileFeature> features = gridDataset.extractProfileFeatures(
-                        CollectionUtils.setOf(varId), plottingParams.getBbox(),
-                        plottingParams.getZExtent(), plottingParams.getTExtent(),
-                        plottingParams.getTargetHorizontalPosition(), plottingParams.getTargetT());
+                    CollectionUtils.setOf(varId), plottingParams.getBbox(),
+                    plottingParams.getZExtent(), plottingParams.getTExtent(),
+                    plottingParams.getTargetHorizontalPosition(), plottingParams.getTargetT());
                 profileFeatures.addAll(features);
             }
+
+            Extent<Float> scaleRange;
+            if(zExtent != null){
+                scaleRange = getExtentOfFeatures(profileFeatures);
+            } else {
+                List<Extent<Float>> scaleRanges = GetMapStyleParams.getColorScaleRanges(params);
+                if (scaleRanges == null || scaleRanges.isEmpty()) {
+                    scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
+                } else {
+                    scaleRange = scaleRanges.get(0);
+                    if (scaleRange == null || scaleRange.isEmpty()) {
+                        scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
+                    }
+                }
+            }
+            ScaleRange colourScale = new ScaleRange(scaleRange.getLow(), scaleRange.getHigh(),
+                params.getBoolean("logscale", false));
+            ColourScheme colourScheme = new SegmentColourScheme(colourScale,
+                    GraphicsUtils.parseColour(params.getString("belowmincolor", "0x000000")),
+                    GraphicsUtils.parseColour(params.getString("abovemaxcolor", "0x000000")),
+                    GraphicsUtils.parseColour(params.getString("bgcolor", "transparent")),
+                    paletteName, numColourBands);
+
             JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(profileFeatures,
-                    lineString, colourScheme, zValue);
+                    lineString, colourScheme, zValue, zExtent);
             chart = Charting.addVerticalSectionChart(chart, verticalSectionChart);
         }
         int width = params.getPositiveInt("width", 700);
@@ -2316,6 +2324,48 @@ public class WmsServlet extends HttpServlet {
             log.error("Cannot write to output stream", e);
             throw new EdalException("Problem writing data to output stream", e);
         }
+    }
+
+    protected Extent<Double> extractSectionElevation(String depthString){
+        Extent<Double> zExtent = null;
+        if (depthString != null && !depthString.trim().equals("")) {
+            String[] depthStrings = depthString.split("/");
+            if (depthStrings.length == 2) {
+                try {
+                    zExtent = Extents.newExtent(Double.parseDouble(depthStrings[0]),
+                        Double.parseDouble(depthStrings[1]));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Section elevation format (number/number) is wrong: " + depthString);
+                }
+            } else {
+                throw new IllegalArgumentException("Section elevation must be a range (number/number)");
+            }
+        }
+        return zExtent;
+    }
+
+    private Extent<Float> getExtentOfFeatures(List<ProfileFeature> features) {
+        float min = Float.MAX_VALUE;
+        float max = -Float.MAX_VALUE;
+        for (ProfileFeature feature : features) {
+            for (String paramId : feature.getParameterIds()) {
+                Array1D<Number> values = feature.getValues(paramId);
+                int size = (int) values.size();
+                for (int i = 0; i < size; i++) {
+                    Number number = values.get(i);
+                    if(number != null) {
+                        if (number.doubleValue() > max) {
+                            max = number.floatValue();
+                        }
+                        if (number.doubleValue() < min) {
+                            min = number.floatValue();
+                        }
+                    }
+                }
+            }
+        }
+
+        return Extents.newExtent(min, max);
     }
 
     protected void getVerticalProfile(RequestParams params,
