@@ -369,18 +369,15 @@ public class NetcdfDatasetAggregator {
     private static NetcdfDataset openDataset(String location) throws DataReadingException {
         NetcdfDataset nc;
         try {
-            if (isNcmlAggregation(location)) {
+            if (isLocalNcmlAggregation(location)) {
                 /*
                  * We use the cache of NetcdfDatasets to read NcML aggregations
                  * as they can be time-consuming to put together. If the
                  * underlying data can change we rely on the server admin
                  * setting the "recheckEvery" parameter in the aggregation file.
                  */
-                if (!isRemote(location)) {
-                    location = "file://" + location;
-                }
-                nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, location), true,
-                        null);
+                nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, "file://"
+                        + location), true, null);
             } else {
                 /*
                  * For local single files and OPeNDAP datasets we don't use the
@@ -405,13 +402,17 @@ public class NetcdfDatasetAggregator {
     /**
      * @param location
      *            The location to test
-     * @return true if the given location represents an NcML aggregation.
+     * @return true if the given location represents a local NcML aggregation.
      *         dataset. This method simply checks to see if the location string
      *         ends with ".xml" or ".ncml", following the same procedure as the
      *         Java NetCDF library.
      */
-    private static boolean isNcmlAggregation(String location) {
-        return location.endsWith(".xml") || location.endsWith(".ncml");
+    private static boolean isLocalNcmlAggregation(String location) {
+        /*
+         * NcML aggregations are always local - OPeNDAP / DODS may end in
+         * ".ncml" but should not be treated as an aggregation
+         */
+        return (!isRemote(location)) && (location.endsWith(".xml") || location.endsWith(".ncml"));
     }
 
     /**
