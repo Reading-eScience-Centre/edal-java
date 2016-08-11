@@ -134,14 +134,14 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
          * This is factored out since it is also used for extracting metadata
          * from the non-staggered parts of staggered grid datasets
          */
-        List<GridVariableMetadata> vars = getGriddedVariableMetadata(nc);
+        List<GridVariableMetadata> vars = getNonStaggeredGriddedVariableMetadata(nc);
 
         CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
                 CdmUtils.getOptimumDataReadingStrategy(nc));
         return cdmGridDataset;
     }
 
-    private List<GridVariableMetadata> getGriddedVariableMetadata(NetcdfDataset nc)
+    private List<GridVariableMetadata> getNonStaggeredGriddedVariableMetadata(NetcdfDataset nc)
             throws DataReadingException, IOException {
         ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
         List<GridVariableMetadata> vars = new ArrayList<>();
@@ -158,6 +158,16 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
              */
             for (GridDatatype grid : gridset.getGrids()) {
                 VariableDS variable = grid.getVariable();
+                Attribute gridAttribute = variable.findAttribute("grid");
+                Attribute locationAttribute = variable.findAttribute("location");
+                if (gridAttribute != null && locationAttribute != null) {
+                    /*
+                     * We have a staggered grid variable. We don't want to
+                     * return this, since we're specifically looking for
+                     * unstaggered ones.
+                     */
+                    continue;
+                }
 
                 Parameter parameter = getParameter(variable);
                 GridVariableMetadata metadata = new GridVariableMetadata(parameter, hDomain,
@@ -179,7 +189,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
          */
         List<GridVariableMetadata> varMetadata;
         try {
-            varMetadata = getGriddedVariableMetadata(nc);
+            varMetadata = getNonStaggeredGriddedVariableMetadata(nc);
         } catch (DataReadingException e) {
             /*
              * The most likely cause here is that we don't have any "grids" (in
@@ -594,6 +604,26 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
                         t = 0;
                     }
                 }
+
+                int xSize = dimensions.get(dimensions.size() - 1 - x).getLength();
+                int ySize = dimensions.get(dimensions.size() - 1 - y).getLength();
+                if (xSize != staggeredGrid.getXSize() || ySize != staggeredGrid.getYSize()) {
+                    /*
+                     * The x and y dimensions of this variable do not match the
+                     * staggered grid size. The likely cause of this is that the
+                     * location attribute was specified incorrectly
+                     */
+                    log.error("The variable "
+                            + var.getFullName()
+                            + " is defined as being on "
+                            + locationAttribute.getStringValue()
+                            + " (relative to the unstaggered parent grid).  However, that staggered grid has the size "
+                            + staggeredGrid.getXSize() + "x" + staggeredGrid.getYSize()
+                            + ", and this variable has the size " + xSize + "x" + ySize
+                            + ".  This variable will not be made available in the dataset " + id);
+                    continue;
+                }
+
                 rangesList.put(var.getFullName(), new RangesList(x, y, z, t));
 
                 GridVariableMetadata metadata = new GridVariableMetadata(getParameter(var),
