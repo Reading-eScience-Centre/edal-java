@@ -114,7 +114,7 @@ final public class Charting {
                 /*
                  * This is the label used for the legend.
                  */
-                String legend = feature.getName() + " of " + varId + "(" 
+                String legend = feature.getName() + " of " + varId + "("
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ","
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ") - "
                         + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
@@ -269,7 +269,7 @@ final public class Charting {
                 TimeSeries series = new TimeSeries(parameter.getTitle());
                 series.setDescription(feature.getParameter(varId).getDescription());
                 for (int i = 0; i < timeValues.size(); i++) {
-                    if(feature.getValues(varId) == null) {
+                    if (feature.getValues(varId) == null) {
                         continue;
                     }
                     Number val = feature.getValues(varId).get(i);
@@ -523,6 +523,10 @@ final public class Charting {
      * @param zValue
      *            The elevation at which a matching transect is plotted (will be
      *            marked on the chart) - can be <code>null</code>
+     * @param zExtent
+     *            The range of elevations to include on the vertical section
+     *            chart. If this is <code>null</code> the entire available range
+     *            will be used
      * @return The resulting chart
      */
     public static JFreeChart createVerticalSectionChart(List<ProfileFeature> features,
@@ -552,7 +556,7 @@ final public class Charting {
         renderer.setPaintScale(scale);
 
         NumberAxis zAxis = getZAxis(features.get(0).getDomain().getVerticalCrs());
-        if(zExtent != null) {
+        if (zExtent != null) {
             zAxis.setRange(new Range(zExtent.getLow(), zExtent.getHigh()));
         }
 
@@ -638,7 +642,7 @@ final public class Charting {
             textTitle.setHorizontalAlignment(HorizontalAlignment.RIGHT);
             combinedChart.addSubtitle(textTitle);
         }
-        
+
         /* Use the legend from the vertical section chart */
         combinedChart.addSubtitle(verticalSectionChart.getSubtitle(0));
 
