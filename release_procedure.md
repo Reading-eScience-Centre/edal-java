@@ -48,8 +48,6 @@ Maven should automatically pick the correct version to relase to - it will be th
 
 ```
 mvn versions:set
-cd ncwms
-mvn versions:set
 cd ..
 ```
 
@@ -112,8 +110,6 @@ git merge master
 You should update the versions to the next snapshot version.  Usually this will be an update to the minor number.  For example if the last release was 1.2, the next version would be 1.3-SNAPSHOT
 
 ```
-mvn versions:set
-cd ncwms
 mvn versions:set
 cd ..
 ```
