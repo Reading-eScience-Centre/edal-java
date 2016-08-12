@@ -131,7 +131,20 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         String name = getVariableName(variable);
 
         Attribute stdNameAtt = variable.findAttributeIgnoreCase("standard_name");
-        String standardName = stdNameAtt != null ? stdNameAtt.getStringValue() : null;
+        String standardName = null;
+        if (stdNameAtt != null) {
+            standardName = stdNameAtt.getStringValue();
+        } else {
+            /*
+             * We don't have a standard name defined. Use "long_name" as a
+             * backup. This won't be strictly correct, but it may be useful. We
+             * don't actually check that standard names are valid anyway.
+             */
+            Attribute longNameAtt = variable.findAttributeIgnoreCase("long_name");
+            if (longNameAtt != null) {
+                standardName = longNameAtt.getStringValue();
+            }
+        }
 
         /*
          * We look to see if this data is categorical, and if so parse the
@@ -220,7 +233,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                  * Check for vector components
                  */
                 IdComponentEastNorth vectorInfo = determineVectorIdAndComponent(stdName);
-                if(vectorInfo != null) {
+                if (vectorInfo != null) {
                     String[] cData;
                     if (!xyComponentPairs.containsKey(vectorInfo.id)) {
                         cData = new String[2];
@@ -231,7 +244,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                     /*
                      * By doing this, we will end up with the merged coverage
                      */
-                    if(vectorInfo.isX) {
+                    if (vectorInfo.isX) {
                         cData[0] = varId;
                     } else {
                         cData[1] = varId;
@@ -262,17 +275,21 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         } else if (stdName.contains("northward_")) {
             return new IdComponentEastNorth(stdName.replaceFirst("northward_", ""), false, true);
         } else if (stdName.matches("u-.*component")) {
-            return new IdComponentEastNorth(stdName.replaceFirst("u-(.*)component", "$1"), true, false);
+            return new IdComponentEastNorth(stdName.replaceFirst("u-(.*)component", "$1"), true,
+                    false);
         } else if (stdName.matches("v-.*component")) {
-            return new IdComponentEastNorth(stdName.replaceFirst("v-(.*)component", "$1"), false, false);
+            return new IdComponentEastNorth(stdName.replaceFirst("v-(.*)component", "$1"), false,
+                    false);
         } else if (stdName.matches(".*x_.*velocity")) {
-            return new IdComponentEastNorth(stdName.replaceFirst("(.*)x_(.*velocity)", "$1$2"), true, false);
+            return new IdComponentEastNorth(stdName.replaceFirst("(.*)x_(.*velocity)", "$1$2"),
+                    true, false);
         } else if (stdName.matches(".*y_.*velocity")) {
-            return new IdComponentEastNorth(stdName.replaceFirst("(.*)y_(.*velocity)", "$1$2"), false, false);
+            return new IdComponentEastNorth(stdName.replaceFirst("(.*)y_(.*velocity)", "$1$2"),
+                    false, false);
         }
         return null;
     }
-    
+
     private class IdComponentEastNorth {
         String id;
         boolean isX;
