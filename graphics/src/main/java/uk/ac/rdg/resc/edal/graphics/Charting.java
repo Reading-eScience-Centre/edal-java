@@ -28,33 +28,11 @@
 
 package uk.ac.rdg.resc.edal.graphics;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.geom.Ellipse2D;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.CombinedDomainXYPlot;
-import org.jfree.chart.plot.IntervalMarker;
-import org.jfree.chart.plot.Marker;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.ValueMarker;
-import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.PaintScale;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYBlockRenderer;
@@ -71,20 +49,12 @@ import org.jfree.data.xy.AbstractXYZDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYZDataset;
-import org.jfree.ui.HorizontalAlignment;
-import org.jfree.ui.RectangleAnchor;
-import org.jfree.ui.RectangleEdge;
-import org.jfree.ui.RectangleInsets;
-import org.jfree.ui.TextAnchor;
+import org.jfree.ui.*;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
-
+import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.MismatchedCrsException;
-import uk.ac.rdg.resc.edal.feature.Feature;
-import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
-import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
-import uk.ac.rdg.resc.edal.feature.ProfileFeature;
-import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
+import uk.ac.rdg.resc.edal.feature.*;
 import uk.ac.rdg.resc.edal.geometry.LineString;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -93,6 +63,15 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
+
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
+import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
 
 /**
  * Code to produce various types of chart.
@@ -547,7 +526,7 @@ final public class Charting {
      * @return The resulting chart
      */
     public static JFreeChart createVerticalSectionChart(List<ProfileFeature> features,
-            LineString horizPath, ColourScheme colourScheme, Double zValue) {
+            LineString horizPath, ColourScheme colourScheme, Double zValue, Extent<Double> zExtent) {
         if (features == null || features.size() == 0) {
             throw new IllegalArgumentException(
                     "You need at least one profile to plot a vertical section.");
@@ -572,8 +551,12 @@ final public class Charting {
         renderer.setBlockHeight(elevationResolution);
         renderer.setPaintScale(scale);
 
-        XYPlot plot = new XYPlot(dataset, xAxis, getZAxis(features.get(0).getDomain()
-                .getVerticalCrs()), renderer);
+        NumberAxis zAxis = getZAxis(features.get(0).getDomain().getVerticalCrs());
+        if(zExtent != null) {
+            zAxis.setRange(new Range(zExtent.getLow(), zExtent.getHigh()));
+        }
+
+        XYPlot plot = new XYPlot(dataset, xAxis, zAxis, renderer);
         plot.setBackgroundPaint(Color.lightGray);
         plot.setDomainGridlinesVisible(false);
         plot.setRangeGridlinePaint(Color.white);
