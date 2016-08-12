@@ -13,7 +13,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.res
             <resc:NumberOfContours>10</resc:NumberOfContours>
             <resc:ContourLineColour>#FF000000</resc:ContourLineColour>
             <resc:ContourLineWidth>1</resc:ContourLineWidth>
-            <resc:ContourLineStyle>DASHED</resc:ContourLineStyle>
+            <resc:ContourLineStyle>SOLID</resc:ContourLineStyle>
             <resc:LabelEnabled>true</resc:LabelEnabled>
             <resc:Range>
               <resc:Minimum>$scaleMin</resc:Minimum>
