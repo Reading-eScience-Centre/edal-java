@@ -2,8 +2,7 @@
 <!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
 <WMT_MS_Capabilities
         version="1.1.1"
-        updateSequence="$catalogue.lastUpdateTime"
-        xmlns:xlink="http://www.w3.org/1999/xlink">
+        updateSequence="$catalogue.lastUpdateTime" >
     <Service>
         <Name>OGC:WMS</Name>
         <Title>$catalogue.serverInfo.name</Title>
@@ -13,7 +12,7 @@
             <Keyword>$keyword</Keyword>
 #end            
         </KeywordList>
-        <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
+        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="$baseUrl"/>
         <ContactInformation>
             <ContactPersonPrimary>
                 <ContactPerson>$catalogue.contactInfo.name</ContactPerson>
@@ -32,7 +31,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="$baseUrl"/>
                         </Get>
                     </HTTP>
                 </DCPType>
@@ -44,7 +43,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="$baseUrl"/>
                         </Get>
                     </HTTP>
                 </DCPType>
@@ -56,7 +55,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xlink:type="simple" xlink:href="$baseUrl"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="$baseUrl"/>
                         </Get>
                     </HTTP>
                 </DCPType>
@@ -75,7 +74,7 @@
                 <Title>$catalogue.getDatasetTitle($dataset.id)</Title>
 #foreach($variable in $dataset.topLevelVariables)
 ## Recursively(?) insert layers here.  Depends how we want to implement layer structure in Capabilities doc...
-#layer($dataset $variable $verbose $variable.children)
+#layer111($dataset $variable $verbose $variable.children)
 #end                
             </Layer>
 #end        
@@ -87,7 +86,7 @@
 ## End of actual capabilities document.  Layer macro follows.
 ##
 ##
-#macro(layer $dataset $variableMetadata $verboseTimes $children)
+#macro(layer111 $dataset $variableMetadata $verboseTimes $children)
 #set($parent = ($children && $children.size() > 0))
 #set($supportedStyles = $catalogue.styleCatalogue.getSupportedStyles($variableMetadata))
 #set($plottable = ($supportedStyles && $supportedStyles.size() > 0))
@@ -106,10 +105,10 @@
 #end
 #if($parent)
 #if($supportedStyles.size() > 0)
-#layer($dataset $variableMetadata $verbose false)
+#layer111($dataset $variableMetadata $verbose false)
 #end
 #foreach($child in $variableMetadata.children)
-#layer($dataset $child $verbose $child.children)
+#layer111($dataset $child $verbose $child.children)
 #end
 #else
 #if($variableMetadata.horizontalDomain.geographicBoundingBox)
@@ -183,7 +182,7 @@
 #end            
             <LegendURL width="110" height="264">
                 <Format>image/png</Format>
-                <OnlineResource xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$paletteName&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$paletteName&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>
             </LegendURL>
         </Style>
 #end
