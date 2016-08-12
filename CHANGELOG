@@ -2,7 +2,17 @@
 =====
 Removed ncWMS from EDAL to its own repository
 Added EDAL guide + SLD specification to docs
+General documentation improvement
 Made uncertainty visualisation work in WMS with option for specifying multiple colour scale ranges
+Contour layers now handle line style, colour, + weight
+SGRID-compatible datasets now handled
+New vector styles - sized + coloured arrows
+Vertical section plots can now focus on specific elevation region
+Bugfixes:
+    Several fixes to coveragejson library
+    Old 5.0.0 version of NetCDF Java was discontinued - now uses specific version
+    Godiva3 now works with browser-level zooming
+    Dynamic variables were not producing correct Capabilities document
 
 1.2.1
 =====
