@@ -566,7 +566,7 @@ public class WmsServlet extends HttpServlet {
                 String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters
                         .getTargetZ().toString();
                 List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT());
-                BufferedImage legend = imageGenerator.getLegend(50, 200);
+                BufferedImage legend = imageGenerator.getLegend(200);
                 GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters
                         .getBbox());
                 imageFormat.writeImage(frames, outputStream, name, description, gbbox, tValues,
