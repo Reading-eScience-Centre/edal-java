@@ -133,11 +133,11 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
          * 
          * These can need to count a very large number of object references.
          * However, this calculation is actually pretty quick. Setting the max
-         * depth to 2,000,000 seems to suppress the vast majority of warnings,
+         * depth to 4,000,000 seems to suppress the vast majority of warnings,
          * and doesn't impact performance noticeably.
          */
         cacheManager = CacheManager.create(new Configuration().name("EDAL-WMS-CacheManager")
-                .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(2_000_000)));
+                .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(4_000_000)));
 
         setCache(config.getCacheSettings());
     }
