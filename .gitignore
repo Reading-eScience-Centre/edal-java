@@ -8,9 +8,6 @@ target/
 .h2/
 gwt-unitCache/
 
-# Ignore apidocs
-apidocs/
-
 # Module specific
 graphics/dependency-reduced-pom.xml
 /pom-backup.xml
