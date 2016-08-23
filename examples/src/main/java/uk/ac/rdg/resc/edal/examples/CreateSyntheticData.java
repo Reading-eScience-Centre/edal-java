@@ -30,48 +30,274 @@ package uk.ac.rdg.resc.edal.examples;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-import ucar.ma2.Array;
+import org.joda.time.DateTime;
+
+import ucar.ma2.ArrayByte;
 import ucar.ma2.ArrayFloat;
+import ucar.ma2.ArrayInt;
+import ucar.ma2.DataType;
 import ucar.ma2.Index;
 import ucar.ma2.InvalidRangeException;
+import ucar.nc2.Attribute;
+import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFileWriter;
+import ucar.nc2.NetcdfFileWriter.Version;
 import ucar.nc2.Variable;
+import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
+import uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 
 /**
- * Code used to generate the synthetic sea temperature data file.
+ * Code used to generate the synthetic data file.
  * 
  * Designed as a quick-and-dirty method for generating synthetic data, rather
- * than to be used as an example for EDAL. Included on github because it's here.
- * Just don't complain if it's not commented or doesn't demonstrate anything
- * EDAL-related...
+ * than to be used as an example for EDAL. Included on github because I wrote it
+ * and there's no point in throwing it away. Just don't complain if it's not
+ * commented or doesn't demonstrate anything EDAL-related...
  *
  * @author Guy Griffiths
  */
 public class CreateSyntheticData {
+    private static DiscreteLayeredDataset<?, ?> landMask;
+    private static ArrayInt timeData;
+    private static ArrayFloat depthData;
+    private static ArrayFloat lonData;
+    private static ArrayFloat latData;
+
     public static void main(String[] args) throws IOException, InvalidRangeException {
-        URL resource = CreateSyntheticData.class.getResource("/synthetic_sea_temperature.nc");
-        NetcdfFileWriter dataset = NetcdfFileWriter.openExisting(resource.getFile());
-        Variable tempVar = dataset.findVariable("temperature");
-        Array readDataBefore = tempVar.read();
-        int[] shape = tempVar.getShape();
-        ArrayFloat data = new ArrayFloat.D3(shape[0], shape[1], shape[2]);
-        Index index = data.getIndex();
-        for (int z = 0; z < shape[0]; z++) {
-            for (int y = 0; y < shape[1]; y++) {
-                for (int x = 0; x < shape[2]; x++) {
-                    float value = (float) (274 - z + 0.0045f * Math.pow(
-                            shape[1] / 2 - Math.abs(y - shape[1] / 2), 2));
-                    index.set(z, y, x);
-                    if (readDataBefore.getFloat(index) == -999f) {
-                        data.setFloat(index, -999f);
-                    } else {
-                        data.setFloat(index, value);
+        URL lmResource = CreateSyntheticData.class.getResource("/synthetic_sea_temperature.nc");
+        landMask = (new CdmGridDatasetFactory()).createDataset("landmask", lmResource.getFile());
+
+        NetcdfFileWriter dataset = NetcdfFileWriter.createNew(Version.netcdf4_classic,
+                "synthetic_data.nc");
+        /*
+         * Define the dimensions
+         */
+        Dimension timeDim = dataset.addDimension("time", 12);
+        Dimension depthDim = dataset.addDimension("depth", 10);
+        Dimension latDim = dataset.addDimension("lat", 180);
+        Dimension lonDim = dataset.addDimension("lon", 360);
+
+        /*
+         * Add the co-ordinate variables
+         */
+        Variable timeVar = dataset.addVariable(timeDim.getFullName(), DataType.INT,
+                Arrays.asList(timeDim));
+        timeVar.addAttribute(new Attribute("units", "days since 2000-01-01 00:00:00"));
+        timeVar.addAttribute(new Attribute("standard_name", "time"));
+        timeVar.addAttribute(new Attribute("calendar", "gregorian"));
+        timeData = new ArrayInt.D1(timeDim.getLength(), false);
+        int day = 0;
+        timeData.setInt(0, day);
+        day += 31;
+        timeData.setInt(1, day);
+        day += 29;
+        timeData.setInt(2, day);
+        day += 31;
+        timeData.setInt(3, day);
+        day += 30;
+        timeData.setInt(4, day);
+        day += 31;
+        timeData.setInt(5, day);
+        day += 30;
+        timeData.setInt(6, day);
+        day += 31;
+        timeData.setInt(7, day);
+        day += 31;
+        timeData.setInt(8, day);
+        day += 30;
+        timeData.setInt(9, day);
+        day += 31;
+        timeData.setInt(10, day);
+        day += 30;
+        timeData.setInt(11, day);
+
+        Variable depthVar = dataset.addVariable(depthDim.getFullName(), DataType.FLOAT,
+                Arrays.asList(depthDim));
+        depthVar.addAttribute(new Attribute("units", "m"));
+        depthVar.addAttribute(new Attribute("positive", "down"));
+        depthVar.addAttribute(new Attribute("standard_name", "depth"));
+        depthData = new ArrayFloat.D1(depthDim.getLength());
+        float depth = 0f;
+        for (int z = 0; z < depthDim.getLength(); z++) {
+            depthData.setFloat(z, depth += 5);
+        }
+
+        Variable latVar = dataset.addVariable(latDim.getFullName(), DataType.FLOAT,
+                Arrays.asList(latDim));
+        latVar.addAttribute(new Attribute("units", "degrees_north"));
+        latVar.addAttribute(new Attribute("standard_name", "latitude"));
+        latData = new ArrayFloat.D1(latDim.getLength());
+        float lat = -89.5f;
+        for (int y = 0; y < latDim.getLength(); y++) {
+            latData.setFloat(y, lat++);
+        }
+
+        Variable lonVar = dataset.addVariable(lonDim.getFullName(), DataType.FLOAT,
+                Arrays.asList(lonDim));
+        lonVar.addAttribute(new Attribute("units", "degrees_east"));
+        lonVar.addAttribute(new Attribute("standard_name", "longitude"));
+        lonData = new ArrayFloat.D1(lonDim.getLength());
+        float lon = -179.5f;
+        for (int x = 0; x < lonDim.getLength(); x++) {
+            lonData.setFloat(x, lon++);
+        }
+
+        List<Dimension> allDims = new ArrayList<>();
+        allDims.add(timeDim);
+        allDims.add(depthDim);
+        allDims.add(latDim);
+        allDims.add(lonDim);
+
+        Variable tempVar = dataset.addVariable("temperature", DataType.FLOAT, allDims);
+        tempVar.addAttribute(new Attribute("units", "K"));
+        tempVar.addAttribute(new Attribute("standard_name", "sea_water_potential_temperature"));
+        tempVar.addAttribute(new Attribute("ref", "http://www.uncertml.org/statistics/mean"));
+        tempVar.addAttribute(new Attribute("_FillValue", -999f));
+        ArrayFloat tempData = new ArrayFloat.D4(timeDim.getLength(), depthDim.getLength(),
+                latDim.getLength(), lonDim.getLength());
+
+        Variable tempErrorVar = dataset.addVariable("temperature_uncertainty", DataType.FLOAT,
+                allDims);
+        tempErrorVar.addAttribute(new Attribute("units", "K"));
+        tempErrorVar
+                .addAttribute(new Attribute("standard_name", "sea_water_potential_temperature"));
+        tempErrorVar.addAttribute(new Attribute("ref",
+                "http://www.uncertml.org/statistics/standard-deviation"));
+        tempErrorVar.addAttribute(new Attribute("_FillValue", -999f));
+        ArrayFloat tempErrorData = new ArrayFloat.D4(timeDim.getLength(), depthDim.getLength(),
+                latDim.getLength(), lonDim.getLength());
+
+        Variable tempUncertGroupVar = dataset.addVariable("temperature_stats", DataType.SHORT,
+                new ArrayList<>());
+        tempUncertGroupVar.addAttribute(new Attribute("ancillary_variables",
+                "temperature temperature_uncertainty"));
+        tempUncertGroupVar.addAttribute(new Attribute("ref",
+                "http://www.uncertml.org/statistics/statistics-collection"));
+
+        List<Dimension> currentDims = Arrays.asList(timeDim, latDim, lonDim);
+        Variable currentXVar = dataset.addVariable("u", DataType.FLOAT, currentDims);
+        currentXVar.addAttribute(new Attribute("units", "m/s"));
+        currentXVar.addAttribute(new Attribute("standard_name", "eastward_sea_water_velocity"));
+        currentXVar.addAttribute(new Attribute("_FillValue", -999f));
+        ArrayFloat currentXData = new ArrayFloat.D3(timeDim.getLength(), latDim.getLength(),
+                lonDim.getLength());
+
+        Variable currentYVar = dataset.addVariable("v", DataType.FLOAT, currentDims);
+        currentYVar.addAttribute(new Attribute("units", "m/s"));
+        currentYVar.addAttribute(new Attribute("standard_name", "northward_sea_water_velocity"));
+        currentYVar.addAttribute(new Attribute("_FillValue", -999f));
+        ArrayFloat currentYData = new ArrayFloat.D3(timeDim.getLength(), latDim.getLength(),
+                lonDim.getLength());
+
+        Variable landUseVar = dataset.addVariable("land_cover", DataType.BYTE,
+                Arrays.asList(latDim, lonDim));
+        landUseVar.addAttribute(new Attribute("units", "Land Cover Class"));
+        landUseVar.addAttribute(new Attribute("long_name", "land_cover"));
+        landUseVar.addAttribute(new Attribute("flag_values", Arrays.asList(0, 1, 2, 3, 4)));
+        landUseVar.addAttribute(new Attribute("flag_meanings",
+                "Desert Grasslands Meadows Forest Ice"));
+        landUseVar.addAttribute(new Attribute("flag_colors",
+                "desert_sand granny_smith_apple emerald forest_green_traditional iceberg"));
+        landUseVar.addAttribute(new Attribute("_FillValue", -1));
+        ArrayByte landUseData = new ArrayByte.D2(latDim.getLength(), lonDim.getLength(), false);
+
+        Index tempIndex = tempData.getIndex();
+        Index tempErrorIndex = tempErrorData.getIndex();
+        for (int t = 0; t < timeDim.getLength(); t++) {
+            for (int z = 0; z < depthDim.getLength(); z++) {
+                for (int y = 0; y < latDim.getLength(); y++) {
+                    for (int x = 0; x < lonDim.getLength(); x++) {
+                        double xFrac = ((double) x) / lonDim.getLength();
+                        double yFrac = ((double) y) / latDim.getLength();
+
+                        double xyTempComp = Math.sin(Math.PI * yFrac) * Math.sin(Math.PI * yFrac);
+                        double zTempComp = -z / 75f;
+                        double timeTempComp = -Math.abs(t - 6) / 36f;
+                        float tempValue = (float) (278 + 25 * (xyTempComp + zTempComp + timeTempComp));
+                        tempIndex.set(t, z, y, x);
+                        tempErrorIndex.set(t, z, y, x);
+
+                        double xyTempErrorComp = 2f - Math.sin(2 * Math.PI * xFrac)
+                                * Math.sin(2 * Math.PI * xFrac) - Math.sin(Math.PI * yFrac)
+                                * Math.sin(Math.PI * yFrac);
+                        float tempErrorValue = (float) (xyTempErrorComp + zTempComp + timeTempComp);
+
+                        if (isLand(x, y, z, t)) {
+                            tempData.setFloat(tempIndex, -999f);
+                            tempErrorData.setFloat(tempErrorIndex, -999f);
+                        } else {
+                            tempData.setFloat(tempIndex, tempValue);
+                            tempErrorData.setFloat(tempErrorIndex, tempErrorValue);
+                        }
                     }
                 }
             }
         }
-        dataset.write(tempVar, data);
+
+        Index currentXIndex = currentXData.getIndex();
+        Index currentYIndex = currentYData.getIndex();
+        for (int t = 0; t < timeDim.getLength(); t++) {
+            for (int y = 0; y < latDim.getLength(); y++) {
+                for (int x = 0; x < lonDim.getLength(); x++) {
+                    currentXIndex.set(t, y, x);
+                    currentYIndex.set(t, y, x);
+
+                    float currentXValue = ((t + 20) / 10f) * (latData.getFloat(y) / 90f);
+                    float currentYValue = ((t + 20) / 10f) * (lonData.getFloat(x) / 90f);
+                    if (isLand(x, y, 0, t)) {
+                        currentXData.set(currentXIndex, -999f);
+                        currentYData.set(currentYIndex, -999f);
+                    } else {
+                        currentXData.set(currentXIndex, currentXValue);
+                        currentYData.set(currentYIndex, currentYValue);
+                    }
+                }
+            }
+        }
+
+        Index landUseIndex = landUseData.getIndex();
+        for (int y = 0; y < latDim.getLength(); y++) {
+            byte landUseValue = (byte) (5 * Math.abs(y - 90) / 92);
+            for (int x = 0; x < lonDim.getLength(); x++) {
+                landUseIndex.set(y, x);
+
+                if (isLand(x, y, 0, 0)) {
+                    landUseData.set(landUseIndex, landUseValue);
+                } else {
+                    landUseData.set(landUseIndex, (byte) -1);
+                }
+            }
+        }
+
+        dataset.create();
+        dataset.write(timeVar, timeData);
+        dataset.write(depthVar, depthData);
+        dataset.write(latVar, latData);
+        dataset.write(lonVar, lonData);
+        dataset.write(tempVar, tempData);
+        dataset.write(tempErrorVar, tempErrorData);
+        dataset.write(currentXVar, currentXData);
+        dataset.write(currentYVar, currentYData);
+        dataset.write(landUseVar, landUseData);
         dataset.close();
+    }
+
+    private static boolean isLand(int x, int y, int z, int t) {
+        DateTime startTime = new DateTime(2000, 1, 1, 0, 0);
+        boolean isLand = false;
+        HorizontalPosition position = new HorizontalPosition(lonData.getDouble(x),
+                latData.getDouble(y));
+        Double zVal = depthData.getDouble(z);
+        Number landMaskValue = landMask.readSinglePoint("temperature", position, zVal,
+                startTime.plusDays(timeData.getInt(t)));
+        if (landMaskValue == null || Float.isNaN(landMaskValue.floatValue())) {
+            isLand = true;
+        }
+        return isLand;
     }
 }
