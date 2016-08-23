@@ -34,8 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.joda.time.DateTime;
-
+import ucar.ma2.Array;
 import ucar.ma2.ArrayByte;
 import ucar.ma2.ArrayFloat;
 import ucar.ma2.ArrayInt;
@@ -47,9 +46,7 @@ import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.NetcdfFileWriter.Version;
 import ucar.nc2.Variable;
-import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
-import uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import ucar.nc2.dataset.NetcdfDataset;
 
 /**
  * Code used to generate the synthetic data file.
@@ -62,15 +59,11 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * @author Guy Griffiths
  */
 public class CreateSyntheticData {
-    private static DiscreteLayeredDataset<?, ?> landMask;
-    private static ArrayInt timeData;
-    private static ArrayFloat depthData;
-    private static ArrayFloat lonData;
-    private static ArrayFloat latData;
-
     public static void main(String[] args) throws IOException, InvalidRangeException {
-        URL lmResource = CreateSyntheticData.class.getResource("/synthetic_sea_temperature.nc");
-        landMask = (new CdmGridDatasetFactory()).createDataset("landmask", lmResource.getFile());
+        URL landMaskResource = CreateSyntheticData.class.getResource("/synthetic_land_mask.nc");
+        NetcdfDataset landMaskDataset = NetcdfDataset.openDataset(landMaskResource.getFile());
+        Variable landMaskVar = landMaskDataset.findVariable("land_mask");
+        Array landMaskData = landMaskVar.read();
 
         NetcdfFileWriter dataset = NetcdfFileWriter.createNew(Version.netcdf4_classic,
                 "synthetic_data.nc");
@@ -90,7 +83,7 @@ public class CreateSyntheticData {
         timeVar.addAttribute(new Attribute("units", "days since 2000-01-01 00:00:00"));
         timeVar.addAttribute(new Attribute("standard_name", "time"));
         timeVar.addAttribute(new Attribute("calendar", "gregorian"));
-        timeData = new ArrayInt.D1(timeDim.getLength(), false);
+        ArrayInt.D1 timeData = new ArrayInt.D1(timeDim.getLength(), false);
         int day = 0;
         timeData.setInt(0, day);
         day += 31;
@@ -121,17 +114,17 @@ public class CreateSyntheticData {
         depthVar.addAttribute(new Attribute("units", "m"));
         depthVar.addAttribute(new Attribute("positive", "down"));
         depthVar.addAttribute(new Attribute("standard_name", "depth"));
-        depthData = new ArrayFloat.D1(depthDim.getLength());
+        ArrayFloat.D1 depthData = new ArrayFloat.D1(depthDim.getLength());
         float depth = 0f;
         for (int z = 0; z < depthDim.getLength(); z++) {
-            depthData.setFloat(z, depth += 5);
+            depthData.setFloat(z, depth += 10);
         }
 
         Variable latVar = dataset.addVariable(latDim.getFullName(), DataType.FLOAT,
                 Arrays.asList(latDim));
         latVar.addAttribute(new Attribute("units", "degrees_north"));
         latVar.addAttribute(new Attribute("standard_name", "latitude"));
-        latData = new ArrayFloat.D1(latDim.getLength());
+        ArrayFloat.D1 latData = new ArrayFloat.D1(latDim.getLength());
         float lat = -89.5f;
         for (int y = 0; y < latDim.getLength(); y++) {
             latData.setFloat(y, lat++);
@@ -141,7 +134,7 @@ public class CreateSyntheticData {
                 Arrays.asList(lonDim));
         lonVar.addAttribute(new Attribute("units", "degrees_east"));
         lonVar.addAttribute(new Attribute("standard_name", "longitude"));
-        lonData = new ArrayFloat.D1(lonDim.getLength());
+        ArrayFloat.D1 lonData = new ArrayFloat.D1(lonDim.getLength());
         float lon = -179.5f;
         for (int x = 0; x < lonDim.getLength(); x++) {
             lonData.setFloat(x, lon++);
@@ -227,7 +220,7 @@ public class CreateSyntheticData {
                                 * Math.sin(Math.PI * yFrac);
                         float tempErrorValue = (float) (xyTempErrorComp + zTempComp + timeTempComp);
 
-                        if (isLand(x, y, z, t)) {
+                        if (isLand(x, y, z, landMaskData)) {
                             tempData.setFloat(tempIndex, -999f);
                             tempErrorData.setFloat(tempErrorIndex, -999f);
                         } else {
@@ -249,7 +242,7 @@ public class CreateSyntheticData {
 
                     float currentXValue = ((t + 20) / 10f) * (latData.getFloat(y) / 90f);
                     float currentYValue = ((t + 20) / 10f) * (lonData.getFloat(x) / 90f);
-                    if (isLand(x, y, 0, t)) {
+                    if (isLand(x, y, 0, landMaskData)) {
                         currentXData.set(currentXIndex, -999f);
                         currentYData.set(currentYIndex, -999f);
                     } else {
@@ -266,7 +259,7 @@ public class CreateSyntheticData {
             for (int x = 0; x < lonDim.getLength(); x++) {
                 landUseIndex.set(y, x);
 
-                if (isLand(x, y, 0, 0)) {
+                if (isLand(x, y, 0, landMaskData)) {
                     landUseData.set(landUseIndex, landUseValue);
                 } else {
                     landUseData.set(landUseIndex, (byte) -1);
@@ -287,17 +280,9 @@ public class CreateSyntheticData {
         dataset.close();
     }
 
-    private static boolean isLand(int x, int y, int z, int t) {
-        DateTime startTime = new DateTime(2000, 1, 1, 0, 0);
-        boolean isLand = false;
-        HorizontalPosition position = new HorizontalPosition(lonData.getDouble(x),
-                latData.getDouble(y));
-        Double zVal = depthData.getDouble(z);
-        Number landMaskValue = landMask.readSinglePoint("temperature", position, zVal,
-                startTime.plusDays(timeData.getInt(t)));
-        if (landMaskValue == null || Float.isNaN(landMaskValue.floatValue())) {
-            isLand = true;
-        }
-        return isLand;
+    private static boolean isLand(int x, int y, int z, Array landMaskData) {
+        Index lmIndex = landMaskData.getIndex();
+        lmIndex.set(z, y, x);
+        return landMaskData.getByte(lmIndex) == 1;
     }
 }
