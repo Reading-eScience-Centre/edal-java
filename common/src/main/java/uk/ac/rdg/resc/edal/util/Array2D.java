@@ -113,11 +113,25 @@ public abstract class Array2D<T> implements Array<T> {
     public int getXSize() {
         return shape[X_IND];
     }
-
+    
     /**
      * Convenience method to get the size in the y-direction
      */
     public int getYSize() {
         return shape[Y_IND];
+    }
+    
+    /**
+     * @return The index used for x values
+     */
+    public int getXIndex() {
+        return X_IND;
+    }
+    
+    /**
+     * @return The index used for y values
+     */
+    public int getYIndex() {
+        return Y_IND;
     }
 }

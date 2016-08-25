@@ -143,4 +143,32 @@ public abstract class Array4D<T> implements Array<T> {
     public int getTSize() {
         return shape[T_IND];
     }
+    /**
+     * @return The index used for x values
+     */
+    public int getXIndex() {
+        return X_IND;
+    }
+
+    /**
+     * @return The index used for y values
+     */
+    public int getYIndex() {
+        return Y_IND;
+    }
+    
+    /**
+     * @return The index used for z values
+     */
+    public int getZIndex() {
+        return Z_IND;
+    }
+    
+    /**
+     * @return The index used for t values
+     */
+    public int getTIndex() {
+        return T_IND;
+    }
+    
 }
