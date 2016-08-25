@@ -187,16 +187,6 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     }
 
     @Override
-    public int getXSize() {
-        return curvCoords.getNi();
-    }
-
-    @Override
-    public int getYSize() {
-        return curvCoords.getNj();
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();

@@ -172,6 +172,16 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
     }
 
     @Override
+    public int getXSize() {
+        return curvCoords.getNi();
+    }
+
+    @Override
+    public int getYSize() {
+        return curvCoords.getNj();
+    }
+    
+    @Override
     public long size() {
         return curvCoords.size();
     }
