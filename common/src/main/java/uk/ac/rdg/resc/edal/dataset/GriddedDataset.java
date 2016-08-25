@@ -32,8 +32,11 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,23 +104,48 @@ public abstract class GriddedDataset extends
             gridDataSource = openDataSource();
 
             /*
-             * Read the actual data. This method will recursively read any data
-             * required for derived variables.
-             */
-            Array4D<Number> data = read4dData(featureId, gridDataSource, gridVariableMetadata);
-
-            /*
              * Create a GridDomain from the GridVariableMetadata
              */
             GridDomain domain = new SimpleGridDomain(gridVariableMetadata.getHorizontalDomain(),
                     gridVariableMetadata.getVerticalDomain(),
                     gridVariableMetadata.getTemporalDomain());
 
-            Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-            parameters.put(featureId, getVariableMetadata(featureId).getParameter());
+            /*
+             * We want this feature to contain all the children of the requested
+             * layer.
+             */
+            Set<String> variablesToRead = recursivelyGetChildIds(gridVariableMetadata, null);
 
+            Map<String, Parameter> parameters = new LinkedHashMap<>();
             Map<String, Array4D<Number>> values = new HashMap<String, Array4D<Number>>();
-            values.put(featureId, data);
+            for (String variableId : variablesToRead) {
+
+                VariableMetadata requiredMetadata = getVariableMetadata(variableId);
+                if (!(requiredMetadata instanceof GridVariableMetadata)) {
+                    /*
+                     * We have a variable which does not have a native grid which we can
+                     * read onto.
+                     */
+                    String message;
+                    if(variableId.equals(featureId)) {
+                        message = "The feature "
+                                + variableId
+                                + " is not gridded.  It is probably a derived variable which is derived from variables with different grids.";
+                    } else {
+                        message = "The feature "
+                                + variableId
+                                + " (which is a child variable of "+featureId+") is not gridded.  It is probably a derived variable which is derived from variables with different grids.";
+                    }
+                    throw new DataReadingException(message);
+                }
+                /*
+                 * Read the actual data. This method will recursively read any
+                 * data required for derived variables.
+                 */
+                Array4D<Number> data = read4dData(variableId, gridDataSource, (GridVariableMetadata) requiredMetadata);
+                values.put(featureId, data);
+                parameters.put(variableId, requiredMetadata.getParameter());
+            }
 
             return new GridFeature(featureId, featureId + " data",
                     "The entire range of data for the variable: " + featureId, domain, parameters,
@@ -134,6 +162,17 @@ public abstract class GriddedDataset extends
                 }
             }
         }
+    }
+
+    private Set<String> recursivelyGetChildIds(VariableMetadata metadata, Set<String> ids) {
+        if (ids == null) {
+            ids = new LinkedHashSet<>();
+        }
+        ids.add(metadata.getId());
+        for (VariableMetadata child : metadata.getChildren()) {
+            ids = recursivelyGetChildIds(child, ids);
+        }
+        return ids;
     }
 
     /**
@@ -193,11 +232,9 @@ public abstract class GriddedDataset extends
             final Array4D<Number>[] requiredData = new Array4D[requiredVariables.length];
             for (int i = 0; i < requiredVariables.length; i++) {
                 VariableMetadata sourceMetadata = getVariableMetadata(requiredVariables[i]);
-                if (sourceMetadata instanceof GridVariableMetadata) {
-                    /*
-                     * Compare domains to metadata
-                     */
-                } else {
+                if (!(sourceMetadata instanceof GridVariableMetadata)
+                        || !((GridVariableMetadata) sourceMetadata).getHorizontalDomain().equals(
+                                metadata.getHorizontalDomain())) {
                     throw new DataReadingException("The derived variable " + varId
                             + " has a different domain to one of its source variables: "
                             + requiredVariables[i]
@@ -247,8 +284,8 @@ public abstract class GriddedDataset extends
     }
 
     @Override
-    protected Array2D<Number> extractHorizontalData(GridVariableMetadata metadata, int tIndex, int zIndex,
-            HorizontalGrid targetGrid, GridDataSource dataSource) {
+    protected Array2D<Number> extractHorizontalData(GridVariableMetadata metadata, int tIndex,
+            int zIndex, HorizontalGrid targetGrid, GridDataSource dataSource) {
         HorizontalGrid sourceGrid = metadata.getHorizontalDomain();
         /*
          * Create a DomainMapper from the source and target grids
@@ -260,8 +297,8 @@ public abstract class GriddedDataset extends
          */
         Array2D<Number> data;
         try {
-            data = getDataReadingStrategy().readMapData(dataSource, metadata.getId(), tIndex, zIndex,
-                    domainMapper);
+            data = getDataReadingStrategy().readMapData(dataSource, metadata.getId(), tIndex,
+                    zIndex, domainMapper);
         } catch (IOException e) {
             throw new DataReadingException("Could not read underlying data", e);
         }
@@ -269,8 +306,9 @@ public abstract class GriddedDataset extends
     }
 
     @Override
-    protected Array1D<Number> extractProfileData(GridVariableMetadata metadata, List<Integer> zs, int tIndex,
-            HorizontalPosition hPos, GridDataSource dataSource) throws DataReadingException {
+    protected Array1D<Number> extractProfileData(GridVariableMetadata metadata, List<Integer> zs,
+            int tIndex, HorizontalPosition hPos, GridDataSource dataSource)
+            throws DataReadingException {
         HorizontalGrid hGrid = metadata.getHorizontalDomain();
         GridCoordinates2D hIndices = hGrid.findIndexOf(hPos);
 
@@ -283,8 +321,8 @@ public abstract class GriddedDataset extends
         int zMax = Collections.max(zs);
         Array4D<Number> data4d;
         try {
-            data4d = dataSource.read(metadata.getId(), tIndex, tIndex, zMin, zMax, yIndex, yIndex, xIndex,
-                    xIndex);
+            data4d = dataSource.read(metadata.getId(), tIndex, tIndex, zMin, zMax, yIndex, yIndex,
+                    xIndex, xIndex);
         } catch (IOException e) {
             throw new DataReadingException("Cannot read data from underlying data source", e);
         }
@@ -298,8 +336,9 @@ public abstract class GriddedDataset extends
     }
 
     @Override
-    protected Array1D<Number> extractTimeseriesData(GridVariableMetadata metadata, List<Integer> ts, int zIndex,
-            HorizontalPosition hPos, GridDataSource dataSource) throws DataReadingException {
+    protected Array1D<Number> extractTimeseriesData(GridVariableMetadata metadata,
+            List<Integer> ts, int zIndex, HorizontalPosition hPos, GridDataSource dataSource)
+            throws DataReadingException {
         HorizontalGrid hGrid = metadata.getHorizontalDomain();
         GridCoordinates2D hIndices = hGrid.findIndexOf(hPos);
 
@@ -312,8 +351,8 @@ public abstract class GriddedDataset extends
         int tMax = Collections.max(ts);
         Array4D<Number> data4d;
         try {
-            data4d = dataSource.read(metadata.getId(), tMin, tMax, zIndex, zIndex, yIndex, yIndex, xIndex,
-                    xIndex);
+            data4d = dataSource.read(metadata.getId(), tMin, tMax, zIndex, zIndex, yIndex, yIndex,
+                    xIndex, xIndex);
         } catch (IOException e) {
             throw new DataReadingException("Cannot read data from underlying data source", e);
         }
@@ -328,8 +367,8 @@ public abstract class GriddedDataset extends
     }
 
     @Override
-    protected Number extractPoint(GridVariableMetadata metadata, int t, int z, HorizontalPosition hPos,
-            GridDataSource dataSource) throws DataReadingException {
+    protected Number extractPoint(GridVariableMetadata metadata, int t, int z,
+            HorizontalPosition hPos, GridDataSource dataSource) throws DataReadingException {
         HorizontalGrid hGrid = metadata.getHorizontalDomain();
         GridCoordinates2D hIndices = hGrid.findIndexOf(hPos);
         if (hIndices == null) {
@@ -340,8 +379,8 @@ public abstract class GriddedDataset extends
         int yIndex = hIndices.getY();
 
         try {
-            return dataSource.read(metadata.getId(), t, t, z, z, yIndex, yIndex, xIndex, xIndex).get(0, 0, 0,
-                    0);
+            return dataSource.read(metadata.getId(), t, t, z, z, yIndex, yIndex, xIndex, xIndex)
+                    .get(0, 0, 0, 0);
         } catch (IOException e) {
             throw new DataReadingException("Problem reading underlying data", e);
         }
