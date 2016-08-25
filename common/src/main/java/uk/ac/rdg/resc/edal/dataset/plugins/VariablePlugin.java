@@ -524,7 +524,6 @@ public abstract class VariablePlugin {
                         "Cannot find a common domain - Not all domains are of the same type");
             }
         }
-        System.out.println("GISUtils 940 - What about staggered grids?");
 
         /*
          * If we've got this far, then we've determined that all grids are
