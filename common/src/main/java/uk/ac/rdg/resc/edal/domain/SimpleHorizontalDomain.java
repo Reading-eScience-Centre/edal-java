@@ -83,6 +83,16 @@ public class SimpleHorizontalDomain implements HorizontalDomain, Serializable {
         bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, crs);
     }
 
+    /**
+     * Create a {@link HorizontalDomain}
+     * 
+     * @param bbox
+     *            The {@link BoundingBox} of this domain
+     */
+    public SimpleHorizontalDomain(BoundingBox bbox) {
+        this.bbox = bbox;
+    }
+
     @Override
     public boolean contains(HorizontalPosition position) {
         return bbox.contains(position);

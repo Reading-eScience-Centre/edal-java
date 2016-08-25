@@ -158,8 +158,6 @@ public abstract class AbstractDataset implements Dataset {
             }
         }
 
-        plugins.add(plugin);
-
         /*-
          * The plugins have 2 functions:
          * 
@@ -172,11 +170,22 @@ public abstract class AbstractDataset implements Dataset {
          * 
          * Do that here.
          */
-        VariableMetadata[] variableMetadata = plugin.processVariableMetadata(sourceMetadata);
+        try {
+            VariableMetadata[] variableMetadata = plugin.processVariableMetadata(sourceMetadata);
 
-        for (VariableMetadata metadata : variableMetadata) {
-            vars.put(metadata.getId(), metadata);
-            metadata.setDataset(this);
+            plugins.add(plugin);
+
+            for (VariableMetadata metadata : variableMetadata) {
+                vars.put(metadata.getId(), metadata);
+                metadata.setDataset(this);
+            }
+        } catch (EdalException e) {
+            /*
+             * An error occurred when adding the plugin. The most likely cause
+             * is that the required variables couldn't be harmonised to a single
+             * grid.
+             */
+            log.warn("Could not add plugin of type: " + plugin.getClass() + " to this dataset", e);
         }
     }
 }

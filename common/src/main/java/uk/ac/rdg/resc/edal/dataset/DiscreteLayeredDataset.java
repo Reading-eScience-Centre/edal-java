@@ -43,12 +43,11 @@ import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
-import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.HorizontalCell;
+import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
-import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
@@ -56,8 +55,8 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
- * A partial implementation of an {@link HorizontallyDiscreteDataset} based on
- * a 4D dataset where the z- and t-dimensions are discrete axes. The horizontal
+ * A partial implementation of an {@link HorizontallyDiscreteDataset} based on a
+ * 4D dataset where the z- and t-dimensions are discrete axes. The horizontal
  * dimension is not necessarily separable into 2 axes. This class is a parent
  * class for both {@link GriddedDataset} (a full 4d grid) and
  * {@link HorizontalMesh4dDataset} (a 4d grid where the horizontal layers are
@@ -79,10 +78,9 @@ public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends D
     }
 
     @Override
-    protected final Array2D<Number> readUnderlyingHorizontalData(String varId,
-            MapDomain domain, DS dataSource)
-            throws DataReadingException, VariableNotFoundException {
-        VM metadata = getNonDerivedVariableMetadata(varId);
+    protected final Array2D<Number> readUnderlyingHorizontalData(String varId, MapDomain domain,
+            DS dataSource) throws DataReadingException, VariableNotFoundException {
+        VM metadata = getVariableMetadata(varId);
 
         /*
          * Get the z/t domains
@@ -103,7 +101,7 @@ public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends D
     protected final Map<ProfileLocation, Array1D<Number>> readUnderlyingVerticalData(String varId,
             VerticalAxis zAxis, BoundingBox bbox, DateTime targetT, Extent<DateTime> tExtent,
             DS dataSource) throws DataReadingException, VariableNotFoundException {
-        VM metadata = getNonDerivedVariableMetadata(varId);
+        VM metadata = getVariableMetadata(varId);
 
         /*
          * Get the z/t domains
@@ -198,7 +196,7 @@ public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends D
     protected final Map<PointSeriesLocation, Array1D<Number>> readUnderlyingTemporalData(
             String varId, TimeAxis tAxis, BoundingBox bbox, Double targetZ, Extent<Double> zExtent,
             DS dataSource) throws DataReadingException, VariableNotFoundException {
-        VM metadata = getNonDerivedVariableMetadata(varId);
+        VM metadata = getVariableMetadata(varId);
 
         /*
          * Get the z/t domains
@@ -296,7 +294,7 @@ public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends D
     protected final Number readUnderlyingPointData(String varId, HorizontalPosition hPos,
             Double zVal, DateTime time, DS dataSource) throws DataReadingException,
             VariableNotFoundException {
-        VM metadata = getNonDerivedVariableMetadata(varId);
+        VM metadata = getVariableMetadata(varId);
 
         VerticalAxis verticalDomain = metadata.getVerticalDomain();
         int z = getVerticalIndex(zVal, verticalDomain, varId);
@@ -317,8 +315,7 @@ public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends D
      * @return A {@link List} of {@link HorizontalPosition}s
      */
     private List<HorizontalPosition> getHorizontalPositionsToExtract(BoundingBox bbox, VM metadata) {
-        DiscreteHorizontalDomain<? extends HorizontalCell> hGrid = metadata
-                .getHorizontalDomain();
+        DiscreteHorizontalDomain<? extends HorizontalCell> hGrid = metadata.getHorizontalDomain();
         /*
          * Find all of the horizontal positions which should be included
          */
@@ -345,32 +342,20 @@ public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends D
         return horizontalPositions;
     }
 
-    /**
-     * Returns the {@link VariableMetadata} for a non-derived variable. This
-     * guarantees that the cast to VM is permissible.
-     * 
-     * @param variableId
-     *            The variable ID
-     * @return The non-derived {@link VariableMetadata} of type VM
-     * @throws VariableNotFoundException
-     *             If the variable does not exist in this {@link Dataset}, or if
-     *             it is a derived variable.
-     */
-    @SuppressWarnings("unchecked")
-    private VM getNonDerivedVariableMetadata(String variableId) throws VariableNotFoundException {
-        if (isDerivedVariable(variableId) != null) {
-            throw new VariableNotFoundException(variableId + " is a derived variable");
-        }
-        /*
-         * This cast is fine, because constructor of this class here ensures
-         * that all non-derived variables are of type VM
-         */
-        return (VM) super.getVariableMetadata(variableId);
-    }
-
     @Override
     public Class<MapFeature> getMapFeatureType(String variableId) {
         return MapFeature.class;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public VM getVariableMetadata(String variableId) throws VariableNotFoundException {
+        /*
+         * This cast is fine, because all supplied VariableMetadata are of type
+         * VM, and plugins now guarantee that all derived variables share the
+         * same type of VariableMetadata as the source variables
+         */
+        return (VM) super.getVariableMetadata(variableId);
     }
 
     /**

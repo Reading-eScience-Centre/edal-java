@@ -123,18 +123,20 @@ public abstract class GriddedDataset extends
                 VariableMetadata requiredMetadata = getVariableMetadata(variableId);
                 if (!(requiredMetadata instanceof GridVariableMetadata)) {
                     /*
-                     * We have a variable which does not have a native grid which we can
-                     * read onto.
+                     * We have a variable which does not have a native grid
+                     * which we can read onto.
                      */
                     String message;
-                    if(variableId.equals(featureId)) {
+                    if (variableId.equals(featureId)) {
                         message = "The feature "
                                 + variableId
                                 + " is not gridded.  It is probably a derived variable which is derived from variables with different grids.";
                     } else {
                         message = "The feature "
                                 + variableId
-                                + " (which is a child variable of "+featureId+") is not gridded.  It is probably a derived variable which is derived from variables with different grids.";
+                                + " (which is a child variable of "
+                                + featureId
+                                + ") is not gridded.  It is probably a derived variable which is derived from variables with different grids.";
                     }
                     throw new DataReadingException(message);
                 }
@@ -142,7 +144,8 @@ public abstract class GriddedDataset extends
                  * Read the actual data. This method will recursively read any
                  * data required for derived variables.
                  */
-                Array4D<Number> data = read4dData(variableId, gridDataSource, (GridVariableMetadata) requiredMetadata);
+                Array4D<Number> data = read4dData(variableId, gridDataSource,
+                        (GridVariableMetadata) requiredMetadata);
                 values.put(featureId, data);
                 parameters.put(variableId, requiredMetadata.getParameter());
             }

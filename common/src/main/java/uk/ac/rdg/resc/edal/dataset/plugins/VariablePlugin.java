@@ -28,16 +28,29 @@
 
 package uk.ac.rdg.resc.edal.dataset.plugins;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
+import uk.ac.rdg.resc.edal.domain.SimpleHorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.TemporalDomain;
 import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.HorizontalMesh;
+import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
+import uk.ac.rdg.resc.edal.grid.RectilinearGridImpl;
+import uk.ac.rdg.resc.edal.grid.ReferenceableAxisImpl;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
+import uk.ac.rdg.resc.edal.metadata.HorizontalMesh4dVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -120,7 +133,8 @@ public abstract class VariablePlugin {
      * @return An {@link Array1D} containing the generated values
      */
     public Array1D<Number> generateArray1D(final String varId,
-            final Array1D<HorizontalPosition> positions, @SuppressWarnings("unchecked") final Array1D<Number>... sourceArrays) {
+            final Array1D<HorizontalPosition> positions,
+            @SuppressWarnings("unchecked") final Array1D<Number>... sourceArrays) {
         if (sourceArrays.length != uses.length) {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " data sources, but you have supplied " + sourceArrays.length);
@@ -202,7 +216,14 @@ public abstract class VariablePlugin {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " metadata sources, but you have supplied " + metadata.length);
         }
-        return doProcessVariableMetadata(metadata);
+        try {
+            return doProcessVariableMetadata(metadata);
+        } catch (IncorrectDomainException e) {
+            /*
+             * The variable
+             */
+            return null;
+        }
     }
 
     /**
@@ -295,9 +316,9 @@ public abstract class VariablePlugin {
              */
             StringBuilder ret = new StringBuilder();
             for (int i = 0; i < partsToUse.length; i++) {
-                ret.append(partsToUse[i]+":");
+                ret.append(partsToUse[i] + ":");
             }
-            combinedName = ret.substring(0, ret.length()-1);
+            combinedName = ret.substring(0, ret.length() - 1);
         }
         return combinedName;
     }
@@ -324,8 +345,11 @@ public abstract class VariablePlugin {
 
     /**
      * Generates {@link VariableMetadata} from the given arguments and metadata.
-     * This method will find the most appropriate domains to use and will return
-     * a {@link GridVariableMetadata} if possible.
+     * 
+     * If all {@link VariableMetadata} arguments are of the same type (e.g.
+     * {@link GridVariableMetadata} or {@link HorizontalMesh4dVariableMetadata}
+     * ), then the return type is guaranteed to be of that type. If that is not
+     * possible, an exception will be thrown.
      * 
      * This should be used by subclasses when generating
      * {@link VariableMetadata} from several other {@link VariableMetadata}
@@ -343,9 +367,12 @@ public abstract class VariablePlugin {
      *         and domains which encompass the intersection of all of the
      *         supplied domains. If appropriate, this will be a
      *         {@link GridVariableMetadata} object.
+     * @throws IncorrectDomainException
+     *             If a common domain of the same type as the domains of the
+     *             supplied {@link VariableMetadata} objects cannot be found.
      */
     protected VariableMetadata newVariableMetadataFromMetadata(Parameter parameter, boolean scalar,
-            VariableMetadata... metadata) {
+            VariableMetadata... metadata) throws IncorrectDomainException {
         HorizontalDomain[] hDomains = new HorizontalDomain[metadata.length];
         VerticalDomain[] vDomains = new VerticalDomain[metadata.length];
         TemporalDomain[] tDomains = new TemporalDomain[metadata.length];
@@ -359,8 +386,10 @@ public abstract class VariablePlugin {
 
     /**
      * Generates {@link VariableMetadata} from the given arguments and domains.
-     * This method will find the most appropriate domains to use and will return
-     * a {@link GridVariableMetadata} if possible.
+     * 
+     * If all of the domains are {@link HorizontalGrid}s, then the resulting
+     * {@link VariableMetadata} will also be {@link GridVariableMetadata} and
+     * can be cast as such.
      * 
      * This should be used by subclasses when generating
      * {@link VariableMetadata} from several other {@link VariableMetadata}
@@ -383,8 +412,9 @@ public abstract class VariablePlugin {
      *         {@link GridVariableMetadata} object.
      */
     protected VariableMetadata newVariableMetadataFromDomains(Parameter parameter, boolean scalar,
-            HorizontalDomain[] hDomains, VerticalDomain[] zDomains, TemporalDomain[] tDomains) {
-        HorizontalDomain hDomain = GISUtils.getIntersectionOfHorizontalDomains(hDomains);
+            HorizontalDomain[] hDomains, VerticalDomain[] zDomains, TemporalDomain[] tDomains)
+            throws IncorrectDomainException {
+        HorizontalDomain hDomain = findCommonHorizontalDomainOfSameType(hDomains);
         VerticalDomain vDomain = GISUtils.getIntersectionOfVerticalDomains(zDomains);
         TemporalDomain tDomain = GISUtils.getIntersectionOfTemporalDomains(tDomains);
         if (hDomain instanceof HorizontalGrid
@@ -392,9 +422,151 @@ public abstract class VariablePlugin {
                 && (tDomain instanceof TimeAxis || tDomain == null)) {
             return new GridVariableMetadata(parameter, (HorizontalGrid) hDomain,
                     (VerticalAxis) vDomain, (TimeAxis) tDomain, scalar);
+        } else if (hDomain instanceof HorizontalMesh
+                && (vDomain instanceof VerticalAxis || vDomain == null)
+                && (tDomain instanceof TimeAxis || tDomain == null)) {
+            return new HorizontalMesh4dVariableMetadata(parameter, (HorizontalMesh) hDomain,
+                    (VerticalAxis) vDomain, (TimeAxis) tDomain, scalar);
         } else {
-            return new VariableMetadata(parameter, hDomain, vDomain, tDomain,
-                    scalar);
+            return new VariableMetadata(parameter, hDomain, vDomain, tDomain, scalar);
+        }
+    }
+
+    /**
+     * Finds a common domain between supplied domains.
+     * 
+     * If all domains are identical, one of them will be returned.
+     * 
+     * Otherwise:
+     * 
+     * <li>If all domains are {@link RectilinearGrid}s, the result will be a
+     * {@link RectilinearGrid} consisting of points from all supplied grids.
+     * 
+     * <li>If all domains are {@link SimpleHorizontalDomain}s, the result will
+     * be the {@link SimpleHorizontalDomain} which encompasses them all.
+     * 
+     * @param domains
+     *            The {@link HorizontalDomain}s from which to construct a common
+     *            domain.
+     * @return The resulting {@link HorizontalDomain}.
+     */
+    private static HorizontalDomain findCommonHorizontalDomainOfSameType(
+            HorizontalDomain... domains) throws IncorrectDomainException {
+        if (domains.length == 0) {
+            throw new IllegalArgumentException("Must provide multiple domains to get a union");
+        }
+
+        boolean allEqual = true;
+        HorizontalDomain comparison = domains[0];
+        if (comparison == null) {
+            throw new IncorrectDomainException(
+                    "Cannot find a common domain - at least one domain is null");
+        }
+
+        for (int i = 1; i < domains.length; i++) {
+            HorizontalDomain domain = domains[i];
+            if (domain == null) {
+                throw new IncorrectDomainException(
+                        "Cannot find a common domain - at least one domain is null");
+            }
+            if (comparison.getCoordinateReferenceSystem() == null) {
+                /*
+                 * If our comparison CRS is null, then all others must be too,
+                 * otherwise we cannot find a common domain
+                 */
+                if (domain.getCoordinateReferenceSystem() != null) {
+                    throw new IncorrectDomainException(
+                            "Cannot find a common domain - Not all domains have the same CRS");
+                }
+            } else {
+                /*
+                 * If we have a null CRS, we cannot find an intersection, since
+                 * our comparison CRS is non-null
+                 */
+                if (domain.getCoordinateReferenceSystem() == null) {
+                    throw new IncorrectDomainException(
+                            "Cannot find a common domain - Not all domains have the same CRS");
+                }
+                if (!comparison.getCoordinateReferenceSystem().equals(
+                        domain.getCoordinateReferenceSystem())) {
+                    throw new IncorrectDomainException(
+                            "Cannot find a common domain - Not all domains have the same CRS");
+                }
+            }
+            if (comparison instanceof RectilinearGrid) {
+                /*
+                 * We can construct a common domain if all domains are
+                 * RectilinearGrids
+                 */
+                if (!(domain instanceof RectilinearGrid)) {
+                    throw new IncorrectDomainException(
+                            "Cannot find a common domain - Not all domains are of the same type");
+                } else if (!domain.equals(comparison)) {
+                    allEqual = false;
+                }
+            } else if (comparison instanceof SimpleHorizontalDomain) {
+                /*
+                 * We can construct a common domain if all domains are
+                 * SimpleHorizontalDomains
+                 */
+                if (!(domain instanceof SimpleHorizontalDomain)) {
+                    throw new IncorrectDomainException(
+                            "Cannot find a common domain - Not all domains are of the same type");
+                } else if (!domain.equals(comparison)) {
+                    allEqual = false;
+                }
+            } else if (!domain.equals(comparison)) {
+                /*
+                 * If we don't have rectilinear grids, we can only find a common
+                 * domain if all domains are identical
+                 */
+                throw new IncorrectDomainException(
+                        "Cannot find a common domain - Not all domains are of the same type");
+            }
+        }
+        System.out.println("GISUtils 940 - What about staggered grids?");
+
+        /*
+         * If we've got this far, then we've determined that all grids are
+         * either equal or are all Rectilinear.
+         */
+        if (allEqual) {
+            return comparison;
+        } else if (comparison instanceof SimpleHorizontalDomain) {
+            /*
+             * They are not all equal, but they are all simple domains
+             */
+            List<HorizontalPosition> bboxCorners = new ArrayList<>();
+            for (HorizontalDomain domain : domains) {
+                SimpleHorizontalDomain simpleDomain = (SimpleHorizontalDomain) domain;
+                BoundingBox bbox = simpleDomain.getBoundingBox();
+                bboxCorners.add(bbox.getLowerCorner());
+                bboxCorners.add(bbox.getUpperCorner());
+            }
+            return new SimpleHorizontalDomain(GISUtils.getBoundingBox(bboxCorners));
+        } else {
+            /*
+             * They are not all equal, but they are all rectilinear
+             */
+            Set<Double> xValues = new HashSet<>();
+            Set<Double> yValues = new HashSet<>();
+            String xName = null;
+            String yName = null;
+            for (HorizontalDomain domain : domains) {
+                RectilinearGrid grid = (RectilinearGrid) domain;
+                xName = grid.getXAxis().getName();
+                yName = grid.getYAxis().getName();
+                xValues.addAll(grid.getXAxis().getCoordinateValues());
+                yValues.addAll(grid.getYAxis().getCoordinateValues());
+            }
+            List<Double> xAxisValues = new ArrayList<>(xValues);
+            Collections.sort(xAxisValues);
+            List<Double> yAxisValues = new ArrayList<>(yValues);
+            Collections.sort(yAxisValues);
+            ReferenceableAxisImpl xAxis = new ReferenceableAxisImpl(xName, xAxisValues,
+                    GISUtils.isWgs84LonLat(comparison.getCoordinateReferenceSystem()));
+            ReferenceableAxisImpl yAxis = new ReferenceableAxisImpl(yName, yAxisValues, false);
+            return new RectilinearGridImpl(xAxis, yAxis, comparison.getCoordinateReferenceSystem());
         }
     }
 }
