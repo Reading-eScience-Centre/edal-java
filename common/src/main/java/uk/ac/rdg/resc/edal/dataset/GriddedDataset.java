@@ -119,7 +119,6 @@ public abstract class GriddedDataset extends
             Map<String, Parameter> parameters = new LinkedHashMap<>();
             Map<String, Array4D<Number>> values = new HashMap<String, Array4D<Number>>();
             for (String variableId : variablesToRead) {
-
                 VariableMetadata requiredMetadata = getVariableMetadata(variableId);
                 if (!(requiredMetadata instanceof GridVariableMetadata)) {
                     /*
@@ -146,7 +145,7 @@ public abstract class GriddedDataset extends
                  */
                 Array4D<Number> data = read4dData(variableId, gridDataSource,
                         (GridVariableMetadata) requiredMetadata);
-                values.put(featureId, data);
+                values.put(variableId, data);
                 parameters.put(variableId, requiredMetadata.getParameter());
             }
 
