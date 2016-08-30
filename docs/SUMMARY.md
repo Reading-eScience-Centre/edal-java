@@ -2,6 +2,7 @@
 
 * [EDAL User Guide](README.md)
     * [Using the EDAL libraries](usage.md)
+    * [Exploring Datasets](exploring_dataset.md)
     * [Plotting Gridded Data](plot_gridded.md)
     * [Extracting Point Data](read_point_data.md)
 * Appendices
