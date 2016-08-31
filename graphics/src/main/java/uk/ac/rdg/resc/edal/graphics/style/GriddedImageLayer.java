@@ -60,7 +60,8 @@ public abstract class GriddedImageLayer extends ImageLayer {
     protected class MapFeatureDataReader {
         private PlottingDomainParams params;
         private FeatureCatalogue catalogue;
-        private Map<String, FeaturesAndMemberName> extractedFeatures = new HashMap<String, FeaturesAndMemberName>();
+        private Map<String, FeaturesAndMemberName> extractedFeatures = new HashMap<>();
+        private Map<String, String> extractedUnits = new HashMap<>();
 
         public MapFeatureDataReader(PlottingDomainParams params, FeatureCatalogue catalogue) {
             this.params = params;
@@ -89,8 +90,8 @@ public abstract class GriddedImageLayer extends ImageLayer {
                 for (DiscreteFeature<?, ?> testFeature : features) {
                     if (testFeature instanceof MapFeature) {
                         if (mapFeature != null) {
-                            throw new EdalException("Expecting a single gridded feature for the layer "
-                                    + layerId);
+                            throw new EdalException(
+                                    "Expecting a single gridded feature for the layer " + layerId);
                         } else {
                             mapFeature = (MapFeature) testFeature;
                         }
@@ -101,9 +102,19 @@ public abstract class GriddedImageLayer extends ImageLayer {
                 }
                 FeaturesAndMemberName singleMapFeature = new FeaturesAndMemberName(mapFeature,
                         featureAndMemberName.getMember());
+
+                extractedUnits.put(layerId,
+                        mapFeature.getParameter(featureAndMemberName.getMember()).getUnits());
                 extractedFeatures.put(layerId, singleMapFeature);
             }
             return extractedFeatures.get(layerId);
+        }
+
+        public String getUnitsForLayerName(String layerId) {
+            if (!extractedUnits.containsKey(layerId)) {
+                extractFeature(layerId);
+            }
+            return extractedUnits.get(layerId);
         }
 
         public Array2D<Number> getDataForLayerName(String layerId) throws EdalException {

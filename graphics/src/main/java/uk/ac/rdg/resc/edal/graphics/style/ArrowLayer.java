@@ -52,13 +52,13 @@ public class ArrowLayer extends GriddedImageLayer {
     private Integer arrowSize = 8;
 
     public enum ArrowStyle {
-        UPSTREAM, THIN_ARROW, FAT_ARROW, TRI_ARROW
+        UPSTREAM, THIN_ARROW, FAT_ARROW, TRI_ARROW, WIND_BARBS
     };
 
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
 
-    public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour, Color arrowBackground,
-            ArrowStyle arrowStyle) {
+    public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour,
+            Color arrowBackground, ArrowStyle arrowStyle) {
         this.directionFieldName = directionFieldName;
         this.arrowColour = arrowColour;
         this.arrowBackground = arrowBackground;
@@ -131,7 +131,8 @@ public class ArrowLayer extends GriddedImageLayer {
                         Double angle = GISUtils.transformWgs84Heading(values.get(j, i),
                                 domainObjects.get(j, i));
                         if (angle != null && !Float.isNaN(angle.floatValue())) {
-                            if (arrowStyle == ArrowStyle.UPSTREAM) {
+                            switch (arrowStyle) {
+                            case UPSTREAM:
                                 /* Convert from degrees to radians */
                                 angle = angle * GISUtils.DEG2RAD;
                                 /* Calculate the end point of the arrow */
@@ -146,23 +147,27 @@ public class ArrowLayer extends GriddedImageLayer {
                                 /* Draw a line representing the vector direction */
                                 g.setStroke(new BasicStroke(1));
                                 g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
-                            } else if (arrowStyle == ArrowStyle.THIN_ARROW) {
+
+                                break;
+                            case FAT_ARROW:
+                                VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
+                                        * Math.PI / 180.0, i, j, arrowSize / 11f, g);
+                                break;
+                            case TRI_ARROW:
+                                VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
+                                        / 180.0, i, j, arrowSize / 11f, g);
+                                break;
+                            case THIN_ARROW:
+                            default:
                                 /*
                                  * The overall arrow size is 11 for things
-                                 * returned from the VectorFactory, so we
-                                 * divide the arrow size by 11 to get the
-                                 * scale factor.
+                                 * returned from the VectorFactory, so we divide
+                                 * the arrow size by 11 to get the scale factor.
                                  */
                                 VectorFactory.renderVector("LINEVEC", angle.doubleValue() * Math.PI
                                         / 180.0, i, j, arrowSize / 11f, g);
-                            } else if (arrowStyle == ArrowStyle.FAT_ARROW) {
-                                VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize / 11f, g);
-                            } else if (arrowStyle == ArrowStyle.TRI_ARROW) {
-                                VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize / 11f, g);
+                                break;
                             }
-
                         }
                     }
                     xLoc += 1.0;

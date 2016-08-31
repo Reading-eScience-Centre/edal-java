@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.graphics.style;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
+import uk.ac.rdg.resc.edal.graphics.utils.BarbFactory;
 import uk.ac.rdg.resc.edal.graphics.utils.VectorFactory;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
@@ -42,6 +43,8 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+
 public class SizedArrowLayer extends GriddedImageLayer {
     protected String directionFieldName;
     protected String arrowSizeFieldName;
@@ -51,7 +54,7 @@ public class SizedArrowLayer extends GriddedImageLayer {
     private int maxArrowSize = 12;
 
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
-    private ScaleRange arriwSizeScaleRange;
+    private ScaleRange arrowSizeScaleRange;
 
     public SizedArrowLayer(String directionFieldName, String magnitudeFieldName,
             Integer minArrowSize, Integer maxArrowSize, ScaleRange magnitudeScaleRange,
@@ -62,7 +65,7 @@ public class SizedArrowLayer extends GriddedImageLayer {
         this.minArrowSize = minArrowSize;
         this.maxArrowSize = maxArrowSize;
 
-        this.arriwSizeScaleRange = magnitudeScaleRange;
+        this.arrowSizeScaleRange = magnitudeScaleRange;
 
         this.arrowColour = arrowColour;
         this.arrowStyle = arrowStyle;
@@ -120,7 +123,7 @@ public class SizedArrowLayer extends GriddedImageLayer {
                         if (sizeValue != null && !Float.isNaN(sizeValue.floatValue())
                                 && angle != null && !Float.isNaN(angle.floatValue())) {
 
-                            double scaleZeroToOne = arriwSizeScaleRange.scaleZeroToOne(sizeValue);
+                            double scaleZeroToOne = arrowSizeScaleRange.scaleZeroToOne(sizeValue);
                             if (scaleZeroToOne < 0) {
                                 scaleZeroToOne = 0.0;
                             }
@@ -136,7 +139,8 @@ public class SizedArrowLayer extends GriddedImageLayer {
                              */
                             g.setColor(getArrowColour(colourData.get(j, i)));
 
-                            if (arrowStyle == ArrowStyle.UPSTREAM) {
+                            switch (arrowStyle) {
+                            case UPSTREAM:
                                 /* Convert from degrees to radians */
                                 angle = angle * GISUtils.DEG2RAD;
                                 /* Calculate the end point of the arrow */
@@ -153,7 +157,42 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                  */
                                 g.setStroke(new BasicStroke(1));
                                 g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
-                            } else if (arrowStyle == ArrowStyle.THIN_ARROW) {
+                                break;
+                            case FAT_ARROW:
+                                VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
+                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
+                                break;
+                            case TRI_ARROW:
+                                VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
+                                        / 180.0, i, j, arrowSize * 0.1f, g);
+                                break;
+                            case WIND_BARBS:
+                                HorizontalPosition horizontalPosition = domainObjects.get(j, i);
+                                boolean isSouthern = false;
+                                if (GISUtils.isWgs84LonLat(horizontalPosition
+                                        .getCoordinateReferenceSystem())) {
+                                    if (horizontalPosition.getY() < 0) {
+                                        isSouthern = true;
+                                    }
+                                } else {
+                                    HorizontalPosition transformPosition = GISUtils
+                                            .transformPosition(horizontalPosition,
+                                                    DefaultGeographicCRS.WGS84);
+                                    if (transformPosition.getY() < 0) {
+                                        isSouthern = true;
+                                    }
+                                }
+                                /*
+                                 * If we give the scale as maxArrowSize, we
+                                 * guarantee that no two barbs ever collide
+                                 */
+                                BarbFactory.renderWindBarbForSpeed(sizeValue.doubleValue(),
+                                        angle.doubleValue() * Math.PI / 180.0, i, j,
+                                        dataReader.getUnitsForLayerName(arrowSizeFieldName),
+                                        maxArrowSize, isSouthern, g);
+                                break;
+                            case THIN_ARROW:
+                            default:
                                 /*
                                  * The overall arrow size is 10 for things
                                  * returned from the VectorFactory, so we
@@ -162,12 +201,8 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                  */
                                 VectorFactory.renderVector("LINEVEC", angle.doubleValue() * Math.PI
                                         / 180.0, i, j, arrowSize * 0.1f, g);
-                            } else if (arrowStyle == ArrowStyle.FAT_ARROW) {
-                                VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize * 0.1f, g);
-                            } else if (arrowStyle == ArrowStyle.TRI_ARROW) {
-                                VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize * 0.1f, g);
+                                break;
+
                             }
                         }
                     }
