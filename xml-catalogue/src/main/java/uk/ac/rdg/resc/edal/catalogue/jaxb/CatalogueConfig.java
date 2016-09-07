@@ -312,13 +312,23 @@ public class CatalogueConfig {
     private static void copyFile(File sourceFile, File destFile) throws IOException {
         FileChannel source = null;
         FileChannel destination = null;
+        FileInputStream sourceIS = null;
+        FileOutputStream destinationOS = null;
         try {
-            source = new FileInputStream(sourceFile).getChannel();
-            destination = new FileOutputStream(destFile).getChannel();
+			sourceIS = new FileInputStream(sourceFile);
+			source = sourceIS.getChannel();
+			destinationOS = new FileOutputStream(destFile);
+			destination = destinationOS.getChannel();
             destination.transferFrom(source, 0, source.size());
         } finally {
+        	if(sourceIS != null) {
+        		sourceIS.close();
+        	}
             if (source != null) {
                 source.close();
+            }
+            if(destinationOS != null) {
+            	destinationOS.close();
             }
             if (destination != null) {
                 destination.close();
