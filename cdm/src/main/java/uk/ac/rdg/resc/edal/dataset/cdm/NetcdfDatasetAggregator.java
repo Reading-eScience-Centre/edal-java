@@ -396,7 +396,7 @@ public class NetcdfDatasetAggregator {
     }
 
     private static boolean isRemote(String location) {
-        return location.startsWith("dods://") || location.startsWith("http://");
+        return location.startsWith("dods://") || location.startsWith("http://") || location.startsWith("https://");
     }
 
     /**
