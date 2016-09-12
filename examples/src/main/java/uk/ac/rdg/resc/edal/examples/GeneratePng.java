@@ -65,7 +65,7 @@ public class GeneratePng {
         /*
          * Get the data file location
          */
-        URL resource = ReadPointData.class.getResource("/synthetic_sea_temperature.nc");
+        URL resource = ReadPointData.class.getResource("/synthetic_data.nc");
 
         /*
          * Creates a dataset factory for reading NetCDF datasets
