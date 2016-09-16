@@ -67,8 +67,7 @@ public class ColouredGlyphLayer extends ImageLayer {
     protected Map<String, ColourableIcon> icons;
     protected ColourableIcon icon;
 
-    public ColouredGlyphLayer(String dataFieldName, String glyphIconName, ColourScheme colourScheme)
-            throws InstantiationException {
+    public ColouredGlyphLayer(String dataFieldName, String glyphIconName, ColourScheme colourScheme) {
         this.dataFieldName = dataFieldName;
         this.glyphIconName = glyphIconName;
         this.colourScheme = colourScheme;
@@ -117,6 +116,10 @@ public class ColouredGlyphLayer extends ImageLayer {
             iconUrl = this.getClass().getResource("/img/dot.png");
             iconImage = ImageIO.read(iconUrl);
             icons.put("dot", new ColourableIcon(iconImage));
+            
+            iconUrl = this.getClass().getResource("/img/bigcircle.png");
+            iconImage = ImageIO.read(iconUrl);
+            icons.put("bigcircle", new ColourableIcon(iconImage));
         } catch (IOException e) {
             throw new EdalException(
                     "Cannot read required icons.  Ensure that JAR is packaged correctly, or that your project is set up correctly in your IDE");
