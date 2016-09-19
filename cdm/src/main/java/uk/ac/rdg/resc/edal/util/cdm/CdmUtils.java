@@ -45,7 +45,9 @@ import org.joda.time.chrono.JulianChronology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
+import ucar.nc2.Dimension;
 import ucar.nc2.constants.AxisType;
 import ucar.nc2.dataset.CoordinateAxis;
 import ucar.nc2.dataset.CoordinateAxis1D;
@@ -53,6 +55,7 @@ import ucar.nc2.dataset.CoordinateAxis1DTime;
 import ucar.nc2.dataset.CoordinateAxis2D;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dt.GridCoordSystem;
+import ucar.nc2.dt.GridDatatype;
 import ucar.nc2.dt.grid.GridDataset;
 import ucar.nc2.time.CalendarDate;
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
@@ -137,13 +140,47 @@ public final class CdmUtils {
      * @return an optimum DataReadingStrategy for reading from the dataset
      */
     public static DataReadingStrategy getOptimumDataReadingStrategy(NetcdfDataset nc) {
-        /*
-         * TODO: also use the size of the grids as a deciding factor: it can be
-         * very slow to read large grids by the BOUNDING_BOX strategy
-         */
         String fileType = nc.getFileTypeId();
-        return "netCDF".equalsIgnoreCase(fileType) || "HDF4".equalsIgnoreCase(fileType) ? DataReadingStrategy.SCANLINE
-                : DataReadingStrategy.BOUNDING_BOX;
+        if ("netCDF".equalsIgnoreCase(fileType) || "HDF4".equalsIgnoreCase(fileType)) {
+            return DataReadingStrategy.SCANLINE;
+        } else {
+            try (GridDataset gridDataset = getGridDataset(nc)) {
+                for (GridDatatype grid : gridDataset.getGrids()) {
+                    long totalsize = 1;
+                    for (Dimension dim : grid.getDimensions()) {
+                        totalsize *= (long) dim.getLength();
+                    }
+                    DataType dt = grid.getDataType();
+                    totalsize *= dt.getSize();
+                    /*
+                     * If the size of the largest grid is greater than a
+                     * fraction of the maximum amount of memory, use a SCANLINE
+                     * strategy.
+                     * 
+                     * Here, we set the multiplier for the maximum memory.
+                     * Although it's relatively small, objects are actually
+                     * (considerably?) bigger than the (dimension * data type
+                     * size) result. Additionally, we need to run everything
+                     * else...
+                     * 
+                     * If we get reports that this is still too large, it can be
+                     * lowered, or we can make it configurable.
+                     */
+                    double multiplier = 0.2;
+                    if (totalsize > multiplier * Runtime.getRuntime().maxMemory()) {
+                        return DataReadingStrategy.SCANLINE;
+                    }
+                }
+            } catch (DataReadingException | IOException e) {
+                /*
+                 * Ignore exception - it's either not a GridDataset or we can't
+                 * open it. If it's not a GridDataset, we won't be reading it
+                 * with a gridded strategy. If we can't open it, we're screwed
+                 * either way.
+                 */
+            }
+            return DataReadingStrategy.BOUNDING_BOX;
+        }
     }
 
     /**
@@ -205,14 +242,14 @@ public final class CdmUtils {
             throw new IllegalStateException("Inconsistent axis types");
         }
     }
-    
+
     public static Array2D<Number> get2DCoordinateValues(final CoordinateAxis2D axis) {
         return new Array2D<Number>(axis.getShape(0), axis.getShape(1)) {
             @Override
             public void set(Number value, int... coords) {
                 throw new UnsupportedOperationException("This Array2D is immutable");
             }
-            
+
             @Override
             public Number get(int... coords) {
                 return axis.getCoordValue(coords[0], coords[1]);
@@ -351,13 +388,13 @@ public final class CdmUtils {
                 double min = coordBounds[0];
                 double max = coordBounds[1];
                 Extent<Double> cellBounds;
-                if(min < max) {
+                if (min < max) {
                     cellBounds = Extents.newExtent(min, max);
                 } else {
                     cellBounds = Extents.newExtent(max, min);
                 }
                 axisBounds.add(cellBounds);
-                
+
                 axisValues.add(axis.getCoordValue(i));
             }
             return new DefinedBoundsAxis(name, axisValues, axisBounds, isLongitude);
