@@ -45,6 +45,7 @@ import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
 import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue.FeaturesAndMemberName;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
+import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
@@ -103,8 +104,12 @@ public abstract class GriddedImageLayer extends ImageLayer {
                 FeaturesAndMemberName singleMapFeature = new FeaturesAndMemberName(mapFeature,
                         featureAndMemberName.getMember());
 
-                extractedUnits.put(layerId,
-                        mapFeature.getParameter(featureAndMemberName.getMember()).getUnits());
+                Parameter parameter = mapFeature.getParameter(featureAndMemberName.getMember());
+                if(parameter != null){
+                    extractedUnits.put(layerId, parameter.getUnits());
+                } else {
+                    extractedUnits.put(layerId, "unknown");
+                }
                 extractedFeatures.put(layerId, singleMapFeature);
             }
             return extractedFeatures.get(layerId);
