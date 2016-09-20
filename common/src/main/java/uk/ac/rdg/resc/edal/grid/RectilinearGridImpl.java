@@ -135,7 +135,7 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
 
     @Override
     public long size() {
-        return xAxis.size() * yAxis.size();
+        return (long) xAxis.size() * (long) yAxis.size();
     }
 
     @Override

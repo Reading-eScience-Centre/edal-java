@@ -318,7 +318,7 @@ public class DerivedStaggeredGrid extends AbstractHorizontalGrid implements Stag
 
     @Override
     public long size() {
-        return xSize * ySize;
+        return (long) xSize * (long) ySize;
     }
 
     @Override
