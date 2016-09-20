@@ -58,6 +58,7 @@
 package uk.ac.rdg.resc.edal.feature;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -75,7 +76,7 @@ import uk.ac.rdg.resc.edal.util.Array;
  *            spatiotemporal position.
  * @param <DO>
  *            The type of domain object
- *            
+ * 
  * @author Guy
  */
 public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<P, DO> {
@@ -105,7 +106,11 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
         this.description = description;
         this.domain = domain;
         this.values = values;
-        this.parameters = parameters;
+        if (parameters != null) {
+            this.parameters = parameters;
+        } else {
+            this.parameters = new HashMap<>();
+        }
         /*
          * Create empty properties. Can be populated by using
          * getFeatureProperties().put(..., ...)
