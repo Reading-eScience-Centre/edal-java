@@ -1345,7 +1345,7 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
                  * method, we safely cover the cases where derived variables are
                  * derived from other derived variables
                  */
-                baseValues[i] = readUnderlyingPointData(variableId, position, zVal, time,
+                baseValues[i] = readUnderlyingPointData(baseVariables[i], position, zVal, time,
                         dataSource);
             }
 
