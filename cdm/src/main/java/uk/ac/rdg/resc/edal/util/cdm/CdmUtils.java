@@ -143,7 +143,8 @@ public final class CdmUtils {
         if ("netCDF".equalsIgnoreCase(fileType) || "HDF4".equalsIgnoreCase(fileType)) {
             return DataReadingStrategy.SCANLINE;
         } else {
-            try (GridDataset gridDataset = getGridDataset(nc)) {
+            try {
+                GridDataset gridDataset = getGridDataset(nc);
                 for (GridDatatype grid : gridDataset.getGrids()) {
                     HorizontalGrid hGrid = CdmUtils.createHorizontalGrid(grid.getCoordinateSystem());
                     DataType dt = grid.getDataType();
