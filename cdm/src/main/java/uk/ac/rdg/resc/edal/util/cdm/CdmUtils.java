@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
-import ucar.nc2.Dimension;
 import ucar.nc2.constants.AxisType;
 import ucar.nc2.dataset.CoordinateAxis;
 import ucar.nc2.dataset.CoordinateAxis1D;
@@ -146,12 +145,9 @@ public final class CdmUtils {
         } else {
             try (GridDataset gridDataset = getGridDataset(nc)) {
                 for (GridDatatype grid : gridDataset.getGrids()) {
-                    long totalsize = 1;
-                    for (Dimension dim : grid.getDimensions()) {
-                        totalsize *= (long) dim.getLength();
-                    }
+                    HorizontalGrid hGrid = CdmUtils.createHorizontalGrid(grid.getCoordinateSystem());
                     DataType dt = grid.getDataType();
-                    totalsize *= dt.getSize();
+                    long totalsize = hGrid.size() * dt.getSize();
                     /*
                      * If the size of the largest grid is greater than a
                      * fraction of the maximum amount of memory, use a SCANLINE
@@ -166,7 +162,7 @@ public final class CdmUtils {
                      * If we get reports that this is still too large, it can be
                      * lowered, or we can make it configurable.
                      */
-                    double multiplier = 0.2;
+                    double multiplier = 0.5;
                     if (totalsize > multiplier * Runtime.getRuntime().maxMemory()) {
                         return DataReadingStrategy.SCANLINE;
                     }
