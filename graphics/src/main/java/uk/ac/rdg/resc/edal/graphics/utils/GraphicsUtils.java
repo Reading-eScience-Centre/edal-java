@@ -102,7 +102,7 @@ public class GraphicsUtils {
     }
 
     /**
-     * Convenience method to extract map features for a since variable in a
+     * Convenience method to extract map features for a single variable in a
      * generic dataset.
      * 
      * @param dataset
