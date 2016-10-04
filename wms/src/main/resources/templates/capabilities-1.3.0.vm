@@ -132,7 +132,7 @@
                     <edal:ParameterName>ITEM</edal:ParameterName>
                     <edal:ParameterDescription>This specifies the metadata to return.  This can take the values:
                         menu: Returns a tree representation of the available WMS layers, with IDs. Takes the optional parameter DATASET to return the same tree for a single dataset
-                        layerDetails: Returns a set of details needed to plot a given layer. This includes such data as units, layer bounding box, configured scale range, etc. Takes the parameters LAYERNAME and TIME. The TIME parameter is optional, and if it is specified then the nearest available time is returned as part of the layer’s details.
+                        layerDetails: Returns a set of details needed to plot a given layer. This includes such data as units, layer bounding box, configured scale range, etc. Takes the parameters LAYERNAME and TIME. The TIME parameter is optional, and if it is specified then the nearest available time is returned as part of the layer's details.
                         minmax: Calculates the range of values in the given area. Takes the same parameters as a GetMap request.
                         timesteps: Returns the available times for a given day. Takes the parameters LAYERNAME and DAY (yyyy-mm-dd)
                         animationTimesteps: Returns a list of time strings at different temporal resolutions for a given time range. This is used to present to the user different frequencies for the generation of an animation. Takes the parameters LAYERNAME, START, and END</edal:ParameterDescription>
