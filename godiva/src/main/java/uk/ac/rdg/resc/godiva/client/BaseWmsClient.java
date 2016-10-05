@@ -229,7 +229,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          * ncWMS
          */
         proxyUrl = "";
-        docHref = "http://www.resc.rdg.ac.uk/trac/ncWMS/wiki/GodivaTwoUserGuide";
+        docHref = "https://reading-escience-centre.gitbooks.io/ncwms-user-guide/content/04-usage.html#godiva3";
         initBaseWms();
     }
 

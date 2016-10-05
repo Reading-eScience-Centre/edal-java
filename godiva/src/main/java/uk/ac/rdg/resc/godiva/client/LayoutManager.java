@@ -60,14 +60,17 @@ public class LayoutManager {
     public static Widget getTraditionalGodiva3Layout(IsWidget layerSelector, Label title,
             UnitsInfoIF unitsInfo, TimeSelectorIF timeSelector,
             ElevationSelectorIF elevationSelector, PaletteSelectorIF paletteSelector,
-            Anchor kmzLink, Anchor permalink, Anchor email, Anchor screenshot, Image rescLogo,
-            MapArea mapArea, Image loadingImage, AnimationButton anim, PushButton infoButton,
-            PushButton zoomToLayerExtents) {
+            Anchor kmzLink, Anchor permalink, Anchor email, Anchor screenshot, Anchor docLink,
+            Image rescLogo, MapArea mapArea, Image loadingImage, AnimationButton anim,
+            PushButton infoButton, PushButton zoomToLayerExtents) {
 
         kmzLink.setStylePrimaryName("linkStyle");
         permalink.setStylePrimaryName("linkStyle");
         email.setStylePrimaryName("linkStyle");
         screenshot.setStylePrimaryName("linkStyle");
+        if (docLink != null) {
+            docLink.setStylePrimaryName("linkStyle");
+        }
 
         VerticalPanel selectors = new VerticalPanel();
         selectors.add(title);
@@ -88,6 +91,9 @@ public class LayoutManager {
         bottomPanel.add(permalink);
         bottomPanel.add(email);
         bottomPanel.add(screenshot);
+        if(docLink != null) {
+            bottomPanel.add(docLink);
+        }
         infoButton.setWidth("16px");
         bottomPanel.add(infoButton);
 
@@ -127,21 +133,22 @@ public class LayoutManager {
         int logoSpace = 80;
         HorizontalPanel mainWindow = new HorizontalPanel();
         ScrollPanel layerScrollPanel = new ScrollPanel(layerSelector.asWidget());
-        layerScrollPanel.setHeight(((int) mapArea.getMap().getSize().getHeight() + 190 - logoSpace) + "px");
+        layerScrollPanel.setHeight(((int) mapArea.getMap().getSize().getHeight() + 190 - logoSpace)
+                + "px");
         layerScrollPanel.setWidth("250px");
         layerSelector.asWidget().setWidth("250px");
-        
+
         VerticalPanel leftPanel = new VerticalPanel();
         leftPanel.add(rescLogo);
-        leftPanel.setCellHeight(rescLogo, logoSpace+"px");
+        leftPanel.setCellHeight(rescLogo, logoSpace + "px");
         leftPanel.setCellVerticalAlignment(rescLogo, HasVerticalAlignment.ALIGN_MIDDLE);
         leftPanel.setCellHorizontalAlignment(rescLogo, HasHorizontalAlignment.ALIGN_CENTER);
         leftPanel.add(layerScrollPanel);
-        
+
         mainWindow.add(leftPanel);
         mainWindow.add(vPanel);
         mainWindow.setCellHeight(layerScrollPanel, "100%");
-        
+
         ScrollPanel scrollPanel = new ScrollPanel(mainWindow);
         return scrollPanel;
     }

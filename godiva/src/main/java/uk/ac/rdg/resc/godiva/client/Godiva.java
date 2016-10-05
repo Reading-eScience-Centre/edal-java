@@ -1012,7 +1012,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         return LayoutManager.getTraditionalGodiva3Layout(layerSelector, titleLabel,
                 widgetCollection.getUnitsInfo(), widgetCollection.getTimeSelector(),
                 widgetCollection.getElevationSelector(), widgetCollection.getPaletteSelector(),
-                kmzLink, permalink, email, screenshot, logo, mapArea, loadingImage, anim,
+                kmzLink, permalink, email, screenshot, docLink, logo, mapArea, loadingImage, anim,
                 infoButton, zoomToLayerExtents);
         //        return LayoutManager.getCompactGodiva3Layout(layerSelector,
         //                widgetCollection.getUnitsInfo(), widgetCollection.getTimeSelector(),
