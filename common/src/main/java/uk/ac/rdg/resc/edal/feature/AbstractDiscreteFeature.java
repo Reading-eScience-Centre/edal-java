@@ -134,7 +134,7 @@ public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<
     }
 
     @Override
-    public Set<String> getParameterIds() {
+    public Set<String> getVariableIds() {
         return parameters.keySet();
     }
 

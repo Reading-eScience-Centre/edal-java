@@ -133,7 +133,7 @@ final public class Charting {
 				}
 			}
 			times.add(feature.getTime());
-			for (String varId : feature.getParameterIds()) {
+			for (String varId : feature.getVariableIds()) {
 				plottedVarList.add(varId);
 				List<Double> elevationValues = feature.getDomain().getCoordinateValues();
 
@@ -319,7 +319,7 @@ final public class Charting {
 					throw new MismatchedCrsException("All chronologies must match to plot multiple time series plots");
 				}
 			}
-			for (String varId : feature.getParameterIds()) {
+			for (String varId : feature.getVariableIds()) {
 				Parameter parameter = feature.getParameter(varId);
 				TimeSeriesCollection collection;
 				String phenomena = parameter.getStandardName() + " (" + parameter.getUnits() + ")";
@@ -467,12 +467,12 @@ final public class Charting {
 		DateTime time = null;
 		for (Entry<PointCollectionFeature, String> entry : pointCollectionFeatures2Labels.entrySet()) {
 			PointCollectionFeature feature = entry.getKey();
-			if (feature.getParameterIds().size() > 1) {
+			if (feature.getVariableIds().size() > 1) {
 				multiplePlots = true;
 			}
 			verticalPosition = feature.getDomain().getVerticalPosition();
 			time = feature.getDomain().getTime();
-			for (String paramId : feature.getParameterIds()) {
+			for (String paramId : feature.getVariableIds()) {
 				XYSeries series = new XYSeries(feature.getName() + ":" + paramId, true);
 				double k = 0;
 				Array1D<Number> values = feature.getValues(paramId);
@@ -793,7 +793,7 @@ final public class Charting {
 			this.numElevations = (int) ((maxElValue - minElValue) / minGap);
 			this.elevationResolution = (maxElValue - minElValue) / numElevations;
 
-			this.paramId = features.get(0).getParameterIds().iterator().next();
+			this.paramId = features.get(0).getVariableIds().iterator().next();
 			this.units = features.get(0).getParameter(paramId).getUnits();
 			this.elevationValues = vAxis.getCoordinateValues();
 		}

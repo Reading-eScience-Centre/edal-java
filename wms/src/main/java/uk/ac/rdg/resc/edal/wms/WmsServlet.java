@@ -2094,7 +2094,7 @@ public class WmsServlet extends HttpServlet {
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
                         httpServletResponse.getOutputStream()));
                 PointSeriesFeature feature = timeseriesFeatures.get(0);
-                Set<String> parameterIds = feature.getParameterIds();
+                Set<String> parameterIds = feature.getVariableIds();
                 HorizontalPosition pos = feature.getHorizontalPosition();
                 /*
                  * If we have a copyright message, split it at semicolons and
@@ -2356,7 +2356,7 @@ public class WmsServlet extends HttpServlet {
         float min = Float.MAX_VALUE;
         float max = -Float.MAX_VALUE;
         for (ProfileFeature feature : features) {
-            for (String paramId : feature.getParameterIds()) {
+            for (String paramId : feature.getVariableIds()) {
                 Array1D<Number> values = feature.getValues(paramId);
                 int size = (int) values.size();
                 for (int i = 0; i < size; i++) {
@@ -2470,7 +2470,7 @@ public class WmsServlet extends HttpServlet {
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
                         httpServletResponse.getOutputStream()));
                 ProfileFeature feature = profileFeatures.get(0);
-                Set<String> parameterIds = feature.getParameterIds();
+                Set<String> parameterIds = feature.getVariableIds();
                 HorizontalPosition pos = feature.getHorizontalPosition();
                 /*
                  * If we have a copyright message, split it at semicolons and

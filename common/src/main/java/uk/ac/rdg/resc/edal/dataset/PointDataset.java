@@ -251,7 +251,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
                 .getDomain().getVerticalCrs()), feature.getTime());
 
         Map<String, Array1D<Number>> values = new HashMap<>();
-        for (String paramId : feature.getParameterIds()) {
+        for (String paramId : feature.getVariableIds()) {
             values.put(paramId, new ImmutableArray1D<>(new Number[] { feature.getValues(paramId)
                     .get(zIndex) }));
         }
@@ -303,7 +303,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
         GeoPosition pos4d = new GeoPosition(position, feature.getVerticalPosition(), time);
 
         Map<String, Array1D<Number>> values = new HashMap<>();
-        for (String paramId : feature.getParameterIds()) {
+        for (String paramId : feature.getVariableIds()) {
             values.put(paramId, new ImmutableArray1D<>(new Number[] { feature.getValues(paramId)
                     .get(tIndex) }));
         }

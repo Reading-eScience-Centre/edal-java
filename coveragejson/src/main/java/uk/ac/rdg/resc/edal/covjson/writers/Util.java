@@ -85,7 +85,7 @@ public class Util {
 		GridDomain gridDomain = new SimpleGridDomain(xy, z, t);
 		
 		Map<String, Array4D<Number>> valuesMap = new HashMap<>();
-		for (String paramId : feature.getParameterIds()) {
+		for (String paramId : feature.getVariableIds()) {
 			final Array2D<Number> vals = feature.getValues(paramId);
 			if (vals != null) {
 				valuesMap.put(paramId, new Array4D<Number>(1, 1, domain.getYSize(), domain.getXSize()) {

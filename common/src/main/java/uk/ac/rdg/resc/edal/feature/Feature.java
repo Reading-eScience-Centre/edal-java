@@ -72,23 +72,23 @@ public interface Feature<P> {
     public Domain<P> getDomain();
 
     /**
-     * @return the set of identifiers of the parameters of this Feature (
-     *         {@literal i.e.} the variables that the feature records).
+     * @return the set of identifiers of the variables recorded in this Feature
      */
-    public Set<String> getParameterIds();
+    public Set<String> getVariableIds();
 
     /**
-     * Gets a {@link Parameter} associated with this {@link Feature}
+     * Gets a {@link Parameter} associated with a variable in this
+     * {@link Feature}
      * 
-     * @param parameterId
+     * @param variableId
      *            The ID of the desired {@link Parameter}
      * @return the desired {@link Parameter}
      */
-    public Parameter getParameter(String parameterId);
+    public Parameter getParameter(String variableId);
 
     /**
-     * @return the set of identifiers of the parameters of this Feature mapped
-     *         to the {@link Parameter}s themselves
+     * @return the set of identifiers of the variables in this Feature mapped to
+     *         the {@link Parameter}s themselves
      */
     public Map<String, Parameter> getParameterMap();
 

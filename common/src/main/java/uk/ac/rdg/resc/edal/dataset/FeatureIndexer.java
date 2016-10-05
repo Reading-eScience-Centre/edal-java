@@ -135,7 +135,7 @@ public interface FeatureIndexer extends Serializable {
         public static FeatureBounds fromProfileFeature(ProfileFeature feature) {
             return new FeatureBounds(feature.getId(), feature.getHorizontalPosition(), feature
                     .getDomain().getCoordinateExtent(), Extents.newExtent(feature.getTime(),
-                    feature.getTime()), feature.getParameterIds());
+                    feature.getTime()), feature.getVariableIds());
         }
 
         /**
@@ -153,7 +153,7 @@ public interface FeatureIndexer extends Serializable {
                 zExtent = Extents.newExtent(zPos.getZ(), zPos.getZ());
             }
             return new FeatureBounds(feature.getId(), feature.getHorizontalPosition(), zExtent,
-                    feature.getDomain().getCoordinateExtent(), feature.getParameterIds());
+                    feature.getDomain().getCoordinateExtent(), feature.getVariableIds());
         }
     }
 }

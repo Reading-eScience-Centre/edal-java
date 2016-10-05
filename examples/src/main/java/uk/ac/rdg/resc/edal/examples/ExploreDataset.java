@@ -187,7 +187,7 @@ public class ExploreDataset {
          * If we read a parent variable, all of its children will also be included
          */
         System.out.println("The following parameters are available in the temp uncert group:");
-        for (String param : readFeature.getParameterIds()) {
+        for (String param : readFeature.getVariableIds()) {
             System.out.println(param);
         }
         

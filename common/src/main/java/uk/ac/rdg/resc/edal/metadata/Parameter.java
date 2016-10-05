@@ -34,13 +34,13 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.feature.Feature;
 
 /**
- * Describes what is being measured by a {@link Feature} or {@link Dataset}.
+ * Describes what is being measured by a variable within a {@link Feature} or a
+ * {@link Dataset}.
  * 
  * @author Jon
  * @author Guy Griffiths
  */
 public class Parameter {
-
     public static class Category {
         private final String id;
         private final String label;

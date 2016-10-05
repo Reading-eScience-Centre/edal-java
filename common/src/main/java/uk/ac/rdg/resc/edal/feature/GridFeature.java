@@ -115,14 +115,14 @@ public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D
         }
 
         if (varIds == null) {
-            varIds = getParameterIds();
+            varIds = getVariableIds();
         }
 
         Domain2DMapper mapper = Domain2DMapper.forGrid(domain.getHorizontalGrid(), targetGrid);
         Map<String, Parameter> parameters = new HashMap<>();
         Map<String, Array2D<Number>> values = new HashMap<>();
         for (String varId : varIds) {
-            if (!getParameterIds().contains(varId)) {
+            if (!getVariableIds().contains(varId)) {
                 throw new DataReadingException("Variable " + varId
                         + " is not present in this feature");
             }

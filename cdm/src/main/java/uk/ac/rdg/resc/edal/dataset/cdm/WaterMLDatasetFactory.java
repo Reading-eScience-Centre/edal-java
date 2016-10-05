@@ -178,7 +178,7 @@ public class WaterMLDatasetFactory extends DatasetFactory {
             Map<Parameter, List<HorizontalDomain>> hDomains = new HashMap<>();
             Map<Parameter, List<TemporalDomain>> tDomains = new HashMap<>();
             for (PointSeriesFeature feature : features) {
-                for (String parameterId : feature.getParameterIds()) {
+                for (String parameterId : feature.getVariableIds()) {
                     Parameter parameter = feature.getParameter(parameterId);
                     if (!hDomains.containsKey(parameter)) {
                         hDomains.put(parameter, new ArrayList<HorizontalDomain>());
