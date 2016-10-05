@@ -606,7 +606,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         protected PointFeature convertFeature(ProfileFeature feature, BoundingBox hExtent,
                 Extent<Double> zExtent, Extent<DateTime> tExtent, Double targetZ, DateTime targetT) {
             log.debug("Converting ProfileFeature to PointFeature");
-            return convertProfileFeature(feature, zExtent, targetZ);
+            return convertProfileFeature(feature, targetZ);
         }
     }
 

@@ -192,12 +192,21 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
      * 
      * @param feature
      *            The feature to convert
-     * @param params
-     *            The {@link PlottingDomainParams} under which the feature
-     *            should be converted
+     * @param hExtent
+     *            The {@link BoundingBox} containing the feature
+     * @param zExtent
+     *            The vertical {@link Extent} containing the feature
+     * @param tExtent
+     *            The time {@link Extent} containing the feature
+     * @param targetZ
+     *            The target depth if multiple features are present in the
+     *            vertical extent
+     * @param targetT
+     *            The target time if multiple features are present in the time
+     *            extent
      * @return A {@link PointFeature} ready for plotting, or <code>null</code>
-     *         if the supplied {@link PlottingDomainParams} specify a location
-     *         where no {@link PointFeature} is present.
+     *         if the supplied parameters specify a location where no
+     *         {@link PointFeature} is present.
      */
     protected abstract PointFeature convertFeature(F feature, BoundingBox hExtent,
             Extent<Double> zExtent, Extent<DateTime> tExtent, Double targetZ, DateTime targetT);
@@ -206,19 +215,17 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
      * Convenience method to convert a {@link ProfileFeature} to a
      * {@link PointFeature}. Can be used by subclasses which only handle
      * {@link ProfileFeature}s to implement
-     * {@link PointDataset#convertFeature(DiscreteFeature, PlottingDomainParams)}
+     * {@link PointDataset#convertFeature(DiscreteFeature, BoundingBox, Extent, Extent, Double, DateTime)}
      * 
      * @param feature
      *            The {@link ProfileFeature} to convert.
-     * @param params
-     *            The {@link PlottingDomainParams} under which the feature
-     *            should be converted
+     * @param targetZ
+     *            The target elevation to extract a {@link PointFeature} at
      * @return A {@link PointFeature} ready for plotting, or <code>null</code>
-     *         if the supplied {@link PlottingDomainParams} specify a location
-     *         where no {@link PointFeature} is present.
+     *         if the supplied elevation specifies a location where no
+     *         {@link PointFeature} is present.
      */
-    protected PointFeature convertProfileFeature(ProfileFeature feature, Extent<Double> zExtent,
-            Double targetZ) {
+    protected PointFeature convertProfileFeature(ProfileFeature feature, Double targetZ) {
         HorizontalPosition position = feature.getHorizontalPosition();
 
         /*
@@ -239,17 +246,6 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
         }
 
         Double zValue = feature.getDomain().getCoordinateValue(zIndex);
-        if (zExtent != null && !zExtent.contains(zValue)) {
-            /*
-             * If we have specified a z-extent, make sure that the z-value is
-             * actually contained within that extent.
-             * 
-             * This is to avoid the case where a feature may have an overall
-             * extent which overlaps the supplied extent, but has no actual
-             * measurements within that range.
-             */
-            return null;
-        }
 
         GeoPosition pos4d = new GeoPosition(position, new VerticalPosition(zValue, feature
                 .getDomain().getVerticalCrs()), feature.getTime());
@@ -271,19 +267,18 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
      * Convenience method to convert a {@link PointSeriesFeature} to a
      * {@link PointFeature}. Can be used by subclasses which only handle
      * {@link PointSeriesFeature}s to implement
-     * {@link PointDataset#convertFeature(DiscreteFeature, PlottingDomainParams)}
+     * {@link PointDataset#convertFeature(DiscreteFeature, BoundingBox, Extent, Extent, Double, DateTime)}
      * 
      * @param feature
      *            The {@link PointSeriesFeature} to convert.
-     * @param params
-     *            The {@link PlottingDomainParams} under which the feature
-     *            should be converted
+     * @param targetT
+     *            The target {@link DateTime} to extract a {@link PointFeature}
+     *            at
      * @return A {@link PointFeature} ready for plotting, or <code>null</code>
-     *         if the supplied {@link PlottingDomainParams} specify a location
-     *         where no {@link PointFeature} is present.
+     *         if the supplied {@link DateTime} specifies a time at which no
+     *         {@link PointFeature} is present.
      */
-    protected PointFeature convertPointSeriesFeature(PointSeriesFeature feature,
-            Extent<DateTime> tExtent, DateTime targetT) {
+    protected PointFeature convertPointSeriesFeature(PointSeriesFeature feature, DateTime targetT) {
         HorizontalPosition position = feature.getHorizontalPosition();
 
         /*
@@ -304,17 +299,6 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
         }
 
         DateTime time = feature.getDomain().getCoordinateValue(tIndex);
-        if (tExtent != null && !tExtent.contains(time)) {
-            /*
-             * If we have specified a time-extent, make sure that the time is
-             * actually contained within that extent.
-             * 
-             * This is to avoid the case where a feature may have an overall
-             * extent which overlaps the supplied extent, but has no actual
-             * measurements within that range.
-             */
-            return null;
-        }
 
         GeoPosition pos4d = new GeoPosition(position, feature.getVerticalPosition(), time);
 

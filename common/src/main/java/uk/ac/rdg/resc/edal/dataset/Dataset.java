@@ -210,9 +210,7 @@ public interface Dataset {
      *            <li>If <code>tExtent</code> and <code>targetT</code> are both
      *            <code>null
      *            </code>, {@link ProfileFeature}s for all available time values
-     *            will be extracted.</li> The {@link PlottingDomainParams}
-     *            describing the domain to be extracted:
-     *            </ul>
+     *            will be extracted.</li>
      * 
      * @return A {@link Collection} of {@link ProfileFeature}s, sorted by their
      *         distance from the target horizontal position, if it exists.
@@ -333,7 +331,7 @@ public interface Dataset {
      *            The ID of the variable to extract
      * @return <code>true</code> if this dataset supports the extraction of the
      *         given variable to {@link PointSeriesFeature}s via the
-     *         {@link Dataset#extractTimeseriesFeatures(Set, PlottingDomainParams)}
+     *         {@link Dataset#extractTimeseriesFeatures(Set, BoundingBox, Extent, Extent, HorizontalPosition, Double)}
      *         method
      */
     public boolean supportsTimeseriesExtraction(String varId);

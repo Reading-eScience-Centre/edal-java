@@ -239,7 +239,7 @@ public class WaterMLDatasetFactory extends DatasetFactory {
         @Override
         protected PointFeature convertFeature(PointSeriesFeature feature, BoundingBox hExtent,
                 Extent<Double> zExtent, Extent<DateTime> tExtent, Double targetZ, DateTime targetT) {
-            return convertPointSeriesFeature(feature, tExtent, targetT);
+            return convertPointSeriesFeature(feature, targetT);
         }
 
         @Override
