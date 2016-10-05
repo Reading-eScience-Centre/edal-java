@@ -64,17 +64,37 @@ public abstract class ImageLayer extends Drawable {
             final FeatureCatalogue catalogue) throws EdalException;
 
     public abstract Collection<Class<? extends Feature<?>>> supportedFeatureTypes();
-    
+
+    /**
+     * @return A {@link MetadataFilter} to filter certain types of data for
+     *         plotting. The default behaviour is to allow all (supported)
+     *         layers to be plotted. This is essentially an exclusionary filter
+     *         which users can implement (e.g. for disallowing directional
+     *         fields from being plotted as rasters)
+     */
     public MetadataFilter getMetadataFilter() {
         return new MetadataFilter() {
-            @Override
-            public boolean supportsMetadata(VariableMetadata metadata) {
-                return true;
-            }
         };
     }
-    
+
+    /**
+     * An interface used to filter metadata for plotting.
+     *
+     * @author Guy Griffiths
+     */
     public static interface MetadataFilter {
-        public boolean supportsMetadata(VariableMetadata metadata);
+        /**
+         * Determine whether or a particular layer can be plotted, based on its
+         * {@link VariableMetadata}
+         * 
+         * @param metadata
+         *            The {@link VariableMetadata} of the layer to be tested
+         * @return <code>true</code> or <code>false</code>, depending on whether
+         *         the given {@link VariableMetadata} represents a layer we wish
+         *         to plot/
+         */
+        public default boolean supportsMetadata(VariableMetadata metadata) {
+            return true;
+        }
     }
 }
