@@ -1,114 +1,107 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<StyledLayerDescriptor version="1.1.0"
-    xsi:schemaLocation="http://www.opengis.net/sld
-StyledLayerDescriptor.xsd"
-    xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc"
-    xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
-    <UserLayer>
-        <se:Name>OSTIA/analysed_sst_bivariate_colourmap</se:Name>
-        <LayerCoverageConstraints>
-            <CoverageConstraint>
-                <se:CoverageName>OSTIA/analysis_error</se:CoverageName>
-            </CoverageConstraint>
-            <CoverageConstraint>
-                <se:CoverageName>OSTIA/analysed_sst</se:CoverageName>
-            </CoverageConstraint>
-        </LayerCoverageConstraints>
-        <UserStyle>
-            <se:Name>2D thresholded colour scheme</se:Name>
-            <se:CoverageStyle>
-                <se:Rule>
-                    <resc:Raster2DSymbolizer>
-                        <se:Opacity>1.0</se:Opacity>
-                        <resc:ColorMap2D>
-                            <resc:Categorize2D
-                                fallbackValue="#00000000">
-                                <se:LookupValue>Rasterdata
-                                </se:LookupValue>
-                                <!-- x thresholds define columns -->
-                                <resc:XThreshold>0.6</resc:XThreshold>
-                                <resc:XThreshold>1.2</resc:XThreshold>
-                                <resc:XThreshold>1.8</resc:XThreshold>
-                                <resc:XThreshold>2.4</resc:XThreshold>
-                                <!-- y thresholds define rows -->
-                                <resc:YThreshold>275.0</resc:YThreshold>
-                                <resc:YThreshold>278.5</resc:YThreshold>
-                                <resc:YThreshold>282.0</resc:YThreshold>
-                                <resc:YThreshold>285.5</resc:YThreshold>
-                                <resc:YThreshold>289.0</resc:YThreshold>
-                                <resc:YThreshold>292.5</resc:YThreshold>
-                                <resc:YThreshold>296.0</resc:YThreshold>
-                                <resc:YThreshold>299.5</resc:YThreshold>
-                                <resc:YThreshold>303.0</resc:YThreshold>
-                                <!-- Colors of equal Hue (h = 65.0) -->
-                                <!-- Colorfulness (C) and Lightness (J) varied 
-                                    according to CIECAM02\. -->
-                                <!-- J = 85.0 -->
-                                <se:Value>#FFFFA600</se:Value>
-                                <se:Value>#FFFFB731</se:Value>
-                                <se:Value>#FFFFC673</se:Value>
-                                <se:Value>#FFFFD4AB</se:Value>
-                                <se:Value>#FFE1DFDE</se:Value>
-                                <!-- J = 77.0 -->
-                                <se:Value>#FFFF9600</se:Value>
-                                <se:Value>#FFFFA61F</se:Value>
-                                <se:Value>#FFFFB564</se:Value>
-                                <se:Value>#FFF2C39B</se:Value>
-                                <se:Value>#FFD0CECD</se:Value>
-                                <!-- J = 69.0 -->
-                                <se:Value>#FFFF8500</se:Value>
-                                <se:Value>#FFFF9503</se:Value>
-                                <se:Value>#FFFCA455</se:Value>
-                                <se:Value>#FFDFB18A</se:Value>
-                                <se:Value>#FFBEBCBC</se:Value>
-                                <!-- J = 61.0 -->
-                                <se:Value>#FFFF7400</se:Value>
-                                <se:Value>#FFFC8400</se:Value>
-                                <se:Value>#FFE79245</se:Value>
-                                <se:Value>#FFCC9F7A</se:Value>
-                                <se:Value>#FFACAAAA</se:Value>
-                                <!-- J = 53.0 -->
-                                <se:Value>#FFF56300</se:Value>
-                                <se:Value>#FFE57200</se:Value>
-                                <se:Value>#FFD18036</se:Value>
-                                <se:Value>#FFB78D68</se:Value>
-                                <se:Value>#FF999797</se:Value>
-                                <!-- J = 45.0 -->
-                                <se:Value>#FFDB5100</se:Value>
-                                <se:Value>#FFCD6000</se:Value>
-                                <se:Value>#FFBA6E25</se:Value>
-                                <se:Value>#FFA37A57</se:Value>
-                                <se:Value>#FF858484</se:Value>
-                                <!-- J = 37.0 -->
-                                <se:Value>#FFBF3E00</se:Value>
-                                <se:Value>#FFB34D00</se:Value>
-                                <se:Value>#FFA25A12</se:Value>
-                                <se:Value>#FF8D6645</se:Value>
-                                <se:Value>#FF717070</se:Value>
-                                <!-- J = 29.0 -->
-                                <se:Value>#FFA12A00</se:Value>
-                                <se:Value>#FF973900</se:Value>
-                                <se:Value>#FF884600</se:Value>
-                                <se:Value>#FF755132</se:Value>
-                                <se:Value>#FF5C5B5A</se:Value>
-                                <!-- J = 21.0 -->
-                                <se:Value>#FF801400</se:Value>
-                                <se:Value>#FF782300</se:Value>
-                                <se:Value>#FF6C3000</se:Value>
-                                <se:Value>#FF5C3B1E</se:Value>
-                                <se:Value>#FF454444</se:Value>
-                                <!-- J = 13.0 -->
-                                <se:Value>#FF5A0000</se:Value>
-                                <se:Value>#FF550B00</se:Value>
-                                <se:Value>#FF4C1800</se:Value>
-                                <se:Value>#FF402308</se:Value>
-                                <se:Value>#FF2C2B2B</se:Value>
-                            </resc:Categorize2D>
-                        </resc:ColorMap2D>
-                    </resc:Raster2DSymbolizer>
-                </se:Rule>
-            </se:CoverageStyle>
-        </UserStyle>
-    </UserLayer>
+<StyledLayerDescriptor version="1.1.0" xsi:schemaLocation="http://www.opengis.net/sld
+StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
+  <UserLayer>
+    <se:Name>OSTIA/analysed_sst_bivariate_colourmap</se:Name>
+    <LayerCoverageConstraints>
+      <CoverageConstraint>
+        <se:CoverageName>OSTIA/analysis_error</se:CoverageName>
+      </CoverageConstraint>
+      <CoverageConstraint>
+        <se:CoverageName>OSTIA/analysed_sst</se:CoverageName>
+      </CoverageConstraint>
+    </LayerCoverageConstraints>
+    <UserStyle>
+      <se:Name>2D thresholded colour scheme</se:Name>
+      <se:CoverageStyle>
+        <se:Rule>
+          <resc:Raster2DSymbolizer>
+            <se:Opacity>1.0</se:Opacity>
+            <resc:ColorMap2D>
+              <resc:Categorize2D fallbackValue="#00000000">
+                <se:LookupValue>Rasterdata</se:LookupValue>
+                <!-- x thresholds define columns -->
+                <resc:XThreshold>0.6</resc:XThreshold>
+                <resc:XThreshold>1.2</resc:XThreshold>
+                <resc:XThreshold>1.8</resc:XThreshold>
+                <resc:XThreshold>2.4</resc:XThreshold>
+                <!-- y thresholds define rows -->
+                <resc:YThreshold>275.0</resc:YThreshold>
+                <resc:YThreshold>278.5</resc:YThreshold>
+                <resc:YThreshold>282.0</resc:YThreshold>
+                <resc:YThreshold>285.5</resc:YThreshold>
+                <resc:YThreshold>289.0</resc:YThreshold>
+                <resc:YThreshold>292.5</resc:YThreshold>
+                <resc:YThreshold>296.0</resc:YThreshold>
+                <resc:YThreshold>299.5</resc:YThreshold>
+                <resc:YThreshold>303.0</resc:YThreshold>
+                <!-- Colors of equal Hue (h = 65.0) -->
+                <!-- Colorfulness (C) and Lightness (J) varied according to CIECAM02\. -->
+                <!-- J = 85.0 -->
+                <se:Value>#FFFFA600</se:Value>
+                <se:Value>#FFFFB731</se:Value>
+                <se:Value>#FFFFC673</se:Value>
+                <se:Value>#FFFFD4AB</se:Value>
+                <se:Value>#FFE1DFDE</se:Value>
+                <!-- J = 77.0 -->
+                <se:Value>#FFFF9600</se:Value>
+                <se:Value>#FFFFA61F</se:Value>
+                <se:Value>#FFFFB564</se:Value>
+                <se:Value>#FFF2C39B</se:Value>
+                <se:Value>#FFD0CECD</se:Value>
+                <!-- J = 69.0 -->
+                <se:Value>#FFFF8500</se:Value>
+                <se:Value>#FFFF9503</se:Value>
+                <se:Value>#FFFCA455</se:Value>
+                <se:Value>#FFDFB18A</se:Value>
+                <se:Value>#FFBEBCBC</se:Value>
+                <!-- J = 61.0 -->
+                <se:Value>#FFFF7400</se:Value>
+                <se:Value>#FFFC8400</se:Value>
+                <se:Value>#FFE79245</se:Value>
+                <se:Value>#FFCC9F7A</se:Value>
+                <se:Value>#FFACAAAA</se:Value>
+                <!-- J = 53.0 -->
+                <se:Value>#FFF56300</se:Value>
+                <se:Value>#FFE57200</se:Value>
+                <se:Value>#FFD18036</se:Value>
+                <se:Value>#FFB78D68</se:Value>
+                <se:Value>#FF999797</se:Value>
+                <!-- J = 45.0 -->
+                <se:Value>#FFDB5100</se:Value>
+                <se:Value>#FFCD6000</se:Value>
+                <se:Value>#FFBA6E25</se:Value>
+                <se:Value>#FFA37A57</se:Value>
+                <se:Value>#FF858484</se:Value>
+                <!-- J = 37.0 -->
+                <se:Value>#FFBF3E00</se:Value>
+                <se:Value>#FFB34D00</se:Value>
+                <se:Value>#FFA25A12</se:Value>
+                <se:Value>#FF8D6645</se:Value>
+                <se:Value>#FF717070</se:Value>
+                <!-- J = 29.0 -->
+                <se:Value>#FFA12A00</se:Value>
+                <se:Value>#FF973900</se:Value>
+                <se:Value>#FF884600</se:Value>
+                <se:Value>#FF755132</se:Value>
+                <se:Value>#FF5C5B5A</se:Value>
+                <!-- J = 21.0 -->
+                <se:Value>#FF801400</se:Value>
+                <se:Value>#FF782300</se:Value>
+                <se:Value>#FF6C3000</se:Value>
+                <se:Value>#FF5C3B1E</se:Value>
+                <se:Value>#FF454444</se:Value>
+                <!-- J = 13.0 -->
+                <se:Value>#FF5A0000</se:Value>
+                <se:Value>#FF550B00</se:Value>
+                <se:Value>#FF4C1800</se:Value>
+                <se:Value>#FF402308</se:Value>
+                <se:Value>#FF2C2B2B</se:Value>
+              </resc:Categorize2D>
+            </resc:ColorMap2D>
+          </resc:Raster2DSymbolizer>
+        </se:Rule>
+      </se:CoverageStyle>
+    </UserStyle>
+  </UserLayer>
 </StyledLayerDescriptor>
