@@ -131,38 +131,6 @@ public class ContourLayer extends GriddedImageLayer {
         this.labelEnabled = labelEnabled;
     }
 
-    public String getDataFieldName() {
-        return dataFieldName;
-    }
-
-    public ScaleRange getScale() {
-        return scale;
-    }
-
-    public boolean isAutoscaleEnabled() {
-        return autoscaleEnabled;
-    }
-
-    public double getNumberOfContours() {
-        return numberOfContours;
-    }
-
-    public Color getContourLineColour() {
-        return contourLineColour;
-    }
-
-    public int getContourLineWidth() {
-        return contourLineWidth;
-    }
-
-    public ContourLineStyle getContourLineStyle() {
-        return contourLineStyle;
-    }
-
-    public boolean isLabelEnabled() {
-        return labelEnabled;
-    }
-
     @Override
     protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader)
             throws EdalException {
