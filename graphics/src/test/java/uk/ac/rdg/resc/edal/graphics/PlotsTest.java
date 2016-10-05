@@ -205,8 +205,8 @@ public class PlotsTest {
 
     @Test
     public void testContour() throws EdalException {
-        ContourLayer contourLayer = new ContourLayer("test", scale, false, 5, Color.cyan, 1,
-                ContourLineStyle.SOLID, true);
+        ContourLayer contourLayer = new ContourLayer("test", scale, false, 5, Color.cyan, null, 1,
+                ContourLineStyle.HEAVY, true);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(contourLayer);
         BufferedImage image = mapImage.drawImage(params, catalogue);

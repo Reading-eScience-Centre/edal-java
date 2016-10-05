@@ -6,11 +6,11 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
-import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ContourLayer.ContourLineStyle;
-import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
+import uk.ac.rdg.resc.edal.graphics.style.sld.SLDRange.Spacing;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
 
 public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
@@ -55,6 +55,14 @@ public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
                 throw new SLDException("Contour line colour incorrectly formatted.");
             }
         }
+        
+        String contourPaletteText = (String) xPath.evaluate("./resc:ContourPalette",
+                symbolizerNode, XPathConstants.STRING);
+        String contourPalette = null;
+        if (!(contourPaletteText == null) && !(contourPaletteText.isEmpty())) {
+            contourPalette = contourPaletteText;
+        }
+        
         String contourLineWidthText = (String) xPath.evaluate("./resc:ContourLineWidth",
                 symbolizerNode, XPathConstants.STRING);
         Integer contourLineWidth = 1;
@@ -76,7 +84,7 @@ public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
                 throw new SLDException("Contour line style not recognized.");
             }
         }
-        String labelEnabledText = (String) xPath.evaluate("./resc:Scale/resc:LabelEnabled",
+        String labelEnabledText = (String) xPath.evaluate("./resc:LabelEnabled",
                 symbolizerNode, XPathConstants.STRING);
         boolean labelEnabled = true;
         if (!(labelEnabledText == null) && !(labelEnabledText.equals(""))) {
@@ -85,7 +93,7 @@ public class SLDContourSymbolizer extends AbstractSLDSymbolizer1D {
 
         // instantiate a new contour layer and add it to the image
         ContourLayer contourLayer = new ContourLayer(layerName, scale, autoscaleEnabled,
-                numberOfContours, contourLineColour, contourLineWidth, contourLineStyle,
+                numberOfContours, contourLineColour, contourPalette, contourLineWidth, contourLineStyle,
                 labelEnabled);
         return contourLayer;
     }

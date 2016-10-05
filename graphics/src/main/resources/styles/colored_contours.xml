@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<StyledLayerDescriptor version="1.1.0" xsi:schemaLocation="http://www.opengis.net/sld
+StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc"
+xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
+  <NamedLayer>
+    <se:Name>$layerName</se:Name>
+    <UserStyle>
+      <se:CoverageStyle>
+        <se:Rule>
+          <resc:ContourSymbolizer>
+            <se:Opacity>$opacity</se:Opacity>
+            <resc:NumberOfContours>20</resc:NumberOfContours>
+            <resc:ContourPalette>$paletteName</resc:ContourPalette>
+            <resc:ContourLineWidth>1</resc:ContourLineWidth>
+            <resc:ContourLineStyle>SOLID</resc:ContourLineStyle>
+            <resc:LabelEnabled>false</resc:LabelEnabled>
+            <resc:Range>
+              <resc:Minimum>$scaleMin</resc:Minimum>
+              <resc:Maximum>$scaleMax</resc:Maximum>
+              <resc:Spacing>linear</resc:Spacing>
+            </resc:Range>
+            <resc:AutoRangeEnabled>false</resc:AutoRangeEnabled>
+          </resc:ContourSymbolizer>
+        </se:Rule>
+      </se:CoverageStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>

@@ -1,7 +1,5 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
-import static uk.ac.rdg.resc.edal.graphics.style.sld.SLDColorMapParser.parseColorMap;
-
 import javax.xml.xpath.XPathExpressionException;
 
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
@@ -15,7 +13,7 @@ public class SLDRasterSymbolizer extends AbstractSLDSymbolizer1D {
 	 */
 	@Override
 	protected ImageLayer parseSymbolizer() throws XPathExpressionException, NumberFormatException, SLDException {
-		ColourScheme colourScheme = parseColorMap(xPath, symbolizerNode);
+		ColourScheme colourScheme = SLDColorMapParser.parseColorMap(xPath, symbolizerNode);
 		
 		// instantiate a new raster layer and add it to the image
 		RasterLayer rasterLayer = new RasterLayer(layerName, colourScheme);

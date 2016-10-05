@@ -54,22 +54,14 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 
+/**
+ * A {@link GriddedImageLayer} which plots contours
+ *
+ * @author Charles Roberts
+ * @author Guy Griffiths
+ */
 public class ContourLayer extends GriddedImageLayer {
     public enum ContourLineStyle {
-        SOLID {
-            @Override
-            public int getLineStyleInteger() {
-                return ContourLineAttribute.SOLID;
-            }
-        },
-
-        DASHED {
-            @Override
-            public int getLineStyleInteger() {
-                return ContourLineAttribute.DASHED;
-            }
-        },
-
         HEAVY {
             @Override
             public int getLineStyleInteger() {
@@ -81,20 +73,6 @@ public class ContourLayer extends GriddedImageLayer {
             @Override
             public int getLineStyleInteger() {
                 return ContourLineAttribute.HIGHLIGHT;
-            }
-        },
-
-        MARK {
-            @Override
-            public int getLineStyleInteger() {
-                return ContourLineAttribute.MARK;
-            }
-        },
-
-        MARK_LINE {
-            @Override
-            public int getLineStyleInteger() {
-                return ContourLineAttribute.MARK_LINE;
             }
         },
 
@@ -114,13 +92,37 @@ public class ContourLayer extends GriddedImageLayer {
     private Boolean autoscaleEnabled = true;
     private Double numberOfContours = 10.0;
     private Color contourLineColour = Color.BLACK;
+    private SegmentColourScheme colourScheme = null;
     private Integer contourLineWidth = 1;
-    private ContourLineStyle contourLineStyle = ContourLineStyle.DASHED;
+    private ContourLineStyle contourLineStyle = ContourLineStyle.HEAVY;
     private Boolean labelEnabled = true;
 
+    /**
+     * @param dataFieldName
+     *            The data field to plot
+     * @param scale
+     *            The {@link ScaleRange} spanned by the contours
+     * @param autoscaleEnabled
+     *            Whether to auto-scale the data
+     * @param numberOfContours
+     *            The number of contours to plot
+     * @param contourLineColour
+     *            The colour to plot contours. This defaults to black, and will
+     *            be ignored if a palette is specified.
+     * @param contourPalette
+     *            The name of the colour palette to use. This can be
+     *            <code>null</code>, in which case all contours have the same
+     *            colour.
+     * @param contourLineWidth
+     *            The width, in pixels, to draw contour lines
+     * @param contourLineStyle
+     *            The {@link ContourLineStyle} in which to plot contours.
+     * @param labelEnabled
+     *            Whether or not to add value labels to contour lines.
+     */
     public ContourLayer(String dataFieldName, ScaleRange scale, boolean autoscaleEnabled,
-            double numberOfContours, Color contourLineColour, int contourLineWidth,
-            ContourLineStyle contourLineStyle, boolean labelEnabled) {
+            double numberOfContours, Color contourLineColour, String contourPalette,
+            int contourLineWidth, ContourLineStyle contourLineStyle, boolean labelEnabled) {
         this.dataFieldName = dataFieldName;
         this.scale = scale;
         this.autoscaleEnabled = autoscaleEnabled;
@@ -129,6 +131,10 @@ public class ContourLayer extends GriddedImageLayer {
         this.contourLineWidth = contourLineWidth;
         this.contourLineStyle = contourLineStyle;
         this.labelEnabled = labelEnabled;
+        if (contourPalette != null) {
+            this.colourScheme = new SegmentColourScheme(scale, null, null, new Color(0, true),
+                    contourPalette, 250);
+        }
     }
 
     @Override
@@ -193,12 +199,23 @@ public class ContourLayer extends GriddedImageLayer {
         ContourLevels levels = new ContourLevels();
         for (double val = scaleMin; val <= scaleMax; val += contourSpacing) {
             ContourLineAttribute lineStyle = new ContourLineAttribute();
-            lineStyle.setColor(contourLineColour);
+            if (colourScheme != null) {
+                lineStyle.setColor(colourScheme.getColor(val));
+            } else {
+                lineStyle.setColor(contourLineColour);
+            }
             if (contourLineStyle != null) {
                 lineStyle.setStyle(contourLineStyle.getLineStyleInteger());
             }
             lineStyle.setWidth(contourLineWidth);
-            lineStyle.setLabelEnabled(labelEnabled);
+            if (!labelEnabled) {
+                /*
+                 * The lineStyle.setLabelEnabled() method doesn't work. It
+                 * always leaves labels present. Setting this height to zero
+                 * gets rid of them though.
+                 */
+                lineStyle.setLabelHeightP(0);
+            }
             levels.addLevel(val, lineStyle);
         }
 

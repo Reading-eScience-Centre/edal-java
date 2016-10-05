@@ -5,7 +5,8 @@ A variable can be plotted as contours by specifying the `<resc:ContourSymbolizer
 | Tag name | Type of contents | Default value | Description |
 | --- | --- | --- | --- |
 | `<resc:NumberOfContours>` | Integer | 10 | The number of contour levels |
-| `<resc:ContourLineColour>` | String specifying colour | #FF000000 (Black) | The colour of the contours |
+| `<resc:ContourLineColour>` | String specifying colour | #FF000000 (Black) | The colour of the contours.  Ignored if the `<resc:ContourPalette>` is defined |
+| `<resc:ContourPalette>` | String specifying colour palette to use | No colouring by value | The palette to use to colour the contours. |
 | `<resc:ContourLineWidth>` | Integer | 1 | The width of the contour lines, in pixels.  This is ignored for the "HIGHLIGHT" style |
 | `<resc:ContourLineStyle>` | String | SOLID | The style of the contour lines.  Three styles are available - "SOLID" (solid lines), "DASHED" (dashed lines), and "HIGHLIGHT" (lines surrounded by a contrasting colour).  If "HIGHLIGHT" is used, the `<resc:ContourLineWidth>` parameter is ignored. |
 | `<resc:Range>` | XML element | No default - must be specified | The scale range for the contours |
