@@ -149,11 +149,34 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                 try {
                     JSONValue jsonMap = JSONParser.parseLenient(response.getText());
                     JSONObject parentObj = jsonMap.isObject();
-                    proxyUrl = parentObj.get("proxy").isString().stringValue();
-                    docHref = parentObj.get("docLocation").isString().stringValue();
-                    mapHeight = Integer.parseInt(parentObj.get("mapHeight").isString()
-                            .stringValue());
-                    mapWidth = Integer.parseInt(parentObj.get("mapWidth").isString().stringValue());
+                    JSONValue proxyJson = parentObj.get("proxy");
+                    if (proxyJson != null) {
+                        if (proxyJson.isString() != null) {
+                            proxyUrl = proxyJson.isString().stringValue();
+                        }
+                    }
+                    JSONValue docJson = parentObj.get("docLocation");
+                    if (docJson != null) {
+                        if (docJson.isString() != null) {
+                            docHref = docJson.isString().stringValue();
+                        }
+                    }
+                    JSONValue mapHeightJson = parentObj.get("mapHeight");
+                    if (mapHeightJson != null) {
+                        if (mapHeightJson.isString() != null) {
+                            mapHeight = Integer.parseInt(mapHeightJson.isString().stringValue());
+                        } else if (mapHeightJson.isNumber() != null) {
+                            mapHeight = (int) mapHeightJson.isNumber().doubleValue();
+                        }
+                    }
+                    JSONValue mapWidthJson = parentObj.get("mapWidth");
+                    if (mapWidthJson != null) {
+                        if (mapWidthJson.isString() != null) {
+                            mapWidth = Integer.parseInt(mapWidthJson.isString().stringValue());
+                        } else if (mapWidthJson.isNumber() != null) {
+                            mapWidth = (int) mapWidthJson.isNumber().doubleValue();
+                        }
+                    }
                     /*
                      * Handle any user-specific configuration parameters
                      */
@@ -307,7 +330,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         argPart.deleteCharAt(argPart.length() - 1);
 
         String ret = URL.encode(proxyUrl + baseUrl) + argPart.toString();
-        GWT.log("encoded:"+ret);
+        GWT.log("encoded:" + ret);
         return ret;
     }
 
@@ -851,8 +874,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             VerticalPanel v = new VerticalPanel();
             if (e instanceof ConnectionException) {
                 v.add(new Label(e.getMessage()));
-            } else if(response.contains("<ServiceException>")){
-                int start = response.indexOf("<ServiceException>")+18;
+            } else if (response.contains("<ServiceException>")) {
+                int start = response.indexOf("<ServiceException>") + 18;
                 int end = response.indexOf("</ServiceException>");
                 v.add(new Label(response.substring(start, end)));
             } else {

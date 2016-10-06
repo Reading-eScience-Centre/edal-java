@@ -567,14 +567,16 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
     @Override
     public void animationStarted(String times, String fps) {
         updateLinksEtc();
-        screenshot.setHref(getAviUrl(times, fps));
-        screenshot.setText("Export to AVI");
+//        screenshot.setHref(getAviUrl(times, fps));
+//        screenshot.setText("Export to AVI");
+        screenshot.setEnabled(false);
     }
 
     @Override
     public void animationStopped() {
         updateLinksEtc();
-        screenshot.setText("Export to PNG");
+//        screenshot.setText("Export to PNG");
+        screenshot.setEnabled(true);
     }
 
     /*
