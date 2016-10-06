@@ -91,7 +91,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      */
     protected int mapHeight;
     protected int mapWidth;
-    protected String proxyUrl;
+    protected String proxyUrl = "";
     protected String docHref;
 
     /*
