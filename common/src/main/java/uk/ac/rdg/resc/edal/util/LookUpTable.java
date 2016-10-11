@@ -61,8 +61,8 @@ public final class LookUpTable {
     private DataBuffer iIndices;
     private DataBuffer jIndices;
 
-    private final int nLon;
-    private final int nLat;
+    private  int nLon;
+    private  int nLat;
 
     // Converts from lat-lon coordinates to index space in the LUT.
     private final AffineTransform transform = new AffineTransform();
@@ -100,6 +100,12 @@ public final class LookUpTable {
          */
         nLon = (int) Math.ceil(lonDiff / minResolution);
         nLat = (int) Math.ceil(latDiff / minResolution);
+
+        while (((long) nLon * (long) nLat) > Integer.MAX_VALUE) {
+            nLon *= 0.9;
+            nLat *= 0.9;
+        }
+        
         if (nLon <= 0 || nLat <= 0) {
             String msg = String.format("nLon (=%d) and nLat (=%d) must be positive and > 0", nLon,
                     nLat);
