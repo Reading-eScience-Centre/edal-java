@@ -32,16 +32,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
 import java.net.URL;
-import java.security.CodeSource;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,8 +55,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -153,77 +157,53 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
 
         /*
-         * We want the catalogue to read all possible XML templates for
-         * supported styles. This includes 2 parts:
+         * We want the catalogue to read the styles which are packaged with the
+         * edal-wms module (i.e. from the JAR file)
          * 
-         * 1. Reading the styles which are packaged with the edal-wms module
-         * (i.e. from the JAR file)
-         * 
-         * 2. Reading any additional styles defined by a user (i.e. from the
-         * classpath)
-         * 
-         * Styles in an arbitrary directory can be added with the
+         * Styles in another arbitrary directory can be added with the
          * addStylesInDirectory() method
          */
-        NoAutoCloseZipInputStream zip = null;
+        log.debug("Getting styles from JAR file");
+        Stream<Path> walk = null;
         try {
             /*
              * This reads all styles from the JAR file
              */
-            Pattern styleXmlPath = Pattern.compile("^styles/(.*)\\.xml$");
-            CodeSource src = StyleCatalogue.class.getProtectionDomain().getCodeSource();
-            if (src != null) {
-                URL jar = src.getLocation();
-                zip = new NoAutoCloseZipInputStream(jar.openStream());
-                while (true) {
-                    ZipEntry e = zip.getNextEntry();
-                    if (e == null) {
-                        break;
-                    }
-                    String name = e.getName();
-                    Matcher matcher = styleXmlPath.matcher(name);
-                    if (matcher.matches()) {
-                        String xmlString = IOUtils.toString(zip);
-                        StyleDef style = processStyle(matcher.group(1), xmlString);
-                        if (style != null) {
-                            styleDefs.put(style.styleName, style);
-                        }
-                    }
-                }
+            URI uri = SldTemplateStyleCatalogue.class.getResource("/styles").toURI();
+            Path myPath;
+            if (uri.getScheme().equals("jar")) {
+                FileSystem fileSystem = FileSystems.newFileSystem(uri,
+                        Collections.<String, Object> emptyMap());
+                myPath = fileSystem.getPath("/styles");
             } else {
-                /* Fail... */
+                myPath = Paths.get(uri);
+            }
+            walk = Files.walk(myPath, 1);
+            for (Iterator<Path> it = walk.iterator(); it.hasNext();) {
+                Path stylePath = it.next();
+                URL style = SldTemplateStyleCatalogue.class.getResource(stylePath.toString());
+                if (style == null) {
+                    /*
+                     * This happens when the code is run whilst not contained in
+                     * a JAR (e.g. from an IDE)
+                     */
+                    style = new File(stylePath.toString()).toURI().toURL();
+                }
+                Pattern styleXmlPath = Pattern.compile(".*/styles/(.*)\\.xml$");
+                Matcher matcher = styleXmlPath.matcher(style.getFile());
+                if (matcher.matches()) {
+                    String xmlString = IOUtils.toString(style.openStream());
+                    String styleName = matcher.group(1);
+                    log.debug("Found style: " + styleName);
+                    styleDefs.put(styleName, processStyle(styleName, xmlString));
+                }
             }
         } catch (Exception e) {
             log.error("Problem processing styles in edal-wms module", e);
         } finally {
-            if (zip != null) {
-                zip.allowToBeClosed();
-                try {
-                    zip.close();
-                } catch (IOException e) {
-                    /*
-                     * Ignore this error, we can't do anything about it
-                     */
-                }
+            if (walk != null) {
+                walk.close();
             }
-        }
-        try {
-            /*
-             * This reads all styles from the WEB-INF/classes/styles directory
-             */
-            File stylesDir = new File(SldTemplateStyleCatalogue.class.getResource("/styles/")
-                    .toURI());
-            addStylesInDirectory(stylesDir);
-        } catch (IllegalArgumentException e) {
-            /*
-             * We ignore this exception since it just means that the styles
-             * directory is missing from the classpath
-             */
-            if (!e.getMessage().contains("URI is not hierarchical")) {
-                throw e;
-            }
-        } catch (Exception e) {
-            log.error("Problem processing styles on classpath", e);
         }
 
         /*
@@ -244,6 +224,12 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>(),
                 role2MetadataFilter);
         styleDefs.put(CATEGORICAL_STYLE_NAME, categories);
+    }
+
+    public static void main(String[] args) {
+        SldTemplateStyleCatalogue sld = new SldTemplateStyleCatalogue();
+        for (String s : sld.styleDefs.keySet())
+            System.out.println(s);
     }
 
     @Override
@@ -320,7 +306,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         List<Extent<Float>> colourScaleRanges = templateProperties.getColorScaleRanges();
         for (int i = 0; i < colourScaleRanges.size(); i++) {
             Extent<Float> scaleRange = colourScaleRanges.get(i);
-            if(i == 0) {
+            if (i == 0) {
                 context.put("scaleMin", scaleRange.getLow());
                 context.put("scaleMax", scaleRange.getHigh());
             } else {
@@ -847,7 +833,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             this.usesPalette = usesPalette;
             this.needsNamedLayer = needsNamedLayer;
             this.scaledLayerRoles = scaledLayers;
-            if(this.scaledLayerRoles == null) {
+            if (this.scaledLayerRoles == null) {
                 this.scaledLayerRoles = new ArrayList<>();
             }
             this.roles2FeatureType = roles2FeatureType;
@@ -996,39 +982,6 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                  */
             }
             return true;
-        }
-    }
-
-    /**
-     * This is an {@link ZipInputStream} which only gets closed once it's been
-     * specifically told to. This is because otherwise when parsing XML using
-     * the {@link DocumentBuilder}, it will close the {@link InputStream}.
-     * 
-     * Since {@link ZipInputStream}s need to stay open to process everything
-     * within the zip file, this is not what we want. The ideal solution would
-     * be that {@link DocumentBuilder} didn't close {@link InputStream}s which
-     * it didn't create, but that's out of our control.
-     * 
-     * See http://stackoverflow.com/questions/20020982/java-create-inputstream-
-     * from-zipinputstream-entry
-     * 
-     * @author Guy Griffiths
-     */
-    private static class NoAutoCloseZipInputStream extends ZipInputStream {
-        private boolean canBeClosed = false;
-
-        public NoAutoCloseZipInputStream(InputStream is) {
-            super(is);
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (canBeClosed)
-                super.close();
-        }
-
-        public void allowToBeClosed() {
-            canBeClosed = true;
         }
     }
 }
