@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 org.khelekore.prtree
 uk.ac.rdg.resc.edal.catalogue
 uk.ac.rdg.resc.edal.catalogue.jaxb
@@ -40,3 +41,46 @@ uk.ac.rdg.resc.godiva.client.util
 uk.ac.rdg.resc.godiva.client.widgets
 uk.ac.rdg.resc.godiva.server
 uk.ac.rdg.resc.godiva.shared
+||||||| merged common ancestors
+=======
+org.khelekore.prtree
+uk.ac.rdg.resc.edal.catalogue
+uk.ac.rdg.resc.edal.catalogue.jaxb
+uk.ac.rdg.resc.edal.covjson
+uk.ac.rdg.resc.edal.covjson.writers
+uk.ac.rdg.resc.edal.dataset
+uk.ac.rdg.resc.edal.dataset.cdm
+uk.ac.rdg.resc.edal.dataset.plugins
+uk.ac.rdg.resc.edal.domain
+uk.ac.rdg.resc.edal.examples
+uk.ac.rdg.resc.edal.exceptions
+uk.ac.rdg.resc.edal.feature
+uk.ac.rdg.resc.edal.geometry
+uk.ac.rdg.resc.edal.graphics
+uk.ac.rdg.resc.edal.graphics.exceptions
+uk.ac.rdg.resc.edal.graphics.formats
+uk.ac.rdg.resc.edal.graphics.pcolor.examples
+uk.ac.rdg.resc.edal.graphics.style
+uk.ac.rdg.resc.edal.graphics.style.sld
+uk.ac.rdg.resc.edal.graphics.utils
+uk.ac.rdg.resc.edal.grid
+uk.ac.rdg.resc.edal.grid.cdm
+uk.ac.rdg.resc.edal.grid.kdtree
+uk.ac.rdg.resc.edal.metadata
+uk.ac.rdg.resc.edal.position
+uk.ac.rdg.resc.edal.util
+uk.ac.rdg.resc.edal.util.cdm
+uk.ac.rdg.resc.edal.util.chronologies
+uk.ac.rdg.resc.edal.wms
+uk.ac.rdg.resc.edal.wms.exceptions
+uk.ac.rdg.resc.edal.wms.util
+uk.ac.rdg.resc.godiva.client
+uk.ac.rdg.resc.godiva.client.handlers
+uk.ac.rdg.resc.godiva.client.jsresource
+uk.ac.rdg.resc.godiva.client.requests
+uk.ac.rdg.resc.godiva.client.state
+uk.ac.rdg.resc.godiva.client.util
+uk.ac.rdg.resc.godiva.client.widgets
+uk.ac.rdg.resc.godiva.server
+uk.ac.rdg.resc.godiva.shared
+>>>>>>> Stashed changes
