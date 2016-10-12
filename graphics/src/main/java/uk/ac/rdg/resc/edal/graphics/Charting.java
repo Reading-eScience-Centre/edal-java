@@ -221,7 +221,7 @@ final public class Charting {
 				timeString = TimeUtils.formatUtcHumanReadableDateTime(times.get(0));
 			} else {
 				timeString = "Between " + TimeUtils.formatUtcHumanReadableDateTime(Collections.min(times)) + " and "
-						+ Collections.max(times);
+						+ TimeUtils.formatUtcHumanReadableDateTime(Collections.max(times));
 			}
 		}
 
