@@ -1,3 +1,15 @@
+1.2.3
+=====
+Added new synthetic data for docs
+Dataset.readFeature() now includes child variables in the returned feature
+Derived variables have consistent VariableMetadata types (e.g. variables derived from GriddedVariableMetadata are guaranteed to be gridded)
+Added wind barbs
+Recognise https as remote
+Improvements to transect / profile plots
+Use data size when choosing data reading strategy
+Extended Capabilities information + XSD added
+Various bugfixes
+
 1.2.2
 =====
 Removed ncWMS from EDAL to its own repository
