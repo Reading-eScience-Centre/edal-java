@@ -1933,8 +1933,8 @@ public class WmsServlet extends HttpServlet {
              * We're only creating the colour bar so we need to know a width and
              * height
              */
-            int width = params.getPositiveInt("width", 50);
-            int height = params.getPositiveInt("height", 200);
+            int width = params.getPositiveInt("width", 100);
+            int height = params.getPositiveInt("height", 400);
             /*
              * Find the requested colour palette, or use the default if not set
              */
@@ -1984,7 +1984,7 @@ public class WmsServlet extends HttpServlet {
                  * We have non-categorical data - use the MapImage to generate a
                  * legend
                  */
-                int height = params.getPositiveInt("height", 200);
+                int height = params.getPositiveInt("height", 400);
                 int width;
                 if (imageGenerator.getFieldsWithScales().size() > 1 && !isVector) {
                     width = params.getPositiveInt("width", height);

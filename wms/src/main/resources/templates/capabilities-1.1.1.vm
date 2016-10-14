@@ -182,7 +182,7 @@
 #end            
             <LegendURL width="110" height="264">
                 <Format>image/png</Format>
-                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$paletteName&amp;COLORBARONLY=true&amp;WIDTH=110&amp;HEIGHT=264"/>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="$baseUrl?REQUEST=GetLegendGraphic&amp;PALETTE=$paletteName&amp;LAYERS=$layerName&amp;STYLES=$style/$paletteName"/>
             </LegendURL>
         </Style>
 #end
