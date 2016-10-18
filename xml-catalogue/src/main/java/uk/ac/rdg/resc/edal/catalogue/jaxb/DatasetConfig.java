@@ -149,7 +149,7 @@ public class DatasetConfig {
     private DatasetState state = DatasetState.NEEDS_REFRESH;
     /* Set if there is an error loading the dataset */
     @XmlTransient
-    private Exception err;
+    private Throwable err;
     /*
      * The number of consecutive times we've seen an error when loading a
      * dataset
@@ -220,7 +220,7 @@ public class DatasetConfig {
             numErrorsInARow = 0;
             state = DatasetState.READY;
             lastSuccessfulUpdateTime = new DateTime();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             state = DatasetState.ERROR;
             numErrorsInARow++;
             lastFailedUpdateTime = new DateTime();
@@ -503,7 +503,7 @@ public class DatasetConfig {
      * @return Any {@link Exception} which was thrown during the loading of the
      *         associated {@link Dataset}
      */
-    public Exception getException() {
+    public Throwable getException() {
         return err;
     }
 

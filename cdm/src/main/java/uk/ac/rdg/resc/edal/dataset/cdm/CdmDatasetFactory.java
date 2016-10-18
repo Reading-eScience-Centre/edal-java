@@ -74,7 +74,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
 
     @Override
     public DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> createDataset(
-            String id, String location, boolean forceRefresh) throws IOException, EdalException {
+            String id, String location, boolean forceRefresh) throws EdalException {
         NetcdfDataset nc = null;
         try {
             /*
@@ -111,6 +111,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              * necessary.
              */
             return dataset;
+        } catch (Throwable e) {
+            throw new EdalException("Problem creating dataset "+id+" at "+location, e);
         } finally {
             NetcdfDatasetAggregator.releaseDataset(nc);
         }
