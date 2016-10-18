@@ -83,3 +83,5 @@ Maven dependency:
     <version>[insert required version]</version>
 </dependency>
 ```
+
+Note that the `gwt-user` dependency is *not* propagated by `edal-godiva`.  Therefore, if you wish to compile Godiva3 as part of the build process for a webapp, you will need to include the `gwt-user` library in addition to `edal-godiva`.
