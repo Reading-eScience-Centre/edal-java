@@ -111,11 +111,6 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
     private static final String UNSTAGGERED_SUFFIX = ":face";
 
-    public static void main(String[] args) throws EdalException, IOException {
-        CdmGridDatasetFactory df = new CdmGridDatasetFactory();
-        df.createDataset("test", "/home/guy/Data/sgrid/sgrid_real.nc");
-    }
-
     @Override
     protected DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateDataset(
             String id, String location, NetcdfDataset nc) throws IOException {
