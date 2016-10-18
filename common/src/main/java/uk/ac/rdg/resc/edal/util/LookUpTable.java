@@ -61,8 +61,8 @@ public final class LookUpTable {
     private DataBuffer iIndices;
     private DataBuffer jIndices;
 
-    private  int nLon;
-    private  int nLat;
+    private int nLon;
+    private int nLat;
 
     // Converts from lat-lon coordinates to index space in the LUT.
     private final AffineTransform transform = new AffineTransform();
@@ -101,11 +101,27 @@ public final class LookUpTable {
         nLon = (int) Math.ceil(lonDiff / minResolution);
         nLat = (int) Math.ceil(latDiff / minResolution);
 
-        while (((long) nLon * (long) nLat) > Integer.MAX_VALUE) {
+        /*
+         * If datasets get too big, we get integer overflow issues (when
+         * nLon*nLat is bigger than the maximum integer size). We start to index
+         * arrays using negative numbers, because of the overflow. So that
+         * explains why we need to reduce nLon*nLat to be smaller than
+         * Integer.MAX_VALUE.
+         * 
+         * However, even with nLon*nLat being smaller than Integer.MAX_VALUE, we
+         * still see OutOfMemoryErrors for very large datasets. Hence the
+         * addition of a scale factor, determined empirically. By which I mean I
+         * tried it with the datasets that were screwing everything up, and then
+         * reduced it a bit more. Having a lookup table that is too small
+         * doesn't seem to actually be an issue performance-wise, which is one
+         * of those things which is slightly weird, but that I'm happy to just
+         * accept.
+         */
+        while (((long) nLon * (long) nLat) > Integer.MAX_VALUE * 0.2) {
             nLon *= 0.9;
             nLat *= 0.9;
         }
-        
+
         if (nLon <= 0 || nLat <= 0) {
             String msg = String.format("nLon (=%d) and nLat (=%d) must be positive and > 0", nLon,
                     nLat);
