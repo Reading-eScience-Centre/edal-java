@@ -45,10 +45,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 /**
  * A horizontal (2D) grid that is defined by explicitly specifying the longitude
  * and latitude coordinates of its cells. We assume the WGS84 lat-lon coordinate
- * system. This class holds references to passed-in arrays of longitude and
- * latitude, but does not modify them or provide any public methods to modify
- * them. Modification of these arrays outside this class will cause undefined
- * behaviour.
+ * system.
  * 
  * @author Guy Griffiths
  * @author Jon Blower
