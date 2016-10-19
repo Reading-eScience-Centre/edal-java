@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -40,8 +40,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -56,6 +54,7 @@ import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
 
 /**
@@ -66,7 +65,7 @@ import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
  * appropriate map will be drawn with linearly-varying fields, suitable for use
  * as a legend. The names of the fields to use are set in the
  * {@link LegendDataGenerator#getFeatureCatalogue(String, String)} method
- * 
+ *
  * @author Guy Griffiths
  */
 public class LegendDataGenerator {
@@ -83,7 +82,7 @@ public class LegendDataGenerator {
 
     /**
      * Instantiate a new {@link LegendDataGenerator}
-     * 
+     *
      * @param width
      *            The width of the domain (which will translate to the final
      *            image width in pixels)
@@ -106,7 +105,7 @@ public class LegendDataGenerator {
 
     /**
      * Instantiate a new {@link LegendDataGenerator}
-     * 
+     *
      * @param width
      *            The width of the domain (which will translate to the final
      *            image width in pixels)
@@ -134,7 +133,7 @@ public class LegendDataGenerator {
 
     /**
      * Instantiate a new {@link LegendDataGenerator}
-     * 
+     *
      * @param width
      *            The width of the domain (which will translate to the final
      *            image width in pixels)
@@ -171,7 +170,7 @@ public class LegendDataGenerator {
         xAxis = new RegularAxisImpl("", 0, 0.001, width, false);
         yAxis = new RegularAxisImpl("", 0, 0.001, height, false);
 
-        RegularGrid hGrid = new RegularGridImpl(xAxis, yAxis, DefaultGeographicCRS.WGS84);
+        RegularGrid hGrid = new RegularGridImpl(xAxis, yAxis, GISUtils.defaultGeographicCRS());
         domain = new MapDomain(hGrid, null, null, null);
 
         this.fractionExtraXLow = fractionExtraXLow;
@@ -262,7 +261,7 @@ public class LegendDataGenerator {
 
     /**
      * Generates a {@link MapFeature} containing the correctly named variables
-     * 
+     *
      * @param field
      *            The variable to vary linearly
      * @param type
@@ -283,7 +282,7 @@ public class LegendDataGenerator {
 
     /**
      * Generates {@link PointFeature}s spread across the given ranges
-     * 
+     *
      * @param field
      *            The variable to vary linearly
      * @param type
@@ -399,7 +398,7 @@ public class LegendDataGenerator {
 
     /**
      * Extends a scale range by a specified amount
-     * 
+     *
      * @param scaleRange
      *            The scale range to extend
      * @param fractionExtraLow
@@ -420,7 +419,7 @@ public class LegendDataGenerator {
 
     /**
      * Linearly interpolates a value based on its index along an axis
-     * 
+     *
      * @param value
      *            The index within the axis
      * @param scaleRange

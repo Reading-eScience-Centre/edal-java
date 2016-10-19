@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
@@ -118,7 +117,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
             }
         }
 
-        this.bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, DefaultGeographicCRS.WGS84);
+        this.bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, GISUtils.defaultGeographicCRS());
         if (minZ != Double.MAX_VALUE) {
             this.zExtent = Extents.newExtent(minZ, maxZ);
         } else {

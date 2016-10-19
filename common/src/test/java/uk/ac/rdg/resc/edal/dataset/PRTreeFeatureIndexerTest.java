@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -35,7 +35,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.TreeSet;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
@@ -48,13 +47,14 @@ import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Test class for {@link PRTreeFeatureIndexer}. For
  * {@link PRTreeFeatureIndexer#getAllFeatureIds} and
  * {@link PRTreeFeatureIndexer#findFeatureIds} methods only as others are
  * simple.
- * 
+ *
  * @author Nan Lin
  */
 public class PRTreeFeatureIndexerTest {
@@ -73,7 +73,7 @@ public class PRTreeFeatureIndexerTest {
     private Extent<DateTime> timeExtent;
     private TreeSet<Double> longitudePoints = new TreeSet<>();
     private TreeSet<Double> latitudePoints = new TreeSet<>();
-    private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+    private CoordinateReferenceSystem crs = GISUtils.defaultGeographicCRS();
 
     private Collection<String> varIDs;
     private ArrayList<FeatureIndexer.FeatureBounds> features = new ArrayList<>();
@@ -185,7 +185,7 @@ public class PRTreeFeatureIndexerTest {
 
     /**
      * Help method to do the real business of testing findFeatureIds
-     * 
+     *
      * @param bbox
      *            Bounding box of the feature that users are interested
      * @param verticalExtent
@@ -194,7 +194,7 @@ public class PRTreeFeatureIndexerTest {
      *            timeExtent of the feature that users are interested
      * @param variableIds
      *            names of the features that users are interested
-     * 
+     *
      */
     private void findFeatureIds(BoundingBox bbox, Extent<Double> verticalExtent,
             Extent<DateTime> timeExtent, Collection<String> variableIds) {

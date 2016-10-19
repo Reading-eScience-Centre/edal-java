@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -30,7 +30,6 @@ package uk.ac.rdg.resc.edal.domain;
 
 import java.io.Serializable;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -41,7 +40,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * A simple implementation of a {@link HorizontalDomain}
- * 
+ *
  * @author Guy Griffiths
  */
 public class SimpleHorizontalDomain implements HorizontalDomain, Serializable {
@@ -50,7 +49,7 @@ public class SimpleHorizontalDomain implements HorizontalDomain, Serializable {
 
     /**
      * Create a {@link HorizontalDomain} based on a WGS84 bounding box
-     * 
+     *
      * @param minLon
      *            The minimum longitude
      * @param minLat
@@ -61,12 +60,12 @@ public class SimpleHorizontalDomain implements HorizontalDomain, Serializable {
      *            The maximum latitude
      */
     public SimpleHorizontalDomain(double minLon, double minLat, double maxLon, double maxLat) {
-        bbox = new BoundingBoxImpl(minLon, minLat, maxLon, maxLat, DefaultGeographicCRS.WGS84);
+        bbox = new BoundingBoxImpl(minLon, minLat, maxLon, maxLat, GISUtils.defaultGeographicCRS());
     }
 
     /**
      * Create a {@link HorizontalDomain}
-     * 
+     *
      * @param minX
      *            The minimum x value
      * @param minY

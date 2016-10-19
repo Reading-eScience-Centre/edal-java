@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -29,7 +29,6 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import static org.junit.Assert.*;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -40,6 +39,7 @@ import uk.ac.rdg.resc.edal.grid.RectilinearGridImpl;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 import java.util.ArrayList;
@@ -52,14 +52,14 @@ import java.util.Map;
 
 /**
  * Test class for {@link Domain1DMapper} with its ancestor {@link DomainMapper}.
- * 
+ *
  * @author Nan
  */
 
 public class Domain1DMapperTest {
     // details about the source grid
     private HorizontalGrid hGrid;
-    private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+    private CoordinateReferenceSystem crs = GISUtils.defaultGeographicCRS();
     private int xSize = 160;
     private int ySize = 200;
     private double resolution = 1.0 / 4;
@@ -212,7 +212,7 @@ public class Domain1DMapperTest {
         };
         // sort the key as the iterator of the Domain1DMapper is in an order.
         Arrays.sort(keys, c);
-        
+
 
         Iterator<DomainMapperEntry<Integer>> iterator = mapper.iterator();
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2012 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -32,13 +32,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.geotoolkit.referencing.CRS;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.apache.sis.referencing.CRS;
+import org.apache.sis.geometry.Envelopes;
+import org.apache.sis.geometry.GeneralEnvelope;
+import org.apache.sis.internal.referencing.ReferencingUtilities;
 import org.opengis.geometry.Envelope;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.crs.SingleCRS;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.RangeMeaning;
+import org.opengis.referencing.operation.TransformException;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -46,7 +51,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Immutable implementation of a {@link BoundingBox}.
- * 
+ *
  * @author Guy Griffiths
  * @author Jon
  */
@@ -60,7 +65,7 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
     private final CoordinateReferenceSystem crs;
 
     public static BoundingBoxImpl global() {
-        return new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84);
+        return new BoundingBoxImpl(-180, -90, 180, 90, GISUtils.defaultGeographicCRS());
     }
 
     /**
@@ -96,24 +101,48 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
     /**
      * Creates a {@link BoundingBox} from an existing
      * {@link GeographicBoundingBox}
-     * 
+     *
      * @param gbb
      *            The {@link GeographicBoundingBox} defining this
      *            {@link BoundingBox}
      */
     public BoundingBoxImpl(GeographicBoundingBox gbb) {
         this(gbb.getWestBoundLongitude(), gbb.getSouthBoundLatitude(), gbb.getEastBoundLongitude(),
-                gbb.getNorthBoundLatitude(), DefaultGeographicCRS.WGS84);
+                gbb.getNorthBoundLatitude(), GISUtils.defaultGeographicCRS());
     }
 
     /**
      * Creates a {@link BoundingBox} from a {@link CoordinateReferenceSystem},
      * where the bounds are the limits of validity of the CRS
-     * 
+     *
      * @param crs
      */
     public BoundingBoxImpl(CoordinateReferenceSystem crs) {
-        Envelope envelope = CRS.getEnvelope(crs);
+        //
+        // TODO: replace the code below by the following block after Apache SIS 0.8 release:
+        //
+        // Envelope envelope = CRS.getDomainOfValidity(crs);
+        //
+        Envelope envelope = null;
+        final GeographicBoundingBox bbox = CRS.getGeographicBoundingBox(crs);
+        if (bbox != null && !Boolean.FALSE.equals(bbox.getInclusion())) {
+            final SingleCRS targetCRS = CRS.getHorizontalComponent(crs);
+            GeographicCRS sourceCRS = ReferencingUtilities.toNormalizedGeographicCRS(targetCRS);
+            if (sourceCRS != null) {
+                GeneralEnvelope bounds = new GeneralEnvelope(bbox);
+                bounds.translate(-CRS.getGreenwichLongitude(sourceCRS), 0);
+                bounds.setCoordinateReferenceSystem(sourceCRS);
+                try {
+                    envelope = Envelopes.transform(bounds, targetCRS);
+                } catch (TransformException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+        }
+        // End of TODO block
+        if (envelope == null) {
+            throw new IllegalArgumentException("The given CRS does not specify a domain of validity.");
+        }
         this.minx = envelope.getMinimum(0);
         this.maxx = envelope.getMaximum(0);
         this.miny = envelope.getMinimum(1);

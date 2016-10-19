@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2015 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -33,7 +33,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
@@ -49,6 +48,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 public class ReadPointData {
     /*
@@ -70,7 +70,7 @@ public class ReadPointData {
          * "griddataset"
          */
         Dataset rawDataset = datasetFactory.createDataset("griddataset", resource.getFile());
-        
+
         if(!(rawDataset instanceof GriddedDataset)) {
             throw new EdalException("Dataset is not gridded");
         }
@@ -83,7 +83,7 @@ public class ReadPointData {
         List<HorizontalPosition> positions = new ArrayList<>();
         for (int i = -170; i <= 170; i += 20) {
             for (int j = -80; j <= 80; j += 20) {
-                positions.add(new HorizontalPosition(i, j, DefaultGeographicCRS.WGS84));
+                positions.add(new HorizontalPosition(i, j, GISUtils.defaultGeographicCRS()));
             }
         }
 
@@ -102,17 +102,17 @@ public class ReadPointData {
         /*
          * Cast to a GridVariableMetadata. Generally VariableMetadata from a
          * GriddedDataset can be cast to GridVariableMetadata with no issues.
-         * 
+         *
          * ASIDE (feel free to ignore this comment - it's not relevant to data
          * extraction):
-         * 
+         *
          * The only case where a GriddedDataset will have variables which are
          * non-gridded is if a variable is dynamically generated (using a
          * VariablePlugin). This allows us to have variables generated on the
          * fly which are not guaranteed to be gridded. For example, we could
          * create a dynamically-generated variable which had a continuous domain
          * and interpolated a gridded variable.
-         * 
+         *
          * This is not relevant here, although this dataset does have several
          * dynamically-generated variables. All of the "*[NE]Comp" variables are
          * present in the data file, and represent components of a vector. The
@@ -151,7 +151,7 @@ public class ReadPointData {
          * between these values and the extracted domain.
          */
         Array1D<Number> values = pointCollection.getValues(varId);
-        
+
         /*
          * Just to demonstrate they are the same
          */

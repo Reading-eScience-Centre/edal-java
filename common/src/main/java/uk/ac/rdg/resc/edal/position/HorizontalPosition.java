@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -31,12 +31,13 @@ package uk.ac.rdg.resc.edal.position;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Defines the position of a point in the horizontal plane.
- * 
+ *
  * @author Jon Blower
  * @author Guy
  */
@@ -50,7 +51,7 @@ public class HorizontalPosition implements Serializable {
     /**
      * Constructs a {@link HorizontalPosition} which uses
      * {@link DefaultGeographicCRS#WGS84} as its co-ordinate reference system
-     * 
+     *
      * @param longitude
      *            The longitude of the position
      * @param latitude
@@ -59,12 +60,12 @@ public class HorizontalPosition implements Serializable {
     public HorizontalPosition(double longitude, double latitude) {
         this.x = longitude;
         this.y = latitude;
-        this.crs = DefaultGeographicCRS.WGS84;
+        this.crs = GISUtils.defaultGeographicCRS();
     }
 
     /**
      * Construct a {@link HorizontalPosition}
-     * 
+     *
      * @param x
      *            The x-value of the position
      * @param y
@@ -97,7 +98,7 @@ public class HorizontalPosition implements Serializable {
      * Returns a two-dimensional coordinate reference system. The first
      * coordinate in the CRS is the {@link #getX() x coordinate}; the second is
      * the {@link #getY() y coordinate}.
-     * 
+     *
      * @return a two-dimensional coordinate reference system
      */
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {

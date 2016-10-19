@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -44,7 +44,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 import org.joda.time.format.DateTimeFormatter;
@@ -84,6 +83,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
@@ -91,12 +91,12 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 /**
  * {@link DatasetFactory} that creates {@link Dataset}s representing profile
  * data from the EN3/4 database read through the Unidata Common Data Model.
- * 
+ *
  * The data must be in either EN3 v2a or EN4 v4.1.1 format. Intermediate format
  * versions will almost certainly work. Earlier versions of EN3 will not work.
  * At the time of writing EN4 v4.1.1 is the latest version. As for future
  * versions, who knows?
- * 
+ *
  * @author Guy Griffiths
  */
 public final class En3DatasetFactory extends DatasetFactory {
@@ -123,7 +123,7 @@ public final class En3DatasetFactory extends DatasetFactory {
     /*
      * Converting between ID and file/profile number could be done (and was
      * previously done) using a map of internal ID to file and profile number.
-     * 
+     *
      * By using a simple string encoding (number:filepath) we use less memory,
      * which can be a concern when querying the entire EN3 database
      */
@@ -222,9 +222,9 @@ public final class En3DatasetFactory extends DatasetFactory {
         if (spatialIndexFile.exists() && !forceRefresh) {
             /*-
              * We have an existing spatial index for this ID.
-             * 
+             *
              * This file contains simple serialisations of (in order):
-             * 
+             *
              * The list of files used in the index.
              * The horizontal domain
              * The vertical domain
@@ -317,14 +317,14 @@ public final class En3DatasetFactory extends DatasetFactory {
             /*
              * We want to be able to easily convert a feature ID to a file and
              * profile number. We could:
-             * 
+             *
              * Create unique IDs and store a map of ID -> File/ProfileNumber
-             * 
+             *
              * Encode the full path/profile number in the ID
-             * 
+             *
              * Store the common prefix+suffix of all file paths in the dataset,
              * and encode the non-unique path/profile number in the ID
-             * 
+             *
              * But to get around having awkward characters in the ID and not use
              * too much memory, we use a hybrid solution, where we store a Map
              * of IDs to Files, and encode the file ID and the profile number in
@@ -390,7 +390,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                      * All positions are in WGS84
                      */
                     HorizontalPosition horizontalPosition = new HorizontalPosition(lon, lat,
-                            DefaultGeographicCRS.WGS84);
+                            GISUtils.defaultGeographicCRS());
                     /*
                      * Find the time of the current profile measurement
                      */
@@ -419,7 +419,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                         /*
                          * We have the situation where all values of depth
                          * returned NaN
-                         * 
+                         *
                          * This profile cannot be indexed
                          */
                         continue;
@@ -532,7 +532,7 @@ public final class En3DatasetFactory extends DatasetFactory {
              * The above is equivalent to an if-else block, but is implemented
              * as 2 opposite ifs so that the second block can be entered if the
              * first fails.
-             * 
+             *
              * The upshot is that none of the above variables can be null,
              * unless the logic is seriously wrong.
              */
@@ -620,7 +620,7 @@ public final class En3DatasetFactory extends DatasetFactory {
 
         /**
          * Converts an ID to a {@link FileAndProfileNumber}
-         * 
+         *
          * @param id
          *            The ID
          * @return The corresponding {@link FileAndProfileNumber}
@@ -719,7 +719,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                     List<FeatureAndProfileId> featureProfileIds = entry.getValue();
                     /*
                      * For 100 simultaneous requests
-                     * 
+                     *
                      * 4a happens 100 times more than 4b
                      */
                     log.debug("readFeatures 4a reading all features from file "
@@ -732,7 +732,7 @@ public final class En3DatasetFactory extends DatasetFactory {
                                 featureProfileId.profileId, variableIds);
                         /*
                          * doRead exit log happens 50 times less than 5b
-                         * 
+                         *
                          * i.e. doRead enters once more than it exits
                          */
                         log.debug("readFeatures 5b");
@@ -761,7 +761,7 @@ public final class En3DatasetFactory extends DatasetFactory {
 
     /**
      * Reads a single {@link ProfileFeature} from a {@link NetcdfDataset}
-     * 
+     *
      * @param id
      *            The desired ID of the returned {@link ProfileFeature}
      * @param nc
@@ -796,10 +796,10 @@ public final class En3DatasetFactory extends DatasetFactory {
          * TODO removed this approach...it didn't fix the issue, but it might be
          * good to put it back for speed reasons once we do track down the
          * problem...
-         * 
+         *
          * We synchronise the rest of this method on an object specific to the
          * location of the NetcdfDataset we are reading.
-         * 
+         *
          * This means that doRead() cannot be called simultaneously with the
          * same NetcdfDataset object (this causes Ranges to be set incorrectly
          * and leads to ArrayIndex errors), but CAN be called simultaneously to
@@ -876,7 +876,7 @@ public final class En3DatasetFactory extends DatasetFactory {
          * feature
          */
         HorizontalPosition hPos = new HorizontalPosition(lonValues.getDouble(0),
-                latValues.getDouble(0), DefaultGeographicCRS.WGS84);
+                latValues.getDouble(0), GISUtils.defaultGeographicCRS());
 
         double seconds = (timeValues.getDouble(0) * unitLength);
         DateTime time = refTime.plusSeconds((int) seconds);
@@ -1026,7 +1026,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         //				value = "N/A";
         //			}
         //			props.put(key, value);
-        //			
+        //
         //			key = "Date/time QC";
         //			if (qcJuld.getChar(profNum) == '1') {
         //				value = "Accept";

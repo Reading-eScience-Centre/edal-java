@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.oro.io.GlobFilenameFilter;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
 import org.joda.time.chrono.GregorianChronology;
@@ -81,6 +80,7 @@ import uk.ac.rdg.resc.edal.position.VerticalCrsImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.chronologies.AllLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.NoLeapChronology;
 import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
@@ -89,7 +89,7 @@ import uk.ac.rdg.resc.edal.util.chronologies.ThreeSixtyDayChronology;
  * Contains static helper methods for reading data and metadata from NetCDF
  * files, OPeNDAP servers and other data sources using the Unidata Common Data
  * Model.
- * 
+ *
  * @author Jon Blower
  * @author Guy Griffiths
  * @author Mike Grant, Plymouth Marine Labs
@@ -133,7 +133,7 @@ public final class CdmUtils {
      * local and uncompressed this will return
      * {@link DataReadingStrategy#SCANLINE}, which reduces the amount of data
      * read.
-     * 
+     *
      * @param nc
      *            The NetcdfDataset from which data will be read.
      * @return an optimum DataReadingStrategy for reading from the dataset
@@ -181,7 +181,7 @@ public final class CdmUtils {
     }
 
     /**
-     * 
+     *
      * @param coordSys
      *            The {@link GridCoordSystem} to create a {@link HorizontalGrid}
      *            from
@@ -190,7 +190,7 @@ public final class CdmUtils {
      *         {@link RectilinearGrid} or {@link RegularGrid}) if appropriate
      *         for the passed-in coordinate system. The grid's coordinate system
      *         will be a WGS84 longitude-latitude system.
-     * 
+     *
      *         TODO May want to be careful about datum shifts - model data is
      *         often in spherical coordinates, not strict WGS84
      */
@@ -208,10 +208,10 @@ public final class CdmUtils {
                 if (xRefAxis instanceof RegularAxis && yRefAxis instanceof RegularAxis) {
                     /* We can create a regular grid */
                     return new RegularGridImpl((RegularAxis) xRefAxis, (RegularAxis) yRefAxis,
-                            DefaultGeographicCRS.WGS84);
+                            GISUtils.defaultGeographicCRS());
                 } else {
                     /* Axes are not both regular */
-                    return new RectilinearGridImpl(xRefAxis, yRefAxis, DefaultGeographicCRS.WGS84);
+                    return new RectilinearGridImpl(xRefAxis, yRefAxis, GISUtils.defaultGeographicCRS());
                 }
             } else {
                 /*
@@ -288,7 +288,7 @@ public final class CdmUtils {
 
     /**
      * Creates a time axis from the given {@link GridCoordSystem}
-     * 
+     *
      * @param coordSys
      *            the {@link CoordinateAxis1DTime} defining the axis
      * @return a new {@link TimeAxis}
@@ -339,7 +339,7 @@ public final class CdmUtils {
      * Creates a {@link ReferenceableAxis} from the given
      * {@link CoordinateAxis1D}. Creates a longitude axis if
      * axis.getAxisType()==AxisType.Lon.
-     * 
+     *
      * @param axis
      *            The {@link CoordinateAxis1D} to convert to a
      *            {@link ReferenceableAxis}
@@ -352,7 +352,7 @@ public final class CdmUtils {
     /**
      * Creates a {@link ReferenceableAxis} from the given
      * {@link CoordinateAxis1D}.
-     * 
+     *
      * @param axis
      *            The {@link CoordinateAxis1D} to convert to a
      *            {@link ReferenceableAxis}
@@ -409,7 +409,7 @@ public final class CdmUtils {
      * Expands a glob expression to give a List of paths to files. This method
      * recursively searches directories, allowing for glob expressions like
      * {@code "c:\\data\\200[6-7]\\*\\1*\\A*.nc"}.
-     * 
+     *
      * @param globExpression
      *            The expression to expand
      * @return a {@link List} of {@link File}s matching the given glob

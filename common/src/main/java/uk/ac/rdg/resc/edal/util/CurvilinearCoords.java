@@ -36,8 +36,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -127,7 +125,7 @@ public final class CurvilinearCoords {
             throw new IllegalStateException("Invalid bounding box");
         }
 
-        lonLatBbox = new BoundingBoxImpl(minLon, minLat, maxLon, maxLat, DefaultGeographicCRS.WGS84);
+        lonLatBbox = new BoundingBoxImpl(minLon, minLat, maxLon, maxLat, GISUtils.defaultGeographicCRS());
 
         /* Calculate the corners of the grid cells */
         cornerLons = makeCorners(longitudes, true);
@@ -526,7 +524,7 @@ public final class CurvilinearCoords {
                     minY = Math.min(minY, corner.getY());
                     maxY = Math.max(maxY, corner.getY());
                 }
-                mbr = new BoundingBoxImpl(minX, minY, maxX, maxY, DefaultGeographicCRS.WGS84);
+                mbr = new BoundingBoxImpl(minX, minY, maxX, maxY, GISUtils.defaultGeographicCRS());
             }
             return mbr;
         }

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -42,7 +42,6 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -74,21 +73,22 @@ import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * These tests plot a predictable (in-memory) dataset with missing values, and
  * out-of-range data. The expected outputs (found in src/test/resources) have
  * been examined and are correct for the dataset.
- * 
+ *
  * The tests here generate the images and do a pixel-by-pixel comparison with
  * the expected images. If any of these tests fail, it means that the plotting
  * output has changed since a careful examination showed the test images to be
  * correct.
- * 
+ *
  * This would be expected if a plot style has changed at all, in which case the
  * new image can be manually examined substituted for the test example if
  * correct.
- * 
+ *
  * @author Guy
  */
 public class PlotsTest {
@@ -105,7 +105,7 @@ public class PlotsTest {
 
     @Before
     public void setup() {
-        BoundingBox bbox = new BoundingBoxImpl(-180, -90, 180, 90, DefaultGeographicCRS.WGS84);
+        BoundingBox bbox = new BoundingBoxImpl(-180, -90, 180, 90, GISUtils.defaultGeographicCRS());
 
         RegularGrid hGrid = new RegularGridImpl(bbox, WIDTH, HEIGHT);
         MapDomain domain = new MapDomain(hGrid, null, null, null);
@@ -175,7 +175,7 @@ public class PlotsTest {
     /**
      * Accepts a buffered image as input and returns a boolean indicating if the
      * image is entirely the same colour.
-     * 
+     *
      * @param image
      * @return blank
      */

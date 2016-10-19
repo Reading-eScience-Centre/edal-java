@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2015 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -38,8 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-
 import uk.ac.rdg.resc.edal.dataset.DataReadingStrategy;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
@@ -53,6 +51,7 @@ import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.util.Array4D;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.ValuesArray4D;
 
 public class ModisLcDatasetFactory extends DatasetFactory {
@@ -111,7 +110,7 @@ public class ModisLcDatasetFactory extends DatasetFactory {
         categories.put(16, new Category("Barren or sparsely vegetated", "Barren or sparsely vegetated", "#808080", null));
         GridVariableMetadata metadata = new GridVariableMetadata(new Parameter("land_cover",
                 "Land Cover", "MODIS land cover", "MODIS", "", categories), new RegularGridImpl(
-                xAxis, yAxis, DefaultGeographicCRS.WGS84), null, null, true);
+                xAxis, yAxis, GISUtils.defaultGeographicCRS()), null, null, true);
 
         List<GridVariableMetadata> metadataCollection = Arrays.asList(metadata);
         return new ModisGridDataset(id, metadataCollection, vals);

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2014 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -33,8 +33,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -49,9 +48,9 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * Test class for {@link RectilinearGridImpl}.
- * 
+ *
  * @author Nan
- * 
+ *
  */
 public class RectilinearGridImplTest {
     // para about the tested grid
@@ -60,7 +59,7 @@ public class RectilinearGridImplTest {
     private RectilinearGrid rGrid;
     private ReferenceableAxis<Double> longAxis;
     private ReferenceableAxis<Double> latAxis;
-    private CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+    private CoordinateReferenceSystem crs = GISUtils.defaultGeographicCRS();
 
     /**
      * Initialize the RectilinearGrid.
@@ -115,7 +114,7 @@ public class RectilinearGridImplTest {
     /**
      * Test {@link RectilinearGridImpl#contains}. Pick up positions inside or
      * outside the grid.
-     * 
+     *
      * @throws InvalidCrsException
      *             if a wrong epsg code is provided.
      */
@@ -128,10 +127,10 @@ public class RectilinearGridImplTest {
         assertTrue(rGrid.contains(position));
         position = new HorizontalPosition(96.0, 40.7, crs);
         assertTrue(rGrid.contains(position));
-        
+
         //give "null" as a special argument.
         assertFalse(rGrid.contains(null));
-        
+
         //a point using different epsg code.
         CoordinateReferenceSystem japanArea = GISUtils.getCrs("EPSG:2450");
         assertFalse(rGrid.contains(new HorizontalPosition(17945.194292, 41625.344542, japanArea)));

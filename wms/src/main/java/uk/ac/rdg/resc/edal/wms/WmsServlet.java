@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -75,7 +75,6 @@ import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.RuntimeConstants;
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.joda.time.DateTime;
@@ -149,7 +148,7 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  * servlet can be used as-is by defining it in the usual way in a web.xml file,
  * and injecting a {@link WmsCatalogue} object by calling the
  * {@link WmsServlet#setCatalogue(WmsCatalogue)}.
- * 
+ *
  * If the {@link WmsCatalogue} is not set, behaviour is undefined. It'll fail in
  * all sorts of ways - nothing will work properly. However, the
  * {@link WmsCatalogue} set in {@link WmsServlet#setCatalogue(WmsCatalogue)} is
@@ -157,7 +156,7 @@ import uk.ac.rdg.resc.edal.wms.util.WmsUtils;
  * {@link WmsServlet#dispatchWmsRequest(String, RequestParams, HttpServletRequest, HttpServletResponse, WmsCatalogue)}
  * , so if it is not set, a subclass can still override that method and inject a
  * {@link WmsCatalogue} on a per-request basis.
- * 
+ *
  * The recommended usage is to either subclass this servlet and set a valid
  * instance of a {@link WmsCatalogue} in the constructor/init method or to use
  * Spring to do the wiring for you.
@@ -210,10 +209,10 @@ public class WmsServlet extends HttpServlet {
 
     /**
      * Sets a {@link WmsCatalogue} to be used globally for all requests.
-     * 
+     *
      * If no catalogue is set and this {@link Servlet} is used then it will fail
      * with a {@link NullPointerException} on the vast majority of calls.
-     * 
+     *
      * Note that this {@link WmsCatalogue} is only used in the
      * {@link WmsServlet#dispatchWmsRequest(String, RequestParams, HttpServletRequest, HttpServletResponse)}
      * method, which passes it to all of the worker methods. Thus, a different
@@ -222,7 +221,7 @@ public class WmsServlet extends HttpServlet {
      * {@link WmsServlet} and overriding
      * {@link WmsServlet#dispatchWmsRequest(String, RequestParams, HttpServletRequest, HttpServletResponse)}
      * such that it passes a new catalogue to each of those methods
-     * 
+     *
      * @param catalogue
      *            The {@link WmsCatalogue} to use.
      */
@@ -232,22 +231,22 @@ public class WmsServlet extends HttpServlet {
 
     /**
      * Sets the palettes to be advertised in the GetCapabilities document.
-     * 
+     *
      * In the capabilities document, each layer will advertise the available
      * styles.
-     * 
+     *
      * Since some styles can use palettes, this means that the capabilities
      * document can get very large very quickly with the formula:
-     * 
+     *
      * (styles which use palettes) x (number of palettes) x (number of layers)
-     * 
+     *
      * being an approximation of how many Style tags are defined in the
      * document. This is impractical, so we limit the number of advertised
      * palettes. By default, this will only include the default palette name.
-     * 
+     *
      * This method takes a {@link List} of palette names to advertise alongside
      * the default.
-     * 
+     *
      * @param paletteNames
      *            The palettes to advertise alongside the default.
      */
@@ -323,7 +322,7 @@ public class WmsServlet extends HttpServlet {
 
     /**
      * Sends the HTTP request to the appropriate WMS method
-     * 
+     *
      * @param request
      *            The URL REQUEST parameter
      * @param params
@@ -460,7 +459,7 @@ public class WmsServlet extends HttpServlet {
 
         /*
          * Do some checks on the style parameters.
-         * 
+         *
          * These only apply to non-XML styles. XML ones are more complex to
          * handle.
          */
@@ -579,7 +578,7 @@ public class WmsServlet extends HttpServlet {
             /*
              * The client can quite often cancel requests when loading tiled
              * maps.
-             * 
+             *
              * This gives Broken pipe errors which can be ignored.
              */
         } catch (IOException e) {
@@ -765,7 +764,7 @@ public class WmsServlet extends HttpServlet {
                     /*
                      * Now add the values for every child layer, using the child
                      * variable IDs to identify values.
-                     * 
+                     *
                      * TODO perhaps in cases where we have child layers for
                      * multiple features we will want to use a combination of
                      * feature ID + child variable ID.
@@ -809,7 +808,7 @@ public class WmsServlet extends HttpServlet {
             template = velocityEngine.getTemplate("templates/featureInfo-plain.vm");
         }
         VelocityContext context = new VelocityContext();
-        context.put("position", GISUtils.transformPosition(position, DefaultGeographicCRS.WGS84));
+        context.put("position", GISUtils.transformPosition(position, GISUtils.defaultGeographicCRS()));
         context.put("featureInfo", featureInfos);
         try {
             template.merge(context, httpServletResponse.getWriter());
@@ -820,7 +819,7 @@ public class WmsServlet extends HttpServlet {
 
     /**
      * Extracts the target value from a feature
-     * 
+     *
      * @param feature
      *            The feature to extract the value from
      * @param variableId
@@ -867,7 +866,7 @@ public class WmsServlet extends HttpServlet {
              * This shouldn't ever get called now that we are dealing with
              * PointFeatures rather than ProfileFeatures (ProfileFeatures may be
              * the underlying data type but they shouldn't be the map feature).
-             * 
+             *
              * No harm leaving the code in for future reference.
              */
             ProfileFeature profileFeature = (ProfileFeature) feature;
@@ -886,7 +885,7 @@ public class WmsServlet extends HttpServlet {
              * PointFeatures rather than PointSeriesFeatures
              * (PointSeriesFeatures may be the underlying data type but they
              * shouldn't be the map feature).
-             * 
+             *
              * No harm leaving the code in for future reference.
              */
             PointSeriesFeature pointSeriesFeature = (PointSeriesFeature) feature;
@@ -917,7 +916,7 @@ public class WmsServlet extends HttpServlet {
 
     /**
      * Handles returning metadata about a requested layer.
-     * 
+     *
      * @param params
      *            The URL parameters
      * @param httpServletResponse
@@ -991,7 +990,7 @@ public class WmsServlet extends HttpServlet {
                 /*
                  * This shouldn't happen - it means that we've failed to get
                  * layer metadata for a layer which definitely exists.
-                 * 
+                 *
                  * If it does happen, we just miss this bit out of the menu and
                  * log the message. That'll lead back to here, and the debugging
                  * can begin!
@@ -1250,7 +1249,7 @@ public class WmsServlet extends HttpServlet {
                      * distribution of depths by reading a sample. Then we can
                      * generate more sensible depth values which
                      * increase/decrease as required.
-                     * 
+                     *
                      * Note that we could do this for any type of feature where
                      * the dataset has a continuous z-domain, but unless each
                      * feature has a discrete vertical domain, we'd need to read
@@ -1309,14 +1308,14 @@ public class WmsServlet extends HttpServlet {
                          * which we want to use. These are all round numbers
                          * which will make the axis values nicely human-readable
                          * in the client.
-                         * 
+                         *
                          * Note that because this is a stack, 0.001 will be on
                          * top after the values have been added.
-                         * 
+                         *
                          * We will pop these out until we reach a suitable size.
                          * From that point our elevation values will get further
                          * apart.
-                         * 
+                         *
                          * The aim is to get something like:
                          * 0,10,20,30,40,50,100,200,300,800,1300,2300
                          */
@@ -1339,7 +1338,7 @@ public class WmsServlet extends HttpServlet {
                         int nLevels = 25;
                         /*
                          * Split the elevation values into 25 levels.
-                         * 
+                         *
                          * We could just use these elevation values. We'd get a
                          * nice distribution of levels, but they'd be horrible
                          * numbers. So now we get complicated instead...
@@ -1396,7 +1395,7 @@ public class WmsServlet extends HttpServlet {
                         /*
                          * Now we have a nice set of values, serialise them to
                          * JSON.
-                         * 
+                         *
                          * Thanks for reading, and if you're trying to change
                          * this code, I'm sorry. Maybe you should start from
                          * scratch? Or maybe it's simpler than I think and you
@@ -2542,7 +2541,7 @@ public class WmsServlet extends HttpServlet {
 
     /**
      * Wraps {@link EdalException}s in an XML wrapper and returns them.
-     * 
+     *
      * @param exception
      *            The exception to handle
      * @param httpServletResponse

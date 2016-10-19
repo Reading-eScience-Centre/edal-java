@@ -32,8 +32,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
-
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.CurvilinearCoords;
@@ -51,7 +49,7 @@ import uk.ac.rdg.resc.edal.util.LookUpTable;
  * Therefore we pre-calculate a {@link LookUpTable "look-up table"} of the
  * nearest i-j indices to a set of lat-lon points. Coordinate conversions using
  * such a look-up table are not precise but may suffice for many applications.
- * 
+ *
  * @author Guy Griffiths
  * @author Jon Blower
  */
@@ -59,7 +57,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     /**
      * In-memory cache of LookUpTableGrid objects to save expensive
      * re-generation of same object
-     * 
+     *
      * @todo The CurvilinearGrid objects can be very big. Really we only need to
      *       key on the arrays of lon and lat: all other quantities can be
      *       calculated from these. This means that we could make other large
@@ -110,7 +108,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
     @Override
     public GridCoordinates2D findIndexOf(HorizontalPosition position) {
         if(!GISUtils.isWgs84LonLat(position.getCoordinateReferenceSystem())) {
-            position = GISUtils.transformPosition(position, DefaultGeographicCRS.WGS84);
+            position = GISUtils.transformPosition(position, GISUtils.defaultGeographicCRS());
         }
         if(!getBoundingBox().contains(position)) {
             return null;
