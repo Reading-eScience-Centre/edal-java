@@ -46,7 +46,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
@@ -195,7 +194,7 @@ final public class Charting {
 		if (hPos != null) {
 			StringBuilder posSB = new StringBuilder();
 			if (!GISUtils.isWgs84LonLat(hPos.getCoordinateReferenceSystem())) {
-				hPos = GISUtils.transformPosition(hPos, DefaultGeographicCRS.WGS84);
+				hPos = GISUtils.transformPosition(hPos, GISUtils.defaultGeographicCRS());
 			}
 			if (hPos.getY() < 0) {
 				posSB.append(NUMBER_FORMAT.format(-hPos.getY()));

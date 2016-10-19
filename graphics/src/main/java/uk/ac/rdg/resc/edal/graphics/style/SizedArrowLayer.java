@@ -28,6 +28,13 @@
 
 package uk.ac.rdg.resc.edal.graphics.style;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
+
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.utils.BarbFactory;
@@ -37,13 +44,6 @@ import uk.ac.rdg.resc.edal.util.Array;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
 
 public class SizedArrowLayer extends GriddedImageLayer {
     protected String directionFieldName;
@@ -177,7 +177,7 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                 } else {
                                     HorizontalPosition transformPosition = GISUtils
                                             .transformPosition(horizontalPosition,
-                                                    DefaultGeographicCRS.WGS84);
+                                                    GISUtils.defaultGeographicCRS());
                                     if (transformPosition.getY() < 0) {
                                         isSouthern = true;
                                     }
