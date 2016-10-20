@@ -34,13 +34,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import javax.naming.Context;
+import javax.naming.Name;
+import javax.naming.spi.ObjectFactory;
+
 import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
-import org.apache.sis.referencing.CommonCRS;
 import org.apache.sis.referencing.CRS;
+import org.apache.sis.referencing.CommonCRS;
 import org.apache.sis.referencing.crs.AbstractCRS;
 import org.apache.sis.referencing.cs.AxesConvention;
 import org.apache.sis.util.Utilities;
@@ -53,6 +58,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.util.FactoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.HorizontalDomain;
@@ -77,35 +84,35 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 
 /**
  * A class containing static methods which are useful for GIS operations.
+ * 
+ * Also implements {@link ObjectFactory} so that it can be used to provide the
+ * {@link JdbcDataSource} for the EPSG database to JNDI.
  *
  * @author Guy
  *
  */
-public final class GISUtils {
-
+public final class GISUtils implements ObjectFactory {
     public final static double RAD2DEG = 180.0 / Math.PI;
     public final static double DEG2RAD = Math.PI / 180.0;
-
-    private GISUtils() {
-    }
+    private static final Logger log = LoggerFactory.getLogger(GISUtils.class);
 
     /**
-     * Returns the default Lon-Lat geographic CRS.
-     * This method guarantees that the returned CRS complies to the following conditions:
+     * Returns the default Lon-Lat geographic CRS. This method guarantees that
+     * the returned CRS complies to the following conditions:
      *
      * <ul>
-     *   <li>is geographic</li>
-     *   <li>has axes in <var>longitude</var>, <var>latitude</var> order</li>
-     *   <li>has longitude in degrees increasing toward East</li>
-     *   <li>has latitude in degrees increasing toward North</li>
-     *   <li>use the Greenwich prime meridian.</li>
+     * <li>is geographic</li>
+     * <li>has axes in <var>longitude</var>, <var>latitude</var> order</li>
+     * <li>has longitude in degrees increasing toward East</li>
+     * <li>has latitude in degrees increasing toward North</li>
+     * <li>use the Greenwich prime meridian.</li>
      * </ul>
      *
-     * This method makes no guarantees about the geodetic datum.
-     * The current implementation delegates to {@link CommonCRS#defaultGeographic()},
-     * which itself delegates to a geographic CRS based on the WGS84 datum.
-     * However the default may change in future versions,
-     * for example using a spherical CRS instead of WGS84.
+     * This method makes no guarantees about the geodetic datum. The current
+     * implementation delegates to {@link CommonCRS#defaultGeographic()}, which
+     * itself delegates to a geographic CRS based on the WGS84 datum. However
+     * the default may change in future versions, for example using a spherical
+     * CRS instead of WGS84.
      *
      * @return the default geographic CRS with Lon-Lat axes in degrees.
      */
@@ -114,12 +121,14 @@ public final class GISUtils {
     }
 
     /**
-     * Tests if a coordinate reference system is equivalent to the default geographic CRS.
+     * Tests if a coordinate reference system is equivalent to the default
+     * geographic CRS.
      *
      * @param coordinateReferenceSystem
      *            The {@link CoordinateReferenceSystem} to test
      * @return <code>true</code> if the supplied
-     *         {@link CoordinateReferenceSystem} is equivalent to {@link #defaultGeographicCRS()}
+     *         {@link CoordinateReferenceSystem} is equivalent to
+     *         {@link #defaultGeographicCRS()}
      */
     public static boolean isDefaultGeographicCRS(CoordinateReferenceSystem coordinateReferenceSystem) {
         return Utilities.equalsIgnoreMetadata(defaultGeographicCRS(), coordinateReferenceSystem);
@@ -135,8 +144,10 @@ public final class GISUtils {
      */
     public static boolean isWgs84LonLat(CoordinateReferenceSystem coordinateReferenceSystem) {
         try {
-            return CRS.findOperation(coordinateReferenceSystem, CommonCRS.WGS84.normalizedGeographic(), null)
-                    .getMathTransform().isIdentity();
+            return CRS
+                    .findOperation(coordinateReferenceSystem,
+                            CommonCRS.WGS84.normalizedGeographic(), null).getMathTransform()
+                    .isIdentity();
         } catch (Exception e) {
             return false;
         }
@@ -263,7 +274,8 @@ public final class GISUtils {
          * should incur no large penalty for multiple invocations
          */
         try {
-            MathTransform transform = CRS.findOperation(sourceCrs, targetCrs, null).getMathTransform();
+            MathTransform transform = CRS.findOperation(sourceCrs, targetCrs, null)
+                    .getMathTransform();
             if (transform.isIdentity())
                 return pos;
             double[] point = new double[] { pos.getX(), pos.getY() };
@@ -1284,8 +1296,8 @@ public final class GISUtils {
 
     /**
      * Contains a single static flag. This can be used to set the path for the
-     * EPSG database directory. If not set, it will use the system's temporary
-     * directory.
+     * EPSG database directory. If not set, the system's temporary directory
+     * will be used
      *
      * This is in a separate class because the static{} block in GISUtils will
      * get executed before the class can be used, so setting something like
@@ -1295,13 +1307,19 @@ public final class GISUtils {
         public static String DB_PATH = null;
     }
 
+    @Override
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx,
+            Hashtable<?, ?> environment) throws Exception {
+        return dataSource;
+    }
+
+    private static JdbcDataSource dataSource = new JdbcDataSource();
     static {
         /*
          * Initialise the EPSG database if necessary
          */
         try {
             Class.forName("org.h2.Driver");
-            JdbcDataSource dataSource = new JdbcDataSource();
             String path;
             if (EpsgDatabasePath.DB_PATH == null) {
                 path = System.getProperty("java.io.tmpdir");
@@ -1314,29 +1332,19 @@ public final class GISUtils {
              * will then start server mode.
              */
             dataSource.setURL("jdbc:h2:" + path + "/.h2/epsg.db;AUTO_SERVER=TRUE");
+
             Connection conn = dataSource.getConnection();
             conn.setAutoCommit(true);
-// TODO     Hints.putSystemDefault(Hints.EPSG_DATA_SOURCE, dataSource);
+            
             /*
-             * There is no need to use a specific method for installing the EPSG database.
-             * Just asking for a CRS will trig the installation.
+             * Install the standalone JNDI context. This will only get registered if
+             * no other JNDI handler exists. In the case that this class is within a
+             * webapp (e.g. ncWMS) inside a servlet container (e.g. Tomcat), this
+             * will not do anything.
              */
-            CRS.forCode("EPSG:3395");
-        } catch (FactoryException e) {
-            if (!e.getMessage().contains("Schema \"EPSG\" already exists")) {
-                /*
-                 * For some reason the i.exists() method fails to detect an
-                 * existing database if we are using server mode.
-                 *
-                 * This causes an exception, but there is no real problem - it's
-                 * just that the i.exists() method should have returned true
-                 */
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            JNDI.install(dataSource);
+        } catch (SQLException | ClassNotFoundException e) {
+            log.error("Problem creating EPSG database.  Reprojection will not work", e);
         }
     }
 
@@ -1376,5 +1384,9 @@ public final class GISUtils {
                 || units.equalsIgnoreCase("degreesE") || units.equalsIgnoreCase("degreeE"))
             return true;
         return false;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getCrs("EPSG:5041"));
     }
 }
