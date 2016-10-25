@@ -33,6 +33,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.Configuration;
+import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import uk.ac.rdg.resc.edal.dataset.HZTDataSource.MeshCoordinates3D;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
@@ -86,6 +95,7 @@ public abstract class HorizontalMesh4dDataset extends
         throw new UnsupportedOperationException("Feature reading is not yet supported");
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Array2D<Number> extractHorizontalData(HorizontalMesh4dVariableMetadata metadata,
             int tIndex, int zIndex, HorizontalGrid targetGrid, HZTDataSource dataSource)
@@ -97,15 +107,25 @@ public abstract class HorizontalMesh4dDataset extends
          * data, and a corresponding list of 2D coordinates in which to store
          * the output data
          */
-        List<GridCoordinates2D> outputCoords = new ArrayList<>();
-        List<MeshCoordinates3D> coordsToRead = new ArrayList<>();
-        for (GridCell2D cell : targetGrid.getDomainObjects()) {
-            HorizontalPosition centre = cell.getCentre();
-            GridCoordinates2D coordinates = cell.getGridCoordinates();
-            int hIndex = grid.findIndexOf(centre);
-            MeshCoordinates3D meshCoords = new MeshCoordinates3D(hIndex, zIndex, tIndex);
-            outputCoords.add(coordinates);
-            coordsToRead.add(meshCoords);
+        List<GridCoordinates2D> outputCoords;
+        List<MeshCoordinates3D> coordsToRead;
+        if (meshDatasetCache.isKeyInCache(targetGrid)) {
+            Object[] cachedLists = (Object[]) meshDatasetCache.get(targetGrid).getObjectValue();
+            outputCoords = (List<GridCoordinates2D>) cachedLists[0];
+            coordsToRead = (List<MeshCoordinates3D>) cachedLists[1];
+        } else {
+            outputCoords = new ArrayList<>();
+            coordsToRead = new ArrayList<>();
+            for (GridCell2D cell : targetGrid.getDomainObjects()) {
+                HorizontalPosition centre = cell.getCentre();
+                GridCoordinates2D coordinates = cell.getGridCoordinates();
+                int hIndex = grid.findIndexOf(centre);
+                MeshCoordinates3D meshCoords = new MeshCoordinates3D(hIndex, zIndex, tIndex);
+                outputCoords.add(coordinates);
+                coordsToRead.add(meshCoords);
+            }
+            meshDatasetCache.put(new Element(targetGrid,
+                    new Object[] { outputCoords, coordsToRead }));
         }
 
         /*
@@ -196,5 +216,30 @@ public abstract class HorizontalMesh4dDataset extends
         }
         return dataSource.read(metadata.getId(),
                 Collections.singletonList(new MeshCoordinates3D(hIndex, z, t))).get(0);
+    }
+
+    /*
+     * Cache management
+     */
+    protected static final CacheManager cacheManager = CacheManager.create(new Configuration()
+            .name("EDAL-Common-CacheManager"));
+    private static Cache meshDatasetCache;
+
+    static {
+        /*
+         * Configure cache - keep 50 maps of in-out coord mappings in memory
+         * before starting to evict them
+         */
+        CacheConfiguration config = new CacheConfiguration("meshDatasetCache", 50).eternal(true)
+                .memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU)
+                .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
+                .transactionalMode(TransactionalMode.OFF);
+
+        /*
+         * If we already have a cache, we can assume that the configuration has
+         * changed, so we remove and re-add it.
+         */
+        meshDatasetCache = new Cache(config);
+        cacheManager.addCache(meshDatasetCache);
     }
 }
