@@ -130,7 +130,7 @@
 #set($tDomain = $variableMetadata.temporalDomain)
 #if($GISUtils.isTemporalDomainTimeAxis($tDomain))
 ## Discrete temporal domain
-        <Extent name="time" multipleValues="1" current="1" default="$TimeUtils.dateTimeToISO8601($GISUtils.getClosestToCurrentTime($tDomain.coordinateValues))">
+        <Extent name="time" multipleValues="1" current="1" default="$TimeUtils.dateTimeToISO8601($GISUtils.getClosestToCurrentTime($tDomain))">
 #if($verboseTimes)
 #foreach($tval in $tDomain.coordinateValues)
             $TimeUtils.dateTimeToISO8601($tval)#if($foreach.hasNext),#end

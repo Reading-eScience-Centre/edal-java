@@ -219,7 +219,7 @@
 #set($tDomain = $variableMetadata.temporalDomain)
 #if($GISUtils.isTemporalDomainTimeAxis($tDomain))
 ## Discrete temporal domain
-        <Dimension name="time" units="$WmsUtils.getTimeAxisUnits($tDomain.chronology)" multipleValues="true" current="true" default="$TimeUtils.dateTimeToISO8601($GISUtils.getClosestToCurrentTime($tDomain.coordinateValues))">
+        <Dimension name="time" units="$WmsUtils.getTimeAxisUnits($tDomain.chronology)" multipleValues="true" current="true" default="$TimeUtils.dateTimeToISO8601($GISUtils.getClosestToCurrentTime($tDomain))">
 #if($verboseTimes)
 #foreach($tval in $tDomain.coordinateValues)
             $TimeUtils.dateTimeToISO8601($tval)#if($foreach.hasNext),#end
