@@ -1227,6 +1227,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
             super(id, vars);
             this.location = location;
             this.dataReadingStrategy = dataReadingStrategy;
+            log.debug("Data reading strategy for "+id+": "+dataReadingStrategy);
         }
 
         @Override
