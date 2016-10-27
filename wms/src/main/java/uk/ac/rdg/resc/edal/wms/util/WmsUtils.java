@@ -281,7 +281,8 @@ public class WmsUtils {
     public static Collection<String> getSupportedStylesForLayer(String layerName,
             WmsCatalogue catalogue) throws EdalLayerNotFoundException {
         VariableMetadata variableMetadata = getVariableMetadataFromLayerName(layerName, catalogue);
-        return catalogue.getStyleCatalogue().getSupportedStyles(variableMetadata);
+        return catalogue.getStyleCatalogue().getSupportedStyles(variableMetadata,
+                catalogue.getLayerNameMapper());
     }
 
     /**

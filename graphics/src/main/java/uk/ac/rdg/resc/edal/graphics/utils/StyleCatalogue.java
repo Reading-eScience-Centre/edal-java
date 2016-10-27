@@ -47,9 +47,13 @@ public interface StyleCatalogue {
      * 
      * @param variableMetadata
      *            The {@link VariableMetadata} of the variable to get styles for
+     * @param layerNameMapper
+     *            The {@link LayerNameMapper} used to map layer names to
+     *            dataset/variable pairs.
      * @return A {@link List} of the supported style names for this variable
      */
-    public Collection<String> getSupportedStyles(VariableMetadata variableMetadata);
+    public Collection<String> getSupportedStyles(VariableMetadata variableMetadata,
+            LayerNameMapper layerNameMapper);
 
     /**
      * @param styleName
@@ -68,7 +72,7 @@ public interface StyleCatalogue {
      *         <li>An empty string if the named layer is scaled
      * 
      *         <li>The child role which scaling is applied to
-     *         
+     * 
      *         TODO DOCUMENT MULTIPLE ROLES CASE
      */
     public List<String> getScaledRoleForStyle(String styleName);

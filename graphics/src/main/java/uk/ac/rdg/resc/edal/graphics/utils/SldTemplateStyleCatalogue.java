@@ -222,7 +222,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         StyleDef categories = new StyleDef(CATEGORICAL_STYLE_NAME, new ArrayList<String>(), false,
                 true, true, null,
                 new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>(),
-                role2MetadataFilter);
+                role2MetadataFilter, null);
         styleDefs.put(CATEGORICAL_STYLE_NAME, categories);
     }
 
@@ -233,13 +233,14 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
     }
 
     @Override
-    public Collection<String> getSupportedStyles(VariableMetadata variableMetadata) {
+    public Collection<String> getSupportedStyles(VariableMetadata variableMetadata,
+            LayerNameMapper layerNameMapper) {
         List<String> supportedStyles = new ArrayList<>();
         /*
          * Loop through all loaded style definitions
          */
         for (StyleDef styleDef : styleDefs.values()) {
-            if (styleDef.supportedBy(variableMetadata)) {
+            if (styleDef.supportedBy(variableMetadata, layerNameMapper)) {
                 supportedStyles.add(styleDef.styleName);
             }
         }
@@ -261,7 +262,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
     public MapImage getMapImageFromStyle(String styleName,
             PlottingStyleParameters templateProperties, VariableMetadata metadata,
             LayerNameMapper layerNameMapper) {
-        if (!styleDefs.get(styleName).supportedBy(metadata)) {
+        if (!styleDefs.get(styleName).supportedBy(metadata, layerNameMapper)) {
             throw new EdalStyleNotFoundException("The style " + styleName
                     + " is not supported for this layer");
         }
@@ -533,8 +534,9 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          * The Map maps role names to the (2nd) Collection of Feature types, one
          * of which the variable with that role must be a type of.
          */
-        Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType = new ArrayList<Map<String, Collection<Class<? extends Feature<?>>>>>();
+        Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType = new ArrayList<>();
         Map<String, MetadataFilter> metadataFilters = new HashMap<>();
+        Collection<String> concreteLayersRequired = new ArrayList<>();
         boolean isCategorical = false;
         try {
             MapImage mapImage = StyleSLDParser.createImage(xmlString);
@@ -553,9 +555,6 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                     for (NameAndRange field : fieldsWithScales) {
                         String layerName = field.getFieldLabel();
                         if (layerName.startsWith("$layerName")) {
-                            /*
-                             * This should always be the case
-                             */
                             String role;
                             if (layerName.equals("$layerName")) {
                                 role = "";
@@ -564,6 +563,8 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                             }
                             role2FeatureType.put(role, supportedFeatureTypes);
                             metadataFilters.put(role, imageLayer.getMetadataFilter());
+                        } else {
+                            concreteLayersRequired.add(layerName);
                         }
                     }
                 }
@@ -574,7 +575,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         }
 
         return new StyleDef(name, requiredChildren, usesPalette, isCategorical, needsNamedLayer,
-                scaledLayers, roles2FeatureType, metadataFilters);
+                scaledLayers, roles2FeatureType, metadataFilters, concreteLayersRequired);
     }
 
     /**
@@ -790,6 +791,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         private List<String> scaledLayerRoles;
         private Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType;
         private Map<String, MetadataFilter> role2MetadataFilter;
+        private List<String> concreteLayersRequired;
 
         /**
          * Instantiate a new {@link StyleDef}
@@ -822,22 +824,35 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          *            A {@link Collection} of {@link MetadataFilter}s which all
          *            {@link ImageLayer}s must pass through before being
          *            plottable
+         * @param concreteLayersRequired
+         *            A {@link Collection} of concrete layer names which are
+         *            required for this style. Only layers where all layer names
+         *            are matched by either the layer name or one of its
+         *            descendents are supported
          */
         public StyleDef(String styleName, Collection<String> requiredChildren, boolean usesPalette,
                 boolean isCategorical, boolean needsNamedLayer, List<String> scaledLayers,
                 Collection<Map<String, Collection<Class<? extends Feature<?>>>>> roles2FeatureType,
-                Map<String, MetadataFilter> role2MetadataFilter) {
+                Map<String, MetadataFilter> role2MetadataFilter,
+                Collection<String> concreteLayersRequired) {
             super();
             this.styleName = styleName;
-            this.requiredChildRoles = new ArrayList<String>(requiredChildren);
+            this.requiredChildRoles = new ArrayList<>();
+            if(requiredChildren != null) {
+                this.requiredChildRoles.addAll(requiredChildren);
+            }
             this.usesPalette = usesPalette;
             this.needsNamedLayer = needsNamedLayer;
-            this.scaledLayerRoles = scaledLayers;
-            if (this.scaledLayerRoles == null) {
-                this.scaledLayerRoles = new ArrayList<>();
+            this.scaledLayerRoles = new ArrayList<>();
+            if (scaledLayers != null) {
+                this.scaledLayerRoles.addAll(scaledLayers);
             }
             this.roles2FeatureType = roles2FeatureType;
             this.role2MetadataFilter = role2MetadataFilter;
+            this.concreteLayersRequired = new ArrayList<>();
+            if(concreteLayersRequired != null) {
+                this.concreteLayersRequired.addAll(concreteLayersRequired);
+            }
         }
 
         @Override
@@ -851,11 +866,51 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          * @param variableMetadata
          *            The {@link VariableMetadata} representing the variable to
          *            test
+         * @param layerName
+         *            The layer name of the data to be plotted. Needed to check
+         *            styles where a concrete name is supplied.
          * @return <code>true</code> if the style can be supported
          */
-        public boolean supportedBy(VariableMetadata variableMetadata) {
+        public boolean supportedBy(VariableMetadata variableMetadata,
+                LayerNameMapper layerNameMapper) {
             if (variableMetadata == null) {
                 return false;
+            }
+            if (concreteLayersRequired.size() == 1 && !needsNamedLayer
+                    && requiredChildRoles.isEmpty()) {
+                /*
+                 * This is the most common case for having concrete layer names
+                 * in a template - the template ONLY applies to the single named
+                 * layer, and no others.
+                 * 
+                 * In that situation, we want to only support the named layer.
+                 */
+                if (!layerNameMapper.getLayerName(variableMetadata.getDataset().getId(),
+                        variableMetadata.getId()).equals(concreteLayersRequired.get(0))) {
+                    return false;
+                }
+            } else {
+                /*-
+                 * We either have:
+                 * 
+                 * No concrete layer names
+                 * Multiple concrete layer names
+                 * One concrete layer name + either the named layer or a specific child layer
+                 * 
+                 * In all of those cases, we want ALL of the concrete layer names
+                 * to be matched by either this variable or by one of its descendants
+                 */
+                for (String concreteLayer : concreteLayersRequired) {
+                    /*
+                     * If one of the concrete layer names required cannot be
+                     * found in this VariableMetadata or one of its descendants,
+                     * this style is not supported.
+                     */
+                    if (!recursiveCheckMetadataMatchesName(variableMetadata, layerNameMapper,
+                            concreteLayer)) {
+                        return false;
+                    }
+                }
             }
             if (needsNamedLayer) {
                 /*
@@ -881,7 +936,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 }
             }
 
-            if (requiredChildRoles != null && !requiredChildRoles.isEmpty()) {
+            if (!requiredChildRoles.isEmpty()) {
                 for (String requiredRole : requiredChildRoles) {
                     VariableMetadata childMetadata = variableMetadata
                             .getChildWithRole(requiredRole);
@@ -916,6 +971,34 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 }
             }
             return true;
+        }
+
+        /**
+         * Checks if the supplied {@link VariableMetadata}, or one of its
+         * descendants, has a layer name which matches the given name
+         * 
+         * @param variableMetadata
+         *            The {@link VariableMetadata} to test against
+         * @param layerNameMapper
+         *            The {@link LayerNameMapper} used to generate layer names
+         * @param layerNameToMatch
+         *            The layer name to test against
+         * @return <code>true</code> if one of the layer names matches the given
+         *         name, <code>false</code> otherwise
+         */
+        private boolean recursiveCheckMetadataMatchesName(VariableMetadata variableMetadata,
+                LayerNameMapper layerNameMapper, String layerNameToMatch) {
+            String layerName = layerNameMapper.getLayerName(variableMetadata.getDataset().getId(),
+                    variableMetadata.getId());
+            if (layerNameToMatch.equals(layerName)) {
+                return true;
+            } else {
+                for (VariableMetadata childMetadata : variableMetadata.getChildren()) {
+                    return recursiveCheckMetadataMatchesName(childMetadata, layerNameMapper,
+                            layerNameToMatch);
+                }
+            }
+            return false;
         }
 
         /**

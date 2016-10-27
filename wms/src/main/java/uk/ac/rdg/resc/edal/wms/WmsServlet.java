@@ -839,7 +839,8 @@ public class WmsServlet extends HttpServlet {
             template = velocityEngine.getTemplate("templates/featureInfo-plain.vm");
         }
         VelocityContext context = new VelocityContext();
-        context.put("position", GISUtils.transformPosition(position, GISUtils.defaultGeographicCRS()));
+        context.put("position",
+                GISUtils.transformPosition(position, GISUtils.defaultGeographicCRS()));
         context.put("featureInfo", featureInfos);
         try {
             template.merge(context, httpServletResponse.getWriter());
@@ -1054,7 +1055,7 @@ public class WmsServlet extends HttpServlet {
             child.put("label", title);
 
             Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
-                    variable);
+                    variable, catalogue.getLayerNameMapper());
             child.put("plottable", (supportedStyles != null && supportedStyles.size() > 0));
 
             Set<VariableMetadata> children = variable.getChildren();
@@ -1127,7 +1128,7 @@ public class WmsServlet extends HttpServlet {
         }
 
         Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
-                variableMetadata);
+                variableMetadata, catalogue.getLayerNameMapper());
 
         VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
@@ -1670,7 +1671,8 @@ public class WmsServlet extends HttpServlet {
              * Specified as a URL parameter
              */
             styleName = styleNames[0];
-            if (!catalogue.getStyleCatalogue().getSupportedStyles(variableMetadata)
+            if (!catalogue.getStyleCatalogue()
+                    .getSupportedStyles(variableMetadata, catalogue.getLayerNameMapper())
                     .contains(styleName)) {
                 throw new MetadataException("Cannot find min-max for this layer.  The style "
                         + styleName + " is not supported.");
@@ -1680,7 +1682,7 @@ public class WmsServlet extends HttpServlet {
              * The default style
              */
             Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
-                    variableMetadata);
+                    variableMetadata, catalogue.getLayerNameMapper());
             for (String supportedStyle : supportedStyles) {
                 if (supportedStyle.startsWith("default")) {
                     styleName = supportedStyle;

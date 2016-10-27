@@ -181,7 +181,7 @@
 ##
 #macro(layer $dataset $variableMetadata $verboseTimes $children)
 #set($parent = ($children && $children.size() > 0))
-#set($supportedStyles = $catalogue.styleCatalogue.getSupportedStyles($variableMetadata))
+#set($supportedStyles = $catalogue.styleCatalogue.getSupportedStyles($variableMetadata, $catalogue.layerNameMapper))
 #set($plottable = ($supportedStyles && $supportedStyles.size() > 0))
 #set($layerName = $catalogue.layerNameMapper.getLayerName($dataset.id, $variableMetadata.id))
 #set($layerMetadata = $catalogue.getLayerMetadata($variableMetadata))
@@ -261,10 +261,7 @@
             <Name>$style/$paletteName</Name>
             <Title>$style/$paletteName</Title>
 #if($paletteName.equalsIgnoreCase("default"))
-            <Abstract>$style style, using the default palette.  Available palettes are:
-#foreach($availablePalette in $allPalettes)
-            $availablePalette, 
-#end
+            <Abstract>$style style, using the default palette.  Available palettes can be found in the response to $baseUrl?request=GetMetadata&amp;item=layerDetails&amp;layerName=$layerName
             </Abstract>
 #else
             <Abstract>$style style, using the $paletteName palette</Abstract>
