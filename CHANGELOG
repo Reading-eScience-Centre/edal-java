@@ -1,3 +1,11 @@
+1.2.4
+=====
+Reduced size of capabilities document
+Migrated from Geotoolkit to Apache SIS
+Improved GetFeatureInfo speed for gridded datasets
+Updated to latest Joda time
+Various minor bugfixes
+
 1.2.3
 =====
 Added new synthetic data for docs
