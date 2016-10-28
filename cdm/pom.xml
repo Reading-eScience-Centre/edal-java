@@ -6,7 +6,7 @@
     <parent>
         <artifactId>edal</artifactId>
         <groupId>uk.ac.rdg.resc</groupId>
-        <version>1.2.4</version>
+        <version>1.2.5-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 <!--     <properties> -->
