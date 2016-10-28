@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <!-- NewPage -->
 <html lang="en">
@@ -689,6 +690,679 @@ extends <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.h
     try {
         if (location.href.indexOf('is-external=true') == -1) {
             parent.document.title="AbstractContinuousDomainDataset (Environmental Data Abstraction Library 1.2.3 API)";
+        }
+    }
+    catch(err) {
+    }
+//-->
+var methods = {"i0":10,"i1":10,"i2":10,"i3":6,"i4":6,"i5":6,"i6":10,"i7":6,"i8":10};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
+var altColor = "altColor";
+var rowColor = "rowColor";
+var tableTab = "tableTab";
+var activeTableTab = "activeTableTab";
+</script>
+<noscript>
+<div>JavaScript is disabled on your browser.</div>
+</noscript>
+<!-- ========= START OF TOP NAVBAR ======= -->
+<div class="topNav"><a name="navbar.top">
+<!--   -->
+</a>
+<div class="skipNav"><a href="#skip.navbar.top" title="Skip navigation links">Skip navigation links</a></div>
+<a name="navbar.top.firstrow">
+<!--   -->
+</a>
+<ul class="navList" title="Navigation">
+<li><a href="../../../../../../overview-summary.html">Overview</a></li>
+<li><a href="package-summary.html">Package</a></li>
+<li class="navBarCell1Rev">Class</li>
+<li><a href="class-use/AbstractContinuousDomainDataset.html">Use</a></li>
+<li><a href="package-tree.html">Tree</a></li>
+<li><a href="../../../../../../deprecated-list.html">Deprecated</a></li>
+<li><a href="../../../../../../index-all.html">Index</a></li>
+<li><a href="../../../../../../help-doc.html">Help</a></li>
+</ul>
+</div>
+<div class="subNav">
+<ul class="navList">
+<li>Prev&nbsp;Class</li>
+<li><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html" title="class in uk.ac.rdg.resc.edal.dataset"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+</ul>
+<ul class="navList">
+<li><a href="../../../../../../index.html?uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html" target="_top">Frames</a></li>
+<li><a href="AbstractContinuousDomainDataset.html" target="_top">No&nbsp;Frames</a></li>
+</ul>
+<ul class="navList" id="allclasses_navbar_top">
+<li><a href="../../../../../../allclasses-noframe.html">All&nbsp;Classes</a></li>
+</ul>
+<div>
+<script type="text/javascript"><!--
+  allClassesLink = document.getElementById("allclasses_navbar_top");
+  if(window==top) {
+    allClassesLink.style.display = "block";
+  }
+  else {
+    allClassesLink.style.display = "none";
+  }
+  //-->
+</script>
+</div>
+<div>
+<ul class="subNavList">
+<li>Summary:&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#fields.inherited.from.class.uk.ac.rdg.resc.edal.dataset.AbstractDataset">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
+<li><a href="#method.summary">Method</a></li>
+</ul>
+<ul class="subNavList">
+<li>Detail:&nbsp;</li>
+<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
+<li><a href="#method.detail">Method</a></li>
+</ul>
+</div>
+<a name="skip.navbar.top">
+<!--   -->
+</a></div>
+<!-- ========= END OF TOP NAVBAR ========= -->
+<!-- ======== START OF CLASS DATA ======== -->
+<div class="header">
+<div class="subTitle">uk.ac.rdg.resc.edal.dataset</div>
+<h2 title="Class AbstractContinuousDomainDataset" class="title">Class AbstractContinuousDomainDataset</h2>
+</div>
+<div class="contentContainer">
+<ul class="inheritance">
+<li><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
+<li>
+<ul class="inheritance">
+<li><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html" title="class in uk.ac.rdg.resc.edal.dataset">uk.ac.rdg.resc.edal.dataset.AbstractDataset</a></li>
+<li>
+<ul class="inheritance">
+<li>uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="description">
+<ul class="blockList">
+<li class="blockList">
+<dl>
+<dt>All Implemented Interfaces:</dt>
+<dd><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset">Dataset</a></dd>
+</dl>
+<dl>
+<dt>Direct Known Subclasses:</dt>
+<dd><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/PointDataset.html" title="class in uk.ac.rdg.resc.edal.dataset">PointDataset</a></dd>
+</dl>
+<hr>
+<br>
+<pre>public abstract class <span class="typeNameLabel">AbstractContinuousDomainDataset</span>
+extends <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html" title="class in uk.ac.rdg.resc.edal.dataset">AbstractDataset</a></pre>
+<div class="block">Partial implementation of a <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset"><code>Dataset</code></a> with a continuous domain which
+ performs spatial indexing of features.</div>
+<dl>
+<dt><span class="simpleTagLabel">Author:</span></dt>
+<dd>Guy Griffiths</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="summary">
+<ul class="blockList">
+<li class="blockList">
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<ul class="blockList">
+<li class="blockList"><a name="fields.inherited.from.class.uk.ac.rdg.resc.edal.dataset.AbstractDataset">
+<!--   -->
+</a>
+<h3>Fields inherited from class&nbsp;uk.ac.rdg.resc.edal.dataset.<a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html" title="class in uk.ac.rdg.resc.edal.dataset">AbstractDataset</a></h3>
+<code><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#id">id</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#plugins">plugins</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#vars">vars</a></code></li>
+</ul>
+</li>
+</ul>
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="constructor.summary">
+<!--   -->
+</a>
+<h3>Constructor Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Constructor Summary table, listing constructors, and an explanation">
+<caption><span>Constructors</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colOne" scope="col">Constructor and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#AbstractContinuousDomainDataset-java.lang.String-java.util.Collection-uk.ac.rdg.resc.edal.dataset.FeatureIndexer-">AbstractContinuousDomainDataset</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;id,
+                               <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>&gt;&nbsp;vars,
+                               <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/FeatureIndexer.html" title="interface in uk.ac.rdg.resc.edal.dataset">FeatureIndexer</a>&nbsp;featureIndexer)</code>&nbsp;</td>
+</tr>
+</table>
+</li>
+</ul>
+<!-- ========== METHOD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="method.summary">
+<!--   -->
+</a>
+<h3>Method Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tr id="i0" class="altColor">
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature">DiscreteFeature</a>&lt;?,?&gt;&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#extractMapFeatures-java.util.Set-uk.ac.rdg.resc.edal.geometry.BoundingBox-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.domain.Extent-">extractMapFeatures</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;varIds,
+                  <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry">BoundingBox</a>&nbsp;hExtent,
+                  <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&gt;&nbsp;zExtent,
+                  <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;org.joda.time.DateTime&gt;&nbsp;tExtent)</code>
+<div class="block">Extracts features to be plotted on a map.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature">ProfileFeature</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#extractProfileFeatures-java.util.Set-uk.ac.rdg.resc.edal.geometry.BoundingBox-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.position.HorizontalPosition-org.joda.time.DateTime-">extractProfileFeatures</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;varIds,
+                      <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry">BoundingBox</a>&nbsp;bbox,
+                      <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&gt;&nbsp;zExtent,
+                      <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;org.joda.time.DateTime&gt;&nbsp;tExtent,
+                      <a href="../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&nbsp;targetPos,
+                      org.joda.time.DateTime&nbsp;targetTime)</code>
+<div class="block">Extracts <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>ProfileFeature</code></a>(s) from the <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset"><code>Dataset</code></a></div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature">PointSeriesFeature</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#extractTimeseriesFeatures-java.util.Set-uk.ac.rdg.resc.edal.geometry.BoundingBox-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.position.HorizontalPosition-java.lang.Double-">extractTimeseriesFeatures</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;varIds,
+                         <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry">BoundingBox</a>&nbsp;bbox,
+                         <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&gt;&nbsp;zExtent,
+                         <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;org.joda.time.DateTime&gt;&nbsp;tExtent,
+                         <a href="../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&nbsp;targetPos,
+                         <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&nbsp;targetZ)</code>
+<div class="block">Extracts <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>PointSeriesFeature</code></a>(s) from the <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset"><code>Dataset</code></a></div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>protected abstract <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry">BoundingBox</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#getDatasetBoundingBox--">getDatasetBoundingBox</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>protected abstract <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;org.joda.time.DateTime&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#getDatasetTimeExtent--">getDatasetTimeExtent</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>protected abstract <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#getDatasetVerticalExtent--">getDatasetVerticalExtent</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/8/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#getFeatureIds--">getFeatureIds</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code>abstract <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/DiscreteFeatureReader.html" title="interface in uk.ac.rdg.resc.edal.dataset">DiscreteFeatureReader</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature">DiscreteFeature</a>&lt;?,?&gt;&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#getFeatureReader--">getFeatureReader</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature">DiscreteFeature</a>&lt;?,?&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html#readFeature-java.lang.String-">readFeature</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;featureId)</code>
+<div class="block">Reads an entire feature from underlying storage</div>
+</td>
+</tr>
+</table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.uk.ac.rdg.resc.edal.dataset.AbstractDataset">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;uk.ac.rdg.resc.edal.dataset.<a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html" title="class in uk.ac.rdg.resc.edal.dataset">AbstractDataset</a></h3>
+<code><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#addVariablePlugin-uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin-">addVariablePlugin</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#getId--">getId</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#getTopLevelVariables--">getTopLevelVariables</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#getVariableIds--">getVariableIds</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#getVariableMetadata-java.lang.String-">getVariableMetadata</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html#isDerivedVariable-java.lang.String-">isDerivedVariable</a></code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;java.lang.<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></h3>
+<code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#clone--" title="class or interface in java.lang">clone</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#equals-java.lang.Object-" title="class or interface in java.lang">equals</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#finalize--" title="class or interface in java.lang">finalize</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#getClass--" title="class or interface in java.lang">getClass</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#hashCode--" title="class or interface in java.lang">hashCode</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notify--" title="class or interface in java.lang">notify</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notifyAll--" title="class or interface in java.lang">notifyAll</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#toString--" title="class or interface in java.lang">toString</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait--" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-int-" title="class or interface in java.lang">wait</a></code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.uk.ac.rdg.resc.edal.dataset.Dataset">
+<!--   -->
+</a>
+<h3>Methods inherited from interface&nbsp;uk.ac.rdg.resc.edal.dataset.<a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset">Dataset</a></h3>
+<code><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html#getFeatureType-java.lang.String-">getFeatureType</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html#getMapFeatureType-java.lang.String-">getMapFeatureType</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html#supportsProfileFeatureExtraction-java.lang.String-">supportsProfileFeatureExtraction</a>, <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html#supportsTimeseriesExtraction-java.lang.String-">supportsTimeseriesExtraction</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="details">
+<ul class="blockList">
+<li class="blockList">
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="constructor.detail">
+<!--   -->
+</a>
+<h3>Constructor Detail</h3>
+<a name="AbstractContinuousDomainDataset-java.lang.String-java.util.Collection-uk.ac.rdg.resc.edal.dataset.FeatureIndexer-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>AbstractContinuousDomainDataset</h4>
+<pre>public&nbsp;AbstractContinuousDomainDataset(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;id,
+                                       <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>&gt;&nbsp;vars,
+                                       <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/FeatureIndexer.html" title="interface in uk.ac.rdg.resc.edal.dataset">FeatureIndexer</a>&nbsp;featureIndexer)</pre>
+</li>
+</ul>
+</li>
+</ul>
+<!-- ============ METHOD DETAIL ========== -->
+<ul class="blockList">
+<li class="blockList"><a name="method.detail">
+<!--   -->
+</a>
+<h3>Method Detail</h3>
+<a name="readFeature-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>readFeature</h4>
+<pre>public&nbsp;<a href="../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature">DiscreteFeature</a>&lt;?,?&gt;&nbsp;readFeature(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;featureId)
+                                 throws <a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/DataReadingException.html" title="class in uk.ac.rdg.resc.edal.exceptions">DataReadingException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html#readFeature-java.lang.String-">Dataset</a></code></span></div>
+<div class="block">Reads an entire feature from underlying storage</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>featureId</code> - The ID of the feature to read</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The resulting <a href="../../../../../../uk/ac/rdg/resc/edal/feature/Feature.html" title="interface in uk.ac.rdg.resc.edal.feature"><code>Feature</code></a></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/DataReadingException.html" title="class in uk.ac.rdg.resc.edal.exceptions">DataReadingException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="getFeatureIds--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getFeatureIds</h4>
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;getFeatureIds()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the IDs of features which are present in this Dataset</dd>
+</dl>
+</li>
+</ul>
+<a name="extractMapFeatures-java.util.Set-uk.ac.rdg.resc.edal.geometry.BoundingBox-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.domain.Extent-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>extractMapFeatures</h4>
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature">DiscreteFeature</a>&lt;?,?&gt;&gt;&nbsp;extractMapFeatures(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;varIds,
+                                                               <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry">BoundingBox</a>&nbsp;hExtent,
+                                                               <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&gt;&nbsp;zExtent,
+                                                               <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;org.joda.time.DateTime&gt;&nbsp;tExtent)
+                                                        throws <a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/DataReadingException.html" title="class in uk.ac.rdg.resc.edal.exceptions">DataReadingException</a></pre>
+<div class="block">Extracts features to be plotted on a map.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>varIds</code> - The IDs of the variables to be extracted. If this is
+            <code>null</code> then all variable IDs will be plotted. Any
+            non-scalar parent variables will have all of their child
+            variables extracted.</dd>
+<dd><code>hExtent</code> - The <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry"><code>BoundingBox</code></a> describing the horizontal domain from
+            which to extract features</dd>
+<dd><code>zExtent</code> - The vertical extent from which to extract features</dd>
+<dd><code>tExtent</code> - The time range from which to extract features</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util"><code>Collection</code></a> of <a href="../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature"><code>DiscreteFeature</code></a>s which can be
+         plotted</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/DataReadingException.html" title="class in uk.ac.rdg.resc.edal.exceptions">DataReadingException</a></code> - If there is a problem reading the underlying data</dd>
+<dd><code><a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/VariableNotFoundException.html" title="class in uk.ac.rdg.resc.edal.exceptions">VariableNotFoundException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a name="extractProfileFeatures-java.util.Set-uk.ac.rdg.resc.edal.geometry.BoundingBox-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.position.HorizontalPosition-org.joda.time.DateTime-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>extractProfileFeatures</h4>
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature">ProfileFeature</a>&gt;&nbsp;extractProfileFeatures(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;varIds,
+                                                             <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry">BoundingBox</a>&nbsp;bbox,
+                                                             <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&gt;&nbsp;zExtent,
+                                                             <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;org.joda.time.DateTime&gt;&nbsp;tExtent,
+                                                             <a href="../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&nbsp;targetPos,
+                                                             org.joda.time.DateTime&nbsp;targetTime)
+                                                      throws <a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/DataReadingException.html" title="class in uk.ac.rdg.resc.edal.exceptions">DataReadingException</a>,
+                                                             <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/UnsupportedOperationException.html?is-external=true" title="class or interface in java.lang">UnsupportedOperationException</a>,
+                                                             <a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/VariableNotFoundException.html" title="class in uk.ac.rdg.resc.edal.exceptions">VariableNotFoundException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html#extractProfileFeatures-java.util.Set-uk.ac.rdg.resc.edal.geometry.BoundingBox-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.position.HorizontalPosition-org.joda.time.DateTime-">Dataset</a></code></span></div>
+<div class="block">Extracts <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>ProfileFeature</code></a>(s) from the <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset"><code>Dataset</code></a></div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>varIds</code> - The variable IDs to extract. If this is <code>null</code> then
+            all variable IDs will be plotted. Any non-scalar parent
+            variables will have all of their child variables extracted.</dd>
+<dd><code>bbox</code> - <ul>
+            <li>If this <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry"><code>BoundingBox</code></a> is non- <code>null</code>, all
+            measurements falling within it will be returned.</li>
+            <li>If it is <code>null</code>, only measurements which match
+            the horizontal position given by <code>targetPos</code> will
+            be extracted.</li>
+            <li>If both <code>bbox</code> and <code>targetPos</code> are
+            <code>null</code> no constraint is placed on horizontal
+            positions - e.g. for a gridded field a profile will be
+            returned for every horizontal grid point.</li>
+            </ul></dd>
+<dd><code>zExtent</code> - <ul>
+            <li>If this is non- <code>null</code>, all
+            <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>ProfileFeature</code></a>s whose domains have any intersection
+            with this vertical extent will be extracted. The domains of
+            the extracted <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>ProfileFeature</code></a> s will be the entire
+            available domains, not just the intersection.</li>
+ 
+            <li>If this is <code>null
+            </code>, no constraint will be placed on the vertical domain
+            of the <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>ProfileFeature</code></a>s to extract.</li>
+            </ul></dd>
+<dd><code>tExtent</code> - <ul>
+            <li>If this is non- <code>null</code>, all measurements which
+            fall entirely within its extent will be extracted</li>
+            <li>If it is <code>null
+            </code> only profiles matching the time specified by
+            <code>targetT</code> will be extracted.</li>
+            <li>If <code>tExtent</code> and <code>targetT</code> are both
+            <code>null
+            </code>, <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>ProfileFeature</code></a>s for all available time values
+            will be extracted.</li>
+            </ul></dd>
+<dd><code>targetPos</code> - <ul>
+            <li>If the <code>bbox</code> argument is <code>null</code>,
+            only measurements which match this horizontal position will be
+            extracted. In the case of a gridded feature, this will be the
+            profile of the grid cell which the position falls into, but
+            for a dataset with a continuous <a href="../../../../../../uk/ac/rdg/resc/edal/domain/HorizontalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain"><code>HorizontalDomain</code></a> only
+            exact matches will be extracted</li>
+            <li>If both <code>bbox</code> and <code>targetPos</code> are
+            <code>null</code> no constraint is placed on horizontal
+            positions - e.g. for a gridded field a profile will be
+            returned for every horizontal grid point.</li>
+            <li>If this is non-<code>null</code>, the resulting
+            <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util"><code>Collection</code></a> will be sorted according to distance (in
+            co-ordinate units) from the target position</li>
+            </ul></dd>
+<dd><code>targetTime</code> - <ul>
+            <li>If <code>tExtent</code> is <code>null
+            </code> only profiles matching the time specified by this
+            parameter will be extracted. In the case of a gridded dataset
+            a time is considered to match if the method
+            <code>TimeAxis#contains(org.joda.time.DateTime)</code> on its time
+            axis returns <code>true</code> for the target time. For a
+            non-gridded dataset, the feature time must exactly match the
+            target time.</li>
+            <li>If <code>tExtent</code> and <code>targetT</code> are both
+            <code>null
+            </code>, <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>ProfileFeature</code></a>s for all available time values
+            will be extracted.</li></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util"><code>Collection</code></a> of <a href="../../../../../../uk/ac/rdg/resc/edal/feature/ProfileFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>ProfileFeature</code></a>s, sorted by their
+         distance from the target horizontal position, if it exists.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/DataReadingException.html" title="class in uk.ac.rdg.resc.edal.exceptions">DataReadingException</a></code> - if there is a problem reading the underlying data</dd>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/UnsupportedOperationException.html?is-external=true" title="class or interface in java.lang">UnsupportedOperationException</a></code> - if not all of the requested variables have a vertical domain</dd>
+<dd><code><a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/VariableNotFoundException.html" title="class in uk.ac.rdg.resc.edal.exceptions">VariableNotFoundException</a></code> - if one or more of the specified variables are not present in
+             this dataset</dd>
+</dl>
+</li>
+</ul>
+<a name="extractTimeseriesFeatures-java.util.Set-uk.ac.rdg.resc.edal.geometry.BoundingBox-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.position.HorizontalPosition-java.lang.Double-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>extractTimeseriesFeatures</h4>
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature">PointSeriesFeature</a>&gt;&nbsp;extractTimeseriesFeatures(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&gt;&nbsp;varIds,
+                                                                    <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry">BoundingBox</a>&nbsp;bbox,
+                                                                    <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&gt;&nbsp;zExtent,
+                                                                    <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;org.joda.time.DateTime&gt;&nbsp;tExtent,
+                                                                    <a href="../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&nbsp;targetPos,
+                                                                    <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&nbsp;targetZ)
+                                                             throws <a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/DataReadingException.html" title="class in uk.ac.rdg.resc.edal.exceptions">DataReadingException</a>,
+                                                                    <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/UnsupportedOperationException.html?is-external=true" title="class or interface in java.lang">UnsupportedOperationException</a>,
+                                                                    <a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/VariableNotFoundException.html" title="class in uk.ac.rdg.resc.edal.exceptions">VariableNotFoundException</a></pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html#extractTimeseriesFeatures-java.util.Set-uk.ac.rdg.resc.edal.geometry.BoundingBox-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.domain.Extent-uk.ac.rdg.resc.edal.position.HorizontalPosition-java.lang.Double-">Dataset</a></code></span></div>
+<div class="block">Extracts <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>PointSeriesFeature</code></a>(s) from the <a href="../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset"><code>Dataset</code></a></div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>varIds</code> - The variable IDs to extract. If this is <code>null</code> then
+            all variable IDs will be plotted. Any non-scalar parent
+            variables will have all of their child variables extracted.</dd>
+<dd><code>bbox</code> - <ul>
+            <li>If this <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry"><code>BoundingBox</code></a> is non- <code>null</code>, all
+            measurements falling within it will be returned.</li>
+            <li>If it is <code>null</code>, only measurements which match
+            the horizontal position given by <code>targetPos</code> will
+            be extracted.</li>
+            <li>If both <code>bbox</code> and <code>targetPos</code> are
+            <code>null</code> no constraint is placed on horizontal
+            positions - e.g. for a gridded field a profile will be
+            returned for every horizontal grid point.</li>
+            </ul></dd>
+<dd><code>zExtent</code> - <ul>
+            <li>If this is non- <code>null</code>, all measurements which
+            fall entirely within its extent will be extracted</li>
+            <li>If it is <code>null
+            </code> only timeseries matching the depth specified by
+            <code>targetZ</code> will be extracted.</li>
+            <li>If <code>zExtent</code> and <code>targetZ</code> are both
+            <code>null
+            </code>, <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>PointSeriesFeature</code></a>s for all available depth
+            values will be extracted.</li>
+            </ul></dd>
+<dd><code>tExtent</code> - <ul>
+            <li>If this is non- <code>null</code>, all
+            <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>PointSeriesFeature</code></a>s whose domains have any
+            intersection with this time extent will be extracted. The
+            domains of the extracted <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>PointSeriesFeature</code></a> s will be
+            the entire available domains, not just the intersection.</li>
+ 
+            <li>If this is <code>null
+            </code>, no constraint will be placed on the time domain of
+            the <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>PointSeriesFeature</code></a>s to extract.</li>
+            </ul></dd>
+<dd><code>targetPos</code> - <ul>
+            <li>If the <code>bbox</code> argument is <code>null</code>,
+            only measurements which match this horizontal position will be
+            extracted. In the case of a gridded feature, this will be the
+            profile of the grid cell which the position falls into, but
+            for a dataset with a continuous <a href="../../../../../../uk/ac/rdg/resc/edal/domain/HorizontalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain"><code>HorizontalDomain</code></a> only
+            exact matches will be extracted</li>
+            <li>If both <code>bbox</code> and <code>targetPos</code> are
+            <code>null</code> no constraint is placed on horizontal
+            positions - e.g. for a gridded field a profile will be
+            returned for every horizontal grid point.</li>
+            <li>If this is non-<code>null</code>, the resulting
+            <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util"><code>Collection</code></a> will be sorted according to distance (in
+            co-ordinate units) from the target position</li>
+            </ul></dd>
+<dd><code>targetZ</code> - <ul>
+            <li>If <code>zExtent</code> is <code>null
+            </code> only timeseries matching the depth specified by this
+            parameter will be extracted. In the case of a gridded dataset
+            a depth is considered to match if the method
+            <code>VerticalAxis#contains(Double)</code> on its vertical axis
+            returns <code>true</code> for the target depth. For a
+            non-gridded dataset, the feature depth must exactly match the
+            target depth.</li>
+            <li>If <code>zExtent</code> and <code>targetZ</code> are both
+            <code>null
+            </code>, <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>PointSeriesFeature</code></a>s for all available time
+            values will be extracted.</li>
+            </ul></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util"><code>Collection</code></a> of <a href="../../../../../../uk/ac/rdg/resc/edal/feature/PointSeriesFeature.html" title="class in uk.ac.rdg.resc.edal.feature"><code>PointSeriesFeature</code></a>s, sorted by
+         their distance from the target horizontal position, if it exists.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/DataReadingException.html" title="class in uk.ac.rdg.resc.edal.exceptions">DataReadingException</a></code> - if there is a problem reading the underlying data</dd>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/UnsupportedOperationException.html?is-external=true" title="class or interface in java.lang">UnsupportedOperationException</a></code> - if not all of the requested variables have a time domain</dd>
+<dd><code><a href="../../../../../../uk/ac/rdg/resc/edal/exceptions/VariableNotFoundException.html" title="class in uk.ac.rdg.resc.edal.exceptions">VariableNotFoundException</a></code> - if one or more of the specified variables are not present in
+             this dataset</dd>
+</dl>
+</li>
+</ul>
+<a name="getDatasetBoundingBox--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getDatasetBoundingBox</h4>
+<pre>protected abstract&nbsp;<a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry">BoundingBox</a>&nbsp;getDatasetBoundingBox()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The <a href="../../../../../../uk/ac/rdg/resc/edal/geometry/BoundingBox.html" title="interface in uk.ac.rdg.resc.edal.geometry"><code>BoundingBox</code></a> of the entire dataset</dd>
+</dl>
+</li>
+</ul>
+<a name="getDatasetVerticalExtent--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getDatasetVerticalExtent</h4>
+<pre>protected abstract&nbsp;<a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Double.html?is-external=true" title="class or interface in java.lang">Double</a>&gt;&nbsp;getDatasetVerticalExtent()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain"><code>Extent</code></a> of the vertical domain for the entire dataset</dd>
+</dl>
+</li>
+</ul>
+<a name="getDatasetTimeExtent--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getDatasetTimeExtent</h4>
+<pre>protected abstract&nbsp;<a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain">Extent</a>&lt;org.joda.time.DateTime&gt;&nbsp;getDatasetTimeExtent()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The <a href="../../../../../../uk/ac/rdg/resc/edal/domain/Extent.html" title="interface in uk.ac.rdg.resc.edal.domain"><code>Extent</code></a> of the time domain for the entire dataset</dd>
+</dl>
+</li>
+</ul>
+<a name="getFeatureReader--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getFeatureReader</h4>
+<pre>public abstract&nbsp;<a href="../../../../../../uk/ac/rdg/resc/edal/dataset/DiscreteFeatureReader.html" title="interface in uk.ac.rdg.resc.edal.dataset">DiscreteFeatureReader</a>&lt;? extends <a href="../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature">DiscreteFeature</a>&lt;?,?&gt;&gt;&nbsp;getFeatureReader()</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<!-- ========= END OF CLASS DATA ========= -->
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<div class="bottomNav"><a name="navbar.bottom">
+<!--   -->
+</a>
+<div class="skipNav"><a href="#skip.navbar.bottom" title="Skip navigation links">Skip navigation links</a></div>
+<a name="navbar.bottom.firstrow">
+<!--   -->
+</a>
+<ul class="navList" title="Navigation">
+<li><a href="../../../../../../overview-summary.html">Overview</a></li>
+<li><a href="package-summary.html">Package</a></li>
+<li class="navBarCell1Rev">Class</li>
+<li><a href="class-use/AbstractContinuousDomainDataset.html">Use</a></li>
+<li><a href="package-tree.html">Tree</a></li>
+<li><a href="../../../../../../deprecated-list.html">Deprecated</a></li>
+<li><a href="../../../../../../index-all.html">Index</a></li>
+<li><a href="../../../../../../help-doc.html">Help</a></li>
+</ul>
+</div>
+<div class="subNav">
+<ul class="navList">
+<li>Prev&nbsp;Class</li>
+<li><a href="../../../../../../uk/ac/rdg/resc/edal/dataset/AbstractDataset.html" title="class in uk.ac.rdg.resc.edal.dataset"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+</ul>
+<ul class="navList">
+<li><a href="../../../../../../index.html?uk/ac/rdg/resc/edal/dataset/AbstractContinuousDomainDataset.html" target="_top">Frames</a></li>
+<li><a href="AbstractContinuousDomainDataset.html" target="_top">No&nbsp;Frames</a></li>
+</ul>
+<ul class="navList" id="allclasses_navbar_bottom">
+<li><a href="../../../../../../allclasses-noframe.html">All&nbsp;Classes</a></li>
+</ul>
+<div>
+<script type="text/javascript"><!--
+  allClassesLink = document.getElementById("allclasses_navbar_bottom");
+  if(window==top) {
+    allClassesLink.style.display = "block";
+  }
+  else {
+    allClassesLink.style.display = "none";
+  }
+  //-->
+</script>
+</div>
+<div>
+<ul class="subNavList">
+<li>Summary:&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#fields.inherited.from.class.uk.ac.rdg.resc.edal.dataset.AbstractDataset">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
+<li><a href="#method.summary">Method</a></li>
+</ul>
+<ul class="subNavList">
+<li>Detail:&nbsp;</li>
+<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
+<li><a href="#method.detail">Method</a></li>
+</ul>
+</div>
+<a name="skip.navbar.bottom">
+<!--   -->
+</a></div>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+<p class="legalCopy"><small>Copyright &#169; 2010&#x2013;2016 <a href="http://www.met.reading.ac.uk/resc/home/">Reading e-Science Centre, University of Reading, UK</a>. All rights reserved.</small></p>
+</body>
+</html>
+>>>>>>> Stashed changes
+||||||| merged common ancestors
+=======
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- NewPage -->
+<html lang="en">
+<head>
+<!-- Generated by javadoc (1.8.0_101) on Fri Oct 28 15:35:17 BST 2016 -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>AbstractContinuousDomainDataset (Environmental Data Abstraction Library 1.2.4 API)</title>
+<meta name="date" content="2016-10-28">
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+<script type="text/javascript" src="../../../../../../script.js"></script>
+</head>
+<body>
+<script type="text/javascript"><!--
+    try {
+        if (location.href.indexOf('is-external=true') == -1) {
+            parent.document.title="AbstractContinuousDomainDataset (Environmental Data Abstraction Library 1.2.4 API)";
         }
     }
     catch(err) {
