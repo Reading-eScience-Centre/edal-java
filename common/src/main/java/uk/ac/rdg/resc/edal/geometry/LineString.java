@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.sis.distance.DistanceUtils;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
@@ -109,9 +110,8 @@ public final class LineString {
         for (int i = 1; i < this.controlPoints.size(); i++) {
             HorizontalPosition p1 = controlPoints.get(i - 1);
             HorizontalPosition p2 = controlPoints.get(i);
-            double dx = p2.getX() - p1.getX();
-            double dy = p2.getY() - p1.getY();
-            pathLength += Math.sqrt(dx * dx + dy * dy);
+            pathLength += DistanceUtils.getHaversineDistance(p1.getY(), p1.getX(), p2.getY(),
+                    p2.getX());
             controlPointDistances[i] = pathLength;
         }
     }
@@ -132,16 +132,23 @@ public final class LineString {
      * @param index
      *            The index of the control point. An index of zero represents
      *            the start of the line string.
-     * @return the fractional distance along the whole line string to the
-     *         control point
+     * @return the distance in km along the whole line string to the control
+     *         point
      * @throws IndexOutOfBoundsException
      *             if {@code index < 0 || index >= number of control points}
      */
-    public double getFractionalControlPointDistance(int index) {
+    public double getControlPointDistanceKm(int index) {
         if (index < 0 || index >= controlPointDistances.length) {
             throw new IndexOutOfBoundsException();
         }
-        return controlPointDistances[index] / pathLength;
+        return controlPointDistances[index];
+    }
+
+    /**
+     * @return The total path length, in km
+     */
+    public double getPathLength() {
+        return pathLength;
     }
 
     /**

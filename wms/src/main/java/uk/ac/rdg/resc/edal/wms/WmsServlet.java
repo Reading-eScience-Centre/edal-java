@@ -138,7 +138,13 @@ import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
-import uk.ac.rdg.resc.edal.util.*;
+import uk.ac.rdg.resc.edal.util.Array;
+import uk.ac.rdg.resc.edal.util.Array1D;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
+import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
+import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.wms.exceptions.CurrentUpdateSequence;
 import uk.ac.rdg.resc.edal.wms.exceptions.EdalUnsupportedOperationException;
 import uk.ac.rdg.resc.edal.wms.exceptions.InvalidUpdateSequence;
@@ -691,6 +697,12 @@ public class WmsServlet extends HttpServlet {
             log.error("Capabilities template has incorrect method", e);
         } catch (IOException e) {
             log.error("Problem writing output to stream", e);
+        } finally {
+            try {
+                httpServletResponse.flushBuffer();
+            } catch (IOException e) {
+                log.error("Problem flushing output buffer", e);
+            }
         }
     }
 
@@ -2223,6 +2235,9 @@ public class WmsServlet extends HttpServlet {
         Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layers) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
+            if(dataset == null) {
+                throw new EdalLayerNotFoundException("The layer "+layerName+" was not found on this server");
+            }
             if (dataset instanceof DiscreteLayeredDataset<?, ?>) {
                 gridDataset = (DiscreteLayeredDataset<?, ?>) dataset;
                 varId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);

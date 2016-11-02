@@ -167,19 +167,23 @@ public class LineStringTest {
          * line string.
          */
         int n = 6; // 10 control points on the line string one.
-        double fDistance = lineStrings.get(0).getFractionalControlPointDistance(n);
+        double fDistance = lineStrings.get(0).getControlPointDistanceKm(n)
+                / lineStrings.get(0).getPathLength();
+        ;
         // notice , the length of the first line string is 10
         double expectedFDistance = (double) n / 10;
         assertEquals(expectedFDistance, fDistance, delta);
 
         n = 5; // 6 control points on the line string two.
-        fDistance = lineStrings.get(1).getFractionalControlPointDistance(n);
+        fDistance = lineStrings.get(1).getControlPointDistanceKm(n)
+                / lineStrings.get(1).getPathLength();
         // notice , the length of the second line string is 6
         expectedFDistance = n / 6.0;
         assertEquals(expectedFDistance, fDistance, delta);
 
         n = 3; // 7 control points on the line string three.
-        fDistance = lineStrings.get(2).getFractionalControlPointDistance(n);
+        fDistance = lineStrings.get(2).getControlPointDistanceKm(n)
+                / lineStrings.get(2).getPathLength();
         /*
          * The length of the third line string is 10 * sqrt(2). This control
          * point's distance to the first one is 3*sqrt(2).
