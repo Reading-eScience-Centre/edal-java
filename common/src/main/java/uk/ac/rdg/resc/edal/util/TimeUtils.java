@@ -326,8 +326,7 @@ public class TimeUtils {
             }
         }
 
-        throw new RuntimeException("BREAKING DELIBERATELY In TimeUtils");
-//        return str.toString();
+        return str.toString();
     }
 
     /**
