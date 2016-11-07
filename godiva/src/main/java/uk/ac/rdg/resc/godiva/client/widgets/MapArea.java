@@ -398,6 +398,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         params.setTransparent(true);
         params.setStyles(style + "/" + palette);
         params.setLayers(wmsLayerName);
+        params.setParameter("version", "1.3.0");
         if (time != null) {
             params.setParameter("TIME", time);
         }
@@ -988,61 +989,92 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
     }
 
     protected void addBaseLayers() {
-        WMS naturalEarth;
-        WMS blueMarble;
-        WMS demis;
-
-        WMS naturalEarthNP;
-        WMS naturalEarthSP;
-        WMS blueMarbleNP;
-        WMS blueMarbleSP;
-
-        String mapServerUrl = "http://godiva.reading.ac.uk/geoserver/ReSC/wms?";
-//        String mapServerUrl = "http://dexter.nerc-essc.ac.uk/geoserver/ReSC/wms?";
+        /*
+         * Adds the base layers to the map.
+         * 
+         * Note that this section has some unnecessary code duplication.
+         * Specifically, we redefine WMSOptions and WMSParams each time we use
+         * them, when in reality, the same WMSOptions object can be used for
+         * many of the layers.
+         * 
+         * IT'S FOR CLARITY AND A HASSLE-FREE FUTURE, PLEASE DON'T SCREW AROUND
+         * WITH IT.
+         */
 
         WMSParams wmsParams;
         WMSOptions wmsOptions;
+
+        /*
+         * NASA Basemap
+         * 
+         * This doesn't currently work - if you request a tile which spans the
+         * dateline, it fetches the wrong area. It's probably a bug in their
+         * code. I've told them about it, so this may be useful if/when they fix
+         * it.
+         */
+//        WMS nasaBlueMarble;
+//        wmsOptions = new WMSOptions();
+//        wmsOptions.setProjection("CRS:84");
+//        wmsOptions.setWrapDateLine(true);
+//        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
+//        wmsParams = new WMSParams();
+//        wmsParams.setLayers("BlueMarbleNG-TB");
+//        wmsParams.setFormat("image/png");
+//        wmsParams.setParameter("version", "1.3.0");
+//        
+//        String nasaMapServerUrl = "http://neowms.sci.gsfc.nasa.gov/wms/wms?";
+//        nasaBlueMarble = new WMS("NASA Blue Marble WMS", nasaMapServerUrl, wmsParams, wmsOptions);
+//        nasaBlueMarble.addLayerLoadStartListener(loadStartListener);
+//        nasaBlueMarble.addLayerLoadEndListener(loadEndListener);
+//        nasaBlueMarble.setIsBaseLayer(true);
+
+        /*
+         * Basemaps hosted at ReSC
+         */
+
+        /*
+         * ReSC naturalearth
+         */
+        String rescMapServerUrl = "http://godiva.reading.ac.uk/geoserver/ReSC/wms?";
         wmsOptions = new WMSOptions();
-        wmsOptions.setProjection("EPSG:4326");
+        wmsOptions.setProjection("CRS:84");
         wmsOptions.setWrapDateLine(true);
         wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
         wmsParams = new WMSParams();
         wmsParams.setLayers("naturalearth");
         wmsParams.setFormat("image/png");
-
-        naturalEarth = new WMS("NaturalEarth WMS", mapServerUrl, wmsParams, wmsOptions);
+        wmsParams.setParameter("version", "1.3.0");
+        WMS naturalEarth = new WMS("NaturalEarth WMS", rescMapServerUrl, wmsParams, wmsOptions);
         naturalEarth.addLayerLoadStartListener(loadStartListener);
         naturalEarth.addLayerLoadEndListener(loadEndListener);
         naturalEarth.setIsBaseLayer(true);
 
+        /*
+         * ReSC Bluemarble
+         */
+        wmsOptions = new WMSOptions();
+        wmsOptions.setProjection("CRS:84");
+        wmsOptions.setWrapDateLine(true);
+        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
         wmsParams = new WMSParams();
         wmsParams.setLayers("bluemarble");
         wmsParams.setFormat("image/png");
-
-        blueMarble = new WMS("BlueMarble WMS", mapServerUrl, wmsParams, wmsOptions);
+        WMS blueMarble = new WMS("BlueMarble WMS", rescMapServerUrl, wmsParams, wmsOptions);
         blueMarble.addLayerLoadStartListener(loadStartListener);
         blueMarble.addLayerLoadEndListener(loadEndListener);
         blueMarble.setIsBaseLayer(true);
 
-        wmsParams = new WMSParams();
-        wmsParams
-                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
-                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
-        wmsParams.setFormat("image/png");
-
-        demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap", wmsParams,
-                wmsOptions);
-        demis.setIsBaseLayer(true);
-        demis.addLayerLoadStartListener(loadStartListener);
-        demis.addLayerLoadEndListener(loadEndListener);
-
         /*
-         * These are the bounds of the polar layers on the dexter server
+         * These are the bounds of ALL OF the polar layers (i.e. North AND
+         * South) on the ReSC server
          */
         Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
         float polarMaxResolution = (float) ((polarMaxExtent.getUpperRightX() - polarMaxExtent
                 .getLowerLeftX()) / 512.0);
 
+        /*
+         * ReSC Natural Earth North Pole
+         */
         wmsNorthPolarOptions = new WMSOptions();
         wmsNorthPolarOptions.setProjection("EPSG:5041");
         wmsNorthPolarOptions.setMaxExtent(polarMaxExtent);
@@ -1053,20 +1085,26 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams = new WMSParams();
         wmsParams.setLayers("naturalearth-np");
         wmsParams.setFormat("image/png");
-
-        naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", mapServerUrl,
+        wmsParams.setParameter("version", "1.3.0");
+        WMS naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", rescMapServerUrl,
                 wmsParams, wmsNorthPolarOptions);
         naturalEarthNP.setIsBaseLayer(true);
 
+        /*
+         * ReSC Blue Marble North Pole
+         */
         wmsParams = new WMSParams();
         wmsParams.setLayers("bluemarble-np");
         wmsParams.setFormat("image/png");
-
-        blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", mapServerUrl, wmsParams,
-                wmsNorthPolarOptions);
+        wmsParams.setParameter("version", "1.3.0");
+        WMS blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", rescMapServerUrl,
+                wmsParams, wmsNorthPolarOptions);
         blueMarbleNP.setIsBaseLayer(true);
         blueMarbleNP.setSingleTile(true);
 
+        /*
+         * ReSC Natural Earth South Pole
+         */
         wmsSouthPolarOptions = new WMSOptions();
         wmsSouthPolarOptions.setProjection("EPSG:5042");
         wmsSouthPolarOptions.setMaxExtent(polarMaxExtent);
@@ -1077,27 +1115,74 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams = new WMSParams();
         wmsParams.setLayers("naturalearth-sp");
         wmsParams.setFormat("image/png");
-
-        naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", mapServerUrl,
+        wmsParams.setParameter("version", "1.3.0");
+        WMS naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", rescMapServerUrl,
                 wmsParams, wmsSouthPolarOptions);
         naturalEarthSP.setIsBaseLayer(true);
 
+        /*
+         * ReSC Blue Marble South Pole
+         */
         wmsParams = new WMSParams();
         wmsParams.setLayers("bluemarble-sp");
         wmsParams.setFormat("image/png");
-
-        blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", mapServerUrl, wmsParams,
-                wmsSouthPolarOptions);
+        wmsParams.setParameter("version", "1.3.0");
+        WMS blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", rescMapServerUrl,
+                wmsParams, wmsSouthPolarOptions);
         blueMarbleSP.setIsBaseLayer(true);
 
+        /*
+         * Basemap from demis.nl
+         */
+        wmsOptions = new WMSOptions();
+        wmsOptions.setProjection("EPSG:4326");
+        wmsOptions.setWrapDateLine(true);
+        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
+        wmsParams = new WMSParams();
+        wmsParams
+                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
+                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+        wmsParams.setFormat("image/png");
+        WMS demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap",
+                wmsParams, wmsOptions);
+        demis.setIsBaseLayer(true);
+        demis.addLayerLoadStartListener(loadStartListener);
+        demis.addLayerLoadEndListener(loadEndListener);
+        
+        /*
+         * Basemaps from GEBCO.  Note that these need a special copyright message
+         */
+        wmsOptions = new WMSOptions();
+        wmsOptions.setProjection("EPSG:4326");
+        wmsOptions.setWrapDateLine(true);
+        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
+        wmsParams = new WMSParams();
+        wmsParams
+                .setLayers("GEBCO_LATEST");
+        wmsParams.setFormat("image/png");
+        WMS gebco = new WMS("GEBCO WMS - Imagery reproduced from the GEBCO_2014 Grid, version 20150318, www.gebco.net", "http://www.gebco.net/data_and_products/gebco_web_services/web_map_service/mapserv?",
+                wmsParams, wmsOptions);
+        gebco.setIsBaseLayer(true);
+        gebco.addLayerLoadStartListener(loadStartListener);
+        gebco.addLayerLoadEndListener(loadEndListener);
+
+        /*
+         * Add all of the layers in the order we want them displayed
+         */
         map.addLayer(naturalEarth);
         map.addLayer(blueMarble);
+//        map.addLayer(nasaBlueMarble);
         map.addLayer(demis);
+        map.addLayer(gebco);
         map.addLayer(naturalEarthNP);
-        map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleNP);
+        map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleSP);
-
+        
+        /*
+         * Now global setup stuff. Store the current projection, add the layer
+         * change listener and set the default layer.
+         */
         currentProjection = map.getProjection();
 
         map.addMapBaseLayerChangedListener(new MapBaseLayerChangedListener() {
@@ -1108,7 +1193,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         });
 
         map.setBaseLayer(naturalEarth);
-        baseUrlForExport = mapServerUrl;
+        baseUrlForExport = rescMapServerUrl;
         layersForExport = "naturalEarth";
     }
 
