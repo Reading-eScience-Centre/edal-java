@@ -398,7 +398,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         params.setTransparent(true);
         params.setStyles(style + "/" + palette);
         params.setLayers(wmsLayerName);
-        params.setParameter("version", "1.3.0");
         if (time != null) {
             params.setParameter("TIME", time);
         }
