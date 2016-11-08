@@ -40,6 +40,8 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
@@ -54,6 +56,8 @@ import uk.ac.rdg.resc.edal.exceptions.BadTimeFormatException;
  * @author Jon Blower
  */
 public class TimeUtils {
+    private static final Logger log = LoggerFactory.getLogger(TimeUtils.class);
+
     private static final DateTimeFormatter ISO_PARSER = ISODateTimeFormat.dateOptionalTimeParser();
     private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
     private static final DateTimeFormatter ISO_DATE_FORMATTER = ISODateTimeFormat.date();
@@ -181,6 +185,19 @@ public class TimeUtils {
         return ISO_DATE_FORMATTER.print(dateTime);
     }
 
+    /*
+     * Provide last-access "cache" for capabilities string. For long complex
+     * lists this can take a while to calculate, and in many cases, the same
+     * thing will be called multiple times in a row.
+     * 
+     * To be fair, any list which is complex enough to really benefit from this
+     * probably has other issues which need addressing, but it occupies very
+     * little memory and can cause massive speed-ups under the right
+     * circumstances.
+     */
+    private static List<DateTime> lastCapabilitiesTimes = null;
+    private static String lastCapabilitiesString = null;
+    
     /**
      * <p>
      * Returns a string representing the given List of DateTimes, suitable for
@@ -212,7 +229,14 @@ public class TimeUtils {
             return "";
         if (times.size() == 1)
             return dateTimeToISO8601(times.get(0));
+        
+        synchronized (lastCapabilitiesTimes) {
+            if(lastCapabilitiesTimes != null && lastCapabilitiesTimes.equals(times)) {
+                return lastCapabilitiesString;
+            }
+        }
 
+        log.debug("Getting time string for capabilities from " + times.size() + " time values");
         /*
          * We look for sublists that are regularly-spaced This is a simple class
          * that holds the indices of the start and end of these sublists,
@@ -232,6 +256,7 @@ public class TimeUtils {
         currentSubList.first = 0;
         currentSubList.spacing = times.get(1).getMillis() - times.get(0).getMillis();
 
+        log.debug("Looping over times");
         for (int i = 1; i < times.size() - 1; i++) {
             long spacing = times.get(i + 1).getMillis() - times.get(i).getMillis();
             if (spacing != currentSubList.spacing) {
@@ -248,6 +273,9 @@ public class TimeUtils {
         /* Now add the last time */
         currentSubList.last = times.size() - 1;
         subLists.add(currentSubList);
+
+        log.debug("Finished looping.  Out of " + times.size() + " time values, we have "
+                + subLists.size() + " sub-lists of regularly spaced times");
 
         /*
          * We now have a collection of sub-lists, each regularly spaced in time.
@@ -314,6 +342,8 @@ public class TimeUtils {
             }
         } while (!done);
 
+        log.debug("About to print out " + subLists.size() + " lists");
+
         /* Now we can simply print out our sublists, comma-separated */
         StringBuilder str = new StringBuilder();
         for (int i = 0; i < subLists.size(); i++) {
@@ -324,6 +354,11 @@ public class TimeUtils {
                     str.append(",");
                 str.append(getRegularlySpacedTimeString(timeList, subList.spacing));
             }
+        }
+        
+        synchronized (lastCapabilitiesTimes) {
+            lastCapabilitiesTimes = new ArrayList<>(times);
+            lastCapabilitiesString = str.toString();
         }
 
         return str.toString();
