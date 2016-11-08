@@ -74,7 +74,7 @@ public class CoverageJsonConverterImpl implements CoverageJsonConverter {
 	}
 
 	@Override
-	public void checkFeaturesSupported(Collection<Feature<?>> features) {
+	public void checkFeaturesSupported(Collection<? extends Feature<?>> features) {
 		for (Feature<?> feature : features) {
 			new Coverage(feature);
 		}

@@ -444,10 +444,11 @@ public class WmsServlet extends HttpServlet {
                     converter.convertFeatureToJson(httpServletResponse.getOutputStream(),
                             features.get(0));
                 } else {
-                    // vectors are currently multiple features each with one
-                    // parameter
-                    // TODO group features with identical domain into single
-                    // feature
+                    /*
+                     * vectors are currently multiple features each with one
+                     * parameter TODO group features with identical domain into
+                     * single feature
+                     */
                     converter
                             .convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
                 }
@@ -590,7 +591,13 @@ public class WmsServlet extends HttpServlet {
              * This gives Broken pipe errors which can be ignored.
              */
         } catch (IOException e) {
-            log.error("Problem writing output to stream", e);
+            if (!(e.getCause() instanceof SocketException)) {
+                /*
+                 * Same as above - IOException which has a direct cause which is
+                 * a SocketException
+                 */
+                log.error("Problem writing output to stream", e);
+            }
         }
     }
 
@@ -2058,9 +2065,12 @@ public class WmsServlet extends HttpServlet {
         if (!"image/png".equalsIgnoreCase(outputFormat)
                 && !"image/jpeg".equalsIgnoreCase(outputFormat)
                 && !"image/jpg".equalsIgnoreCase(outputFormat)
-                && !"text/csv".equalsIgnoreCase(outputFormat)) {
+                && !"text/csv".equalsIgnoreCase(outputFormat)
+                && !"text/json".equalsIgnoreCase(outputFormat)
+                && !"application/prs.coverage+json".equalsIgnoreCase(outputFormat)
+                && !"application/prs.coverage json".equalsIgnoreCase(outputFormat)) {
             throw new InvalidFormatException(outputFormat
-                    + " is not a valid output format for a profile plot");
+                    + " is not a valid output format for a timeseries plot");
         }
         /*
          * Loop over all requested layers
@@ -2078,9 +2088,12 @@ public class WmsServlet extends HttpServlet {
             VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
                     layerName, catalogue);
 
-            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
+            if (("text/csv".equalsIgnoreCase(outputFormat)
+                    || "text/json".equalsIgnoreCase(outputFormat)
+                    || "application/prs.coverage+json".equalsIgnoreCase(outputFormat) || "application/prs.coverage json"
+                        .equalsIgnoreCase(outputFormat)) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
-                        + " cannot be downloaded as CSV");
+                        + " can only be downloaded as an image");
             }
             EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
@@ -2129,8 +2142,23 @@ public class WmsServlet extends HttpServlet {
         }
 
         httpServletResponse.setContentType(outputFormat);
+        if ("text/json".equalsIgnoreCase(outputFormat)
+                || "application/prs.coverage+json".equalsIgnoreCase(outputFormat)
+                || "application/prs.coverage json".equalsIgnoreCase(outputFormat)) {
+            if (timeseriesFeatures.size() > 1) {
+                throw new IncorrectDomainException("JSON export is only supported for gridded data");
+            }
+            CoverageJsonConverter converter = new CoverageJsonConverterImpl();
 
-        if ("text/csv".equalsIgnoreCase(outputFormat)) {
+            converter.checkFeaturesSupported(timeseriesFeatures);
+            try {
+                converter.convertFeatureToJson(httpServletResponse.getOutputStream(),
+                        timeseriesFeatures.get(0));
+            } catch (IOException e) {
+                log.error("Cannot write to output stream", e);
+                throw new EdalException("Problem writing data to output stream", e);
+            }
+        } else if ("text/csv".equalsIgnoreCase(outputFormat)) {
             if (timeseriesFeatures.size() > 1) {
                 throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }
@@ -2235,8 +2263,9 @@ public class WmsServlet extends HttpServlet {
         Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layers) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            if(dataset == null) {
-                throw new EdalLayerNotFoundException("The layer "+layerName+" was not found on this server");
+            if (dataset == null) {
+                throw new EdalLayerNotFoundException("The layer " + layerName
+                        + " was not found on this server");
             }
             if (dataset instanceof DiscreteLayeredDataset<?, ?>) {
                 gridDataset = (DiscreteLayeredDataset<?, ?>) dataset;
@@ -2434,7 +2463,10 @@ public class WmsServlet extends HttpServlet {
         if (!"image/png".equalsIgnoreCase(outputFormat)
                 && !"image/jpeg".equalsIgnoreCase(outputFormat)
                 && !"image/jpg".equalsIgnoreCase(outputFormat)
-                && !"text/csv".equalsIgnoreCase(outputFormat)) {
+                && !"text/csv".equalsIgnoreCase(outputFormat)
+                && !"text/json".equalsIgnoreCase(outputFormat)
+                && !"application/prs.coverage+json".equalsIgnoreCase(outputFormat)
+                && !"application/prs.coverage json".equalsIgnoreCase(outputFormat)) {
             throw new InvalidFormatException(outputFormat
                     + " is not a valid output format for a profile plot");
         }
@@ -2457,9 +2489,12 @@ public class WmsServlet extends HttpServlet {
                     layerName, catalogue);
             xLabel = catalogue.getLayerMetadata(variableMetadata).getTitle();
 
-            if ("text/csv".equalsIgnoreCase(outputFormat) && !catalogue.isDownloadable(layerName)) {
+            if (("text/csv".equalsIgnoreCase(outputFormat)
+                    || "text/json".equalsIgnoreCase(outputFormat)
+                    || "application/prs.coverage+json".equalsIgnoreCase(outputFormat) || "application/prs.coverage json"
+                        .equalsIgnoreCase(outputFormat)) && !catalogue.isDownloadable(layerName)) {
                 throw new LayerNotQueryableException("The layer: " + layerName
-                        + " cannot be downloaded as CSV");
+                        + " can only be downloaded as an image");
             }
             EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
@@ -2509,7 +2544,23 @@ public class WmsServlet extends HttpServlet {
 
         httpServletResponse.setContentType(outputFormat);
 
-        if ("text/csv".equalsIgnoreCase(outputFormat)) {
+        if ("text/json".equalsIgnoreCase(outputFormat)
+                || "application/prs.coverage+json".equalsIgnoreCase(outputFormat)
+                || "application/prs.coverage json".equalsIgnoreCase(outputFormat)) {
+            if (profileFeatures.size() > 1) {
+                throw new IncorrectDomainException("JSON export is only supported for gridded data");
+            }
+            CoverageJsonConverter converter = new CoverageJsonConverterImpl();
+
+            converter.checkFeaturesSupported(profileFeatures);
+            try {
+                converter.convertFeatureToJson(httpServletResponse.getOutputStream(),
+                        profileFeatures.get(0));
+            } catch (IOException e) {
+                log.error("Cannot write to output stream", e);
+                throw new EdalException("Problem writing data to output stream", e);
+            }
+        } else if ("text/csv".equalsIgnoreCase(outputFormat)) {
             if (profileFeatures.size() > 1) {
                 throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }

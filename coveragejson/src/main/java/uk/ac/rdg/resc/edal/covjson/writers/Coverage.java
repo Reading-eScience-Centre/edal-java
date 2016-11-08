@@ -24,6 +24,7 @@ import uk.ac.rdg.resc.edal.feature.Feature;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
+import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
@@ -178,6 +179,8 @@ public class Coverage {
 			return doGetDomain((MapFeature) feature);
 		} else if (feature instanceof ProfileFeature) {
 			return doGetDomain((ProfileFeature) feature);
+		} else if (feature instanceof PointSeriesFeature) {
+		    return doGetDomain((PointSeriesFeature) feature);
 		} else if (feature instanceof PointFeature) {
 			return doGetDomain((PointFeature) feature);
 		} else if (feature instanceof TrajectoryFeature) {
@@ -228,6 +231,24 @@ public class Coverage {
 		
 		return new Domain(axes, refSysConnections, Vals.VERTICALPROFILE);
 	}
+	
+    private static Domain doGetDomain(PointSeriesFeature feature) {
+        TimeAxis tAxis = feature.getDomain();
+        HorizontalPosition xy = feature.getHorizontalPosition();
+        VerticalPosition z = feature.getVerticalPosition();
+
+        VerticalAxis zAxis = z != null ? new VerticalAxisImpl(Keys.Z, Arrays.asList(z.getZ()),
+                z.getCoordinateReferenceSystem()) : null;
+        ReferenceableAxis<?> x = new ReferenceableAxisImpl(Keys.X, Arrays.asList(xy.getX()), false);
+        ReferenceableAxis<?> y = new ReferenceableAxisImpl(Keys.Y, Arrays.asList(xy.getY()), false);
+
+        Map<String, Axis> axes = getAxes(x, y, tAxis, zAxis);
+        Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(
+                xy.getCoordinateReferenceSystem(), tAxis != null ? tAxis.getChronology() : null,
+                z != null ? z.getCoordinateReferenceSystem() : null);
+
+        return new Domain(axes, refSysConnections, Vals.POINTSERIES);
+    }
 	
 	private static Domain doGetDomain(PointFeature feature) {
 		GeoPosition domain = feature.getGeoPosition();

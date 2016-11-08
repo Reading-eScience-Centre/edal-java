@@ -92,6 +92,7 @@ public final class Constants {
         public static final String INTEGER = "integer";
         public static final String FLOAT = "float";
         public static final String GRID = "Grid";
+        public static final String POINTSERIES = "PointSeries";
         public static final String VERTICALPROFILE = "VerticalProfile";
         public static final String POINT = "Point";
         public static final String TRAJECTORY = "Trajectory";

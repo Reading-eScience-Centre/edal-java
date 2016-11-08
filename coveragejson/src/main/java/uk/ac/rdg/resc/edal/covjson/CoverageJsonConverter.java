@@ -68,5 +68,5 @@ public interface CoverageJsonConverter {
      * @param features The features to check.
      * @throws EdalException If the features cannot be converted.
      */
-    public void checkFeaturesSupported(Collection<Feature<?>> features);
+    public void checkFeaturesSupported(Collection<? extends Feature<?>> features);
 }
