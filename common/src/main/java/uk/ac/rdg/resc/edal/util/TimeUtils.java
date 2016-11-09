@@ -195,7 +195,7 @@ public class TimeUtils {
      * little memory and can cause massive speed-ups under the right
      * circumstances.
      */
-    private static List<DateTime> lastCapabilitiesTimes = null;
+    private static List<DateTime> lastCapabilitiesTimes = new ArrayList<>();
     private static String lastCapabilitiesString = null;
     
     /**
