@@ -80,7 +80,18 @@ public class GetMapStyleParams {
     /* true if we are using an XML style specification */
     private MapImage xmlMapImage = null;
 
-    public GetMapStyleParams(RequestParams params) throws EdalException {
+    /**
+     * Extract GetMap parameters from the URL, using a {@link WmsCatalogue} to
+     * determine default values.
+     * 
+     * @param params
+     *            The {@link RequestParams} object created from the URL request
+     * @param catalogue
+     *            The {@link WmsCatalogue} from which to extract default values
+     * @throws EdalException
+     *             If the request is not properly formed
+     */
+    public GetMapStyleParams(RequestParams params, WmsCatalogue catalogue) throws EdalException {
         String layersStr = params.getString("layers");
         if (layersStr == null || layersStr.trim().isEmpty()) {
             layers = null;
@@ -141,7 +152,15 @@ public class GetMapStyleParams {
             layers = imageLayers.toArray(new String[0]);
         }
 
-        String bgcStr = params.getString("bgcolor", "0xffffff");
+        /*
+         * We now take the first layer, and find the default values for that.
+         */
+        String firstLayer = layers[0];
+        PlottingStyleParameters defaults = WmsUtils.getLayerMetadata(firstLayer, catalogue)
+                .getDefaultPlottingParameters();
+
+        String bgcStr = params.getString("bgcolor",
+                GraphicsUtils.colourToHtmlString(defaults.getNoDataColour()));
         backgroundColour = GraphicsUtils.parseColour(bgcStr);
 
         this.transparent = params.getBoolean("transparent", false);
@@ -149,7 +168,10 @@ public class GetMapStyleParams {
             backgroundColour = new Color(0, true);
         }
 
-        String bmcStr = params.getString("belowmincolor");
+        String bmcStr = params.getString(
+                "belowmincolor",
+                defaults.getBelowMinColour() != null ? GraphicsUtils.colourToHtmlString(defaults
+                        .getBelowMinColour()) : null);
         if (bmcStr == null) {
             belowMinColour = Color.black;
         } else if (bmcStr.equalsIgnoreCase("extend")) {
@@ -160,7 +182,10 @@ public class GetMapStyleParams {
             belowMinColour = GraphicsUtils.parseColour(bmcStr);
         }
 
-        String amcStr = params.getString("abovemaxcolor");
+        String amcStr = params.getString(
+                "abovemaxcolor",
+                defaults.getAboveMaxColour() != null ? GraphicsUtils.colourToHtmlString(defaults
+                        .getAboveMaxColour()) : null);
         if (amcStr == null) {
             aboveMaxColour = Color.black;
         } else if (amcStr.equalsIgnoreCase("extend")) {
@@ -171,16 +196,18 @@ public class GetMapStyleParams {
             aboveMaxColour = GraphicsUtils.parseColour(amcStr);
         }
 
-        opacity = params.getPositiveInt("opacity", 100);
+        opacity = params.getPositiveInt("opacity", (int) (100 * defaults.getOpacity()));
         if (opacity > 100) {
             opacity = 100;
         }
 
-        colourScaleRange = getColorScaleRanges(params);
+        colourScaleRange = getColorScaleRanges(params, defaults.getColorScaleRange());
 
-        logarithmic = params.getBoolean("logscale", null);
+        logarithmic = params.getBoolean("logscale", defaults.isLogScaling());
 
-        numColourBands = params.getPositiveInt("numcolorbands", ColourPalette.MAX_NUM_COLOURS);
+        numColourBands = params.getPositiveInt("numcolorbands",
+                defaults.getNumColorBands() != null ? defaults.getNumColorBands()
+                        : ColourPalette.MAX_NUM_COLOURS);
         if (numColourBands > ColourPalette.MAX_NUM_COLOURS) {
             numColourBands = ColourPalette.MAX_NUM_COLOURS;
         }
@@ -189,7 +216,7 @@ public class GetMapStyleParams {
     /**
      * Gets the ColorScaleRange object requested by the client
      */
-    public static List<Extent<Float>> getColorScaleRanges(RequestParams params)
+    public static List<Extent<Float>> getColorScaleRanges(RequestParams params, Extent<Float> defaultScale)
             throws EdalException {
         List<Extent<Float>> ranges = new ArrayList<>();
         String csr = params.getString("colorscalerange");
@@ -197,14 +224,14 @@ public class GetMapStyleParams {
             /*
              * No scale range supplied - we want to use the default range
              */
-            ranges.add(Extents.emptyExtent());
+            ranges.add(defaultScale);
             return ranges;
         }
         String[] rangeStrings = csr.split(";");
         for (String range : rangeStrings) {
             if (range.isEmpty() || range.equalsIgnoreCase("default")) {
                 /* The client wants this layer's default scale range to be used */
-                ranges.add(Extents.emptyExtent());
+                ranges.add(defaultScale);
             } else if (range.equalsIgnoreCase("auto")) {
                 /*
                  * The client wants to auto scale the range on this layer
@@ -214,7 +241,7 @@ public class GetMapStyleParams {
                 /* The client has specified an explicit colour scale range */
                 String[] scaleEls = range.split(",");
                 if (scaleEls.length == 0) {
-                    ranges.add(Extents.emptyExtent());
+                    ranges.add(defaultScale);
                 } else {
                     Float scaleMin = Float.parseFloat(scaleEls[0]);
                     Float scaleMax = Float.parseFloat(scaleEls[1]);

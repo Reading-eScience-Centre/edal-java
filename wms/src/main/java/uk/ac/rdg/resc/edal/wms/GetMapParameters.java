@@ -94,7 +94,7 @@ public class GetMapParameters {
         formatString = params.getString("format", "image/png");
         animation = params.getBoolean("animation", false);
         frameRate = params.getPositiveInt("frameRate", 24);
-        styleParameters = new GetMapStyleParams(params);
+        styleParameters = new GetMapStyleParams(params, catalogue);
 
         /*
          * Now we have the style parameters, we can find out which layers we

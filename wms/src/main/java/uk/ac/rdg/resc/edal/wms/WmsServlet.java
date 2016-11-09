@@ -1573,8 +1573,8 @@ public class WmsServlet extends HttpServlet {
         }
         layerDetails.put("palettes", supportedPalettesJson);
         layerDetails.put("defaultPalette", defaultPalette);
-        layerDetails.put("aboveMaxColor", aboveMaxColour);
-        layerDetails.put("belowMinColor", belowMinColour);
+        layerDetails.put("aboveMaxColor", aboveMaxColour.replaceFirst("#", "0x"));
+        layerDetails.put("belowMinColor", belowMinColour.replaceFirst("#", "0x"));
         layerDetails.put("noDataColor", noDataColour);
         layerDetails.put("logScaling", logScaling);
 
@@ -2000,7 +2000,7 @@ public class WmsServlet extends HttpServlet {
              */
             GetMapStyleParams getMapStyleParameters;
             try {
-                getMapStyleParameters = new GetMapStyleParams(params);
+                getMapStyleParameters = new GetMapStyleParams(params, catalogue);
             } catch (EdalLayerNotFoundException e) {
                 throw new MetadataException(
                         "Requested layer is either not present, disabled, or not yet loaded.");
@@ -2261,6 +2261,7 @@ public class WmsServlet extends HttpServlet {
         DiscreteLayeredDataset<?, ?> gridDataset = null;
         String varId = null;
         Set<String> copyrights = new LinkedHashSet<>();
+        PlottingStyleParameters defaults = null;
         for (String layerName : layers) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             if (dataset == null) {
@@ -2270,8 +2271,10 @@ public class WmsServlet extends HttpServlet {
             if (dataset instanceof DiscreteLayeredDataset<?, ?>) {
                 gridDataset = (DiscreteLayeredDataset<?, ?>) dataset;
                 varId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
-                String layerCopyright = WmsUtils.getLayerMetadata(layerName, catalogue)
-                        .getCopyright();
+                EnhancedVariableMetadata layerMetadata = WmsUtils.getLayerMetadata(layerName,
+                        catalogue);
+                String layerCopyright = layerMetadata.getCopyright();
+                defaults = layerMetadata.getDefaultPlottingParameters();
                 if (layerCopyright != null && !"".equals(layerCopyright)) {
                     copyrights.add(layerCopyright);
                 }
@@ -2320,6 +2323,11 @@ public class WmsServlet extends HttpServlet {
             }
         }
 
+        if (defaults == null) {
+            defaults = new PlottingStyleParameters(new ArrayList<>(), "default", Color.black,
+                    Color.black, new Color(0, true), false, ColourPalette.MAX_NUM_COLOURS, 1f);
+        }
+
         for (String layerCopyright : copyrights) {
             copyright.append(layerCopyright);
             copyright.append('\n');
@@ -2336,9 +2344,9 @@ public class WmsServlet extends HttpServlet {
              * This can only be true if we have an AbstractGridDataset, so we
              * can use our previous cast
              */
-            String paletteName = params.getString("palette", ColourPalette.DEFAULT_PALETTE_NAME);
-            int numColourBands = params.getPositiveInt("numcolorbands",
-                    ColourPalette.MAX_NUM_COLOURS);
+            String paletteName = params.getString("palette", defaults.getPalette());
+            int numColourBands = params
+                    .getPositiveInt("numcolorbands", defaults.getNumColorBands());
 
             /*
              * define an extent for the vertical section if parameter present
@@ -2367,7 +2375,8 @@ public class WmsServlet extends HttpServlet {
             if (zExtent != null) {
                 scaleRange = getExtentOfFeatures(profileFeatures);
             } else {
-                List<Extent<Float>> scaleRanges = GetMapStyleParams.getColorScaleRanges(params);
+                List<Extent<Float>> scaleRanges = GetMapStyleParams.getColorScaleRanges(params,
+                        defaults.getColorScaleRange());
                 if (scaleRanges == null || scaleRanges.isEmpty()) {
                     scaleRange = GraphicsUtils.estimateValueRange(gridDataset, varId);
                 } else {
@@ -2378,11 +2387,14 @@ public class WmsServlet extends HttpServlet {
                 }
             }
             ScaleRange colourScale = new ScaleRange(scaleRange.getLow(), scaleRange.getHigh(),
-                    params.getBoolean("logscale", false));
+                    params.getBoolean("logscale", defaults.isLogScaling()));
             ColourScheme colourScheme = new SegmentColourScheme(colourScale,
-                    GraphicsUtils.parseColour(params.getString("belowmincolor", "0x000000")),
-                    GraphicsUtils.parseColour(params.getString("abovemaxcolor", "0x000000")),
-                    GraphicsUtils.parseColour(params.getString("bgcolor", "transparent")),
+                    GraphicsUtils.parseColour(params.getString("belowmincolor",
+                            GraphicsUtils.colourToString(defaults.getBelowMinColour()))),
+                    GraphicsUtils.parseColour(params.getString("abovemaxcolor",
+                            GraphicsUtils.colourToString(defaults.getAboveMaxColour()))),
+                    GraphicsUtils.parseColour(params.getString("bgcolor",
+                            GraphicsUtils.colourToString(defaults.getNoDataColour()))),
                     paletteName, numColourBands);
 
             JFreeChart verticalSectionChart = Charting.createVerticalSectionChart(profileFeatures,

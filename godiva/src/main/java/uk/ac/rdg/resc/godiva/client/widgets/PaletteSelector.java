@@ -980,7 +980,12 @@ public class PaletteSelector implements PaletteSelectorIF {
                 }
             }
         }
-        nColorBands.setSelectedIndex(minIndex);
+        int index = minIndex;
+        if(nBands > Integer.parseInt(nColorBands.getValue(minIndex))) {
+            index++;
+        }
+        nColorBands.insertItem(nBands+"", index);
+        nColorBands.setSelectedIndex(index);
     }
 
     public void setLogScale(boolean isLogScale) {
