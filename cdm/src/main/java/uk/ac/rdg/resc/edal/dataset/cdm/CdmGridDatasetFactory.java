@@ -1218,7 +1218,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         return gridTopology != null;
     }
 
-    private static class CdmGridDataset extends GriddedDataset {
+    private class CdmGridDataset extends GriddedDataset {
         protected final String location;
         private final DataReadingStrategy dataReadingStrategy;
 
@@ -1234,7 +1234,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         protected GridDataSource openDataSource() throws DataReadingException {
             NetcdfDataset nc = null;
             try {
-                nc = NetcdfDatasetAggregator.getDataset(location);
+                nc = CdmGridDatasetFactory.this.getNetcdfDatasetFromLocation(location, false);
                 synchronized (this) {
                     /*
                      * If the getGridDataset method runs concurrently on the
@@ -1258,7 +1258,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         }
     }
 
-    private static final class CdmSgridDataset extends CdmGridDataset {
+    private final class CdmSgridDataset extends CdmGridDataset {
         private Map<String, RangesList> rangesList = null;
         private Map<String, SGridPadding[]> paddings;
 
@@ -1274,7 +1274,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         protected GridDataSource openDataSource() throws DataReadingException {
             NetcdfDataset nc = null;
             try {
-                nc = NetcdfDatasetAggregator.getDataset(location);
+                nc = CdmGridDatasetFactory.this.getNetcdfDatasetFromLocation(location, false);
                 synchronized (this) {
                     /*
                      * If the getGridDataset method runs concurrently on the
@@ -1443,7 +1443,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         }
     }
 
-    private static final class CdmUgridDataset extends HorizontalMesh4dDataset {
+    private final class CdmUgridDataset extends HorizontalMesh4dDataset {
         private final String location;
         private final Map<String, int[]> varId2hztIndices;
 
@@ -1474,7 +1474,7 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory {
         protected HZTDataSource openDataSource() throws DataReadingException {
             NetcdfDataset nc;
             try {
-                nc = NetcdfDatasetAggregator.getDataset(location);
+                nc = CdmGridDatasetFactory.this.getNetcdfDatasetFromLocation(location, false);
                 synchronized (this) {
                     /*
                      * If the getGridDataset method runs concurrently on the

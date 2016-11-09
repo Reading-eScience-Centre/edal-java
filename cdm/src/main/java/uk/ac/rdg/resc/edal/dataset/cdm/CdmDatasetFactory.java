@@ -80,7 +80,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
             /*
              * Open the NetcdfDataset, using the cache.
              */
-            nc = NetcdfDatasetAggregator.getDataset(location, forceRefresh);
+            nc = getNetcdfDatasetFromLocation(location, forceRefresh);
 
             /*
              * Generate a simple dataset - delegated to subclasses
@@ -112,10 +112,15 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              */
             return dataset;
         } catch (Throwable e) {
-            throw new EdalException("Problem creating dataset "+id+" at "+location, e);
+            throw new EdalException("Problem creating dataset " + id + " at " + location, e);
         } finally {
             NetcdfDatasetAggregator.releaseDataset(nc);
         }
+    }
+
+    protected NetcdfDataset getNetcdfDatasetFromLocation(String location, boolean forceRefresh)
+            throws IOException, EdalException {
+        return NetcdfDatasetAggregator.getDataset(location, forceRefresh);
     }
 
     /**
