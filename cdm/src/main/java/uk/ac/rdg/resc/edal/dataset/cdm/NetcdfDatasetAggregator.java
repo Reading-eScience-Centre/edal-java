@@ -53,6 +53,7 @@ import ucar.nc2.ncml.NcMLReader;
 import ucar.nc2.units.DateUnit;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.MetadataException;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 public class NetcdfDatasetAggregator {
@@ -230,9 +231,24 @@ public class NetcdfDatasetAggregator {
                         }
 
                         /*
-                         * Create a Map
+                         * We map time values to the variables in files.
+                         * 
+                         * The standard case is that we have multiple files, all
+                         * with the same variables, but at different times. That
+                         * will create an aggregation using "joinExisting".
+                         * 
+                         * However, we also support the case where we have
+                         * multiple files per timestep, each containing a
+                         * different set of variables. Then we want to do a
+                         * "joinExisting", but the thing we want to join is a
+                         * union of the files. This map allows us to do that.
                          */
                         Map<Long, Map<String, String>> time2vars2filename = new HashMap<>();
+                        /*
+                         * Used to check that attribute values are consistent
+                         * across all variables in all files.
+                         */
+                        Map<String, Map<String, Object>> varname2Attributes = new HashMap<>();
                         for (File file : files) {
                             NetcdfFile ncFile = null;
                             try {
@@ -249,13 +265,105 @@ public class NetcdfDatasetAggregator {
                                     time2vars2filename.put(time, vars2filename);
                                 }
                                 List<Variable> variables = ncFile.getVariables();
+                                /*
+                                 * varNames allows us to track which variables
+                                 * are in each file.
+                                 */
                                 String varNames = "";
                                 for (Variable v : variables) {
-                                    varNames += v.getFullName();
+                                    String varName = v.getFullName();
+                                    varNames += varName;
+                                    /*
+                                     * We now check that the variables we are
+                                     * aggregating all share the same
+                                     * attributes. If we have different
+                                     * attributes for variables in different
+                                     * files, it's asking for trouble (e.g.
+                                     * different units on time variables,
+                                     * different add_offset and scale_factor)
+                                     * because NcML will take the attributes
+                                     * from the final file it aggregates.
+                                     */
+                                    if (!varname2Attributes.containsKey(varName)) {
+                                        /*
+                                         * We haven't processed a variable with
+                                         * this name before
+                                         */
+                                        Map<String, Object> attributeValues = new HashMap<>();
+                                        for (Attribute attr : v.getAttributes()) {
+                                            Object value = attr.getNumericValue();
+                                            if (value == null && attr.isString()) {
+                                                value = attr.getStringValue();
+                                            }
+                                            if (value != null) {
+                                                attributeValues.put(attr.getFullName(), value);
+                                            }
+                                        }
+                                        varname2Attributes.put(varName, attributeValues);
+                                    } else {
+                                        Map<String, Object> attributes = varname2Attributes
+                                                .get(varName);
+                                        for (Attribute attr : v.getAttributes()) {
+                                            if (!attributes.containsKey(attr.getFullName())) {
+                                                /*
+                                                 * We have an attribute for a
+                                                 * variable which did not exist
+                                                 * in a previous variable with
+                                                 * the same name.
+                                                 */
+                                                throw new MetadataException(
+                                                        "Trying to aggregate NetCDF files, but the variable "
+                                                                + varName
+                                                                + " in "
+                                                                + file.getAbsolutePath()
+                                                                + " has the attribute "
+                                                                + attr.getFullName()
+                                                                + " which did not exist in another file in the aggregation.  "
+                                                                + "All variable attributes must match across all files in the aggregation.");
+                                            } else {
+                                                Object value = attr.getNumericValue();
+                                                if (value == null && attr.isString()) {
+                                                    value = attr.getStringValue();
+                                                }
+                                                if (value != null
+                                                        && !attributes.get(attr.getFullName())
+                                                                .equals(value)) {
+                                                    /*
+                                                     * We have an attribute
+                                                     * which existed in a
+                                                     * variable with the same
+                                                     * name, but which had a
+                                                     * different value
+                                                     */
+                                                    throw new MetadataException(
+                                                            "Trying to aggregate NetCDF files, but the variable "
+                                                                    + varName
+                                                                    + " in the file "
+                                                                    + file.getAbsolutePath()
+                                                                    + " has an attribute "
+                                                                    + attr.getFullName()
+                                                                    + " with the value "
+                                                                    + value
+                                                                    + " which is different to the value of "
+                                                                    + attr.getFullName()
+                                                                    + " on "
+                                                                    + varName
+                                                                    + " in a different file.  "
+                                                                    + "All variable attributes must match across all files in the aggregation.");
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                                 time2vars2filename.get(time).put(varNames, file.getAbsolutePath());
+                            } catch (MetadataException e) {
+                                /*
+                                 * We want to actually throw our
+                                 * MetadataExceptions, but catch all others.
+                                 */
+                                throw e;
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                log.error("Problem aggregating dataset", e);
                             } finally {
                                 if (ncFile != null) {
                                     ncFile.close();
@@ -396,7 +504,8 @@ public class NetcdfDatasetAggregator {
     }
 
     private static boolean isRemote(String location) {
-        return location.startsWith("dods://") || location.startsWith("http://") || location.startsWith("https://");
+        return location.startsWith("dods://") || location.startsWith("http://")
+                || location.startsWith("https://");
     }
 
     /**
