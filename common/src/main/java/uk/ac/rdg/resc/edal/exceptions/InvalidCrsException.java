@@ -36,7 +36,7 @@ package uk.ac.rdg.resc.edal.exceptions;
  */
 public class InvalidCrsException extends EdalException {
     private static final long serialVersionUID = 1L;
-
+    
     /**
      * Creates a new instance of InvalidCrsException
      * 
@@ -47,4 +47,15 @@ public class InvalidCrsException extends EdalException {
         super("The CRS " + crsCode + " is not supported by this server", "InvalidCRS");
     }
 
+    /**
+     * Creates a new instance of InvalidCrsException
+     * 
+     * @param crsCode
+     *            The code of the unsupported CRS
+     * @param e
+     *            The exception which caused this
+     */
+    public InvalidCrsException(String crsCode, Exception e) {
+        super("The CRS " + crsCode + " is not supported by this server", "InvalidCRS", e);
+    }
 }

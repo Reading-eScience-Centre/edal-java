@@ -400,7 +400,8 @@ public final class GISUtils implements ObjectFactory {
             crs = AbstractCRS.castOrCopy(crs).forConvention(AxesConvention.RIGHT_HANDED);
             return crs;
         } catch (Exception e) {
-            throw new InvalidCrsException(crsCode);
+            log.error("Problem getting CRS", e);
+            throw new InvalidCrsException(crsCode, e);
         }
     }
 
@@ -1319,6 +1320,7 @@ public final class GISUtils implements ObjectFactory {
          * Initialise the EPSG database if necessary
          */
         try {
+            log.debug("Creating EPSG database");
             Class.forName("org.h2.Driver");
             String path;
             if (EpsgDatabasePath.DB_PATH == null) {
@@ -1344,10 +1346,14 @@ public final class GISUtils implements ObjectFactory {
              */
             JNDI.install(dataSource);
         } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+            log.error("Problem creating EPSG database.  Reprojection will not work", e);
+        } catch (Exception e) {
+            e.printStackTrace();
             log.error("Problem creating EPSG database.  Reprojection will not work", e);
         }
     }
-
+    
     public static boolean isPressureUnits(String units) {
         if (units.equalsIgnoreCase("bar") || units.equalsIgnoreCase("standard_atmosphere")
                 || units.equalsIgnoreCase("technical_atmosphere")
@@ -1387,6 +1393,6 @@ public final class GISUtils implements ObjectFactory {
     }
 
     public static void main(String[] args) {
-        System.out.println(getCrs("EPSG:5041"));
+        System.out.println(getCrs("EPSG:3857"));
     }
 }
