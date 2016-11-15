@@ -160,7 +160,7 @@ public class GetMapStyleParams {
                 .getDefaultPlottingParameters();
 
         String bgcStr = params.getString("bgcolor",
-                GraphicsUtils.colourToHtmlString(defaults.getNoDataColour()));
+                GraphicsUtils.colourToString(defaults.getNoDataColour()));
         backgroundColour = GraphicsUtils.parseColour(bgcStr);
 
         this.transparent = params.getBoolean("transparent", false);
@@ -170,8 +170,8 @@ public class GetMapStyleParams {
 
         String bmcStr = params.getString(
                 "belowmincolor",
-                defaults.getBelowMinColour() != null ? GraphicsUtils.colourToHtmlString(defaults
-                        .getBelowMinColour()) : null);
+                defaults.getBelowMinColour() != null ? GraphicsUtils.colourToString(defaults
+                        .getBelowMinColour()) : "extend");
         if (bmcStr == null) {
             belowMinColour = Color.black;
         } else if (bmcStr.equalsIgnoreCase("extend")) {
@@ -184,8 +184,8 @@ public class GetMapStyleParams {
 
         String amcStr = params.getString(
                 "abovemaxcolor",
-                defaults.getAboveMaxColour() != null ? GraphicsUtils.colourToHtmlString(defaults
-                        .getAboveMaxColour()) : null);
+                defaults.getAboveMaxColour() != null ? GraphicsUtils.colourToString(defaults
+                        .getAboveMaxColour()) : "extend");
         if (amcStr == null) {
             aboveMaxColour = Color.black;
         } else if (amcStr.equalsIgnoreCase("extend")) {
