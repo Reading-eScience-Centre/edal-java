@@ -1333,11 +1333,14 @@ public final class GISUtils implements ObjectFactory {
              * the first JVM. However, if a second JVM tries to access it, it
              * will then start server mode.
              */
-            dataSource.setURL("jdbc:h2:" + path + "/.h2/epsg.db;AUTO_SERVER=TRUE");
-
+            String dbUrl = "jdbc:h2:" + path + "/.h2/epsg.db;AUTO_SERVER=TRUE";
+            log.debug("Attempting to create EPSG datbase: "+dbUrl);
+            dataSource.setURL(dbUrl);
+            
             Connection conn = dataSource.getConnection();
             conn.setAutoCommit(true);
             
+            log.debug("EPSG database created successfully");
             /*
              * Install the standalone JNDI context. This will only get registered if
              * no other JNDI handler exists. In the case that this class is within a
