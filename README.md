@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/yosoyjay/edal-java.svg?branch=dockerize)](https://travis-ci.org/yosoyjay/edal-java)
+
 Environmental Data Abstraction Layer (EDAL)
 ===========================================
 
