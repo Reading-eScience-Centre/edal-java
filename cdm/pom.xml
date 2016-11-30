@@ -24,27 +24,27 @@
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>cdm</artifactId>
-            <version>5.0.0-20161006.124426-12</version>
+            <version>5.0.0-20161126.124418-24</version>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>udunits</artifactId>
-            <version>5.0.0-20161006.124642-11</version>
+            <version>5.0.0-20161126.124637-23</version>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>netcdf4</artifactId>
-            <version>5.0.0-20161006.124501-11</version>
+            <version>5.0.0-20161126.124452-23</version>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>grib</artifactId>
-            <version>5.0.0-20161006.124442-12</version>
+            <version>5.0.0-20161126.124433-24</version>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>opendap</artifactId>
-            <version>5.0.0-20161006.124503-11</version>
+            <version>5.0.0-20161126.124454-23</version>
         </dependency>
         <dependency>
             <groupId>oro</groupId>
