@@ -107,7 +107,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public final class CdmGridDatasetFactory extends CdmDatasetFactory {
+public class CdmGridDatasetFactory extends CdmDatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
     private static final String UNSTAGGERED_SUFFIX = ":face";
 
