@@ -4,7 +4,7 @@ language: java
 services:
     - docker 
 
-before_install:
+install:
     - docker build -t edal-java/$TRAVIS_BRANCH . 
 
 script:
