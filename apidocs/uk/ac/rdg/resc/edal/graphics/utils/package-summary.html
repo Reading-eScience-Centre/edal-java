@@ -1,5 +1,6 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <!-- NewPage -->
 <html lang="en">
@@ -615,6 +616,308 @@
     try {
         if (location.href.indexOf('is-external=true') == -1) {
             parent.document.title="uk.ac.rdg.resc.edal.graphics.utils (Environmental Data Abstraction Library 1.2.4 API)";
+        }
+    }
+    catch(err) {
+    }
+//-->
+</script>
+<noscript>
+<div>JavaScript is disabled on your browser.</div>
+</noscript>
+<!-- ========= START OF TOP NAVBAR ======= -->
+<div class="topNav"><a name="navbar.top">
+<!--   -->
+</a>
+<div class="skipNav"><a href="#skip.navbar.top" title="Skip navigation links">Skip navigation links</a></div>
+<a name="navbar.top.firstrow">
+<!--   -->
+</a>
+<ul class="navList" title="Navigation">
+<li><a href="../../../../../../../overview-summary.html">Overview</a></li>
+<li class="navBarCell1Rev">Package</li>
+<li>Class</li>
+<li><a href="package-use.html">Use</a></li>
+<li><a href="package-tree.html">Tree</a></li>
+<li><a href="../../../../../../../deprecated-list.html">Deprecated</a></li>
+<li><a href="../../../../../../../index-all.html">Index</a></li>
+<li><a href="../../../../../../../help-doc.html">Help</a></li>
+</ul>
+</div>
+<div class="subNav">
+<ul class="navList">
+<li><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/style/sld/package-summary.html">Prev&nbsp;Package</a></li>
+<li><a href="../../../../../../../uk/ac/rdg/resc/edal/grid/package-summary.html">Next&nbsp;Package</a></li>
+</ul>
+<ul class="navList">
+<li><a href="../../../../../../../index.html?uk/ac/rdg/resc/edal/graphics/utils/package-summary.html" target="_top">Frames</a></li>
+<li><a href="package-summary.html" target="_top">No&nbsp;Frames</a></li>
+</ul>
+<ul class="navList" id="allclasses_navbar_top">
+<li><a href="../../../../../../../allclasses-noframe.html">All&nbsp;Classes</a></li>
+</ul>
+<div>
+<script type="text/javascript"><!--
+  allClassesLink = document.getElementById("allclasses_navbar_top");
+  if(window==top) {
+    allClassesLink.style.display = "block";
+  }
+  else {
+    allClassesLink.style.display = "none";
+  }
+  //-->
+</script>
+</div>
+<a name="skip.navbar.top">
+<!--   -->
+</a></div>
+<!-- ========= END OF TOP NAVBAR ========= -->
+<div class="header">
+<h1 title="Package" class="title">Package&nbsp;uk.ac.rdg.resc.edal.graphics.utils</h1>
+<div class="docSummary">
+<div class="block">Utilities to serialise/deserialise the styles in the parent package, as well as other shared classes</div>
+</div>
+<p>See:&nbsp;<a href="#package.description">Description</a></p>
+</div>
+<div class="contentContainer">
+<ul class="blockList">
+<li class="blockList">
+<table class="typeSummary" border="0" cellpadding="3" cellspacing="0" summary="Interface Summary table, listing interfaces, and an explanation">
+<caption><span>Interface Summary</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Interface</th>
+<th class="colLast" scope="col">Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/DatasetCatalogue.html" title="interface in uk.ac.rdg.resc.edal.graphics.utils">DatasetCatalogue</a></td>
+<td class="colLast">
+<div class="block">A catalogue of <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset"><code>Dataset</code></a>s and the default plotting information for the
+ Variables contained within them</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/EnhancedVariableMetadata.html" title="interface in uk.ac.rdg.resc.edal.graphics.utils">EnhancedVariableMetadata</a></td>
+<td class="colLast">
+<div class="block">Interface defining the enahnced metadata about a variable, including title,
+ description, copyright/more info and default values for layer plotting
+ 
+ Any of these methods may return <code>null</code> if no default is set.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/FeatureCatalogue.html" title="interface in uk.ac.rdg.resc.edal.graphics.utils">FeatureCatalogue</a></td>
+<td class="colLast">
+<div class="block">An interface defining a catalogue which can extract <a href="../../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature"><code>DiscreteFeature</code></a>s
+ based on a <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang"><code>String</code></a> identifier and a set of
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/PlottingDomainParams.html" title="class in uk.ac.rdg.resc.edal.graphics.utils"><code>PlottingDomainParams</code></a></div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/LayerNameMapper.html" title="interface in uk.ac.rdg.resc.edal.graphics.utils">LayerNameMapper</a></td>
+<td class="colLast">
+<div class="block">Interface defining the mapping of image layer names (i.e.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/StyleCatalogue.html" title="interface in uk.ac.rdg.resc.edal.graphics.utils">StyleCatalogue</a></td>
+<td class="colLast">
+<div class="block">A catalogue of supported styles for plotting.</div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList">
+<table class="typeSummary" border="0" cellpadding="3" cellspacing="0" summary="Class Summary table, listing classes, and an explanation">
+<caption><span>Class Summary</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Class</th>
+<th class="colLast" scope="col">Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/BarbFactory.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">BarbFactory</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/BilinearInterpolator.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">BilinearInterpolator</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/ColourableIcon.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">ColourableIcon</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/ColourPalette.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">ColourPalette</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/DataReadingTypes.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">DataReadingTypes</a></td>
+<td class="colLast">
+<div class="block">This class contains the enum types needed for specifying how data should be
+ extracted.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/FeatureCatalogue.FeaturesAndMemberName.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">FeatureCatalogue.FeaturesAndMemberName</a></td>
+<td class="colLast">
+<div class="block">Simple class combining a <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util"><code>Collection</code></a> of <a href="../../../../../../../uk/ac/rdg/resc/edal/feature/DiscreteFeature.html" title="interface in uk.ac.rdg.resc.edal.feature"><code>DiscreteFeature</code></a>s
+ and the name of the member of interest</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/GraphicsUtils.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">GraphicsUtils</a></td>
+<td class="colLast">
+<div class="block">Class containing static utility methods for dealing with graphics</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/GraphicsUtils.ColorAdapter.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">GraphicsUtils.ColorAdapter</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/LegendDataGenerator.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">LegendDataGenerator</a></td>
+<td class="colLast">
+<div class="block">A class to generate the correct data for a legend.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/PlottingDatum.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">PlottingDatum</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/PlottingDomainParams.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">PlottingDomainParams</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/PlottingStyleParameters.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">PlottingStyleParameters</a></td>
+<td class="colLast">
+<div class="block">Class defining the parameters which affect the style of a plot and which can
+ be substituted into a style template.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/SimpleFeatureCatalogue.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">SimpleFeatureCatalogue</a>&lt;D extends <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/Dataset.html" title="interface in uk.ac.rdg.resc.edal.dataset">Dataset</a>&gt;</td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/SldTemplateStyleCatalogue.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">SldTemplateStyleCatalogue</a></td>
+<td class="colLast">
+<div class="block">An implementation of a <a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/StyleCatalogue.html" title="interface in uk.ac.rdg.resc.edal.graphics.utils"><code>StyleCatalogue</code></a> which is based on having
+ resources containing Xml templates of SLD documents.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/VectorFactory.html" title="class in uk.ac.rdg.resc.edal.graphics.utils">VectorFactory</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList">
+<table class="typeSummary" border="0" cellpadding="3" cellspacing="0" summary="Enum Summary table, listing enums, and an explanation">
+<caption><span>Enum Summary</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Enum</th>
+<th class="colLast" scope="col">Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/DataReadingTypes.PlotType.html" title="enum in uk.ac.rdg.resc.edal.graphics.utils">DataReadingTypes.PlotType</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/DataReadingTypes.SubsampleType.html" title="enum in uk.ac.rdg.resc.edal.graphics.utils">DataReadingTypes.SubsampleType</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/utils/LegendDataGenerator.MatrixType.html" title="enum in uk.ac.rdg.resc.edal.graphics.utils">LegendDataGenerator.MatrixType</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<a name="package.description">
+<!--   -->
+</a>
+<h2 title="Package uk.ac.rdg.resc.edal.graphics.utils Description">Package uk.ac.rdg.resc.edal.graphics.utils Description</h2>
+<div class="block">Utilities to serialise/deserialise the styles in the parent package, as well as other shared classes</div>
+<dl>
+<dt><span class="simpleTagLabel">Author:</span></dt>
+<dd>Guy</dd>
+</dl>
+</div>
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<div class="bottomNav"><a name="navbar.bottom">
+<!--   -->
+</a>
+<div class="skipNav"><a href="#skip.navbar.bottom" title="Skip navigation links">Skip navigation links</a></div>
+<a name="navbar.bottom.firstrow">
+<!--   -->
+</a>
+<ul class="navList" title="Navigation">
+<li><a href="../../../../../../../overview-summary.html">Overview</a></li>
+<li class="navBarCell1Rev">Package</li>
+<li>Class</li>
+<li><a href="package-use.html">Use</a></li>
+<li><a href="package-tree.html">Tree</a></li>
+<li><a href="../../../../../../../deprecated-list.html">Deprecated</a></li>
+<li><a href="../../../../../../../index-all.html">Index</a></li>
+<li><a href="../../../../../../../help-doc.html">Help</a></li>
+</ul>
+</div>
+<div class="subNav">
+<ul class="navList">
+<li><a href="../../../../../../../uk/ac/rdg/resc/edal/graphics/style/sld/package-summary.html">Prev&nbsp;Package</a></li>
+<li><a href="../../../../../../../uk/ac/rdg/resc/edal/grid/package-summary.html">Next&nbsp;Package</a></li>
+</ul>
+<ul class="navList">
+<li><a href="../../../../../../../index.html?uk/ac/rdg/resc/edal/graphics/utils/package-summary.html" target="_top">Frames</a></li>
+<li><a href="package-summary.html" target="_top">No&nbsp;Frames</a></li>
+</ul>
+<ul class="navList" id="allclasses_navbar_bottom">
+<li><a href="../../../../../../../allclasses-noframe.html">All&nbsp;Classes</a></li>
+</ul>
+<div>
+<script type="text/javascript"><!--
+  allClassesLink = document.getElementById("allclasses_navbar_bottom");
+  if(window==top) {
+    allClassesLink.style.display = "block";
+  }
+  else {
+    allClassesLink.style.display = "none";
+  }
+  //-->
+</script>
+</div>
+<a name="skip.navbar.bottom">
+<!--   -->
+</a></div>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+<p class="legalCopy"><small>Copyright &#169; 2010&#x2013;2016 <a href="http://www.met.reading.ac.uk/resc/home/">Reading e-Science Centre, University of Reading, UK</a>. All rights reserved.</small></p>
+</body>
+</html>
+>>>>>>> Stashed changes
+||||||| merged common ancestors
+=======
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- NewPage -->
+<html lang="en">
+<head>
+<!-- Generated by javadoc (1.8.0_111) on Wed Dec 07 12:11:04 GMT 2016 -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>uk.ac.rdg.resc.edal.graphics.utils (Environmental Data Abstraction Library 1.2.5 API)</title>
+<meta name="date" content="2016-12-07">
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+<script type="text/javascript" src="../../../../../../../script.js"></script>
+</head>
+<body>
+<script type="text/javascript"><!--
+    try {
+        if (location.href.indexOf('is-external=true') == -1) {
+            parent.document.title="uk.ac.rdg.resc.edal.graphics.utils (Environmental Data Abstraction Library 1.2.5 API)";
         }
     }
     catch(err) {

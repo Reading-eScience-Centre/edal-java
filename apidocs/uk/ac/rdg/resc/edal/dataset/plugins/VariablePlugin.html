@@ -1,5 +1,6 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <!-- NewPage -->
 <html lang="en">
@@ -1441,6 +1442,725 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
     try {
         if (location.href.indexOf('is-external=true') == -1) {
             parent.document.title="VariablePlugin (Environmental Data Abstraction Library 1.2.4 API)";
+        }
+    }
+    catch(err) {
+    }
+//-->
+var methods = {"i0":10,"i1":6,"i2":10,"i3":10,"i4":6,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
+var altColor = "altColor";
+var rowColor = "rowColor";
+var tableTab = "tableTab";
+var activeTableTab = "activeTableTab";
+</script>
+<noscript>
+<div>JavaScript is disabled on your browser.</div>
+</noscript>
+<!-- ========= START OF TOP NAVBAR ======= -->
+<div class="topNav"><a name="navbar.top">
+<!--   -->
+</a>
+<div class="skipNav"><a href="#skip.navbar.top" title="Skip navigation links">Skip navigation links</a></div>
+<a name="navbar.top.firstrow">
+<!--   -->
+</a>
+<ul class="navList" title="Navigation">
+<li><a href="../../../../../../../overview-summary.html">Overview</a></li>
+<li><a href="package-summary.html">Package</a></li>
+<li class="navBarCell1Rev">Class</li>
+<li><a href="class-use/VariablePlugin.html">Use</a></li>
+<li><a href="package-tree.html">Tree</a></li>
+<li><a href="../../../../../../../deprecated-list.html">Deprecated</a></li>
+<li><a href="../../../../../../../index-all.html">Index</a></li>
+<li><a href="../../../../../../../help-doc.html">Help</a></li>
+</ul>
+</div>
+<div class="subNav">
+<ul class="navList">
+<li><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/ValueErrorPlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VectorPlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+</ul>
+<ul class="navList">
+<li><a href="../../../../../../../index.html?uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html" target="_top">Frames</a></li>
+<li><a href="VariablePlugin.html" target="_top">No&nbsp;Frames</a></li>
+</ul>
+<ul class="navList" id="allclasses_navbar_top">
+<li><a href="../../../../../../../allclasses-noframe.html">All&nbsp;Classes</a></li>
+</ul>
+<div>
+<script type="text/javascript"><!--
+  allClassesLink = document.getElementById("allclasses_navbar_top");
+  if(window==top) {
+    allClassesLink.style.display = "block";
+  }
+  else {
+    allClassesLink.style.display = "none";
+  }
+  //-->
+</script>
+</div>
+<div>
+<ul class="subNavList">
+<li>Summary:&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
+<li><a href="#method.summary">Method</a></li>
+</ul>
+<ul class="subNavList">
+<li>Detail:&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
+<li><a href="#method.detail">Method</a></li>
+</ul>
+</div>
+<a name="skip.navbar.top">
+<!--   -->
+</a></div>
+<!-- ========= END OF TOP NAVBAR ========= -->
+<!-- ======== START OF CLASS DATA ======== -->
+<div class="header">
+<div class="subTitle">uk.ac.rdg.resc.edal.dataset.plugins</div>
+<h2 title="Class VariablePlugin" class="title">Class VariablePlugin</h2>
+</div>
+<div class="contentContainer">
+<ul class="inheritance">
+<li><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
+<li>
+<ul class="inheritance">
+<li>uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin</li>
+</ul>
+</li>
+</ul>
+<div class="description">
+<ul class="blockList">
+<li class="blockList">
+<dl>
+<dt>Direct Known Subclasses:</dt>
+<dd><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/DifferencePlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins">DifferencePlugin</a>, <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/NormalisedDifferencePlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins">NormalisedDifferencePlugin</a>, <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/ValueErrorPlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins">ValueErrorPlugin</a>, <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VectorPlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins">VectorPlugin</a></dd>
+</dl>
+<hr>
+<br>
+<pre>public abstract class <span class="typeNameLabel">VariablePlugin</span>
+extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
+<div class="block">This class specifies a way of generating new variables on-the-fly from
+ existing ones.
+ 
+ It works by supplying to the constructor a list of variable IDs which the
+ plugin uses, and a list of suffixes which it provides. The full variable IDs
+ which the plugin provides are obtained by combining the input IDs and adding
+ each of the suffixes.
+ 
+ The plugin must then override the two abstract methods
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#doProcessVariableMetadata-uk.ac.rdg.resc.edal.metadata.VariableMetadata...-"><code>doProcessVariableMetadata(VariableMetadata...)</code></a> and
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#generateValue-java.lang.String-uk.ac.rdg.resc.edal.position.HorizontalPosition-java.lang.Number...-"><code>generateValue(String, HorizontalPosition, Number...)</code></a>
+ to generate appropriate metadata and values respectively.
+ 
+ For an example of usage, see <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VectorPlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins"><code>VectorPlugin</code></a>, which groups vector
+ components and generates magnitude and direction variables.</div>
+<dl>
+<dt><span class="simpleTagLabel">Author:</span></dt>
+<dd>Guy Griffiths</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="summary">
+<ul class="blockList">
+<li class="blockList">
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Field Summary table, listing fields, and an explanation">
+<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Field and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#prefixLength">prefixLength</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#uses">uses</a></span></code>&nbsp;</td>
+</tr>
+</table>
+</li>
+</ul>
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="constructor.summary">
+<!--   -->
+</a>
+<h3>Constructor Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Constructor Summary table, listing constructors, and an explanation">
+<caption><span>Constructors</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colOne" scope="col">Constructor and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#VariablePlugin-java.lang.String:A-java.lang.String:A-">VariablePlugin</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;usesVariables,
+              <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;providesSuffixes)</code>
+<div class="block">Instantiate a plugin</div>
+</td>
+</tr>
+</table>
+</li>
+</ul>
+<!-- ========== METHOD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="method.summary">
+<!--   -->
+</a>
+<h3>Method Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tr id="i0" class="altColor">
+<td class="colFirst"><code>protected <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#combineIds-java.lang.String...-">combineIds</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>...&nbsp;partsToUse)</code>
+<div class="block">Provides a convenience method for mangling several IDs into one new one.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>protected abstract <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#doProcessVariableMetadata-uk.ac.rdg.resc.edal.metadata.VariableMetadata...-">doProcessVariableMetadata</a></span>(<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>...&nbsp;metadata)</code>
+<div class="block">Subclasses should override this method to modify the
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> tree, and return any new objects added to it.</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util">Array1D</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#generateArray1D-java.lang.String-uk.ac.rdg.resc.edal.util.Array1D-uk.ac.rdg.resc.edal.util.Array1D...-">generateArray1D</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;varId,
+               <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util">Array1D</a>&lt;<a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&gt;&nbsp;positions,
+               <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util">Array1D</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&gt;...&nbsp;sourceArrays)</code>
+<div class="block">Convenience method for generating an <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array1D</code></a> from source</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util">Array2D</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#generateArray2D-java.lang.String-uk.ac.rdg.resc.edal.util.Array2D-uk.ac.rdg.resc.edal.util.Array2D...-">generateArray2D</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;varId,
+               <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util">Array2D</a>&lt;<a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&gt;&nbsp;positions,
+               <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util">Array2D</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&gt;...&nbsp;sourceArrays)</code>
+<div class="block">Convenience method for generating an <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array2D</code></a> from source</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>protected abstract <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#generateValue-java.lang.String-uk.ac.rdg.resc.edal.position.HorizontalPosition-java.lang.Number...-">generateValue</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;varSuffix,
+             <a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&nbsp;pos,
+             <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>...&nbsp;sourceValues)</code>
+<div class="block">Subclasses should override this method to generate values based on source
+ variable values</div>
+</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>protected <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#getFullId-java.lang.String-">getFullId</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;suffix)</code>
+<div class="block">Returns an ID based on the combined ID of all used variables and the
+ suffix of a provided variable.</div>
+</td>
+</tr>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#getValue-java.lang.String-uk.ac.rdg.resc.edal.position.HorizontalPosition-java.lang.Number...-">getValue</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;varId,
+        <a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&nbsp;pos,
+        <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>...&nbsp;values)</code>
+<div class="block">Generates a value for the desired ID</div>
+</td>
+</tr>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#newVariableMetadataFromDomains-uk.ac.rdg.resc.edal.metadata.Parameter-boolean-uk.ac.rdg.resc.edal.domain.HorizontalDomain:A-uk.ac.rdg.resc.edal.domain.VerticalDomain:A-uk.ac.rdg.resc.edal.domain.TemporalDomain:A-">newVariableMetadataFromDomains</a></span>(<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/Parameter.html" title="class in uk.ac.rdg.resc.edal.metadata">Parameter</a>&nbsp;parameter,
+                              boolean&nbsp;scalar,
+                              <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/HorizontalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain">HorizontalDomain</a>[]&nbsp;hDomains,
+                              <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/VerticalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain">VerticalDomain</a>[]&nbsp;zDomains,
+                              <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/TemporalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain">TemporalDomain</a>[]&nbsp;tDomains)</code>
+<div class="block">Generates <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> from the given arguments and domains.</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
+<td class="colFirst"><code>protected <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#newVariableMetadataFromMetadata-uk.ac.rdg.resc.edal.metadata.Parameter-boolean-uk.ac.rdg.resc.edal.metadata.VariableMetadata...-">newVariableMetadataFromMetadata</a></span>(<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/Parameter.html" title="class in uk.ac.rdg.resc.edal.metadata">Parameter</a>&nbsp;parameter,
+                               boolean&nbsp;scalar,
+                               <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>...&nbsp;metadata)</code>
+<div class="block">Generates <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> from the given arguments and metadata.</div>
+</td>
+</tr>
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code><a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#processVariableMetadata-uk.ac.rdg.resc.edal.metadata.VariableMetadata...-">processVariableMetadata</a></span>(<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>...&nbsp;metadata)</code>
+<div class="block">Modifies the current <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> tree to reflect the changes
+ this plugin implements.</div>
+</td>
+</tr>
+<tr id="i10" class="altColor">
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#providesVariables--">providesVariables</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i11" class="rowColor">
+<td class="colFirst"><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#usesVariables--">usesVariables</a></span>()</code>&nbsp;</td>
+</tr>
+</table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;java.lang.<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></h3>
+<code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#clone--" title="class or interface in java.lang">clone</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#equals-java.lang.Object-" title="class or interface in java.lang">equals</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#finalize--" title="class or interface in java.lang">finalize</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#getClass--" title="class or interface in java.lang">getClass</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#hashCode--" title="class or interface in java.lang">hashCode</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notify--" title="class or interface in java.lang">notify</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notifyAll--" title="class or interface in java.lang">notifyAll</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#toString--" title="class or interface in java.lang">toString</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait--" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-int-" title="class or interface in java.lang">wait</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="details">
+<ul class="blockList">
+<li class="blockList">
+<!-- ============ FIELD DETAIL =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.detail">
+<!--   -->
+</a>
+<h3>Field Detail</h3>
+<a name="uses">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>uses</h4>
+<pre>protected&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[] uses</pre>
+</li>
+</ul>
+<a name="prefixLength">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>prefixLength</h4>
+<pre>protected&nbsp;int prefixLength</pre>
+</li>
+</ul>
+</li>
+</ul>
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="constructor.detail">
+<!--   -->
+</a>
+<h3>Constructor Detail</h3>
+<a name="VariablePlugin-java.lang.String:A-java.lang.String:A-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>VariablePlugin</h4>
+<pre>public&nbsp;VariablePlugin(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;usesVariables,
+                      <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;providesSuffixes)</pre>
+<div class="block">Instantiate a plugin</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>usesVariables</code> - The IDs of the variables used to generate new values</dd>
+<dd><code>providesSuffixes</code> - The suffixes of the generated variables. These will not form
+            the actual variable IDs.</dd>
+</dl>
+</li>
+</ul>
+</li>
+</ul>
+<!-- ============ METHOD DETAIL ========== -->
+<ul class="blockList">
+<li class="blockList"><a name="method.detail">
+<!--   -->
+</a>
+<h3>Method Detail</h3>
+<a name="usesVariables--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>usesVariables</h4>
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;usesVariables()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The IDs of the variables which this plugin uses,
+         <em>in the order it needs them</em></dd>
+</dl>
+</li>
+</ul>
+<a name="providesVariables--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>providesVariables</h4>
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>[]&nbsp;providesVariables()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The IDs of the variables which this plugin provides</dd>
+</dl>
+</li>
+</ul>
+<a name="generateArray1D-java.lang.String-uk.ac.rdg.resc.edal.util.Array1D-uk.ac.rdg.resc.edal.util.Array1D...-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>generateArray1D</h4>
+<pre>public&nbsp;<a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util">Array1D</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&gt;&nbsp;generateArray1D(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;varId,
+                                       <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util">Array1D</a>&lt;<a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&gt;&nbsp;positions,
+                                       <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util">Array1D</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&gt;...&nbsp;sourceArrays)</pre>
+<div class="block">Convenience method for generating an <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array1D</code></a> from source</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>varId</code> - The ID of the variable to generate</dd>
+<dd><code>positions</code> - An <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array1D</code></a> of the positions of each value</dd>
+<dd><code>sourceArrays</code> - An <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array1D</code></a> containing the source values</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>An <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array1D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array1D</code></a> containing the generated values</dd>
+</dl>
+</li>
+</ul>
+<a name="generateArray2D-java.lang.String-uk.ac.rdg.resc.edal.util.Array2D-uk.ac.rdg.resc.edal.util.Array2D...-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>generateArray2D</h4>
+<pre>public&nbsp;<a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util">Array2D</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&gt;&nbsp;generateArray2D(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;varId,
+                                       <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util">Array2D</a>&lt;<a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&gt;&nbsp;positions,
+                                       <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util">Array2D</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&gt;...&nbsp;sourceArrays)</pre>
+<div class="block">Convenience method for generating an <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array2D</code></a> from source</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>varId</code> - The ID of the variable to generate</dd>
+<dd><code>positions</code> - An <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array2D</code></a> of the positions of each value</dd>
+<dd><code>sourceArrays</code> - An <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array2D</code></a> containing the source values</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>An <a href="../../../../../../../uk/ac/rdg/resc/edal/util/Array2D.html" title="class in uk.ac.rdg.resc.edal.util"><code>Array2D</code></a> containing the generated values</dd>
+</dl>
+</li>
+</ul>
+<a name="processVariableMetadata-uk.ac.rdg.resc.edal.metadata.VariableMetadata...-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>processVariableMetadata</h4>
+<pre>public&nbsp;<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>[]&nbsp;processVariableMetadata(<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>...&nbsp;metadata)
+                                           throws <a href="../../../../../../../uk/ac/rdg/resc/edal/exceptions/EdalException.html" title="class in uk.ac.rdg.resc.edal.exceptions">EdalException</a></pre>
+<div class="block">Modifies the current <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> tree to reflect the changes
+ this plugin implements.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>metadata</code> - An array of <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> of the source variables</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>An array of any new <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> objects inserted
+         into the tree</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../../uk/ac/rdg/resc/edal/exceptions/EdalException.html" title="class in uk.ac.rdg.resc.edal.exceptions">EdalException</a></code> - If there is a problem processing the metadata</dd>
+</dl>
+</li>
+</ul>
+<a name="getValue-java.lang.String-uk.ac.rdg.resc.edal.position.HorizontalPosition-java.lang.Number...-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getValue</h4>
+<pre>public&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&nbsp;getValue(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;varId,
+                       <a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&nbsp;pos,
+                       <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>...&nbsp;values)</pre>
+<div class="block">Generates a value for the desired ID</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>varId</code> - The ID of the variable to generate a value for</dd>
+<dd><code>pos</code> - The <a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position"><code>HorizontalPosition</code></a> at which the data is being
+            generated. This may be relevant to how the plugin processes
+            the values</dd>
+<dd><code>values</code> - An array of <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang"><code>Number</code></a>s representing the source values</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The derived value</dd>
+</dl>
+</li>
+</ul>
+<a name="doProcessVariableMetadata-uk.ac.rdg.resc.edal.metadata.VariableMetadata...-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>doProcessVariableMetadata</h4>
+<pre>protected abstract&nbsp;<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>[]&nbsp;doProcessVariableMetadata(<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>...&nbsp;metadata)
+                                                         throws <a href="../../../../../../../uk/ac/rdg/resc/edal/exceptions/EdalException.html" title="class in uk.ac.rdg.resc.edal.exceptions">EdalException</a></pre>
+<div class="block">Subclasses should override this method to modify the
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> tree, and return any new objects added to it.
+ This allows subclasses to arbitrarily restructure the metadata tree by
+ calling the <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html#setParent-uk.ac.rdg.resc.edal.metadata.VariableMetadata-java.lang.String-"><code>VariableMetadata.setParent(VariableMetadata, String)</code></a>
+ methods.
+ 
+ Note that the IDs in the newly-created <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> objects
+ should be generated by calling <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#getFullId-java.lang.String-"><code>getFullId(String)</code></a>
+ with the variable's suffix.
+ 
+ If the plugin is designed to group several child variables, the first
+ child will be used to automatically estimate the scale range of the
+ parent.
+ 
+ This is guaranteed to only be called once.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>metadata</code> - An array of <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> of the source variables
+            in the order they were supplied to the constructor</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The derived <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../../uk/ac/rdg/resc/edal/exceptions/EdalException.html" title="class in uk.ac.rdg.resc.edal.exceptions">EdalException</a></code> - If there is a problem generating new metadata</dd>
+</dl>
+</li>
+</ul>
+<a name="generateValue-java.lang.String-uk.ac.rdg.resc.edal.position.HorizontalPosition-java.lang.Number...-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>generateValue</h4>
+<pre>protected abstract&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>&nbsp;generateValue(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;varSuffix,
+                                        <a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position">HorizontalPosition</a>&nbsp;pos,
+                                        <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang">Number</a>...&nbsp;sourceValues)</pre>
+<div class="block">Subclasses should override this method to generate values based on source
+ variable values</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>varSuffix</code> - The suffix ID of the variable to generate
+            <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> for. This will be one of the provided
+            suffixes in the constructor, but not the actual variable ID
+            (which subclasses do not need to worry about)</dd>
+<dd><code>pos</code> - The <a href="../../../../../../../uk/ac/rdg/resc/edal/position/HorizontalPosition.html" title="class in uk.ac.rdg.resc.edal.position"><code>HorizontalPosition</code></a> at which the value is
+            generated. This may affect the returned value</dd>
+<dd><code>sourceValues</code> - An array of <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Number.html?is-external=true" title="class or interface in java.lang"><code>Number</code></a>s representing the source values in
+            the order they were supplied to the constructor</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The derived value</dd>
+</dl>
+</li>
+</ul>
+<a name="combineIds-java.lang.String...-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>combineIds</h4>
+<pre>protected&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;combineIds(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>...&nbsp;partsToUse)</pre>
+<div class="block">Provides a convenience method for mangling several IDs into one new one.
+ This just concatenates them, but subclasses may wish to override this if
+ they require a specific format for IDs.
+ 
+ This is guaranteed to be called once upon construction.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>partsToUse</code> - The IDs to base this name on</dd>
+</dl>
+</li>
+</ul>
+<a name="getFullId-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getFullId</h4>
+<pre>protected final&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;getFullId(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;suffix)</pre>
+<div class="block">Returns an ID based on the combined ID of all used variables and the
+ suffix of a provided variable.
+ 
+ This should be used by subclasses to generate new
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> objects in
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html#doProcessVariableMetadata-uk.ac.rdg.resc.edal.metadata.VariableMetadata...-"><code>doProcessVariableMetadata(VariableMetadata...)</code></a> if
+ required</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>suffix</code> - The suffix used to identify the generated variable.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The full ID</dd>
+</dl>
+</li>
+</ul>
+<a name="newVariableMetadataFromMetadata-uk.ac.rdg.resc.edal.metadata.Parameter-boolean-uk.ac.rdg.resc.edal.metadata.VariableMetadata...-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>newVariableMetadataFromMetadata</h4>
+<pre>protected&nbsp;<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>&nbsp;newVariableMetadataFromMetadata(<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/Parameter.html" title="class in uk.ac.rdg.resc.edal.metadata">Parameter</a>&nbsp;parameter,
+                                                           boolean&nbsp;scalar,
+                                                           <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>...&nbsp;metadata)
+                                                    throws <a href="../../../../../../../uk/ac/rdg/resc/edal/exceptions/IncorrectDomainException.html" title="class in uk.ac.rdg.resc.edal.exceptions">IncorrectDomainException</a></pre>
+<div class="block">Generates <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> from the given arguments and metadata.
+ 
+ If all <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> arguments are of the same type (e.g.
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/GridVariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>GridVariableMetadata</code></a> or <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/HorizontalMesh4dVariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>HorizontalMesh4dVariableMetadata</code></a>
+ ), then the return type is guaranteed to be of that type. If that is not
+ possible, an exception will be thrown.
+ 
+ This should be used by subclasses when generating
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> from several other <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a>
+ objects.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>parameter</code> - The <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/Parameter.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>Parameter</code></a> describing the variable</dd>
+<dd><code>scalar</code> - Whether the resulting variable is a scalar (if not, it is a
+            grouping variable)</dd>
+<dd><code>metadata</code> - An array of <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> objects for the source
+            data</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> object with the specified parameters,
+         and domains which encompass the intersection of all of the
+         supplied domains. If appropriate, this will be a
+         <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/GridVariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>GridVariableMetadata</code></a> object.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../../uk/ac/rdg/resc/edal/exceptions/IncorrectDomainException.html" title="class in uk.ac.rdg.resc.edal.exceptions">IncorrectDomainException</a></code> - If a common domain of the same type as the domains of the
+             supplied <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> objects cannot be found.</dd>
+</dl>
+</li>
+</ul>
+<a name="newVariableMetadataFromDomains-uk.ac.rdg.resc.edal.metadata.Parameter-boolean-uk.ac.rdg.resc.edal.domain.HorizontalDomain:A-uk.ac.rdg.resc.edal.domain.VerticalDomain:A-uk.ac.rdg.resc.edal.domain.TemporalDomain:A-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>newVariableMetadataFromDomains</h4>
+<pre>protected&nbsp;<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata">VariableMetadata</a>&nbsp;newVariableMetadataFromDomains(<a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/Parameter.html" title="class in uk.ac.rdg.resc.edal.metadata">Parameter</a>&nbsp;parameter,
+                                                          boolean&nbsp;scalar,
+                                                          <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/HorizontalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain">HorizontalDomain</a>[]&nbsp;hDomains,
+                                                          <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/VerticalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain">VerticalDomain</a>[]&nbsp;zDomains,
+                                                          <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/TemporalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain">TemporalDomain</a>[]&nbsp;tDomains)
+                                                   throws <a href="../../../../../../../uk/ac/rdg/resc/edal/exceptions/IncorrectDomainException.html" title="class in uk.ac.rdg.resc.edal.exceptions">IncorrectDomainException</a></pre>
+<div class="block">Generates <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> from the given arguments and domains.
+ 
+ If all of the domains are <a href="../../../../../../../uk/ac/rdg/resc/edal/grid/HorizontalGrid.html" title="interface in uk.ac.rdg.resc.edal.grid"><code>HorizontalGrid</code></a>s, then the resulting
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> will also be <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/GridVariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>GridVariableMetadata</code></a> and
+ can be cast as such.
+ 
+ This should be used by subclasses when generating
+ <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> from several other <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a>
+ objects.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>parameter</code> - The <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/Parameter.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>Parameter</code></a> describing the variable</dd>
+<dd><code>scalar</code> - Whether the resulting variable is a scalar (if not, it is a
+            grouping variable)</dd>
+<dd><code>hDomains</code> - An array of <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/HorizontalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain"><code>HorizontalDomain</code></a>s for the source data</dd>
+<dd><code>zDomains</code> - An array of <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/VerticalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain"><code>VerticalDomain</code></a>s for the source data</dd>
+<dd><code>tDomains</code> - An array of <a href="../../../../../../../uk/ac/rdg/resc/edal/domain/TemporalDomain.html" title="interface in uk.ac.rdg.resc.edal.domain"><code>TemporalDomain</code></a>s for the source data</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/VariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>VariableMetadata</code></a> object with the specified parameters,
+         and domains which encompass the intersection of all of the
+         supplied domains. If appropriate, this will be a
+         <a href="../../../../../../../uk/ac/rdg/resc/edal/metadata/GridVariableMetadata.html" title="class in uk.ac.rdg.resc.edal.metadata"><code>GridVariableMetadata</code></a> object.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../../../../../../uk/ac/rdg/resc/edal/exceptions/IncorrectDomainException.html" title="class in uk.ac.rdg.resc.edal.exceptions">IncorrectDomainException</a></code></dd>
+</dl>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<!-- ========= END OF CLASS DATA ========= -->
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<div class="bottomNav"><a name="navbar.bottom">
+<!--   -->
+</a>
+<div class="skipNav"><a href="#skip.navbar.bottom" title="Skip navigation links">Skip navigation links</a></div>
+<a name="navbar.bottom.firstrow">
+<!--   -->
+</a>
+<ul class="navList" title="Navigation">
+<li><a href="../../../../../../../overview-summary.html">Overview</a></li>
+<li><a href="package-summary.html">Package</a></li>
+<li class="navBarCell1Rev">Class</li>
+<li><a href="class-use/VariablePlugin.html">Use</a></li>
+<li><a href="package-tree.html">Tree</a></li>
+<li><a href="../../../../../../../deprecated-list.html">Deprecated</a></li>
+<li><a href="../../../../../../../index-all.html">Index</a></li>
+<li><a href="../../../../../../../help-doc.html">Help</a></li>
+</ul>
+</div>
+<div class="subNav">
+<ul class="navList">
+<li><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/ValueErrorPlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../../../../uk/ac/rdg/resc/edal/dataset/plugins/VectorPlugin.html" title="class in uk.ac.rdg.resc.edal.dataset.plugins"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+</ul>
+<ul class="navList">
+<li><a href="../../../../../../../index.html?uk/ac/rdg/resc/edal/dataset/plugins/VariablePlugin.html" target="_top">Frames</a></li>
+<li><a href="VariablePlugin.html" target="_top">No&nbsp;Frames</a></li>
+</ul>
+<ul class="navList" id="allclasses_navbar_bottom">
+<li><a href="../../../../../../../allclasses-noframe.html">All&nbsp;Classes</a></li>
+</ul>
+<div>
+<script type="text/javascript"><!--
+  allClassesLink = document.getElementById("allclasses_navbar_bottom");
+  if(window==top) {
+    allClassesLink.style.display = "block";
+  }
+  else {
+    allClassesLink.style.display = "none";
+  }
+  //-->
+</script>
+</div>
+<div>
+<ul class="subNavList">
+<li>Summary:&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
+<li><a href="#method.summary">Method</a></li>
+</ul>
+<ul class="subNavList">
+<li>Detail:&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
+<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
+<li><a href="#method.detail">Method</a></li>
+</ul>
+</div>
+<a name="skip.navbar.bottom">
+<!--   -->
+</a></div>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+<p class="legalCopy"><small>Copyright &#169; 2010&#x2013;2016 <a href="http://www.met.reading.ac.uk/resc/home/">Reading e-Science Centre, University of Reading, UK</a>. All rights reserved.</small></p>
+</body>
+</html>
+>>>>>>> Stashed changes
+||||||| merged common ancestors
+=======
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- NewPage -->
+<html lang="en">
+<head>
+<!-- Generated by javadoc (1.8.0_111) on Wed Dec 07 12:11:01 GMT 2016 -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>VariablePlugin (Environmental Data Abstraction Library 1.2.5 API)</title>
+<meta name="date" content="2016-12-07">
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+<script type="text/javascript" src="../../../../../../../script.js"></script>
+</head>
+<body>
+<script type="text/javascript"><!--
+    try {
+        if (location.href.indexOf('is-external=true') == -1) {
+            parent.document.title="VariablePlugin (Environmental Data Abstraction Library 1.2.5 API)";
         }
     }
     catch(err) {
