@@ -1,3 +1,12 @@
+1.2.5
+=====
+Transect plots report distance in km
+Added more background map servers
+Additionl CoverageJSON writer support
+Updated to fixed versions of UCAR libraries which will not disappear
+Temporary workaround for clash between Apache SIS context and config dir configuration
+Minor bugfixes
+
 1.2.4
 =====
 Reduced size of capabilities document
