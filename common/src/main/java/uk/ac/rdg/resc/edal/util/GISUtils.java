@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.util;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ import javax.naming.Name;
 import javax.naming.spi.ObjectFactory;
 
 import org.apache.sis.geometry.DirectPosition2D;
+import org.apache.sis.internal.metadata.sql.Initializer;
 import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.CommonCRS;
@@ -1334,20 +1336,55 @@ public final class GISUtils implements ObjectFactory {
              * will then start server mode.
              */
             String dbUrl = "jdbc:h2:" + path + "/.h2/epsg.db;AUTO_SERVER=TRUE";
-            log.debug("Attempting to create EPSG datbase: "+dbUrl);
+            log.debug("Attempting to create EPSG datbase: " + dbUrl);
             dataSource.setURL(dbUrl);
-            
+
             Connection conn = dataSource.getConnection();
             conn.setAutoCommit(true);
-            
+
             log.debug("EPSG database created successfully");
             /*
-             * Install the standalone JNDI context. This will only get registered if
-             * no other JNDI handler exists. In the case that this class is within a
-             * webapp (e.g. ncWMS) inside a servlet container (e.g. Tomcat), this
-             * will not do anything.
+             * Install the standalone JNDI context. This will only get
+             * registered if no other JNDI handler exists. In the case that this
+             * class is within a webapp (e.g. ncWMS) inside a servlet container
+             * (e.g. Tomcat), this will not do anything.
              */
-            JNDI.install(dataSource);
+//            JNDI.install(dataSource);
+
+            /*
+             * WARNING - THIS IS A *HORRIBLE* HACK
+             * 
+             * Previously we were using JNDI to declare the data source, either
+             * by defining this class as the factory class for the DataSource in
+             * the webapp context, or by using the small JNDI context when run
+             * outside a webapp (itself a hack, although not a very horrible
+             * one).
+             * 
+             * The trouble is that in ncWMS we suggest that people override the
+             * context.xml to provide a config directory location which will
+             * persist across application redeploys. Doing this overwrites the
+             * supplied context, meaning that no database is created.
+             * 
+             * There is no satisfactory way around this.
+             * 
+             * So instead, we use reflection to set the private field on
+             * Initializer (the Apache SIS class). THIS IS NOT A LONG TERM
+             * SOLUTION and should be fixed as soon as possible. Fixes in order
+             * of preference:
+             * 
+             * Get Apache to include a setter on Initializer, rather than
+             * mandating JNDI
+             * 
+             * Find a way of binding the JNDI resource programmatically /
+             * outside META-INF/context.xml
+             * 
+             * Move back to Geotoolkit (it's a little slower, but it doesn't
+             * require hacks like this).
+             */
+            Field f = Initializer.class.getDeclaredField("source");
+            f.setAccessible(true);
+            f.set(null, dataSource);
+            f.setAccessible(false);
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
             log.error("Problem creating EPSG database.  Reprojection will not work", e);
@@ -1356,7 +1393,7 @@ public final class GISUtils implements ObjectFactory {
             log.error("Problem creating EPSG database.  Reprojection will not work", e);
         }
     }
-    
+
     public static boolean isPressureUnits(String units) {
         if (units.equalsIgnoreCase("bar") || units.equalsIgnoreCase("standard_atmosphere")
                 || units.equalsIgnoreCase("technical_atmosphere")
