@@ -12,3 +12,5 @@ gwt-unitCache/
 graphics/dependency-reduced-pom.xml
 /pom-backup.xml
 /pom.xml.bak
+
+*.swp
