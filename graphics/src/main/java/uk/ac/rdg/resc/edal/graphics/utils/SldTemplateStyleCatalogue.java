@@ -572,6 +572,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             }
         } catch (SLDException e) {
             log.error("Problem parsing style XML", e);
+            return null;
         }
 
         return new StyleDef(name, requiredChildren, usesPalette, isCategorical, needsNamedLayer,
@@ -838,7 +839,7 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             super();
             this.styleName = styleName;
             this.requiredChildRoles = new ArrayList<>();
-            if(requiredChildren != null) {
+            if (requiredChildren != null) {
                 this.requiredChildRoles.addAll(requiredChildren);
             }
             this.usesPalette = usesPalette;
@@ -848,9 +849,12 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                 this.scaledLayerRoles.addAll(scaledLayers);
             }
             this.roles2FeatureType = roles2FeatureType;
-            this.role2MetadataFilter = role2MetadataFilter;
+            this.role2MetadataFilter = new HashMap<>();
+            if (role2MetadataFilter != null) {
+                this.role2MetadataFilter.putAll(role2MetadataFilter);
+            }
             this.concreteLayersRequired = new ArrayList<>();
-            if(concreteLayersRequired != null) {
+            if (concreteLayersRequired != null) {
                 this.concreteLayersRequired.addAll(concreteLayersRequired);
             }
         }
@@ -931,7 +935,8 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
                     return false;
                 }
 
-                if (!role2MetadataFilter.get("").supportsMetadata(variableMetadata)) {
+                if (role2MetadataFilter.get("") == null
+                        || !role2MetadataFilter.get("").supportsMetadata(variableMetadata)) {
                     return false;
                 }
             }
