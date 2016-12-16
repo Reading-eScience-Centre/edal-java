@@ -62,9 +62,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -81,6 +78,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.chrono.ISOChronology;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
@@ -1023,7 +1022,7 @@ public class WmsServlet extends HttpServlet {
         } else {
             datasets = catalogue.getAllDatasets();
         }
-
+        
         JSONArray children = new JSONArray();
         for (Dataset dataset : datasets) {
             String datasetId = dataset.getId();
@@ -1036,7 +1035,7 @@ public class WmsServlet extends HttpServlet {
                 JSONObject datasetJson = new JSONObject();
                 datasetJson.put("label", datasetLabel);
                 datasetJson.put("children", datasetChildren);
-                children.add(datasetJson);
+                children.put(datasetJson);
             } catch (EdalLayerNotFoundException e) {
                 /*
                  * This shouldn't happen - it means that we've failed to get
@@ -1083,7 +1082,7 @@ public class WmsServlet extends HttpServlet {
                 child.put("children", childrenArray);
             }
 
-            ret.add(child);
+            ret.put(child);
         }
         return ret;
     }
@@ -1219,10 +1218,10 @@ public class WmsServlet extends HttpServlet {
         layerDetails.put("units", units);
 
         JSONArray bboxJson = new JSONArray();
-        bboxJson.add(boundingBox.getMinX());
-        bboxJson.add(boundingBox.getMinY());
-        bboxJson.add(boundingBox.getMaxX());
-        bboxJson.add(boundingBox.getMaxY());
+        bboxJson.put(boundingBox.getMinX());
+        bboxJson.put(boundingBox.getMinY());
+        bboxJson.put(boundingBox.getMaxX());
+        bboxJson.put(boundingBox.getMaxY());
         layerDetails.put("bbox", bboxJson);
 
         List<Extent<Float>> scaleRanges = defaultProperties.getColorScaleRanges();
@@ -1241,8 +1240,8 @@ public class WmsServlet extends HttpServlet {
              * them - currently just uncertainty images)
              */
             JSONArray scaleRangeJson = new JSONArray();
-            scaleRangeJson.add(scaleRange.getLow());
-            scaleRangeJson.add(scaleRange.getHigh());
+            scaleRangeJson.put(scaleRange.getLow());
+            scaleRangeJson.put(scaleRange.getHigh());
             if (s == 0) {
                 layerDetails.put("scaleRange", scaleRangeJson);
             } else {
@@ -1256,9 +1255,9 @@ public class WmsServlet extends HttpServlet {
         JSONArray supportedStylesJson = new JSONArray();
         JSONArray noPaletteStylesJson = new JSONArray();
         for (String supportedStyle : supportedStyles) {
-            supportedStylesJson.add(supportedStyle);
+            supportedStylesJson.put(supportedStyle);
             if (!catalogue.getStyleCatalogue().styleUsesPalette(supportedStyle)) {
-                noPaletteStylesJson.add(supportedStyle);
+                noPaletteStylesJson.put(supportedStyle);
             }
         }
         layerDetails.put("supportedStyles", supportedStylesJson);
@@ -1282,7 +1281,7 @@ public class WmsServlet extends HttpServlet {
                 VerticalAxis verticalAxis = (VerticalAxis) verticalDomain;
                 JSONArray zValuesJson = new JSONArray();
                 for (Double z : verticalAxis.getCoordinateValues()) {
-                    zValuesJson.add(z);
+                    zValuesJson.put(z);
                 }
                 zAxisJson.put("values", zValuesJson);
             } else {
@@ -1454,7 +1453,7 @@ public class WmsServlet extends HttpServlet {
                          */
                         JSONArray zValuesJson = new JSONArray();
                         for (Double level : levels) {
-                            zValuesJson.add(level);
+                            zValuesJson.put(level);
                         }
                         zAxisJson.put("values", zValuesJson);
                     }
@@ -1509,11 +1508,11 @@ public class WmsServlet extends HttpServlet {
                         JSONArray daysJson = new JSONArray();
                         List<Integer> days = months.get(month);
                         for (Integer day : days) {
-                            daysJson.add(day);
+                            daysJson.put(day);
                         }
-                        monthsJson.put(month, daysJson);
+                        monthsJson.put(""+month, daysJson);
                     }
-                    datesWithDataJson.put(year, monthsJson);
+                    datesWithDataJson.put(""+year, monthsJson);
                 }
                 layerDetails.put("datesWithData", datesWithDataJson);
             } else {
@@ -1569,7 +1568,7 @@ public class WmsServlet extends HttpServlet {
         }
         JSONArray supportedPalettesJson = new JSONArray();
         for (String supportedPalette : supportedPalettes) {
-            supportedPalettesJson.add(supportedPalette);
+            supportedPalettesJson.put(supportedPalette);
         }
         layerDetails.put("palettes", supportedPalettesJson);
         layerDetails.put("defaultPalette", defaultPalette);
@@ -1631,7 +1630,7 @@ public class WmsServlet extends HttpServlet {
             TimeAxis timeAxis = (TimeAxis) temporalDomain;
             for (DateTime time : timeAxis.getCoordinateValues()) {
                 if (TimeUtils.onSameDay(day, time)) {
-                    timesteps.add(TimeUtils.formatUtcIsoTimeOnly(time));
+                    timesteps.put(TimeUtils.formatUtcIsoTimeOnly(time));
                 }
             }
         } else {
@@ -1886,7 +1885,7 @@ public class WmsServlet extends HttpServlet {
             JSONObject timestep = new JSONObject();
             timestep.put("title", "Full (" + (endIndex - startIndex + 1) + " frames)");
             timestep.put("timeString", startStr + "/" + endStr);
-            timeStrings.add(timestep);
+            timeStrings.put(timestep);
             addTimeStringToJson(AnimationStep.DAILY, timeStrings, tValues, startIndex, endIndex);
             addTimeStringToJson(AnimationStep.WEEKLY, timeStrings, tValues, startIndex, endIndex);
             addTimeStringToJson(AnimationStep.MONTHLY, timeStrings, tValues, startIndex, endIndex);
@@ -1960,7 +1959,7 @@ public class WmsServlet extends HttpServlet {
             JSONObject timestep = new JSONObject();
             timestep.put("title", step.label + " (" + nSteps + " frames)");
             timestep.put("timeString", timeString);
-            jsonArray.add(timestep);
+            jsonArray.put(timestep);
         }
     }
 
