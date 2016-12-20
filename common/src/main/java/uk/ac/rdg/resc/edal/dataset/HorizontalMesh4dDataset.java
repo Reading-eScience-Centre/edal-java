@@ -33,6 +33,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import java.lang.management.ManagementFactory;
+import javax.management.MBeanServer;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -42,6 +45,7 @@ import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
 import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+import net.sf.ehcache.management.ManagementService;
 import uk.ac.rdg.resc.edal.dataset.HZTDataSource.MeshCoordinates3D;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
@@ -220,26 +224,32 @@ public abstract class HorizontalMesh4dDataset extends
 
     /*
      * Cache management
+     * - 50 maps of in-out coordinate mappings
      */
-    protected static final CacheManager cacheManager = CacheManager.create(new Configuration()
-            .name("EDAL-Common-CacheManager"));
-    private static Cache meshDatasetCache;
+    private static final String CACHE_NAME ="meshDatasetCache";
+    private static final String CACHE_MANAGER = "EDAL-CacheManager";
+    private static final int MAX_HEAP_ENTRIES = 50;
+    private static final MemoryStoreEvictionPolicy EVICTION_POLICY = MemoryStoreEvictionPolicy.LFU;
+    private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
+    private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
+    private static Cache meshDatasetCache = null;
+    private static MBeanServer mBeanServer = null;
+    protected static final CacheManager cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER));
 
     static {
-        /*
-         * Configure cache - keep 50 maps of in-out coord mappings in memory
-         * before starting to evict them
-         */
-        CacheConfiguration config = new CacheConfiguration("meshDatasetCache", 50).eternal(true)
-                .memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU)
-                .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
-                .transactionalMode(TransactionalMode.OFF);
-
-        /*
-         * If we already have a cache, we can assume that the configuration has
-         * changed, so we remove and re-add it.
-         */
-        meshDatasetCache = new Cache(config);
-        cacheManager.addCache(meshDatasetCache);
+        if (cacheManager.cacheExists(CACHE_NAME) == false) {
+            /*
+             * Configure cache
+             */
+            CacheConfiguration config = new CacheConfiguration(CACHE_NAME, MAX_HEAP_ENTRIES)
+                    .eternal(true)
+                    .memoryStoreEvictionPolicy(EVICTION_POLICY)
+                    .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
+                    .transactionalMode(TRANSACTIONAL_MODE);
+            meshDatasetCache = new Cache(config);
+            cacheManager.addCache(meshDatasetCache);
+        } else {
+            meshDatasetCache = cacheManager.getCache(CACHE_NAME);
+        }
     }
 }

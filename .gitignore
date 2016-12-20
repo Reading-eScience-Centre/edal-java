@@ -7,10 +7,14 @@ target/
 *.log
 .h2/
 gwt-unitCache/
+out/
 
 # Module specific
 graphics/dependency-reduced-pom.xml
 /pom-backup.xml
 /pom.xml.bak
 
+# editors
 *.swp
+*.idea
+*.iml

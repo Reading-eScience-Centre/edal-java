@@ -70,6 +70,8 @@ public class Domain2DMapper extends DomainMapper<int[]> {
     private int targetXSize;
     private int targetYSize;
 
+
+
     private Domain2DMapper(HorizontalGrid sourceGrid, int targetXSize, int targetYSize) {
         super(sourceGrid, targetXSize * targetYSize);
         this.targetXSize = targetXSize;
@@ -224,27 +226,31 @@ public class Domain2DMapper extends DomainMapper<int[]> {
     /*
      * Cache management
      */
-
-    protected static final CacheManager cacheManager = CacheManager.create(new Configuration()
-            .name("EDAL-Common-CacheManager"));
+    private static final String CACHE_NAME = "domainMapperCache";
+    private static final String CACHE_MANAGER = "EDAL-CacheManager";
+    private static final int MAX_HEAP_ENTRIES = 100;
+    private static final MemoryStoreEvictionPolicy EVICTION_POLICY = MemoryStoreEvictionPolicy.LFU;
+    private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
+    private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
     private static Cache domainMapperCache;
+    protected static final CacheManager cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER));
 
     static {
-        /*
-         * Configure cache - keep 100 Domain2DMappers in memory before starting
-         * to evict them
-         */
-        CacheConfiguration config = new CacheConfiguration("domainMapperCache", 100).eternal(true)
-                .memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU)
-                .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
-                .transactionalMode(TransactionalMode.OFF);
+        if (cacheManager.cacheExists(CACHE_NAME) == false) {
+            /*
+             * Configure cache
+             */
+            CacheConfiguration config = new CacheConfiguration(CACHE_NAME, MAX_HEAP_ENTRIES)
+                    .eternal(true)
+                    .memoryStoreEvictionPolicy(EVICTION_POLICY)
+                    .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
+                    .transactionalMode(TRANSACTIONAL_MODE);
+            domainMapperCache = new Cache(config);
+            cacheManager.addCache(domainMapperCache);
+        } else {
+            domainMapperCache = cacheManager.getCache(CACHE_NAME);
+        }
 
-        /*
-         * If we already have a cache, we can assume that the configuration has
-         * changed, so we remove and re-add it.
-         */
-        domainMapperCache = new Cache(config);
-        cacheManager.addCache(domainMapperCache);
     }
 
     public static class Domain2DMapperCacheKey {
@@ -287,6 +293,5 @@ public class Domain2DMapper extends DomainMapper<int[]> {
                 return false;
             return true;
         }
-
     }
 }

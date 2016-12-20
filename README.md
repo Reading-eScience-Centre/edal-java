@@ -1,6 +1,8 @@
 Environmental Data Abstraction Layer (EDAL)
 ===========================================
 
+[![Build Status](https://travis-ci.org/yosoyjay/edal-java.svg?branch=dockerize)](https://travis-ci.org/yosoyjay/edal-java)
+
 The EDAL project comprises a set of libraries to deal with the manipulation and visualisation of environmental data.  They were originally created as part of [ncWMS](https://github.com/Reading-eScience-Centre/ncwms) but are standalone libraries which ncWMS uses. 
 
 EDAL consists of a number of modules, each focused on a different task.  These modules are outlined below
@@ -41,6 +43,24 @@ EDAL was developed primarily to factor out common functionality from the origina
 Documentation
 -------------
 Further documentation on using EDAL can be found in the [EDAL User Guide](https://reading-escience-centre.gitbooks.io/edal-user-guide/content/)
+
+### Caching of datasets
+Caching of datasets to improve performance is implemented using [Ehcache](http://www.ehcache.org/).
+Two distinct caches are included in EDAL:
+
+- A cache for datasets "featureCache"
+- A cache for maps "meshDatasetCache"
+
+When using ncWMS2 another cache is available:
+
+- A cache for dynamic datasets  "dynamicCache"
+
+Configuration for the caches can be configured using ehcache.xml which can be specified at run-time with the JVM parameter '-Dehcache.config="/path/to/ehcache.xml"'.
+The default configuration is specified in /common/src/main/resources/ehcache.xml.
+
+The Ehcache cache can be distributed using Terracotta by specifying the parameters in ehcache.xml.
+An example file is provided in /common/src/main/resources/ehcache.terracotta.xml.
+
 
 Authors
 -------
