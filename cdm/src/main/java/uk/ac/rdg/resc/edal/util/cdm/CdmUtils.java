@@ -279,10 +279,7 @@ public final class CdmUtils {
         }
         values = Collections.unmodifiableList(zValues);
 
-        /*
-         * TODO: We're assuming this CRS is not dimensionless.
-         */
-        VerticalCrs vCrs = new VerticalCrsImpl(units, isPressure, isPositive, false);
+        VerticalCrs vCrs = new VerticalCrsImpl(units, isPressure, units.isEmpty(), isPositive);
         return new VerticalAxisImpl("Vertical Axis", values, vCrs);
     }
 

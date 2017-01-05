@@ -150,19 +150,26 @@
 #if($variableMetadata.verticalDomain)
 ## We have a non-null vertical domain
 #set($zDomain = $variableMetadata.verticalDomain)
+#if($zDomain.verticalCrs.isPressure())
+#set($zUnits = "ncwms:pressure")
+#elseif($zDomain.verticalCrs.isPositiveUpwards())
+#set($zUnits = "ncwms:height")
+#else
+#set($zUnits = "ncwms:depth")
+#end
 #if($GISUtils.isVerticalDomainVerticalAxis($zDomain))
-## Discrete vertical domain
 ## Domain is a VerticalAxis
-        <Extent name="elevation" default="$GISUtils.getClosestElevationToSurface($zDomain)">
+## Set the units attribute to a pseudo-CRS
+        <Dimension name="elevation" units="$zUnits" unitSymbol="$zDomain.verticalCrs.units" default="$GISUtils.getClosestElevationToSurface($zDomain)">
 #foreach($zval in $zDomain.coordinateValues)
             $zval#if($foreach.hasNext),#end
 #end            
-        </Extent>
+        </Dimension>
 #else
 ## Continuous vertical domain
-        <Extent name="elevation" default="$zDomain.extent.low">
+        <Dimension name="elevation" units="$zUnits" unitSymbol="$zDomain.verticalCrs.units" default="$zDomain.extent.low">
             $zDomain.extent.low/$zDomain.extent.high/0
-        </Extent>
+        </Dimension>
 #end
 #end
 #foreach($style in $supportedStyles)

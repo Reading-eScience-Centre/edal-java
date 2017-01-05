@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<schema xmlns:edal="http://www.resc.ac.uk/schemas/edal"
+<schema xmlns:edal="http://reading-escience-centre.github.io/edal-java/wms"
     xmlns:wms="http://www.opengis.net/wms" xmlns="http://www.w3.org/2001/XMLSchema"
     xmlns:xlink="http://www.w3.org/1999/xlink" targetNamespace="http://reading-escience-centre.github.io/edal-java/wms"
     elementFormDefault="qualified">

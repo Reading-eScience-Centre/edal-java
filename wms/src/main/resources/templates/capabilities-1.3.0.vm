@@ -68,6 +68,9 @@
                 </DCPType>
             </GetFeatureInfo>
         </Request>
+        <Exception>
+            <Format>XML</Format>
+        </Exception>
         <edal:ExtendedCapabilities>
             <edal:CapabilitiesType>ncWMS2</edal:CapabilitiesType>
             <edal:ExtendedRequest>
@@ -154,9 +157,6 @@
                 </edal:UrlParameter>
             </edal:ExtendedRequest>
         </edal:ExtendedCapabilities>
-        <Exception>
-            <Format>XML</Format>
-        </Exception>
         <Layer>
             <Title>$catalogue.serverInfo.name</Title>
 #foreach($supportedCrs in $supportedCrsCodes)
@@ -239,10 +239,17 @@
 #if($variableMetadata.verticalDomain)
 ## We have a non-null vertical domain
 #set($zDomain = $variableMetadata.verticalDomain)
+#if($zDomain.verticalCrs.isPressure())
+#set($zUnits = "ncwms:pressure")
+#elseif($zDomain.verticalCrs.isPositiveUpwards())
+#set($zUnits = "ncwms:height")
+#else
+#set($zUnits = "ncwms:depth")
+#end
 #if($GISUtils.isVerticalDomainVerticalAxis($zDomain))
-## Discrete vertical domain
 ## Domain is a VerticalAxis
-        <Dimension name="elevation" units="$zDomain.verticalCrs.units" default="$GISUtils.getClosestElevationToSurface($zDomain)">
+## Set the units attribute to a pseudo-CRS
+        <Dimension name="elevation" units="$zUnits" unitSymbol="$zDomain.verticalCrs.units" default="$GISUtils.getClosestElevationToSurface($zDomain)">
 #foreach($zval in $zDomain.coordinateValues)
             $zval#if($foreach.hasNext),#end
 #end            
