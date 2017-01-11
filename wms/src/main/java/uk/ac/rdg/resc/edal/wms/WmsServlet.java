@@ -175,7 +175,7 @@ public class WmsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final String FEATURE_INFO_XML_FORMAT = "text/xml";
     private static final String FEATURE_INFO_PLAIN_FORMAT = "text/plain";
-    private static final String[] SUPPORTED_CRS_CODES = new String[] { "EPSG:4326", "CRS:84",
+    private static final String[] DEFAULT_SUPPORTED_CRS_CODES = new String[] { "EPSG:4326", "CRS:84",
             "EPSG:41001", // Mercator
             "EPSG:27700", // British National Grid
             "EPSG:3408", // NSIDC EASE-Grid North
@@ -190,6 +190,8 @@ public class WmsServlet extends HttpServlet {
     private WmsCatalogue catalogue = null;
     private final VelocityEngine velocityEngine;
     private final Set<String> advertisedPalettes = new TreeSet<>();
+
+    private String[] SupportedCrsCodes = DEFAULT_SUPPORTED_CRS_CODES;
 
     /**
      * @see HttpServlet#HttpServlet()
@@ -684,7 +686,7 @@ public class WmsServlet extends HttpServlet {
         context.put("supportedImageFormats", ImageFormat.getSupportedMimeTypes());
         context.put("supportedFeatureInfoFormats", new String[] { FEATURE_INFO_PLAIN_FORMAT,
                 FEATURE_INFO_XML_FORMAT });
-        context.put("supportedCrsCodes", SUPPORTED_CRS_CODES);
+        context.put("supportedCrsCodes", SupportedCrsCodes);
         context.put("GISUtils", GISUtils.class);
         context.put("TimeUtils", TimeUtils.class);
         context.put("WmsUtils", WmsUtils.class);
@@ -2688,5 +2690,13 @@ public class WmsServlet extends HttpServlet {
             template = velocityEngine.getTemplate("templates/exception-1.1.1.vm");
         }
         template.merge(context, httpServletResponse.getWriter());
+    }
+
+    public void setCrsCodes(String[] SupportedCrsCodes) {
+        this.SupportedCrsCodes = SupportedCrsCodes;
+    }
+
+    public String[] getCrsCodes(){
+        return SupportedCrsCodes;
     }
 }
