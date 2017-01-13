@@ -2663,7 +2663,7 @@ public class WmsServlet extends HttpServlet {
      * @throws IOException
      *             If there is a problem writing to the output stream
      */
-    void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
+    protected void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
         if (exception instanceof EdalLayerNotFoundException) {
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
