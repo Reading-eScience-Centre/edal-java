@@ -111,6 +111,13 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
 
     private DateTime lastUpdateTime = new DateTime();
 
+    public DataCatalogue() {
+        cacheManager = null;
+        config = null;
+        layerMetadata = null;
+        layerNameMapper = null;
+    }
+
     public DataCatalogue(CatalogueConfig config, LayerNameMapper layerNameMapper)
             throws IOException {
         /*

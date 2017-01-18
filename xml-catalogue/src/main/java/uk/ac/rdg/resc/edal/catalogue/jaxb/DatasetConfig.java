@@ -293,7 +293,7 @@ public class DatasetConfig {
         loadingProgress.add("Finished loading dataset metadata");
     }
 
-    private boolean needsRefresh() {
+    public boolean needsRefresh() {
         if (disabled || state == DatasetState.LOADING || state == DatasetState.UPDATING) {
             return false;
         } else if (state == DatasetState.NEEDS_REFRESH) {
