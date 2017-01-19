@@ -175,6 +175,7 @@ public class WmsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final String FEATURE_INFO_XML_FORMAT = "text/xml";
     private static final String FEATURE_INFO_PLAIN_FORMAT = "text/plain";
+    private static final String FEATURE_INFO_HTML_FORMAT = "text/html";
     private static final String[] DEFAULT_SUPPORTED_CRS_CODES = new String[] { "EPSG:4326", "CRS:84",
             "EPSG:41001", // Mercator
             "EPSG:27700", // British National Grid
@@ -685,7 +686,7 @@ public class WmsServlet extends HttpServlet {
         context.put("datasets", datasets);
         context.put("supportedImageFormats", ImageFormat.getSupportedMimeTypes());
         context.put("supportedFeatureInfoFormats", new String[] { FEATURE_INFO_PLAIN_FORMAT,
-                FEATURE_INFO_XML_FORMAT });
+                FEATURE_INFO_XML_FORMAT, FEATURE_INFO_HTML_FORMAT });
         context.put("supportedCrsCodes", SupportedCrsCodes);
         context.put("GISUtils", GISUtils.class);
         context.put("TimeUtils", TimeUtils.class);
@@ -723,9 +724,10 @@ public class WmsServlet extends HttpServlet {
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
                 catalogue);
         if (!FEATURE_INFO_XML_FORMAT.equals(featureInfoParameters.getInfoFormat())
-                && !FEATURE_INFO_PLAIN_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
+                && !FEATURE_INFO_PLAIN_FORMAT.equals(featureInfoParameters.getInfoFormat())
+                && !FEATURE_INFO_HTML_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
             throw new EdalUnsupportedOperationException(
-                    "Currently the supported feature info types are \"text/xml\" and \"text/plain\"");
+                    "Currently the supported feature info types are \"text/html\" \"text/xml\" and \"text/plain\"");
         }
         httpServletResponse.setContentType(featureInfoParameters.getInfoFormat());
 
@@ -855,6 +857,8 @@ public class WmsServlet extends HttpServlet {
         Template template;
         if (FEATURE_INFO_XML_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
             template = velocityEngine.getTemplate("templates/featureInfo-xml.vm");
+        } else if (FEATURE_INFO_HTML_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
+            template = velocityEngine.getTemplate("templates/featureInfo-html.vm");
         } else {
             template = velocityEngine.getTemplate("templates/featureInfo-plain.vm");
         }
