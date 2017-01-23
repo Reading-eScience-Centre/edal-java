@@ -282,6 +282,7 @@ public class WmsServlet extends HttpServlet {
          */
         RequestParams params = new RequestParams(httpServletRequest.getParameterMap());
 
+
         try {
             /*
              * Check the REQUEST parameter to see if we're producing a
@@ -731,8 +732,7 @@ public class WmsServlet extends HttpServlet {
         }
         httpServletResponse.setContentType(featureInfoParameters.getInfoFormat());
 
-        PlottingDomainParams plottingParameters = featureInfoParameters
-                .getPlottingDomainParameters();
+        PlottingDomainParams plottingParameters = featureInfoParameters.getPlottingDomainParameters();
         final HorizontalPosition position = featureInfoParameters.getClickedPosition();
 
         String[] layerNames = featureInfoParameters.getLayerNames();
@@ -752,10 +752,8 @@ public class WmsServlet extends HttpServlet {
                 throw new LayerNotQueryableException("The layer " + layerName + " is not queryable");
             }
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            String variableId = catalogue.getLayerNameMapper()
-                    .getVariableIdFromLayerName(layerName);
-            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(layerName,
-                    catalogue);
+            String variableId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
+            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(layerName, catalogue);
             Set<VariableMetadata> children = metadata.getChildren();
 
             /*
