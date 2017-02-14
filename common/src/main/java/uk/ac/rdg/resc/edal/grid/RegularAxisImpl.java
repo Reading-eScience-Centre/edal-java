@@ -32,6 +32,8 @@ import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
+import java.io.Serializable;
+
 /**
  * Immutable implementation of a {@link RegularAxis}, whose values are regularly
  * spaced along the axis.
@@ -39,7 +41,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Jon
  * @author Guy Griffiths
  */
-public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> implements RegularAxis {
+public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> implements RegularAxis, Serializable {
     private double firstValue;
     /*
      * The axis spacing

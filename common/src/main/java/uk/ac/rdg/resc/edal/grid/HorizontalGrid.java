@@ -33,6 +33,8 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
+import java.io.Serializable;
+
 /**
  * A two-dimensional grid in the horizontal plane that is referenced to a 2D
  * horizontal coordinate reference system. If each individual grid axis is
@@ -41,7 +43,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * 
  * @author Jon Blower
  */
-public interface HorizontalGrid extends DiscreteHorizontalDomain<GridCell2D> {
+public interface HorizontalGrid extends DiscreteHorizontalDomain<GridCell2D>, Serializable {
     
     @Override
     public Array2D<GridCell2D> getDomainObjects();

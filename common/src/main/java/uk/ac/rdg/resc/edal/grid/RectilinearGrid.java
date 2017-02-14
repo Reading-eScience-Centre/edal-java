@@ -28,6 +28,8 @@
 
 package uk.ac.rdg.resc.edal.grid;
 
+import java.io.Serializable;
+
 /**
  * A {@link HorizontalGrid} whose axes in the
  * {@link #getCoordinateReferenceSystem() external CRS} are aligned with the
@@ -35,7 +37,7 @@ package uk.ac.rdg.resc.edal.grid;
  * 
  * @author Jon Blower
  */
-public interface RectilinearGrid extends HorizontalGrid {
+public interface RectilinearGrid extends HorizontalGrid, Serializable {
 
     /**
      * Gets the x axis of the grid.

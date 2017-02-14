@@ -57,6 +57,7 @@
  */
 package uk.ac.rdg.resc.edal.feature;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import uk.ac.rdg.resc.edal.domain.DiscreteHorizontalDomain;
@@ -78,7 +79,7 @@ import uk.ac.rdg.resc.edal.util.Array2D;
  * 
  * @author Guy
  */
-public class MapFeature extends AbstractDiscreteFeature<HorizontalPosition, GridCell2D> {
+public class MapFeature extends AbstractDiscreteFeature<HorizontalPosition, GridCell2D> implements Serializable {
 
     public MapFeature(String id, String name, String description, MapDomain domain,
             Map<String, Parameter> parameters, Map<String, Array2D<Number>> valuesMap) {

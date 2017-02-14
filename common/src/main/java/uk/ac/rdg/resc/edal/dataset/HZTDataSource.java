@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.io.Serializable;
 import java.util.List;
 
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
@@ -59,7 +60,7 @@ public interface HZTDataSource extends DataSource {
      * 
      * @author Guy Griffiths
      */
-    public final class MeshCoordinates3D {
+    public final class MeshCoordinates3D implements Serializable {
         public final int h;
         public final int z;
         public final int t;

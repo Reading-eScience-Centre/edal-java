@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.io.Serializable;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -67,7 +68,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
  * @author Guy Griffiths
  */
 public abstract class HorizontalMesh4dDataset extends
-        DiscreteLayeredDataset<HZTDataSource, HorizontalMesh4dVariableMetadata> {
+        DiscreteLayeredDataset<HZTDataSource, HorizontalMesh4dVariableMetadata> implements Serializable {
 
     public HorizontalMesh4dDataset(String id, Collection<HorizontalMesh4dVariableMetadata> vars) {
         super(id, vars);
@@ -93,7 +94,7 @@ public abstract class HorizontalMesh4dDataset extends
         throw new UnsupportedOperationException("Feature reading is not yet supported");
     }
 
-    @SuppressWarnings("unchecked")
+//    @SuppressWarnings("unchecked")
     @Override
     protected Array2D<Number> extractHorizontalData(HorizontalMesh4dVariableMetadata metadata,
             int tIndex, int zIndex, HorizontalGrid targetGrid, HZTDataSource dataSource)
@@ -107,10 +108,11 @@ public abstract class HorizontalMesh4dDataset extends
          */
         List<GridCoordinates2D> outputCoords;
         List<MeshCoordinates3D> coordsToRead;
+        MeshDatasetCacheElement meshDatasetCacheElement;
         if (meshDatasetCache.isKeyInCache(targetGrid)) {
-            Object[] cachedLists = (Object[]) meshDatasetCache.get(targetGrid).getObjectValue();
-            outputCoords = (List<GridCoordinates2D>) cachedLists[0];
-            coordsToRead = (List<MeshCoordinates3D>) cachedLists[1];
+            meshDatasetCacheElement = (MeshDatasetCacheElement) meshDatasetCache.get(targetGrid).getObjectValue();
+            outputCoords = meshDatasetCacheElement.getOutputCoords();
+            coordsToRead = meshDatasetCacheElement.getCoordsToRead();
         } else {
             outputCoords = new ArrayList<>();
             coordsToRead = new ArrayList<>();
@@ -122,8 +124,8 @@ public abstract class HorizontalMesh4dDataset extends
                 outputCoords.add(coordinates);
                 coordsToRead.add(meshCoords);
             }
-            meshDatasetCache.put(new Element(targetGrid,
-                    new Object[] { outputCoords, coordsToRead }));
+            meshDatasetCacheElement = new MeshDatasetCacheElement(outputCoords, coordsToRead);
+            meshDatasetCache.put(new Element(targetGrid, meshDatasetCacheElement));
         }
 
         /*

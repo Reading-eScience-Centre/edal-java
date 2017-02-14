@@ -33,6 +33,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,7 +80,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * 
  * @author Guy Griffiths
  */
-public class GraphicsUtils {
+public class GraphicsUtils implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(GraphicsUtils.class);
     private static Map<String, Color> namedColors = new HashMap<>();
 

@@ -28,9 +28,10 @@
 
 package uk.ac.rdg.resc.edal.util;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
-public abstract class Array2D<T> implements Array<T> {
+public abstract class Array2D<T> implements Array<T>, Serializable {
 
     private int[] shape = new int[2];
 

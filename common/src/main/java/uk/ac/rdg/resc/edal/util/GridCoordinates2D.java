@@ -28,13 +28,15 @@
 
 package uk.ac.rdg.resc.edal.util;
 
+import java.io.Serializable;
+
 /**
  * Class representing a pair of integer co-ordinates. This is used in preference
  * to int[] so that the order does not cause issues
  * 
  * @author Guy Griffiths
  */
-public final class GridCoordinates2D{
+public final class GridCoordinates2D implements Serializable {
     private int x;
     private int y;
 

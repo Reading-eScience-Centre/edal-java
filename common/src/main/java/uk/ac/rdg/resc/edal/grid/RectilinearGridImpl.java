@@ -38,12 +38,14 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
+import java.io.Serializable;
+
 /**
  * Immutable implementation of a {@link RectilinearGrid} using {@link Double}s.
  * 
  * @author Guy Griffiths
  */
-public class RectilinearGridImpl extends AbstractHorizontalGrid implements RectilinearGrid {
+public class RectilinearGridImpl extends AbstractHorizontalGrid implements RectilinearGrid, Serializable {
     protected ReferenceableAxis<Double> xAxis;
     protected ReferenceableAxis<Double> yAxis;
     private Array2D<GridCell2D> domainObjects = null;

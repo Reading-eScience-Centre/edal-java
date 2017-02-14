@@ -34,6 +34,8 @@ import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.HorizontalMesh;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 
+import java.io.Serializable;
+
 /**
  * This is a {@link VariableMetadata} object specialised for discrete 4D grids.
  * This is used to ensure that {@link VariableMetadata} supplied to
@@ -42,7 +44,7 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
  * 
  * @author Guy
  */
-public class HorizontalMesh4dVariableMetadata extends DiscreteLayeredVariableMetadata {
+public class HorizontalMesh4dVariableMetadata extends DiscreteLayeredVariableMetadata implements Serializable {
 
     public HorizontalMesh4dVariableMetadata(Parameter parameter,
             HorizontalMesh hDomain, VerticalAxis zDomain, TimeAxis tDomain,

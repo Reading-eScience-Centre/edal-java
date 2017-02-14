@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -107,7 +108,8 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public class CdmGridDatasetFactory extends CdmDatasetFactory {
+
+public final class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
     private static final String UNSTAGGERED_SUFFIX = ":face";
 
@@ -1443,7 +1445,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory {
         }
     }
 
-    private final class CdmUgridDataset extends HorizontalMesh4dDataset {
+    private final class CdmUgridDataset extends HorizontalMesh4dDataset implements Serializable {
         private final String location;
         private final Map<String, int[]> varId2hztIndices;
 
