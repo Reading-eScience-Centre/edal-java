@@ -557,7 +557,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 try {
                     featureInfo = processFeatureInfo(eventObject.getText(), converters.get(layerId));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    GWT.log(e.getMessage());
                     /*
                      * Something is wrong with the GFI response. It may just be
                      * that there is no data here.
@@ -1147,19 +1147,20 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         demis.setIsBaseLayer(true);
         demis.addLayerLoadStartListener(loadStartListener);
         demis.addLayerLoadEndListener(loadEndListener);
-        
+
         /*
-         * Basemaps from GEBCO.  Note that these need a special copyright message
+         * Basemaps from GEBCO. Note that these need a special copyright message
          */
         wmsOptions = new WMSOptions();
         wmsOptions.setProjection("EPSG:4326");
         wmsOptions.setWrapDateLine(true);
         wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
         wmsParams = new WMSParams();
-        wmsParams
-                .setLayers("GEBCO_LATEST");
+        wmsParams.setLayers("GEBCO_LATEST");
         wmsParams.setFormat("image/png");
-        WMS gebco = new WMS("GEBCO WMS - Imagery reproduced from the GEBCO_2014 Grid, version 20150318, www.gebco.net", "http://www.gebco.net/data_and_products/gebco_web_services/web_map_service/mapserv?",
+        WMS gebco = new WMS(
+                "GEBCO WMS - Imagery reproduced from the GEBCO_2014 Grid, version 20150318, www.gebco.net",
+                "http://www.gebco.net/data_and_products/gebco_web_services/web_map_service/mapserv?",
                 wmsParams, wmsOptions);
         gebco.setIsBaseLayer(true);
         gebco.addLayerLoadStartListener(loadStartListener);
@@ -1177,7 +1178,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.addLayer(blueMarbleNP);
         map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleSP);
-        
+
         /*
          * Now global setup stuff. Store the current projection, add the layer
          * change listener and set the default layer.
@@ -1298,7 +1299,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 for (int j = 0; j < featureInfoNode.getLength(); j++) {
                     Node child = featureInfoNode.item(j);
                     if (child.getNodeName().equalsIgnoreCase("time")) {
-                        time = child.getFirstChild().getNodeValue();
+                        Node firstChild = child.getFirstChild();
+                        if (firstChild != null) {
+                            time = firstChild.getNodeValue();
+                        }
                     } else if (child.getNodeName().equalsIgnoreCase("value")) {
                         valueStr = child.getFirstChild().getNodeValue();
                         /*
