@@ -110,6 +110,9 @@ public class FeatureInfoPoint {
 	 *         <code>null</code>
 	 */
 	public String getTime() {
+	    if(timeStr.isEmpty()){
+	        return null;
+	    }
 		return timeStr;
 	}
 
