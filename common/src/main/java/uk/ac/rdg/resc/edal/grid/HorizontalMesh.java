@@ -79,7 +79,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
      */
     public static HorizontalMesh fromConnections(List<HorizontalPosition> positions,
             List<int[]> connections, int connectionsStartFrom) {
-        HorizontalMesh mesh = new HorizontalMesh(positions);
+        HorizontalMesh mesh = new HorizontalMesh(positions, null);
 
         /*
          * Calculate the boundary of the grid.
@@ -272,7 +272,7 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
 
     public static HorizontalMesh fromBounds(List<HorizontalPosition> positions,
             List<Polygon> boundaries) {
-        HorizontalMesh mesh = new HorizontalMesh(positions);
+        HorizontalMesh mesh = new HorizontalMesh(positions, boundaries);
 
         Map<HorizontalEdge, Integer> edgeOccurences = new HashMap<>();
         for (Polygon cellBound : boundaries) {
@@ -417,11 +417,24 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> 
         return mesh;
     }
 
-    private HorizontalMesh(List<HorizontalPosition> positions) {
+    private HorizontalMesh(List<HorizontalPosition> positions, List<Polygon> boundaries) {
         this.kdTree = new KDTree(positions);
         this.kdTree.buildTree();
         this.positions = positions;
-        this.bbox = GISUtils.getBoundingBox(positions);
+        if (boundaries == null) {
+            this.bbox = GISUtils.getBoundingBox(positions);
+        } else {
+            List<HorizontalPosition> allPositions = new ArrayList<>();
+            for(HorizontalPosition pos : positions) {
+                allPositions.add(pos);
+            }
+            for(Polygon poly : boundaries) {
+                for(HorizontalPosition pos : poly.getVertices()) {
+                    allPositions.add(pos);
+                }
+            }
+            this.bbox = GISUtils.getBoundingBox(allPositions);
+        }
     }
 
     @Override
