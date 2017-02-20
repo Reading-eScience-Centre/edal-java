@@ -48,7 +48,6 @@ Maven should automatically pick the correct version to relase to - it will be th
 
 ```
 mvn versions:set
-cd ..
 ```
 
 ### Build the software:
@@ -66,7 +65,7 @@ git tag edal-VERSION
 ```
 mvn deploy -P release
 ```
-Upon successful completion of this stage, log into [sonatype](http://oss.sonatype.org) with the username "resc", click the "Staging Repositories" link on the left, and scroll down to find the uk.ac.rdg.resc entry.  Select it and then click the "Release" button and enter a short comment.  This will allow the releases to be synchronised to Maven central, and an automated email will be sent once the process is complete.
+Upon successful completion of this stage, log into [sonatype](http://oss.sonatype.org) with the username "resc", click the "Staging Repositories" link on the left, and scroll down to find the uk.ac.rdg.resc entry.  Select it and then click the "Release" button and enter a short comment.  This will allow the releases to be synchronised to Maven central.
 
 ### Merge the release branch into master:
 ```
