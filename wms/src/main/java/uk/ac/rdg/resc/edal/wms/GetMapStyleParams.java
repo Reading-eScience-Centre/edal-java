@@ -135,7 +135,7 @@ public class GetMapStyleParams {
         }
 
         if (xmlStyle == null) {
-            if (layers == null || styles == null) {
+            if (layers == null) {
                 throw new EdalException(
                         "You must specify either SLD, SLD_BODY or LAYERS and STYLES");
             }
@@ -216,8 +216,8 @@ public class GetMapStyleParams {
     /**
      * Gets the ColorScaleRange object requested by the client
      */
-    public static List<Extent<Float>> getColorScaleRanges(RequestParams params, Extent<Float> defaultScale)
-            throws EdalException {
+    public static List<Extent<Float>> getColorScaleRanges(RequestParams params,
+            Extent<Float> defaultScale) throws EdalException {
         List<Extent<Float>> ranges = new ArrayList<>();
         String csr = params.getString("colorscalerange");
         if (csr == null) {
@@ -289,7 +289,7 @@ public class GetMapStyleParams {
 
         String style = "default/default";
 
-        if (styles.length != 0 && !"".equals(styles[0])) {
+        if (styles != null && (styles.length != 0 && !"".equals(styles[0]))) {
             style = styles[0];
         }
 
