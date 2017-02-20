@@ -1,3 +1,12 @@
+1.2.6
+=====
+Travis integration
+Pseudo-vertical CRS included in capabilities
+Bugfixes:
+    Bounding box was too small on some UGRID datasets
+    FeatureInfo didn't work in Godiva if <time> was empty
+    STYLES no longer mandatory in GetLegendGraphic
+
 1.2.5
 =====
 Transect plots report distance in km
