@@ -107,7 +107,6 @@ You should update the versions to the next snapshot version.  Usually this will 
 
 ```
 mvn versions:set
-cd ..
 ```
 
 ### Remove the backup files created by setting versions:
