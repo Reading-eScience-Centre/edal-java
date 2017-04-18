@@ -154,25 +154,22 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
          * However, this calculation is actually pretty quick. Setting the max
          * depth to 4,000,000 seems to suppress the vast majority of warnings,
          * and doesn't impact performance noticeably.
-         *
-         *  Cache configuration specified in resources/ehcache.xml
+         * 
+         * Cache configuration specified in resources/ehcache.xml
          */
         String ehcache_file = System.getProperty(WMS_CACHE_CONFIG);
-        if (ehcache_file != null && !ehcache_file.isEmpty())
-        {
+        if (ehcache_file != null && !ehcache_file.isEmpty()) {
             cacheManager = CacheManager.create(System.getProperty(WMS_CACHE_CONFIG));
-        }
-        else {
+        } else {
             cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER)
                     .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(MAX_CACHE_DEPTH)));
         }
 
         if (cacheManager.cacheExists(CACHE_NAME) == false) {
-             /*
-              * Configure cache
-              */
-            CacheConfiguration cacheConfig = new CacheConfiguration(CACHE_NAME, 0)
-                    .eternal(true)
+            /*
+             * Configure cache
+             */
+            CacheConfiguration cacheConfig = new CacheConfiguration(CACHE_NAME, 0).eternal(true)
                     .maxBytesLocalHeap(CACHE_SIZE, MemoryUnit.MEGABYTES)
                     .memoryStoreEvictionPolicy(EVICTION_POLICY)
                     .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
@@ -182,14 +179,17 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
             cacheManager.addCache(featureCache);
         } else {
             /*
-             * Use parameters for featureCache from ehcache.xml config file if passed in as JVM parameter wmsCache.config
-             * - Update cache params in NwcmsConfig
+             * Use parameters for featureCache from ehcache.xml config file if
+             * passed in as JVM parameter wmsCache.config - Update cache params
+             * in NwcmsConfig
              */
             featureCache = cacheManager.getCache(CACHE_NAME);
             CacheInfo catalogueCacheInfo = config.getCacheSettings();
             CacheConfiguration featureCacheConfiguration = featureCache.getCacheConfiguration();
-            catalogueCacheInfo.setInMemorySizeMB((int) (featureCacheConfiguration.getMaxBytesLocalHeap() / (1024 * 1024)));
-            catalogueCacheInfo.setElementLifetimeMinutes(featureCacheConfiguration.getTimeToLiveSeconds() / 60);
+            catalogueCacheInfo.setInMemorySizeMB((int) (featureCacheConfiguration
+                    .getMaxBytesLocalHeap() / (1024 * 1024)));
+            catalogueCacheInfo.setElementLifetimeMinutes(featureCacheConfiguration
+                    .getTimeToLiveSeconds() / 60);
             catalogueCacheInfo.setEnabled(true);
         }
 
@@ -220,10 +220,12 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         long lifetimeSeconds;
         long configLifetimeSeconds = (long) (cacheConfig.getElementLifetimeMinutes() * 60);
 
-        if (featureCache != null &&
-            cachingEnabled == cacheConfig.isEnabled() &&
-            configCacheSizeMB == featureCache.getCacheConfiguration().getMaxBytesLocalHeap() / (1024 * 1024) &&
-            configLifetimeSeconds == featureCache.getCacheConfiguration().getTimeToLiveSeconds()) {
+        if (featureCache != null
+                && cachingEnabled == cacheConfig.isEnabled()
+                && configCacheSizeMB == featureCache.getCacheConfiguration().getMaxBytesLocalHeap()
+                        / (1024 * 1024)
+                && configLifetimeSeconds == featureCache.getCacheConfiguration()
+                        .getTimeToLiveSeconds()) {
             /*
              * We are not changing anything about the cache.
              */
@@ -233,19 +235,17 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         cachingEnabled = cacheConfig.isEnabled();
 
         if (cachingEnabled) {
-            if(cacheManager.cacheExists(CACHE_NAME)){
+            if (cacheManager.cacheExists(CACHE_NAME)) {
                 /*
-                * Update cache configuration
-                */
+                 * Update cache configuration
+                 */
                 CacheConfiguration featureCacheConfig = featureCache.getCacheConfiguration();
                 featureCacheConfig.setTimeToLiveSeconds(configLifetimeSeconds);
                 featureCacheConfig.setMaxBytesLocalHeap((long) configCacheSizeMB * 1024 * 1024);
             } else {
                 /*
-                 * - Precedence:
-                 *  - Admin config
-                 *  - XML file "ehcache.config"
-                 *  - Default values
+                 * - Precedence: - Admin config - XML file "ehcache.config" -
+                 * Default values
                  */
 
                 // Default values
@@ -257,15 +257,18 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
 
                 // XML config
                 String ehcache_file = System.getProperty("ehcache.config");
-                if (ehcache_file != null && !ehcache_file.isEmpty())
-                {
-                    CacheManager tmpCacheManager = CacheManager.create(System.getProperty("ehcache.config"));
+                if (ehcache_file != null && !ehcache_file.isEmpty()) {
                     Cache tmpfeatureCache = cacheManager.getCache(CACHE_NAME);
-                    cacheSizeMB = tmpfeatureCache.getCacheConfiguration().getMaxBytesLocalHeap() / (1024 * 1024);
-                    lifetimeSeconds = tmpfeatureCache.getCacheConfiguration().getTimeToLiveSeconds();
-                    memoryStoreEviction = tmpfeatureCache.getCacheConfiguration().getMemoryStoreEvictionPolicy();
-                    persistenceStrategy = tmpfeatureCache.getCacheConfiguration().getPersistenceConfiguration().getStrategy();
-                    transactionalMode = tmpfeatureCache.getCacheConfiguration().getTransactionalMode();
+                    cacheSizeMB = tmpfeatureCache.getCacheConfiguration().getMaxBytesLocalHeap()
+                            / (1024 * 1024);
+                    lifetimeSeconds = tmpfeatureCache.getCacheConfiguration()
+                            .getTimeToLiveSeconds();
+                    memoryStoreEviction = tmpfeatureCache.getCacheConfiguration()
+                            .getMemoryStoreEvictionPolicy();
+                    persistenceStrategy = tmpfeatureCache.getCacheConfiguration()
+                            .getPersistenceConfiguration().getStrategy();
+                    transactionalMode = tmpfeatureCache.getCacheConfiguration()
+                            .getTransactionalMode();
                 }
 
                 // Admin
@@ -280,12 +283,12 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                  * Configure and create cache
                  */
                 CacheConfiguration config = new CacheConfiguration(CACHE_NAME, 0)
-                    .eternal(lifetimeSeconds == 0)
-                    .maxBytesLocalHeap(cacheSizeMB, MemoryUnit.MEGABYTES)
-                    .timeToLiveSeconds(lifetimeSeconds)
-                    .memoryStoreEvictionPolicy(memoryStoreEviction)
-                    .persistence(new PersistenceConfiguration().strategy(persistenceStrategy))
-                    .transactionalMode(transactionalMode);
+                        .eternal(lifetimeSeconds == 0)
+                        .maxBytesLocalHeap(cacheSizeMB, MemoryUnit.MEGABYTES)
+                        .timeToLiveSeconds(lifetimeSeconds)
+                        .memoryStoreEvictionPolicy(memoryStoreEviction)
+                        .persistence(new PersistenceConfiguration().strategy(persistenceStrategy))
+                        .transactionalMode(transactionalMode);
 
                 featureCache = new Cache(config);
                 cacheManager.addCache(featureCache);
