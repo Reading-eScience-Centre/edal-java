@@ -243,19 +243,25 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                 featureCacheConfig.setTimeToLiveSeconds(configLifetimeSeconds);
                 featureCacheConfig.setMaxBytesLocalHeap((long) configCacheSizeMB * 1024 * 1024);
             } else {
-                /*
-                 * - Precedence: - Admin config - XML file "ehcache.config" -
-                 * Default values
+                /*-
+                 * Precedence:
+                 * - Admin config
+                 * - XML file "ehcache.config"
+                 * - Default values
                  */
 
-                // Default values
+                /*
+                 * Default values
+                 */
                 cacheSizeMB = CACHE_SIZE;
                 lifetimeSeconds = LIFETIME_SECONDS;
                 memoryStoreEviction = EVICTION_POLICY;
                 persistenceStrategy = PERSISTENCE_STRATEGY;
                 transactionalMode = TRANSACTIONAL_MODE;
 
-                // XML config
+                /*
+                 * XML config
+                 */
                 String ehcache_file = System.getProperty("ehcache.config");
                 if (ehcache_file != null && !ehcache_file.isEmpty()) {
                     Cache tmpfeatureCache = cacheManager.getCache(CACHE_NAME);
@@ -271,7 +277,9 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                             .getTransactionalMode();
                 }
 
-                // Admin
+                /*
+                 * Admin
+                 */
                 if (cacheConfig.getInMemorySizeMB() != 0) {
                     cacheSizeMB = configCacheSizeMB;
                 }
