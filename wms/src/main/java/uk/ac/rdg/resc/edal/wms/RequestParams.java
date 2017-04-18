@@ -67,6 +67,9 @@ public class RequestParams {
             assert values.length >= 1;
             String key = name.trim().toLowerCase();
             String value = values[0].trim();
+            if (key.equals("time")) {
+                value = value.replace(' ', '+');
+            }
             this.paramMap.put(key, value);
         }
     }

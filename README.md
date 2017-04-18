@@ -1,12 +1,18 @@
-Environmental Data Abstraction Layer (EDAL)
-===========================================
+# Environmental Data Abstraction Layer (EDAL)
 
-The EDAL project comprises a set of libraries to deal with the manipulation and visualisation of environmental data.  They were originally created as part of [ncWMS](https://github.com/Reading-eScience-Centre/ncwms) but are standalone libraries which ncWMS uses. 
+[![Build Status](https://travis-ci.org/axiom-data-science/edal-java.svg?branch=dockerize)](https://travis-ci.org/axiom-data-science/edal-java)
+
+- [Documentation](https://reading-escience-centre.gitbooks.io/edal-user-guide/content/)
+- [Source code](https://github.com/Reading-eScience-Centre/edal-java)
+- [Issues](https://github.com/Reading-eScience-Centre/edal-java/issues)
+- [CHANGELOG](https://github.com/Reading-eScience-Centre/edal-java/blob/master/CHANGELOG)
+
+
+The EDAL project comprises a set of libraries to deal with the manipulation and visualisation of environmental data.  They were originally created as part of [ncWMS](https://github.com/Reading-eScience-Centre/ncwms) but are standalone libraries which ncWMS uses.
 
 EDAL consists of a number of modules, each focused on a different task.  These modules are outlined below
 
-EDAL Modules
-------------
+## EDAL Modules
 
 ### EDAL Common
 The edal-common module contains the core data model used in EDAL, as well as in-memory implementations of this data model, common utility methods, and exceptions.
@@ -38,11 +44,63 @@ This module does not depend on any others.
 
 EDAL was developed primarily to factor out common functionality from the original ncWMS (http://sourceforge.net/projects/ncwms/)
 
-Documentation
--------------
-Further documentation on using EDAL can be found in the [EDAL User Guide](https://reading-escience-centre.gitbooks.io/edal-user-guide/content/)
 
-Authors
--------
-The EDAL libraries are developed by the [Reading e-Science Centre](http://www.met.reading.ac.uk/resc/home/)
+### Caching of datasets
+Caching of datasets to improve performance is implemented using [Ehcache](http://www.ehcache.org/).
+Two distinct caches are included in EDAL:
 
+- A cache for datasets "featureCache"
+- A cache for maps "meshDatasetCache"
+
+When using ncWMS2 another cache is available:
+
+- A cache for dynamic datasets  "dynamicCache"
+
+Configuration for the caches can be configured using ehcache.xml which can be specified at run-time with the JVM parameter '-Dehcache.config="/path/to/ehcache.xml"'.
+The default configuration is specified in /common/src/main/resources/ehcache.xml.
+
+The Ehcache cache can be distributed using Terracotta by specifying the parameters in ehcache.xml.
+An example file is provided in /common/src/main/resources/ehcache.terracotta.xml.
+
+
+## Licence
+
+```
+Copyright (c) 2010 The University of Reading
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University of Reading, nor the names of the
+   authors or contributors may be used to endorse or promote products
+   derived from this software without specific prior written permission.
+4. If you wish to use, with or without modification, the Godiva web
+   interface, the logo of the Reading e-Science Centre must be retained
+   on the web page.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+## Authors and Contributors
+
+The EDAL libraries are developed by the [Reading e-Science Centre](http://www.met.reading.ac.uk/resc/home/) and are maintained by [@guygriffiths](https://github.com/guygriffiths).
+
+Contributors:
+
+- [@yosoyjay](https://github.com/yosoyjay)
+- [@kwilcox](https://github.com/kwilcox)

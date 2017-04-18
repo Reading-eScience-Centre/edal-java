@@ -1,0 +1,61 @@
+<h2>
+    FeatureInfo - layer name: $featureInfo[0].layerName
+</h2>
+<style>
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+    td {
+        paddding-left: 5px;
+    }
+</style>
+<table style="width:100%">
+<thead>
+    <tr>
+        <th> Layer name </th>
+        <th> Feature Id </th>
+        <th> Clicked latitude (x)  </th>
+        <th> Clicked longitude (y) </th>
+        <th> Time </th>
+        <th> Value </th>
+    </tr>
+</thead>
+
+<tbody>
+    #foreach( $info in $featureInfo )
+        <tr>
+            <td> $info.layerName </td>
+
+            #if( $info.featureId )
+                <td> $info.featureId </td>
+            #else
+                <td> - </td>
+            #end
+
+            <td> $position.x </td>
+            <td> $position.y </td>
+
+            #if( $info.time )
+                <td> $info.time </td>
+            #else
+                <td> - </td>
+            #end
+
+            #if( $info.value )
+                <td> $info.value </td>
+            #else
+                <td> - </td>
+            #end
+
+            #foreach ( $property in $info.featureProperties.entrySet() )
+                #if ( $property.value )
+                    <td> $property.value </td>
+                #else
+                    <td> </td>
+                #end
+            #end
+        </tr>
+    #end
+</tbody>
+</table>

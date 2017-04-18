@@ -175,7 +175,8 @@ public class WmsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final String FEATURE_INFO_XML_FORMAT = "text/xml";
     private static final String FEATURE_INFO_PLAIN_FORMAT = "text/plain";
-    private static final String[] SUPPORTED_CRS_CODES = new String[] { "EPSG:4326", "CRS:84",
+    private static final String FEATURE_INFO_HTML_FORMAT = "text/html";
+    private static final String[] DEFAULT_SUPPORTED_CRS_CODES = new String[] { "EPSG:4326", "CRS:84",
             "EPSG:41001", // Mercator
             "EPSG:27700", // British National Grid
             "EPSG:3408", // NSIDC EASE-Grid North
@@ -190,6 +191,8 @@ public class WmsServlet extends HttpServlet {
     private WmsCatalogue catalogue = null;
     private final VelocityEngine velocityEngine;
     private final Set<String> advertisedPalettes = new TreeSet<>();
+
+    private String[] SupportedCrsCodes = DEFAULT_SUPPORTED_CRS_CODES;
 
     /**
      * @see HttpServlet#HttpServlet()
@@ -278,6 +281,7 @@ public class WmsServlet extends HttpServlet {
          * sensitive to the case of the parameter VALUES).
          */
         RequestParams params = new RequestParams(httpServletRequest.getParameterMap());
+
 
         try {
             /*
@@ -683,8 +687,8 @@ public class WmsServlet extends HttpServlet {
         context.put("datasets", datasets);
         context.put("supportedImageFormats", ImageFormat.getSupportedMimeTypes());
         context.put("supportedFeatureInfoFormats", new String[] { FEATURE_INFO_PLAIN_FORMAT,
-                FEATURE_INFO_XML_FORMAT });
-        context.put("supportedCrsCodes", SUPPORTED_CRS_CODES);
+                FEATURE_INFO_XML_FORMAT, FEATURE_INFO_HTML_FORMAT });
+        context.put("supportedCrsCodes", SupportedCrsCodes);
         context.put("GISUtils", GISUtils.class);
         context.put("TimeUtils", TimeUtils.class);
         context.put("WmsUtils", WmsUtils.class);
@@ -721,14 +725,14 @@ public class WmsServlet extends HttpServlet {
         GetFeatureInfoParameters featureInfoParameters = new GetFeatureInfoParameters(params,
                 catalogue);
         if (!FEATURE_INFO_XML_FORMAT.equals(featureInfoParameters.getInfoFormat())
-                && !FEATURE_INFO_PLAIN_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
+                && !FEATURE_INFO_PLAIN_FORMAT.equals(featureInfoParameters.getInfoFormat())
+                && !FEATURE_INFO_HTML_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
             throw new EdalUnsupportedOperationException(
-                    "Currently the supported feature info types are \"text/xml\" and \"text/plain\"");
+                    "Currently the supported feature info types are \"text/html\" \"text/xml\" and \"text/plain\"");
         }
         httpServletResponse.setContentType(featureInfoParameters.getInfoFormat());
 
-        PlottingDomainParams plottingParameters = featureInfoParameters
-                .getPlottingDomainParameters();
+        PlottingDomainParams plottingParameters = featureInfoParameters.getPlottingDomainParameters();
         final HorizontalPosition position = featureInfoParameters.getClickedPosition();
 
         String[] layerNames = featureInfoParameters.getLayerNames();
@@ -748,10 +752,8 @@ public class WmsServlet extends HttpServlet {
                 throw new LayerNotQueryableException("The layer " + layerName + " is not queryable");
             }
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            String variableId = catalogue.getLayerNameMapper()
-                    .getVariableIdFromLayerName(layerName);
-            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(layerName,
-                    catalogue);
+            String variableId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
+            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(layerName, catalogue);
             Set<VariableMetadata> children = metadata.getChildren();
 
             /*
@@ -853,6 +855,8 @@ public class WmsServlet extends HttpServlet {
         Template template;
         if (FEATURE_INFO_XML_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
             template = velocityEngine.getTemplate("templates/featureInfo-xml.vm");
+        } else if (FEATURE_INFO_HTML_FORMAT.equals(featureInfoParameters.getInfoFormat())) {
+            template = velocityEngine.getTemplate("templates/featureInfo-html.vm");
         } else {
             template = velocityEngine.getTemplate("templates/featureInfo-plain.vm");
         }
@@ -2661,7 +2665,7 @@ public class WmsServlet extends HttpServlet {
      * @throws IOException
      *             If there is a problem writing to the output stream
      */
-    void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
+    protected void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
             boolean v130) throws IOException {
         if (exception instanceof EdalLayerNotFoundException) {
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -2688,5 +2692,13 @@ public class WmsServlet extends HttpServlet {
             template = velocityEngine.getTemplate("templates/exception-1.1.1.vm");
         }
         template.merge(context, httpServletResponse.getWriter());
+    }
+
+    public void setCrsCodes(String[] SupportedCrsCodes) {
+        this.SupportedCrsCodes = SupportedCrsCodes;
+    }
+
+    public String[] getCrsCodes(){
+        return SupportedCrsCodes;
     }
 }

@@ -37,18 +37,21 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.lang.management.ManagementFactory;
+import javax.management.MBeanServer;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
 import net.sf.ehcache.config.Configuration;
+import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.MemoryUnit;
 import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
 import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.SizeOfPolicyConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+import net.sf.ehcache.management.ManagementService;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -85,11 +88,20 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureCatalogue {
     private static final Logger log = LoggerFactory.getLogger(DataCatalogue.class);
 
+    private static final String WMS_CACHE_CONFIG = "ehcache.config";
     private static final String CACHE_NAME = "featureCache";
+    private static final String CACHE_MANAGER = "EDAL-CacheManager";
+    private static final int CACHE_SIZE = 512;
+    private static final int LIFETIME_SECONDS = 0;
+    private static final int MAX_CACHE_DEPTH = 4_000_000;
+    final MemoryStoreEvictionPolicy EVICTION_POLICY = MemoryStoreEvictionPolicy.LFU;
+    private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
+    private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
 
-    private boolean cachingEnabled = false;
-    protected final CacheManager cacheManager;
+    private boolean cachingEnabled = true;
+    protected static CacheManager cacheManager;
     private Cache featureCache = null;
+    private static MBeanServer mBeanServer;
 
     protected final CatalogueConfig config;
     protected Map<String, Dataset> datasets;
@@ -98,6 +110,13 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
     protected final LayerNameMapper layerNameMapper;
 
     private DateTime lastUpdateTime = new DateTime();
+
+    public DataCatalogue() {
+        cacheManager = null;
+        config = null;
+        layerMetadata = null;
+        layerNameMapper = null;
+    }
 
     public DataCatalogue(CatalogueConfig config, LayerNameMapper layerNameMapper)
             throws IOException {
@@ -135,11 +154,50 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
          * However, this calculation is actually pretty quick. Setting the max
          * depth to 4,000,000 seems to suppress the vast majority of warnings,
          * and doesn't impact performance noticeably.
+         *
+         *  Cache configuration specified in resources/ehcache.xml
          */
-        cacheManager = CacheManager.create(new Configuration().name("EDAL-WMS-CacheManager")
-                .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(4_000_000)));
+        String ehcache_file = System.getProperty(WMS_CACHE_CONFIG);
+        if (ehcache_file != null && !ehcache_file.isEmpty())
+        {
+            cacheManager = CacheManager.create(System.getProperty(WMS_CACHE_CONFIG));
+        }
+        else {
+            cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER)
+                    .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(MAX_CACHE_DEPTH)));
+        }
 
-        setCache(config.getCacheSettings());
+        if (cacheManager.cacheExists(CACHE_NAME) == false) {
+             /*
+              * Configure cache
+              */
+            CacheConfiguration cacheConfig = new CacheConfiguration(CACHE_NAME, 0)
+                    .eternal(true)
+                    .maxBytesLocalHeap(CACHE_SIZE, MemoryUnit.MEGABYTES)
+                    .memoryStoreEvictionPolicy(EVICTION_POLICY)
+                    .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
+                    .transactionalMode(TRANSACTIONAL_MODE);
+
+            featureCache = new Cache(cacheConfig);
+            cacheManager.addCache(featureCache);
+        } else {
+            /*
+             * Use parameters for featureCache from ehcache.xml config file if passed in as JVM parameter wmsCache.config
+             * - Update cache params in NwcmsConfig
+             */
+            featureCache = cacheManager.getCache(CACHE_NAME);
+            CacheInfo catalogueCacheInfo = config.getCacheSettings();
+            CacheConfiguration featureCacheConfiguration = featureCache.getCacheConfiguration();
+            catalogueCacheInfo.setInMemorySizeMB((int) (featureCacheConfiguration.getMaxBytesLocalHeap() / (1024 * 1024)));
+            catalogueCacheInfo.setElementLifetimeMinutes(featureCacheConfiguration.getTimeToLiveSeconds() / 60);
+            catalogueCacheInfo.setEnabled(true);
+        }
+
+        /*
+         * Used to gather statistics about Ehcache
+         */
+        mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        ManagementService.registerMBeans(cacheManager, mBeanServer, true, true, true, true);
     }
 
     public CatalogueConfig getConfig() {
@@ -154,13 +212,18 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
      *            <code>null</code>
      */
     public void setCache(CacheInfo cacheConfig) {
-        int cacheSizeMB = cacheConfig.getInMemorySizeMB();
-        long lifetimeSeconds = (long) (cacheConfig.getElementLifetimeMinutes() * 60);
-        if (featureCache != null
-                && cachingEnabled == cacheConfig.isEnabled()
-                && cacheSizeMB == featureCache.getCacheConfiguration().getMaxBytesLocalHeap()
-                        / (1024 * 1024)
-                && lifetimeSeconds == featureCache.getCacheConfiguration().getTimeToLiveSeconds()) {
+        MemoryStoreEvictionPolicy memoryStoreEviction;
+        Strategy persistenceStrategy;
+        TransactionalMode transactionalMode;
+        long cacheSizeMB;
+        long configCacheSizeMB = cacheConfig.getInMemorySizeMB();
+        long lifetimeSeconds;
+        long configLifetimeSeconds = (long) (cacheConfig.getElementLifetimeMinutes() * 60);
+
+        if (featureCache != null &&
+            cachingEnabled == cacheConfig.isEnabled() &&
+            configCacheSizeMB == featureCache.getCacheConfiguration().getMaxBytesLocalHeap() / (1024 * 1024) &&
+            configLifetimeSeconds == featureCache.getCacheConfiguration().getTimeToLiveSeconds()) {
             /*
              * We are not changing anything about the cache.
              */
@@ -169,37 +232,69 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
 
         cachingEnabled = cacheConfig.isEnabled();
 
-        /*
-         * We are either disabling the cache or changing its size, so remove any
-         * existing one.
-         */
-        if (cacheManager.cacheExists(CACHE_NAME)) {
-            cacheManager.removeCache(CACHE_NAME);
-        }
-
         if (cachingEnabled) {
-            /*
-             * Configure cache
-             */
-            CacheConfiguration config = new CacheConfiguration(CACHE_NAME, 0)
+            if(cacheManager.cacheExists(CACHE_NAME)){
+                /*
+                * Update cache configuration
+                */
+                CacheConfiguration featureCacheConfig = featureCache.getCacheConfiguration();
+                featureCacheConfig.setTimeToLiveSeconds(configLifetimeSeconds);
+                featureCacheConfig.setMaxBytesLocalHeap((long) configCacheSizeMB * 1024 * 1024);
+            } else {
+                /*
+                 * - Precedence:
+                 *  - Admin config
+                 *  - XML file "ehcache.config"
+                 *  - Default values
+                 */
+
+                // Default values
+                cacheSizeMB = CACHE_SIZE;
+                lifetimeSeconds = LIFETIME_SECONDS;
+                memoryStoreEviction = EVICTION_POLICY;
+                persistenceStrategy = PERSISTENCE_STRATEGY;
+                transactionalMode = TRANSACTIONAL_MODE;
+
+                // XML config
+                String ehcache_file = System.getProperty("ehcache.config");
+                if (ehcache_file != null && !ehcache_file.isEmpty())
+                {
+                    CacheManager tmpCacheManager = CacheManager.create(System.getProperty("ehcache.config"));
+                    Cache tmpfeatureCache = cacheManager.getCache(CACHE_NAME);
+                    cacheSizeMB = tmpfeatureCache.getCacheConfiguration().getMaxBytesLocalHeap() / (1024 * 1024);
+                    lifetimeSeconds = tmpfeatureCache.getCacheConfiguration().getTimeToLiveSeconds();
+                    memoryStoreEviction = tmpfeatureCache.getCacheConfiguration().getMemoryStoreEvictionPolicy();
+                    persistenceStrategy = tmpfeatureCache.getCacheConfiguration().getPersistenceConfiguration().getStrategy();
+                    transactionalMode = tmpfeatureCache.getCacheConfiguration().getTransactionalMode();
+                }
+
+                // Admin
+                if (cacheConfig.getInMemorySizeMB() != 0) {
+                    cacheSizeMB = configCacheSizeMB;
+                }
+                if (cacheConfig.getElementLifetimeMinutes() != 0) {
+                    lifetimeSeconds = configLifetimeSeconds;
+                }
+
+                /*
+                 * Configure and create cache
+                 */
+                CacheConfiguration config = new CacheConfiguration(CACHE_NAME, 0)
                     .eternal(lifetimeSeconds == 0)
                     .maxBytesLocalHeap(cacheSizeMB, MemoryUnit.MEGABYTES)
                     .timeToLiveSeconds(lifetimeSeconds)
-                    .memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU)
-                    .persistence(new PersistenceConfiguration().strategy(Strategy.NONE))
-                    .transactionalMode(TransactionalMode.OFF);
+                    .memoryStoreEvictionPolicy(memoryStoreEviction)
+                    .persistence(new PersistenceConfiguration().strategy(persistenceStrategy))
+                    .transactionalMode(transactionalMode);
 
-            /*
-             * If we already have a cache, we can assume that the configuration
-             * has changed, so we remove and re-add it.
-             */
-            featureCache = new Cache(config);
-            cacheManager.addCache(featureCache);
+                featureCache = new Cache(config);
+                cacheManager.addCache(featureCache);
+            }
         } else {
             /*
-             * Nullify any existing cache to free up memory
+             * Remove existing cache to free up memory
              */
-            featureCache = null;
+            cacheManager.removeCache(CACHE_NAME);
         }
     }
 
