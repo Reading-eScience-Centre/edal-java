@@ -157,12 +157,25 @@ public class NetcdfDatasetAggregator {
      * @throws IOException
      *             if there was an error reading from the data source.
      */
-    public static synchronized NetcdfDataset getDataset(String location, boolean forceRefresh)
+    // These warnings are because we keep files open and close them when they get removed from the cache      
+    @SuppressWarnings("resource")
+    public static synchronized NetcdfDataset getDataset(final String location, boolean forceRefresh)
             throws IOException, EdalException {
         NetcdfDataset nc;
+
         if (datasetCache.containsKey(location) && !forceRefresh) {
             nc = datasetCache.get(location);
         } else {
+            if (datasetCache.containsKey(location)) {
+                /*
+                 * This means that we have the location in the cache, but we are
+                 * forcing a refresh. In this case, we want to forcibly remove
+                 * the dataset from the cache and close it before doing anything else
+                 */
+                nc = datasetCache.get(location);
+                datasetCache.remove(location);
+                nc.close();
+            }
             if (isRemote(location)) {
                 /*
                  * We have a remote dataset
@@ -184,8 +197,7 @@ public class NetcdfDatasetAggregator {
                             + " doesn't refer to any existing files.");
                 }
                 if (files.size() == 1) {
-                    location = files.get(0).getAbsolutePath();
-                    nc = openDataset(location);
+                    nc = openDataset(files.get(0).getAbsolutePath());
                 } else {
                     /*
                      * We have multiple files in a glob expression. We write

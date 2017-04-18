@@ -33,19 +33,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import java.lang.management.ManagementFactory;
-import javax.management.MBeanServer;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.PersistenceConfiguration;
-import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
 import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-import net.sf.ehcache.management.ManagementService;
 import uk.ac.rdg.resc.edal.dataset.HZTDataSource.MeshCoordinates3D;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
@@ -233,7 +229,6 @@ public abstract class HorizontalMesh4dDataset extends
     private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
     private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
     private static Cache meshDatasetCache = null;
-    private static MBeanServer mBeanServer = null;
     protected static final CacheManager cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER));
 
     static {
