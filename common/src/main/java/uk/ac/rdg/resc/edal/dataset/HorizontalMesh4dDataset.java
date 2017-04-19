@@ -59,8 +59,6 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 
-;
-
 /**
  * Partial implementation of a {@link Dataset} where the horizontal layers are
  * based on an unstructured mesh, and the vertical / time dimensions are

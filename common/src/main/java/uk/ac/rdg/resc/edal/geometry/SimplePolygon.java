@@ -61,7 +61,6 @@ public class SimplePolygon extends AbstractPolygon {
      *            {@link CoordinateReferenceSystem}
      */
     public SimplePolygon(List<HorizontalPosition> vertices) {
-        this.vertices = vertices;
         for (HorizontalPosition vertex : vertices) {
             if (crs == null) {
                 crs = vertex.getCoordinateReferenceSystem();
@@ -71,6 +70,25 @@ public class SimplePolygon extends AbstractPolygon {
                             "All positions in a polygon must have the same CRS");
                 }
             }
+        }
+
+        if (GISUtils.isWgs84LonLat(crs)) {
+            /*
+             * If we're working with lat-lon, deal with polygons crossing the
+             * date line
+             */
+            this.vertices = new ArrayList<>();
+            HorizontalPosition last = null;
+            for (HorizontalPosition vertex : vertices) {
+                if (last != null) {
+                    vertex = new HorizontalPosition(GISUtils.getNearestEquivalentLongitude(
+                            last.getX(), vertex.getX()), vertex.getY());
+                    last = vertex;
+                }
+                this.vertices.add(vertex);
+            }
+        } else {
+            this.vertices = vertices;
         }
 
         /*

@@ -81,7 +81,7 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
          * Check the bounds of the bbox
          */
         if (this.minx > this.maxx || this.miny > this.maxy) {
-            throw new IllegalArgumentException("Invalid bounding box specification");
+            throw new IllegalArgumentException("Invalid bounding box specification: "+minx+","+miny+":"+maxx+","+maxy);
         }
         this.crs = crs;
     }

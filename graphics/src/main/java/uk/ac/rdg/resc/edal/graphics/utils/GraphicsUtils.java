@@ -331,7 +331,7 @@ public class GraphicsUtils {
                 }
             } catch (Exception e) {
                 log.error(
-                        "Problem reading data whilst estimating scale range.  A default value will be used.",
+                        "Problem reading data whilst estimating scale range for "+varId+".  A default value will be used.",
                         e);
             }
         } else if (dataset instanceof AbstractContinuousDomainDataset) {
