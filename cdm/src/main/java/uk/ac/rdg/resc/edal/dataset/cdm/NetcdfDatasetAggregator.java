@@ -170,7 +170,8 @@ public class NetcdfDatasetAggregator {
                 /*
                  * This means that we have the location in the cache, but we are
                  * forcing a refresh. In this case, we want to forcibly remove
-                 * the dataset from the cache and close it before doing anything else
+                 * the dataset from the cache and close it before doing anything
+                 * else
                  */
                 nc = datasetCache.get(location);
                 datasetCache.remove(location);
@@ -338,14 +339,11 @@ public class NetcdfDatasetAggregator {
                                                     value = attr.getStringValue();
                                                 }
                                                 if (value != null
-                                                        && !attributes.get(attr.getFullName())
-                                                                .equals(value)) {
-                                                    /*
-                                                     * We have an attribute
-                                                     * which existed in a
-                                                     * variable with the same
-                                                     * name, but which had a
-                                                     * different value
+                                                        && !attributes.get(attr.getFullName()).equals(value) 
+                                                        && !attr.getFullName().startsWith("_")) {
+                                                    /*-
+                                                     * We have an attribute which existed in a variable with the same
+                                                     * name, but which had a different value (ignoring special vars starting "_")
                                                      */
                                                     throw new MetadataException(
                                                             "Trying to aggregate NetCDF files, but the variable "
