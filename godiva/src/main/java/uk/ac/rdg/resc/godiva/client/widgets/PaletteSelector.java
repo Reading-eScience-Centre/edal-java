@@ -50,7 +50,6 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.NumberFormat;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CellPanel;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -208,7 +207,12 @@ public class PaletteSelector implements PaletteSelectorIF {
                 try {
                     minVal = Float.parseFloat(minScale.getValue());
                 } catch (NumberFormatException e) {
-                    Window.alert(minScale.getValue() + " is not a number!");
+                    ErrorBox.popupErrorMessage(minScale.getValue() + " is not a number!");
+                    minScale.setValue(lastMinScaleValue);
+                    return;
+                }
+                if(isLogScale() && minVal <= 0) {
+                    ErrorBox.popupErrorMessage("Cannot use a negative or zero value for logarithmic scale");
                     minScale.setValue(lastMinScaleValue);
                     return;
                 }
@@ -216,12 +220,12 @@ public class PaletteSelector implements PaletteSelectorIF {
                 try {
                     maxVal = Float.parseFloat(maxScale.getValue());
                 } catch (NumberFormatException e) {
-                    Window.alert(maxScale.getValue() + " is not a number!");
+                    ErrorBox.popupErrorMessage(maxScale.getValue() + " is not a number!");
                     maxScale.setValue(lastMaxScaleValue);
                     return;
                 }
                 if (maxVal < minVal) {
-                    Window.alert(maxScale.getValue() + " is less than " + minScale.getValue());
+                    ErrorBox.popupErrorMessage(maxScale.getValue() + " is less than " + minScale.getValue());
                     minScale.setValue(lastMinScaleValue);
                     maxScale.setValue(lastMaxScaleValue);
                     return;
