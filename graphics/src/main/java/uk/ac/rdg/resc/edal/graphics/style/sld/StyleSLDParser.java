@@ -52,6 +52,7 @@ public class StyleSLDParser {
     static {
         registerSymbolizer("RasterSymbolizer", SLDRasterSymbolizer.class);
         registerSymbolizer("Raster2DSymbolizer", SLDRaster2DSymbolizer.class);
+        registerSymbolizer("RasterRGBSymbolizer", SLDRasterRGBSymbolizer.class);
         registerSymbolizer("ContourSymbolizer", SLDContourSymbolizer.class);
         registerSymbolizer("StippleSymbolizer", SLDStippleSymbolizer.class);
         registerSymbolizer("ArrowSymbolizer", SLDArrowSymbolizer.class);

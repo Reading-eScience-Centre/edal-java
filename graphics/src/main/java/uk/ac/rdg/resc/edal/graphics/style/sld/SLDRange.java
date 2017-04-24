@@ -6,6 +6,8 @@ import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Node;
 
+import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
+
 public class SLDRange {
 
 	public enum Spacing {
@@ -38,6 +40,10 @@ public class SLDRange {
 
 	public Spacing getSpacing() {
 		return spacing;
+	}
+	
+	public ScaleRange getScaleRange() {
+	    return new ScaleRange(getMinimum(), getMaximum(), getSpacing() == Spacing.LOGARITHMIC);
 	}
 
 	/**

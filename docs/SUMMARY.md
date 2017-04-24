@@ -20,6 +20,7 @@
             * [Thresholds (SE compliant)](appendices/sld_spec/xml_description/colour_maps.md#thresholds)
             * [Interpolation (SE compliant)](appendices/sld_spec/xml_description/colour_maps.md#interpolation)
             * [Segments (SE compliant)](appendices/sld_spec/xml_description/colour_maps.md#segments)
+          * [RGB Color Images](appendices/sld_spec/xml_description/rgb_color_images.md)
           * [Bivariate colour maps](appendices/sld_spec/xml_description/bivariate_colour_maps.md)
           * [Glyphs](appendices/sld_spec/xml_description/glyphs.md)
             * [In-situ Coloured Glyphs](appendices/sld_spec/xml_description/glyphs.md#in-situ)
