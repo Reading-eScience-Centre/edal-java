@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.catalogue;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,24 +38,23 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.lang.management.ManagementFactory;
+
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
+import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.MemoryUnit;
 import net.sf.ehcache.config.PersistenceConfiguration;
-import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
 import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.SizeOfPolicyConfiguration;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import net.sf.ehcache.management.ManagementService;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
