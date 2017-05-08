@@ -2009,7 +2009,7 @@ public class WmsServlet extends HttpServlet {
                         "Requested layer is either not present, disabled, or not yet loaded.");
             } catch (Exception e) {
                 throw new MetadataException(
-                        "You must specify either SLD, SLD_BODY or LAYERS and STYLES for a full legend.  You may set COLORBARONLY=true to just generate a colour bar");
+                        "You must specify either SLD, SLD_BODY, LAYERS and STYLES, or LAYER and STYLE for a full legend.  You may set COLORBARONLY=true to just generate a colour bar");
             }
             /*
              * Test whether we have categorical data - this will generate a
