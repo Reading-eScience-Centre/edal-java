@@ -135,6 +135,18 @@ public class GetMapStyleParams {
         }
 
         if (xmlStyle == null) {
+            /*
+             * Check if this a request with LAYER parameter required for GetLegendGraphic
+             */
+            String layerStr = params.getString("layer");
+            if (layerStr != null && layersStr == null) {
+                layers = new String[]{layerStr};
+            }
+            String styleStr = params.getString("style");
+            if (stylesStr != null && stylesStr == null) {
+                styles = new String[]{styleStr};
+            }
+
             if (layers == null) {
                 throw new EdalException(
                         "You must specify either SLD, SLD_BODY or LAYERS and STYLES");
