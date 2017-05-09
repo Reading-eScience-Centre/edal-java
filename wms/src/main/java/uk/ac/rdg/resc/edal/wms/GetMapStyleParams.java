@@ -143,7 +143,7 @@ public class GetMapStyleParams {
                 layers = new String[]{layerStr};
             }
             String styleStr = params.getString("style");
-            if (stylesStr != null && stylesStr == null) {
+            if (styleStr != null && stylesStr == null) {
                 styles = new String[]{styleStr};
             }
 
