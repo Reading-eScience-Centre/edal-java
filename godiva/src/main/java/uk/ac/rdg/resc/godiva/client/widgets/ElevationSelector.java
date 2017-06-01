@@ -61,6 +61,7 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
     private String id;
     private String units;
     private boolean continuous;
+    private boolean pressure = false;
 
     public ElevationSelector(String id, String title, final ElevationSelectionHandler handler) {
         super(title);
@@ -169,6 +170,7 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
 
             } else {
                 int i = 0;
+                boolean elSet = false;
                 for (String elevationStr : availableElevations) {
                     Float elevation = Float.parseFloat(elevationStr);
                     String formattedElevationStr = format.format(elevation);
@@ -176,8 +178,16 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
                     formattedValuesToRealValues.put(formattedElevationStr, elevationStr);
                     if (elevationStr.equals(currentElevation)) {
                         elevations.setSelectedIndex(i);
+                        elSet = true;
                     }
                     i++;
+                }
+                if (!elSet && this.pressure) {
+                    /*
+                     * Select the final value if this is a pressure axis (and we
+                     * haven't already set the elevation)
+                     */
+                    elevations.setSelectedIndex(i-1);
                 }
             }
             label.removeStyleDependentName("inactive");
@@ -207,9 +217,10 @@ public class ElevationSelector extends BaseSelector implements ElevationSelector
     }
 
     @Override
-    public void setUnitsAndDirection(String units, boolean positive) {
+    public void setUnitsAndDirection(String units, boolean positive, boolean pressure) {
         this.units = units;
-        if (positive) {
+        this.pressure = pressure;
+        if (positive || pressure) {
             label.setText("Elevation");
             elevations.setTitle("Select the elevation");
         } else {

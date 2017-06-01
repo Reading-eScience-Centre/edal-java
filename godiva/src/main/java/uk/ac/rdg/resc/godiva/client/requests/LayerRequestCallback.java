@@ -285,6 +285,7 @@ public abstract class LayerRequestCallback implements RequestCallback {
         if (zAxisJson != null) {
             JSONObject zvalsObj = zAxisJson.isObject();
             layerDetails.setZUnits(zvalsObj.get("units").isString().stringValue());
+            layerDetails.setIsPressure(zvalsObj.get("pressure").isBoolean().booleanValue());
             layerDetails.setZPositive(zvalsObj.get("positive").isBoolean().booleanValue());
 
             /*

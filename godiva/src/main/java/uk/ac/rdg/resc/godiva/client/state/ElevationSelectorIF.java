@@ -62,8 +62,10 @@ public interface ElevationSelectorIF extends IsWidget {
      *            <code>true</code> if increasing elevation value means
      *            increasing height. <code>false</code> if increasing elevation
      *            value means increasing depth
+     * @param pressure
+     *            <code>true</code> if this axis represents pressure
      */
-    public void setUnitsAndDirection(String units, boolean positive);
+    public void setUnitsAndDirection(String units, boolean positive, boolean pressure);
 
     /**
      * Gets the currently selected elevation as a {@link String}

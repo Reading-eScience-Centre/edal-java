@@ -51,6 +51,7 @@ public class LayerDetails {
     private boolean categorical = false;
     private String zUnits = null;
     private boolean zPositive = true;
+    private boolean pressure = false;
     private List<String> availableZs = null;
     private String moreInfo = null;
     private String copyright = null;
@@ -76,6 +77,7 @@ public class LayerDetails {
     private boolean timeseriesSupported = false;
     private boolean profilesSupported = false;
     private boolean transectsSupported = false;
+
 
     public LayerDetails(String layerId) {
         id = layerId;
@@ -119,6 +121,10 @@ public class LayerDetails {
 
     public String getZUnits() {
         return zUnits;
+    }
+    
+    public boolean isPressure() {
+        return pressure;
     }
 
     public boolean isZPositive() {
@@ -205,6 +211,10 @@ public class LayerDetails {
         this.zUnits = zUnits;
     }
 
+    public void setIsPressure(boolean pressure) {
+        this.pressure = pressure;
+    }
+    
     public void setZPositive(boolean zPositive) {
         this.zPositive = zPositive;
     }

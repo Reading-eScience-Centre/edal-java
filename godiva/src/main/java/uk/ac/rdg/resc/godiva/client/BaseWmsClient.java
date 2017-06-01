@@ -739,7 +739,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
         widgetCollection.getCopyrightInfo().setCopyrightInfo(layerDetails.getCopyright());
         widgetCollection.getMoreInfo().setInfo(layerDetails.getMoreInfo());
         widgetCollection.getElevationSelector().setUnitsAndDirection(layerDetails.getZUnits(),
-                layerDetails.isZPositive());
+                layerDetails.isZPositive(), layerDetails.isPressure());
 
         /*
          * Populate the palette options

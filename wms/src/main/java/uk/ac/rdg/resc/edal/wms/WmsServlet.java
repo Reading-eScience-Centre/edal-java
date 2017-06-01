@@ -1277,6 +1277,7 @@ public class WmsServlet extends HttpServlet {
             layerDetails.put("continuousZ", !discreteZ);
             JSONObject zAxisJson = new JSONObject();
             zAxisJson.put("units", verticalDomain.getVerticalCrs().getUnits());
+            zAxisJson.put("pressure", verticalDomain.getVerticalCrs().isPressure());
             zAxisJson.put("positive", verticalDomain.getVerticalCrs().isPositiveUpwards());
             if (verticalDomain instanceof VerticalAxis) {
                 /*
