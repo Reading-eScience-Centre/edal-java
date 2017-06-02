@@ -418,27 +418,27 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
             String id, String location, NetcdfDataset nc) throws IOException;
 
     /**
-     * @return the phenomenon that the given variable represents.
+     * @return the name of the phenomenon that the given variable represents.
      * 
      *         This name will be, in order of preference:
      * 
-     *         The standard name
-     * 
      *         The long name
+     * 
+     *         The standard name
      * 
      *         The variable name
      */
     protected static String getVariableName(Variable var) {
-        Attribute stdNameAtt = var.findAttributeIgnoreCase("standard_name");
-        if (stdNameAtt == null || stdNameAtt.getStringValue().trim().equals("")) {
-            Attribute longNameAtt = var.findAttributeIgnoreCase("long_name");
-            if (longNameAtt == null || longNameAtt.getStringValue().trim().equals("")) {
+        Attribute longNameAtt = var.findAttributeIgnoreCase("long_name");
+        if (longNameAtt == null || longNameAtt.getStringValue().trim().equals("")) {
+            Attribute stdlongNameAtt = var.findAttributeIgnoreCase("standard_name");
+            if (stdlongNameAtt == null || stdlongNameAtt.getStringValue().trim().equals("")) {
                 return var.getFullName();
             } else {
-                return longNameAtt.getStringValue();
+                return stdlongNameAtt.getStringValue();
             }
         } else {
-            return stdNameAtt.getStringValue();
+            return longNameAtt.getStringValue();
         }
     }
 }

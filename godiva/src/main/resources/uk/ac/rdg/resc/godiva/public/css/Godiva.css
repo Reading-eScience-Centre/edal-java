@@ -179,6 +179,10 @@
 	margin: 0px;
 }
 
+.gwt-Label {
+	white-space: normal;
+}
+
 /* Used for popup in date selector */
 .dateBoxPopup {
 	z-index: 2010;

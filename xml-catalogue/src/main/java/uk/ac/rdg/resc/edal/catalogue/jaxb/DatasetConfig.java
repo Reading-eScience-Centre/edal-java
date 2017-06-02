@@ -235,8 +235,9 @@ public class DatasetConfig {
         }
     }
 
-    public void createDataset(DatasetStorage datasetStorage, boolean forceRefresh) throws InstantiationException,
-            IllegalAccessException, ClassNotFoundException, IOException, EdalException {
+    public void createDataset(DatasetStorage datasetStorage, boolean forceRefresh)
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException,
+            IOException, EdalException {
         loadingProgress.add("Starting loading");
 
         /*
@@ -278,10 +279,10 @@ public class DatasetConfig {
                  */
                 Extent<Float> colorScaleRange = GraphicsUtils.estimateValueRange(dataset, varId);
                 VariableMetadata variableMetadata = dataset.getVariableMetadata(varId);
-                VariableConfig variable = new VariableConfig(varId, varId, variableMetadata
-                        .getParameter().getDescription(), colorScaleRange,
-                        ColourPalette.DEFAULT_PALETTE_NAME, Color.black, Color.black, new Color(0,
-                                true), "linear", ColourPalette.MAX_NUM_COLOURS);
+                VariableConfig variable = new VariableConfig(varId, variableMetadata.getParameter()
+                        .getTitle(), variableMetadata.getParameter().getDescription(),
+                        colorScaleRange, ColourPalette.DEFAULT_PALETTE_NAME, Color.black,
+                        Color.black, new Color(0, true), "linear", ColourPalette.MAX_NUM_COLOURS);
                 variable.setParentDataset(this);
                 variables.put(varId, variable);
             }
@@ -592,7 +593,7 @@ public class DatasetConfig {
     public DateTime getLastUpdateTime() {
         return lastSuccessfulUpdateTime;
     }
-    
+
     public void setLastSuccessfulUpdateTime(DateTime lastSuccessfulUpdateTime) {
         this.lastSuccessfulUpdateTime = lastSuccessfulUpdateTime;
     }
