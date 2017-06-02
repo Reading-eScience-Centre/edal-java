@@ -71,7 +71,7 @@ public class ReferenceableAxisImpl extends AbstractIrregularAxis<Double> {
         if (position == null || Double.isNaN(position))
             return -1;
         if (isLongitude) {
-            position = GISUtils.getNextEquivalentLongitude(this.getMinimumValue(), position);
+            position = GISUtils.getNextEquivalentLongitude(getCoordinateExtent().getLow(), position);
         }
         return super.findIndexOf(position);
     }
