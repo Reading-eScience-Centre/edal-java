@@ -1284,8 +1284,21 @@ public class WmsServlet extends HttpServlet {
                  * We have discrete vertical axis values
                  */
                 VerticalAxis verticalAxis = (VerticalAxis) verticalDomain;
+                List<Double> sortedVals = new ArrayList<>(verticalAxis.getCoordinateValues());
+                /*
+                 * Sort the values smallest to largest.
+                 */
+                Collections.sort(sortedVals);
+                if(verticalAxis.getVerticalCrs().isPressure()
+                        || (sortedVals.get(0) < 0 && sortedVals.get(sortedVals.size()-1) < 0)) {
+                    /*
+                     * Largest to smallest if pressure, or all values are negative
+                     */
+                    Collections.reverse(sortedVals);
+                }
+                
                 JSONArray zValuesJson = new JSONArray();
-                for (Double z : verticalAxis.getCoordinateValues()) {
+                for (Double z : sortedVals) {
                     zValuesJson.put(z);
                 }
                 zAxisJson.put("values", zValuesJson);
