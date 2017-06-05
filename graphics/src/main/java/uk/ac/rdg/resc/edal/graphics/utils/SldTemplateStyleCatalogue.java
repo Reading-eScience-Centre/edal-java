@@ -35,11 +35,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -172,12 +168,18 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             URI uri = SldTemplateStyleCatalogue.class.getResource("/styles").toURI();
             Path myPath;
             if (uri.getScheme().equals("jar")) {
-                FileSystem fileSystem = FileSystems.newFileSystem(uri,
-                        Collections.<String, Object> emptyMap());
+                FileSystem fileSystem;
+                try {
+                    fileSystem = FileSystems.newFileSystem(uri,
+                            Collections.<String, Object>emptyMap());
+                } catch (FileSystemAlreadyExistsException e) {
+                    fileSystem = FileSystems.getFileSystem(uri) ;
+                }
                 myPath = fileSystem.getPath("/styles");
             } else {
                 myPath = Paths.get(uri);
             }
+
             walk = Files.walk(myPath, 1);
             for (Iterator<Path> it = walk.iterator(); it.hasNext();) {
                 Path stylePath = it.next();
