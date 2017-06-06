@@ -1,3 +1,16 @@
+1.2.8
+=====
+Minor bugfixes
+Better automatic variable titles
+Better z-axis behaviour (default selection and ordering)
+Got rid of several Tomcat warnings
+
+1.2.7
+=====
+Configurable EHCache support
+RGB component images + SLD support
+Minor bugfixes
+
 1.2.6
 =====
 Travis integration
