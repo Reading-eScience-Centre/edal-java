@@ -60,7 +60,7 @@ public class PlottingDomainParams implements Serializable {
         return new PlottingDomainParams(width, height, bbox, null, null, null, targetZ, targetT);
     }
 
-    public PlottingDomainParams (int width, int height, BoundingBox bbox, Extent<Double> zExtent,
+    public PlottingDomainParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
             Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ, DateTime targetT) {
         super();
         this.width = width;

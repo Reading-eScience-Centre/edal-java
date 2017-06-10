@@ -472,9 +472,11 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                 /*
                  * This is why we added the SuppressWarnings("unchecked").
                  */
-                mapFeatures = (Collection<? extends DiscreteFeature<?, ?>>) element.getObjectValue();
+                mapFeatures = (Collection<? extends DiscreteFeature<?, ?>>) element
+                        .getObjectValue();
             } else {
                 mapFeatures = doExtraction(layerName, variable, params);
+                featureCache.put(new Element(key, mapFeatures));
             }
         } else {
             mapFeatures = doExtraction(layerName, variable, params);
