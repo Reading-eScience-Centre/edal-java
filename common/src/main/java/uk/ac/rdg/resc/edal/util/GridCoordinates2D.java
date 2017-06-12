@@ -37,6 +37,7 @@ import java.io.Serializable;
  * @author Guy Griffiths
  */
 public final class GridCoordinates2D implements Serializable {
+    private static final long serialVersionUID = 1L;
     private int x;
     private int y;
 

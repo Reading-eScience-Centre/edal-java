@@ -46,6 +46,7 @@ import java.io.Serializable;
  * @author Guy Griffiths
  */
 public class RectilinearGridImpl extends AbstractHorizontalGrid implements RectilinearGrid, Serializable {
+    private static final long serialVersionUID = 1L;
     protected ReferenceableAxis<Double> xAxis;
     protected ReferenceableAxis<Double> yAxis;
     private Array2D<GridCell2D> domainObjects = null;
@@ -80,6 +81,8 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     public Array2D<GridCell2D> getDomainObjects() {
         if (domainObjects == null) {
             domainObjects = new Array2D<GridCell2D>(yAxis.size(), xAxis.size()) {
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];

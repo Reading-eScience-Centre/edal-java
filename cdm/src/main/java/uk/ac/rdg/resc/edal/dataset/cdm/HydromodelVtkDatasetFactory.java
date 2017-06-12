@@ -197,6 +197,7 @@ public class HydromodelVtkDatasetFactory extends DatasetFactory {
      * @author Guy Griffiths
      */
     private static final class HydromodelVtkDataset extends HorizontalMesh4dDataset {
+        private static final long serialVersionUID = 1L;
         private final InMemoryMeshDataSource dataSource;
 
         public HydromodelVtkDataset(String id, Collection<HorizontalMesh4dVariableMetadata> vars,

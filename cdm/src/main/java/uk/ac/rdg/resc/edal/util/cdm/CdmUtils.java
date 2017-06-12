@@ -242,6 +242,8 @@ public final class CdmUtils {
 
     public static Array2D<Number> get2DCoordinateValues(final CoordinateAxis2D axis) {
         return new Array2D<Number>(axis.getShape(0), axis.getShape(1)) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             public void set(Number value, int... coords) {
                 throw new UnsupportedOperationException("This Array2D is immutable");

@@ -82,6 +82,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  */
 public class GraphicsUtils implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(GraphicsUtils.class);
+    private static final long serialVersionUID = 1L;
     private static Map<String, Color> namedColors = new HashMap<>();
 
     static {

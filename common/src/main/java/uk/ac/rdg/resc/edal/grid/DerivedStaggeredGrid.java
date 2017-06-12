@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.grid;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -53,8 +54,8 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  *
  * @author Guy Griffiths
  */
-public class DerivedStaggeredGrid extends AbstractHorizontalGrid implements StaggeredHorizontalGrid {
-
+public class DerivedStaggeredGrid extends AbstractHorizontalGrid implements StaggeredHorizontalGrid, Serializable {
+    private static final long serialVersionUID = 1L;
     private HorizontalGrid grid;
     private int xSize;
     private int ySize;
@@ -150,6 +151,7 @@ public class DerivedStaggeredGrid extends AbstractHorizontalGrid implements Stag
             for (int y = 0; y < ySize; y++) {
                 HorizontalPosition staggeredPosition = staggerPosition(x, y,
                         new Array2D<HorizontalPosition>(origYSize, origXSize) {
+                            private static final long serialVersionUID = 1L;
                             @Override
                             public HorizontalPosition get(int... coords) {
                                 return originalDomainObjects.get(coords).getCentre();
@@ -164,6 +166,7 @@ public class DerivedStaggeredGrid extends AbstractHorizontalGrid implements Stag
                     final int nFinal = n;
                     HorizontalPosition staggeredVertex = staggerPosition(x, y,
                             new Array2D<HorizontalPosition>(origYSize, origXSize) {
+                                private static final long serialVersionUID = 1L;
                                 @Override
                                 public HorizontalPosition get(int... coords) {
                                     return originalDomainObjects.get(coords).getFootprint()
@@ -546,7 +549,8 @@ public class DerivedStaggeredGrid extends AbstractHorizontalGrid implements Stag
         return true;
     }
 
-    private class GridCellArray2D extends Array2D<GridCell2D> {
+    private class GridCellArray2D extends Array2D<GridCell2D> implements Serializable{
+        private static final long serialVersionUID = 1L;
         private GridCell2D[][] data;
 
         public GridCellArray2D(int ySize, int xSize) {

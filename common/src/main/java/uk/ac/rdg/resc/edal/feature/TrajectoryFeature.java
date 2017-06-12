@@ -44,6 +44,8 @@ import uk.ac.rdg.resc.edal.util.Array1D;
  * 
  */
 public class TrajectoryFeature extends AbstractDiscreteFeature<GeoPosition, GeoPosition> {
+    private static final long serialVersionUID = 1L;
+
     public TrajectoryFeature(String id, String name, String description, TrajectoryDomain domain,
             Map<String, Parameter> parameters, Map<String, ? extends Array1D<Number>> values) {
         super(id, name, description, domain, parameters, values);

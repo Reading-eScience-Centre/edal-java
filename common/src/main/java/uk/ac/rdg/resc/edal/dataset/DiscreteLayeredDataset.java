@@ -74,6 +74,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  */
 public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends DiscreteLayeredVariableMetadata>
         extends HorizontallyDiscreteDataset<DS> implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public DiscreteLayeredDataset(String id, Collection<VM> vars) {
         super(id, vars);

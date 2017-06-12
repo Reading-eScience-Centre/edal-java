@@ -80,6 +80,7 @@ import uk.ac.rdg.resc.edal.util.Array2D;
  * @author Guy
  */
 public class MapFeature extends AbstractDiscreteFeature<HorizontalPosition, GridCell2D> implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public MapFeature(String id, String name, String description, MapDomain domain,
             Map<String, Parameter> parameters, Map<String, Array2D<Number>> valuesMap) {

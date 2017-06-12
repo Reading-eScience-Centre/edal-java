@@ -72,6 +72,7 @@ import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
  */
 public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
         AbstractContinuousDomainDataset {
+    private static final long serialVersionUID = 1L;
     private BoundingBox bbox;
     private Extent<Double> zExtent;
     private Extent<DateTime> tExtent;

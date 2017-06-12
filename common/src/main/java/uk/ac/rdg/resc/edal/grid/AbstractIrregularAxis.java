@@ -47,6 +47,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  */
 public abstract class AbstractIrregularAxis<T extends Comparable<? super T>> extends
         AbstractReferenceableAxis<T> {
+    private static final long serialVersionUID = 1L;
     /**
      * The axis values, always in ascending numerical order to simplify
      * searching

@@ -45,6 +45,7 @@ import java.io.Serializable;
  * @author Guy
  */
 public class HorizontalMesh4dVariableMetadata extends DiscreteLayeredVariableMetadata implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public HorizontalMesh4dVariableMetadata(Parameter parameter,
             HorizontalMesh hDomain, VerticalAxis zDomain, TimeAxis tDomain,

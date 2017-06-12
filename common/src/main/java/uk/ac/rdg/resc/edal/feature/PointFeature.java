@@ -42,6 +42,8 @@ import uk.ac.rdg.resc.edal.util.Array1D;
  * @author Guy Griffiths
  */
 public class PointFeature extends AbstractDiscreteFeature<GeoPosition, GeoPosition> {
+    private static final long serialVersionUID = 1L;
+
     public PointFeature(String id, String name, String description, GeoPosition pos4d,
             Map<String, Parameter> parameters, Map<String, Array1D<Number>> values) {
         super(id, name, description, new PointDomain(pos4d), parameters, values);

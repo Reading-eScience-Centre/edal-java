@@ -50,7 +50,7 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
  * @author Jon Blower
  */
 public class VariableMetadata implements Serializable {
-
+    private static final long serialVersionUID = 1L;
     private String id;
     private Dataset dataset;
     private Parameter parameter;

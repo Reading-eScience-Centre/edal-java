@@ -32,6 +32,7 @@ import java.io.Serializable;
 import java.util.Iterator;
 
 public abstract class Array2D<T> implements Array<T>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     private int[] shape = new int[2];
 

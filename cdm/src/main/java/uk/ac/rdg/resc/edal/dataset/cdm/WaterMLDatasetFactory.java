@@ -212,6 +212,7 @@ public class WaterMLDatasetFactory extends DatasetFactory {
     }
 
     class WaterMLDataset extends PointDataset<PointSeriesFeature> {
+        private static final long serialVersionUID = 1L;
         private WaterMLFeatureReader featureReader;
 
         public WaterMLDataset(String id, Collection<VariableMetadata> vars,

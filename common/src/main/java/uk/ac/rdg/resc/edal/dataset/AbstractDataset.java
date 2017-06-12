@@ -51,6 +51,7 @@ public abstract class AbstractDataset implements Dataset, Serializable {
     protected final String id;
     protected Map<String, VariableMetadata> vars;
     protected List<VariablePlugin> plugins;
+    private static final long serialVersionUID = 1L;
 
     /**
      * @param id

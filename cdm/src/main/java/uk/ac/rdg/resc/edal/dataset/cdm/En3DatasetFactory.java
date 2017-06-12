@@ -557,6 +557,7 @@ public final class En3DatasetFactory extends DatasetFactory {
     }
 
     private final class En3Dataset extends PointDataset<ProfileFeature> {
+        private static final long serialVersionUID = 1L;
         private En3DatabaseReader reader = new En3DatabaseReader(this);
 
         private Map<Integer, File> fileMap;

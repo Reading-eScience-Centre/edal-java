@@ -55,6 +55,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Guy Griffiths
  */
 public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell>, Serializable {
+    private static final long serialVersionUID = 1L;
     private final List<HorizontalPosition> positions;
     private final BoundingBox bbox;
     private List<NestedBoundary> topLevelBoundaries;

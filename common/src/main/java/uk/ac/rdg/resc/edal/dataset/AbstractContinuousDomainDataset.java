@@ -57,6 +57,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Guy Griffiths
  */
 public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
+    private static final long serialVersionUID = 1L;
     private FeatureIndexer featureIndexer;
 
     public AbstractContinuousDomainDataset(String id, Collection<? extends VariableMetadata> vars,

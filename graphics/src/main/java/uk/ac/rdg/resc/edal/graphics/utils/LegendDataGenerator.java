@@ -348,6 +348,7 @@ public class LegendDataGenerator {
      * @author Guy Griffiths
      */
     protected class XYNan extends Array2D<Number> {
+        private static final long serialVersionUID = 1L;
         private MatrixType type;
         private Extent<Float> scaleRange = null;
 

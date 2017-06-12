@@ -64,6 +64,7 @@ public final class LookUpTableGrid extends AbstractCurvilinearGrid {
      *       objects available for garbage collection.
      */
     private static final Map<CurvilinearCoords, LookUpTableGrid> CACHE = new HashMap<CurvilinearCoords, LookUpTableGrid>();
+    private static final long serialVersionUID = 1L;
 
     private final LookUpTable lut;
 

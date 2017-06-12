@@ -117,6 +117,7 @@ public class ModisLcDatasetFactory extends DatasetFactory {
     }
 
     private final class ModisGridDataset extends GriddedDataset {
+        private static final long serialVersionUID = 1L;
         private ValuesArray4D data;
 
         public ModisGridDataset(String id, Collection<GridVariableMetadata> vars, ValuesArray4D data) {

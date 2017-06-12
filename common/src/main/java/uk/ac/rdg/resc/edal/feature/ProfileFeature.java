@@ -45,6 +45,7 @@ import uk.ac.rdg.resc.edal.util.Array1D;
  */
 public class ProfileFeature extends AbstractDiscreteFeature<Double, Extent<Double>> {
 
+    private static final long serialVersionUID = 1L;
     private final HorizontalPosition hPos;
     private final DateTime time;
 

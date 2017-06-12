@@ -49,6 +49,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * @author Jon Blower
  */
 public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
+    private static final long serialVersionUID = 1L;
     protected final CurvilinearCoords curvCoords;
     private final BoundingBox latLonBbox;
     private Array2D<GridCell2D> domainObjects = null;
@@ -139,6 +140,8 @@ public abstract class AbstractCurvilinearGrid extends AbstractTransformedGrid {
         if (domainObjects == null) {
             domainObjects = new Array2D<GridCell2D>(curvCoords.getNj(),
                     curvCoords.getNi()) {
+                private static final long serialVersionUID = 5711678709143071525L;
+
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];

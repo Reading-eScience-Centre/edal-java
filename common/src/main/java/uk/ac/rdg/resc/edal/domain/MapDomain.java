@@ -51,6 +51,8 @@ import java.io.Serializable;
  * @author Guy
  */
 public class MapDomain implements RectilinearGrid, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private RectilinearGrid hGrid;
     private Double z;
     private VerticalCrs vCrs;

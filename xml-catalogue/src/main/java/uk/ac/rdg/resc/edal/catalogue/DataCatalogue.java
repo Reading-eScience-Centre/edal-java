@@ -495,6 +495,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
     }
 
     private static class CacheKey implements Serializable {
+        private static final long serialVersionUID = 1L;
         final String id;
         final PlottingDomainParams params;
 

@@ -46,6 +46,7 @@ import java.io.Serializable;
  * @author Guy Griffiths
  */
 public class DiscreteLayeredVariableMetadata extends VariableMetadata implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public DiscreteLayeredVariableMetadata(Parameter parameter,
             DiscreteHorizontalDomain<? extends HorizontalCell> hDomain, VerticalAxis zDomain,

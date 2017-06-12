@@ -44,6 +44,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * so that vector transforms can be handled.
  */
 public abstract class AbstractTransformedGrid implements HorizontalGrid {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Transforms a heading in native grid co-ordinates (degrees clockwise from
      * positive y-direction) into a heading in WGS84 (degrees clockwise from

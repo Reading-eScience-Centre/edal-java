@@ -42,6 +42,7 @@ import java.io.Serializable;
  * @author Guy Griffiths
  */
 public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> implements RegularAxis, Serializable {
+    private static final long serialVersionUID = 1L;
     private double firstValue;
     /*
      * The axis spacing

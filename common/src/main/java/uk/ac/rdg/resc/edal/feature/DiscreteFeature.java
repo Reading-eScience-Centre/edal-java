@@ -31,7 +31,6 @@ package uk.ac.rdg.resc.edal.feature;
 import uk.ac.rdg.resc.edal.domain.DiscreteDomain;
 import uk.ac.rdg.resc.edal.util.Array;
 
-import java.io.Serializable;
 
 /**
  * <p>

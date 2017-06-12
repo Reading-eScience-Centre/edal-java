@@ -69,6 +69,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
  */
 public abstract class HorizontalMesh4dDataset extends
         DiscreteLayeredDataset<HZTDataSource, HorizontalMesh4dVariableMetadata> implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public HorizontalMesh4dDataset(String id, Collection<HorizontalMesh4dVariableMetadata> vars) {
         super(id, vars);
@@ -94,7 +95,6 @@ public abstract class HorizontalMesh4dDataset extends
         throw new UnsupportedOperationException("Feature reading is not yet supported");
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Array2D<Number> extractHorizontalData(HorizontalMesh4dVariableMetadata metadata,
             int tIndex, int zIndex, HorizontalGrid targetGrid, HZTDataSource dataSource)

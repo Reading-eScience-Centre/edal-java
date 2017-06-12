@@ -64,6 +64,7 @@ public interface HZTDataSource extends DataSource {
         public final int h;
         public final int z;
         public final int t;
+        private static final long serialVersionUID = 1L;
 
         /**
          * Create a new {@link MeshCoordinates3D} object
