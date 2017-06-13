@@ -64,6 +64,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Guy Griffiths
  */
 public class InMemoryNorthPolarStereographicDataset extends GriddedDataset {
+    private static final long serialVersionUID = 1L;
+
     public InMemoryNorthPolarStereographicDataset() throws EdalException {
         super("northPole", getGridVariables());
         addVariablePlugin(new VectorPlugin("allx_u", "allx_v", "All X", false));

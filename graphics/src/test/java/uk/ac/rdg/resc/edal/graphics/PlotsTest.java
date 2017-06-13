@@ -91,6 +91,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  *
  * @author Guy
  */
+@SuppressWarnings("serial")
 public class PlotsTest {
 
     private static final int WIDTH = 500;
