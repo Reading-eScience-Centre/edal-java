@@ -182,7 +182,7 @@ abstract class FixedYearLengthChronology extends BaseChronology {
         public int getMaximumValue() {
             return this.get(Long.MAX_VALUE) - 1;
         }
-    };
+    }
 
     /**
      * @param daysInYear

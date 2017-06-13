@@ -339,7 +339,7 @@ public class LegendDataGenerator {
 
     protected enum MatrixType {
         X, Y, NAN
-    };
+    }
 
     /**
      * An {@link Array2D} which contains data either varying in just the

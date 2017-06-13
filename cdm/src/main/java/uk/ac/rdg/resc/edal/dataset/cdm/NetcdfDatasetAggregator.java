@@ -102,7 +102,7 @@ public class NetcdfDatasetAggregator {
                 return true;
             }
             return false;
-        };
+        }
 
     };
 

@@ -93,7 +93,7 @@ public interface StaggeredHorizontalGrid extends HorizontalGrid {
             }
             return NO_OFFSET;
         }
-    };
+    }
 
     /**
      * @return The {@link HorizontalGrid} which this grid is staggered in

@@ -1953,7 +1953,7 @@ public class WmsServlet extends HttpServlet {
             this.periodString = periodString;
             this.period = period;
         }
-    };
+    }
 
     private static void addTimeStringToJson(AnimationStep step, JSONArray jsonArray,
             List<DateTime> tValues, int startIndex, int endIndex) {

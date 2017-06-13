@@ -147,7 +147,7 @@ public abstract class GriddedImageLayer extends ImageLayer {
                     return values.get(params.getHeight() - coords[0] - 1, coords[1]);
                 }
             };
-        };
+        }
 
         public Array2D<HorizontalPosition> getMapDomainObjects(String layerId) throws EdalException {
             MapFeature mapFeature = getFeature(layerId);

@@ -53,7 +53,7 @@ public class ArrowLayer extends GriddedImageLayer {
 
     public enum ArrowStyle {
         UPSTREAM, THIN_ARROW, FAT_ARROW, TRI_ARROW, WIND_BARBS
-    };
+    }
 
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
 
