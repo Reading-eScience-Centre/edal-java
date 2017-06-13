@@ -36,6 +36,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
 
 public class VerticalAxisImpl extends ReferenceableAxisImpl implements VerticalAxis {
 
+    private static final long serialVersionUID = 1L;
     private VerticalCrs vCrs;
 
     public VerticalAxisImpl(String axisName, List<Double> values, VerticalCrs vCrs) {

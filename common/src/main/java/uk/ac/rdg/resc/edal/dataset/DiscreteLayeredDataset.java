@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -72,7 +73,9 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Jon Blower
  */
 public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends DiscreteLayeredVariableMetadata>
-        extends HorizontallyDiscreteDataset<DS> {
+        extends HorizontallyDiscreteDataset<DS> implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public DiscreteLayeredDataset(String id, Collection<VM> vars) {
         super(id, vars);
     }

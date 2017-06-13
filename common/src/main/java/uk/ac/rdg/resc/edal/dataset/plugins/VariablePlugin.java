@@ -176,6 +176,8 @@ public abstract class VariablePlugin {
                     + " data sources, but you have supplied " + sourceArrays.length);
         }
         return new Array2D<Number>(sourceArrays[0].getYSize(), sourceArrays[0].getXSize()) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             public void set(Number value, int... coords) {
                 throw new IllegalArgumentException("This Array is immutable");

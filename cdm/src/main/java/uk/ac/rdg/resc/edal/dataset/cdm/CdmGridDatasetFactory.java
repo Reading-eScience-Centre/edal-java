@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -107,9 +108,10 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public class CdmGridDatasetFactory extends CdmDatasetFactory {
+public final class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
     private static final String UNSTAGGERED_SUFFIX = ":face";
+    private static final long serialVersionUID = 1L;
 
     @Override
     protected DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> generateDataset(
@@ -1219,6 +1221,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory {
     }
 
     private class CdmGridDataset extends GriddedDataset {
+        private static final long serialVersionUID = 1L;
         protected final String location;
         private final DataReadingStrategy dataReadingStrategy;
 
@@ -1259,6 +1262,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory {
     }
 
     private final class CdmSgridDataset extends CdmGridDataset {
+        private static final long serialVersionUID = 1L;
         private Map<String, RangesList> rangesList = null;
         private Map<String, SGridPadding[]> paddings;
 
@@ -1443,7 +1447,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory {
         }
     }
 
-    private final class CdmUgridDataset extends HorizontalMesh4dDataset {
+    private final class CdmUgridDataset extends HorizontalMesh4dDataset implements Serializable {
+        private static final long serialVersionUID = 1L;
         private final String location;
         private final Map<String, int[]> varId2hztIndices;
 

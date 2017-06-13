@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.grid;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +54,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * 
  * @author Guy Griffiths
  */
-public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell> {
+public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell>, Serializable {
+    private static final long serialVersionUID = 1L;
     private final List<HorizontalPosition> positions;
     private final BoundingBox bbox;
     private List<NestedBoundary> topLevelBoundaries;

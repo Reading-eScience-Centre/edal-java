@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,11 +46,12 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
-public abstract class AbstractDataset implements Dataset {
+public abstract class AbstractDataset implements Dataset, Serializable {
     private static final Logger log = LoggerFactory.getLogger(GriddedDataset.class);
     protected final String id;
     protected Map<String, VariableMetadata> vars;
     protected List<VariablePlugin> plugins;
+    private static final long serialVersionUID = 1L;
 
     /**
      * @param id

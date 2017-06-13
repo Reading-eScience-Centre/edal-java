@@ -43,12 +43,16 @@ import uk.ac.rdg.resc.edal.position.VerticalCrs;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
+import java.io.Serializable;
+
 /**
  * Implementation of a {@link MapDomain}
  * 
  * @author Guy
  */
-public class MapDomain implements RectilinearGrid {
+public class MapDomain implements RectilinearGrid, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private RectilinearGrid hGrid;
     private Double z;
     private VerticalCrs vCrs;

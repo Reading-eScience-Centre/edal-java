@@ -45,6 +45,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  */
 public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implements TimeAxis {
 
+    private static final long serialVersionUID = 1L;
     private Chronology chronology;
 
     public TimeAxisImpl(String name, List<DateTime> axisValues) {

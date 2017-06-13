@@ -36,13 +36,16 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
+import java.io.Serializable;
+
 /**
  * A {@link StaggeredHorizontalGrid} which tracks the original grid and the x/y
  * paddings used, but defers to an explictly-defined grid for referencing
  *
  * @author Guy Griffiths
  */
-public class DefinedStaggeredGrid implements StaggeredHorizontalGrid {
+public class DefinedStaggeredGrid implements StaggeredHorizontalGrid, Serializable {
+    private static final long serialVersionUID = 1L;
     private HorizontalGrid originalGrid;
     private HorizontalGrid staggeredGrid;
     private SGridPadding xPadding;

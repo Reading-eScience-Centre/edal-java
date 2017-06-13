@@ -45,6 +45,8 @@ import uk.ac.rdg.resc.edal.util.Array1D;
 public class PointCollectionFeature extends
         AbstractDiscreteFeature<HorizontalPosition, HorizontalPosition> {
 
+    private static final long serialVersionUID = 1L;
+
     public PointCollectionFeature(String id, String name, String description,
             PointCollectionDomain domain, Map<String, Parameter> parameters,
             Map<String, Array1D<Number>> values) {

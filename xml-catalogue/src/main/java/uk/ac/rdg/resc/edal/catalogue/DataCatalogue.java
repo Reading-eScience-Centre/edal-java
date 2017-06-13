@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.Serializable;
 
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -466,6 +467,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         if (cachingEnabled) {
             CacheKey key = new CacheKey(layerName, params);
             Element element = featureCache.get(key);
+
             if (element != null && element.getObjectValue() != null) {
                 /*
                  * This is why we added the SuppressWarnings("unchecked").
@@ -492,7 +494,8 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         return getDatasetFromId(layerNameMapper.getDatasetIdFromLayerName(layerName));
     }
 
-    private static class CacheKey {
+    private static class CacheKey implements Serializable {
+        private static final long serialVersionUID = 1L;
         final String id;
         final PlottingDomainParams params;
 

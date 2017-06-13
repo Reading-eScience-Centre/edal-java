@@ -41,6 +41,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  */
 public class ReferenceableAxisImpl extends AbstractIrregularAxis<Double> {
 
+    private static final long serialVersionUID = 1L;
     private final boolean isLongitude;
 
     /**

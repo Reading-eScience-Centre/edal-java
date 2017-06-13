@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.grid;
 
+import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.List;
 
@@ -45,8 +46,8 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * @author Guy
  */
 public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>> implements
-        ReferenceableAxis<T> {
-
+        ReferenceableAxis<T>, Serializable {
+    private static final long serialVersionUID = 1L;
     private final String name;
 
     /**

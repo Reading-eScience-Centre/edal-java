@@ -40,6 +40,7 @@ import uk.ac.rdg.resc.edal.util.Extents;
  * @author Guy Griffiths
  */
 public class DefinedBoundsAxis extends ReferenceableAxisImpl implements ReferenceableAxis<Double> {
+    private static final long serialVersionUID = 1L;
     private List<Extent<Double>> bounds;
     private Extent<Double> axisExtent;
 

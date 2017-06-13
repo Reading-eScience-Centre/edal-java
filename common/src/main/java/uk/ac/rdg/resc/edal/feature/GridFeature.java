@@ -57,6 +57,8 @@ import uk.ac.rdg.resc.edal.util.Array4D;
  */
 public class GridFeature extends AbstractDiscreteFeature<GeoPosition, GridCell4D> {
 
+    private static final long serialVersionUID = 1L;
+
     public GridFeature(String id, String name, String description, GridDomain domain,
             Map<String, Parameter> parameters, Map<String, Array4D<Number>> valuesMap) {
         super(id, name, description, domain, parameters, valuesMap);

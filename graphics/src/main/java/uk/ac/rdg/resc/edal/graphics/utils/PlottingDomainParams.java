@@ -38,7 +38,11 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.TimeUtils;
 
-public class PlottingDomainParams {
+import java.io.Serializable;
+
+public class PlottingDomainParams implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     final private int width;
     final private int height;
 

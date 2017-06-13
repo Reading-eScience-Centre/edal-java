@@ -57,6 +57,7 @@
  */
 package uk.ac.rdg.resc.edal.feature;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,8 +80,8 @@ import uk.ac.rdg.resc.edal.util.Array;
  * 
  * @author Guy
  */
-public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<P, DO> {
-
+public abstract class AbstractDiscreteFeature<P, DO> implements DiscreteFeature<P, DO>, Serializable {
+    private static final long serialVersionUID = 1L;
     private final String id;
     private final String name;
     private final String description;

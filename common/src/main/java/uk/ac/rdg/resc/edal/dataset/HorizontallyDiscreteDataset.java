@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -93,8 +94,9 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends AbstractDataset {
+public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends AbstractDataset implements Serializable{
     private static final Logger log = LoggerFactory.getLogger(HorizontallyDiscreteDataset.class);
+    private static final long serialVersionUID = 1L;
 
     public HorizontallyDiscreteDataset(String id, Collection<? extends VariableMetadata> vars) {
         super(id, vars);
@@ -302,6 +304,8 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
 
             return plugin.generateArray2D(varId, new Array2D<HorizontalPosition>(domain.getYSize(),
                     domain.getXSize()) {
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 public HorizontalPosition get(int... coords) {
                     return domain.getDomainObjects().get(coords).getCentre();

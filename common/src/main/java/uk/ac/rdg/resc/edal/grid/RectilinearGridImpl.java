@@ -38,12 +38,15 @@ import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
+import java.io.Serializable;
+
 /**
  * Immutable implementation of a {@link RectilinearGrid} using {@link Double}s.
  * 
  * @author Guy Griffiths
  */
-public class RectilinearGridImpl extends AbstractHorizontalGrid implements RectilinearGrid {
+public class RectilinearGridImpl extends AbstractHorizontalGrid implements RectilinearGrid, Serializable {
+    private static final long serialVersionUID = 1L;
     protected ReferenceableAxis<Double> xAxis;
     protected ReferenceableAxis<Double> yAxis;
     private Array2D<GridCell2D> domainObjects = null;
@@ -78,6 +81,8 @@ public class RectilinearGridImpl extends AbstractHorizontalGrid implements Recti
     public Array2D<GridCell2D> getDomainObjects() {
         if (domainObjects == null) {
             domainObjects = new Array2D<GridCell2D>(yAxis.size(), xAxis.size()) {
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 public GridCell2D get(int... coords) {
                     int xIndex = coords[1];

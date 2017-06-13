@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.metadata;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -48,8 +49,8 @@ import uk.ac.rdg.resc.edal.domain.VerticalDomain;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public class VariableMetadata {
-
+public class VariableMetadata implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String id;
     private Dataset dataset;
     private Parameter parameter;

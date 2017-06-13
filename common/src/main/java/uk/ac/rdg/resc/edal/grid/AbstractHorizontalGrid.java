@@ -32,8 +32,10 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
-public abstract class AbstractHorizontalGrid implements HorizontalGrid {
+import java.io.Serializable;
 
+public abstract class AbstractHorizontalGrid implements HorizontalGrid, Serializable {
+    private static final long serialVersionUID = 1L;
     protected CoordinateReferenceSystem crs;
 
     public AbstractHorizontalGrid(CoordinateReferenceSystem crs) {

@@ -34,13 +34,16 @@ import org.opengis.referencing.cs.RangeMeaning;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 
+import java.io.Serializable;
+
 /**
  * Immutable implementation of a {@link RegularGrid}.
  * 
  * @author Guy
  * @author Jon
  */
-public class RegularGridImpl extends RectilinearGridImpl implements RegularGrid {
+public class RegularGridImpl extends RectilinearGridImpl implements RegularGrid, Serializable {
+    private static final long serialVersionUID = 1L;
 
     public RegularGridImpl(RegularAxis xAxis, RegularAxis yAxis, CoordinateReferenceSystem crs) {
         super(xAxis, yAxis, crs);

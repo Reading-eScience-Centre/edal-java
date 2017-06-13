@@ -135,6 +135,8 @@ public abstract class GriddedImageLayer extends ImageLayer {
              * the returned values in an Array2D with a flipped y-axis
              */
             return new Array2D<Number>(values.getYSize(), values.getXSize()) {
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 public void set(Number value, int... coords) {
                     throw new UnsupportedOperationException("This is an immutable Array2D");
@@ -156,6 +158,8 @@ public abstract class GriddedImageLayer extends ImageLayer {
              */
             return new Array2D<HorizontalPosition>(domainObjects.getShape()[0],
                     domainObjects.getShape()[1]) {
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 public HorizontalPosition get(int... coords) {
                     return domainObjects.get(params.getHeight() - coords[0] - 1, coords[1])

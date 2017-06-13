@@ -69,6 +69,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 public abstract class GriddedDataset extends
         DiscreteLayeredDataset<GridDataSource, GridVariableMetadata> {
     private static final Logger log = LoggerFactory.getLogger(GriddedDataset.class);
+    private static final long serialVersionUID = 1L;
 
     public GriddedDataset(String id, Collection<GridVariableMetadata> vars) {
         super(id, vars);

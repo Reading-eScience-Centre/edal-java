@@ -47,6 +47,7 @@ import uk.ac.rdg.resc.edal.util.Array1D;
  */
 public class PointSeriesFeature extends AbstractDiscreteFeature<DateTime, Extent<DateTime>> {
 
+    private static final long serialVersionUID = 1L;
     private final HorizontalPosition hPos;
     private final VerticalPosition zPos;
 

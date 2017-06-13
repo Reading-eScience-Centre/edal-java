@@ -36,6 +36,7 @@ package uk.ac.rdg.resc.edal.util;
  */
 public class ValuesArray2D extends Array2D<Number> {
 
+    private static final long serialVersionUID = 1L;
     private Number[][] data;
 
     public ValuesArray2D(int ySize, int xSize) {

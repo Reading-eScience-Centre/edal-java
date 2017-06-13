@@ -67,6 +67,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Guy Griffiths
  */
 public class CdmTransformedGrid extends AbstractTransformedGrid {
+    private static final long serialVersionUID = 1L;
     private final ProjectionImpl proj;
     private final ReferenceableAxis<Double> xAxis;
 
@@ -210,6 +211,8 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     public Array2D<GridCell2D> getDomainObjects() {
         if (domainObjs == null) {
             domainObjs = new Array2D<GridCell2D>(getYSize(), getXSize()) {
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 public GridCell2D get(final int... coords) {
                     double x = xAxis.getCoordinateValue(coords[1]);

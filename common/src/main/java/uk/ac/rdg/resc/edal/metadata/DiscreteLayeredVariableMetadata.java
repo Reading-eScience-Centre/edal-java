@@ -36,6 +36,8 @@ import uk.ac.rdg.resc.edal.grid.HorizontalCell;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 
+import java.io.Serializable;
+
 /**
  * {@link VariableMetadata} whose {@link VerticalDomain} and
  * {@link TemporalDomain} are discrete axes, and whose {@link HorizontalDomain}
@@ -43,7 +45,8 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
  * 
  * @author Guy Griffiths
  */
-public class DiscreteLayeredVariableMetadata extends VariableMetadata {
+public class DiscreteLayeredVariableMetadata extends VariableMetadata implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public DiscreteLayeredVariableMetadata(Parameter parameter,
             DiscreteHorizontalDomain<? extends HorizontalCell> hDomain, VerticalAxis zDomain,

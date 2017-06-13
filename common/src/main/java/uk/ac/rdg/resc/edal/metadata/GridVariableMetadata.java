@@ -42,6 +42,7 @@ import uk.ac.rdg.resc.edal.grid.VerticalAxis;
  * @author Guy Griffiths
  */
 public class GridVariableMetadata extends DiscreteLayeredVariableMetadata {
+    private static final long serialVersionUID = 1L;
 
     public GridVariableMetadata(Parameter parameter, HorizontalGrid hDomain, VerticalAxis zDomain,
             TimeAxis tDomain, boolean scalar) {
