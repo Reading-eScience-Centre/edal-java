@@ -146,7 +146,8 @@ public final class CdmUtils {
             try {
                 GridDataset gridDataset = getGridDataset(nc);
                 for (GridDatatype grid : gridDataset.getGrids()) {
-                    HorizontalGrid hGrid = CdmUtils.createHorizontalGrid(grid.getCoordinateSystem());
+                    HorizontalGrid hGrid = CdmUtils
+                            .createHorizontalGrid(grid.getCoordinateSystem());
                     DataType dt = grid.getDataType();
                     long totalsize = hGrid.size() * dt.getSize();
                     /*
@@ -211,7 +212,8 @@ public final class CdmUtils {
                             GISUtils.defaultGeographicCRS());
                 } else {
                     /* Axes are not both regular */
-                    return new RectilinearGridImpl(xRefAxis, yRefAxis, GISUtils.defaultGeographicCRS());
+                    return new RectilinearGridImpl(xRefAxis, yRefAxis,
+                            GISUtils.defaultGeographicCRS());
                 }
             } else {
                 /*
@@ -395,8 +397,20 @@ public final class CdmUtils {
             }
             return new DefinedBoundsAxis(name, axisValues, axisBounds, isLongitude);
         } else if (axis.isRegular()) {
-            return new RegularAxisImpl(name, axis.getStart(), axis.getIncrement(),
-                    (int) axis.getSize(), isLongitude);
+            double aStart = axis.getStart();
+            int aSize = (int) axis.getSize();
+            double aInc = axis.getIncrement();
+            if (aSize == 1 && aInc == 0.0) {
+                /*
+                 * This means that we have an axis with one single value. To
+                 * allow this to be visible on a map, we give it an arbitrary
+                 * size.
+                 */
+                aInc = 0.1;
+                aStart = axis.getCoordValue(0);
+            }
+            RegularAxisImpl ret = new RegularAxisImpl(name, aStart, aInc, aSize, isLongitude);
+            return ret;
         } else {
             double[] primVals = axis.getCoordValues();
             List<Double> valsList = CollectionUtils.listFromDoubleArray(primVals);
