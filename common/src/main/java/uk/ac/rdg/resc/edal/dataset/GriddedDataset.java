@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,17 +39,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
+import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleGridDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.exceptions.IncorrectDomainException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
+import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
+import uk.ac.rdg.resc.edal.grid.RectilinearGridImpl;
+import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
+import uk.ac.rdg.resc.edal.grid.ReferenceableAxisImpl;
+import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
+import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.grid.VerticalAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
@@ -164,6 +178,223 @@ public abstract class GriddedDataset extends
                     log.error("Problem closing data source");
                 }
             }
+        }
+    }
+
+    /**
+     * Extracts a 4d subset of data from the dataset. All variables must share
+     * the same underlying grid, which must be rectilinear and CRS:84/EPSG:4326.
+     * Whilst limiting scope, this is useful in a large number of situations.
+     * 
+     * @param variables
+     *            The variable IDs to extract into a feature
+     * @param hBox
+     *            The {@link BoundingBox} in which to extract data. If this has
+     *            zero height/width, data will be extracted at a point, with a
+     *            horizontal domain consisting of 2 single-valued axes. Note
+     *            that any extracted feature will use the underlying grid, so at
+     *            least this {@link BoundingBox} will be extracted, but the
+     *            actual area extracted may be larger, depending on where the
+     *            cell boundaries lie.
+     * @param zExtent
+     *            The {@link Extent} in the z-direction to subset. If
+     *            <code>null</code>, all available z-values (if there are any)
+     *            will be extracted
+     * @param tExtent
+     *            The {@link Extent} in time to subset. If <code>null</code>,
+     *            all available time values (if there are any) will be extracted
+     * @return A new {@link GridFeature} whose domain
+     */
+    public GridFeature subsetFeatures(Set<String> variables, BoundingBox hBox,
+            Extent<Double> zExtent, Extent<DateTime> tExtent) throws EdalException, IOException {
+        /*
+         * Open the GridDataSource as a resource, so it gets closed automatically.
+         */
+        try (GridDataSource dataSource = this.openDataSource()) {
+            Map<String, Parameter> parameters = new HashMap<>();
+            Map<String, Array4D<Number>> valuesMap = new HashMap<>();
+            /*
+             * Used to check that all variables share a common domain
+             */
+            RectilinearGrid commonGrid = null;
+            VerticalAxis commonZAxis = null;
+            TimeAxis commonTAxis = null;
+
+            StringBuilder nameStr = new StringBuilder("Subset of: ");
+            StringBuilder descriptionStr = new StringBuilder("Variables: ");
+            /*
+             * The domain of the final GridFeature
+             */
+            GridDomain outputDomain = null;
+            /*
+             * Extraction indices
+             */
+            int minX = -1;
+            int maxX = -1;
+            int minY = -1;
+            int maxY = -1;
+            int minZ = -1;
+            int maxZ = -1;
+            int minT = -1;
+            int maxT = -1;
+            for (String var : variables) {
+                nameStr.append(var + ",");
+                descriptionStr.append(var + ",");
+
+                GridVariableMetadata metadata = this.getVariableMetadata(var);
+
+                /*
+                 * First check that we can do this subset.
+                 */
+                HorizontalGrid hGrid = metadata.getHorizontalDomain();
+                if (!(hGrid instanceof RectilinearGrid)) {
+                    throw new IncorrectDomainException(
+                            "Feature subsetting is currently only supported for rectilinear grids");
+                }
+                RectilinearGrid grid = (RectilinearGrid) hGrid;
+                if (commonGrid == null) {
+                    commonGrid = grid;
+                } else {
+                    if (!commonGrid.equals(grid)) {
+                        throw new IncorrectDomainException(
+                                "All variables must be on the same horizontal grid");
+                    }
+                }
+                VerticalAxis zAxis = metadata.getVerticalDomain();
+                if (commonZAxis == null) {
+                    commonZAxis = zAxis;
+                } else {
+                    if (!commonZAxis.equals(zAxis)) {
+                        throw new IncorrectDomainException(
+                                "All variables must share a common z axis");
+                    }
+                }
+                TimeAxis tAxis = metadata.getTemporalDomain();
+                if (commonTAxis == null) {
+                    commonTAxis = tAxis;
+                } else {
+                    if (!commonTAxis.equals(tAxis)) {
+                        throw new IncorrectDomainException(
+                                "All variables must share a common time axis");
+                    }
+                }
+
+                if (outputDomain == null) {
+                    /*
+                     * We only need to set the min/max vars once.
+                     * 
+                     * At the same time, we construct the output domain
+                     */
+                    ReferenceableAxis<Double> xAxis = grid.getXAxis();
+                    minX = xAxis.findIndexOf(hBox.getMinX());
+                    maxX = xAxis.findIndexOf(hBox.getMaxX());
+
+                    ReferenceableAxis<Double> yAxis = grid.getYAxis();
+                    minY = yAxis.findIndexOf(hBox.getMinY());
+                    maxY = yAxis.findIndexOf(hBox.getMaxY());
+
+                    if (zExtent != null) {
+                        minZ = zAxis.findIndexOf(zExtent.getLow());
+                        maxZ = zAxis.findIndexOf(zExtent.getHigh());
+                    } else if (metadata.getVerticalDomain() != null) {
+                        /*
+                         * null extent means we want the entire range (which may
+                         * be non-existent)
+                         */
+                        minZ = zAxis.findIndexOf(metadata.getVerticalDomain().getExtent().getLow());
+                        maxZ = zAxis
+                                .findIndexOf(metadata.getVerticalDomain().getExtent().getHigh());
+                    }
+
+                    if (tExtent != null) {
+                        minT = tAxis.findIndexOf(tExtent.getLow());
+                        maxT = tAxis.findIndexOf(tExtent.getHigh());
+                    } else if (metadata.getTemporalDomain() != null) {
+                        /*
+                         * null extent means we want the entire range (which may
+                         * be non-existent)
+                         */
+                        minT = tAxis.findIndexOf(metadata.getTemporalDomain().getExtent().getLow());
+                        maxT = tAxis
+                                .findIndexOf(metadata.getTemporalDomain().getExtent().getHigh());
+                    }
+
+                    /*
+                     * Now construct the subset domain
+                     */
+                    List<Double> xAxisOutputValues = new ArrayList<>();
+                    List<Double> xAxisValues = xAxis.getCoordinateValues();
+                    for (int i = minX; i <= maxX; i++) {
+                        xAxisOutputValues.add(xAxisValues.get(i));
+                    }
+                    ReferenceableAxis<Double> xOutputAxis = new ReferenceableAxisImpl(
+                            xAxis.getName(), xAxisOutputValues, xAxis.wraps());
+
+                    List<Double> yAxisOutputValues = new ArrayList<>();
+                    List<Double> yAxisValues = yAxis.getCoordinateValues();
+                    for (int i = minY; i <= maxY; i++) {
+                        yAxisOutputValues.add(yAxisValues.get(i));
+                    }
+                    ReferenceableAxis<Double> yOutputAxis = new ReferenceableAxisImpl(
+                            yAxis.getName(), yAxisOutputValues, yAxis.wraps());
+
+                    RectilinearGridImpl outputGrid = new RectilinearGridImpl(xOutputAxis,
+                            yOutputAxis, grid.getCoordinateReferenceSystem());
+
+                    VerticalAxisImpl outputZAxis = null;
+                    if (zAxis != null) {
+                        List<Double> zAxisOutputValues = new ArrayList<>();
+                        List<Double> zAxisValues = zAxis.getCoordinateValues();
+                        for (int i = minZ; i <= maxZ; i++) {
+                            zAxisOutputValues.add(zAxisValues.get(i));
+                        }
+                        outputZAxis = new VerticalAxisImpl(zAxis.getName(), zAxisOutputValues,
+                                zAxis.getVerticalCrs());
+                    }
+
+                    TimeAxisImpl outputTAxis = null;
+                    if (tAxis != null) {
+                        List<DateTime> tAxisOutputValues = new ArrayList<>();
+                        List<DateTime> tAxisValues = tAxis.getCoordinateValues();
+                        for (int i = minT; i <= maxT; i++) {
+                            tAxisOutputValues.add(tAxisValues.get(i));
+                        }
+                        outputTAxis = new TimeAxisImpl(tAxis.getName(), tAxisOutputValues);
+                    }
+                    outputDomain = new SimpleGridDomain(outputGrid, outputZAxis, outputTAxis);
+                }
+                
+                /*
+                 * Remove trailing commas, and finalise the name/description
+                 */
+                nameStr.deleteCharAt(nameStr.length() - 1);
+                descriptionStr.deleteCharAt(nameStr.length() - 1);
+                descriptionStr.append(" extracted over the region: " + hBox.toString());
+                if (zExtent != null) {
+                    descriptionStr.append(", the vertical extent: " + zExtent.toString());
+                }
+                if (tExtent != null) {
+                    descriptionStr.append(", the time extent: " + tExtent.toString());
+                }
+
+                /*
+                 * Store the Parameter data + values
+                 */
+                parameters.put(var, metadata.getParameter());
+                Array4D<Number> data = dataSource.read(var, minT, maxT, minZ, maxZ, minY, maxY,
+                        minX, maxX);
+                valuesMap.put(var, data);
+            }
+
+            return new GridFeature(id, nameStr.toString(), descriptionStr.toString(), outputDomain,
+                    parameters, valuesMap);
+        } catch (Exception e) {
+            /*
+             * Catch and rethrow any exceptions. This try-catch block is just to
+             * auto-close the GridDataSource
+             */
+            log.error("Problem subsetting feature", e);
+            throw e;
         }
     }
 
