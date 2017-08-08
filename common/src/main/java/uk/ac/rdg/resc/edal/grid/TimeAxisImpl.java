@@ -54,10 +54,19 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implemen
     }
 
     @Override
+    public boolean wraps() {
+        /*
+         * The jury's still out on this one, but for practical purposes we
+         * assume that time is non-cyclical
+         */
+        return false;
+    }
+
+    @Override
     public boolean contains(DateTime position) {
         return getCoordinateExtent().contains(position);
     }
-    
+
     @Override
     protected DateTime extendFirstValue(DateTime firstVal, DateTime nextVal) {
         long tVal = (long) (firstVal.getMillis() - 0.5 * (nextVal.getMillis() - firstVal
@@ -95,10 +104,10 @@ public final class TimeAxisImpl extends AbstractIrregularAxis<DateTime> implemen
         DateTime time = getCoordinateValue(index);
         return Extents.newExtent(time, time);
     }
-    
+
     @Override
     public Extent<DateTime> getCoordinateExtent() {
-        return Extents.newExtent(getCoordinateValue(0), getCoordinateValue(size()-1));
+        return Extents.newExtent(getCoordinateValue(0), getCoordinateValue(size() - 1));
     }
 
     @Override

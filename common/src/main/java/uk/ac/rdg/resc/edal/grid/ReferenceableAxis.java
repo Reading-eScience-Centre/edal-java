@@ -81,6 +81,11 @@ public interface ReferenceableAxis<P> extends DiscreteDomain<P, Extent<P>> {
      * to their natural ordering.
      */
     public boolean isAscending();
+    
+    /**
+     * Returns true if the values on the axis wrap around (e.g. longitude)
+     */
+    public boolean wraps();
 
     /**
      * Gets the coordinate bounds associated with the point at the given index.

@@ -101,8 +101,7 @@ public abstract class AbstractReferenceableAxis<T extends Comparable<? super T>>
         final T min;
         final T max;
         if (size() == 1) {
-            min = getMinimumValue();
-            max = getMaximumValue();
+            return getCoordinateBounds(0);
         } else {
             T val1 = extendFirstValue(getFirstValue(), getCoordinateValue(1));
             T val2 = extendLastValue(getLastValue(), getCoordinateValue(size() - 2));

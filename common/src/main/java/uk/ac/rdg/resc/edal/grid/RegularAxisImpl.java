@@ -61,11 +61,16 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
         init(firstValue, spacing, size);
     }
 
+    @Override
+    public boolean wraps() {
+        return this.isLongitude;
+    }
+    
     private void init(double firstValue, double spacing, int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("Axis length must not be negative or zero");
         }
-        if (spacing == 0.0) {
+        if (spacing == 0.0 && size > 1) {
             throw new IllegalArgumentException("Axis spacing cannot be zero");
         }
         this.firstValue = firstValue;

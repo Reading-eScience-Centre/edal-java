@@ -66,6 +66,11 @@ public class ReferenceableAxisImpl extends AbstractIrregularAxis<Double> {
         super(name, axisValues);
         this.isLongitude = isLongitude;
     }
+    
+    @Override
+    public boolean wraps() {
+        return this.isLongitude;
+    }
 
     @Override
     public int findIndexOf(Double position) {
