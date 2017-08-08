@@ -218,14 +218,7 @@ public abstract class VariablePlugin {
             throw new IllegalArgumentException("This plugin needs " + uses.length
                     + " metadata sources, but you have supplied " + metadata.length);
         }
-        try {
-            return doProcessVariableMetadata(metadata);
-        } catch (IncorrectDomainException e) {
-            /*
-             * The variable
-             */
-            return null;
-        }
+        return doProcessVariableMetadata(metadata);
     }
 
     /**
