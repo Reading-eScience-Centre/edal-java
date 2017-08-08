@@ -116,6 +116,14 @@ public final class RegularAxisImpl extends AbstractReferenceableAxis<Double> imp
             return Extents.newExtent(centre + 0.5 * spacing, centre - 0.5 * spacing);
         }
     }
+    
+    @Override
+    public Extent<Double> getCoordinateExtent() {
+        if(size() == 1) {
+            return getCoordinateBounds(0);
+        }
+        return super.getCoordinateExtent();
+    }
 
     @Override
     public int findIndexOf(Double position) {
