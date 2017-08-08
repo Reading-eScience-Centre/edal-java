@@ -69,6 +69,14 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
     }
 
     /**
+     * Creates a {@link BoundingBox} from the minimum and maximum axis values,
+     * with the default CRS
+     */
+    public BoundingBoxImpl(double minx, double miny, double maxx, double maxy) {
+        this(minx, miny, maxx, maxy, GISUtils.defaultGeographicCRS());
+    }
+
+    /**
      * Creates a {@link BoundingBox} from the minimum and maximum axis values
      */
     public BoundingBoxImpl(double minx, double miny, double maxx, double maxy,
@@ -81,7 +89,8 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
          * Check the bounds of the bbox
          */
         if (this.minx > this.maxx || this.miny > this.maxy) {
-            throw new IllegalArgumentException("Invalid bounding box specification: "+minx+","+miny+":"+maxx+","+maxy);
+            throw new IllegalArgumentException("Invalid bounding box specification: " + minx + ","
+                    + miny + ":" + maxx + "," + maxy);
         }
         this.crs = crs;
     }
@@ -141,7 +150,8 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
         }
         // End of TODO block
         if (envelope == null) {
-            throw new IllegalArgumentException("The given CRS does not specify a domain of validity.");
+            throw new IllegalArgumentException(
+                    "The given CRS does not specify a domain of validity.");
         }
         this.minx = envelope.getMinimum(0);
         this.maxx = envelope.getMaximum(0);
