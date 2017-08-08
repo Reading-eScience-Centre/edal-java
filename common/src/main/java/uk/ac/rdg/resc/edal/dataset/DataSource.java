@@ -30,7 +30,7 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 
-public interface DataSource {
+public interface DataSource extends AutoCloseable {
     /**
      * Close all resources associated with the underlying data.
      * 
