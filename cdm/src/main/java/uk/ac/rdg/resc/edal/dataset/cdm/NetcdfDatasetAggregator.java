@@ -322,7 +322,9 @@ public class NetcdfDatasetAggregator {
                                                             "add_offset")
                                                     || attr.getFullName().equalsIgnoreCase(
                                                             "_FillValue")
-                                                    || attr.getFullName().equalsIgnoreCase("units")) {
+                                                    || (attr.getFullName()
+                                                            .equalsIgnoreCase("units") && varName
+                                                            .equals(timeDimName))) {
                                                 if (!attributes.containsKey(attr.getFullName())) {
                                                     /*
                                                      * We have an attribute for
