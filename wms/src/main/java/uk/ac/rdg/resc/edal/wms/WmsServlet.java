@@ -176,8 +176,8 @@ public class WmsServlet extends HttpServlet {
     private static final String FEATURE_INFO_XML_FORMAT = "text/xml";
     private static final String FEATURE_INFO_PLAIN_FORMAT = "text/plain";
     private static final String FEATURE_INFO_HTML_FORMAT = "text/html";
-    private static final String[] DEFAULT_SUPPORTED_CRS_CODES = new String[] { "EPSG:4326", "CRS:84",
-            "EPSG:41001", // Mercator
+    private static final String[] DEFAULT_SUPPORTED_CRS_CODES = new String[] { "EPSG:4326",
+            "CRS:84", "EPSG:41001", // Mercator
             "EPSG:27700", // British National Grid
             "EPSG:3408", // NSIDC EASE-Grid North
             "EPSG:3409", // NSIDC EASE-Grid South
@@ -240,6 +240,17 @@ public class WmsServlet extends HttpServlet {
     }
 
     /**
+     * Gets the {@link WmsCatalogue} used in this servlet. Subclasses may wish
+     * to use this method to get direct access to the catalogue if (for example)
+     * implementing new, non-WMS extensions.
+     * 
+     * @return The {@link WmsCatalogue} associated with this servlet.
+     */
+    protected WmsCatalogue getCatalogue() {
+        return this.catalogue;
+    }
+
+    /**
      * Sets the palettes to be advertised in the GetCapabilities document.
      * 
      * In the capabilities document, each layer will advertise the available
@@ -281,7 +292,6 @@ public class WmsServlet extends HttpServlet {
          * sensitive to the case of the parameter VALUES).
          */
         RequestParams params = new RequestParams(httpServletRequest.getParameterMap());
-
 
         try {
             /*
@@ -732,7 +742,8 @@ public class WmsServlet extends HttpServlet {
         }
         httpServletResponse.setContentType(featureInfoParameters.getInfoFormat());
 
-        PlottingDomainParams plottingParameters = featureInfoParameters.getPlottingDomainParameters();
+        PlottingDomainParams plottingParameters = featureInfoParameters
+                .getPlottingDomainParameters();
         final HorizontalPosition position = featureInfoParameters.getClickedPosition();
 
         String[] layerNames = featureInfoParameters.getLayerNames();
@@ -752,8 +763,10 @@ public class WmsServlet extends HttpServlet {
                 throw new LayerNotQueryableException("The layer " + layerName + " is not queryable");
             }
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            String variableId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
-            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(layerName, catalogue);
+            String variableId = catalogue.getLayerNameMapper()
+                    .getVariableIdFromLayerName(layerName);
+            VariableMetadata metadata = WmsUtils.getVariableMetadataFromLayerName(layerName,
+                    catalogue);
             Set<VariableMetadata> children = metadata.getChildren();
 
             /*
@@ -1026,7 +1039,7 @@ public class WmsServlet extends HttpServlet {
         } else {
             datasets = catalogue.getAllDatasets();
         }
-        
+
         JSONArray children = new JSONArray();
         for (Dataset dataset : datasets) {
             String datasetId = dataset.getId();
@@ -1289,14 +1302,15 @@ public class WmsServlet extends HttpServlet {
                  * Sort the values smallest to largest.
                  */
                 Collections.sort(sortedVals);
-                if(verticalAxis.getVerticalCrs().isPressure()
-                        || (sortedVals.get(0) < 0 && sortedVals.get(sortedVals.size()-1) < 0)) {
+                if (verticalAxis.getVerticalCrs().isPressure()
+                        || (sortedVals.get(0) < 0 && sortedVals.get(sortedVals.size() - 1) < 0)) {
                     /*
-                     * Largest to smallest if pressure, or all values are negative
+                     * Largest to smallest if pressure, or all values are
+                     * negative
                      */
                     Collections.reverse(sortedVals);
                 }
-                
+
                 JSONArray zValuesJson = new JSONArray();
                 for (Double z : sortedVals) {
                     zValuesJson.put(z);
@@ -1528,9 +1542,9 @@ public class WmsServlet extends HttpServlet {
                         for (Integer day : days) {
                             daysJson.put(day);
                         }
-                        monthsJson.put(""+month, daysJson);
+                        monthsJson.put("" + month, daysJson);
                     }
-                    datesWithDataJson.put(""+year, monthsJson);
+                    datesWithDataJson.put("" + year, monthsJson);
                 }
                 layerDetails.put("datesWithData", datesWithDataJson);
             } else {
@@ -2679,8 +2693,8 @@ public class WmsServlet extends HttpServlet {
      * @throws IOException
      *             If there is a problem writing to the output stream
      */
-    protected void handleWmsException(EdalException exception, HttpServletResponse httpServletResponse,
-            boolean v130) throws IOException {
+    protected void handleWmsException(EdalException exception,
+            HttpServletResponse httpServletResponse, boolean v130) throws IOException {
         if (exception instanceof EdalLayerNotFoundException) {
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
         } else {
@@ -2712,7 +2726,7 @@ public class WmsServlet extends HttpServlet {
         this.SupportedCrsCodes = SupportedCrsCodes;
     }
 
-    public String[] getCrsCodes(){
+    public String[] getCrsCodes() {
         return SupportedCrsCodes;
     }
 }
