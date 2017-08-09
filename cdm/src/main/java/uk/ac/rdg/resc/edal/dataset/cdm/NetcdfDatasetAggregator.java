@@ -347,7 +347,9 @@ public class NetcdfDatasetAggregator {
                                                     if (value == null && attr.isString()) {
                                                         value = attr.getStringValue();
                                                     }
-                                                    if (value != null) {
+                                                    if (value != null
+                                                            && !attributes.get(attr.getFullName())
+                                                                    .equals(value)) {
                                                         /*-
                                                          * We have an attribute which existed in a variable with the same
                                                          * name, but which had a different value (ignoring special vars starting "_")
