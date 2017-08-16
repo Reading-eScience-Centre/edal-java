@@ -867,14 +867,18 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory implements Se
                  * fact this is a maximum, so we first calculate how many of the
                  * values are populated with non-fill values
                  */
+                nEdgesThisFace = nEdges;
                 for (int j = 0; j < nEdges; j++) {
-                    index.set(i, j);
+                    if (!ijSwap) {
+                        index.set(i, j);
+                    } else {
+                        index.set(j, i);
+                    }
                     if (fillValue == faceNodeData.getInt(index)) {
                         nEdgesThisFace = j;
                         break;
                     }
                 }
-                nEdgesThisFace = nEdges;
             } else {
                 nEdgesThisFace = nEdges;
             }
