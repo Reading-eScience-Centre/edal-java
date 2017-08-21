@@ -990,7 +990,11 @@ public final class CdmGridDatasetFactory extends CdmDatasetFactory implements Se
                          * values
                          */
                         for (int j = 0; j < nEdges; j++) {
-                            index.set(i, j);
+                            if (!ijSwap) {
+                                index.set(i, j);
+                            } else {
+                                index.set(j, i);
+                            }
                             if (fillValue == faceNodeData.getInt(index)) {
                                 nEdgesThisFace = j;
                                 break;
