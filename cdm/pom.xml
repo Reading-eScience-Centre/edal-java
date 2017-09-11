@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- POM for core module -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>edal</artifactId>
@@ -9,9 +8,9 @@
         <version>1.2.9-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
-<!--     <properties> -->
-<!--         <netcdfversion>5.0.0-SNAPSHOT</netcdfversion> -->
-<!--     </properties> -->
+    <properties>
+        <netcdfversion>5.0.0-alpha2</netcdfversion>
+    </properties>
     <artifactId>edal-cdm</artifactId>
     <packaging>jar</packaging>
     <name>EDAL interface to the Unidata Common Data Model</name>
@@ -24,27 +23,27 @@
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>cdm</artifactId>
-            <version>5.0.0-alpha1</version>
+            <version>${netcdfversion}</version>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>udunits</artifactId>
-            <version>5.0.0-alpha1</version>
+            <version>${netcdfversion}</version>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>netcdf4</artifactId>
-            <version>5.0.0-alpha1</version>
+            <version>${netcdfversion}</version>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>grib</artifactId>
-            <version>5.0.0-alpha1</version>
+            <version>${netcdfversion}</version>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
             <artifactId>opendap</artifactId>
-            <version>5.0.0-alpha1</version>
+            <version>${netcdfversion}</version>
         </dependency>
         <dependency>
             <groupId>oro</groupId>

@@ -33,12 +33,15 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,18 +52,31 @@ import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.DatasetUrl;
 import ucar.nc2.dataset.NetcdfDataset;
+import ucar.nc2.ft.fmrc.Fmrc;
 import ucar.nc2.ncml.NcMLReader;
 import ucar.nc2.units.DateUnit;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.MetadataException;
+import uk.ac.rdg.resc.edal.util.TimeUtils;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
 public class NetcdfDatasetAggregator {
+    private static class NcmlString {
+        private String ncml;
+        private boolean fmrc;
+
+        public NcmlString(String location, boolean fmrc) {
+            super();
+            this.ncml = location;
+            this.fmrc = fmrc;
+        }
+    }
+
     private static final Logger log = LoggerFactory.getLogger(NetcdfDatasetAggregator.class);
     private static final int DATASET_CACHE_SIZE = 20;
 
-    private static Map<String, String> ncmlStringCache = new HashMap<>();
+    private static Map<String, NcmlString> ncmlStringCache = new HashMap<>();
 
     private static Map<NetcdfDataset, Integer> activeDatasets = new HashMap<>();
     /**
@@ -208,7 +224,7 @@ public class NetcdfDatasetAggregator {
                      * If we have already generated the ncML on a previous call,
                      * just use that.
                      */
-                    String ncmlString;
+                    NcmlString ncmlString;
                     if (ncmlStringCache.containsKey(location) && !forceRefresh) {
                         ncmlString = ncmlStringCache.get(location);
                     } else {
@@ -258,10 +274,17 @@ public class NetcdfDatasetAggregator {
                          */
                         Map<Long, Map<String, String>> time2vars2filename = new HashMap<>();
                         /*
+                         * This stores the end time of each file. Used to check
+                         * for time axis overlaps
+                         */
+                        List<Long> endTimes = new ArrayList<>();
+                        /*
                          * Used to check that attribute values are consistent
                          * across all variables in all files.
                          */
                         Map<String, Map<String, Object>> varname2Attributes = new HashMap<>();
+                        String timeUnitsTest = null;
+                        boolean commonTimeUnits = true;
                         for (File file : files) {
                             NetcdfFile ncFile = null;
                             try {
@@ -269,13 +292,33 @@ public class NetcdfDatasetAggregator {
                                 Variable timeVar = ncFile.findVariable(timeDimName);
                                 String unitsString = timeVar.findAttribute("units")
                                         .getStringValue();
+                                /*
+                                 * Check whether all files have common time
+                                 * units.
+                                 * 
+                                 * If not, we need timeUnitsChange="true" in our
+                                 * NcML
+                                 */
+                                if (timeUnitsTest == null) {
+                                    timeUnitsTest = unitsString;
+                                } else {
+                                    if (!timeUnitsTest.equals(unitsString)) {
+                                        commonTimeUnits = false;
+                                    }
+                                }
                                 String[] unitsParts = unitsString.split(" since ");
-                                long time = new DateUnit(timeVar.read().getDouble(0),
+                                long startTime = new DateUnit(timeVar.read().getDouble(0),
                                         unitsParts[0], DateUnit.getStandardOrISO(unitsParts[1]))
                                         .getDate().getTime();
-                                if (!time2vars2filename.containsKey(time)) {
+                                long endTime = new DateUnit(timeVar.read().getDouble(
+                                        timeVar.getShape(0) - 1), unitsParts[0],
+                                        DateUnit.getStandardOrISO(unitsParts[1])).getDate()
+                                        .getTime();
+                                endTimes.add(endTime);
+
+                                if (!time2vars2filename.containsKey(startTime)) {
                                     Map<String, String> vars2filename = new HashMap<>();
-                                    time2vars2filename.put(time, vars2filename);
+                                    time2vars2filename.put(startTime, vars2filename);
                                 }
                                 List<Variable> variables = ncFile.getVariables();
                                 /*
@@ -373,9 +416,11 @@ public class NetcdfDatasetAggregator {
                                                 }
                                             }
                                         }
+
                                     }
                                 }
-                                time2vars2filename.get(time).put(varNames, file.getAbsolutePath());
+                                time2vars2filename.get(startTime).put(varNames,
+                                        file.getAbsolutePath());
                             } catch (MetadataException e) {
                                 /*
                                  * We want to actually throw our
@@ -391,8 +436,18 @@ public class NetcdfDatasetAggregator {
                             }
                         }
 
-                        List<Long> times = new ArrayList<>(time2vars2filename.keySet());
-                        Collections.sort(times);
+                        List<Long> startTimes = new ArrayList<>(time2vars2filename.keySet());
+                        Collections.sort(startTimes);
+                        Collections.sort(endTimes);
+
+                        boolean overlap = false;
+                        for (int i = 1; i < startTimes.size(); i++) {
+                            if (startTimes.get(i) <= endTimes.get(i - 1)) {
+                                overlap = true;
+                                log.debug("Overlap in: " + new Date(startTimes.get(i))
+                                        + "," + new Date(endTimes.get(i - 1)));
+                            }
+                        }
 
                         /*
                          * Now create the NcML string and use it to create an
@@ -400,14 +455,41 @@ public class NetcdfDatasetAggregator {
                          */
                         StringBuffer ncmlStringBuffer = new StringBuffer();
                         ncmlStringBuffer
-                                .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\">");
-                        ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName
-                                + "\" type=\"joinExisting\">");
-                        for (Long time : times) {
+                                .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\" enhance=\"true\">");
+                        String timeUnitsChange = commonTimeUnits ? "" : "timeUnitsChange=\"true\"";
+
+                        if (!overlap) {
+                            /*
+                             * Non overlapping time axes. This is the standard
+                             * and we use joinExisting
+                             */
+                            ncmlStringBuffer.append("<aggregation dimName=\"" + timeDimName + "\" "
+                                    + timeUnitsChange + " type=\"joinExisting\">");
+                        } else {
+                            /*
+                             * We have overlapping time axes. Treat this as a
+                             * forecast model run collection, which it probably
+                             * is.
+                             * 
+                             * Plus, even if it's not, this is probably the best
+                             * way of handling the overlapping time axes (i.e.
+                             * take later values in preference to earlier ones)
+                             */
+                            ncmlStringBuffer.append("<aggregation dimName=\"run\" "
+                                    + timeUnitsChange
+                                    + " type=\"forecastModelRunCollection\" enhance=\"true\">");
+                        }
+                        for (Long time : startTimes) {
                             Map<String, String> vars2filename = time2vars2filename.get(time);
                             if (vars2filename.size() == 1) {
                                 String filename = vars2filename.values().iterator().next();
-                                ncmlStringBuffer.append("<netcdf location=\"" + filename + "\"/>");
+                                ncmlStringBuffer.append("<netcdf location=\"" + filename + "\"");
+                                if (overlap) {
+                                    ncmlStringBuffer.append(" coordValue=\""
+                                            + TimeUtils.dateTimeToISO8601(new DateTime(time))
+                                            + "\"");
+                                }
+                                ncmlStringBuffer.append("/>");
                             } else {
                                 ncmlStringBuffer.append("<netcdf><aggregation type=\"union\">");
                                 for (Entry<String, String> entry : vars2filename.entrySet()) {
@@ -420,10 +502,22 @@ public class NetcdfDatasetAggregator {
                         ncmlStringBuffer.append("</aggregation>");
                         ncmlStringBuffer.append("</netcdf>");
 
-                        ncmlString = ncmlStringBuffer.toString();
+                        ncmlString = new NcmlString(ncmlStringBuffer.toString(), overlap);
                         ncmlStringCache.put(location, ncmlString);
                     }
-                    nc = NcMLReader.readNcML(new StringReader(ncmlString), null);
+                    if(ncmlString.fmrc) {
+                        /*
+                         * NcML string represents a forecast model run collection
+                         */
+                        Formatter errlog = new Formatter();
+                        Fmrc fmrc = Fmrc.readNcML(ncmlString.ncml, errlog);
+                        nc = fmrc.getDatasetBest().getNetcdfDataset();
+                    } else {
+                        /*
+                         * Standard NcML
+                         */
+                        nc = NcMLReader.readNcML(new StringReader(ncmlString.ncml), null);
+                    }
                 }
             }
             datasetCache.put(location, nc);
@@ -504,8 +598,20 @@ public class NetcdfDatasetAggregator {
                  * underlying data can change we rely on the server admin
                  * setting the "recheckEvery" parameter in the aggregation file.
                  */
-                nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, "file://"
-                        + location), true, null);
+                try {
+                    /*
+                     * Try opening as a Forecast Model Run Collection. This will
+                     * throw an exception if it is not possible to do so.
+                     */
+                    Formatter errlog = new Formatter();
+                    Fmrc fmrc = Fmrc.open(location, errlog);
+                    nc = fmrc.getDatasetBest().getNetcdfDataset();
+                } catch (Exception e) {
+                    log.debug("Couldn't create FMRC, trying standard NcML");
+                    nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, "file://"
+                            + location), true, null);
+                }
+
             } else {
                 /*
                  * For local single files and OPeNDAP datasets we don't use the
