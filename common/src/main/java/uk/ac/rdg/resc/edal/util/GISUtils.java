@@ -447,7 +447,7 @@ public final class GISUtils implements ObjectFactory {
         } catch (NumberFormatException nfe) {
             throw new EdalException("Invalid bounding box format: all elements must be numeric");
         }
-        if (minx >= maxx || miny >= maxy) {
+        if (minx > maxx || miny > maxy) {
             throw new EdalException("Invalid bounding box format");
         }
         return new BoundingBoxImpl(minx, miny, maxx, maxy, getCrs(crs));
