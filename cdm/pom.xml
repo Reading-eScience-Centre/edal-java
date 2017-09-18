@@ -9,7 +9,7 @@
         <relativePath>..</relativePath>
     </parent>
     <properties>
-        <netcdfversion>5.0.0-alpha2</netcdfversion>
+        <netcdfversion>5.0.0-alpha3</netcdfversion>
     </properties>
     <artifactId>edal-cdm</artifactId>
     <packaging>jar</packaging>
