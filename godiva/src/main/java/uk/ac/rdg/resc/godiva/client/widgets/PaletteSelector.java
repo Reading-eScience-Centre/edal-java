@@ -187,7 +187,8 @@ public class PaletteSelector implements PaletteSelectorIF {
         nColorBands.addItem("250");
         nColorBands.setTitle("Select the number of colour bands to use for this data");
 
-        paletteImage = new Image();
+        // Set to an empty png so that we don't just see the title text
+        paletteImage = new Image(GWT.getModuleBaseURL() + "img/empty.png");
         paletteImage.setWidth("0px");
         paletteImage.setHeight("0px");
         paletteImage.addClickHandler(new ClickHandler() {
