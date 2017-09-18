@@ -526,8 +526,13 @@ public class WmsServlet extends HttpServlet {
         MapImage imageGenerator = styleParameters.getImageGenerator(catalogue);
 
         List<BufferedImage> frames;
+        /*
+         * Used for KML format
+         */
+        List<DateTime> timeValues = new ArrayList<>();
         if (!getMapParams.isAnimation()) {
             frames = Arrays.asList(imageGenerator.drawImage(plottingParameters, catalogue));
+            timeValues.add(plottingParameters.getTargetT());
         } else {
             frames = new ArrayList<>();
             for (DateTime timeStep : getMapParams.getAnimationTimesteps()) {
@@ -551,6 +556,7 @@ public class WmsServlet extends HttpServlet {
                 g.setColor(Color.black);
                 g.drawString(TimeUtils.formatUtcHumanReadableDateTime(timeStep), 10,
                         frame.getHeight() - 10);
+                timeValues.add(timeStep);
                 frames.add(frame);
             }
         }
@@ -588,11 +594,10 @@ public class WmsServlet extends HttpServlet {
                 String description = layerMetadata.getDescription();
                 String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters
                         .getTargetZ().toString();
-                List<DateTime> tValues = Arrays.asList(plottingParameters.getTargetT());
-                BufferedImage legend = imageGenerator.getLegend(200);
+                BufferedImage legend = imageGenerator.getLegend(50, 200, true);
                 GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters
                         .getBbox());
-                imageFormat.writeImage(frames, outputStream, name, description, gbbox, tValues,
+                imageFormat.writeImage(frames, outputStream, name, description, gbbox, timeValues,
                         zValue, legend, getMapParams.getFrameRate());
             }
             outputStream.close();
