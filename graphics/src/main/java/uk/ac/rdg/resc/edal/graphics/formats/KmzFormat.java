@@ -93,8 +93,7 @@ public class KmzFormat extends ImageFormat {
             String timestamp = null;
             String z = null;
 
-            if (tValues != null && tValues.get(frameIndex) != null
-                    && !tValues.get(frameIndex).equals("")) {
+            if (tValues != null && tValues.get(frameIndex) != null) {
                 timestamp = TimeUtils.dateTimeToISO8601(tValues.get(frameIndex));
                 kml.append("<TimeStamp><when>" + timestamp + "</when></TimeStamp>");
             }
