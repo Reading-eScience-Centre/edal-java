@@ -44,7 +44,6 @@ import org.opengis.metadata.extent.GeographicBoundingBox;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
-import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
@@ -56,8 +55,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  *
  * @author Guy Griffiths
  */
-public class PRTreeFeatureIndexer implements FeatureIndexer,
-        MBRConverter<FeatureIndexer.FeatureBounds> {
+public class PRTreeFeatureIndexer
+        implements FeatureIndexer, MBRConverter<FeatureIndexer.FeatureBounds> {
 
     private static final long serialVersionUID = 1L;
     private PRTree<FeatureBounds> prTree;
@@ -76,23 +75,47 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
             /*
              * Transform to WGS84 if required
              */
-            if (!GISUtils.isWgs84LonLat(feature.horizontalPosition.getCoordinateReferenceSystem())) {
-                feature.horizontalPosition = GISUtils.transformPosition(feature.horizontalPosition,
-                        GISUtils.defaultGeographicCRS());
+            if (!GISUtils.isWgs84LonLat(feature.hBbox.getCoordinateReferenceSystem())) {
+                feature.hBbox = GISUtils.toWGS84BoundingBox(feature.hBbox);
             }
 
             /*
-             * Now ensure position is in the range (-180:180]
+             * Now ensure minimum x value of bounding box is in the range (-180:180]
              */
-            double constrainedX = GISUtils.constrainLongitude180(feature.horizontalPosition.getX());
-            if (feature.horizontalPosition.getX() != constrainedX) {
-                feature.horizontalPosition = new HorizontalPosition(constrainedX,
-                        feature.horizontalPosition.getY(),
-                        feature.horizontalPosition.getCoordinateReferenceSystem());
-            }
+            feature.hBbox = moveBoundingBoxToConstrainMinTo180(feature.hBbox);
         }
 
         prTree.load(features);
+    }
+
+    private static BoundingBox moveBoundingBoxToConstrainMinTo180(BoundingBox bbox) {
+        /*
+         * Transform bounding box to lat-lon here with min value in range
+         * (-180:180].
+         *
+         * We do this manually rather than using GISUtils.constrainLongitude180
+         * because we want to shift both sides of the bounding box by the same
+         * amount.
+         */
+        double minx = bbox.getMinX();
+        double maxx = bbox.getMaxX();
+        boolean changed = false;
+        while (minx > 180) {
+            minx -= 360.0;
+            maxx -= 360.0;
+            changed = true;
+        }
+        while (minx <= -180) {
+            minx += 360.0;
+            maxx += 360.0;
+            changed = true;
+        }
+        if (changed) {
+            return new BoundingBoxImpl(minx, bbox.getMinY(), maxx, bbox.getMaxY(),
+                    bbox.getCoordinateReferenceSystem());
+        } else {
+            return bbox;
+        }
     }
 
     @Override
@@ -109,31 +132,7 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
                     geographicBoundingBox.getNorthBoundLatitude(), GISUtils.defaultGeographicCRS());
         }
 
-        /*
-         * Transform bounding box to lat-lon here with min value in range
-         * (-180:180].
-         *
-         * We do this manually rather than using GISUtils.constrainLongitude180
-         * because we want to shift both sides of the bounding box by the same
-         * amount.
-         */
-        double minx = horizontalExtent.getMinX();
-        double maxx = horizontalExtent.getMaxX();
-        boolean changed = false;
-        while (minx > 180) {
-            minx -= 360.0;
-            maxx -= 360.0;
-            changed = true;
-        }
-        while (minx <= -180) {
-            minx += 360.0;
-            maxx += 360.0;
-            changed = true;
-        }
-        if (changed) {
-            horizontalExtent = new BoundingBoxImpl(minx, horizontalExtent.getMinY(), maxx,
-                    horizontalExtent.getMaxY(), horizontalExtent.getCoordinateReferenceSystem());
-        }
+        horizontalExtent = moveBoundingBoxToConstrainMinTo180(horizontalExtent);
 
         Double zLow = -Double.MAX_VALUE;
         Double zHigh = Double.MAX_VALUE;
@@ -163,9 +162,8 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
                         horizontalExtent.getMaxY(), zLow, zHigh, tLow, tHigh);
                 features = prTree.find(mbr);
             } else {
-                MBR mbr = new SimpleMBR(horizontalExtent.getMinX(), 180,
-                        horizontalExtent.getMinY(), horizontalExtent.getMaxY(), zLow, zHigh, tLow,
-                        tHigh);
+                MBR mbr = new SimpleMBR(horizontalExtent.getMinX(), 180, horizontalExtent.getMinY(),
+                        horizontalExtent.getMaxY(), zLow, zHigh, tLow, tHigh);
                 features = prTree.find(mbr);
                 for (FeatureBounds feature : features) {
                     featureIds.add(feature.id);
@@ -219,9 +217,9 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
     public double getMax(int axis, FeatureBounds bounds) {
         switch (axis) {
         case 0:
-            return bounds.horizontalPosition.getX();
+            return bounds.hBbox.getMaxX();
         case 1:
-            return bounds.horizontalPosition.getY();
+            return bounds.hBbox.getMaxY();
         case 2:
             return bounds.verticalExtent.getHigh();
         case 3:
@@ -235,9 +233,9 @@ public class PRTreeFeatureIndexer implements FeatureIndexer,
     public double getMin(int axis, FeatureBounds bounds) {
         switch (axis) {
         case 0:
-            return bounds.horizontalPosition.getX();
+            return bounds.hBbox.getMinX();
         case 1:
-            return bounds.horizontalPosition.getY();
+            return bounds.hBbox.getMaxY();
         case 2:
             return bounds.verticalExtent.getLow();
         case 3:

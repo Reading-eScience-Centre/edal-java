@@ -556,7 +556,7 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
      */
     @SuppressWarnings("deprecation")
     public static List<String> getDatesInRange(String startDateTimeStr, String endDateTimeStr) {
-        DateTimeFormat parser = DateTimeFormat.getFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'");
+        DateTimeFormat parser = DateTimeFormat.getFormat(PredefinedFormat.ISO_8601);
 
         Date startDate = parser.parse(startDateTimeStr);
         Date endDate = parser.parse(endDateTimeStr);

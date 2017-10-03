@@ -38,7 +38,9 @@ import org.joda.time.DateTime;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
+import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Extents;
@@ -91,7 +93,7 @@ public interface FeatureIndexer extends Serializable {
     public static class FeatureBounds implements Serializable {
         private static final long serialVersionUID = 1L;
         String id;
-        HorizontalPosition horizontalPosition;
+        BoundingBox hBbox;
         Extent<Double> verticalExtent;
         Extent<Long> timeExtent;
         Collection<String> variableIds;
@@ -99,6 +101,14 @@ public interface FeatureIndexer extends Serializable {
         public FeatureBounds(String id, HorizontalPosition horizontalPosition,
                 Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
                 Collection<String> variableIds) {
+            this(id, new BoundingBoxImpl(horizontalPosition.getX(), horizontalPosition.getY(),
+                    horizontalPosition.getX(), horizontalPosition.getY(),
+                    horizontalPosition.getCoordinateReferenceSystem()), verticalExtent, timeExtent,
+                    variableIds);
+        }
+
+        public FeatureBounds(String id, BoundingBox hBbox, Extent<Double> verticalExtent,
+                Extent<DateTime> timeExtent, Collection<String> variableIds) {
             super();
             /*
              * We need at least an ID and a horizontal position.
@@ -107,20 +117,20 @@ public interface FeatureIndexer extends Serializable {
              * the maximum possible extent so that they will always be included
              * in any query.
              */
-            if (id == null || horizontalPosition == null) {
+            if (id == null || hBbox == null) {
                 throw new IllegalArgumentException(
-                        "Must provide a non-null ID and horizontal position to index a feature");
+                        "Must provide a non-null ID and horizontal bounding box to index a feature");
             }
             this.id = id;
-            this.horizontalPosition = horizontalPosition;
+            this.hBbox = hBbox;
             if (verticalExtent != null) {
                 this.verticalExtent = verticalExtent;
             } else {
                 this.verticalExtent = Extents.newExtent(-Double.MAX_VALUE, Double.MAX_VALUE);
             }
             if (timeExtent != null) {
-                this.timeExtent = Extents.newExtent(timeExtent.getLow().getMillis(), timeExtent
-                        .getHigh().getMillis());
+                this.timeExtent = Extents.newExtent(timeExtent.getLow().getMillis(),
+                        timeExtent.getHigh().getMillis());
             } else {
                 this.timeExtent = Extents.newExtent(-Long.MAX_VALUE, Long.MAX_VALUE);
             }
@@ -128,14 +138,18 @@ public interface FeatureIndexer extends Serializable {
         }
 
         /**
-         * Convenience method to generate a {@link FeatureBounds} object from a {@link ProfileFeature}
-         * @param feature A {@link ProfileFeature} to calculate the bounds for
+         * Convenience method to generate a {@link FeatureBounds} object from a
+         * {@link ProfileFeature}
+         * 
+         * @param feature
+         *            A {@link ProfileFeature} to calculate the bounds for
          * @return The appropriate {@link FeatureBounds}
          */
         public static FeatureBounds fromProfileFeature(ProfileFeature feature) {
-            return new FeatureBounds(feature.getId(), feature.getHorizontalPosition(), feature
-                    .getDomain().getCoordinateExtent(), Extents.newExtent(feature.getTime(),
-                    feature.getTime()), feature.getVariableIds());
+            return new FeatureBounds(feature.getId(), feature.getHorizontalPosition(),
+                    feature.getDomain().getCoordinateExtent(),
+                    Extents.newExtent(feature.getTime(), feature.getTime()),
+                    feature.getVariableIds());
         }
 
         /**
@@ -154,6 +168,20 @@ public interface FeatureIndexer extends Serializable {
             }
             return new FeatureBounds(feature.getId(), feature.getHorizontalPosition(), zExtent,
                     feature.getDomain().getCoordinateExtent(), feature.getVariableIds());
+        }
+
+        /**
+         * Convenience method to generate a {@link FeatureBounds} object from a
+         * {@link TrajectoryFeature}
+         * 
+         * @param feature
+         *            A {@link TrajectoryFeature} to calculate the bounds for
+         * @return The appropriate {@link FeatureBounds}
+         */
+        public static FeatureBounds fromProfileFeature(TrajectoryFeature feature) {
+            return new FeatureBounds(feature.getId(), feature.getDomain().getCoordinateBounds(),
+                    feature.getDomain().getVerticalExtent(), feature.getDomain().getTimeExtent(),
+                    feature.getVariableIds());
         }
     }
 }

@@ -61,6 +61,7 @@ public class StyleSLDParser {
         registerSymbolizer("ColoredGlyphSymbolizer", SLDColoredGlyphSymbolizer.class);
         //		registerSymbolizer("SubsampledIconSymbolizer", SLDSubsampledIconSymbolizer.class);
         registerSymbolizer("ConfidenceIntervalSymbolizer", SLDConfidenceIntervalSymbolizer.class);
+        registerSymbolizer("TrajectorySymbolizer", SLDTrajectorySymbolizer.class);
     }
 
     /**

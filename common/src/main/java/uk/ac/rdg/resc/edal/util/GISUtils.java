@@ -132,7 +132,8 @@ public final class GISUtils implements ObjectFactory {
      *         {@link CoordinateReferenceSystem} is equivalent to
      *         {@link #defaultGeographicCRS()}
      */
-    public static boolean isDefaultGeographicCRS(CoordinateReferenceSystem coordinateReferenceSystem) {
+    public static boolean isDefaultGeographicCRS(
+            CoordinateReferenceSystem coordinateReferenceSystem) {
         return Utilities.equalsIgnoreMetadata(defaultGeographicCRS(), coordinateReferenceSystem);
     }
 
@@ -148,8 +149,8 @@ public final class GISUtils implements ObjectFactory {
         try {
             return CRS
                     .findOperation(coordinateReferenceSystem,
-                            CommonCRS.WGS84.normalizedGeographic(), null).getMathTransform()
-                    .isIdentity();
+                            CommonCRS.WGS84.normalizedGeographic(), null)
+                    .getMathTransform().isIdentity();
         } catch (Exception e) {
             return false;
         }
@@ -744,15 +745,17 @@ public final class GISUtils implements ObjectFactory {
                 dataGridPoints += dataGridIncrease;
                 pointList = points;
             } else {
-                /* We've gained little advantage by the last resolution increase */
+                /*
+                 * We've gained little advantage by the last resolution increase
+                 */
                 return pointList;
             }
         }
     }
 
     /**
-     * Converts a {@link BoundingBox} into a {@link GeographicBoundingBox} (i.e.
-     * one which is in lat/lon WGS84).
+     * Converts a {@link BoundingBox} into a {@link BoundingBox} using the
+     * {@link GISUtils#defaultGeographicCRS()}
      *
      * This method is not guaranteed to be exact. Its aim is to choose bounding
      * boxes which contain all of the data - there is no requirement that the
@@ -760,10 +763,11 @@ public final class GISUtils implements ObjectFactory {
      *
      * @param bbox
      *            The bounding box
-     * @return A {@link GeographicBoundingBox} which contains the supplied
-     *         {@link BoundingBox}
+     * @return A {@link BoundingBox} in the
+     *         {@link GISUtils#defaultGeographicCRS()} CRS which contains the
+     *         supplied {@link BoundingBox}
      */
-    public static GeographicBoundingBox toGeographicBoundingBox(BoundingBox bbox) {
+    public static BoundingBox toWGS84BoundingBox(BoundingBox bbox) {
         double minx = Double.MAX_VALUE;
         double maxx = -Double.MAX_VALUE;
         double miny = Double.MAX_VALUE;
@@ -813,8 +817,9 @@ public final class GISUtils implements ObjectFactory {
                  * Top and bottom sides of bbox
                  */
                 double y = bbox.getMinY();
-                HorizontalPosition transformPosition = transformPosition(new HorizontalPosition(x,
-                        y, bbox.getCoordinateReferenceSystem()), defaultGeographicCRS());
+                HorizontalPosition transformPosition = transformPosition(
+                        new HorizontalPosition(x, y, bbox.getCoordinateReferenceSystem()),
+                        defaultGeographicCRS());
                 minx = Math.min(transformPosition.getX(), minx);
                 maxx = Math.max(transformPosition.getX(), maxx);
                 miny = Math.min(transformPosition.getY(), miny);
@@ -834,8 +839,9 @@ public final class GISUtils implements ObjectFactory {
                  * Sides of bbox
                  */
                 double x = bbox.getMinX();
-                HorizontalPosition transformPosition = transformPosition(new HorizontalPosition(x,
-                        y, bbox.getCoordinateReferenceSystem()), defaultGeographicCRS());
+                HorizontalPosition transformPosition = transformPosition(
+                        new HorizontalPosition(x, y, bbox.getCoordinateReferenceSystem()),
+                        defaultGeographicCRS());
                 minx = Math.min(transformPosition.getX(), minx);
                 maxx = Math.max(transformPosition.getX(), maxx);
                 miny = Math.min(transformPosition.getY(), miny);
@@ -867,7 +873,26 @@ public final class GISUtils implements ObjectFactory {
         if (maxy > 90) {
             maxy = 90;
         }
-        return new DefaultGeographicBoundingBox(minx, maxx, miny, maxy);
+        return new BoundingBoxImpl(minx, miny, maxx, maxy, defaultGeographicCRS());
+    }
+
+    /**
+     * Converts a {@link BoundingBox} into a {@link GeographicBoundingBox} (i.e.
+     * one which is in lat/lon WGS84).
+     *
+     * This method is not guaranteed to be exact. Its aim is to choose bounding
+     * boxes which contain all of the data - there is no requirement that the
+     * bounding box is a tight fit.
+     *
+     * @param bbox
+     *            The bounding box
+     * @return A {@link GeographicBoundingBox} which contains the supplied
+     *         {@link BoundingBox}
+     */
+    public static GeographicBoundingBox toGeographicBoundingBox(BoundingBox bbox) {
+        BoundingBox wgs84BoundingBox = toWGS84BoundingBox(bbox);
+        return new DefaultGeographicBoundingBox(wgs84BoundingBox.getMinX(),
+                wgs84BoundingBox.getMaxX(), wgs84BoundingBox.getMinY(), wgs84BoundingBox.getMaxY());
     }
 
     /**
@@ -886,8 +911,8 @@ public final class GISUtils implements ObjectFactory {
          */
         double xExtra = bbox.getWidth() * (percentageIncrease / 200.0);
         double yExtra = bbox.getHeight() * (percentageIncrease / 200.0);
-        BoundingBox bboxBordered = new BoundingBoxImpl(bbox.getMinX() - xExtra, bbox.getMinY()
-                - yExtra, bbox.getMaxX() + xExtra, bbox.getMaxY() + yExtra,
+        BoundingBox bboxBordered = new BoundingBoxImpl(bbox.getMinX() - xExtra,
+                bbox.getMinY() - yExtra, bbox.getMaxX() + xExtra, bbox.getMaxY() + yExtra,
                 bbox.getCoordinateReferenceSystem());
         return bboxBordered;
     }
@@ -962,8 +987,8 @@ public final class GISUtils implements ObjectFactory {
                 if (domain.getCoordinateReferenceSystem() == null) {
                     return null;
                 }
-                if (!comparison.getCoordinateReferenceSystem().equals(
-                        domain.getCoordinateReferenceSystem())) {
+                if (!comparison.getCoordinateReferenceSystem()
+                        .equals(domain.getCoordinateReferenceSystem())) {
                     sameCrs = false;
                 }
             }
@@ -1394,7 +1419,7 @@ public final class GISUtils implements ObjectFactory {
             log.error("Problem creating EPSG database.  Reprojection will not work", e);
         }
     }
-    
+
     public static void releaseEpsgDatabase() {
         try {
             conn.close();
@@ -1402,7 +1427,7 @@ public final class GISUtils implements ObjectFactory {
             log.error("Problem closing EPSG database", e);
         }
     }
-    
+
     public static boolean isPressureUnits(String units) {
         if (units.equalsIgnoreCase("bar") || units.equalsIgnoreCase("standard_atmosphere")
                 || units.equalsIgnoreCase("technical_atmosphere")
