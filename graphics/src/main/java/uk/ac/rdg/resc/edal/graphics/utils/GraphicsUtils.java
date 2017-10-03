@@ -55,8 +55,10 @@ import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
 import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
 import uk.ac.rdg.resc.edal.dataset.PointDataset;
+import uk.ac.rdg.resc.edal.dataset.TrajectoryDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -88,14 +90,13 @@ public class GraphicsUtils implements Serializable {
     static {
         try {
             URL resource = GraphicsUtils.class.getResource("/colors.csv");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()));
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(resource.openStream()));
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] split = line.split(",");
-                namedColors.put(
-                        split[0],
-                        new Color(Integer.parseInt(split[1]), Integer.parseInt(split[2]), Integer
-                                .parseInt(split[3])));
+                namedColors.put(split[0], new Color(Integer.parseInt(split[1]),
+                        Integer.parseInt(split[2]), Integer.parseInt(split[3])));
             }
             reader.close();
         } catch (Throwable e) {
@@ -118,18 +119,25 @@ public class GraphicsUtils implements Serializable {
      */
     public static Collection<? extends DiscreteFeature<?, ?>> extractGeneralMapFeatures(
             Dataset dataset, String varId, PlottingDomainParams params) {
-        Collection<? extends DiscreteFeature<?, ?>> mapFeatures = new ArrayList<>();
+        Collection<DiscreteFeature<?, ?>> mapFeatures = new ArrayList<>();
         if (dataset instanceof HorizontallyDiscreteDataset<?>) {
             HorizontallyDiscreteDataset<?> discreteDataset = (HorizontallyDiscreteDataset<?>) dataset;
-            mapFeatures = discreteDataset.extractMapFeatures(
-                    CollectionUtils.setOf(varId),
-                    new MapDomain(new RegularGridImpl(params.getBbox(), params.getWidth(), params
-                            .getHeight()), params.getTargetZ(), params.getTargetT()));
+            mapFeatures.addAll(discreteDataset.extractMapFeatures(CollectionUtils.setOf(varId),
+                    new MapDomain(
+                            new RegularGridImpl(params.getBbox(), params.getWidth(),
+                                    params.getHeight()),
+                            params.getTargetZ(), params.getTargetT())));
         } else if (dataset instanceof PointDataset<?>) {
             PointDataset<?> pointDataset = (PointDataset<?>) dataset;
-            mapFeatures = pointDataset.extractMapFeatures(CollectionUtils.setOf(varId),
-                    params.getBbox(), params.getZExtent(), params.getTExtent(),
-                    params.getTargetZ(), params.getTargetT());
+            mapFeatures.addAll(pointDataset.extractMapFeatures(CollectionUtils.setOf(varId),
+                    params.getBbox(), params.getZExtent(), params.getTExtent(), params.getTargetZ(),
+                    params.getTargetT()));
+        } else if (dataset instanceof TrajectoryDataset) {
+            TrajectoryDataset trajectoryDataset = (TrajectoryDataset) dataset;
+            mapFeatures.addAll(trajectoryDataset.extractFeatures(CollectionUtils.setOf(varId),
+                    params.getBbox(), params.getZExtent(), params.getTExtent()));
+        } else {
+            throw new EdalException("Can't extract map features for this dataset");
         }
         return mapFeatures;
     }
@@ -325,16 +333,16 @@ public class GraphicsUtils implements Serializable {
                     vCrs = variableMetadata.getVerticalDomain().getVerticalCrs();
                 }
                 mapFeatures = discreteDataset.extractMapFeatures(CollectionUtils.setOf(varId),
-                        new MapDomain(new RegularGridImpl(variableMetadata.getHorizontalDomain()
-                                .getBoundingBox(), 100, 100), zPos, vCrs, time));
+                        new MapDomain(new RegularGridImpl(
+                                variableMetadata.getHorizontalDomain().getBoundingBox(), 100, 100),
+                                zPos, vCrs, time));
                 if (log.isDebugEnabled()) {
                     t2 = System.currentTimeMillis();
                     log.debug("Extracted data for range estimation: " + (t2 - t1) + "ms");
                 }
             } catch (Exception e) {
-                log.error(
-                        "Problem reading data whilst estimating scale range for "+varId+".  A default value will be used.",
-                        e);
+                log.error("Problem reading data whilst estimating scale range for " + varId
+                        + ".  A default value will be used.", e);
             }
         } else if (dataset instanceof AbstractContinuousDomainDataset) {
             /*
@@ -360,8 +368,8 @@ public class GraphicsUtils implements Serializable {
             }
             DiscreteFeatureReader<? extends DiscreteFeature<?, ?>> featureReader = cdDataset
                     .getFeatureReader();
-            mapFeatures = featureReader
-                    .readFeatures(featureIdsToRead, CollectionUtils.setOf(varId));
+            mapFeatures = featureReader.readFeatures(featureIdsToRead,
+                    CollectionUtils.setOf(varId));
         }
         if (mapFeatures != null) {
             for (DiscreteFeature<?, ?> feature : mapFeatures) {
@@ -464,8 +472,8 @@ public class GraphicsUtils implements Serializable {
                      * Find the nearest index in the source palette (Multiplying
                      * by 1.0f converts integers to floats)
                      */
-                    int nearestIndex = Math.round(palette.length * i * 1.0f
-                            / (targetPalette.length - 1));
+                    int nearestIndex = Math
+                            .round(palette.length * i * 1.0f / (targetPalette.length - 1));
                     targetPalette[i] = palette[nearestIndex];
                 }
             } else {
@@ -477,8 +485,8 @@ public class GraphicsUtils implements Serializable {
                 int lastIndex = 0;
                 for (int i = 1; i < palette.length - 1; i++) {
                     /* Find the nearest index in the target palette */
-                    int nearestIndex = Math.round(targetPalette.length * i * 1.0f
-                            / (palette.length - 1));
+                    int nearestIndex = Math
+                            .round(targetPalette.length * i * 1.0f / (palette.length - 1));
                     targetPalette[nearestIndex] = palette[i];
                     /* Now interpolate all the values we missed */
                     for (int j = lastIndex + 1; j < nearestIndex; j++) {
@@ -638,8 +646,8 @@ public class GraphicsUtils implements Serializable {
         /*
          * Use the default colour scheme, transparent background
          */
-        ColourScheme colourScheme = new SegmentColourScheme(scaleRange, null, null, new Color(0,
-                true), "default", 250);
+        ColourScheme colourScheme = new SegmentColourScheme(scaleRange, null, null,
+                new Color(0, true), "default", 250);
 
         MapImage imageGenerator = new MapImage();
         RasterLayer rasterLayer = new RasterLayer(varId, colourScheme);
@@ -667,23 +675,23 @@ public class GraphicsUtils implements Serializable {
      */
     private static final Color[] CATEGORICAL_COLOUR_SET = new Color[] { new Color(140, 0, 0),
             new Color(158, 0, 0), new Color(175, 0, 0), new Color(193, 0, 0), new Color(211, 0, 0),
-            new Color(228, 0, 0), new Color(246, 0, 0), new Color(255, 7, 0),
-            new Color(255, 23, 0), new Color(255, 39, 0), new Color(255, 55, 0),
-            new Color(255, 71, 0), new Color(255, 87, 0), new Color(255, 103, 0),
-            new Color(255, 119, 0), new Color(255, 135, 0), new Color(255, 151, 0),
-            new Color(255, 167, 0), new Color(255, 183, 0), new Color(255, 199, 0),
-            new Color(255, 215, 0), new Color(255, 231, 0), new Color(255, 247, 0),
-            new Color(247, 255, 7), new Color(231, 255, 23), new Color(215, 255, 39),
-            new Color(199, 255, 55), new Color(183, 255, 71), new Color(167, 255, 87),
-            new Color(151, 255, 103), new Color(135, 255, 119), new Color(119, 255, 135),
-            new Color(103, 255, 151), new Color(87, 255, 167), new Color(71, 255, 183),
-            new Color(55, 255, 199), new Color(39, 255, 215), new Color(23, 255, 231),
-            new Color(7, 255, 247), new Color(0, 251, 255), new Color(0, 235, 255),
-            new Color(0, 219, 255), new Color(0, 203, 255), new Color(0, 187, 255),
-            new Color(0, 171, 255), new Color(0, 155, 255), new Color(0, 139, 255),
-            new Color(0, 123, 255), new Color(0, 107, 255), new Color(0, 91, 255),
-            new Color(0, 75, 255), new Color(0, 59, 255), new Color(0, 43, 255),
-            new Color(0, 27, 255), new Color(0, 11, 255), new Color(0, 0, 255),
-            new Color(0, 0, 239), new Color(0, 0, 223), new Color(0, 0, 207), new Color(0, 0, 191),
-            new Color(0, 0, 175), new Color(0, 0, 159), new Color(0, 0, 143) };
+            new Color(228, 0, 0), new Color(246, 0, 0), new Color(255, 7, 0), new Color(255, 23, 0),
+            new Color(255, 39, 0), new Color(255, 55, 0), new Color(255, 71, 0),
+            new Color(255, 87, 0), new Color(255, 103, 0), new Color(255, 119, 0),
+            new Color(255, 135, 0), new Color(255, 151, 0), new Color(255, 167, 0),
+            new Color(255, 183, 0), new Color(255, 199, 0), new Color(255, 215, 0),
+            new Color(255, 231, 0), new Color(255, 247, 0), new Color(247, 255, 7),
+            new Color(231, 255, 23), new Color(215, 255, 39), new Color(199, 255, 55),
+            new Color(183, 255, 71), new Color(167, 255, 87), new Color(151, 255, 103),
+            new Color(135, 255, 119), new Color(119, 255, 135), new Color(103, 255, 151),
+            new Color(87, 255, 167), new Color(71, 255, 183), new Color(55, 255, 199),
+            new Color(39, 255, 215), new Color(23, 255, 231), new Color(7, 255, 247),
+            new Color(0, 251, 255), new Color(0, 235, 255), new Color(0, 219, 255),
+            new Color(0, 203, 255), new Color(0, 187, 255), new Color(0, 171, 255),
+            new Color(0, 155, 255), new Color(0, 139, 255), new Color(0, 123, 255),
+            new Color(0, 107, 255), new Color(0, 91, 255), new Color(0, 75, 255),
+            new Color(0, 59, 255), new Color(0, 43, 255), new Color(0, 27, 255),
+            new Color(0, 11, 255), new Color(0, 0, 255), new Color(0, 0, 239), new Color(0, 0, 223),
+            new Color(0, 0, 207), new Color(0, 0, 191), new Color(0, 0, 175), new Color(0, 0, 159),
+            new Color(0, 0, 143) };
 }

@@ -46,9 +46,20 @@ public class SimpleTemporalDomain implements TemporalDomain, Serializable {
     private static final long serialVersionUID = 1L;
     private final Extent<DateTime> extent;
     private final Chronology chronology;
-    
+
+    public SimpleTemporalDomain(Extent<DateTime> extent) {
+        this.extent = extent;
+        if (this.extent.getLow() != null) {
+            this.chronology = this.extent.getLow().getChronology();
+        } else if (this.extent.getHigh() != null) {
+            this.chronology = this.extent.getHigh().getChronology();
+        } else {
+            chronology = ISOChronology.getInstanceUTC();
+        }
+    }
+
     public SimpleTemporalDomain(DateTime min, DateTime max) {
-        if(min == null || max == null) {
+        if (min == null || max == null) {
             chronology = ISOChronology.getInstanceUTC();
             extent = Extents.emptyExtent();
         } else {
@@ -56,7 +67,7 @@ public class SimpleTemporalDomain implements TemporalDomain, Serializable {
             extent = Extents.newExtent(min, max);
         }
     }
-    
+
     @Override
     public boolean contains(DateTime position) {
         return extent.contains(position);
@@ -71,7 +82,6 @@ public class SimpleTemporalDomain implements TemporalDomain, Serializable {
     public Chronology getChronology() {
         return chronology;
     }
-
 
     @Override
     public int hashCode() {
@@ -103,6 +113,5 @@ public class SimpleTemporalDomain implements TemporalDomain, Serializable {
             return false;
         return true;
     }
-
 
 }

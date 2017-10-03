@@ -44,13 +44,18 @@ public class SimpleVerticalDomain implements VerticalDomain, Serializable {
     private final Extent<Double> extent;
     private final VerticalCrs crs;
 
-    public SimpleVerticalDomain(Double min, Double max, VerticalCrs crs) {
+    public SimpleVerticalDomain(Extent<Double> extent, VerticalCrs crs) {
+        this.extent = extent;
         this.crs = crs;
+    }
+    
+    public SimpleVerticalDomain(Double min, Double max, VerticalCrs crs) {
         if (min == null || max == null) {
             extent = Extents.emptyExtent();
         } else {
             extent = Extents.newExtent(min, max);
         }
+        this.crs = crs;
     }
 
     @Override

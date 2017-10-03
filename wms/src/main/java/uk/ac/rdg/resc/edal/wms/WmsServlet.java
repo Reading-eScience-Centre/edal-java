@@ -111,6 +111,7 @@ import uk.ac.rdg.resc.edal.feature.PointCollectionFeature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
 import uk.ac.rdg.resc.edal.feature.PointSeriesFeature;
 import uk.ac.rdg.resc.edal.feature.ProfileFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.LineString;
 import uk.ac.rdg.resc.edal.graphics.Charting;
@@ -366,8 +367,8 @@ public class WmsServlet extends HttpServlet {
         if (request.equals("GetMap")) {
             getMap(params, httpServletResponse, catalogue);
         } else if (request.equals("GetCapabilities")) {
-            getCapabilities(params, httpServletResponse, httpServletRequest.getRequestURL()
-                    .toString(), catalogue);
+            getCapabilities(params, httpServletResponse,
+                    httpServletRequest.getRequestURL().toString(), catalogue);
         } else if (request.equals("GetFeatureInfo")) {
             /* Look to see if we're requesting data from a remote server */
             String url = params.getString("url");
@@ -418,7 +419,8 @@ public class WmsServlet extends HttpServlet {
          * If the user has requested the actual data in coverageJSON format...
          */
         if (getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage+json")
-                || getMapParams.getFormatString().equalsIgnoreCase("application/prs.coverage json")) {
+                || getMapParams.getFormatString()
+                        .equalsIgnoreCase("application/prs.coverage json")) {
             String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
             LayerNameMapper layerNameMapper = catalogue.getLayerNameMapper();
             List<Feature<?>> features = new ArrayList<>();
@@ -427,10 +429,10 @@ public class WmsServlet extends HttpServlet {
                     throw new InvalidFormatException(
                             "The format \"application/prs.coverage+json\" is not enabled for this layer.\nIf you think this is an error, please contact the server administrator and get them to enable Download for this dataset");
                 }
-                Dataset dataset = catalogue.getDatasetFromId(layerNameMapper
-                        .getDatasetIdFromLayerName(layerName));
-                VariableMetadata metadata = dataset.getVariableMetadata(layerNameMapper
-                        .getVariableIdFromLayerName(layerName));
+                Dataset dataset = catalogue
+                        .getDatasetFromId(layerNameMapper.getDatasetIdFromLayerName(layerName));
+                VariableMetadata metadata = dataset
+                        .getVariableMetadata(layerNameMapper.getVariableIdFromLayerName(layerName));
                 if (metadata.isScalar()) {
                     Collection<? extends DiscreteFeature<?, ?>> mapFeatures = GraphicsUtils
                             .extractGeneralMapFeatures(dataset,
@@ -441,8 +443,8 @@ public class WmsServlet extends HttpServlet {
                     Set<VariableMetadata> children = metadata.getChildren();
                     for (VariableMetadata child : children) {
                         Collection<? extends DiscreteFeature<?, ?>> mapFeatures = GraphicsUtils
-                                .extractGeneralMapFeatures(dataset, child.getParameter()
-                                        .getVariableId(), plottingParameters);
+                                .extractGeneralMapFeatures(dataset,
+                                        child.getParameter().getVariableId(), plottingParameters);
                         features.addAll(mapFeatures);
                     }
                 }
@@ -462,8 +464,8 @@ public class WmsServlet extends HttpServlet {
                      * parameter TODO group features with identical domain into
                      * single feature
                      */
-                    converter
-                            .convertFeaturesToJson(httpServletResponse.getOutputStream(), features);
+                    converter.convertFeaturesToJson(httpServletResponse.getOutputStream(),
+                            features);
                 }
             } catch (IOException e) {
                 log.error("Problem writing CoverageJSON to output stream", e);
@@ -488,21 +490,21 @@ public class WmsServlet extends HttpServlet {
         if (!styleParameters.isXmlDefined()) {
             if (styleParameters.isTransparent()
                     && !getMapParams.getImageFormat().supportsFullyTransparentPixels()) {
-                throw new EdalException("The image format "
-                        + getMapParams.getImageFormat().getMimeType()
-                        + " does not support fully-transparent pixels");
+                throw new EdalException(
+                        "The image format " + getMapParams.getImageFormat().getMimeType()
+                                + " does not support fully-transparent pixels");
             }
             if (styleParameters.getOpacity() < 100
                     && !getMapParams.getImageFormat().supportsPartiallyTransparentPixels()) {
-                throw new EdalException("The image format "
-                        + getMapParams.getImageFormat().getMimeType()
-                        + " does not support partially-transparent pixels");
+                throw new EdalException(
+                        "The image format " + getMapParams.getImageFormat().getMimeType()
+                                + " does not support partially-transparent pixels");
             }
             if (styleParameters.getNumLayers() > catalogue.getServerInfo()
                     .getMaxSimultaneousLayers()) {
-                throw new EdalException("Only "
-                        + catalogue.getServerInfo().getMaxSimultaneousLayers()
-                        + " layer(s) can be plotted at once");
+                throw new EdalException(
+                        "Only " + catalogue.getServerInfo().getMaxSimultaneousLayers()
+                                + " layer(s) can be plotted at once");
             }
         }
 
@@ -585,18 +587,18 @@ public class WmsServlet extends HttpServlet {
                     /*
                      * If this is a KMZ file, give it a sensible filename
                      */
-                    httpServletResponse.setHeader("Content-Disposition", "inline; filename="
-                            + layerName.replaceAll("/", "-") + ".kmz");
+                    httpServletResponse.setHeader("Content-Disposition",
+                            "inline; filename=" + layerName.replaceAll("/", "-") + ".kmz");
                 }
                 EnhancedVariableMetadata layerMetadata = WmsUtils.getLayerMetadata(layerName,
                         catalogue);
                 String name = layerMetadata.getTitle();
                 String description = layerMetadata.getDescription();
-                String zValue = plottingParameters.getTargetZ() == null ? null : plottingParameters
-                        .getTargetZ().toString();
+                String zValue = plottingParameters.getTargetZ() == null ? null
+                        : plottingParameters.getTargetZ().toString();
                 BufferedImage legend = imageGenerator.getLegend(50, 200, true);
-                GeographicBoundingBox gbbox = GISUtils.toGeographicBoundingBox(plottingParameters
-                        .getBbox());
+                GeographicBoundingBox gbbox = GISUtils
+                        .toGeographicBoundingBox(plottingParameters.getBbox());
                 imageFormat.writeImage(frames, outputStream, name, description, gbbox, timeValues,
                         zValue, legend, getMapParams.getFrameRate());
             }
@@ -650,8 +652,8 @@ public class WmsServlet extends HttpServlet {
             if (updateSequence.isEqual(catalogue.getLastUpdateTime())) {
                 throw new CurrentUpdateSequence(updateSeqStr);
             } else if (updateSequence.isAfter(catalogue.getLastUpdateTime())) {
-                throw new InvalidUpdateSequence(updateSeqStr
-                        + " is later than the current server updatesequence value");
+                throw new InvalidUpdateSequence(
+                        updateSeqStr + " is later than the current server updatesequence value");
             }
         }
 
@@ -761,11 +763,12 @@ public class WmsServlet extends HttpServlet {
          */
         for (String layerName : layerNames) {
             if (catalogue.isDisabled(layerName)) {
-                throw new EdalLayerNotFoundException("The layer " + layerName
-                        + " is not enabled on this server");
+                throw new EdalLayerNotFoundException(
+                        "The layer " + layerName + " is not enabled on this server");
             }
             if (!catalogue.isQueryable(layerName)) {
-                throw new LayerNotQueryableException("The layer " + layerName + " is not queryable");
+                throw new LayerNotQueryableException(
+                        "The layer " + layerName + " is not queryable");
             }
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             String variableId = catalogue.getLayerNameMapper()
@@ -806,8 +809,9 @@ public class WmsServlet extends HttpServlet {
                             plottingParameters.getTargetZ(), plottingParameters.getTargetT());
                     if (value != null) {
                         featureInfoPoint = new FeatureInfoPoint(layerNameToSave, child.getId(),
-                                position, TimeUtils.dateTimeToISO8601(plottingParameters
-                                        .getTargetT()), value, new Properties());
+                                position,
+                                TimeUtils.dateTimeToISO8601(plottingParameters.getTargetT()), value,
+                                new Properties());
                         featureInfos.add(featureInfoPoint);
                     }
                 }
@@ -916,8 +920,8 @@ public class WmsServlet extends HttpServlet {
         String timeStr = null;
         if (feature instanceof MapFeature) {
             MapFeature mapFeature = (MapFeature) feature;
-            GridCoordinates2D pointIndex = mapFeature.getDomain().findIndexOf(
-                    plottingParameters.getTargetHorizontalPosition());
+            GridCoordinates2D pointIndex = mapFeature.getDomain()
+                    .findIndexOf(plottingParameters.getTargetHorizontalPosition());
             if (pointIndex != null) {
                 position = mapFeature.getDomain().getDomainObjects()
                         .get(pointIndex.getY(), pointIndex.getX()).getCentre();
@@ -966,8 +970,8 @@ public class WmsServlet extends HttpServlet {
             if (index >= 0) {
                 position = pointSeriesFeature.getHorizontalPosition();
                 value = pointSeriesFeature.getValues(variableId).get(index);
-                timeStr = TimeUtils.dateTimeToISO8601(pointSeriesFeature.getDomain()
-                        .getCoordinateValue(index));
+                timeStr = TimeUtils.dateTimeToISO8601(
+                        pointSeriesFeature.getDomain().getCoordinateValue(index));
             }
         }
         if (value != null) {
@@ -1081,8 +1085,8 @@ public class WmsServlet extends HttpServlet {
         for (VariableMetadata variable : variables) {
             String id = variable.getId();
             String layerName = catalogue.getLayerNameMapper().getLayerName(datasetId, id);
-            EnhancedVariableMetadata layerMetadata = WmsUtils
-                    .getLayerMetadata(layerName, catalogue);
+            EnhancedVariableMetadata layerMetadata = WmsUtils.getLayerMetadata(layerName,
+                    catalogue);
             if (catalogue.isDisabled(layerName)) {
                 continue;
             }
@@ -1094,8 +1098,8 @@ public class WmsServlet extends HttpServlet {
             String title = layerMetadata.getTitle();
             child.put("label", title);
 
-            Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
-                    variable, catalogue.getLayerNameMapper());
+            Collection<String> supportedStyles = catalogue.getStyleCatalogue()
+                    .getSupportedStyles(variable, catalogue.getLayerNameMapper());
             child.put("plottable", (supportedStyles != null && supportedStyles.size() > 0));
 
             Set<VariableMetadata> children = variable.getChildren();
@@ -1135,8 +1139,8 @@ public class WmsServlet extends HttpServlet {
         try {
             layerMetadata = WmsUtils.getLayerMetadata(layerName, catalogue);
             if (catalogue.isDisabled(layerName)) {
-                throw new EdalLayerNotFoundException("The layer " + layerName
-                        + " is not enabled on this server");
+                throw new EdalLayerNotFoundException(
+                        "The layer " + layerName + " is not enabled on this server");
             }
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("Layer not found", e);
@@ -1159,16 +1163,16 @@ public class WmsServlet extends HttpServlet {
          * Now create local variables containing the relevant details needed
          */
         String units = variableMetadata.getParameter().getUnits();
-        BoundingBox boundingBox = GISUtils.constrainBoundingBox(variableMetadata
-                .getHorizontalDomain().getBoundingBox());
+        BoundingBox boundingBox = GISUtils
+                .constrainBoundingBox(variableMetadata.getHorizontalDomain().getBoundingBox());
 
         Integer numColorBands = defaultProperties.getNumColorBands();
         if (numColorBands == null) {
             numColorBands = 250;
         }
 
-        Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
-                variableMetadata, catalogue.getLayerNameMapper());
+        Collection<String> supportedStyles = catalogue.getStyleCatalogue()
+                .getSupportedStyles(variableMetadata, catalogue.getLayerNameMapper());
 
         VerticalDomain verticalDomain = variableMetadata.getVerticalDomain();
         TemporalDomain temporalDomain = variableMetadata.getTemporalDomain();
@@ -1367,9 +1371,11 @@ public class WmsServlet extends HttpServlet {
                                     depthValues.addAll(feature.getDomain().getCoordinateValues());
                                 }
                             } catch (DataReadingException e) {
-                                log.error("Problem reading profile feature to test depth levels", e);
+                                log.error("Problem reading profile feature to test depth levels",
+                                        e);
                             } catch (VariableNotFoundException e) {
-                                log.error("Problem reading profile feature to test depth levels", e);
+                                log.error("Problem reading profile feature to test depth levels",
+                                        e);
                             }
                         } else {
                             break;
@@ -1380,8 +1386,9 @@ public class WmsServlet extends HttpServlet {
                      * We now have a sorted list of axis values for (up to) 50
                      * features.
                      */
-                    if (Math.abs(depthValues.get(0) - depthValues.get(1)) > Math.abs(depthValues
-                            .get(depthValues.size() - 1) - depthValues.get(depthValues.size() - 2))) {
+                    if (Math.abs(depthValues.get(0) - depthValues.get(1)) > Math
+                            .abs(depthValues.get(depthValues.size() - 1)
+                                    - depthValues.get(depthValues.size() - 2))) {
                         /*
                          * If the widest increments are at the end of the depth
                          * values list, this will not work, so we just use the
@@ -1409,8 +1416,8 @@ public class WmsServlet extends HttpServlet {
 
                         Stack<Double> deltas = new Stack<>();
                         deltas.addAll(Arrays.asList(new Double[] { 10000.0, 5000.0, 1000.0, 500.0,
-                                200.0, 100.0, 50.0, 20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05,
-                                0.01, 0.005, 0.001 }));
+                                200.0, 100.0, 50.0, 20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05, 0.01,
+                                0.005, 0.001 }));
 
                         /*
                          * The first level should be the minimum of the extent,
@@ -1430,8 +1437,8 @@ public class WmsServlet extends HttpServlet {
                          * nice distribution of levels, but they'd be horrible
                          * numbers. So now we get complicated instead...
                          */
-                        for (int i = depthValues.size() / nLevels; i < depthValues.size(); i += depthValues
-                                .size() / nLevels) {
+                        for (int i = depthValues.size() / nLevels; i < depthValues
+                                .size(); i += depthValues.size() / nLevels) {
                             /*
                              * With these nLevels levels, what is the difference
                              * between the two we're considering?
@@ -1634,8 +1641,8 @@ public class WmsServlet extends HttpServlet {
             dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             variableId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
             if (catalogue.isDisabled(layerName)) {
-                throw new EdalLayerNotFoundException("The layer " + layerName
-                        + " is not enabled on this server");
+                throw new EdalLayerNotFoundException(
+                        "The layer " + layerName + " is not enabled on this server");
             }
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
@@ -1705,8 +1712,8 @@ public class WmsServlet extends HttpServlet {
             variableMetadata = WmsUtils.getVariableMetadataFromLayerName(layerNames[0], catalogue);
             datasetId = WmsUtils.getDatasetFromLayerName(layerNames[0], catalogue).getId();
             if (catalogue.isDisabled(layerNames[0])) {
-                throw new EdalLayerNotFoundException("The layer " + layerNames[0]
-                        + " is not enabled on this server");
+                throw new EdalLayerNotFoundException(
+                        "The layer " + layerNames[0] + " is not enabled on this server");
             }
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("Layer " + layerNames[0] + " not found on this server", e);
@@ -1736,8 +1743,8 @@ public class WmsServlet extends HttpServlet {
             /*
              * The default style
              */
-            Collection<String> supportedStyles = catalogue.getStyleCatalogue().getSupportedStyles(
-                    variableMetadata, catalogue.getLayerNameMapper());
+            Collection<String> supportedStyles = catalogue.getStyleCatalogue()
+                    .getSupportedStyles(variableMetadata, catalogue.getLayerNameMapper());
             for (String supportedStyle : supportedStyles) {
                 if (supportedStyle.startsWith("default")) {
                     styleName = supportedStyle;
@@ -1752,8 +1759,8 @@ public class WmsServlet extends HttpServlet {
         /*
          * Now find which layer the scale is being applied to
          */
-        List<String> scaledLayerRoles = catalogue.getStyleCatalogue().getScaledRoleForStyle(
-                styleName);
+        List<String> scaledLayerRoles = catalogue.getStyleCatalogue()
+                .getScaledRoleForStyle(styleName);
         String scaledLayerRole = null;
         if (scaledLayerRoles.size() > 0) {
             scaledLayerRole = scaledLayerRoles.get(0);
@@ -1807,23 +1814,26 @@ public class WmsServlet extends HttpServlet {
                 while (iterator.hasNext()) {
                     Number value = iterator.next();
                     if (value != null) {
-                        if (value.doubleValue() > max) {
-                            max = value.doubleValue();
-                        }
-                        if (value.doubleValue() < min) {
-                            min = value.doubleValue();
-                        }
+                        max = Math.max(max, value.doubleValue());
+                        min = Math.min(min, value.doubleValue());
                     }
                 }
             } else if (f instanceof PointFeature) {
                 PointFeature pointFeature = (PointFeature) f;
                 Number value = pointFeature.getValues(featuresAndMember.getMember()).get(0);
                 if (value != null) {
-                    if (value.doubleValue() > max) {
-                        max = value.doubleValue();
-                    }
-                    if (value.doubleValue() < min) {
-                        min = value.doubleValue();
+                    max = Math.max(max, value.doubleValue());
+                    min = Math.min(min, value.doubleValue());
+                }
+            } else if (f instanceof TrajectoryFeature) {
+                TrajectoryFeature trajectoryFeature = (TrajectoryFeature) f;
+                Array1D<Number> values = trajectoryFeature.getValues(featuresAndMember.getMember());
+                Iterator<Number> it = values.iterator();
+                while (it.hasNext()) {
+                    Number value = it.next();
+                    if (value != null) {
+                        max = Math.max(max, value.doubleValue());
+                        min = Math.min(min, value.doubleValue());
                     }
                 }
             } else {
@@ -1878,8 +1888,8 @@ public class WmsServlet extends HttpServlet {
             dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             variableId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
             if (catalogue.isDisabled(layerName)) {
-                throw new EdalLayerNotFoundException("The layer " + layerName
-                        + " is not enabled on this server");
+                throw new EdalLayerNotFoundException(
+                        "The layer " + layerName + " is not enabled on this server");
             }
         } catch (EdalLayerNotFoundException e) {
             throw new MetadataException("The layer " + layerName + " does not exist", e);
@@ -1903,10 +1913,10 @@ public class WmsServlet extends HttpServlet {
             int startIndex;
             int endIndex;
             try {
-                startIndex = timeAxis.findIndexOf(TimeUtils.iso8601ToDateTime(startStr,
-                        timeAxis.getChronology()));
-                endIndex = timeAxis.findIndexOf(TimeUtils.iso8601ToDateTime(endStr,
-                        timeAxis.getChronology()));
+                startIndex = timeAxis.findIndexOf(
+                        TimeUtils.iso8601ToDateTime(startStr, timeAxis.getChronology()));
+                endIndex = timeAxis
+                        .findIndexOf(TimeUtils.iso8601ToDateTime(endStr, timeAxis.getChronology()));
             } catch (BadTimeFormatException e) {
                 throw new MetadataException("Time string is not ISO8601 formatted");
             }
@@ -1926,7 +1936,8 @@ public class WmsServlet extends HttpServlet {
             addTimeStringToJson(AnimationStep.DAILY, timeStrings, tValues, startIndex, endIndex);
             addTimeStringToJson(AnimationStep.WEEKLY, timeStrings, tValues, startIndex, endIndex);
             addTimeStringToJson(AnimationStep.MONTHLY, timeStrings, tValues, startIndex, endIndex);
-            addTimeStringToJson(AnimationStep.BIMONTHLY, timeStrings, tValues, startIndex, endIndex);
+            addTimeStringToJson(AnimationStep.BIMONTHLY, timeStrings, tValues, startIndex,
+                    endIndex);
             addTimeStringToJson(AnimationStep.BIANNUALLY, timeStrings, tValues, startIndex,
                     endIndex);
             addTimeStringToJson(AnimationStep.YEARLY, timeStrings, tValues, startIndex, endIndex);
@@ -2025,9 +2036,9 @@ public class WmsServlet extends HttpServlet {
             /*
              * Find the requested colour palette, or use the default if not set
              */
-            SegmentColourScheme colourScheme = new SegmentColourScheme(new ScaleRange(
-                    Extents.newExtent(0f, 1f), false), Color.black, Color.black, Color.black,
-                    paletteName, numColourBands);
+            SegmentColourScheme colourScheme = new SegmentColourScheme(
+                    new ScaleRange(Extents.newExtent(0f, 1f), false), Color.black, Color.black,
+                    Color.black, paletteName, numColourBands);
             legend = colourScheme.getScaleBar(width, height, 0.0f, vertical, false, null, null);
         } else {
             /*
@@ -2105,8 +2116,8 @@ public class WmsServlet extends HttpServlet {
                 && !"text/json".equalsIgnoreCase(outputFormat)
                 && !"application/prs.coverage+json".equalsIgnoreCase(outputFormat)
                 && !"application/prs.coverage json".equalsIgnoreCase(outputFormat)) {
-            throw new InvalidFormatException(outputFormat
-                    + " is not a valid output format for a timeseries plot");
+            throw new InvalidFormatException(
+                    outputFormat + " is not a valid output format for a timeseries plot");
         }
         /*
          * Loop over all requested layers
@@ -2121,15 +2132,16 @@ public class WmsServlet extends HttpServlet {
         Set<String> copyrights = new LinkedHashSet<>();
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
-                    layerName, catalogue);
+            VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(layerName,
+                    catalogue);
 
             if (("text/csv".equalsIgnoreCase(outputFormat)
                     || "text/json".equalsIgnoreCase(outputFormat)
-                    || "application/prs.coverage+json".equalsIgnoreCase(outputFormat) || "application/prs.coverage json"
-                        .equalsIgnoreCase(outputFormat)) && !catalogue.isDownloadable(layerName)) {
-                throw new LayerNotQueryableException("The layer: " + layerName
-                        + " can only be downloaded as an image");
+                    || "application/prs.coverage+json".equalsIgnoreCase(outputFormat)
+                    || "application/prs.coverage json".equalsIgnoreCase(outputFormat))
+                    && !catalogue.isDownloadable(layerName)) {
+                throw new LayerNotQueryableException(
+                        "The layer: " + layerName + " can only be downloaded as an image");
             }
             EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
@@ -2182,7 +2194,8 @@ public class WmsServlet extends HttpServlet {
                 || "application/prs.coverage+json".equalsIgnoreCase(outputFormat)
                 || "application/prs.coverage json".equalsIgnoreCase(outputFormat)) {
             if (timeseriesFeatures.size() > 1) {
-                throw new IncorrectDomainException("JSON export is only supported for gridded data");
+                throw new IncorrectDomainException(
+                        "JSON export is only supported for gridded data");
             }
             CoverageJsonConverter converter = new CoverageJsonConverterImpl();
 
@@ -2199,8 +2212,8 @@ public class WmsServlet extends HttpServlet {
                 throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }
             try {
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-                        httpServletResponse.getOutputStream()));
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(httpServletResponse.getOutputStream()));
                 PointSeriesFeature feature = timeseriesFeatures.get(0);
                 Set<String> parameterIds = feature.getVariableIds();
                 HorizontalPosition pos = feature.getHorizontalPosition();
@@ -2231,13 +2244,13 @@ public class WmsServlet extends HttpServlet {
                     filename.append(parameterId + "-");
                 }
                 filename.append("timeseries.csv");
-                httpServletResponse.setHeader("Content-Disposition", "attachment; filename=\""
-                        + filename + "\"");
+                httpServletResponse.setHeader("Content-Disposition",
+                        "attachment; filename=\"" + filename + "\"");
                 writer.write(headerLine.substring(0, headerLine.length() - 1) + "\n");
                 TimeAxis axis = feature.getDomain();
                 for (int i = 0; i < axis.size(); i++) {
-                    StringBuilder dataLine = new StringBuilder(TimeUtils.dateTimeToISO8601(axis
-                            .getCoordinateValues().get(i)) + ",");
+                    StringBuilder dataLine = new StringBuilder(
+                            TimeUtils.dateTimeToISO8601(axis.getCoordinateValues().get(i)) + ",");
                     for (String parameterId : parameterIds) {
                         dataLine.append(feature.getValues(parameterId).get(i) + ",");
                     }
@@ -2276,8 +2289,8 @@ public class WmsServlet extends HttpServlet {
         String outputFormat = params.getMandatoryString("format");
         if (!"image/png".equals(outputFormat) && !"image/jpeg".equals(outputFormat)
                 && !"image/jpg".equals(outputFormat)) {
-            throw new InvalidFormatException(outputFormat
-                    + " is not a valid output format for a transect plot");
+            throw new InvalidFormatException(
+                    outputFormat + " is not a valid output format for a transect plot");
         }
         String[] layers = params.getMandatoryString("layers").split(",");
         CoordinateReferenceSystem crs = GISUtils.getCrs(params.getMandatoryString("CRS"));
@@ -2301,8 +2314,8 @@ public class WmsServlet extends HttpServlet {
         for (String layerName : layers) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
             if (dataset == null) {
-                throw new EdalLayerNotFoundException("The layer " + layerName
-                        + " was not found on this server");
+                throw new EdalLayerNotFoundException(
+                        "The layer " + layerName + " was not found on this server");
             }
             if (dataset instanceof DiscreteLayeredDataset<?, ?>) {
                 gridDataset = (DiscreteLayeredDataset<?, ?>) dataset;
@@ -2351,8 +2364,8 @@ public class WmsServlet extends HttpServlet {
 
                 PointCollectionFeature feature = gridDataset.extractPointCollection(
                         CollectionUtils.setOf(varId), pointCollectionDomain);
-                pointCollectionFeatures2Labels.put(feature, catalogue.getLayerMetadata(metadata)
-                        .getTitle());
+                pointCollectionFeatures2Labels.put(feature,
+                        catalogue.getLayerMetadata(metadata).getTitle());
             } else {
                 throw new EdalUnsupportedOperationException(
                         "Only gridded datasets are supported for transect plots");
@@ -2381,8 +2394,8 @@ public class WmsServlet extends HttpServlet {
              * can use our previous cast
              */
             String paletteName = params.getString("palette", defaults.getPalette());
-            int numColourBands = params
-                    .getPositiveInt("numcolorbands", defaults.getNumColorBands());
+            int numColourBands = params.getPositiveInt("numcolorbands",
+                    defaults.getNumColorBands());
 
             /*
              * define an extent for the vertical section if parameter present
@@ -2447,8 +2460,8 @@ public class WmsServlet extends HttpServlet {
                         height);
             } else {
                 /* Must be a JPEG */
-                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart,
-                        width, height);
+                ChartUtilities.writeChartAsJPEG(httpServletResponse.getOutputStream(), chart, width,
+                        height);
             }
         } catch (IOException e) {
             log.error("Cannot write to output stream", e);
@@ -2500,8 +2513,8 @@ public class WmsServlet extends HttpServlet {
         return Extents.newExtent(min, max);
     }
 
-    protected void getVerticalProfile(RequestParams params,
-            HttpServletResponse httpServletResponse, WmsCatalogue catalogue) throws EdalException {
+    protected void getVerticalProfile(RequestParams params, HttpServletResponse httpServletResponse,
+            WmsCatalogue catalogue) throws EdalException {
         GetPlotParameters getPlotParameters = new GetPlotParameters(params, catalogue);
         PlottingDomainParams plottingParameters = getPlotParameters.getPlottingDomainParameters();
         final HorizontalPosition position = getPlotParameters.getClickedPosition();
@@ -2515,8 +2528,8 @@ public class WmsServlet extends HttpServlet {
                 && !"text/json".equalsIgnoreCase(outputFormat)
                 && !"application/prs.coverage+json".equalsIgnoreCase(outputFormat)
                 && !"application/prs.coverage json".equalsIgnoreCase(outputFormat)) {
-            throw new InvalidFormatException(outputFormat
-                    + " is not a valid output format for a profile plot");
+            throw new InvalidFormatException(
+                    outputFormat + " is not a valid output format for a profile plot");
         }
 
         /*
@@ -2533,16 +2546,17 @@ public class WmsServlet extends HttpServlet {
         String xLabel = null;
         for (String layerName : layerNames) {
             Dataset dataset = WmsUtils.getDatasetFromLayerName(layerName, catalogue);
-            VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
-                    layerName, catalogue);
+            VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(layerName,
+                    catalogue);
             xLabel = catalogue.getLayerMetadata(variableMetadata).getTitle();
 
             if (("text/csv".equalsIgnoreCase(outputFormat)
                     || "text/json".equalsIgnoreCase(outputFormat)
-                    || "application/prs.coverage+json".equalsIgnoreCase(outputFormat) || "application/prs.coverage json"
-                        .equalsIgnoreCase(outputFormat)) && !catalogue.isDownloadable(layerName)) {
-                throw new LayerNotQueryableException("The layer: " + layerName
-                        + " can only be downloaded as an image");
+                    || "application/prs.coverage+json".equalsIgnoreCase(outputFormat)
+                    || "application/prs.coverage json".equalsIgnoreCase(outputFormat))
+                    && !catalogue.isDownloadable(layerName)) {
+                throw new LayerNotQueryableException(
+                        "The layer: " + layerName + " can only be downloaded as an image");
             }
             EnhancedVariableMetadata layerMetadata = catalogue.getLayerMetadata(variableMetadata);
             String layerCopyright = layerMetadata.getCopyright();
@@ -2596,7 +2610,8 @@ public class WmsServlet extends HttpServlet {
                 || "application/prs.coverage+json".equalsIgnoreCase(outputFormat)
                 || "application/prs.coverage json".equalsIgnoreCase(outputFormat)) {
             if (profileFeatures.size() > 1) {
-                throw new IncorrectDomainException("JSON export is only supported for gridded data");
+                throw new IncorrectDomainException(
+                        "JSON export is only supported for gridded data");
             }
             CoverageJsonConverter converter = new CoverageJsonConverterImpl();
 
@@ -2613,8 +2628,8 @@ public class WmsServlet extends HttpServlet {
                 throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }
             try {
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-                        httpServletResponse.getOutputStream()));
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(httpServletResponse.getOutputStream()));
                 ProfileFeature feature = profileFeatures.get(0);
                 Set<String> parameterIds = feature.getVariableIds();
                 HorizontalPosition pos = feature.getHorizontalPosition();
@@ -2645,13 +2660,13 @@ public class WmsServlet extends HttpServlet {
                     filename.append(parameterId + "-");
                 }
                 filename.append("profile.csv");
-                httpServletResponse.setHeader("Content-Disposition", "attachment; filename=\""
-                        + filename + "\"");
+                httpServletResponse.setHeader("Content-Disposition",
+                        "attachment; filename=\"" + filename + "\"");
                 writer.write(headerLine.substring(0, headerLine.length() - 1) + "\n");
                 VerticalAxis axis = feature.getDomain();
                 for (int i = 0; i < axis.size(); i++) {
-                    StringBuilder dataLine = new StringBuilder(axis.getCoordinateValues().get(i)
-                            + ",");
+                    StringBuilder dataLine = new StringBuilder(
+                            axis.getCoordinateValues().get(i) + ",");
                     for (String parameterId : parameterIds) {
                         dataLine.append(feature.getValues(parameterId).get(i) + ",");
                     }
@@ -2667,8 +2682,8 @@ public class WmsServlet extends HttpServlet {
             int height = 600;
 
             /* Now create the vertical profile plot */
-            JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, xLabel,
-                    position, copyright.toString());
+            JFreeChart chart = Charting.createVerticalProfilePlot(profileFeatures, xLabel, position,
+                    copyright.toString());
 
             try {
                 if ("image/png".equals(outputFormat)) {
