@@ -39,6 +39,7 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 
+import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.SimpleHorizontalDomain;
 import uk.ac.rdg.resc.edal.domain.SimpleTemporalDomain;
 import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
@@ -46,6 +47,7 @@ import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
@@ -53,6 +55,7 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
 public class FakeTrajectoryDatasetFactory extends DatasetFactory {
@@ -84,7 +87,7 @@ public class FakeTrajectoryDatasetFactory extends DatasetFactory {
                 @Override
                 public VariableMetadata get(int index) {
                     return new VariableMetadata(PARAMETER,
-                            new SimpleHorizontalDomain(-30, -SIZE / 2, 30, SIZE / 2), null,
+                            new SimpleHorizontalDomain(-SIZE / 2, -30, SIZE / 2, 30), null,
                             new SimpleTemporalDomain(TIME_AXIS.getCoordinateExtent()));
                 }
 
@@ -105,9 +108,10 @@ public class FakeTrajectoryDatasetFactory extends DatasetFactory {
                     for (int i = 0; i < SIZE; i++) {
                         double lfo = 30 * Math.cos(i * 8.8 / SIZE);
                         valueArr.set(273.0 + i * 30.0 / SIZE, i);
-                        HorizontalPosition hPos = new HorizontalPosition( - i + SIZE / 2, lfo);
+                        HorizontalPosition hPos = new HorizontalPosition(-i + SIZE / 2, lfo);
 
-                        GeoPosition pos = new GeoPosition(hPos, null, TIME_AXIS.getCoordinateValue(i));
+                        GeoPosition pos = new GeoPosition(hPos, null,
+                                TIME_AXIS.getCoordinateValue(i));
                         positions.add(pos);
                     }
 
@@ -124,7 +128,29 @@ public class FakeTrajectoryDatasetFactory extends DatasetFactory {
                 @Override
                 public Collection<TrajectoryFeature> readFeatures(Collection<String> ids,
                         Set<String> variableIds) throws DataReadingException {
-                    return null;
+                    List<TrajectoryFeature> ret = new ArrayList<>();
+                    for(String id : ids) {
+                        ret.add(readFeature(id, variableIds));
+                    }
+                    return ret;
+                }
+            }, new FeatureIndexer() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public Set<String> getAllFeatureIds() {
+                    return CollectionUtils.setOf(FEATURE_ID);
+                }
+
+                @Override
+                public Collection<String> findFeatureIds(BoundingBox horizontalExtent,
+                        Extent<Double> verticalExtent, Extent<DateTime> timeExtent,
+                        Collection<String> variableIds) {
+                    return CollectionUtils.setOf(FEATURE_ID);
+                }
+
+                @Override
+                public void addFeatures(List<FeatureBounds> features) {
                 }
             });
         }

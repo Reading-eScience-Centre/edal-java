@@ -94,7 +94,7 @@ public class ColouredTrajectoryLayer extends ImageLayer {
 
         Collection<? extends DiscreteFeature<?, ?>> features = featureAndMemberName.getFeatures();
 
-        double arrowSize = 8.0;
+        double arrowSize = 10.0;
         Graphics2D canvas = image.createGraphics();
         canvas.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
@@ -127,6 +127,7 @@ public class ColouredTrajectoryLayer extends ImageLayer {
 
             for (int i = 1; i < positions.size(); i++) {
                 pos = positions.get(i).getHorizontalPosition();
+                HorizontalPosition lastPos = positions.get(i - 1).getHorizontalPosition();
 
                 int currPointX = xAxis.findIndexOfUnconstrained(pos.getX());
                 int currPointY = image.getHeight() - yAxis.findIndexOfUnconstrained(pos.getY()) - 1;
@@ -152,8 +153,8 @@ public class ColouredTrajectoryLayer extends ImageLayer {
                 if (!((tExtent != null && !tExtent.contains(positions.get(i).getTime()))
                         || (zExtent != null
                                 && !zExtent.contains(positions.get(i).getVerticalPosition().getZ()))
-                        || (Math.signum(currPointX - lastPointX) != Math.signum(pos.getX()
-                                - positions.get(i - 1).getHorizontalPosition().getX())))) {
+                        || (Math.signum(currPointX - lastPointX) != Math
+                                .signum(pos.getX() - lastPos.getX())))) {
                     /*
                      * Draw a line from the last point to the mid point, in the
                      * colour representing the last point's value
@@ -177,8 +178,13 @@ public class ColouredTrajectoryLayer extends ImageLayer {
                             .sqrt((currPointX - lastArrowX) * (currPointX - lastArrowX)
                                     + (currPointY - lastArrowY) * (currPointY - lastArrowY));
                     if (distFromLastArrow > 30) {
-                        double lineAngle = 2 * Math.PI
-                                - Math.atan2((currPointY - lastPointY), (currPointX - lastPointX));
+                        /*
+                         * Use the actual positions (rather than the pixel
+                         * positions) to calculate the angle of the arrowhead.
+                         * This is more accurate and looks a lot better.
+                         */
+                        double lineAngle = 2 * Math.PI - Math.atan2((lastPos.getY() - pos.getY()),
+                                (pos.getX() - lastPos.getX()));
                         double headAngle1 = lineAngle + 0.3;
                         double headAngle2 = lineAngle - 0.3;
                         double xh1 = arrowSize * Math.cos(headAngle1);

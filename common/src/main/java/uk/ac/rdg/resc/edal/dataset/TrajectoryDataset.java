@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -54,12 +53,14 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 public class TrajectoryDataset extends AbstractDataset {
     private static final long serialVersionUID = 1L;
 
+    private FeatureIndexer indexer;
     private DiscreteFeatureReader<TrajectoryFeature> featureReader;
 
     public TrajectoryDataset(String id, Collection<VariableMetadata> vars,
-            DiscreteFeatureReader<TrajectoryFeature> featureReader) {
+            DiscreteFeatureReader<TrajectoryFeature> featureReader, FeatureIndexer indexer) {
         super(id, vars);
         this.featureReader = featureReader;
+        this.indexer = indexer;
     }
 
     @Override
@@ -86,27 +87,28 @@ public class TrajectoryDataset extends AbstractDataset {
         return featureReader.readFeature(featureId, vars.keySet());
     }
 
-    public List<TrajectoryFeature> extractFeatures(Set<String> varIds, BoundingBox bbox,
+    /**
+     * Extracts trajectory features which cross the given 4d area. Note that
+     * this just detects overlaps in the bounding boxes. There is no guarantee
+     * that any of the returned features are <i>actually</i> within the area,
+     * just that their bounding boxes cross.
+     * 
+     * @param varIds
+     *            The required variable IDs
+     * @param bbox
+     *            The {@link BoundingBox} which features should cross
+     * @param zExtent
+     *            The vertical extent which features should be partially
+     *            contained within
+     * @param tExtent
+     *            The time extent which features should be partially contained
+     *            within
+     * @return A {@link Collection} of the desired {@link TrajectoryFeature}s
+     */
+    public Collection<TrajectoryFeature> extractFeatures(Set<String> varIds, BoundingBox bbox,
             Extent<Double> zExtent, Extent<DateTime> tExtent) {
-        List<TrajectoryFeature> features = new ArrayList<>();
-
-        /*
-         * 
-         * TODO - Implement this. It needs to use a feature indexer, which
-         * probably needs to be populated + injected into this class on
-         * construction. Then search for all features which cross the bounding
-         * box, to ensure that we can plot all entries/exits.
-         * 
-         */
-
-        /*
-         * Temporary - just reads a feature with a single ID, which is currently
-         * equivalent to the variable ID. Won't be the case once feature
-         * indexing has been added.
-         */
-        features.add(readFeature(varIds.iterator().next()));
-
-        return features;
+        Collection<String> featureIds = indexer.findFeatureIds(bbox, zExtent, tExtent, varIds);
+        return featureReader.readFeatures(featureIds, varIds);
     }
 
     @Override
