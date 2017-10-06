@@ -560,15 +560,17 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
 
         Date startDate = parser.parse(startDateTimeStr);
         Date endDate = parser.parse(endDateTimeStr);
+        startDate.setHours(0);
         startDate.setMinutes(0);
         startDate.setSeconds(0);
 
-        endDate.setHours(endDate.getHours() + 1);
+        endDate.setDate(endDate.getDate()+1);
+        endDate.setHours(0);
         endDate.setMinutes(0);
         endDate.setSeconds(0);
 
         List<String> dates = new ArrayList<String>();
-        while (startDate.getTime() <= endDate.getTime()) {
+        while (startDate.getTime() < endDate.getTime()) {
             dates.add(DATE_FORMAT.format(startDate));
             startDate.setDate(startDate.getDate() + 1);
         }
