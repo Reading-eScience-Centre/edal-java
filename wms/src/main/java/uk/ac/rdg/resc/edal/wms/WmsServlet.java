@@ -2722,9 +2722,16 @@ public class WmsServlet extends HttpServlet {
         }
 
         httpServletResponse.setContentType("text/xml");
-        StackTraceElement element = exception.getStackTrace()[0];
-        log.warn("Wms Exception caught: \"" + exception.getMessage() + "\" from:"
-                + element.getClassName() + ":" + element.getLineNumber());
+        StackTraceElement[] stackTrace = exception.getStackTrace();
+        StackTraceElement element = stackTrace[0];
+        StringBuilder warningMessage = new StringBuilder(
+                "Wms Exception caught: \"" + exception.getMessage() + "\" from:"
+                        + element.getClassName() + ":" + element.getLineNumber());
+        if(exception.getCause() != null) {
+            Throwable cause = exception.getCause();
+            warningMessage.append(" Cause: "+cause.getMessage());
+        }
+        log.warn(warningMessage.toString());
 
         VelocityContext context = new VelocityContext();
         EventCartridge ec = new EventCartridge();
@@ -2732,6 +2739,9 @@ public class WmsServlet extends HttpServlet {
         ec.attachToContext(context);
 
         context.put("exception", exception);
+        if (exception.getCause() != null) {
+            context.put("cause", exception.getCause());
+        }
 
         Template template;
         if (v130) {
