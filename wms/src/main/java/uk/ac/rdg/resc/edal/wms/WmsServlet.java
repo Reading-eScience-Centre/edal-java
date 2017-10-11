@@ -1698,7 +1698,7 @@ public class WmsServlet extends HttpServlet {
 
         String[] layerNames = getMapParams.getStyleParameters().getLayerNames();
         String[] styleNames = getMapParams.getStyleParameters().getStyleNames();
-        if (layerNames.length != 1 || styleNames.length > 1) {
+        if (layerNames.length != 1 || (styleNames != null && styleNames.length > 1)) {
             /*
              * TODO Perhaps relax this restriction and return min/max with layer
              * IDs?
