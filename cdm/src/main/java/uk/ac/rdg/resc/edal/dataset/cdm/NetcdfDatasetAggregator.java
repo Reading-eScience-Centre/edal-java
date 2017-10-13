@@ -144,8 +144,8 @@ public class NetcdfDatasetAggregator {
      * @throws IOException
      *             if there was an error reading from the data source.
      */
-    public static synchronized NetcdfDataset getDataset(String location) throws IOException,
-            EdalException {
+    public static synchronized NetcdfDataset getDataset(String location)
+            throws IOException, EdalException {
         return getDataset(location, false);
     }
 
@@ -210,8 +210,8 @@ public class NetcdfDatasetAggregator {
                     throw e;
                 }
                 if (files.size() == 0) {
-                    throw new EdalException("The location " + location
-                            + " doesn't refer to any existing files.");
+                    throw new EdalException(
+                            "The location " + location + " doesn't refer to any existing files.");
                 }
                 if (files.size() == 1) {
                     nc = openDataset(files.get(0).getAbsolutePath());
@@ -309,11 +309,11 @@ public class NetcdfDatasetAggregator {
                                 String[] unitsParts = unitsString.split(" since ");
                                 long startTime = new DateUnit(timeVar.read().getDouble(0),
                                         unitsParts[0], DateUnit.getStandardOrISO(unitsParts[1]))
-                                        .getDate().getTime();
-                                long endTime = new DateUnit(timeVar.read().getDouble(
-                                        timeVar.getShape(0) - 1), unitsParts[0],
-                                        DateUnit.getStandardOrISO(unitsParts[1])).getDate()
-                                        .getTime();
+                                                .getDate().getTime();
+                                long endTime = new DateUnit(
+                                        timeVar.read().getDouble(timeVar.getShape(0) - 1),
+                                        unitsParts[0], DateUnit.getStandardOrISO(unitsParts[1]))
+                                                .getDate().getTime();
                                 endTimes.add(endTime);
 
                                 if (!time2vars2filename.containsKey(startTime)) {
@@ -330,15 +330,16 @@ public class NetcdfDatasetAggregator {
                                     String varName = v.getFullName();
                                     varNames += varName;
                                     /*
-                                     * We now check that the variables we are
-                                     * aggregating all share the same important
-                                     * attributes. If we have different values
-                                     * for certain attributes for variables in
-                                     * different files, it's asking for trouble
-                                     * (e.g. different units on time variables,
-                                     * different add_offset and scale_factor)
-                                     * because NcML will take the attributes
-                                     * from the final file it aggregates.
+                                     * When aggregating different files, it's
+                                     * important that _FillValue, scale_factor,
+                                     * and add_offset have common values across
+                                     * the aggregation, otherwise incorrect
+                                     * values will be reported - each aggregated
+                                     * variable will pick one value (usually the
+                                     * last one) and apply it to all of them.
+                                     * 
+                                     * NOTE: This used to be the case for time
+                                     * units, but it now works properly :D
                                      */
                                     if (!varname2Attributes.containsKey(varName)) {
                                         /*
@@ -361,13 +362,10 @@ public class NetcdfDatasetAggregator {
                                                 .get(varName);
                                         for (Attribute attr : v.getAttributes()) {
                                             if (attr.getFullName().equalsIgnoreCase("scale_factor")
-                                                    || attr.getFullName().equalsIgnoreCase(
-                                                            "add_offset")
-                                                    || attr.getFullName().equalsIgnoreCase(
-                                                            "_FillValue")
-                                                    || (attr.getFullName()
-                                                            .equalsIgnoreCase("units") && varName
-                                                            .equals(timeDimName))) {
+                                                    || attr.getFullName()
+                                                            .equalsIgnoreCase("add_offset")
+                                                    || attr.getFullName()
+                                                            .equalsIgnoreCase("_FillValue")) {
                                                 if (!attributes.containsKey(attr.getFullName())) {
                                                     /*
                                                      * We have an attribute for
@@ -378,8 +376,7 @@ public class NetcdfDatasetAggregator {
                                                      */
                                                     throw new MetadataException(
                                                             "Trying to aggregate NetCDF files, but the variable "
-                                                                    + varName
-                                                                    + " in "
+                                                                    + varName + " in "
                                                                     + file.getAbsolutePath()
                                                                     + " has the attribute "
                                                                     + attr.getFullName()
@@ -399,17 +396,14 @@ public class NetcdfDatasetAggregator {
                                                          */
                                                         throw new MetadataException(
                                                                 "Trying to aggregate NetCDF files, but the variable "
-                                                                        + varName
-                                                                        + " in the file "
+                                                                        + varName + " in the file "
                                                                         + file.getAbsolutePath()
                                                                         + " has an attribute "
                                                                         + attr.getFullName()
-                                                                        + " with the value "
-                                                                        + value
+                                                                        + " with the value " + value
                                                                         + " which is different to the value of "
                                                                         + attr.getFullName()
-                                                                        + " on "
-                                                                        + varName
+                                                                        + " on " + varName
                                                                         + " in a different file.  "
                                                                         + "This variable attribute must match across all files in the aggregation.");
                                                     }
@@ -444,8 +438,8 @@ public class NetcdfDatasetAggregator {
                         for (int i = 1; i < startTimes.size(); i++) {
                             if (startTimes.get(i) <= endTimes.get(i - 1)) {
                                 overlap = true;
-                                log.debug("Overlap in: " + new Date(startTimes.get(i))
-                                        + "," + new Date(endTimes.get(i - 1)));
+                                log.debug("Overlap in: " + new Date(startTimes.get(i)) + ","
+                                        + new Date(endTimes.get(i - 1)));
                             }
                         }
 
@@ -454,8 +448,8 @@ public class NetcdfDatasetAggregator {
                          * aggregated dataset
                          */
                         StringBuffer ncmlStringBuffer = new StringBuffer();
-                        ncmlStringBuffer
-                                .append("<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\" enhance=\"true\">");
+                        ncmlStringBuffer.append(
+                                "<netcdf xmlns=\"http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2\" enhance=\"true\">");
                         String timeUnitsChange = commonTimeUnits ? "" : "timeUnitsChange=\"true\"";
 
                         if (!overlap) {
@@ -493,8 +487,8 @@ public class NetcdfDatasetAggregator {
                             } else {
                                 ncmlStringBuffer.append("<netcdf><aggregation type=\"union\">");
                                 for (Entry<String, String> entry : vars2filename.entrySet()) {
-                                    ncmlStringBuffer.append("<netcdf location=\""
-                                            + entry.getValue() + "\"/>");
+                                    ncmlStringBuffer.append(
+                                            "<netcdf location=\"" + entry.getValue() + "\"/>");
                                 }
                                 ncmlStringBuffer.append("</aggregation></netcdf>");
                             }
@@ -505,9 +499,10 @@ public class NetcdfDatasetAggregator {
                         ncmlString = new NcmlString(ncmlStringBuffer.toString(), overlap);
                         ncmlStringCache.put(location, ncmlString);
                     }
-                    if(ncmlString.fmrc) {
+                    if (ncmlString.fmrc) {
                         /*
-                         * NcML string represents a forecast model run collection
+                         * NcML string represents a forecast model run
+                         * collection
                          */
                         Formatter errlog = new Formatter();
                         Fmrc fmrc = Fmrc.readNcML(ncmlString.ncml, errlog);
@@ -558,8 +553,7 @@ public class NetcdfDatasetAggregator {
             }
         } else {
             if (dataset != null) {
-                log.warn("Dataset "
-                        + dataset.getLocation()
+                log.warn("Dataset " + dataset.getLocation()
                         + " is not in active dataset list but has been asked to be released!  This is not harmful in itself but may indicate a coding error whereby a dataset has been marked to be released from the cache multiple times.");
             }
         }
@@ -608,8 +602,8 @@ public class NetcdfDatasetAggregator {
                     nc = fmrc.getDatasetBest().getNetcdfDataset();
                 } catch (Exception e) {
                     log.debug("Couldn't create FMRC, trying standard NcML");
-                    nc = NetcdfDataset.acquireDataset(new DatasetUrl(ServiceType.NCML, "file://"
-                            + location), true, null);
+                    nc = NetcdfDataset.acquireDataset(
+                            new DatasetUrl(ServiceType.NCML, "file://" + location), true, null);
                 }
 
             } else {
