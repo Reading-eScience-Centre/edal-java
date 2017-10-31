@@ -63,12 +63,6 @@ import org.gwtopenmaps.openlayers.client.layer.WMSOptions;
 import org.gwtopenmaps.openlayers.client.layer.WMSParams;
 import org.gwtopenmaps.openlayers.client.util.JSObject;
 
-import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
-import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
-import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
-import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
-import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -84,6 +78,12 @@ import com.google.gwt.xml.client.Node;
 import com.google.gwt.xml.client.NodeList;
 import com.google.gwt.xml.client.XMLParser;
 
+import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
+import uk.ac.rdg.resc.godiva.client.handlers.OpacitySelectionHandler;
+import uk.ac.rdg.resc.godiva.client.handlers.StartEndTimeHandler;
+import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
+import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF;
+
 /**
  * A widget containing the main OpenLayers map.
  * 
@@ -97,6 +97,50 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     protected static final Projection CRS84 = new Projection("CRS:84");
     protected static final NumberFormat FORMATTER = NumberFormat.getFormat("###.#####");
+
+    /**
+     * A class to store details for a "fixed" layer - i.e. a base map layer, or
+     * a static overlay layer. These can be passed in to a new {@link MapArea}
+     * to define custom map layers
+     *
+     * @author Guy Griffiths
+     */
+    public final static class FixedLayerDetails {
+        public final String title;
+        public final String wmsUrl;
+        public final String layerNames;
+        public final String projection;
+        public final String imageFormat;
+        public final String version;
+        public final boolean isBaseLayer;
+
+        public FixedLayerDetails(String title, String wmsUrl, String layerNames, String projection,
+                String imageFormat, String version, boolean isBaseLayer) {
+            if (title == null || wmsUrl == null || layerNames == null) {
+                throw new IllegalArgumentException(
+                        "Must provide a non-null title, WMS URL, and layer name");
+            }
+            this.title = title;
+            this.wmsUrl = wmsUrl;
+            this.layerNames = layerNames;
+            if (projection != null) {
+                this.projection = projection;
+            } else {
+                this.projection = "CRS:84";
+            }
+            if (imageFormat != null) {
+                this.imageFormat = imageFormat;
+            } else {
+                this.imageFormat = "image/png";
+            }
+            if (version != null) {
+                this.version = version;
+            } else {
+                this.version = "1.1.1";
+            }
+            this.isBaseLayer = isBaseLayer;
+        }
+    }
 
     /*
      * Class to store a WMS layer along with some other details. This means that
@@ -168,7 +212,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      */
     protected boolean animLayerLoading = false;
 
-    public MapArea(int width, int height, final GodivaActionsHandler godivaListener, String proxyUrl) {
+    public MapArea(int width, int height, final GodivaActionsHandler godivaListener,
+            String proxyUrl, FixedLayerDetails... additionalLayers) {
         super(width + "px", height + "px", getDefaultMapOptions());
 
         if (proxyUrl == null) {
@@ -202,7 +247,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             }
         };
         this.widgetDisabler = godivaListener;
-        init();
+        init(additionalLayers);
         map.addMapMoveListener(godivaListener);
         map.addMapZoomListener(godivaListener);
 
@@ -437,8 +482,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
      * Does the work of actually adding the layer to the map
      */
     protected void doAddingOfLayer(String wmsUrl, String internalLayerId, WMSParams params,
-            WMSOptions options, boolean queryable, boolean downloadable,
-            boolean multipleElevations, boolean multipleTimes) {
+            WMSOptions options, boolean queryable, boolean downloadable, boolean multipleElevations,
+            boolean multipleTimes) {
         WmsDetails wmsAndParams = wmsLayers.get(internalLayerId);
         WMS wmsLayer;
 
@@ -460,6 +505,12 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsLayer.setIsBaseLayer(false);
         wmsLayer.setOpacity(opacity);
         map.addLayer(wmsLayer);
+        /*
+         * Set the WMS layer to be first in the list of overlays.
+         * 
+         * User-defined overlays are intended to overlay (well, duh) the data
+         */
+        map.setLayerIndex(wmsLayer, 0);
 
         WmsDetails newWmsAndParams = new WmsDetails(wmsUrl, wmsLayer, params, queryable,
                 downloadable, multipleElevations, multipleTimes);
@@ -917,10 +968,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         return mapOptions;
     }
 
-    protected void init() {
+    protected void init(FixedLayerDetails[] additionalLayers) {
         this.setStylePrimaryName("mapStyle");
         map = this.getMap();
-        addBaseLayers();
+        addBaseLayers(additionalLayers);
 
         currentProjection = map.getProjection();
         map.addControl(new LayerSwitcher());
@@ -987,7 +1038,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         baseLayerChanged(layer);
     }
 
-    protected void addBaseLayers() {
+    protected void addBaseLayers(FixedLayerDetails[] additionalLayers) {
         /*
          * Adds the base layers to the map.
          * 
@@ -1138,9 +1189,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsOptions.setWrapDateLine(true);
         wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
         wmsParams = new WMSParams();
-        wmsParams
-                .setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
-                        + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
+        wmsParams.setLayers("Countries,Bathymetry,Topography,Hillshading,Coastlines,Builtup+areas,"
+                + "Waterbodies,Rivers,Streams,Railroads,Highways,Roads,Trails,Borders,Cities,Airports");
         wmsParams.setFormat("image/png");
         WMS demis = new WMS("Demis WMS", "http://www2.demis.nl/wms/wms.ashx?WMS=WorldMap",
                 wmsParams, wmsOptions);
@@ -1178,6 +1228,32 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.addLayer(blueMarbleNP);
         map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleSP);
+
+        /*
+         * Now add any additional user-defined layers
+         */
+        for (FixedLayerDetails layer : additionalLayers) {
+            try {
+                wmsOptions = new WMSOptions();
+                wmsOptions.setProjection(layer.projection);
+                wmsOptions.setWrapDateLine(true);
+                wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
+                wmsOptions.setIsBaseLayer(layer.isBaseLayer);
+                wmsParams = new WMSParams();
+                wmsParams.setLayers(layer.layerNames);
+                wmsParams.setFormat(layer.imageFormat);
+                wmsParams.setTransparent(true);
+                wmsParams.setParameter("version", layer.version);
+                WMS userLayer = new WMS(layer.title, layer.wmsUrl, wmsParams, wmsOptions);
+                /*
+                 * Don't make visible until switched on.
+                 */
+                userLayer.setIsVisible(false);
+                map.addLayer(userLayer);
+            } catch (Exception e) {
+                GWT.log("Problem adding custom map layer.  Ignoring this layer", e);
+            }
+        }
 
         /*
          * Now global setup stuff. Store the current projection, add the layer

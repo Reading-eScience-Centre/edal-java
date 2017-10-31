@@ -32,10 +32,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.gwtopenmaps.openlayers.client.OpenLayers;
+
+import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.ScriptInjector;
+import com.google.gwt.http.client.Request;
+import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.RequestException;
+import com.google.gwt.http.client.Response;
+import com.google.gwt.http.client.URL;
+import com.google.gwt.json.client.JSONNumber;
+import com.google.gwt.json.client.JSONObject;
+import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONValue;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 import uk.ac.rdg.resc.godiva.client.handlers.ElevationSelectionHandler;
 import uk.ac.rdg.resc.godiva.client.handlers.GodivaActionsHandler;
@@ -54,22 +71,7 @@ import uk.ac.rdg.resc.godiva.client.state.GodivaStateInfo;
 import uk.ac.rdg.resc.godiva.client.util.UnitConverter;
 import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton;
 import uk.ac.rdg.resc.godiva.client.widgets.MapArea;
-
-import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.ScriptInjector;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
-import com.google.gwt.http.client.URL;
-import com.google.gwt.json.client.JSONNumber;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONValue;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.VerticalPanel;
+import uk.ac.rdg.resc.godiva.client.widgets.MapArea.FixedLayerDetails;
 
 /**
  * A class to handle the common operations needed in an EDAL wms client.
@@ -82,9 +84,9 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * @author Guy Griffiths
  * 
  */
-public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaActionsHandler,
-        LayerSelectionHandler, ElevationSelectionHandler, TimeDateSelectionHandler,
-        PaletteSelectionHandler {
+public abstract class BaseWmsClient
+        implements EntryPoint, ErrorHandler, GodivaActionsHandler, LayerSelectionHandler,
+        ElevationSelectionHandler, TimeDateSelectionHandler, PaletteSelectionHandler {
 
     /*
      * State variables.
@@ -118,6 +120,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
     protected boolean layerDetailsLoaded;
     protected boolean dateTimeDetailsLoaded;
     protected boolean minMaxDetailsLoaded;
+    private FixedLayerDetails[] userLayers;
 
     private static Logger log = Logger.getLogger("BaseWmsClient");
 
@@ -144,6 +147,14 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
          */
         RequestBuilder getConfig = new RequestBuilder(RequestBuilder.GET, "getconfig");
         getConfig.setCallback(new RequestCallback() {
+            private static final String TITLE = "Title";
+            private static final String URL = "URL";
+            private static final String LAYERS = "Layers";
+            private static final String PROJECTION = "Projection";
+            private static final String FORMAT = "Format";
+            private static final String VERSION = "Version";
+            private static final String IS_OVERLAY = "IsOverlay";
+
             @Override
             public void onResponseReceived(Request request, Response response) {
                 try {
@@ -177,6 +188,75 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                             mapWidth = (int) mapWidthJson.isNumber().doubleValue();
                         }
                     }
+
+                    /*
+                     * Now find user base layers + overlays
+                     */
+                    Map<String, Map<String, String>> layerDefs = new HashMap<>();
+                    for (String key : parentObj.keySet()) {
+                        for (String field : new String[] { URL, TITLE, LAYERS, PROJECTION, FORMAT,
+                                VERSION, IS_OVERLAY }) {
+                            /*
+                             * Add all potential fields to map to decode later.
+                             * 
+                             * Keys are of the format:
+                             * 
+                             * mapidURL
+                             * mapidTitle
+                             * mapidLayers
+                             * othermapidURL
+                             * othermapidProjection
+                             * 
+                             * so we want to extract the "mapid", "othermapid" to use as keys in our new Map
+                             */
+                            if (key.endsWith(field)) {
+                                String layerName = key.replaceAll(field, "");
+                                if (!layerDefs.containsKey(layerName)) {
+                                    layerDefs.put(layerName, new HashMap<String, String>());
+                                }
+                                layerDefs.get(layerName).put(field,
+                                        parentObj.get(key).isString().stringValue());
+                            }
+                        }
+                    }
+                    /*
+                     * Now go through and create FixedLayerDetails objects where possible
+                     */
+                    List<FixedLayerDetails> userLayersList = new ArrayList<>();
+                    for (Entry<String, Map<String, String>> e : layerDefs.entrySet()) {
+                        Map<String, String> params = e.getValue();
+                        if (!params.containsKey(URL) || !params.containsKey(LAYERS)) {
+                            GWT.log(e.getKey()
+                                    + " doesn't have URL and Layer parameters.  Not adding");
+                            continue;
+                        }
+                        String title;
+                        if (params.containsKey(TITLE)) {
+                            title = params.get(TITLE);
+                        } else {
+                            title = e.getKey();
+                        }
+                        String projection = null;
+                        if (params.containsKey(PROJECTION)) {
+                            projection = params.get(PROJECTION);
+                        }
+                        String format = null;
+                        if (params.containsKey(FORMAT)) {
+                            format = params.get(FORMAT);
+                        }
+                        String version = null;
+                        if (params.containsKey(VERSION)) {
+                            version = params.get(VERSION);
+                        }
+                        boolean isBaseLayer = true;
+                        if (params.containsKey(IS_OVERLAY)) {
+                            isBaseLayer = !Boolean.parseBoolean(params.get(IS_OVERLAY));
+                        }
+                        userLayersList.add(new FixedLayerDetails(title, params.get(URL),
+                                params.get(LAYERS), projection, format, version, isBaseLayer));
+                    }
+                    userLayers = userLayersList.toArray(new FixedLayerDetails[0]);
+
                     /*
                      * Handle any user-specific configuration parameters
                      */
@@ -287,7 +367,7 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *         {@link MapArea}
      */
     protected MapArea getMapArea() {
-        return new MapArea(mapWidth, mapHeight, this, proxyUrl);
+        return new MapArea(mapWidth, mapHeight, this, proxyUrl, userLayers);
     }
 
     /**
@@ -299,7 +379,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
      *            a {@link Map} of parameters and their values
      * @return the URL of the request
      */
-    protected String getWmsRequestUrl(String wmsUrl, String request, Map<String, String> parameters) {
+    protected String getWmsRequestUrl(String wmsUrl, String request,
+            Map<String, String> parameters) {
         String[] params = new String[parameters.size() + 1];
         params[0] = "request=" + request;
         int i = 1;
@@ -546,12 +627,12 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
              * "targettime" (single value) from the time selector
              */
             if (widgetCollection.getTimeSelector().getSelectedDateTime() != null) {
-                parameters.put("TARGETTIME", widgetCollection.getTimeSelector()
-                        .getSelectedDateTime());
+                parameters.put("TARGETTIME",
+                        widgetCollection.getTimeSelector().getSelectedDateTime());
             }
             if (widgetCollection.getTimeSelector().getSelectedDateTimeRange() != null) {
-                parameters.put("time", widgetCollection.getTimeSelector()
-                        .getSelectedDateTimeRange());
+                parameters.put("time",
+                        widgetCollection.getTimeSelector().getSelectedDateTimeRange());
             }
         } else {
             /*
@@ -568,20 +649,20 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
              * "colorby/depth" (single value) from the elevation selector
              */
             if (widgetCollection.getElevationSelector().getSelectedElevation() != null) {
-                parameters.put("TARGETELEVATION", widgetCollection.getElevationSelector()
-                        .getSelectedElevation());
+                parameters.put("TARGETELEVATION",
+                        widgetCollection.getElevationSelector().getSelectedElevation());
             }
             if (widgetCollection.getElevationSelector().getSelectedElevationRange() != null) {
-                parameters.put("elevation", widgetCollection.getElevationSelector()
-                        .getSelectedElevationRange());
+                parameters.put("elevation",
+                        widgetCollection.getElevationSelector().getSelectedElevationRange());
             }
         } else {
             /*
              * Discrete elevation ranges just need a single elevation
              */
             if (widgetCollection.getElevationSelector().getSelectedElevation() != null) {
-                parameters.put("elevation", widgetCollection.getElevationSelector()
-                        .getSelectedElevation());
+                parameters.put("elevation",
+                        widgetCollection.getElevationSelector().getSelectedElevation());
             }
         }
         /*
@@ -826,8 +907,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                     widgetCollection.getElevationSelector().populateElevations(startEndZs);
                 }
             } else if (layerDetails.getAvailableZs() != null) {
-                widgetCollection.getElevationSelector().populateElevations(
-                        layerDetails.getAvailableZs());
+                widgetCollection.getElevationSelector()
+                        .populateElevations(layerDetails.getAvailableZs());
             } else {
                 /*
                  * We have either the start or end z being null
@@ -838,8 +919,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
             /*
              * Set all options which depend on this having a discrete z-axis
              */
-            widgetCollection.getElevationSelector().populateElevations(
-                    layerDetails.getAvailableZs());
+            widgetCollection.getElevationSelector()
+                    .populateElevations(layerDetails.getAvailableZs());
         }
     }
 
@@ -973,8 +1054,8 @@ public abstract class BaseWmsClient implements EntryPoint, ErrorHandler, GodivaA
                         throw new ConnectionException("Error contacting server");
                     }
                     availableTimesLoaded(layerId, getAvailableTimesteps(), nearestTime);
-                    datetimeSelected(layerId, getWidgetCollection(layerId).getTimeSelector()
-                            .getSelectedDateTime());
+                    datetimeSelected(layerId,
+                            getWidgetCollection(layerId).getTimeSelector().getSelectedDateTime());
                 } catch (Exception e) {
                     invalidJson(e, response.getText(), getTimeRequest.getUrl(), true);
                 } finally {

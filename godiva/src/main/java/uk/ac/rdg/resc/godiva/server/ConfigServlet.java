@@ -86,12 +86,31 @@ public class ConfigServlet extends HttpServlet {
                     /*
                      * Now write out a default config file, for easier
                      * configuration in future.
-                     * 
-                     * If users completely ignore it, it's fine, because these
-                     * are the defaults.
                      */
                     BufferedWriter writer = new BufferedWriter(new FileWriter(configFile));
-                    writer.write("mapHeight = 600\nmapWidth = 750\n#proxy = http://proxyUrlGoesHere/\n");
+
+                    writer.write("#mapHeight=512\n");
+                    writer.write("#mapWidth=1024\n");
+                    writer.write("#proxy=http://proxyUrlGoesHere/\n");
+                    writer.write("# Definition of user layers\n");
+                    writer.write("# First we define a layer with ID \"user\"\n");
+                    writer.write("# The URL of the WMS.  MANDATORY\n");
+                    writer.write("#userURL=htts://wmsurl.com/with/query/separator/wms?\n");
+                    writer.write(
+                            "# The Title for the layer switcher. Defaults to the ID (i.e. \"user\" in this case)\n");
+                    writer.write("#userTitle=My WMS Layer\n");
+                    writer.write("# The layer(s) to plot.  MANDATORY\n");
+                    writer.write("#userLayers=wmslayer1,wmslayer2\n");
+                    writer.write("# The projection to use.  Defaults to \"CRS:84\"\n");
+                    writer.write("#userProjection=EPSG:4326\n");
+                    writer.write("# The WMS version to use.  Defaults to \"1.1.1\"\n");
+                    writer.write("#userVersion=1.3.0\n");
+                    writer.write("# The image format to use.  Defaults to \"image/png\"\n");
+                    writer.write("#userFormat=image/png\n");
+                    writer.write(
+                            "# Whether to use as an overlay (as opposed to a base map).  Defaults to false\n");
+                    writer.write("#userIsOverlay=true\n");
+
                     writer.close();
                 }
             } catch (IOException e) {
