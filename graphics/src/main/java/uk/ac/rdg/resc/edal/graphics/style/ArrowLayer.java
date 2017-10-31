@@ -193,7 +193,8 @@ public class ArrowLayer extends GriddedImageLayer {
                  * Arrows should only be plotted for layers where the units are
                  * "degrees"
                  */
-                return metadata.getParameter().getUnits().equalsIgnoreCase("degrees");
+                return metadata.getParameter().getUnits().equalsIgnoreCase("degrees") ||
+                        metadata.getParameter().getUnits().equalsIgnoreCase("degree");
             }
         };
     }
