@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.joda.time.DateTime;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +55,8 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
 
 public class ColouredTrajectoryLayer extends ImageLayer {
     private static final Logger log = LoggerFactory.getLogger(ColouredTrajectoryLayer.class);
@@ -98,6 +101,8 @@ public class ColouredTrajectoryLayer extends ImageLayer {
         Graphics2D canvas = image.createGraphics();
         canvas.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
+        CoordinateReferenceSystem imageCRS = params.getBbox().getCoordinateReferenceSystem();
+
         for (DiscreteFeature<?, ?> f : features) {
             /*
              * No reason that this should be the case for a well-implemented
@@ -117,7 +122,24 @@ public class ColouredTrajectoryLayer extends ImageLayer {
             Array1D<GeoPosition> positions = feature.getDomain().getDomainObjects();
             Array1D<Number> values = feature.getValues(member);
 
+            /*
+             * Transform all positions in the trajectory domain if required
+             */
+            if (!GISUtils.crsMatch(imageCRS, feature.getDomain().getHorizontalCrs())) {
+                GeoPosition[] transformedPositions = new GeoPosition[(int) positions.size()];
+                for (int i = 0; i < positions.size(); i++) {
+                    GeoPosition geoPos = positions.get(i);
+                    HorizontalPosition hPos = geoPos.getHorizontalPosition();
+
+                    transformedPositions[i] = new GeoPosition(
+                            GISUtils.transformPosition(hPos, imageCRS),
+                            positions.get(i).getVerticalPosition(), positions.get(i).getTime());
+                }
+                positions = new ImmutableArray1D<>(transformedPositions);
+            }
+
             HorizontalPosition pos = positions.get(0).getHorizontalPosition();
+
             int lastPointX = xAxis.findIndexOfUnconstrained(pos.getX());
             int lastPointY = image.getHeight() - yAxis.findIndexOfUnconstrained(pos.getY()) - 1;
             int lastArrowX = lastPointX;
