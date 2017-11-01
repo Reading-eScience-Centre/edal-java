@@ -112,10 +112,11 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         public final String projection;
         public final String imageFormat;
         public final String version;
+        public final boolean isOn;
         public final boolean isBaseLayer;
 
         public FixedLayerDetails(String title, String wmsUrl, String layerNames, String projection,
-                String imageFormat, String version, boolean isBaseLayer) {
+                String imageFormat, String version, boolean isOn, boolean isBaseLayer) {
             if (title == null || wmsUrl == null || layerNames == null) {
                 throw new IllegalArgumentException(
                         "Must provide a non-null title, WMS URL, and layer name");
@@ -138,6 +139,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             } else {
                 this.version = "1.1.1";
             }
+            this.isOn = isOn;
             this.isBaseLayer = isBaseLayer;
         }
     }
@@ -1229,6 +1231,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleSP);
 
+        map.setBaseLayer(naturalEarth);
+        
         /*
          * Now add any additional user-defined layers
          */
@@ -1245,11 +1249,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 wmsParams.setTransparent(true);
                 wmsParams.setParameter("version", layer.version);
                 WMS userLayer = new WMS(layer.title, layer.wmsUrl, wmsParams, wmsOptions);
-                /*
-                 * Don't make visible until switched on.
-                 */
-                userLayer.setIsVisible(false);
+                if(!layer.isBaseLayer && layer.isOn) {
+                    userLayer.setIsVisible(true);
+                } else {
+                    userLayer.setIsVisible(false);
+                }
                 map.addLayer(userLayer);
+                if(layer.isBaseLayer && layer.isOn) {
+                    map.setBaseLayer(userLayer);
+                }
             } catch (Exception e) {
                 GWT.log("Problem adding custom map layer.  Ignoring this layer", e);
             }
@@ -1268,7 +1276,6 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             }
         });
 
-        map.setBaseLayer(naturalEarth);
         baseUrlForExport = rescMapServerUrl;
         layersForExport = "naturalEarth";
     }

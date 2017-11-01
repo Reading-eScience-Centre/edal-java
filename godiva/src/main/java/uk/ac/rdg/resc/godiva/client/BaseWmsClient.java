@@ -153,6 +153,7 @@ public abstract class BaseWmsClient
             private static final String PROJECTION = "Projection";
             private static final String FORMAT = "Format";
             private static final String VERSION = "Version";
+            private static final String ON_BY_DEFAULT = "OnByDefault";
             private static final String IS_OVERLAY = "IsOverlay";
 
             @Override
@@ -179,6 +180,8 @@ public abstract class BaseWmsClient
                         } else if (mapHeightJson.isNumber() != null) {
                             mapHeight = (int) mapHeightJson.isNumber().doubleValue();
                         }
+                    } else {
+                        mapHeight = 600;
                     }
                     JSONValue mapWidthJson = parentObj.get("mapWidth");
                     if (mapWidthJson != null) {
@@ -187,6 +190,8 @@ public abstract class BaseWmsClient
                         } else if (mapWidthJson.isNumber() != null) {
                             mapWidth = (int) mapWidthJson.isNumber().doubleValue();
                         }
+                    } else {
+                        mapWidth = 750;
                     }
 
                     /*
@@ -195,7 +200,7 @@ public abstract class BaseWmsClient
                     Map<String, Map<String, String>> layerDefs = new HashMap<>();
                     for (String key : parentObj.keySet()) {
                         for (String field : new String[] { URL, TITLE, LAYERS, PROJECTION, FORMAT,
-                                VERSION, IS_OVERLAY }) {
+                                VERSION, ON_BY_DEFAULT, IS_OVERLAY }) {
                             /*
                              * Add all potential fields to map to decode later.
                              * 
@@ -248,12 +253,16 @@ public abstract class BaseWmsClient
                         if (params.containsKey(VERSION)) {
                             version = params.get(VERSION);
                         }
+                        boolean isOn = false;
+                        if (params.containsKey(ON_BY_DEFAULT)) {
+                            isOn = Boolean.parseBoolean(params.get(ON_BY_DEFAULT));
+                        }
                         boolean isBaseLayer = true;
                         if (params.containsKey(IS_OVERLAY)) {
                             isBaseLayer = !Boolean.parseBoolean(params.get(IS_OVERLAY));
                         }
                         userLayersList.add(new FixedLayerDetails(title, params.get(URL),
-                                params.get(LAYERS), projection, format, version, isBaseLayer));
+                                params.get(LAYERS), projection, format, version, isOn, isBaseLayer));
                     }
                     userLayers = userLayersList.toArray(new FixedLayerDetails[0]);
 

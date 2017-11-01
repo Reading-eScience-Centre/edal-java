@@ -95,7 +95,7 @@ public class ConfigServlet extends HttpServlet {
                     writer.write("# Definition of user layers\n");
                     writer.write("# First we define a layer with ID \"user\"\n");
                     writer.write("# The URL of the WMS.  MANDATORY\n");
-                    writer.write("#userURL=htts://wmsurl.com/with/query/separator/wms?\n");
+                    writer.write("#userURL=http://wmsurl.com/with/query/separator/wms?\n");
                     writer.write(
                             "# The Title for the layer switcher. Defaults to the ID (i.e. \"user\" in this case)\n");
                     writer.write("#userTitle=My WMS Layer\n");
@@ -107,6 +107,9 @@ public class ConfigServlet extends HttpServlet {
                     writer.write("#userVersion=1.3.0\n");
                     writer.write("# The image format to use.  Defaults to \"image/png\"\n");
                     writer.write("#userFormat=image/png\n");
+                    writer.write(
+                            "# Whether a layer should be switched on at load.  Can be defined for multiple overlays, but only for one base layer\n");
+                    writer.write("#userOnByDefault=true\n");
                     writer.write(
                             "# Whether to use as an overlay (as opposed to a base map).  Defaults to false\n");
                     writer.write("#userIsOverlay=true\n");
