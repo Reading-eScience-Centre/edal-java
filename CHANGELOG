@@ -1,3 +1,11 @@
+1.2.11
+======
+Implemented trajectory feature plotting
+Improvements to FMRC aggregation
+Added support for user-defined base layers / overlays
+Improved PNG write speed for multiple requests
+Minor bugfixes
+
 1.2.10
 ======
 Fixed bug with KMZ animation export
