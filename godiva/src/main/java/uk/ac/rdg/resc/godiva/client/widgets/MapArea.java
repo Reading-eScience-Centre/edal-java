@@ -50,6 +50,7 @@ import org.gwtopenmaps.openlayers.client.event.LayerLoadCancelListener;
 import org.gwtopenmaps.openlayers.client.event.LayerLoadEndListener;
 import org.gwtopenmaps.openlayers.client.event.LayerLoadStartListener;
 import org.gwtopenmaps.openlayers.client.event.MapBaseLayerChangedListener;
+import org.gwtopenmaps.openlayers.client.event.MapLayerChangedListener;
 import org.gwtopenmaps.openlayers.client.feature.VectorFeature;
 import org.gwtopenmaps.openlayers.client.geometry.LineString;
 import org.gwtopenmaps.openlayers.client.geometry.Point;
@@ -91,6 +92,7 @@ import uk.ac.rdg.resc.godiva.client.widgets.DialogBoxWithCloseButton.CentrePosIF
  */
 public class MapArea extends MapWidget implements OpacitySelectionHandler, CentrePosIF {
 
+    private static final String NCWMS_LAYER_NAME = "ncWMS Layer";
     /*
      * We work in CRS:84 rather than EPSG:4326 so that lon-lat order is always
      * correct (regardless of WMS version)
@@ -181,6 +183,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     protected Map map;
     protected java.util.Map<String, WmsDetails> wmsLayers;
+    protected java.util.Map<String, FixedLayerDetails> overLayers;
     protected Image animLayer;
     protected String currentProjection;
 
@@ -199,6 +202,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
 
     protected String baseUrlForExport;
     protected String layersForExport;
+    protected String overlaysForExport = null;
 
     protected WMSGetFeatureInfo getFeatureInfo;
     protected EditingToolbar editingToolbar;
@@ -225,8 +229,9 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             this.proxyUrl = proxyUrl;
         }
 
-        wmsLayers = new LinkedHashMap<String, WmsDetails>();
-        converters = new HashMap<String, UnitConverter>();
+        wmsLayers = new LinkedHashMap<>();
+        overLayers = new HashMap<>();
+        converters = new HashMap<>();
 
         /*
          * Define some listeners to handle layer start/end loading events
@@ -501,7 +506,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
             map.removeLayer(wmsLayers.get(internalLayerId).wms);
         }
 
-        wmsLayer = new WMS("WMS Layer", wmsUrl, params, options);
+        wmsLayer = new WMS(NCWMS_LAYER_NAME, wmsUrl, params, options);
         wmsLayer.addLayerLoadStartListener(loadStartListener);
         wmsLayer.addLayerLoadCancelListener(loadCancelListener);
         wmsLayer.addLayerLoadEndListener(loadEndListener);
@@ -1019,6 +1024,10 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         return layersForExport;
     }
 
+    public String getOverlaysForExport() {
+        return overlaysForExport;
+    }
+
     public String getBackgroundMapName() {
         return map.getBaseLayer().getName();
     }
@@ -1085,7 +1094,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setLayers("BlueMarbleNG-TB");
         wmsParams.setFormat("image/png");
         wmsParams.setParameter("version", "1.3.0");
-        
+
         String nasaMapServerUrl = "http://neowms.sci.gsfc.nasa.gov/wms/wms?";
         nasaBlueMarble = new WMS("NASA Blue Marble WMS", nasaMapServerUrl, wmsParams, wmsOptions);
         nasaBlueMarble.addLayerLoadStartListener(loadStartListener);
@@ -1243,18 +1252,70 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         map.addLayer(naturalEarthSP);
         map.addLayer(blueMarbleSP);
 
-        map.setBaseLayer(naturalEarth);
-
         /*
          * Now global setup stuff. Store the current projection, add the layer
          * change listener and set the default layer.
          */
         currentProjection = map.getProjection();
 
+        /*
+         * Technically we should be able to leave these vars, add the base layer
+         * change listener, and *then* do map.setBaseLayer() to trigger
+         * baseLayerChanged which will set the vars.
+         * 
+         * But it doesn't work, probably due to something weird. Meh, this works
+         * too.
+         */
+        baseUrlForExport = rescMapServerUrl;
+        layersForExport = "naturalearth";
+        map.setBaseLayer(naturalEarth);
+
         map.addMapBaseLayerChangedListener(new MapBaseLayerChangedListener() {
             @Override
             public void onBaseLayerChanged(MapBaseLayerChangedEvent eventObject) {
                 baseLayerChanged(eventObject.getLayer());
+            }
+        });
+
+        map.addMapLayerChangedListener(new MapLayerChangedListener() {
+            /*
+             * This is to change the screenshot servlet link when an overlay is
+             * switched on or off
+             */
+            @Override
+            public void onLayerChanged(MapLayerChangedEvent eventObject) {
+                /*
+                 * First check that we're dealing with an overlay, otherwise do
+                 * nothing
+                 */
+                if (overLayers.containsKey(eventObject.getLayer().getId())) {
+                    /*
+                     * Now construct the overlaysForExport String from all
+                     * visible overlays
+                     */
+                    Layer[] layers = map.getLayers();
+                    StringBuilder sb = new StringBuilder();
+                    for (Layer layer : layers) {
+                        if (!layer.isBaseLayer() && layer.isVisible()) {
+                            FixedLayerDetails wmsDetails = overLayers.get(layer.getId());
+                            if (wmsDetails != null) {
+                                sb.append(wmsDetails.wmsUrl + "LAYERS=" + wmsDetails.layerNames
+                                        + ",");
+                            }
+                        }
+                    }
+                    sb.deleteCharAt(sb.length() - 1);
+                    /*
+                     * If after all this, the string has changed (which it
+                     * should have done?), reassign it and trigger the link
+                     * update.
+                     */
+                    String newOverlaysExportStr = sb.toString();
+                    if (!newOverlaysExportStr.equals(overlaysForExport)) {
+                        overlaysForExport = newOverlaysExportStr;
+                        widgetDisabler.updateLinksEtc();
+                    }
+                }
             }
         });
 
@@ -1279,25 +1340,24 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                 wmsParams.setTransparent(true);
                 wmsParams.setParameter("version", layer.version);
                 WMS userLayer = new WMS(layer.title, layer.wmsUrl, wmsParams, wmsOptions);
+                overLayers.put(userLayer.getId(), layer);
+                userLayer.setIsVisible(false);
+                map.addLayer(userLayer);
                 if (!layer.isBaseLayer && layer.isOn) {
                     userLayer.setIsVisible(true);
                 } else {
-                    userLayer.setIsVisible(false);
                 }
-                map.addLayer(userLayer);
                 if (layer.isBaseLayer && layer.isOn) {
                     map.setBaseLayer(userLayer);
                 }
             } catch (Exception e) {
-                GWT.log("Problem adding custom map layer.  Ignoring this layer: "+layer.title, e);
+                GWT.log("Problem adding custom map layer.  Ignoring this layer: " + layer.title, e);
             }
         }
-
-        baseUrlForExport = rescMapServerUrl;
-        layersForExport = "naturalEarth";
     }
 
     private void baseLayerChanged(Layer layer) {
+        GWT.log("Base layer changed");
         String url = layer.getJSObject().getPropertyAsString("url");
         String layers = layer.getJSObject().getPropertyAsArray("params")[0]
                 .getPropertyAsString("LAYERS");

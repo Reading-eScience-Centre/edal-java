@@ -156,8 +156,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         String permalinkString = Window.Location.getParameter("permalinking");
         if (permalinkString != null && Boolean.parseBoolean(permalinkString)) {
             permalinking = true;
-            permalinkParamsMap = CaseInsensitiveParameterMap.getMapFromList(Window.Location
-                    .getParameterMap());
+            permalinkParamsMap = CaseInsensitiveParameterMap
+                    .getMapFromList(Window.Location.getParameterMap());
         }
 
         /*
@@ -389,11 +389,9 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
                 String[] bboxElems = bbox.split(",");
                 if (bboxElems.length == 4) {
                     try {
-                        mapArea.getMap().zoomToExtent(
-                                new Bounds(Double.parseDouble(bboxElems[0]), Double
-                                        .parseDouble(bboxElems[1]), Double
-                                        .parseDouble(bboxElems[2]), Double
-                                        .parseDouble(bboxElems[3])));
+                        mapArea.getMap().zoomToExtent(new Bounds(Double.parseDouble(bboxElems[0]),
+                                Double.parseDouble(bboxElems[1]), Double.parseDouble(bboxElems[2]),
+                                Double.parseDouble(bboxElems[3])));
                     } catch (NumberFormatException nfe) {
                         /*
                          * Can't parse one of the bounds. Oh well, not a lot we
@@ -620,20 +618,20 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
          */
         if (!widgetCollection.getPaletteSelector().isLocked()) {
             if (layerDetails.getSelectedPalette() != null) {
-                widgetCollection.getPaletteSelector().selectPalette(
-                        layerDetails.getSelectedPalette());
+                widgetCollection.getPaletteSelector()
+                        .selectPalette(layerDetails.getSelectedPalette());
             }
             if (layerDetails.getAboveMaxColour() != null) {
-                widgetCollection.getPaletteSelector().setExtraAboveMaxColour(
-                        layerDetails.getAboveMaxColour());
+                widgetCollection.getPaletteSelector()
+                        .setExtraAboveMaxColour(layerDetails.getAboveMaxColour());
             }
             if (layerDetails.getBelowMinColour() != null) {
-                widgetCollection.getPaletteSelector().setExtraBelowMinColour(
-                        layerDetails.getBelowMinColour());
+                widgetCollection.getPaletteSelector()
+                        .setExtraBelowMinColour(layerDetails.getBelowMinColour());
             }
             if (layerDetails.getNoDataColour() != null) {
-                widgetCollection.getPaletteSelector().setNoDataColour(
-                        layerDetails.getNoDataColour());
+                widgetCollection.getPaletteSelector()
+                        .setNoDataColour(layerDetails.getNoDataColour());
             }
         }
 
@@ -650,8 +648,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
             String numColorBands = permalinkParamsMap.get("numColorBands");
             if (numColorBands != null) {
-                widgetCollection.getPaletteSelector().setNumColorBands(
-                        Integer.parseInt(numColorBands));
+                widgetCollection.getPaletteSelector()
+                        .setNumColorBands(Integer.parseInt(numColorBands));
             }
 
             String aboveMaxString = permalinkParamsMap.get("aboveMaxColor");
@@ -684,8 +682,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
 
             String noDataString = permalinkParamsMap.get("noDataColor");
             if (belowMinString != null) {
-                widgetCollection.getPaletteSelector().setNoDataColour(
-                        URL.decodePathSegment(noDataString));
+                widgetCollection.getPaletteSelector()
+                        .setNoDataColour(URL.decodePathSegment(noDataString));
             }
 
             String currentElevation = permalinkParamsMap.get("elevation");
@@ -764,7 +762,15 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         email.setEnabled(true);
         screenshot.setEnabled(true);
 
-        kmzLink.setHref(mapArea.getKMZUrl());
+        try {
+            kmzLink.setHref(mapArea.getKMZUrl());
+        } catch (Exception e) {
+            /*
+             * This got triggered by a bug (fixed), but it caused wide-ranging
+             * issues, so leaving in the safety-catch.
+             */
+            GWT.log("Problem setting KMZ URL", e);
+        }
 
         String baseurl = Window.Location.getProtocol() + "//" + Window.Location.getHost()
                 + Window.Location.getPath() + "?permalinking=true&bgmap="
@@ -850,8 +856,8 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             logScale = true;
         }
 
-        anim.updateDetails(currentLayer, currentElevation, currentPalette, currentStyle,
-                scaleRange, aboveMax, belowMin, noData, nColorBands, logScale);
+        anim.updateDetails(currentLayer, currentElevation, currentPalette, currentStyle, scaleRange,
+                aboveMax, belowMin, noData, nColorBands, logScale);
 
         /* Don't need to encode the query string, because we never decode it */
         permalink.setHref(URL.encode(baseurl + urlParams));
@@ -881,6 +887,10 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
             urlParams += "&units=" + unitsInfo.getUnits();
         urlParams += "&baseUrl=" + mapArea.getBaseLayerUrl();
         urlParams += "&baseLayers=" + mapArea.getBaseLayerLayers();
+        String overlaysForExport = mapArea.getOverlaysForExport();
+        if (overlaysForExport != null) {
+            urlParams += "&overlays=" + overlaysForExport;
+        }
 
         String godivaPath = Window.Location.getPath();
         screenshot.setHref(Window.Location.getProtocol() + "//" + Window.Location.getHost() + "/"
