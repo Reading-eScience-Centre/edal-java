@@ -64,12 +64,8 @@
     </dependencies>
     <repositories>
         <repository>
-            <id>unidata-snapshots</id>
-            <url>https://artifacts.unidata.ucar.edu/content/repositories/unidata-snapshots/</url>
-        </repository>
-        <repository>
-            <id>unidata-releases</id>
-            <url>https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/</url>
+            <id>unidata-all</id>
+            <url>https://artifacts.unidata.ucar.edu/repository/unidata-all</url>
         </repository>
     </repositories>
 </project>
