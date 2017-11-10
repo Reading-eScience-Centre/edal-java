@@ -128,7 +128,8 @@ public class ScreenshotServlet extends HttpServlet {
 
         RequestParams params = new RequestParams(request.getParameterMap());
 
-        if (params.getString("image") != null && params.getString("image").equalsIgnoreCase("true")) {
+        if (params.getString("image") != null
+                && params.getString("image").equalsIgnoreCase("true")) {
             BufferedImage image;
             try {
                 image = drawScreenshot(params, servletUrl);
@@ -176,18 +177,17 @@ public class ScreenshotServlet extends HttpServlet {
 
         String crs = params.getString("crs");
 
-        /*
-         * Set the background map URL
-         * 
-         * TODO Replace these with a more reliable method (i.e. keep
-         * geo-referenced images locally for this purpose...)
-         */
-        if (crs.equalsIgnoreCase("EPSG:5041")) {
-            baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-np";
-        } else if (crs.equalsIgnoreCase("EPSG:5042")) {
-            baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-sp";
-        } else {
-            baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble";
+        if (baseLayerUrl == null) {
+            /*
+             * Set the background map URL if it was blank
+             */
+            if (crs.equalsIgnoreCase("EPSG:5041")) {
+                baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-np";
+            } else if (crs.equalsIgnoreCase("EPSG:5042")) {
+                baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble-sp";
+            } else {
+                baseLayerUrl = "http://godiva.rdg.ac.uk/geoserver/ReSC/wms?LAYERS=bluemarble";
+            }
         }
 
         int mapHeight = params.getPositiveInt("mapHeight", 384);
@@ -244,7 +244,8 @@ public class ScreenshotServlet extends HttpServlet {
          * Create the final image, fill it white, and set some rendering
          * defaults
          */
-        BufferedImage image = new BufferedImage(totalWidth, totalHeight, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(totalWidth, totalHeight,
+                BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();
         g.setPaint(Color.white);
         g.fillRect(0, 0, image.getWidth(), image.getHeight());
@@ -306,11 +307,10 @@ public class ScreenshotServlet extends HttpServlet {
          * 
          * Now draw the background image
          */
-
         if ((!crs.equalsIgnoreCase("EPSG:4326") && !crs.equalsIgnoreCase("CRS:84"))
                 || (minLon >= -180 && maxLon <= 180)) {
-            BufferedImage im = getImage(params, minLon, minLat, maxLon, maxLat, mapWidth,
-                    mapHeight, baseLayerUrl, time);
+            BufferedImage im = getImage(params, minLon, minLat, maxLon, maxLat, mapWidth, mapHeight,
+                    baseLayerUrl, time);
             g.drawImage(im, 0, textSpace, null);
         } else if (minLon < -180 && maxLon <= 180) {
             int lefWidth = (int) (mapWidth * (-180 - minLon) / (lonRange));
@@ -322,8 +322,8 @@ public class ScreenshotServlet extends HttpServlet {
             g.drawImage(im, lefWidth, textSpace, null);
         } else if (minLon >= -180 && maxLon > 180) {
             int rightWidth = (int) (mapWidth * (maxLon - 180f) / (lonRange));
-            BufferedImage im = getImage(params, minLon, minLat, 180f, maxLat,
-                    mapWidth - rightWidth, mapHeight, baseLayerUrl, time);
+            BufferedImage im = getImage(params, minLon, minLat, 180f, maxLat, mapWidth - rightWidth,
+                    mapHeight, baseLayerUrl, time);
             g.drawImage(im, 0, textSpace, null);
             im = getImage(params, -180f, minLat, maxLon - 360, maxLat, rightWidth, mapHeight,
                     baseLayerUrl, time);
@@ -352,9 +352,24 @@ public class ScreenshotServlet extends HttpServlet {
             g.drawImage(wmsLayer, 0, textSpace, null);
         }
 
+        String overlaysStr = params.getString("overlays");
+        if (overlaysStr != null) {
+            /*
+             * Draw any overlay layers on top of the WMS one
+             */
+            String[] overlayers = overlaysStr.split(",");
+            for (String overlayer : overlayers) {
+                URL overlayWmsUrl = createWmsUrl(params, true, minLon, minLat, maxLon, maxLat,
+                        mapWidth, mapHeight, overlayer, time, false);
+                if (overlayWmsUrl != null) {
+                    wmsLayer = ImageIO.read(overlayWmsUrl);
+                    g.drawImage(wmsLayer, 0, textSpace, null);
+                }
+            }
+        }
+
         if (colorBar != null) {
-            g.drawImage(colorBar, mapWidth + 10,
-                    textSpace + (mapHeight - colorBar.getHeight()) / 2,
+            g.drawImage(colorBar, mapWidth + 10, textSpace + (mapHeight - colorBar.getHeight()) / 2,
                     mapWidth + 10 + colorBar.getWidth(),
                     textSpace + (mapHeight + colorBar.getHeight()) / 2, 0, 0, colorBar.getWidth(),
                     colorBar.getHeight(), null);
@@ -369,6 +384,7 @@ public class ScreenshotServlet extends HttpServlet {
         URL baseUrl = createWmsUrl(params, true, minLon, minLat, maxLon, maxLat, width, height,
                 bgUrl, time, false);
         try {
+            System.out.println("Getting " + baseUrl);
             image = ImageIO.read(baseUrl);
         } catch (Exception e) {
             e.printStackTrace();
@@ -442,8 +458,7 @@ public class ScreenshotServlet extends HttpServlet {
                  * Yuck. But it seems to be necessary, otherwise "+" gets
                  * interpreted wrongly
                  */
-                url.append("&TARGETTIME="
-                        + URLEncoder.encode(targetTime, "UTF-8"));
+                url.append("&TARGETTIME=" + URLEncoder.encode(targetTime, "UTF-8"));
         }
 
         url.append("&TRANSPARENT=true");
