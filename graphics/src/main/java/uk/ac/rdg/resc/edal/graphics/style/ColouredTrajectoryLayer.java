@@ -105,11 +105,10 @@ public class ColouredTrajectoryLayer extends ImageLayer {
 
         for (DiscreteFeature<?, ?> f : features) {
             /*
-             * No reason that this should be the case for a well-implemented
-             * FeatureCatalogue...
+             * This may well be the case for mixed feature layers (e.g. legends)
              */
             if (!(f instanceof TrajectoryFeature)) {
-                log.warn("Expecting trajectory features for the ColouredTrajectoryLayer.  Got "
+                log.debug("Expecting trajectory features for the ColouredTrajectoryLayer.  Got "
                         + f.getClass() + " instead");
                 continue;
             }

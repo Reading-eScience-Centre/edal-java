@@ -40,17 +40,22 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.joda.time.DateTime;
+
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
+import uk.ac.rdg.resc.edal.domain.TrajectoryDomain;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
 import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.feature.PointFeature;
+import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.graphics.style.Drawable.NameAndRange;
 import uk.ac.rdg.resc.edal.graphics.style.MapImage;
 import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.RegularGridImpl;
 import uk.ac.rdg.resc.edal.position.GeoPosition;
+import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
 import uk.ac.rdg.resc.edal.util.Array2D;
 import uk.ac.rdg.resc.edal.util.Extents;
@@ -231,10 +236,12 @@ public class LegendDataGenerator {
      *         method are those returned by
      *         {@link LegendDataGenerator#getPlottingDomainParams()}
      */
-    public FeatureCatalogue getFeatureCatalogue(final NameAndRange xField, final NameAndRange yField) {
+    public FeatureCatalogue getFeatureCatalogue(final NameAndRange xField,
+            final NameAndRange yField) {
         return new FeatureCatalogue() {
             @Override
-            public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params) {
+            public FeaturesAndMemberName getFeaturesForLayer(String id,
+                    PlottingDomainParams params) {
                 final Set<DiscreteFeature<?, ?>> features = new LinkedHashSet<>();
                 String xLabel = null;
                 String yLabel = null;
@@ -246,12 +253,15 @@ public class LegendDataGenerator {
                 }
                 if (id.equals(xLabel)) {
                     features.add(getMapFeature(xField, MatrixType.X));
+                    features.add(getTrajectoryFeature(xField, MatrixType.X));
                     features.addAll(getPointFeatures(xField, MatrixType.X));
                 } else if (id.equals(yLabel)) {
                     features.add(getMapFeature(yField, MatrixType.Y));
+                    features.add(getTrajectoryFeature(yField, MatrixType.Y));
                     features.addAll(getPointFeatures(yField, MatrixType.Y));
                 } else {
                     features.add(getMapFeature(new NameAndRange(id, null), MatrixType.NAN));
+                    features.add(getTrajectoryFeature(new NameAndRange(id, null), MatrixType.NAN));
                     features.addAll(getPointFeatures(new NameAndRange(id, null), MatrixType.NAN));
                 }
                 return new FeaturesAndMemberName(features, id);
@@ -311,30 +321,73 @@ public class LegendDataGenerator {
 
                 Map<String, Array1D<Number>> values = new HashMap<>();
                 if (type == MatrixType.NAN) {
-                    values.put(field.getFieldLabel(), new ImmutableArray1D<>(
-                            new Number[] { Float.NaN }));
+                    values.put(field.getFieldLabel(),
+                            new ImmutableArray1D<>(new Number[] { Float.NaN }));
                 } else if (type == MatrixType.X) {
-                    values.put(
-                            field.getFieldLabel(),
-                            new ImmutableArray1D<>(new Number[] { getLinearInterpolatedValue(
-                                    xIndex,
-                                    extendScaleRange(field.getScaleRange(), fractionExtraXLow,
-                                            fractionExtraXHigh), xAxis.size()) }));
+                    values.put(field.getFieldLabel(),
+                            new ImmutableArray1D<>(
+                                    new Number[] { getLinearInterpolatedValue(xIndex,
+                                            extendScaleRange(field.getScaleRange(),
+                                                    fractionExtraXLow, fractionExtraXHigh),
+                                            xAxis.size()) }));
                 } else if (type == MatrixType.Y) {
-                    values.put(
-                            field.getFieldLabel(),
-                            new ImmutableArray1D<>(new Number[] { getLinearInterpolatedValue(
-                                    yIndex,
-                                    extendScaleRange(field.getScaleRange(), fractionExtraYLow,
-                                            fractionExtraYHigh), yAxis.size()) }));
+                    values.put(field.getFieldLabel(),
+                            new ImmutableArray1D<>(
+                                    new Number[] { getLinearInterpolatedValue(yIndex,
+                                            extendScaleRange(field.getScaleRange(),
+                                                    fractionExtraYLow, fractionExtraYHigh),
+                                            yAxis.size()) }));
                 }
-                PointFeature feature = new PointFeature("", "", "", new GeoPosition(domain
-                        .getDomainObjects().get(yIndex, xIndex).getCentre(), null, null), null,
-                        values);
+                PointFeature feature = new PointFeature("", "", "",
+                        new GeoPosition(domain.getDomainObjects().get(yIndex, xIndex).getCentre(),
+                                null, null),
+                        null, values);
                 features.add(feature);
             }
         }
         return features;
+    }
+
+    protected TrajectoryFeature getTrajectoryFeature(NameAndRange field, MatrixType type) {
+        if (field != null) {
+            XYNan values = new XYNan(type, field.getScaleRange());
+
+            Map<String, Array1D<Number>> trajValsMap = new HashMap<>();
+
+            DateTime time = new DateTime(0L);
+            List<GeoPosition> positions = new ArrayList<>();
+            // Number of back and forth oscillations
+            int f = 8;
+            // Number of points in the trajectory
+            int N = 500;
+            Number[] vals = new Number[N];
+            for (int n = 0; n < N; n++) {
+                double p = (double) n / N;
+                double r = Math.sin(f * n * 2 * Math.PI / N);
+                double frac;
+                if(p <= 0.5)
+                    frac = p;
+                else
+                    frac = (1-p);
+                int i = (int) (xAxis.size() * p + r * frac * xAxis.size() * 0.98);
+                int j = (int) (yAxis.size() * p - r * frac * yAxis.size() * 0.98);
+                
+                positions.add(new GeoPosition(
+                        new HorizontalPosition(xAxis.getCoordinateValue(i),
+                                yAxis.getCoordinateValue(j), domain.getCoordinateReferenceSystem()),
+                        null, time));
+                time = time.plus(1L);
+                vals[n] = (values.get(j, i));
+            }
+            trajValsMap.put(field.getFieldLabel(), new ImmutableArray1D<Number>(vals));
+            TrajectoryFeature feature = new TrajectoryFeature("", "", "",
+                    new TrajectoryDomain(positions), null, trajValsMap);
+            return feature;
+        }
+        /*
+         * TODO probably a bad idea...
+         */
+        return null;
     }
 
     protected enum MatrixType {
@@ -432,7 +485,7 @@ public class LegendDataGenerator {
      */
     protected static Number getLinearInterpolatedValue(int value, Extent<Float> scaleRange,
             int axisSize) {
-        return scaleRange.getLow() + value * (scaleRange.getHigh() - scaleRange.getLow())
-                / axisSize;
+        return scaleRange.getLow()
+                + value * (scaleRange.getHigh() - scaleRange.getLow()) / axisSize;
     }
 }
