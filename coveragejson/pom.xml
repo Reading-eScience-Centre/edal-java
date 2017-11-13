@@ -7,7 +7,7 @@
         <artifactId>edal</artifactId>
         <groupId>uk.ac.rdg.resc</groupId>
         <relativePath>..</relativePath>
-        <version>1.2.12-SNAPSHOT</version>
+        <version>1.2.12</version>
     </parent>
     <artifactId>edal-coveragejson</artifactId>
     <packaging>jar</packaging>
