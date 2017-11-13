@@ -1,3 +1,9 @@
+1.2.12
+======
+Updated Unidata repository
+Added custom basemaps/overlays to screenshot
+Added support for trajectory features in GetLegendGraphic
+
 1.2.11
 ======
 Implemented trajectory feature plotting
