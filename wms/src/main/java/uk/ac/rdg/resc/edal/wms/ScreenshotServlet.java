@@ -384,7 +384,6 @@ public class ScreenshotServlet extends HttpServlet {
         URL baseUrl = createWmsUrl(params, true, minLon, minLat, maxLon, maxLat, width, height,
                 bgUrl, time, false);
         try {
-            System.out.println("Getting " + baseUrl);
             image = ImageIO.read(baseUrl);
         } catch (Exception e) {
             e.printStackTrace();

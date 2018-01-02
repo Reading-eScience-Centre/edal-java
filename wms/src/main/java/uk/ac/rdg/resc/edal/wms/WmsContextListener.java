@@ -48,8 +48,6 @@ public class WmsContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
