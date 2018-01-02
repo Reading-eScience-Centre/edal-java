@@ -108,7 +108,7 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Guy Griffiths
  * @author Jon Blower
  */
-public final class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializable {
+public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(CdmGridDatasetFactory.class);
     private static final String UNSTAGGERED_SUFFIX = ":face";
     private static final long serialVersionUID = 1L;
