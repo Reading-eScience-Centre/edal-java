@@ -6,7 +6,7 @@
         <artifactId>edal</artifactId>
         <groupId>uk.ac.rdg.resc</groupId>
         <relativePath>..</relativePath>
-        <version>1.2.13</version>
+        <version>1.2.14-SNAPSHOT</version>
     </parent>
     <artifactId>edal-graphics</artifactId>
     <packaging>jar</packaging>
