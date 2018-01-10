@@ -217,6 +217,10 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
     public CatalogueConfig getConfig() {
         return config;
     }
+    
+    public void shutdown() {
+        CatalogueConfig.shutdown();
+    }
 
     /**
      * Configures the cache used to store features
