@@ -288,10 +288,26 @@ public abstract class GriddedDataset extends
                     ReferenceableAxis<Double> xAxis = grid.getXAxis();
                     minX = xAxis.findIndexOf(hBox.getMinX());
                     maxX = xAxis.findIndexOf(hBox.getMaxX());
+                    if(maxX < minX) {
+                        /*
+                         * We may have a decreasing axis
+                         */
+                        int t = maxX;
+                        maxX = minX;
+                        minX = t;
+                    }
 
                     ReferenceableAxis<Double> yAxis = grid.getYAxis();
                     minY = yAxis.findIndexOf(hBox.getMinY());
                     maxY = yAxis.findIndexOf(hBox.getMaxY());
+                    if(maxY < minY) {
+                        /*
+                         * We may have a decreasing axis
+                         */
+                        int t = maxY;
+                        maxY = minY;
+                        minY = t;
+                    }
 
                     if (zExtent != null) {
                         minZ = zAxis.findIndexOf(zExtent.getLow());
@@ -308,7 +324,13 @@ public abstract class GriddedDataset extends
 
                     if (tExtent != null) {
                         minT = tAxis.findIndexOf(tExtent.getLow());
+                        if(minT == -1) {
+                            minT = 0; 
+                        }
                         maxT = tAxis.findIndexOf(tExtent.getHigh());
+                        if(maxT == -1) {
+                            maxT = tAxis.size() - 1;
+                        }
                     } else if (metadata.getTemporalDomain() != null) {
                         /*
                          * null extent means we want the entire range (which may
