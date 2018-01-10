@@ -207,7 +207,7 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
 
     @Override
     public String toString() {
-        return String.format("%f, %f - %f, %f", minx, miny, maxx, maxy);
+        return String.format("(%2.3f, %2.3f)-(%2.3f, %2.3f)", minx, miny, maxx, maxy);
     }
 
     /**
