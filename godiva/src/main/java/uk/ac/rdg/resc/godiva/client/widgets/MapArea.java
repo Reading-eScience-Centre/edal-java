@@ -41,6 +41,7 @@ import org.gwtopenmaps.openlayers.client.Projection;
 import org.gwtopenmaps.openlayers.client.control.EditingToolbar;
 import org.gwtopenmaps.openlayers.client.control.LayerSwitcher;
 import org.gwtopenmaps.openlayers.client.control.MousePosition;
+import org.gwtopenmaps.openlayers.client.control.PanZoom;
 import org.gwtopenmaps.openlayers.client.control.WMSGetFeatureInfo;
 import org.gwtopenmaps.openlayers.client.control.WMSGetFeatureInfoOptions;
 import org.gwtopenmaps.openlayers.client.event.EventHandler;
@@ -62,6 +63,7 @@ import org.gwtopenmaps.openlayers.client.layer.Vector;
 import org.gwtopenmaps.openlayers.client.layer.WMS;
 import org.gwtopenmaps.openlayers.client.layer.WMSOptions;
 import org.gwtopenmaps.openlayers.client.layer.WMSParams;
+import org.gwtopenmaps.openlayers.client.util.JObjectArray;
 import org.gwtopenmaps.openlayers.client.util.JSObject;
 
 import com.google.gwt.core.client.GWT;
@@ -967,6 +969,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         MapOptions mapOptions = new MapOptions();
         mapOptions.setProjection("CRS:84");
         mapOptions.setDisplayProjection(CRS84);
+        mapOptions.removeDefaultControls();
+        mapOptions.setControls(new JObjectArray(new JSObject[0]));
         JSObject vendorParams = JSObject.createJSObject();
         vendorParams.setProperty("theme", GWT.getModuleBaseURL() + "theme/default/style.css");
         mapOptions.setJSObject(vendorParams);
@@ -981,6 +985,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         currentProjection = map.getProjection();
         map.addControl(new LayerSwitcher());
         map.addControl(new MousePosition());
+        map.addControl(new PanZoom());
         addDrawingLayer();
         map.setMaxExtent(new Bounds(-180, -90, 180, 90));
         map.setCenter(new LonLat(0.0, 0.0), 2);

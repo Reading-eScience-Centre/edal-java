@@ -41,7 +41,7 @@ import com.google.gwt.resources.client.TextResource;
 public  interface JavascriptDependencies extends ClientBundle {
     JavascriptDependencies INSTANCE = GWT.create(JavascriptDependencies.class);
 
-    @Source("uk/ac/rdg/resc/godiva/public/js/OpenLayers-2.11.js")
+    @Source("uk/ac/rdg/resc/godiva/public/js/OpenLayers-2.13.js")
     public TextResource openLayers();
 
     @Source("uk/ac/rdg/resc/godiva/public/js/proj4js.js")

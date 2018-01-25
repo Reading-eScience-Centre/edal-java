@@ -143,6 +143,10 @@
 	visibility: hidden;
 }
 
+.olControlZoom {
+	visibility: hidden;
+}
+
 /* Used for palette, animation, getFeatureInfo popups */
 .gwt-DialogBox {
 	z-index: 2000;
