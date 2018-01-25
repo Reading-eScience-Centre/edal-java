@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.dataset;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
@@ -84,9 +85,9 @@ public interface DiscreteFeatureReader<F extends DiscreteFeature<?, ?>> {
      * 
      *            If this argument is <code>null</code> then all available
      *            variables should be included
-     * @return A {@link Collection} of {@link DiscreteFeature}s containing
+     * @return A {@link List} of {@link DiscreteFeature}s containing
      *         measurements for all of the supplied variables.
      */
-    public Collection<F> readFeatures(Collection<String> ids, Set<String> variableIds)
+    public List<F> readFeatures(Collection<String> ids, Set<String> variableIds)
             throws DataReadingException;
 }

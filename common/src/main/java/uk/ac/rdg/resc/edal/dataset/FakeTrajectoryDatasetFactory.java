@@ -126,7 +126,7 @@ public class FakeTrajectoryDatasetFactory extends DatasetFactory {
                 }
 
                 @Override
-                public Collection<TrajectoryFeature> readFeatures(Collection<String> ids,
+                public List<TrajectoryFeature> readFeatures(Collection<String> ids,
                         Set<String> variableIds) throws DataReadingException {
                     List<TrajectoryFeature> ret = new ArrayList<>();
                     for(String id : ids) {

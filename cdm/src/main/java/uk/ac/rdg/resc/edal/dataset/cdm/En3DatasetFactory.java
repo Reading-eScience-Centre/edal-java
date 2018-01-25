@@ -679,7 +679,7 @@ public final class En3DatasetFactory extends DatasetFactory {
         }
 
         @Override
-        public Collection<ProfileFeature> readFeatures(Collection<String> ids,
+        public List<ProfileFeature> readFeatures(Collection<String> ids,
                 Set<String> variableIds) throws DataReadingException {
             log.debug("IN readFeatures Reading multiple features");
             List<ProfileFeature> ret = new ArrayList<ProfileFeature>();
