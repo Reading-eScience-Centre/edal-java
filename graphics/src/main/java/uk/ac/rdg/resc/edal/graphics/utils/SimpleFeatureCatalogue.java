@@ -100,8 +100,8 @@ public class SimpleFeatureCatalogue<D extends Dataset> implements FeatureCatalog
             } else if (dataset instanceof PointDataset<?>) {
                 PointDataset<?> pointDataset = (PointDataset<?>) dataset;
                 extractedFeatures = pointDataset.extractMapFeatures(CollectionUtils.setOf(varId),
-                        params.getBbox(), params.getZExtent(), params.getTExtent(),
-                        params.getTargetZ(), params.getTargetT());
+                        params.getBbox(), params.getZExtent(), params.getTargetZ(), params.getTExtent(),
+                        params.getTargetT());
 
             }
             if (cache) {

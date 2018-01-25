@@ -56,9 +56,9 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * 
  * @author Guy Griffiths
  */
-public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
+public abstract class AbstractContinuousDomainDataset extends AbstractDataset implements ContinuousDomainDataset {
     private static final long serialVersionUID = 1L;
-    private FeatureIndexer featureIndexer;
+    protected FeatureIndexer featureIndexer;
 
     public AbstractContinuousDomainDataset(String id, Collection<? extends VariableMetadata> vars,
             FeatureIndexer featureIndexer) {
@@ -97,9 +97,10 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
      *             If there is a problem reading the underlying data
      * @throws VariableNotFoundException
      */
+    @Override
     public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
-            BoundingBox hExtent, Extent<Double> zExtent, Extent<DateTime> tExtent)
-            throws DataReadingException {
+            BoundingBox hExtent, Extent<Double> zExtent, Double targetZ, Extent<DateTime> tExtent,
+            DateTime targetT) throws DataReadingException {
         if (hExtent == null) {
             hExtent = getDatasetBoundingBox();
         }
@@ -119,8 +120,8 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
     @Override
     public List<? extends ProfileFeature> extractProfileFeatures(Set<String> varIds,
             BoundingBox bbox, Extent<Double> zExtent, Extent<DateTime> tExtent,
-            final HorizontalPosition targetPos, DateTime targetTime) throws DataReadingException,
-            UnsupportedOperationException, VariableNotFoundException {
+            final HorizontalPosition targetPos, DateTime targetTime)
+            throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
         for (String varId : varIds) {
             if (!supportsProfileFeatureExtraction(varId)) {
                 throw new UnsupportedOperationException(
@@ -167,8 +168,8 @@ public abstract class AbstractContinuousDomainDataset extends AbstractDataset {
     @Override
     public List<? extends PointSeriesFeature> extractTimeseriesFeatures(Set<String> varIds,
             BoundingBox bbox, Extent<Double> zExtent, Extent<DateTime> tExtent,
-            final HorizontalPosition targetPos, Double targetZ) throws DataReadingException,
-            UnsupportedOperationException, VariableNotFoundException {
+            final HorizontalPosition targetPos, Double targetZ)
+            throws DataReadingException, UnsupportedOperationException, VariableNotFoundException {
         for (String varId : varIds) {
             if (!supportsTimeseriesExtraction(varId)) {
                 throw new UnsupportedOperationException(

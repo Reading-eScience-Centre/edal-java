@@ -87,7 +87,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverter;
 import uk.ac.rdg.resc.edal.covjson.CoverageJsonConverterImpl;
-import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
+import uk.ac.rdg.resc.edal.dataset.ContinuousDomainDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
@@ -815,7 +815,7 @@ public class WmsServlet extends HttpServlet {
                         featureInfos.add(featureInfoPoint);
                     }
                 }
-            } else if (dataset instanceof AbstractContinuousDomainDataset) {
+            } else if (dataset instanceof ContinuousDomainDataset) {
                 /*
                  * Extract the map features. Because of the way
                  * GetFeatureInfoParameters works, features are searched for in

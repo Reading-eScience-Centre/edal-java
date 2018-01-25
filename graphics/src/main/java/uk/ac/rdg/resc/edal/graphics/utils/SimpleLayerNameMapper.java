@@ -26,10 +26,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.catalogue;
+package uk.ac.rdg.resc.edal.graphics.utils;
 
 import uk.ac.rdg.resc.edal.graphics.exceptions.EdalLayerNotFoundException;
-import uk.ac.rdg.resc.edal.graphics.utils.LayerNameMapper;
 
 /**
  * An implementation of a {@link LayerNameMapper} which encodes layer names as

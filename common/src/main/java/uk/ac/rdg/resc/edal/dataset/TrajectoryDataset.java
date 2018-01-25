@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.util.AbstractList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +36,8 @@ import java.util.Set;
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.domain.TemporalDomain;
+import uk.ac.rdg.resc.edal.domain.VerticalDomain;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
@@ -44,23 +47,85 @@ import uk.ac.rdg.resc.edal.feature.TrajectoryFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.Extents;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * A {@link Dataset} which contains only {@link TrajectoryFeature}s. 
  *
  * @author Guy Griffiths
  */
-public class TrajectoryDataset extends AbstractDataset {
+public class TrajectoryDataset extends AbstractContinuousDomainDataset {
     private static final long serialVersionUID = 1L;
 
-    private FeatureIndexer indexer;
     private DiscreteFeatureReader<TrajectoryFeature> featureReader;
 
-    public TrajectoryDataset(String id, Collection<VariableMetadata> vars,
+    private BoundingBox bbox;
+
+    private Extent<Double> vExtent;
+
+    private Extent<DateTime> tExtent;
+
+    public TrajectoryDataset(String id, List<VariableMetadata> vars,
             DiscreteFeatureReader<TrajectoryFeature> featureReader, FeatureIndexer indexer) {
-        super(id, vars);
+        super(id, vars, indexer);
         this.featureReader = featureReader;
-        this.indexer = indexer;
+        
+        bbox = GISUtils.getBoundingBoxOfBoxes(new AbstractList<BoundingBox>() {
+            @Override
+            public BoundingBox get(int index) {
+                return vars.get(index).getHorizontalDomain().getBoundingBox();
+            }
+
+            @Override
+            public int size() {
+                return vars.size();
+            }
+        });
+        
+        vExtent = Extents.findMinMax(new AbstractList<Double>() {
+            @Override
+            public Double get(int index) {
+                int varsIndex = index / 2;
+                VerticalDomain vDomain = vars.get(varsIndex).getVerticalDomain();
+                if(vDomain == null) {
+                    return null;
+                }
+                
+                if(index % 2 == 0) {
+                    return vDomain.getExtent().getLow();
+                } else {
+                    return vDomain.getExtent().getHigh();
+                }
+            }
+
+            @Override
+            public int size() {
+                return vars.size() * 2;
+            }
+        });
+        
+        tExtent = Extents.findMinMax(new AbstractList<DateTime>() {
+            @Override
+            public DateTime get(int index) {
+                int varsIndex = index / 2;
+                TemporalDomain tDomain = vars.get(varsIndex).getTemporalDomain();
+                if(tDomain == null) {
+                    return null;
+                }
+                
+                if(index % 2 == 0) {
+                    return tDomain.getExtent().getLow();
+                } else {
+                    return tDomain.getExtent().getHigh();
+                }
+            }
+            
+            @Override
+            public int size() {
+                return vars.size() * 2;
+            }
+        });
     }
 
     @Override
@@ -105,9 +170,10 @@ public class TrajectoryDataset extends AbstractDataset {
      *            within
      * @return A {@link Collection} of the desired {@link TrajectoryFeature}s
      */
-    public Collection<TrajectoryFeature> extractFeatures(Set<String> varIds, BoundingBox bbox,
-            Extent<Double> zExtent, Extent<DateTime> tExtent) {
-        Collection<String> featureIds = indexer.findFeatureIds(bbox, zExtent, tExtent, varIds);
+    @Override
+    public List<TrajectoryFeature> extractMapFeatures(Set<String> varIds, BoundingBox bbox,
+            Extent<Double> zExtent, Double targetZ, Extent<DateTime> tExtent, DateTime targetT) {
+        Collection<String> featureIds = featureIndexer.findFeatureIds(bbox, zExtent, tExtent, varIds);
         return featureReader.readFeatures(featureIds, varIds);
     }
 
@@ -135,5 +201,25 @@ public class TrajectoryDataset extends AbstractDataset {
     @Override
     public boolean supportsTimeseriesExtraction(String varId) {
         return false;
+    }
+
+    @Override
+    protected BoundingBox getDatasetBoundingBox() {
+        return bbox;
+    }
+
+    @Override
+    protected Extent<Double> getDatasetVerticalExtent() {
+        return vExtent;
+    }
+
+    @Override
+    protected Extent<DateTime> getDatasetTimeExtent() {
+        return tExtent;
+    }
+
+    @Override
+    public DiscreteFeatureReader<? extends DiscreteFeature<?, ?>> getFeatureReader() {
+        return featureReader;
     }
 }

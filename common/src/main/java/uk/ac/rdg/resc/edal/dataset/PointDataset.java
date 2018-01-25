@@ -70,8 +70,8 @@ import uk.ac.rdg.resc.edal.util.ImmutableArray1D;
  * 
  * @author Guy Griffiths
  */
-public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
-        AbstractContinuousDomainDataset {
+public abstract class PointDataset<F extends DiscreteFeature<?, ?>>
+        extends AbstractContinuousDomainDataset {
     private static final long serialVersionUID = 1L;
     private BoundingBox bbox;
     private Extent<Double> zExtent;
@@ -131,11 +131,12 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
         }
     }
 
+    @Override
     public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
-            BoundingBox hExtent, Extent<Double> zExtent, Extent<DateTime> tExtent, Double targetZ,
+            BoundingBox hExtent, Extent<Double> zExtent, Double targetZ, Extent<DateTime> tExtent,
             DateTime targetT) throws DataReadingException {
         List<? extends DiscreteFeature<?, ?>> extractedMapFeatures = super.extractMapFeatures(
-                varIds, hExtent, zExtent, tExtent);
+                varIds, hExtent, zExtent, targetZ, tExtent, targetT);
         List<PointFeature> pointFeatures = new ArrayList<>();
         for (DiscreteFeature<?, ?> feature : extractedMapFeatures) {
             /*
@@ -213,7 +214,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
 
     /**
      * Convenience method to convert a {@link ProfileFeature} to a
-     * {@link PointFeature}. Can be used by subclasses which only handle
+     * {@link PointFeature}. Can be used by classes which only handle
      * {@link ProfileFeature}s to implement
      * {@link PointDataset#convertFeature(DiscreteFeature, BoundingBox, Extent, Extent, Double, DateTime)}
      * 
@@ -225,7 +226,7 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
      *         if the supplied elevation specifies a location where no
      *         {@link PointFeature} is present.
      */
-    protected PointFeature convertProfileFeature(ProfileFeature feature, Double targetZ) {
+    public static PointFeature convertProfileFeature(ProfileFeature feature, Double targetZ) {
         HorizontalPosition position = feature.getHorizontalPosition();
 
         /*
@@ -236,8 +237,8 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
             /*
              * If no target z is provided, pick the value closest to the surface
              */
-            zIndex = feature.getDomain().findIndexOf(
-                    GISUtils.getClosestElevationToSurface(feature.getDomain()));
+            zIndex = feature.getDomain()
+                    .findIndexOf(GISUtils.getClosestElevationToSurface(feature.getDomain()));
         } else {
             zIndex = GISUtils.getIndexOfClosestElevationTo(targetZ, feature.getDomain());
         }
@@ -247,25 +248,27 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
 
         Double zValue = feature.getDomain().getCoordinateValue(zIndex);
 
-        GeoPosition pos4d = new GeoPosition(position, new VerticalPosition(zValue, feature
-                .getDomain().getVerticalCrs()), feature.getTime());
+        GeoPosition pos4d = new GeoPosition(position,
+                new VerticalPosition(zValue, feature.getDomain().getVerticalCrs()),
+                feature.getTime());
 
         Map<String, Array1D<Number>> values = new HashMap<>();
         for (String paramId : feature.getVariableIds()) {
-            values.put(paramId, new ImmutableArray1D<>(new Number[] { feature.getValues(paramId)
-                    .get(zIndex) }));
+            values.put(paramId, new ImmutableArray1D<>(
+                    new Number[] { feature.getValues(paramId).get(zIndex) }));
         }
 
-        PointFeature ret = new PointFeature(feature.getId() + ":" + zValue, "Measurement from "
-                + feature.getName(), "Value extracted at depth " + zValue + " from "
-                + feature.getDescription(), pos4d, feature.getParameterMap(), values);
+        PointFeature ret = new PointFeature(feature.getId() + ":" + zValue,
+                "Measurement from " + feature.getName(),
+                "Value extracted at depth " + zValue + " from " + feature.getDescription(), pos4d,
+                feature.getParameterMap(), values);
         ret.getFeatureProperties().putAll(feature.getFeatureProperties());
         return ret;
     }
 
     /**
      * Convenience method to convert a {@link PointSeriesFeature} to a
-     * {@link PointFeature}. Can be used by subclasses which only handle
+     * {@link PointFeature}. Can be used by classes which only handle
      * {@link PointSeriesFeature}s to implement
      * {@link PointDataset#convertFeature(DiscreteFeature, BoundingBox, Extent, Extent, Double, DateTime)}
      * 
@@ -278,7 +281,8 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
      *         if the supplied {@link DateTime} specifies a time at which no
      *         {@link PointFeature} is present.
      */
-    protected PointFeature convertPointSeriesFeature(PointSeriesFeature feature, DateTime targetT) {
+    public static PointFeature convertPointSeriesFeature(PointSeriesFeature feature,
+            DateTime targetT) {
         HorizontalPosition position = feature.getHorizontalPosition();
 
         /*
@@ -289,8 +293,8 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
             /*
              * If no target time is provided, pick the time closest to now
              */
-            tIndex = feature.getDomain().findIndexOf(
-                    GISUtils.getClosestToCurrentTime(feature.getDomain()));
+            tIndex = feature.getDomain()
+                    .findIndexOf(GISUtils.getClosestToCurrentTime(feature.getDomain()));
         } else {
             tIndex = GISUtils.getIndexOfClosestTimeTo(targetT, feature.getDomain());
         }
@@ -304,13 +308,14 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>> extends
 
         Map<String, Array1D<Number>> values = new HashMap<>();
         for (String paramId : feature.getVariableIds()) {
-            values.put(paramId, new ImmutableArray1D<>(new Number[] { feature.getValues(paramId)
-                    .get(tIndex) }));
+            values.put(paramId, new ImmutableArray1D<>(
+                    new Number[] { feature.getValues(paramId).get(tIndex) }));
         }
 
-        PointFeature ret = new PointFeature(feature.getId() + ":" + time, "Measurement from "
-                + feature.getName(), "Value extracted at time " + time + " from "
-                + feature.getDescription(), pos4d, feature.getParameterMap(), values);
+        PointFeature ret = new PointFeature(feature.getId() + ":" + time,
+                "Measurement from " + feature.getName(),
+                "Value extracted at time " + time + " from " + feature.getDescription(), pos4d,
+                feature.getParameterMap(), values);
         ret.getFeatureProperties().putAll(feature.getFeatureProperties());
         return ret;
     }

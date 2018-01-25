@@ -51,11 +51,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.dataset.AbstractContinuousDomainDataset;
+import uk.ac.rdg.resc.edal.dataset.ContinuousDomainDataset;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DiscreteFeatureReader;
 import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
-import uk.ac.rdg.resc.edal.dataset.PointDataset;
-import uk.ac.rdg.resc.edal.dataset.TrajectoryDataset;
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.domain.MapDomain;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
@@ -127,15 +126,11 @@ public class GraphicsUtils implements Serializable {
                             new RegularGridImpl(params.getBbox(), params.getWidth(),
                                     params.getHeight()),
                             params.getTargetZ(), params.getTargetT())));
-        } else if (dataset instanceof PointDataset<?>) {
-            PointDataset<?> pointDataset = (PointDataset<?>) dataset;
+        } else if (dataset instanceof ContinuousDomainDataset) {
+            ContinuousDomainDataset pointDataset = (ContinuousDomainDataset) dataset;
             mapFeatures.addAll(pointDataset.extractMapFeatures(CollectionUtils.setOf(varId),
-                    params.getBbox(), params.getZExtent(), params.getTExtent(), params.getTargetZ(),
+                    params.getBbox(), params.getZExtent(), params.getTargetZ(), params.getTExtent(),
                     params.getTargetT()));
-        } else if (dataset instanceof TrajectoryDataset) {
-            TrajectoryDataset trajectoryDataset = (TrajectoryDataset) dataset;
-            mapFeatures.addAll(trajectoryDataset.extractFeatures(CollectionUtils.setOf(varId),
-                    params.getBbox(), params.getZExtent(), params.getTExtent()));
         } else {
             throw new EdalException("Can't extract map features for this dataset");
         }

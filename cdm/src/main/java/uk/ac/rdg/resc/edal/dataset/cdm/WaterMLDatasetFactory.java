@@ -265,9 +265,9 @@ public class WaterMLDatasetFactory extends DatasetFactory {
         }
 
         @Override
-        public Collection<PointSeriesFeature> readFeatures(Collection<String> ids,
+        public List<PointSeriesFeature> readFeatures(Collection<String> ids,
                 Set<String> variableIds) throws DataReadingException {
-            Collection<PointSeriesFeature> ret = new ArrayList<>();
+            List<PointSeriesFeature> ret = new ArrayList<>();
             for (String id : ids) {
                 ret.add(readFeature(id, variableIds));
             }

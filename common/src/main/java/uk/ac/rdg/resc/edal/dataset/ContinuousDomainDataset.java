@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 The University of Reading
+ * Copyright (c) 2018 The University of Reading
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -26,36 +26,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-package uk.ac.rdg.resc.edal.catalogue.jaxb;
+package uk.ac.rdg.resc.edal.dataset;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
-import javax.xml.bind.JAXBException;
+import org.joda.time.DateTime;
 
-import uk.ac.rdg.resc.edal.catalogue.DataCatalogue;
-import uk.ac.rdg.resc.edal.dataset.Dataset;
-import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
-import uk.ac.rdg.resc.edal.dataset.cdm.CdmGridDatasetFactory;
-import uk.ac.rdg.resc.edal.graphics.utils.SimpleLayerNameMapper;
+import uk.ac.rdg.resc.edal.domain.Extent;
+import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.feature.DiscreteFeature;
+import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 
-public class XmlDataCatalogueTest {
-    public static void main(String[] args) throws IOException, JAXBException, InterruptedException {
-        DatasetFactory.setDefaultDatasetFactoryClass(CdmGridDatasetFactory.class);
-        String file = XmlDataCatalogueTest.class.getResource("/config.xml").getFile();
-        System.out.println("Config file at: "+file);
-        CatalogueConfig xmlConfig = CatalogueConfig.readFromFile(new File(file));
-        DatasetConfig[] xmlDatasets = xmlConfig.getDatasets();
-        System.out.println(xmlDatasets.length + " datasets found");
-        for(DatasetConfig xd : xmlDatasets) {
-            System.out.println(xd.getId()+","+xd.getTitle());
-        }
-        
-        DataCatalogue catalogue = new DataCatalogue(xmlConfig, new SimpleLayerNameMapper());
-        Collection<Dataset> allDatasets = catalogue.getAllDatasets();
-        for(Dataset dataset : allDatasets) {
-            System.out.println(dataset.getId());
-        }
-    }
+public interface ContinuousDomainDataset {
+    public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+            BoundingBox hExtent, Extent<Double> zExtent, Double targetZ, Extent<DateTime> tExtent,
+            DateTime targetT) throws DataReadingException;
 }
