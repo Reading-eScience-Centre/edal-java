@@ -136,15 +136,16 @@ public class GetMapStyleParams {
 
         if (xmlStyle == null) {
             /*
-             * Check if this a request with LAYER parameter required for GetLegendGraphic
+             * Check if this a request with LAYER parameter required for
+             * GetLegendGraphic
              */
             String layerStr = params.getString("layer");
             if (layerStr != null && layersStr == null) {
-                layers = new String[]{layerStr};
+                layers = new String[] { layerStr };
             }
             String styleStr = params.getString("style");
             if (styleStr != null && stylesStr == null) {
-                styles = new String[]{styleStr};
+                styles = new String[] { styleStr };
             }
 
             if (layers == null) {
@@ -180,10 +181,10 @@ public class GetMapStyleParams {
             backgroundColour = new Color(0, true);
         }
 
-        String bmcStr = params.getString(
-                "belowmincolor",
-                defaults.getBelowMinColour() != null ? GraphicsUtils.colourToString(defaults
-                        .getBelowMinColour()) : "extend");
+        String bmcStr = params.getString("belowmincolor",
+                defaults.getBelowMinColour() != null
+                        ? GraphicsUtils.colourToString(defaults.getBelowMinColour())
+                        : "extend");
         if (bmcStr == null) {
             belowMinColour = Color.black;
         } else if (bmcStr.equalsIgnoreCase("extend")) {
@@ -194,10 +195,10 @@ public class GetMapStyleParams {
             belowMinColour = GraphicsUtils.parseColour(bmcStr);
         }
 
-        String amcStr = params.getString(
-                "abovemaxcolor",
-                defaults.getAboveMaxColour() != null ? GraphicsUtils.colourToString(defaults
-                        .getAboveMaxColour()) : "extend");
+        String amcStr = params.getString("abovemaxcolor",
+                defaults.getAboveMaxColour() != null
+                        ? GraphicsUtils.colourToString(defaults.getAboveMaxColour())
+                        : "extend");
         if (amcStr == null) {
             aboveMaxColour = Color.black;
         } else if (amcStr.equalsIgnoreCase("extend")) {
@@ -208,7 +209,8 @@ public class GetMapStyleParams {
             aboveMaxColour = GraphicsUtils.parseColour(amcStr);
         }
 
-        opacity = params.getPositiveInt("opacity", (int) (100 * defaults.getOpacity()));
+        opacity = params.getPositiveInt("opacity",
+                defaults.getOpacity() != null ? (int) (100 * defaults.getOpacity()) : 100);
         if (opacity > 100) {
             opacity = 100;
         }
@@ -242,7 +244,9 @@ public class GetMapStyleParams {
         String[] rangeStrings = csr.split(";");
         for (String range : rangeStrings) {
             if (range.isEmpty() || range.equalsIgnoreCase("default")) {
-                /* The client wants this layer's default scale range to be used */
+                /*
+                 * The client wants this layer's default scale range to be used
+                 */
                 ranges.add(defaultScale);
             } else if (range.equalsIgnoreCase("auto")) {
                 /*
@@ -295,8 +299,8 @@ public class GetMapStyleParams {
         String layerName = layers[0];
         EnhancedVariableMetadata layerMetadata = WmsUtils.getLayerMetadata(layerName, catalogue);
         if (catalogue.isDisabled(layerName)) {
-            throw new EdalLayerNotFoundException("The layer " + layerName
-                    + " is not enabled on this server");
+            throw new EdalLayerNotFoundException(
+                    "The layer " + layerName + " is not enabled on this server");
         }
 
         String style = "default/default";
@@ -315,8 +319,8 @@ public class GetMapStyleParams {
             /*
              * We have no supported styles for this layer
              */
-            throw new StyleNotSupportedException("The layer " + layerName
-                    + " cannot be plotted - no styles support it.");
+            throw new StyleNotSupportedException(
+                    "The layer " + layerName + " cannot be plotted - no styles support it.");
         }
         if ("default".equals(plotStyleName)) {
             /*
@@ -356,8 +360,8 @@ public class GetMapStyleParams {
                 }
             }
             if (!supported) {
-                throw new StyleNotSupportedException("The layer " + layerName
-                        + " does not support the style " + plotStyleName);
+                throw new StyleNotSupportedException(
+                        "The layer " + layerName + " does not support the style " + plotStyleName);
             }
         }
 
@@ -456,8 +460,8 @@ public class GetMapStyleParams {
                      * The layer to auto-scale is a child layer with a given
                      * role.
                      */
-                    VariableMetadata variableMetadata = WmsUtils.getVariableMetadataFromLayerName(
-                            layerName, catalogue);
+                    VariableMetadata variableMetadata = WmsUtils
+                            .getVariableMetadataFromLayerName(layerName, catalogue);
                     VariableMetadata childWithRole = variableMetadata.getChildWithRole(scaledRole);
                     varId = childWithRole.getId();
                 }
@@ -500,11 +504,12 @@ public class GetMapStyleParams {
             numColourBands = ColourPalette.MAX_NUM_COLOURS;
         }
 
-        return styleCatalogue.getMapImageFromStyle(plotStyleName, new PlottingStyleParameters(
-                colourScaleRanges, paletteName, aboveMaxColour, belowMinColour, backgroundColour,
-                logarithmic, numColourBands, opacity / 100f), WmsUtils
-                .getVariableMetadataFromLayerName(layerName, catalogue), catalogue
-                .getLayerNameMapper());
+        return styleCatalogue.getMapImageFromStyle(plotStyleName,
+                new PlottingStyleParameters(colourScaleRanges, paletteName, aboveMaxColour,
+                        belowMinColour, backgroundColour, logarithmic, numColourBands,
+                        opacity / 100f),
+                WmsUtils.getVariableMetadataFromLayerName(layerName, catalogue),
+                catalogue.getLayerNameMapper());
     }
 
     public boolean isTransparent() {

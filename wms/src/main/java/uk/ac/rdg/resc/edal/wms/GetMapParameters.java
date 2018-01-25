@@ -214,6 +214,12 @@ public class GetMapParameters {
         }
 
         String targetTimeStr = params.getString("targettime");
+        if(targetTimeStr == null) {
+            /*
+             * For backward compatibility with the MyOcean WMS viewer
+             */
+            targetTimeStr = params.getString("colorby/time");
+        }
         DateTime targetTime = null;
         if (targetTimeStr == null) {
             if (tExtent != null) {
@@ -225,6 +231,12 @@ public class GetMapParameters {
 
         Extent<Double> zExtent = null;
         String depthString = params.getString("elevation");
+        if(depthString == null) {
+            /*
+             * For backward compatibility with the MyOcean WMS viewer
+             */
+            depthString = params.getString("colorby/depth");
+        }
         if (depthString != null && !depthString.trim().equals("")) {
             String[] depthStrings = depthString.split("/");
             if (depthStrings.length == 1) {
