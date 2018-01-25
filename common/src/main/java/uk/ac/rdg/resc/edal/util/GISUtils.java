@@ -917,6 +917,17 @@ public final class GISUtils implements ObjectFactory {
         return bboxBordered;
     }
 
+    /**
+     * Calculates the {@link BoundingBox} of a set of
+     * {@link HorizontalPosition}s.
+     * 
+     * @param positions
+     *            a {@link List} of {@link HorizontalPosition}s, which must all
+     *            share the same CRS
+     * @return The minimum bounding rectangle of the supplied positions
+     * @throws MismatchedCrsException
+     *             if not all positions share the same CRS
+     */
     public static BoundingBox getBoundingBox(List<HorizontalPosition> positions) {
         double minX = Double.MAX_VALUE;
         double maxX = -Double.MAX_VALUE;
@@ -940,6 +951,27 @@ public final class GISUtils implements ObjectFactory {
         }
         BoundingBox bbox = new BoundingBoxImpl(minX, minY, maxX, maxY, crs);
         return constrainBoundingBox(bbox);
+    }
+
+    /**
+     * Calculates the {@link BoundingBox} of a set of {@link BoundingBox}es -
+     * i.e. the minimum {@link BoundingBox} which will encompass them all
+     * 
+     * @param bboxes
+     *            a {@link List} of {@link BoundingBox}es, which must all share
+     *            the same CRS
+     * @return The minimum bounding rectangle of the supplied
+     *         {@link BoundingBox}es
+     * @throws MismatchedCrsException
+     *             if not all positions share the same CRS
+     */
+    public static BoundingBox getBoundingBoxOfBoxes(List<BoundingBox> bboxes) {
+        List<HorizontalPosition> corners = new ArrayList<>();
+        for (BoundingBox bbox : bboxes) {
+            corners.add(bbox.getLowerCorner());
+            corners.add(bbox.getUpperCorner());
+        }
+        return getBoundingBox(corners);
     }
 
     /**
