@@ -231,12 +231,6 @@ public class GetMapParameters {
 
         Extent<Double> zExtent = null;
         String depthString = params.getString("elevation");
-        if(depthString == null) {
-            /*
-             * For backward compatibility with the MyOcean WMS viewer
-             */
-            depthString = params.getString("colorby/depth");
-        }
         if (depthString != null && !depthString.trim().equals("")) {
             String[] depthStrings = depthString.split("/");
             if (depthStrings.length == 1) {
@@ -260,6 +254,12 @@ public class GetMapParameters {
 
         Double targetDepth = null;
         String targetDepthString = params.getString("targetelevation");
+        if(targetDepthString == null) {
+            /*
+             * For backward compatibility with the MyOcean WMS viewer
+             */
+            targetDepthString = params.getString("colorby/depth");
+        }
         if (targetDepthString != null) {
             try {
                 targetDepth = Double.parseDouble(targetDepthString);
