@@ -1359,26 +1359,21 @@ public class WmsServlet extends HttpServlet {
                     depthValues.add(verticalDomain.getExtent().getLow());
                     depthValues.add(verticalDomain.getExtent().getHigh());
 
-                    for (int nFeatures = 0; nFeatures < 50; nFeatures++) {
-                        /*
-                         * Read up to 50 features
-                         */
-                        if (iterator.hasNext()) {
-                            try {
-                                ProfileFeature feature = (ProfileFeature) dataset
-                                        .readFeature(iterator.next());
-                                if (feature != null) {
-                                    depthValues.addAll(feature.getDomain().getCoordinateValues());
-                                }
-                            } catch (DataReadingException e) {
-                                log.error("Problem reading profile feature to test depth levels",
-                                        e);
-                            } catch (VariableNotFoundException e) {
-                                log.error("Problem reading profile feature to test depth levels",
-                                        e);
+                    int nFeatures = 0;
+                    /*
+                     * Read up to 50 features
+                     */
+                    if (iterator.hasNext() && nFeatures++ < 50) {
+                        try {
+                            ProfileFeature feature = (ProfileFeature) dataset
+                                    .readFeature(iterator.next());
+                            if (feature != null) {
+                                depthValues.addAll(feature.getDomain().getCoordinateValues());
                             }
-                        } else {
-                            break;
+                        } catch (DataReadingException e) {
+                            log.error("Problem reading profile feature to test depth levels", e);
+                        } catch (VariableNotFoundException e) {
+                            log.error("Problem reading profile feature to test depth levels", e);
                         }
                     }
                     Collections.sort(depthValues);
@@ -1420,12 +1415,11 @@ public class WmsServlet extends HttpServlet {
                                 0.005, 0.001 }));
 
                         /*
-                         * The first level should be the minimum of the extent,
-                         * since this was explicitly added to depthValues
+                         * The first level should be 0
                          */
                         List<Double> levels = new ArrayList<>();
                         double lastDeltaStart = depthValues.get(0);
-                        levels.add(lastDeltaStart);
+                        levels.add(0.0);
                         double delta = 0.0;
                         double lastDelta = 0.0;
 
@@ -1460,10 +1454,10 @@ public class WmsServlet extends HttpServlet {
                                      * values are much more pleasing (e.g. you
                                      * don't get 110, 210, 310, etc)
                                      */
+                                }
                                     while (levels.get(levels.size() - 1) % delta != 0) {
                                         levels.add(levels.get(levels.size() - 1) + lastDelta);
                                     }
-                                }
                             }
 
                             /*
@@ -2727,9 +2721,9 @@ public class WmsServlet extends HttpServlet {
         StringBuilder warningMessage = new StringBuilder(
                 "Wms Exception caught: \"" + exception.getMessage() + "\" from:"
                         + element.getClassName() + ":" + element.getLineNumber());
-        if(exception.getCause() != null) {
+        if (exception.getCause() != null) {
             Throwable cause = exception.getCause();
-            warningMessage.append(" Cause: "+cause.getMessage());
+            warningMessage.append(" Cause: " + cause.getMessage());
         }
         log.warn(warningMessage.toString());
 
