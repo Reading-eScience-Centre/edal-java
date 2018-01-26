@@ -34,6 +34,7 @@ import java.util.NoSuchElementException;
 
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
+import org.joda.time.chrono.ISOChronology;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 
@@ -152,8 +153,8 @@ public final class Extents {
 
     }
 
-    private abstract static class AbstractExtent<T extends Comparable<? super T>> implements
-            Extent<T> {
+    private abstract static class AbstractExtent<T extends Comparable<? super T>>
+            implements Extent<T> {
         private static final long serialVersionUID = 1L;
         private final T min;
         private final T max;
@@ -162,8 +163,8 @@ public final class Extents {
             this.min = min;
             this.max = max;
             if (min != null && max != null && compare(min, max) > 0) {
-                throw new IllegalArgumentException(String.format(
-                        "min (%s) must not be greater than max (%s)", min, max));
+                throw new IllegalArgumentException(
+                        String.format("min (%s) must not be greater than max (%s)", min, max));
             }
         }
 
@@ -254,8 +255,8 @@ public final class Extents {
         }
     }
 
-    private static final class SimpleExtent<T extends Comparable<? super T>> extends
-            AbstractExtent<T> {
+    private static final class SimpleExtent<T extends Comparable<? super T>>
+            extends AbstractExtent<T> {
         private static final long serialVersionUID = 1L;
 
         public SimpleExtent(T min, T max) {
@@ -329,6 +330,7 @@ public final class Extents {
             } else {
                 chronology = getHigh().getChronology();
             }
+
             if (val == null) {
                 return false;
             }
@@ -336,7 +338,16 @@ public final class Extents {
                 return chronology == null && super.contains(val);
             }
             if (!val.getChronology().equals(chronology)) {
-                return false;
+                if (chronology instanceof ISOChronology
+                        && val.getChronology() instanceof ISOChronology) {
+                    /*
+                     * If they are both ISO Chronologies, we can do a time zone
+                     * conversion
+                     */
+                    return super.contains(val.toDateTime(chronology.getZone()));
+                } else {
+                    return false;
+                }
             }
             return super.contains(val);
         }
