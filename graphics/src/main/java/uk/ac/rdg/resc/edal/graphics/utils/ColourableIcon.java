@@ -55,8 +55,8 @@ public class ColourableIcon {
          * 25% opaque
          */
         int alpha = colour.getAlpha();
-        if (alpha < 64) {
-            alpha = 64;
+        if (alpha < 128) {
+            alpha = 128;
         }
         return getColouredIcon(colour.getRed(), colour.getGreen(), colour.getBlue(), alpha);
     }

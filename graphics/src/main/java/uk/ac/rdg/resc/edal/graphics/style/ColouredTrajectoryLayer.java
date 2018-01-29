@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
@@ -146,7 +147,7 @@ public class ColouredTrajectoryLayer extends ImageLayer {
             int lastArrowX = lastPointX;
             int lastArrowY = lastPointY;
 
-            canvas.setPaint(colourScheme.getColor(values.get(0)));
+            canvas.setPaint(getColor(values.get(0)));
 
             for (int i = 1; i < positions.size(); i++) {
                 pos = positions.get(i).getHorizontalPosition();
@@ -187,7 +188,7 @@ public class ColouredTrajectoryLayer extends ImageLayer {
                     /*
                      * Set the paint to the colour for the current point
                      */
-                    canvas.setPaint(colourScheme.getColor(values.get(i)));
+                    canvas.setPaint(getColor(values.get(i)));
 
                     /*
                      * Draw the line from the midpoint to the end of the line
@@ -229,6 +230,24 @@ public class ColouredTrajectoryLayer extends ImageLayer {
                 lastPointY = currPointY;
             }
 
+        }
+    }
+
+    /**
+     * We don't ever want to plot completely transparent trajectories. We may
+     * want semi-transparent if there is no numerical data. This method takes
+     * care of that.
+     * 
+     * @param val
+     *            The numerical value to plot
+     * @return The {@link Color} to plot it
+     */
+    private Color getColor(Number val) {
+        Color color = colourScheme.getColor(val);
+        if (color.getAlpha() < 128) {
+            return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);
+        } else {
+            return color;
         }
     }
 
