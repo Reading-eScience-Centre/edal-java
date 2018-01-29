@@ -74,8 +74,11 @@ public class ScaleRange {
      *         out-of-range, and null if null/NaN
      */
     public Float scaleZeroToOne(Number input) {
-        if(input == null || Float.isNaN(input.floatValue())) {
+        if(input == null) {
             return null;
+        }
+        if(Float.isNaN(input.floatValue())) {
+            return Float.NaN;
         }
         
         if(logarithmic) {

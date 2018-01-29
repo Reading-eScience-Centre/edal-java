@@ -227,7 +227,12 @@ public class GraphicsUtils implements Serializable {
     public static String colourToString(Color colour) {
         if (colour == null) {
             return "extend";
-        } else if (colour.getAlpha() == 0) {
+        } else if (colour.getAlpha() == 0
+                /*
+                 * There are some special cases where we a non-black transparent
+                 * colour may hold useful information.
+                 */
+                && colour.getRGB() == 0) {
             return "transparent";
         }
         return String.format("#%08X", colour.getRGB());

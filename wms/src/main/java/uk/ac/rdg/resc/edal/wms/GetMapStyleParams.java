@@ -175,10 +175,22 @@ public class GetMapStyleParams {
         String bgcStr = params.getString("bgcolor",
                 GraphicsUtils.colourToString(defaults.getNoDataColour()));
         backgroundColour = GraphicsUtils.parseColour(bgcStr);
-
+        /*
+         * The WMS spec requires that the background is only set to BGCOLOR if
+         * transparent is FALSE
+         */
         this.transparent = params.getBoolean("transparent", false);
         if (this.transparent) {
-            backgroundColour = new Color(0, true);
+            /*
+             * Make the background colour as specified, but transparent. That
+             * way we can use the information in special cases.
+             */
+            if (backgroundColour != null) {
+                backgroundColour = new Color(backgroundColour.getRed(), backgroundColour.getGreen(),
+                        backgroundColour.getBlue(), 0);
+            } else {
+                backgroundColour = new Color(0, true);
+            }
         }
 
         String bmcStr = params.getString("belowmincolor",

@@ -176,6 +176,9 @@ public class ColouredGlyphLayer extends ImageLayer {
          * The graphics object for drawing
          */
         Graphics2D g = image.createGraphics();
+        
+        g.setColor(colourScheme.getColor(null));
+        g.fillRect(0, 0, image.getWidth(), image.getHeight());
 
         for (DiscreteFeature<?, ?> feature : features) {
             /*
@@ -198,7 +201,7 @@ public class ColouredGlyphLayer extends ImageLayer {
                 int j = params.getHeight() - 1 - yAxis.findIndexOfUnconstrained(position.getY());
 
                 Number value = pointFeature.getValue(featuresForLayer.getMember());
-                if (value != null && !Float.isNaN(value.floatValue())) {
+                if (value != null) {
                     /*
                      * Draw the icon
                      */

@@ -99,6 +99,8 @@ public class ColouredTrajectoryLayer extends ImageLayer {
 
         double arrowSize = 10.0;
         Graphics2D canvas = image.createGraphics();
+        canvas.setColor(colourScheme.getColor(null));
+        canvas.fillRect(0, 0, image.getWidth(), image.getHeight());
         canvas.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
         CoordinateReferenceSystem imageCRS = params.getBbox().getCoordinateReferenceSystem();
