@@ -142,7 +142,7 @@ final public class Charting {
                 /*
                  * This is the label used for the legend.
                  */
-                String legend = feature.getName() + " of " + varId + "("
+                String legend = varId + " from feature " + feature.getId() + " at ("
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ","
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ") - "
                         + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
