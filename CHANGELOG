@@ -1,3 +1,14 @@
+1.3.0
+=====
+Updated OpenLayers & GWT wrapper versions
+Added parameter backward-compatibility with protocol used in MyOcean project
+Abstracted out continuous domain datasets
+Better handling of DateTime extents (equivalent ISO chronologies get converted)
+Improved automatic z axis for collections of profile features
+Minor in-situ plot improvements
+More consistency between timeseries / profile plots
+Minor bugfixes + improvements 
+
 1.2.13
 ======
 Minor bugfix release
@@ -21,7 +32,6 @@ Minor bugfixes
 Fixed bug with KMZ animation export
 Minor Godiva3 layout fix
 Update Unidata libs - bug in the previous versions' build meant an excess 20M to dependencies
-
 
 1.2.9
 =====
