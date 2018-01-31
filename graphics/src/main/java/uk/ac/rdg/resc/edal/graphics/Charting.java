@@ -36,7 +36,6 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,6 +69,7 @@ import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.AbstractXYZDataset;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYZDataset;
@@ -115,82 +115,8 @@ final public class Charting {
         NUMBER_FORMAT.setMaximumFractionDigits(4);
     }
 
-    public static JFreeChart createVerticalProfilePlot(
-            Collection<? extends ProfileFeature> features, String plottedQuantity,
-            HorizontalPosition hPos, String copyrightStatement) throws MismatchedCrsException {
-        XYSeriesCollection xySeriesColl = new XYSeriesCollection();
-
-        Set<String> plottedVarList = new HashSet<String>();
-        VerticalCrs vCrs = null;
-        List<DateTime> times = new ArrayList<>();
-        boolean invertYAxis = false;
-        String xLabel = plottedQuantity;
-        for (ProfileFeature feature : features) {
-            if (vCrs == null) {
-                vCrs = feature.getDomain().getVerticalCrs();
-            } else {
-                if (!vCrs.equals(feature.getDomain().getVerticalCrs())) {
-                    throw new MismatchedCrsException(
-                            "All vertical CRSs must match to plot multiple profile plots");
-                }
-            }
-            times.add(feature.getTime());
-            for (String varId : feature.getVariableIds()) {
-                plottedVarList.add(varId);
-                List<Double> elevationValues = feature.getDomain().getCoordinateValues();
-
-                /*
-                 * This is the label used for the legend.
-                 */
-                String legend = varId + " from feature " + feature.getId() + " at ("
-                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ","
-                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ") - "
-                        + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
-                XYSeries series = new XYSeries(legend, true);
-                series.setDescription(feature.getParameter(varId).getDescription());
-                for (int i = 0; i < elevationValues.size(); i++) {
-                    Number val = feature.getValues(varId).get(i);
-                    if (val == null || Double.isNaN(val.doubleValue())) {
-                        /*
-                         * Don't add NaNs to the series
-                         */
-                        continue;
-                    }
-                    series.add(elevationValues.get(i), val);
-                }
-
-                xLabel += " (" + getParameterUnits(feature, varId) + ")";
-
-                xySeriesColl.addSeries(series);
-            }
-        }
-
-        NumberAxis elevationAxis = getZAxis(vCrs);
-        elevationAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-        if (invertYAxis) {
-            elevationAxis.setInverted(true);
-        }
-        elevationAxis.setAutoRangeIncludesZero(false);
-        elevationAxis.setNumberFormatOverride(NUMBER_FORMAT);
-
-        NumberAxis valueAxis = new NumberAxis(xLabel);
-        valueAxis.setAutoRangeIncludesZero(false);
-        valueAxis.setNumberFormatOverride(NUMBER_FORMAT);
-
-        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        for (int i = 0; i < features.size(); i++) {
-            renderer.setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
-            renderer.setSeriesShapesVisible(i, true);
-        }
-
-        XYPlot plot = new XYPlot(xySeriesColl, elevationAxis, valueAxis, renderer);
-        plot.setNoDataMessage("There is no data for your choice");
-        plot.setNoDataMessageFont(new Font("sansserif", Font.BOLD, 20));
-        plot.setBackgroundPaint(Color.lightGray);
-        plot.setDomainGridlinesVisible(false);
-        plot.setRangeGridlinePaint(Color.white);
-        plot.setOrientation(PlotOrientation.HORIZONTAL);
-
+    private static String getTitle(String type, Collection<String> varList,
+            HorizontalPosition hPos) {
         StringBuilder title = new StringBuilder();
 
         String posString = null;
@@ -217,38 +143,23 @@ final public class Charting {
             posString = posSB.toString();
         }
 
-        String timeString = null;
-        if (times.size() > 0) {
-            if (times.size() == 1) {
-                timeString = TimeUtils.formatUtcHumanReadableDateTime(times.get(0));
-            } else {
-                timeString = "Between "
-                        + TimeUtils.formatUtcHumanReadableDateTime(Collections.min(times))
-                        + " and "
-                        + TimeUtils.formatUtcHumanReadableDateTime(Collections.max(times));
+        if (varList.size() > 0) {
+            StringBuilder varsSB = new StringBuilder();
+            for (String varId : varList) {
+                varsSB.append(varId);
+                varsSB.append(", ");
             }
-        }
-
-        if (plottedVarList.size() > 0) {
-            StringBuilder varList = new StringBuilder();
-            for (String varId : plottedVarList) {
-                varList.append(varId);
-                varList.append(", ");
-            }
-            varList.delete(varList.length() - 2, varList.length() - 1);
-            title.append("Vertical profile of ");
-            if (plottedVarList.size() > 1) {
+            varsSB.delete(varsSB.length() - 2, varsSB.length() - 1);
+            title.append(type);
+            title.append(" of ");
+            if (varList.size() > 1) {
                 title.append("variables: ");
-                title.append(varList.toString());
-            } else {
-                title.append(plottedQuantity);
             }
+            title.append(varsSB.toString());
+
             if (posString != null) {
                 title.append(" at ");
                 title.append(posString);
-            }
-            if (timeString != null) {
-                title.append("\n" + timeString);
             }
         } else {
             title.append("No data to plot ");
@@ -257,22 +168,77 @@ final public class Charting {
                 title.append(posString);
             }
         }
+        return title.toString();
+    }
 
-        /*
-         * Use default font and create a legend if there are multiple lines
-         */
-        JFreeChart chart = new JFreeChart(title.toString(), null, plot,
-                xySeriesColl.getSeriesCount() > 1);
+    public static JFreeChart createVerticalProfilePlot(
+            Collection<? extends ProfileFeature> features, String plottedQuantity,
+            HorizontalPosition hPos, String copyrightStatement) throws MismatchedCrsException {
 
-        if (copyrightStatement != null) {
-            final TextTitle textTitle = new TextTitle(copyrightStatement);
-            textTitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
-            textTitle.setPosition(RectangleEdge.BOTTOM);
-            textTitle.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-            chart.addSubtitle(textTitle);
+        Map<Parameter, XYDataset> param2SeriesCollection = new HashMap<>();
+        Set<String> varList = new HashSet<String>();
+        VerticalCrs vCrs = null;
+        boolean invertYAxis = false;
+
+        for (ProfileFeature feature : features) {
+            if (vCrs == null) {
+                vCrs = feature.getDomain().getVerticalCrs();
+            } else {
+                invertYAxis = !vCrs.isPositiveUpwards();
+                if (!vCrs.equals(feature.getDomain().getVerticalCrs())) {
+                    throw new MismatchedCrsException(
+                            "All vertical CRSs must match to plot multiple profile plots");
+                }
+            }
+            for (String varId : feature.getVariableIds()) {
+                Parameter parameter = feature.getParameter(varId);
+                XYSeriesCollection collection;
+
+                if (param2SeriesCollection.containsKey(parameter)) {
+                    collection = (XYSeriesCollection) param2SeriesCollection.get(parameter);
+                } else {
+                    collection = new XYSeriesCollection();
+                    param2SeriesCollection.put(parameter, collection);
+                }
+
+                List<Double> elevationValues = feature.getDomain().getCoordinateValues();
+
+                /*
+                 * This is the label used for the legend.
+                 */
+                String legend = varId + " from feature " + feature.getId() + " at ("
+                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ","
+                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ") - "
+                        + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
+                XYSeries series = new XYSeries(legend, true);
+
+                series.setDescription(feature.getParameter(varId).getDescription());
+
+                boolean hasValues = false;
+                for (int i = 0; i < elevationValues.size(); i++) {
+                    if (feature.getValues(varId) == null) {
+                        continue;
+                    }
+                    Number val = feature.getValues(varId).get(i);
+                    if (val == null || Double.isNaN(val.doubleValue())) {
+                        /*
+                         * Don't add NaNs to the series
+                         */
+                        continue;
+                    }
+                    series.addOrUpdate(elevationValues.get(i), val);
+                    hasValues = true;
+                }
+
+                if (hasValues) {
+                    collection.addSeries(series);
+                    varList.add(varId);
+                }
+            }
         }
 
-        return chart;
+        return getChart("Vertical profile", param2SeriesCollection, varList, hPos,
+                copyrightStatement, "Depth", PlotOrientation.HORIZONTAL, invertYAxis);
     }
 
     /**
@@ -310,13 +276,12 @@ final public class Charting {
         return zAxis;
     }
 
-    public static JFreeChart createTimeSeriesPlot(
-            Collection<? extends PointSeriesFeature> features, HorizontalPosition hPos,
-            String copyrightStatement) throws MismatchedCrsException {
-
+    public static JFreeChart createTimeSeriesPlot(Collection<? extends PointSeriesFeature> features,
+            HorizontalPosition hPos, String copyrightStatement) throws MismatchedCrsException {
         Chronology chronology = null;
-        List<String> plottedVarList = new ArrayList<String>();
-        Map<String, TimeSeriesCollection> phenomena2timeseries = new HashMap<String, TimeSeriesCollection>();
+        Set<String> varList = new HashSet<>();
+        Map<Parameter, XYDataset> param2SeriesCollection = new HashMap<>();
+
         for (PointSeriesFeature feature : features) {
             if (chronology == null) {
                 chronology = feature.getDomain().getChronology();
@@ -326,24 +291,33 @@ final public class Charting {
                             "All chronologies must match to plot multiple time series plots");
                 }
             }
+
             for (String varId : feature.getVariableIds()) {
                 Parameter parameter = feature.getParameter(varId);
                 TimeSeriesCollection collection;
-                String phenomena = parameter.getStandardName() + " (" + parameter.getUnits() + ")";
-                if (phenomena2timeseries.containsKey(phenomena)) {
-                    collection = phenomena2timeseries.get(phenomena);
+
+                if (param2SeriesCollection.containsKey(parameter)) {
+                    collection = (TimeSeriesCollection) param2SeriesCollection.get(parameter);
                 } else {
                     collection = new TimeSeriesCollection();
-                    phenomena2timeseries.put(phenomena, collection);
+                    param2SeriesCollection.put(parameter, collection);
                 }
-                plottedVarList.add(varId);
+
                 List<DateTime> timeValues = feature.getDomain().getCoordinateValues();
 
                 /*
                  * This is the label used for the legend.
                  */
-                TimeSeries series = new TimeSeries(parameter.getTitle());
+                VerticalPosition zPos = feature.getVerticalPosition();
+                String legend = varId + " from feature " + feature.getId() + " at ("
+                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ", "
+                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + "), "
+                        + zPos.getZ() + zPos.getCoordinateReferenceSystem().getUnits();
+                TimeSeries series = new TimeSeries(legend);
+
                 series.setDescription(feature.getParameter(varId).getDescription());
+
+                boolean hasValues = false;
                 for (int i = 0; i < timeValues.size(); i++) {
                     if (feature.getValues(varId) == null) {
                         continue;
@@ -357,64 +331,64 @@ final public class Charting {
                     }
                     series.addOrUpdate(new Millisecond(new Date(timeValues.get(i).getMillis())),
                             val);
+                    hasValues = true;
                 }
 
-                collection.addSeries(series);
+                if (hasValues) {
+                    collection.addSeries(series);
+                    varList.add(varId);
+                }
             }
         }
 
-        StringBuilder title = new StringBuilder();
-        if (plottedVarList.size() > 0) {
-            StringBuilder varList = new StringBuilder();
-            for (String varId : plottedVarList) {
-                varList.append(varId);
-                varList.append(", ");
-            }
-            varList.delete(varList.length() - 2, varList.length() - 1);
-            title.append("Time series of ");
-            if (plottedVarList.size() > 1) {
-                title.append("variables: ");
-            }
-            title.append(varList.toString());
-        } else {
-            title.append("No data to plot at ");
-            title.append(hPos.toString());
-        }
+        return getChart("Timeseries", param2SeriesCollection, varList, hPos, copyrightStatement,
+                "Time", PlotOrientation.VERTICAL, false);
+    }
 
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(title.toString(), "Date / time",
-                null, null, true, false, false);
+    private static JFreeChart getChart(String type,
+            Map<Parameter, XYDataset> parameter2SeriesCollection, Collection<String> varList,
+            HorizontalPosition hPos, String copyrightStatement, String domainLabel,
+            PlotOrientation orientation, boolean invertDomainAxis) {
 
-        XYPlot plot = chart.getXYPlot();
+        String title = getTitle(type, varList, hPos);
 
-        NumberAxis timeAxis = new NumberAxis("Time");
-        timeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-        timeAxis.setAutoRangeIncludesZero(false);
+        XYPlot plot = new XYPlot();
+
+        NumberAxis domainAxis = new NumberAxis(domainLabel);
+        domainAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        domainAxis.setAutoRangeIncludesZero(false);
+        domainAxis.setInverted(invertDomainAxis);
+        plot.setDomainAxis(domainAxis);
 
         int i = 0;
         boolean legendNeeded = false;
-        for (Entry<String, TimeSeriesCollection> entry : phenomena2timeseries.entrySet()) {
+        for (Entry<Parameter, XYDataset> entry : parameter2SeriesCollection.entrySet()) {
             if (i > 0) {
                 legendNeeded = true;
             }
-            TimeSeriesCollection coll = entry.getValue();
-            NumberAxis valueAxis = new NumberAxis();
-            valueAxis.setAutoRangeIncludesZero(false);
-            valueAxis.setAutoRange(true);
-            valueAxis.setNumberFormatOverride(NUMBER_FORMAT);
-            valueAxis.setLabel(entry.getKey());
-            plot.setDataset(i, coll);
-            plot.setRangeAxis(i, valueAxis);
-            XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-            for (int j = 0; j < coll.getSeriesCount(); j++) {
-                renderer.setSeriesShape(j, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
-                renderer.setSeriesShapesVisible(j, true);
-                if (j > 0) {
-                    legendNeeded = true;
+            XYDataset coll = entry.getValue();
+
+            if (coll.getSeriesCount() > 0) {
+                NumberAxis valueAxis = new NumberAxis();
+                valueAxis.setAutoRangeIncludesZero(false);
+                valueAxis.setAutoRange(true);
+                valueAxis.setNumberFormatOverride(NUMBER_FORMAT);
+                Parameter parameter = entry.getKey();
+                valueAxis.setLabel(parameter.getStandardName() + " (" + parameter.getUnits() + ")");
+                plot.setDataset(i, coll);
+                plot.setRangeAxis(i, valueAxis);
+                XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+                for (int j = 0; j < coll.getSeriesCount(); j++) {
+                    renderer.setSeriesShape(j, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
+                    renderer.setSeriesShapesVisible(j, true);
+                    if (j > 0) {
+                        legendNeeded = true;
+                    }
                 }
+                plot.setRenderer(i, renderer);
+                plot.mapDatasetToRangeAxis(i, i);
+                i++;
             }
-            plot.setRenderer(i, renderer);
-            plot.mapDatasetToRangeAxis(i, i);
-            i++;
         }
 
         plot.setNoDataMessage("There is no data for your choice");
@@ -422,12 +396,12 @@ final public class Charting {
         plot.setBackgroundPaint(Color.lightGray);
         plot.setDomainGridlinesVisible(false);
         plot.setRangeGridlinePaint(Color.white);
-        plot.setOrientation(PlotOrientation.VERTICAL);
+        plot.setOrientation(orientation);
 
         /*
          * Use default font and create a legend if there are multiple lines
          */
-        chart = new JFreeChart(title.toString(), null, plot, legendNeeded);
+        JFreeChart chart = new JFreeChart(title.toString(), null, plot, legendNeeded);
 
         if (copyrightStatement != null) {
             final TextTitle textTitle = new TextTitle(copyrightStatement);
@@ -549,9 +523,9 @@ final public class Charting {
              * If we have a layer which only has one elevation value, we simply
              * create XY Line chart
              */
-            chart = ChartFactory.createXYLineChart(title.toString(),
-                    "Distance along transect (km)", yLabel.toString(), xySeriesColl,
-                    PlotOrientation.VERTICAL, multiplePlots, false, false);
+            chart = ChartFactory.createXYLineChart(title.toString(), "Distance along transect (km)",
+                    yLabel.toString(), xySeriesColl, PlotOrientation.VERTICAL, multiplePlots, false,
+                    false);
             plot = chart.getXYPlot();
             for (int i = 0; i < xySeriesColl.getSeriesCount(); i++) {
                 plot.getRenderer().setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
@@ -579,7 +553,8 @@ final public class Charting {
                  * Determine start end end value for marker based on index of
                  * ctrl point
                  */
-                IntervalMarker target = new IntervalMarker(prevCtrlPointDistance, ctrlPointDistance);
+                IntervalMarker target = new IntervalMarker(prevCtrlPointDistance,
+                        ctrlPointDistance);
                 target.setLabel("["
                         + printTwoDecimals(transectDomain.getControlPoints().get(i - 1).getY())
                         + ","
@@ -631,7 +606,8 @@ final public class Charting {
      * @return The resulting chart
      */
     public static JFreeChart createVerticalSectionChart(List<ProfileFeature> features,
-            LineString horizPath, ColourScheme colourScheme, Double zValue, Extent<Double> zExtent) {
+            LineString horizPath, ColourScheme colourScheme, Double zValue,
+            Extent<Double> zExtent) {
         if (features == null || features.size() == 0) {
             throw new IllegalArgumentException(
                     "You need at least one profile to plot a vertical section.");
@@ -676,7 +652,8 @@ final public class Charting {
                  * Determine start end end value for marker based on index of
                  * ctrl point
                  */
-                IntervalMarker target = new IntervalMarker(prevCtrlPointDistance, ctrlPointDistance);
+                IntervalMarker target = new IntervalMarker(prevCtrlPointDistance,
+                        ctrlPointDistance);
                 target.setPaint(TRANSPARENT);
                 /* Add marker to plot */
                 plot.addDomainMarker(target);
@@ -708,8 +685,8 @@ final public class Charting {
          * Create the combined chart with both the transect and the vertical
          * section
          */
-        CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis(
-                "Distance along path (km)"));
+        CombinedDomainXYPlot plot = new CombinedDomainXYPlot(
+                new NumberAxis("Distance along path (km)"));
         plot.setGap(20.0);
         plot.add(transectChart.getXYPlot(), 1);
         plot.add(verticalSectionChart.getXYPlot(), 1);
@@ -724,7 +701,8 @@ final public class Charting {
             }
         }
 
-        JFreeChart combinedChart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
+        JFreeChart combinedChart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot,
+                false);
 
         /* Set left margin to 10 to avoid number wrap at color bar */
         RectangleInsets r = new RectangleInsets(0, 10, 0, 0);
@@ -826,14 +804,14 @@ final public class Charting {
             HorizontalPosition lastPoint = features.get(0).getHorizontalPosition();
             for (int i = 1; i < features.size(); i++) {
                 HorizontalPosition currentPoint = features.get(i).getHorizontalPosition();
-                double dist = DistanceUtils.getHaversineDistance(lastPoint.getY(),
-                        lastPoint.getX(), currentPoint.getY(), currentPoint.getX());
+                double dist = DistanceUtils.getHaversineDistance(lastPoint.getY(), lastPoint.getX(),
+                        currentPoint.getY(), currentPoint.getX());
                 lastPoint = currentPoint;
                 this.distanceValues.add(this.distanceValues.get(i - 1) + dist);
                 maxGap = Math.max(maxGap, dist);
             }
-            int numXPoints = (int) (distanceValues.get(distanceValues.size()-1) / maxGap);
-            this.xResolution = (distanceValues.get(distanceValues.size()-1)) / numXPoints;
+            int numXPoints = (int) (distanceValues.get(distanceValues.size() - 1) / maxGap);
+            this.xResolution = (distanceValues.get(distanceValues.size() - 1)) / numXPoints;
 
             this.paramId = features.get(0).getVariableIds().iterator().next();
             this.units = features.get(0).getParameter(paramId).getUnits();
@@ -843,7 +821,7 @@ final public class Charting {
         public double getElevationResolution() {
             return elevationResolution;
         }
-        
+
         public double getXResolution() {
             return xResolution;
         }
