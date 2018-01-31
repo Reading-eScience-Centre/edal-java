@@ -183,8 +183,10 @@ final public class Charting {
         for (ProfileFeature feature : features) {
             if (vCrs == null) {
                 vCrs = feature.getDomain().getVerticalCrs();
+                if(vCrs != null) {
+                    invertYAxis = !vCrs.isPositiveUpwards();
+                }
             } else {
-                invertYAxis = !vCrs.isPositiveUpwards();
                 if (!vCrs.equals(feature.getDomain().getVerticalCrs())) {
                     throw new MismatchedCrsException(
                             "All vertical CRSs must match to plot multiple profile plots");
