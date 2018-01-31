@@ -154,9 +154,9 @@ public class ColouredGlyphLayer extends ImageLayer {
          * their edges are visible), we extend the bounding box
          */
         BoundingBox bbox = params.getBbox();
-        BoundingBox largeBoundingBox = GISUtils.getLargeBoundingBox(bbox, 5);
+        BoundingBox largeBoundingBox = GISUtils.getLargeBoundingBox(bbox, 10);
         PlottingDomainParams extractParams = new PlottingDomainParams(
-                (int) (params.getWidth() * 1.05), (int) (params.getHeight() * 1.05),
+                (int) (params.getWidth() * 1.1), (int) (params.getHeight() * 1.1),
                 largeBoundingBox, params.getZExtent(), params.getTExtent(),
                 params.getTargetHorizontalPosition(), params.getTargetZ(), params.getTargetT());
 
