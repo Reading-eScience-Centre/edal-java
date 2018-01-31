@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.wms;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -103,6 +104,8 @@ import uk.ac.rdg.resc.edal.exceptions.EdalException;
  * targetElevation: The target elevation (for in-situ data)
  * 
  * targetTime: The target time (for in-situ data)
+ * 
+ * opacity: The overall opacity of the plotted layer
  * 
  * TODO Error handling is not implemented very well
  */
@@ -344,12 +347,18 @@ public class ScreenshotServlet extends HttpServlet {
             g.drawImage(im, leftWidth, textSpace, null);
         }
 
+        /*
+         * Now get the data image and draw it
+         */
         url = createWmsUrl(params, false, minLon, minLat, maxLon, maxLat, mapWidth, mapHeight,
                 servletUrl, time, false);
         BufferedImage wmsLayer;
         if (url != null) {
             wmsLayer = ImageIO.read(url);
+            float opacity = params.getFloat("opacity", 1.0f);
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
             g.drawImage(wmsLayer, 0, textSpace, null);
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         }
 
         String overlaysStr = params.getString("overlays");
