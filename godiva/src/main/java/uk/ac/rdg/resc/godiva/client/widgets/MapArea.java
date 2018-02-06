@@ -1327,36 +1327,39 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         /*
          * Now add any additional user-defined layers
          */
-        for (FixedLayerDetails layer : additionalLayers) {
-            try {
-                wmsOptions = new WMSOptions();
-                wmsOptions.setProjection(layer.projection);
-                wmsOptions.setWrapDateLine(true);
-                wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
-                wmsOptions.setIsBaseLayer(layer.isBaseLayer);
-                if (layer.projection.equalsIgnoreCase("EPSG:3857")
-                        || layer.projection.equalsIgnoreCase("EPSG:900913")) {
-                    wmsOptions.setMaxExtent(webMercExtent);
-                    wmsOptions.setMaxResolution(webMercMaxResolution);
+        if (additionalLayers != null) {
+            for (FixedLayerDetails layer : additionalLayers) {
+                try {
+                    wmsOptions = new WMSOptions();
+                    wmsOptions.setProjection(layer.projection);
+                    wmsOptions.setWrapDateLine(true);
+                    wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
+                    wmsOptions.setIsBaseLayer(layer.isBaseLayer);
+                    if (layer.projection.equalsIgnoreCase("EPSG:3857")
+                            || layer.projection.equalsIgnoreCase("EPSG:900913")) {
+                        wmsOptions.setMaxExtent(webMercExtent);
+                        wmsOptions.setMaxResolution(webMercMaxResolution);
+                    }
+                    wmsParams = new WMSParams();
+                    wmsParams.setLayers(layer.layerNames);
+                    wmsParams.setFormat(layer.imageFormat);
+                    wmsParams.setTransparent(true);
+                    wmsParams.setParameter("version", layer.version);
+                    WMS userLayer = new WMS(layer.title, layer.wmsUrl, wmsParams, wmsOptions);
+                    overLayers.put(userLayer.getId(), layer);
+                    userLayer.setIsVisible(false);
+                    map.addLayer(userLayer);
+                    if (!layer.isBaseLayer && layer.isOn) {
+                        userLayer.setIsVisible(true);
+                    } else {
+                    }
+                    if (layer.isBaseLayer && layer.isOn) {
+                        map.setBaseLayer(userLayer);
+                    }
+                } catch (Exception e) {
+                    GWT.log("Problem adding custom map layer.  Ignoring this layer: " + layer.title,
+                            e);
                 }
-                wmsParams = new WMSParams();
-                wmsParams.setLayers(layer.layerNames);
-                wmsParams.setFormat(layer.imageFormat);
-                wmsParams.setTransparent(true);
-                wmsParams.setParameter("version", layer.version);
-                WMS userLayer = new WMS(layer.title, layer.wmsUrl, wmsParams, wmsOptions);
-                overLayers.put(userLayer.getId(), layer);
-                userLayer.setIsVisible(false);
-                map.addLayer(userLayer);
-                if (!layer.isBaseLayer && layer.isOn) {
-                    userLayer.setIsVisible(true);
-                } else {
-                }
-                if (layer.isBaseLayer && layer.isOn) {
-                    map.setBaseLayer(userLayer);
-                }
-            } catch (Exception e) {
-                GWT.log("Problem adding custom map layer.  Ignoring this layer: " + layer.title, e);
             }
         }
     }
