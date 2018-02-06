@@ -36,12 +36,15 @@ Maven needs to be installed to build the software, but to release it needs some 
 Release Procedure
 -----------------
 
-Once all code is ready to be released, all tests pass, **and all documentation is updated**, the following steps should be taken:
+Once all code is ready to be released, all tests pass, and all documentation is updated**, the following steps should be taken:
 
 ### Create a branch to do the release on:
 ```
 git checkout -b release-VERSION
 ```
+
+### Update the CHANGELOG
+Update the CHANGELOG, and commit the changes
 
 ### Set the release versions in the pom files:
 Maven should automatically pick the correct version to relase to - it will be the current development version without the "-SNAPSHOT" suffix
