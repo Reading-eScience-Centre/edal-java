@@ -57,6 +57,7 @@ import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
+import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 
 /**
  * Provides methods for writing Features to NetCDF files. Currently fairly
@@ -66,6 +67,8 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Guy Griffiths
  */
 public class CdmGridFeatureWrite {
+    private static final Float FILL_VALUE = Float.NEGATIVE_INFINITY;
+
     /**
      * Writes a {@link GridFeature} to file
      * 
@@ -79,8 +82,27 @@ public class CdmGridFeatureWrite {
      * @throws InvalidRangeException
      *             - Usually indicative of a bug...
      */
-    public static void gridFeatureToNetCDF(GridFeature f, File outFile) throws IOException,
-            InvalidRangeException {
+    public static void gridFeatureToNetCDF(GridFeature f, File outFile)
+            throws IOException, InvalidRangeException {
+        gridFeatureToNetCDF(f, outFile, null);
+    }
+
+    /**
+     * Writes a {@link GridFeature} to file, masking out specified (horizontal)
+     * grid cells
+     * 
+     * @param f
+     *            The {@link GridFeature} to write. Can contain multiple
+     *            variables.
+     * @param outFile
+     *            The {@link File} to write to.
+     * @throws IOException
+     *             - If there is a problem writing to the file location.
+     * @throws InvalidRangeException
+     *             - Usually indicative of a bug...
+     */
+    public static void gridFeatureToNetCDF(GridFeature f, File outFile,
+            Set<GridCoordinates2D> cellsToMask) throws IOException, InvalidRangeException {
         /*
          * By default, this includes reasonable compression
          */
@@ -97,8 +119,8 @@ public class CdmGridFeatureWrite {
 
         GridDomain domain = f.getDomain();
 
-        if (!GISUtils.isDefaultGeographicCRS(domain.getHorizontalGrid()
-                .getCoordinateReferenceSystem())
+        if (!GISUtils
+                .isDefaultGeographicCRS(domain.getHorizontalGrid().getCoordinateReferenceSystem())
                 || !(domain.getHorizontalGrid() instanceof RectilinearGrid)) {
             throw new UnsupportedOperationException(
                     "Currently, writing only supports GridFeatures in CRS:84/EPSG:4326 with a RectlinearGrid");
@@ -176,7 +198,7 @@ public class CdmGridFeatureWrite {
             ArrayLong.D1 tVals = new ArrayLong.D1(tSize, false);
             i = 0;
             for (DateTime tVal : tAxis.getCoordinateValues()) {
-                tVals.set(i++, (long) (tVal.toDate().getTime() / 1000L));
+                tVals.set(i++, tVal.toDate().getTime() / 1000L);
             }
             dataToWrite.put(tVar, tVals);
         }
@@ -225,9 +247,12 @@ public class CdmGridFeatureWrite {
                             }
 
                             Number number = array4d.get(t, z, y, x);
-                            if (number == null) {
-                                // We use NaN as a fill value
-                                number = Float.NaN;
+                            if (number == null ||
+                            // If we have no data, or we wish to mask the data
+                                    (cellsToMask != null
+                                            && cellsToMask.contains(new GridCoordinates2D(x, y)))) {
+                                // We use the fill value
+                                number = FILL_VALUE;
                             }
                             values.set(index, number.floatValue());
                         }
@@ -237,13 +262,13 @@ public class CdmGridFeatureWrite {
 
             Variable variable = fileWriter.addVariable(null, varId, DataType.FLOAT, dims);
 
-            fileWriter.addVariableAttribute(variable, new Attribute("units", f.getParameter(varId)
-                    .getUnits()));
-            fileWriter.addVariableAttribute(variable, new Attribute("standard_name", f
-                    .getParameter(varId).getStandardName()));
+            fileWriter.addVariableAttribute(variable,
+                    new Attribute("units", f.getParameter(varId).getUnits()));
+            fileWriter.addVariableAttribute(variable,
+                    new Attribute("standard_name", f.getParameter(varId).getStandardName()));
             fileWriter.addVariableAttribute(variable,
                     new Attribute("long_name", f.getParameter(varId).getDescription()));
-            fileWriter.addVariableAttribute(variable, new Attribute("_FillValue", Float.NaN));
+            fileWriter.addVariableAttribute(variable, new Attribute("_FillValue", FILL_VALUE));
 
             dataToWrite.put(variable, values);
 
@@ -256,11 +281,11 @@ public class CdmGridFeatureWrite {
                 }
                 Object value = entry.getValue();
                 if (value instanceof String) {
-                    fileWriter.addVariableAttribute(variable, new Attribute(
-                            (String) entry.getKey(), (String) value));
+                    fileWriter.addVariableAttribute(variable,
+                            new Attribute((String) entry.getKey(), (String) value));
                 } else if (value instanceof Number) {
-                    fileWriter.addVariableAttribute(variable, new Attribute(
-                            (String) entry.getKey(), (Number) value));
+                    fileWriter.addVariableAttribute(variable,
+                            new Attribute((String) entry.getKey(), (Number) value));
                 }
             }
 
