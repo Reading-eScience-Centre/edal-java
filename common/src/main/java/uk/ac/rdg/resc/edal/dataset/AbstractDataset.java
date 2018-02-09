@@ -47,7 +47,7 @@ import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 
 public abstract class AbstractDataset implements Dataset, Serializable {
-    private static final Logger log = LoggerFactory.getLogger(GriddedDataset.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractDataset.class);
     protected final String id;
     protected Map<String, VariableMetadata> vars;
     protected List<VariablePlugin> plugins;
@@ -187,7 +187,7 @@ public abstract class AbstractDataset implements Dataset, Serializable {
              * is that the required variables couldn't be harmonised to a single
              * grid.
              */
-            log.warn("Could not add plugin of type: " + plugin.getClass() + " to this dataset", e);
+            log.warn("Could not add plugin of type: " + plugin.getClass() + " to the dataset "+id, e);
         }
     }
 }
