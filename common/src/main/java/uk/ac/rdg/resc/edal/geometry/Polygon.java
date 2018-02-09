@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.geometry;
 
+import java.io.Serializable;
 import java.util.List;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import uk.ac.rdg.resc.edal.domain.Domain;
@@ -39,7 +40,7 @@ import uk.ac.rdg.resc.edal.position.HorizontalPosition;
  * 
  * @author Jon Blower
  */
-public interface Polygon extends Domain<HorizontalPosition> {
+public interface Polygon extends Domain<HorizontalPosition>, Serializable {
 
     /**
      * Returns the two-dimensional horizontal coordinate reference system to

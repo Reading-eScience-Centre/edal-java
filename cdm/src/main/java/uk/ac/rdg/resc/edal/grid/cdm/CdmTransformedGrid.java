@@ -233,6 +233,8 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
                             .unmodifiableList(vertices);
 
                     Polygon footprint = new SimplePolygon(iVertices) {
+                        private static final long serialVersionUID = 1L;
+
                         @Override
                         public CoordinateReferenceSystem getCoordinateReferenceSystem() {
                             return CdmTransformedGrid.this.getCoordinateReferenceSystem();

@@ -48,7 +48,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Guy Griffiths
  */
 public class SimplePolygon extends AbstractPolygon {
-
+    private static final long serialVersionUID = 1L;
     private List<HorizontalPosition> vertices;
     private CoordinateReferenceSystem crs = null;
     private List<BoundingBoxImpl> inBounds = new ArrayList<>();
@@ -259,6 +259,10 @@ public class SimplePolygon extends AbstractPolygon {
 
     @Override
     public boolean contains(double x, double y) {
+        BoundingBox mbr = getBoundingBox();
+        if(!mbr.contains(new HorizontalPosition(x, y, crs))) {
+            return false;
+        }
         /*
          * First check the rectangles which approximate this polygon. If it's in
          * one of them, it's in the Polygon

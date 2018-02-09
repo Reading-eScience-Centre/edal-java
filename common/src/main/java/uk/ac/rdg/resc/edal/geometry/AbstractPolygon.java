@@ -44,6 +44,7 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * @author Jon Blower
  */
 public abstract class AbstractPolygon implements Polygon {
+    private static final long serialVersionUID = 1L;
     private Path2D boundaryPath = null;
     private BoundingBox bbox = null;
 
