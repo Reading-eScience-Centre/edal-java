@@ -42,6 +42,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -1483,6 +1484,7 @@ public class WmsServlet extends HttpServlet {
                 Set<String> featureIds = dataset.getFeatureIds();
                 Iterator<String> iterator = featureIds.iterator();
                 List<Double> depthValues = new ArrayList<>();
+                
                 /*
                  * Make sure that the end points are included
                  */
@@ -1564,20 +1566,38 @@ public class WmsServlet extends HttpServlet {
                     if (deltaI < 1) {
                         deltaI = 1;
                     }
-                    for (int i = depthValues.size() / nLevels; i < depthValues
-                            .size(); i += depthValues.size() / nLevels) {
+                    for (int i = deltaI; i < depthValues.size(); i += deltaI) {
                         /*
                          * With these nLevels levels, what is the difference
                          * between the two we're considering?
                          */
                         Double lastDeltaEnd = depthValues.get(i);
                         Double testDelta = lastDeltaEnd - lastDeltaStart;
+                        /*
+                         * Skip duplicates
+                         */
+                        while(lastDeltaEnd.equals(lastDeltaStart)) {
+                            i += deltaI;
+                            lastDeltaEnd = depthValues.get(i);
+                            testDelta = lastDeltaEnd - lastDeltaStart;
+                        }
+                        
+                        if (testDelta <= 0) {
+                            lastDeltaStart = lastDeltaEnd;
+                            continue;
+                        }
 
                         /*
                          * Find a nice delta value which is close to this.
                          */
                         if (!deltas.empty()) {
-                            while (testDelta > delta) {
+                            /*
+                             * Safety to avoid infinite loops. They shouldn't
+                             * happen, but there could be bugs.
+                             */
+                            int max = 100;
+                            int n = 0;
+                            while (testDelta > delta && n++ < max) {
                                 lastDelta = delta;
                                 delta = deltas.pop();
                                 /*
@@ -1588,7 +1608,8 @@ public class WmsServlet extends HttpServlet {
                                  * etc)
                                  */
                             }
-                            while (levels.get(levels.size() - 1) % delta != 0) {
+                            n = 0;
+                            while (levels.get(levels.size() - 1) % delta != 0 && n++ < max) {
                                 levels.add(levels.get(levels.size() - 1) + lastDelta);
                             }
                         }
@@ -1622,7 +1643,11 @@ public class WmsServlet extends HttpServlet {
                      * perfectly.
                      */
                     JSONArray zValuesJson = new JSONArray();
+                    Set<Double> uniqueLevels = new HashSet<>();
                     for (Double level : levels) {
+                        uniqueLevels.add(level);
+                    }
+                    for (Double level : uniqueLevels) {
                         zValuesJson.put(level);
                     }
                     zAxisJson.put("values", zValuesJson);
