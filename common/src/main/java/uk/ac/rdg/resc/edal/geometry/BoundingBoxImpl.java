@@ -242,6 +242,15 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
     }
 
     @Override
+    public BoundingBox getBoundingBox() {
+        /*
+         * A BoundingBox is an instance of a Polygon, so it has this method. But
+         * the bounding box of a bounding box is (obviously) that bounding box.
+         */
+        return this;
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
