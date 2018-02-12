@@ -137,6 +137,7 @@ import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
 import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
+import uk.ac.rdg.resc.edal.position.GeoPosition;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array;
@@ -938,6 +939,28 @@ public class WmsServlet extends HttpServlet {
             if (pointFeature.getGeoPosition().getTime() != null) {
                 timeStr = TimeUtils.dateTimeToISO8601(pointFeature.getGeoPosition().getTime());
             }
+        } else if (feature instanceof TrajectoryFeature) {
+            TrajectoryFeature trajectoryFeature = (TrajectoryFeature) feature;
+            HorizontalPosition target = plottingParameters.getTargetHorizontalPosition();
+            if(!trajectoryFeature.getDomain().getCoordinateBounds().contains(target)) {
+                /*
+                 * The clicked position is not within this trajectory's bounds
+                 */
+                return null;
+            }
+            double minDist = Double.MAX_VALUE;
+            Array1D<GeoPosition> domain = trajectoryFeature.getDomain().getDomainObjects();
+            Array1D<Number> values = trajectoryFeature.getValues(variableId);
+            for(int i=0;i<domain.size();i++) {
+                GeoPosition pos = domain.get(i);
+                double dist = GISUtils.getDistSquared(pos.getHorizontalPosition(), target);
+                if(dist < minDist) {
+                    minDist = dist;
+                    value = values.get(i);
+                    position = pos.getHorizontalPosition();
+                    timeStr = TimeUtils.dateTimeToISO8601(pos.getTime());
+                }
+            }
         } else if (feature instanceof ProfileFeature) {
             /*
              * This shouldn't ever get called now that we are dealing with
@@ -974,6 +997,8 @@ public class WmsServlet extends HttpServlet {
                 timeStr = TimeUtils.dateTimeToISO8601(
                         pointSeriesFeature.getDomain().getCoordinateValue(index));
             }
+        } else {
+            log.warn("Info for Feature of type "+feature.getClass()+" requested, but this is not supported");
         }
         if (value != null) {
             /*
