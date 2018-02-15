@@ -99,6 +99,16 @@ public class GetMapStyleParams {
             layers = layersStr.split(",");
         }
 
+        if (layers == null) {
+            /*
+             * Support optional "LAYER" parameter for single layer
+             */
+            String layerStr = params.getString("layer");
+            if (layerStr != null && !layersStr.trim().isEmpty()) {
+                layers = new String[] { layerStr };
+            }
+        }
+
         String stylesStr = params.getString("styles");
         if (stylesStr == null) {
             styles = null;
