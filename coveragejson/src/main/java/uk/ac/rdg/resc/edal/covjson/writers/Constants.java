@@ -2,7 +2,8 @@ package uk.ac.rdg.resc.edal.covjson.writers;
 
 import java.util.Locale;
 
-import org.apache.sis.referencing.IdentifiedObjects;
+import org.geotoolkit.metadata.iso.citation.Citations;
+import org.geotoolkit.referencing.IdentifiedObjects;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
 
@@ -104,7 +105,7 @@ public final class Constants {
         public static String getCrsUri(CoordinateReferenceSystem crs) {
             String crsUri;
             try {
-                crsUri = IdentifiedObjects.lookupURN(crs, null);
+                crsUri = IdentifiedObjects.lookupIdentifier(Citations.HTTP_OGC, crs, true);
             } catch (FactoryException e) {
                 throw new RuntimeException(e);
             }

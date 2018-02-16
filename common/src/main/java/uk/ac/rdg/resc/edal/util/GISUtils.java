@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.util;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -43,14 +42,12 @@ import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.spi.ObjectFactory;
 
-import org.apache.sis.geometry.DirectPosition2D;
-import org.apache.sis.internal.metadata.sql.Initializer;
-import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
-import org.apache.sis.referencing.CRS;
-import org.apache.sis.referencing.CommonCRS;
-import org.apache.sis.referencing.crs.AbstractCRS;
-import org.apache.sis.referencing.cs.AxesConvention;
-import org.apache.sis.util.Utilities;
+import org.geotoolkit.factory.Hints;
+import org.geotoolkit.geometry.DirectPosition2D;
+import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.geotoolkit.referencing.CRS;
+import org.geotoolkit.referencing.crs.DefaultGeographicCRS;
+import org.geotoolkit.referencing.factory.epsg.EpsgInstaller;
 import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.Chronology;
 import org.joda.time.DateTime;
@@ -119,7 +116,7 @@ public final class GISUtils implements ObjectFactory {
      * @return the default geographic CRS with Lon-Lat axes in degrees.
      */
     public static CoordinateReferenceSystem defaultGeographicCRS() {
-        return CommonCRS.defaultGeographic();
+        return DefaultGeographicCRS.WGS84;
     }
 
     /**
@@ -134,7 +131,7 @@ public final class GISUtils implements ObjectFactory {
      */
     public static boolean isDefaultGeographicCRS(
             CoordinateReferenceSystem coordinateReferenceSystem) {
-        return Utilities.equalsIgnoreMetadata(defaultGeographicCRS(), coordinateReferenceSystem);
+        return crsMatch(coordinateReferenceSystem, defaultGeographicCRS());
     }
 
     /**
@@ -147,10 +144,8 @@ public final class GISUtils implements ObjectFactory {
      */
     public static boolean isWgs84LonLat(CoordinateReferenceSystem coordinateReferenceSystem) {
         try {
-            return CRS
-                    .findOperation(coordinateReferenceSystem,
-                            CommonCRS.WGS84.normalizedGeographic(), null)
-                    .getMathTransform().isIdentity();
+            return CRS.findMathTransform(coordinateReferenceSystem, DefaultGeographicCRS.WGS84)
+                    .isIdentity();
         } catch (Exception e) {
             return false;
         }
@@ -277,8 +272,7 @@ public final class GISUtils implements ObjectFactory {
          * should incur no large penalty for multiple invocations
          */
         try {
-            MathTransform transform = CRS.findOperation(sourceCrs, targetCrs, null)
-                    .getMathTransform();
+            MathTransform transform = CRS.findMathTransform(sourceCrs, targetCrs, true);
             if (transform.isIdentity())
                 return pos;
             double[] point = new double[] { pos.getX(), pos.getY() };
@@ -317,8 +311,8 @@ public final class GISUtils implements ObjectFactory {
          * should incur no large penalty for multiple invocations
          */
         try {
-            MathTransform wgs2crs = CRS.findOperation(CommonCRS.WGS84.normalizedGeographic(),
-                    position.getCoordinateReferenceSystem(), null).getMathTransform();
+            MathTransform wgs2crs = CRS.findMathTransform(DefaultGeographicCRS.WGS84,
+                    position.getCoordinateReferenceSystem());
             if (wgs2crs.isIdentity())
                 return heading.doubleValue();
             heading = heading.doubleValue() * DEG2RAD;
@@ -372,7 +366,7 @@ public final class GISUtils implements ObjectFactory {
 
         MathTransform transform;
         try {
-            transform = CRS.findOperation(sourceCrs, targetCrs, null).getMathTransform();
+            transform = CRS.findMathTransform(sourceCrs, targetCrs);
             return transform.isIdentity();
         } catch (FactoryException e) {
             /*
@@ -399,9 +393,8 @@ public final class GISUtils implements ObjectFactory {
         if (crsCode == null)
             throw new NullPointerException("CRS code cannot be null");
         try {
-            CoordinateReferenceSystem crs = CRS.forCode(crsCode);
-            crs = AbstractCRS.castOrCopy(crs).forConvention(AxesConvention.RIGHT_HANDED);
-            return crs;
+            /* The "true" means "force longitude first" */
+            return CRS.decode(crsCode, true);
         } catch (Exception e) {
             log.error("Problem getting CRS", e);
             throw new InvalidCrsException(crsCode, e);
@@ -1400,49 +1393,14 @@ public final class GISUtils implements ObjectFactory {
             conn = dataSource.getConnection();
             conn.setAutoCommit(true);
 
-            log.debug("EPSG database created successfully");
-            /*
-             * Install the standalone JNDI context. This will only get
-             * registered if no other JNDI handler exists. In the case that this
-             * class is within a webapp (e.g. ncWMS) inside a servlet container
-             * (e.g. Tomcat), this will not do anything.
-             */
-//            JNDI.install(dataSource);
+            Hints.putSystemDefault(Hints.EPSG_DATA_SOURCE, dataSource);
+            EpsgInstaller i = new EpsgInstaller();
+            i.setDatabase(conn);
+            if (!i.exists()) {
+                i.call();
+            }
 
-            /*
-             * WARNING - THIS IS A *HORRIBLE* HACK
-             * 
-             * Previously we were using JNDI to declare the data source, either
-             * by defining this class as the factory class for the DataSource in
-             * the webapp context, or by using the small JNDI context when run
-             * outside a webapp (itself a hack, although not a very horrible
-             * one).
-             * 
-             * The trouble is that in ncWMS we suggest that people override the
-             * context.xml to provide a config directory location which will
-             * persist across application redeploys. Doing this overwrites the
-             * supplied context, meaning that no database is created.
-             * 
-             * There is no satisfactory way around this.
-             * 
-             * So instead, we use reflection to set the private field on
-             * Initializer (the Apache SIS class). THIS IS NOT A LONG TERM
-             * SOLUTION and should be fixed as soon as possible. Fixes in order
-             * of preference:
-             * 
-             * Get Apache to include a setter on Initializer, rather than
-             * mandating JNDI
-             * 
-             * Find a way of binding the JNDI resource programmatically /
-             * outside META-INF/context.xml
-             * 
-             * Move back to Geotoolkit (it's a little slower, but it doesn't
-             * require hacks like this).
-             */
-            Field f = Initializer.class.getDeclaredField("source");
-            f.setAccessible(true);
-            f.set(null, dataSource);
-            f.setAccessible(false);
+            log.debug("EPSG database created successfully");
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
             log.error("Problem creating EPSG database.  Reprojection will not work", e);
@@ -1496,6 +1454,23 @@ public final class GISUtils implements ObjectFactory {
                 || units.equalsIgnoreCase("degreesE") || units.equalsIgnoreCase("degreeE"))
             return true;
         return false;
+    }
+
+
+    /*
+     * Taken from Apache SIS implementation.
+     */
+    private static final int EARTH_RADIUS = 6371;
+    public static double getHaversineDistance(double latitude1, double longitude1, double latitude2,
+            double longitude2) {
+        double longRadian1 = Math.toRadians(longitude1);
+        double latRadian1 = Math.toRadians(latitude1);
+        double longRadian2 = Math.toRadians(longitude2);
+        double latRadian2 = Math.toRadians(latitude2);
+        double angularDistance = Math
+                .acos(Math.sin(latRadian1) * Math.sin(latRadian2) + Math.cos(latRadian1)
+                        * Math.cos(latRadian2) * Math.cos(longRadian1 - longRadian2));
+        return EARTH_RADIUS * angularDistance;
     }
 
     public static void main(String[] args) {

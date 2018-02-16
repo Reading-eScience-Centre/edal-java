@@ -32,12 +32,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.sis.distance.DistanceUtils;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidLineStringException;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Represents a path through a coordinate system. The path consists of a set of
@@ -110,7 +110,7 @@ public final class LineString {
         for (int i = 1; i < this.controlPoints.size(); i++) {
             HorizontalPosition p1 = controlPoints.get(i - 1);
             HorizontalPosition p2 = controlPoints.get(i);
-            pathLength += DistanceUtils.getHaversineDistance(p1.getY(), p1.getX(), p2.getY(),
+            pathLength += GISUtils.getHaversineDistance(p1.getY(), p1.getX(), p2.getY(),
                     p2.getX());
             controlPointDistances[i] = pathLength;
         }

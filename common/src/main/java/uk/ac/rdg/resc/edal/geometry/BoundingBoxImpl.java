@@ -32,18 +32,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.sis.referencing.CRS;
-import org.apache.sis.geometry.Envelopes;
-import org.apache.sis.geometry.GeneralEnvelope;
-import org.apache.sis.internal.referencing.ReferencingUtilities;
+import org.geotoolkit.referencing.CRS;
 import org.opengis.geometry.Envelope;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.crs.GeographicCRS;
-import org.opengis.referencing.crs.SingleCRS;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.RangeMeaning;
-import org.opengis.referencing.operation.TransformException;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
@@ -127,32 +121,7 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
      * @param crs
      */
     public BoundingBoxImpl(CoordinateReferenceSystem crs) {
-        //
-        // TODO: replace the code below by the following block after Apache SIS 0.8 release:
-        //
-        // Envelope envelope = CRS.getDomainOfValidity(crs);
-        //
-        Envelope envelope = null;
-        final GeographicBoundingBox bbox = CRS.getGeographicBoundingBox(crs);
-        if (bbox != null && !Boolean.FALSE.equals(bbox.getInclusion())) {
-            final SingleCRS targetCRS = CRS.getHorizontalComponent(crs);
-            GeographicCRS sourceCRS = ReferencingUtilities.toNormalizedGeographicCRS(targetCRS);
-            if (sourceCRS != null) {
-                GeneralEnvelope bounds = new GeneralEnvelope(bbox);
-                bounds.translate(-CRS.getGreenwichLongitude(sourceCRS), 0);
-                bounds.setCoordinateReferenceSystem(sourceCRS);
-                try {
-                    envelope = Envelopes.transform(bounds, targetCRS);
-                } catch (TransformException e) {
-                    throw new IllegalArgumentException(e);
-                }
-            }
-        }
-        // End of TODO block
-        if (envelope == null) {
-            throw new IllegalArgumentException(
-                    "The given CRS does not specify a domain of validity.");
-        }
+        Envelope envelope = CRS.getEnvelope(crs);
         this.minx = envelope.getMinimum(0);
         this.maxx = envelope.getMaximum(0);
         this.miny = envelope.getMinimum(1);

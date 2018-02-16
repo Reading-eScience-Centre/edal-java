@@ -28,12 +28,14 @@
 
 package uk.ac.rdg.resc.edal.grid;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
