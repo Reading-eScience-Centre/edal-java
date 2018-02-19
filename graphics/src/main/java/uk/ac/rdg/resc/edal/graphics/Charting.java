@@ -48,7 +48,9 @@ import java.util.Set;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
+import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.IntervalMarker;
 import org.jfree.chart.plot.Marker;
@@ -362,10 +364,18 @@ final public class Charting {
 
         XYPlot plot = new XYPlot();
 
-        NumberAxis domainAxis = new NumberAxis(domainLabel);
-        domainAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-        domainAxis.setAutoRangeIncludesZero(false);
-        domainAxis.setInverted(invertDomainAxis);
+        ValueAxis domainAxis;
+        if (type.equalsIgnoreCase("Timeseries")) {
+            DateAxis dateAxis = new DateAxis(domainLabel);
+            dateAxis.setInverted(invertDomainAxis);
+            domainAxis = dateAxis;
+        } else {
+            NumberAxis numberAxis = new NumberAxis(domainLabel);
+            numberAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+            numberAxis.setAutoRangeIncludesZero(false);
+            numberAxis.setInverted(invertDomainAxis);
+            domainAxis = numberAxis;
+        }
         plot.setDomainAxis(domainAxis);
 
         int i = 0;
