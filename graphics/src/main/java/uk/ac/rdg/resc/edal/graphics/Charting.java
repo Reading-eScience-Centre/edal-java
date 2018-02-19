@@ -182,7 +182,7 @@ final public class Charting {
         for (ProfileFeature feature : features) {
             if (vCrs == null) {
                 vCrs = feature.getDomain().getVerticalCrs();
-                if(vCrs != null) {
+                if (vCrs != null) {
                     invertYAxis = !vCrs.isPositiveUpwards();
                 }
             } else {
@@ -209,8 +209,10 @@ final public class Charting {
                  */
                 String legend = varId + " from feature " + feature.getId() + " at ("
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ","
-                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ") - "
-                        + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
+                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ")";
+                if (feature.getTime() != null) {
+                    legend += "- " + TimeUtils.formatUtcHumanReadableDateTime(feature.getTime());
+                }
                 XYSeries series = new XYSeries(legend, true);
 
                 series.setDescription(feature.getParameter(varId).getDescription());
@@ -312,8 +314,13 @@ final public class Charting {
                 VerticalPosition zPos = feature.getVerticalPosition();
                 String legend = varId + " from feature " + feature.getId() + " at ("
                         + NUMBER_FORMAT.format(feature.getHorizontalPosition().getY()) + ", "
-                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + "), "
-                        + zPos.getZ() + zPos.getCoordinateReferenceSystem().getUnits();
+                        + NUMBER_FORMAT.format(feature.getHorizontalPosition().getX()) + ")";
+                if (zPos != null) {
+                    legend += ", " + zPos.getZ();
+                    if (zPos.getCoordinateReferenceSystem() != null) {
+                        legend += zPos.getCoordinateReferenceSystem().getUnits();
+                    }
+                }
                 TimeSeries series = new TimeSeries(legend);
 
                 series.setDescription(feature.getParameter(varId).getDescription());
