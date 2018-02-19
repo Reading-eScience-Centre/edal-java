@@ -126,18 +126,18 @@ final public class Charting {
             }
             if (hPos.getY() < 0) {
                 posSB.append(NUMBER_FORMAT.format(-hPos.getY()));
-                posSB.append("°W");
+                posSB.append("°S");
             } else {
                 posSB.append(NUMBER_FORMAT.format(hPos.getY()));
-                posSB.append("°E");
+                posSB.append("°N");
             }
             posSB.append(", ");
             if (hPos.getX() < 0) {
                 posSB.append(NUMBER_FORMAT.format(-hPos.getX()));
-                posSB.append("°S");
+                posSB.append("°W");
             } else {
                 posSB.append(NUMBER_FORMAT.format(hPos.getX()));
-                posSB.append("°N");
+                posSB.append("°E");
             }
             posString = posSB.toString();
         }
