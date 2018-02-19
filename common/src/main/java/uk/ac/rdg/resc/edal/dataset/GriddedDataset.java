@@ -286,27 +286,39 @@ public abstract class GriddedDataset extends
                      * At the same time, we construct the output domain
                      */
                     ReferenceableAxis<Double> xAxis = grid.getXAxis();
-                    minX = xAxis.findIndexOf(hBox.getMinX());
-                    maxX = xAxis.findIndexOf(hBox.getMaxX());
-                    if(maxX < minX) {
-                        /*
-                         * We may have a decreasing axis
-                         */
-                        int t = maxX;
-                        maxX = minX;
-                        minX = t;
+                    if(xAxis.isAscending()) {
+                        minX = xAxis.findIndexOf(hBox.getMinX());
+                        maxX = xAxis.findIndexOf(hBox.getMaxX());
+                    } else {
+                        minX = xAxis.findIndexOf(hBox.getMaxX());
+                        maxX = xAxis.findIndexOf(hBox.getMinX());
+                    }
+                    /*
+                     * If either limit is out of range, set it correctly
+                     */
+                    if(minX < 0) {
+                        minX = 0;
+                    }
+                    if(maxX < 0) {
+                        maxX = xAxis.size() - 1;
                     }
 
                     ReferenceableAxis<Double> yAxis = grid.getYAxis();
-                    minY = yAxis.findIndexOf(hBox.getMinY());
-                    maxY = yAxis.findIndexOf(hBox.getMaxY());
-                    if(maxY < minY) {
-                        /*
-                         * We may have a decreasing axis
-                         */
-                        int t = maxY;
-                        maxY = minY;
-                        minY = t;
+                    if(yAxis.isAscending()) {
+                        minY = yAxis.findIndexOf(hBox.getMinY());
+                        maxY = yAxis.findIndexOf(hBox.getMaxY());
+                    } else {
+                        minY = yAxis.findIndexOf(hBox.getMaxY());
+                        maxY = yAxis.findIndexOf(hBox.getMinY());
+                    }
+                    /*
+                     * If either limit is out of range, set it correctly
+                     */
+                    if(minY < 0) {
+                        minY = 0;
+                    }
+                    if(maxY < 0) {
+                        maxY = yAxis.size() - 1;
                     }
 
                     if (zExtent != null) {
