@@ -117,9 +117,9 @@ public class Parameter {
     public Parameter(String varId, String title, String description, String units,
             String standardName) {
         super();
-        if (varId == null || varId.matches("^.*[^a-zA-Z0-9_\\-:].*$")) {
+        if (varId == null || varId.matches("^.*[^a-zA-Z0-9_\\-:.].*$")) {
             throw new IllegalArgumentException(
-                    "A Parameter must have an ID consisting of only alphanumeric characters, underscores, hyphens, and colons");
+                    "A Parameter must have an ID consisting of only alphanumeric characters, underscores, hyphens, periods, and colons");
         }
         this.varId = varId;
         this.title = title;
