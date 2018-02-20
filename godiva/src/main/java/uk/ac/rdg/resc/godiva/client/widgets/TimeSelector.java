@@ -223,12 +223,12 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
             times.clear();
             if (dates.getSelectedIndex() == 0) {
                 for (String item : allTimes) {
-                    if (item.compareTo(startTime) >= 0)
+                    if (item.substring(0, 8).compareTo(startTime.substring(0, 8)) >= 0)
                         times.addItem(item);
                 }
             } else if (dates.getSelectedIndex() == (dates.getItemCount() - 1)) {
                 for (String item : allTimes) {
-                    if (item.compareTo(endTime) <= 0)
+                    if (item.substring(0, 8).compareTo(endTime.substring(0, 8)) <= 0)
                         times.addItem(item);
                 }
             } else {
