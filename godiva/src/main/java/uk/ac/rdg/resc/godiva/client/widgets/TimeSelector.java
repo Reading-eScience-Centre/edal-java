@@ -352,8 +352,8 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
                 for (String item : availableDatetimes) {
                     dates.addItem(item);
                 }
-                datesCalendar.setValue(DATE_FORMAT.parse(availableDatetimes.get(availableDatetimes
-                        .size() - 1)));
+                datesCalendar.setValue(
+                        DATE_FORMAT.parse(availableDatetimes.get(availableDatetimes.size() - 1)));
                 dates.setEnabled(true);
                 label.removeStyleDependentName("inactive");
             }
@@ -556,18 +556,38 @@ public class TimeSelector extends BaseSelector implements TimeSelectorIF {
      */
     @SuppressWarnings("deprecation")
     public static List<String> getDatesInRange(String startDateTimeStr, String endDateTimeStr) {
-        DateTimeFormat parser = DateTimeFormat.getFormat(PredefinedFormat.ISO_8601);
+        /*
+         * The below code was working fine, until we came across the (valid)
+         * ISO8601 time:
+         * 
+         * 1900-01-01T00:00:00.000+00:09:21
+         * 
+         * However, since we only want the date part, and that is simple in an
+         * ISO8601 time, we parse the dates manually.
+         */
+//        DateTimeFormat parser = DateTimeFormat.getFormat(PredefinedFormat.ISO_8601);
+//
+//        Date startDate = parser.parse(startDateTimeStr);
+//        Date endDate = parser.parse(endDateTimeStr);
+//        startDate.setHours(0);
+//        startDate.setMinutes(0);
+//        startDate.setSeconds(0);
+//
+//        endDate.setDate(endDate.getDate()+1);
+//        endDate.setHours(0);
+//        endDate.setMinutes(0);
+//        endDate.setSeconds(0);
 
-        Date startDate = parser.parse(startDateTimeStr);
-        Date endDate = parser.parse(endDateTimeStr);
-        startDate.setHours(0);
-        startDate.setMinutes(0);
-        startDate.setSeconds(0);
+        String[] startDTParts = startDateTimeStr.split("T");
+        String[] startDParts = startDTParts[0].split("-");
+        Date startDate = new Date(Integer.parseInt(startDParts[0]) - 1900,
+                Integer.parseInt(startDParts[1]) - 1, Integer.parseInt(startDParts[2]));
 
-        endDate.setDate(endDate.getDate()+1);
-        endDate.setHours(0);
-        endDate.setMinutes(0);
-        endDate.setSeconds(0);
+        String[] endDTParts = endDateTimeStr.split("T");
+        String[] endDParts = endDTParts[0].split("-");
+        Date endDate = new Date(Integer.parseInt(endDParts[0]) - 1900,
+                Integer.parseInt(endDParts[1]) - 1, Integer.parseInt(endDParts[2]));
+        endDate.setDate(endDate.getDate() + 1);
 
         List<String> dates = new ArrayList<String>();
         while (startDate.getTime() < endDate.getTime()) {
