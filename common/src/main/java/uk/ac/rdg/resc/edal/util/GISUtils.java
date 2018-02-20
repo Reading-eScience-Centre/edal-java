@@ -1401,6 +1401,15 @@ public final class GISUtils implements ObjectFactory {
             }
 
             log.debug("EPSG database created successfully");
+        } catch (FactoryException e) {
+            /*
+             * This can occur when the database already exists. Check the
+             * exception message before logging.
+             */
+            if (!e.getMessage().contains("already exists")) {
+                e.printStackTrace();
+                log.error("Problem creating EPSG database.  Reprojection will not work", e);
+            }
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
             log.error("Problem creating EPSG database.  Reprojection will not work", e);
@@ -1456,11 +1465,11 @@ public final class GISUtils implements ObjectFactory {
         return false;
     }
 
-
     /*
      * Taken from Apache SIS implementation.
      */
     private static final int EARTH_RADIUS = 6371;
+
     public static double getHaversineDistance(double latitude1, double longitude1, double latitude2,
             double longitude2) {
         double longRadian1 = Math.toRadians(longitude1);
