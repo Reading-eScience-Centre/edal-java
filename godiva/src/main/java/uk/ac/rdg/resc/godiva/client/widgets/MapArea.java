@@ -702,17 +702,15 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
                     /*
                      * If we have multiple times, we can plot a time series here
                      */
-                    String eS = elevationStr;
-                    if (targetElevationStr != null) {
-                        eS = targetElevationStr;
-                    }
                     final String parameters = "REQUEST=GetTimeseries" + "&LAYERS=" + layer
                             + "&QUERY_LAYERS=" + layer + "&BBOX=" + map.getExtent().toBBox(4)
                             + "&SRS=" + currentProjection + "&FEATURE_COUNT=5" + "&HEIGHT="
                             + ((int) map.getSize().getHeight()) + "&WIDTH="
                             + ((int) map.getSize().getWidth()) + "&X=" + mapXClick + "&Y="
                             + mapYClick + "&STYLES=default/default"
-                            + ((eS != null) ? ("&ELEVATION=" + eS) : "") + "&VERSION=1.1.1";
+                            + ((elevationStr != null) ? ("&ELEVATION=" + elevationStr) : "")
+                            + ((targetElevationStr != null) ? ("&TARGETELEVATION=" + targetElevationStr) : "")
+                            + "&VERSION=1.1.1";
                     Anchor timeseriesPlot = new Anchor("Time Series Plot");
                     timeseriesPlot.addClickHandler(new ClickHandler() {
                         @Override
