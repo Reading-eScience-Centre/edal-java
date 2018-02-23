@@ -1498,27 +1498,35 @@ public class WmsServlet extends HttpServlet {
              * guarantee that each interval will contain a feature. But it's
              * quick and it doesn't fail
              */
-
             Extent<Double> zExtent = verticalDomain.getExtent();
-            int nLevels = 20;
-            double exactDelta = (zExtent.getHigh() - zExtent.getLow()) / nLevels;
-            double delta = 0.0005;
-            Stack<Double> deltas = new Stack<>();
-            deltas.addAll(Arrays.asList(new Double[] { 10000.0, 5000.0, 1000.0, 500.0, 200.0, 100.0,
-                    50.0, 20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001 }));
-
-            while (delta < exactDelta && !deltas.isEmpty()) {
+            if (zExtent.getLow().equals(zExtent.getHigh())) {
                 /*
-                 * Find the closest gap
+                 * We have a single depth
                  */
-                delta = deltas.pop();
-            }
+                JSONArray zValuesJson = new JSONArray();
+                zValuesJson.put(zExtent.getLow());
+                zAxisJson.put("values", zValuesJson);
+            } else {
+                int nLevels = 20;
+                double exactDelta = (zExtent.getHigh() - zExtent.getLow()) / nLevels;
+                double delta = 0.0005;
+                Stack<Double> deltas = new Stack<>();
+                deltas.addAll(Arrays.asList(new Double[] { 10000.0, 5000.0, 1000.0, 500.0, 200.0, 100.0,
+                        50.0, 20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001 }));
 
-            JSONArray zValuesJson = new JSONArray();
-            for (double level = 0; level < zExtent.getHigh(); level += delta) {
-                zValuesJson.put(level);
+                while (delta < exactDelta && !deltas.isEmpty()) {
+                    /*
+                     * Find the closest gap
+                     */
+                    delta = deltas.pop();
+                }
+
+                JSONArray zValuesJson = new JSONArray();
+                for (double level = 0; level < zExtent.getHigh(); level += delta) {
+                    zValuesJson.put(level);
+                }
+                zAxisJson.put("values", zValuesJson);
             }
-            zAxisJson.put("values", zValuesJson);
         }
         return zAxisJson;
     }
