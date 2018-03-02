@@ -343,6 +343,13 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                     horizontalCoordinateAxes, nc);
 
             /*
+             * Users may define a "staggered" grid as being placed on the nodes
+             * - i.e. not actually staggered.
+             */
+            locations2Sgrids.put("node", new DefinedStaggeredGrid(nodeGrid, nodeGrid,
+                    SGridPadding.NO_OFFSET, SGridPadding.NO_OFFSET));
+
+            /*
              * Now check to see if any other grids are explicitly defined. If
              * so, we'll use them, rather than approximating the staggering of
              * the node-based grid
@@ -413,11 +420,11 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                  * otherwise derive the staggered grid from the original
                  */
                 if (faceGrid != null) {
-                    locations2Sgrids.put("face", new DefinedStaggeredGrid(faceGrid, nodeGrid,
-                            xPadding, yPadding));
+                    locations2Sgrids.put("face",
+                            new DefinedStaggeredGrid(faceGrid, nodeGrid, xPadding, yPadding));
                 } else {
-                    locations2Sgrids.put("face", new DerivedStaggeredGrid(nodeGrid, xPadding,
-                            yPadding));
+                    locations2Sgrids.put("face",
+                            new DerivedStaggeredGrid(nodeGrid, xPadding, yPadding));
                 }
 
                 /*
@@ -450,8 +457,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                     }
                 }
             } else {
-                throw new IllegalArgumentException("face_dimensions is not properly formed: "
-                        + faceDimsAttr.getStringValue());
+                throw new IllegalArgumentException(
+                        "face_dimensions is not properly formed: " + faceDimsAttr.getStringValue());
             }
 
             /*
@@ -466,11 +473,10 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                      * otherwise derive the staggered grid from the original
                      */
                     if (edge1Grid != null) {
-                        locations2Sgrids.put(
-                                "edge1",
+                        locations2Sgrids.put("edge1",
                                 new DefinedStaggeredGrid(edge1Grid, nodeGrid,
-                                        SGridPadding.NO_OFFSET, SGridPadding.fromString(matcher
-                                                .group(5).trim())));
+                                        SGridPadding.NO_OFFSET,
+                                        SGridPadding.fromString(matcher.group(5).trim())));
                     } else {
                         locations2Sgrids.put("edge1",
                                 new DerivedStaggeredGrid(nodeGrid, SGridPadding.NO_OFFSET,
@@ -491,13 +497,15 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                      * otherwise derive the staggered grid from the original
                      */
                     if (edge2Grid != null) {
-                        locations2Sgrids.put("edge2", new DefinedStaggeredGrid(edge2Grid, nodeGrid,
-                                SGridPadding.fromString(matcher.group(3).trim()),
-                                SGridPadding.NO_OFFSET));
+                        locations2Sgrids.put("edge2",
+                                new DefinedStaggeredGrid(edge2Grid, nodeGrid,
+                                        SGridPadding.fromString(matcher.group(3).trim()),
+                                        SGridPadding.NO_OFFSET));
                     } else {
-                        locations2Sgrids.put("edge2", new DerivedStaggeredGrid(nodeGrid,
-                                SGridPadding.fromString(matcher.group(3).trim()),
-                                SGridPadding.NO_OFFSET));
+                        locations2Sgrids.put("edge2",
+                                new DerivedStaggeredGrid(nodeGrid,
+                                        SGridPadding.fromString(matcher.group(3).trim()),
+                                        SGridPadding.NO_OFFSET));
                     }
                 } else {
                     throw new IllegalArgumentException("edge2_dimensions is not properly formed: "
@@ -546,8 +554,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
 
                 Map<String, StaggeredHorizontalGrid> location2grid = sgridDefinitions.get(gridId);
 
-                StaggeredHorizontalGrid staggeredGrid = location2grid.get(locationAttribute
-                        .getStringValue());
+                StaggeredHorizontalGrid staggeredGrid = location2grid
+                        .get(locationAttribute.getStringValue());
 
                 /*
                  * We reverse this list (in place), so we DO NOT want to just
@@ -560,8 +568,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                      * Not a grid. This shouldn't actually happen, but if it
                      * does, we should catch it and ignore this variable.
                      */
-                    log.error("The variable "
-                            + var.getFullName()
+                    log.error("The variable " + var.getFullName()
                             + " links to an SGRID variable, but it is not gridded.  Ignoring this variable");
                     continue;
                 }
@@ -610,9 +617,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                      * staggered grid size. The likely cause of this is that the
                      * location attribute was specified incorrectly
                      */
-                    log.error("The variable "
-                            + var.getFullName()
-                            + " is defined as being on "
+                    log.error("The variable " + var.getFullName() + " is defined as being on "
                             + locationAttribute.getStringValue()
                             + " (relative to the unstaggered parent grid).  However, that staggered grid has the size "
                             + staggeredGrid.getXSize() + "x" + staggeredGrid.getYSize()
@@ -640,15 +645,13 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                  * This is the desired behaviour.
                  */
                 Parameter p = getParameter(var);
-                Parameter unstaggeredParameter = new Parameter(p.getVariableId()
-                        + UNSTAGGERED_SUFFIX, p.getTitle(), p.getDescription(), p.getUnits(),
-                        p.getStandardName());
+                Parameter unstaggeredParameter = new Parameter(
+                        p.getVariableId() + UNSTAGGERED_SUFFIX, p.getTitle() +" (Unstaggered)", p.getDescription(),
+                        p.getUnits(), p.getStandardName(), p.getCategories());
                 GridVariableMetadata unstaggeredMetadata = new GridVariableMetadata(
                         unstaggeredParameter, staggeredGrid.getOriginalGrid(), zAxis, tAxis, true);
-                paddings.put(
-                        unstaggeredMetadata.getId(),
-                        new SGridPadding[] { staggeredGrid.getXPadding(),
-                                staggeredGrid.getYPadding() });
+                paddings.put(unstaggeredMetadata.getId(), new SGridPadding[] {
+                        staggeredGrid.getXPadding(), staggeredGrid.getYPadding() });
                 varMetadata.add(unstaggeredMetadata);
             }
         }
@@ -718,19 +721,16 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
         Attribute faceNodeConnectivityAttr = meshTopology.findAttribute("face_node_connectivity");
         String dummyVarName = meshTopology.getFullName();
         if (topologyDimAttr == null || topologyDimAttr.getNumericValue() == null) {
-            throw new DataReadingException(
-                    dummyVarName
-                            + " variable must contain the integer attribute \"topology_dimension\" to be UGRID compliant");
+            throw new DataReadingException(dummyVarName
+                    + " variable must contain the integer attribute \"topology_dimension\" to be UGRID compliant");
         }
         if (nodeCoordsAttr == null || !nodeCoordsAttr.isString()) {
-            throw new DataReadingException(
-                    dummyVarName
-                            + " variable must contain the string attribute \"node_coordinates\" to be UGRID compliant");
+            throw new DataReadingException(dummyVarName
+                    + " variable must contain the string attribute \"node_coordinates\" to be UGRID compliant");
         }
         if (faceNodeConnectivityAttr == null || !faceNodeConnectivityAttr.isString()) {
-            throw new DataReadingException(
-                    dummyVarName
-                            + " variable must contain the string attribute \"face_node_connectivity\" to be UGRID compliant");
+            throw new DataReadingException(dummyVarName
+                    + " variable must contain the string attribute \"face_node_connectivity\" to be UGRID compliant");
         }
 
         Number topologyDim = topologyDimAttr.getNumericValue();
@@ -756,10 +756,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
         }
         if (!nodeCoordVar1.getDimensions().equals(nodeCoordVar2.getDimensions())
                 || nodeCoordVar1.getDimensions().size() != 1) {
-            throw new DataReadingException(
-                    "Coordinate variables listed in "
-                            + dummyVarName
-                            + ":node_coordinates must share the same single dimension to be UGRID compliant");
+            throw new DataReadingException("Coordinate variables listed in " + dummyVarName
+                    + ":node_coordinates must share the same single dimension to be UGRID compliant");
         }
         Attribute ncv1UnitsAttr = nodeCoordVar1.findAttribute("units");
         Attribute ncv2UnitsAttr = nodeCoordVar2.findAttribute("units");
@@ -812,8 +810,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
              * We have already checked that these two are both 1D and share the
              * same dimensions
              */
-            nodePositions.add(new HorizontalPosition(nodeLonData.getDouble(i), nodeLatData
-                    .getDouble(i)));
+            nodePositions.add(
+                    new HorizontalPosition(nodeLonData.getDouble(i), nodeLatData.getDouble(i)));
         }
 
         /*
@@ -920,10 +918,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                 }
                 if (!faceCoordVar1.getDimensions().equals(faceCoordVar2.getDimensions())
                         || faceCoordVar1.getDimensions().size() != 1) {
-                    throw new DataReadingException(
-                            "Coordinate variables listed in "
-                                    + dummyVarName
-                                    + ":face_coordinates must share the same single dimension to be UGRID compliant");
+                    throw new DataReadingException("Coordinate variables listed in " + dummyVarName
+                            + ":face_coordinates must share the same single dimension to be UGRID compliant");
                 }
                 Attribute fcv1UnitsAttr = faceCoordVar1.findAttribute("units");
                 Attribute fcv2UnitsAttr = faceCoordVar2.findAttribute("units");
@@ -979,8 +975,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                 Array faceLonVals = faceLongitudeVar.read();
 
                 for (int i = 0; i < nFaces; i++) {
-                    facePositions.add(new HorizontalPosition(faceLonVals.getDouble(i), faceLatVals
-                            .getDouble(i)));
+                    facePositions.add(new HorizontalPosition(faceLonVals.getDouble(i),
+                            faceLatVals.getDouble(i)));
                     int nEdgesThisFace;
                     if (fillValue != null) {
                         /*
@@ -1092,8 +1088,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                         for (int i = 0; i < zDim.getLength(); i++) {
                             values.add((double) i);
                         }
-                        zAxis = new VerticalAxisImpl("level", values, new VerticalCrsImpl("level",
-                                false, true, positiveUp));
+                        zAxis = new VerticalAxisImpl("level", values,
+                                new VerticalCrsImpl("level", false, true, positiveUp));
                     }
                 }
             }
@@ -1238,7 +1234,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
             super(id, vars);
             this.location = location;
             this.dataReadingStrategy = dataReadingStrategy;
-            log.debug("Data reading strategy for "+id+": "+dataReadingStrategy);
+            log.debug("Data reading strategy for " + id + ": " + dataReadingStrategy);
         }
 
         @Override
@@ -1359,15 +1355,15 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                  * required data
                  */
                 String origVarId = variableId.replace(UNSTAGGERED_SUFFIX, "");
-                final Array4D<Number> origData = cdmGridDataSource.read(origVarId, tmin, tmax,
-                        zmin, zmax, ymin, ymax, xmin, xmax);
+                final Array4D<Number> origData = cdmGridDataSource.read(origVarId, tmin, tmax, zmin,
+                        zmax, ymin, ymax, xmin, xmax);
 
                 /*
                  * Now wrap the result in a 4D array which takes the appropriate
                  * average
                  */
-                return new Array4D<Number>(tmax - tmin + 1, zmax - zmin + 1, ymax - ymin + 1, xmax
-                        - xmin + 1) {
+                return new Array4D<Number>(tmax - tmin + 1, zmax - zmin + 1, ymax - ymin + 1,
+                        xmax - xmin + 1) {
                     @Override
                     public Number get(int... coords) {
                         int x = coords[3];
@@ -1398,7 +1394,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                             numDimsToAverage++;
                             break;
                         }
-                        if (x < 0 || y < 0 || x >= origData.getXSize() || y >= origData.getYSize()) {
+                        if (x < 0 || y < 0 || x >= origData.getXSize()
+                                || y >= origData.getYSize()) {
                             return null;
                         }
 
@@ -1425,8 +1422,8 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                             if (v1 == null || v2 == null || v3 == null || v4 == null) {
                                 return null;
                             }
-                            return (v1.doubleValue() + v2.doubleValue() + v3.doubleValue() + v4
-                                    .doubleValue()) / 4.0;
+                            return (v1.doubleValue() + v2.doubleValue() + v3.doubleValue()
+                                    + v4.doubleValue()) / 4.0;
                         } else if (numDimsToAverage == 0) {
                             /*
                              * This was marked as a staggered grid, but had both
