@@ -447,6 +447,10 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
             return null;
         }
     }
+    
+    public DatasetConfig getDatabaseInfo(String datasetId) {
+        return config.getDatasetInfo(datasetId);
+    }
 
     @Override
     public EnhancedVariableMetadata getLayerMetadata(final VariableMetadata variableMetadata)
