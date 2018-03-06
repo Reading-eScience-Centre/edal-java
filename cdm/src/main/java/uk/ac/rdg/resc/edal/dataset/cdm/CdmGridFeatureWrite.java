@@ -50,11 +50,14 @@ import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.NetcdfFileWriter.Version;
 import ucar.nc2.Variable;
+import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
+import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
@@ -114,7 +117,7 @@ public class CdmGridFeatureWrite {
         Set<String> outputVariables = new LinkedHashSet<>();
         outputVariables.addAll(f.getVariableIds());
 
-        Map<Variable, Array> dataToWrite = new HashMap<>();
+        Map<Variable, Array> coordVarsToWrite = new HashMap<>();
         ArrayList<Dimension> dims = null;
 
         GridDomain domain = f.getDomain();
@@ -168,7 +171,7 @@ public class CdmGridFeatureWrite {
         for (Double latVal : hGrid.getYAxis().getCoordinateValues()) {
             latVals.set(i++, latVal.floatValue());
         }
-        dataToWrite.put(latVar, latVals);
+        coordVarsToWrite.put(latVar, latVals);
 
         Variable lonVar = fileWriter.addVariable(null, "lon", DataType.FLOAT, "lon");
         lonVar.addAttribute(new Attribute("units", "degrees_east"));
@@ -177,7 +180,7 @@ public class CdmGridFeatureWrite {
         for (Double lonVal : hGrid.getXAxis().getCoordinateValues()) {
             lonVals.set(i++, lonVal.floatValue());
         }
-        dataToWrite.put(lonVar, lonVals);
+        coordVarsToWrite.put(lonVar, lonVals);
 
         if (zPresent) {
             Variable zVar = fileWriter.addVariable(null, "z", DataType.FLOAT, "z");
@@ -189,7 +192,7 @@ public class CdmGridFeatureWrite {
             for (Double zVal : zAxis.getCoordinateValues()) {
                 zVals.set(i++, zVal.floatValue());
             }
-            dataToWrite.put(zVar, zVals);
+            coordVarsToWrite.put(zVar, zVals);
         }
 
         if (tPresent) {
@@ -200,66 +203,13 @@ public class CdmGridFeatureWrite {
             for (DateTime tVal : tAxis.getCoordinateValues()) {
                 tVals.set(i++, tVal.toDate().getTime() / 1000L);
             }
-            dataToWrite.put(tVar, tVals);
+            coordVarsToWrite.put(tVar, tVals);
         }
 
         /*
          * Now write all data variables
          */
         for (String varId : outputVariables) {
-            Array4D<Number> array4d = f.getValues(varId);
-
-            /*
-             * Pick the appropriately dimensioned array
-             */
-            ArrayFloat values;
-            if (!zPresent && !tPresent) {
-                values = new ArrayFloat.D2(ySize, xSize);
-            } else if (zPresent && !tPresent) {
-                values = new ArrayFloat.D3(zSize, ySize, xSize);
-            } else if (!zPresent && tPresent) {
-                values = new ArrayFloat.D3(tSize, ySize, xSize);
-            } else {
-                values = new ArrayFloat.D4(tSize, zSize, ySize, xSize);
-            }
-            Index index = values.getIndex();
-
-            /*
-             * Loop over all 4 possible dimensions. If z/t are not present,
-             * their respective loops will only execute once.
-             */
-            for (int t = 0; t < tSize; t++) {
-                for (int z = 0; z < zSize; z++) {
-                    for (int y = 0; y < ySize; y++) {
-                        for (int x = 0; x < xSize; x++) {
-                            /*
-                             * How to set the index depends on which dimensions
-                             * are present.
-                             */
-                            if (!zPresent && !tPresent) {
-                                index.set(y, x);
-                            } else if (zPresent && !tPresent) {
-                                index.set(z, y, x);
-                            } else if (!zPresent && tPresent) {
-                                index.set(t, y, x);
-                            } else {
-                                index.set(t, z, y, x);
-                            }
-
-                            Number number = array4d.get(t, z, y, x);
-                            if (number == null ||
-                            // If we have no data, or we wish to mask the data
-                                    (cellsToMask != null
-                                            && cellsToMask.contains(new GridCoordinates2D(x, y)))) {
-                                // We use the fill value
-                                number = FILL_VALUE;
-                            }
-                            values.set(index, number.floatValue());
-                        }
-                    }
-                }
-            }
-
             Variable variable = fileWriter.addVariable(null, varId, DataType.FLOAT, dims);
 
             fileWriter.addVariableAttribute(variable,
@@ -269,8 +219,6 @@ public class CdmGridFeatureWrite {
             fileWriter.addVariableAttribute(variable,
                     new Attribute("long_name", f.getParameter(varId).getDescription()));
             fileWriter.addVariableAttribute(variable, new Attribute("_FillValue", FILL_VALUE));
-
-            dataToWrite.put(variable, values);
 
             for (Entry<Object, Object> entry : f.getFeatureProperties().entrySet()) {
                 /*
@@ -303,9 +251,90 @@ public class CdmGridFeatureWrite {
          * Finally actually create the file and write data to it
          */
         fileWriter.create();
-        for (Entry<Variable, Array> entry : dataToWrite.entrySet()) {
+
+        /*
+         * First write out the coordinate variables
+         */
+        for (Entry<Variable, Array> entry : coordVarsToWrite.entrySet()) {
             fileWriter.write(entry.getKey(), entry.getValue());
         }
+
+        /*
+         * Next we write the variable data. To avoid OutOfMemoryErrors, we write
+         * it in 2D slices.
+         */
+
+        /*
+         * Pick the appropriately dimensioned array.
+         * 
+         * Regardless of the actual z/t sizes, we create arrays where their
+         * sizes are 1, since we are writing in 2D slices.
+         */
+        ArrayFloat values;
+        if (!zPresent && !tPresent) {
+            values = new ArrayFloat.D2(ySize, xSize);
+        } else if (zPresent && tPresent) {
+            values = new ArrayFloat.D4(1, 1, ySize, xSize);
+        } else {
+            values = new ArrayFloat.D3(1, ySize, xSize);
+        }
+        Index index = values.getIndex();
+        for (String varId : outputVariables) {
+            Array4D<Number> array4d = f.getValues(varId);
+
+            /*
+             * Loop over all 4 possible dimensions. If z/t are not present,
+             * their respective loops will only execute once.
+             */
+            for (int t = 0; t < tSize; t++) {
+                for (int z = 0; z < zSize; z++) {
+                    for (int y = 0; y < ySize; y++) {
+                        for (int x = 0; x < xSize; x++) {
+
+                            /*
+                             * Again, always set the z/t values to 0, since these slices are
+                             */
+                            if (!zPresent && !tPresent) {
+                                index.set(y, x);
+                            } else if (zPresent && tPresent) {
+                                index.set(0, 0, y, x);
+                            } else {
+                                index.set(0, y, x);
+                            }
+
+                            Number number = array4d.get(t, z, y, x);
+                            if (number == null ||
+                            // If we have no data, or we wish to mask the data
+                                    (cellsToMask != null
+                                            && cellsToMask.contains(new GridCoordinates2D(x, y)))) {
+                                // We use the fill value
+                                number = FILL_VALUE;
+                            }
+                            values.set(index, number.floatValue());
+                        }
+                    }
+                    
+                    /*
+                     * Write slice with the appropriate offset
+                     */
+                    fileWriter.write(varId, new int[] { t, z, 0, 0 }, values);
+                }
+            }
+        }
+
         fileWriter.close();
+    }
+
+    public static void main(String[] args)
+            throws EdalException, IOException, InvalidRangeException {
+        CdmGridDatasetFactory f = new CdmGridDatasetFactory();
+        GriddedDataset dataset = (GriddedDataset) f.createDataset("tamsat",
+                "/home/guy/Data/tamsat/daily/2017/**/*.nc");
+        GridVariableMetadata metadata = dataset.getVariableMetadata("rfe");
+        GridFeature feature = dataset.subsetFeatures(null,
+                metadata.getHorizontalDomain().getBoundingBox(),
+                //                new BoundingBoxImpl(0, 0, 25, 25), 
+                null, metadata.getTemporalDomain().getCoordinateExtent());
+        CdmGridFeatureWrite.gridFeatureToNetCDF(feature, new File("/home/guy/Data/subset-test.nc"));
     }
 }
