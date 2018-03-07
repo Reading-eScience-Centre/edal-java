@@ -209,7 +209,11 @@ final class CdmGridDataSource implements GridDataSource {
         int ySize = ymax - ymin + 1;
         int xSize = xmax - xmin + 1;
 
-        System.gc();
+        /*
+         * Note that this could be increased by forcing a garbage collection.
+         * 
+         * However, that completely cripples performance.
+         */
         long freeBytes = Runtime.getRuntime().freeMemory();
         /*
          * This is actually the amount of storage needed to store an array of
