@@ -448,7 +448,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         }
     }
     
-    public DatasetConfig getDatabaseInfo(String datasetId) {
+    public DatasetConfig getDatasetInfo(String datasetId) {
         return config.getDatasetInfo(datasetId);
     }
 
