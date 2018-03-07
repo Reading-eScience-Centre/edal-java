@@ -282,7 +282,7 @@ public class NetcdfDatasetAggregator {
                          * Used to check that attribute values are consistent
                          * across all variables in all files.
                          */
-                        Map<String, Map<String, Object>> varname2Attributes = new HashMap<>();
+                        Map<String, Map<String, Number>> varname2Attributes = new HashMap<>();
                         String timeUnitsTest = null;
                         boolean commonTimeUnits = true;
                         for (File file : files) {
@@ -346,19 +346,20 @@ public class NetcdfDatasetAggregator {
                                          * We haven't processed a variable with
                                          * this name before
                                          */
-                                        Map<String, Object> attributeValues = new HashMap<>();
+                                        Map<String, Number> attributeValues = new HashMap<>();
                                         for (Attribute attr : v.getAttributes()) {
-                                            Object value = attr.getNumericValue();
-                                            if (value == null && attr.isString()) {
-                                                value = attr.getStringValue();
-                                            }
+                                            Number value = attr.getNumericValue();
                                             if (value != null) {
+                                                /*
+                                                 * We're only concerned with
+                                                 * numeric attributes.
+                                                 */
                                                 attributeValues.put(attr.getFullName(), value);
                                             }
                                         }
                                         varname2Attributes.put(varName, attributeValues);
                                     } else {
-                                        Map<String, Object> attributes = varname2Attributes
+                                        Map<String, Number> attributes = varname2Attributes
                                                 .get(varName);
                                         for (Attribute attr : v.getAttributes()) {
                                             if (attr.getFullName().equalsIgnoreCase("scale_factor")
@@ -381,19 +382,23 @@ public class NetcdfDatasetAggregator {
                                                                     + " has the attribute "
                                                                     + attr.getFullName()
                                                                     + " which did not exist in another file in the aggregation.  "
-                                                                    + "All variable attributes must match across all files in the aggregation.");
+                                                                    + "This attribute must match across all files in the aggregation.");
                                                 } else {
-                                                    Object value = attr.getNumericValue();
-                                                    if (value == null && attr.isString()) {
-                                                        value = attr.getStringValue();
-                                                    }
-                                                    if (value != null
-                                                            && !attributes.get(attr.getFullName())
-                                                                    .equals(value)) {
-                                                        /*-
-                                                         * We have an attribute which existed in a variable with the same
-                                                         * name, but which had a different value (ignoring special vars starting "_")
-                                                         */
+                                                    Number value = attr.getNumericValue();
+                                                    Number previousValue = attributes
+                                                            .get(attr.getFullName());
+                                                    if (value == null) {
+                                                        throw new MetadataException(
+                                                                "Trying to aggregate NetCDF files, but the variable "
+                                                                        + varName + " in the file "
+                                                                        + file.getAbsolutePath()
+                                                                        + " has an attribute "
+                                                                        + attr.getFullName()
+                                                                        + " without a numeric value.  In a previous file, this was seen to have the value "
+                                                                        + previousValue
+                                                                        + "This variable attribute must match across all files in the aggregation.");
+                                                    } else if (previousValue.doubleValue() != value
+                                                            .doubleValue()) {
                                                         throw new MetadataException(
                                                                 "Trying to aggregate NetCDF files, but the variable "
                                                                         + varName + " in the file "
@@ -404,8 +409,9 @@ public class NetcdfDatasetAggregator {
                                                                         + " which is different to the value of "
                                                                         + attr.getFullName()
                                                                         + " on " + varName
-                                                                        + " in a different file.  "
-                                                                        + "This variable attribute must match across all files in the aggregation.");
+                                                                        + " in a different file. ("
+                                                                        + previousValue
+                                                                        + "). This variable attribute must match across all files in the aggregation.");
                                                     }
                                                 }
                                             }
