@@ -32,6 +32,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Set;
 
 import ucar.ma2.Array;
@@ -56,6 +60,8 @@ import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
  * @author Jon
  */
 final class CdmGridDataSource implements GridDataSource {
+    private static final Logger log = LoggerFactory.getLogger(CdmGridDataSource.class);
+
     /*
      * Note that this is the CDM GridDataset, not the EDAL one
      */
@@ -149,8 +155,8 @@ final class CdmGridDataSource implements GridDataSource {
     }
 
     @Override
-    public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax,
-            int ymin, int ymax, int xmin, int xmax) throws IOException, DataReadingException {
+    public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax, int ymin,
+            int ymax, int xmin, int xmax) throws IOException, DataReadingException {
         /*
          * Get hold of the variable from which we want to read data
          */
@@ -187,9 +193,32 @@ final class CdmGridDataSource implements GridDataSource {
         if (rangeListCache.containsKey(variableId)) {
             rangesList = rangeListCache.get(variableId);
         } else {
+            /*
+             * TODO What if gridDatatype is null????
+             */
             rangesList = new RangesList(gridDatatype);
             rangeListCache.put(variableId, rangesList);
         }
+
+        /*
+         * If we are extracting a chunk of data which is 3- or 4-dimensional,
+         * there is a good chance that we may have memory issues.
+         */
+        int tSize = tmax - tmin + 1;
+        int zSize = zmax - zmin + 1;
+        int ySize = ymax - ymin + 1;
+        int xSize = xmax - xmin + 1;
+
+        System.gc();
+        long freeBytes = Runtime.getRuntime().freeMemory();
+        /*
+         * This is actually the amount of storage needed to store an array of
+         * floats * 2. The factor of 2 is to cover additional overheads.
+         */
+        long requiredBytes = (long) xSize * ySize * zSize * tSize * 4 * 2;
+
+        final Array arr;
+        Variable origVar = var.getOriginalVariable();
 
         /*
          * Set the ranges for t,z,y and x. This can be done without raising
@@ -200,37 +229,62 @@ final class CdmGridDataSource implements GridDataSource {
         rangesList.setYRange(ymin, ymax);
         rangesList.setXRange(xmin, xmax);
 
-        final Array arr;
-        Variable origVar = var.getOriginalVariable();
-
-        try {
-            /*
-             * See definition of syncObj for explanation of synchronization
-             */
-            if (origVar == null) {
-                synchronized (syncObj) {
-                    /* We read from the enhanced variable */
-                    arr = var.read(rangesList.getRanges());
+        /*
+         * If we have no t or z data, or we definitely have enough memory, read
+         * all data at once.
+         * 
+         * If not, we will read in 2D slices.
+         */
+        if ((tSize == 1 && zSize == 1) || freeBytes > requiredBytes) {
+            try {
+                /*
+                 * See definition of syncObj for explanation of synchronization
+                 */
+                if (origVar == null) {
+                    synchronized (syncObj) {
+                        /* We read from the enhanced variable */
+                        arr = var.read(rangesList.getRanges());
+                    }
+                } else {
+                    synchronized (syncObj) {
+                        /*
+                         * We read from the original variable to avoid enhancing
+                         * data values that we won't use
+                         */
+                        arr = origVar.read(rangesList.getRanges());
+                    }
                 }
-            } else {
-                synchronized (syncObj) {
-                    /*
-                     * We read from the original variable to avoid enhancing
-                     * data values that we won't use
-                     */
-                    arr = origVar.read(rangesList.getRanges());
-                }
+            } catch (InvalidRangeException ire) {
+                log.error("Problem reading data - invalid range:\n" + "x: " + xmin + " -> " + xmax
+                        + "y: " + ymin + " -> " + ymax + "z: " + zmin + " -> " + zmax + "t: " + tmin
+                        + " -> " + tmax);
+                throw new DataReadingException("Cannot read data - invalid range specified", ire);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                log.error(this + " caused out of bounds");
+                throw e;
             }
-        } catch (InvalidRangeException ire) {
-            ire.printStackTrace();
-            System.out.println(xmin + " -> " + xmax);
-            System.out.println(ymin + " -> " + ymax);
-            System.out.println(zmin + " -> " + zmax);
-            System.out.println(ymin + " -> " + tmax);
-            throw new DataReadingException("Cannot read data - invalid range specified", ire);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println(this + " caused out of bounds");
-            throw e;
+        } else {
+            /*
+             * Reading this section into memory may cause an OutOfMemoryError.
+             * Instead, we will read it in 2D xy slices.
+             * 
+             * This is actually fine for many use cases (e.g. extracting map
+             * data, writing to file), but will become a massive issue if
+             * profile / timeseries data is extracted. Warn about this.
+             * 
+             * When applications know it's fine, they can lower the log
+             * threshold for this class.
+             */
+            log.warn(
+                    "Not enough free memory to read entire data structure into memory. Data will be read in 2D x-y slices. "
+                            + "This will be very inefficient if you are extracting profiles / timeseries. "
+                            + "In that case, consider using a higher-level method to extract the profile / timeseries, or increase the heap size");
+            /*
+             * Simply setting the array to null will cause the WrappedArray to
+             * read 2D slices whenever get() is called. If the same 2D slice is
+             * accessed on subsequent calls, it is cached.
+             */
+            arr = null;
         }
 
         /*
@@ -240,10 +294,14 @@ final class CdmGridDataSource implements GridDataSource {
         final boolean needsEnhance;
         Set<Enhance> enhanceMode = var.getEnhanceMode();
         if (enhanceMode.contains(Enhance.ScaleMissingDefer)) {
-            /* Values read from the array are not enhanced, but need to be */
+            /*
+             * Values read from the array are not enhanced, but need to be
+             */
             needsEnhance = true;
         } else if (enhanceMode.contains(Enhance.ScaleMissing)) {
-            /* We only need to enhance if we read data from the plain Variable */
+            /*
+             * We only need to enhance if we read data from the plain Variable
+             */
             needsEnhance = origVar != null;
         } else {
             /* Values read from the array will not be enhanced */
@@ -253,8 +311,7 @@ final class CdmGridDataSource implements GridDataSource {
         /*
          * Returns a 4D array that wraps the Array
          */
-        int[] shape = new int[] { (tmax - tmin + 1), (zmax - zmin + 1), (ymax - ymin + 1),
-                (xmax - xmin + 1) };
+        int[] shape = new int[] { tSize, zSize, ySize, xSize };
         WrappedArray wrappedArray = new WrappedArray(var, arr, needsEnhance, shape, rangesList);
         return wrappedArray;
     }
@@ -272,14 +329,25 @@ final class CdmGridDataSource implements GridDataSource {
         private final int yAxisIndex;
         private final int zAxisIndex;
         private final int tAxisIndex;
+        private final boolean needsEnhance;
+        private final RangesList rangesList;
+
+        /*
+         * Used for caching in the case where we read in slices
+         */
+        private Array cachedArray2D = null;
+        private int cachedZ = -1;
+        private int cachedT = -1;
 
         public WrappedArray(VariableDS var, Array arr, boolean needsEnhance, int[] shape,
                 RangesList rangesList) {
             super(shape[0], shape[1], shape[2], shape[3]);
             this.var = var;
             this.shape = shape;
+            this.needsEnhance = needsEnhance;
+            this.rangesList = rangesList;
 
-            if (needsEnhance) {
+            if (needsEnhance && arr != null) {
                 this.arr = var.convertScaleOffsetMissing(arr);
             } else {
                 this.arr = arr;
@@ -306,41 +374,96 @@ final class CdmGridDataSource implements GridDataSource {
             int z = coords[1];
             int t = coords[0];
 
+            Array arrLocal;
+            Index index;
+            if (this.arr != null) {
+                /*
+                 * We have already read all of the data into memory. Set the
+                 * correct indices ready to read
+                 */
+                arrLocal = this.arr;
+                index = arrLocal.getIndex();
+                /*
+                 * Set the index values
+                 */
+                if (tAxisIndex >= 0)
+                    index.setDim(tAxisIndex, t);
+                if (zAxisIndex >= 0)
+                    index.setDim(zAxisIndex, z);
+            } else {
+                /*
+                 * We do not want to read all of the data at once. That means we
+                 * are going to read 2D slices on request.
+                 */
+                if (t == cachedT && z == cachedZ) {
+                    /*
+                     * If we have already read this 2D slice, use it.
+                     */
+                    arrLocal = cachedArray2D;
+                } else {
+                    /*
+                     * Need to do a read on the underlying data
+                     */
+                    rangesList.setTRange(t, t);
+                    rangesList.setZRange(z, z);
+                    try {
+                        arrLocal = var.read(rangesList.getRanges());
+                        if (this.needsEnhance) {
+                            arrLocal = var.convertScaleOffsetMissing(arrLocal);
+                        }
+                    } catch (IOException | InvalidRangeException e) {
+                        log.error("Problem reading underlying data", e);
+                        return null;
+                    }
+                    /*
+                     * Store the newly-read slice for subsequent reads.
+                     */
+                    cachedArray2D = arrLocal;
+                    cachedT = t;
+                    cachedZ = z;
+                }
+                /*
+                 * Set z/t indices - they will always be 0, since the data is 1D
+                 * in these directions.
+                 */
+                index = arrLocal.getIndex();
+                if (tAxisIndex >= 0)
+                    index.setDim(tAxisIndex, 0);
+                if (zAxisIndex >= 0)
+                    index.setDim(zAxisIndex, 0);
+            }
+
             /*
-             * Create a new index
+             * Set x/y indices. These are the same whether we're reading from a
+             * slice or the whole data chunk.
              */
-            Index index = arr.getIndex();
-            /*
-             * Set the index values
-             */
-            if (tAxisIndex >= 0)
-                index.setDim(tAxisIndex, t);
-            if (zAxisIndex >= 0)
-                index.setDim(zAxisIndex, z);
             if (yAxisIndex >= 0)
                 index.setDim(yAxisIndex, y);
             if (xAxisIndex >= 0)
                 index.setDim(xAxisIndex, x);
 
+            /*
+             * Do the actual data read.
+             */
             Number val = null;
-            switch (arr.getDataType()) {
+            switch (arrLocal.getDataType()) {
             case BYTE:
-                val = arr.getByte(index);
+                val = arrLocal.getByte(index);
                 break;
             case DOUBLE:
-                val = arr.getDouble(index);
+                val = arrLocal.getDouble(index);
                 break;
             case FLOAT:
-                val = arr.getFloat(index);
+                val = arrLocal.getFloat(index);
                 break;
             case INT:
-                val = arr.getInt(index);
+                val = arrLocal.getInt(index);
                 break;
             case LONG:
-                val = arr.getLong(index);
+                val = arrLocal.getLong(index);
                 break;
             case SHORT:
-                val = arr.getShort(index);
+                val = arrLocal.getShort(index);
                 break;
             default:
                 break;
@@ -385,8 +508,8 @@ final class CdmGridDataSource implements GridDataSource {
                 return true;
             } else {
                 double val = num.doubleValue();
-                if (var.hasFillValue() && var.isFillValue(val) || var.hasMissingValue()
-                        && var.isMissingValue(val) || Double.isNaN(val)) {
+                if (var.hasFillValue() && var.isFillValue(val)
+                        || var.hasMissingValue() && var.isMissingValue(val) || Double.isNaN(val)) {
                     return true;
                 } else if (var.hasInvalidData()) {
                     if (var.getValidMax() != -Double.MAX_VALUE) {
