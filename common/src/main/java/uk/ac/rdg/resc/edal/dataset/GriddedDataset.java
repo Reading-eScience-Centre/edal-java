@@ -237,6 +237,10 @@ public abstract class GriddedDataset extends
             int maxZ = -1;
             int minT = -1;
             int maxT = -1;
+            
+            if(variables == null) {
+                variables = getVariableIds();
+            }
             for (String var : variables) {
                 nameStr.append(var + ",");
                 descriptionStr.append(var + ",");
