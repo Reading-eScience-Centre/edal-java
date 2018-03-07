@@ -50,14 +50,11 @@ import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.NetcdfFileWriter.Version;
 import ucar.nc2.Variable;
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.domain.GridDomain;
-import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.feature.GridFeature;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
-import uk.ac.rdg.resc.edal.metadata.GridVariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
@@ -323,18 +320,5 @@ public class CdmGridFeatureWrite {
         }
 
         fileWriter.close();
-    }
-
-    public static void main(String[] args)
-            throws EdalException, IOException, InvalidRangeException {
-        CdmGridDatasetFactory f = new CdmGridDatasetFactory();
-        GriddedDataset dataset = (GriddedDataset) f.createDataset("tamsat",
-                "/home/guy/Data/tamsat/daily/2017/**/*.nc");
-        GridVariableMetadata metadata = dataset.getVariableMetadata("rfe");
-        GridFeature feature = dataset.subsetFeatures(null,
-                metadata.getHorizontalDomain().getBoundingBox(),
-                //                new BoundingBoxImpl(0, 0, 25, 25), 
-                null, metadata.getTemporalDomain().getCoordinateExtent());
-        CdmGridFeatureWrite.gridFeatureToNetCDF(feature, new File("/home/guy/Data/subset-test.nc"));
     }
 }
