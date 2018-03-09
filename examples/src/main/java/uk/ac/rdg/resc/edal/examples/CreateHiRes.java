@@ -43,7 +43,6 @@ import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
-import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowDirectionConvention;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ColouredGlyphLayer;
@@ -131,7 +130,7 @@ public class CreateHiRes {
         imageGenerator.getLayers().add(raster);
 
         ArrowLayer arrow = new ArrowLayer(dirName, 60, Color.black, new Color(0, true),
-                ArrowStyle.FAT_ARROW, ArrowDirectionConvention.METEOROLOGICAL);
+                ArrowStyle.FAT_ARROW);
         imageGenerator.getLayers().add(arrow);
 
         BufferedImage image = imageGenerator.drawImage(PlottingDomainParams

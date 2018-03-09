@@ -252,7 +252,7 @@ public class PlotsTest {
     @Test
     public void testArrow() throws EdalException {
         ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black, new Color(0, true),
-                ArrowStyle.UPSTREAM, ArrowDirectionConvention.METEOROLOGICAL);
+                ArrowStyle.UPSTREAM);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(arrowLayer);
         BufferedImage image = mapImage.drawImage(params, catalogue);
@@ -261,15 +261,15 @@ public class PlotsTest {
     }
 
     @Test
-    public void testOceonagraphicArrow() throws EdalException, IOException {
+    public void testMeteorologicalArrow() throws EdalException, IOException {
         ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black, new Color(0, true),
-                ArrowStyle.UPSTREAM, ArrowDirectionConvention.OCEANOGRAPHIC);
+                ArrowStyle.THIN_ARROW, ArrowDirectionConvention.METEOROLOGICAL);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(arrowLayer);
         BufferedImage image = mapImage.drawImage(params, catalogue);
-        BufferedImage comparisonImage = getComparisonImage("oceonagraphic_upstream_dots");
+        BufferedImage comparisonImage = getComparisonImage("meteorological_arrow");
         compareImages(comparisonImage, image);
-    }
+    }    
     
     /*
      * Static arrays defined at the bottom to stay out of the way

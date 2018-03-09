@@ -56,20 +56,25 @@ public class ArrowLayer extends GriddedImageLayer {
     }
 
     public enum ArrowDirectionConvention {
-    	OCEANOGRAPHIC, METEOROLOGICAL
+    	DEFAULT, METEOROLOGICAL
     }
     
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
 
-    private ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.METEOROLOGICAL;
+    private ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.DEFAULT;
 
     public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour,
-            Color arrowBackground, ArrowStyle arrowStyle, ArrowDirectionConvention arrowDirectionConvention) {
+            Color arrowBackground, ArrowStyle arrowStyle) {
         this.directionFieldName = directionFieldName;
         this.arrowColour = arrowColour;
         this.arrowBackground = arrowBackground;
         setArrowSize(arrowSize);
         this.arrowStyle = arrowStyle;
+    }
+    
+    public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour,
+            Color arrowBackground, ArrowStyle arrowStyle, ArrowDirectionConvention arrowDirectionConvention) {
+        this(directionFieldName, arrowSize, arrowColour, arrowBackground, arrowStyle);
         this.arrowDirectionConvention = arrowDirectionConvention;
     }
 
@@ -138,18 +143,17 @@ public class ArrowLayer extends GriddedImageLayer {
                         Double angle = GISUtils.transformWgs84Heading(values.get(j, i),
                                 domainObjects.get(j, i));
                         if (angle != null && !Float.isNaN(angle.floatValue())) {
-                            double radAngle = arrowDirectionConvention.equals(ArrowDirectionConvention.OCEANOGRAPHIC) ?
-                        		(angle.doubleValue() + 180.0) * GISUtils.DEG2RAD : angle.doubleValue() * GISUtils.DEG2RAD;
-
                             switch (arrowStyle) {
                             case UPSTREAM:
+                                /* Convert from degrees to radians */
+                                angle = angle * GISUtils.DEG2RAD;
                                 /* Calculate the end point of the arrow */
-                                double iEnd = i + arrowSize * Math.sin(radAngle);
+                                double iEnd = i + arrowSize * Math.sin(angle);
                                 /*
                                  * Screen coordinates go down, but north is up,
                                  * hence the minus sign
                                  */
-                                double jEnd = j - arrowSize * Math.cos(radAngle);
+                                double jEnd = j - arrowSize * Math.cos(angle);
                                 /* Draw a dot representing the data location */
                                 g.fillOval(i - 2, j - 2, 4, 4);
                                 /* Draw a line representing the vector direction */
@@ -158,10 +162,12 @@ public class ArrowLayer extends GriddedImageLayer {
 
                                 break;
                             case FAT_ARROW:
-                                VectorFactory.renderVector("STUMPVEC", radAngle, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("STUMPVEC", convertAngle(angle, arrowDirectionConvention),
+                                        i, j, arrowSize / 11f, g);
                                 break;
                             case TRI_ARROW:
-                                VectorFactory.renderVector("TRIVEC", radAngle, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("TRIVEC", convertAngle(angle, arrowDirectionConvention),
+                                        i, j, arrowSize / 11f, g);
                                 break;
                             case THIN_ARROW:
                             default:
@@ -170,7 +176,8 @@ public class ArrowLayer extends GriddedImageLayer {
                                  * returned from the VectorFactory, so we divide
                                  * the arrow size by 11 to get the scale factor.
                                  */
-                                VectorFactory.renderVector("LINEVEC", radAngle, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("LINEVEC", convertAngle(angle, arrowDirectionConvention),
+                                        i, j, arrowSize / 11f, g);
                                 break;
                             }
                         }
@@ -181,7 +188,19 @@ public class ArrowLayer extends GriddedImageLayer {
             yLoc += 1.0;
         }
     }
-
+    
+    /**
+     * Convert angle to radians according to the direction convention.
+     * 
+     * @param angle Angle in degrees
+     * @param arrowDirectionConvention
+     * @return Angle in radians
+     */
+    private double convertAngle(Double angle, ArrowDirectionConvention arrowDirectionConvention) {
+        return arrowDirectionConvention.equals(ArrowDirectionConvention.METEOROLOGICAL) ?
+    		(angle.doubleValue() + 180.0) * GISUtils.DEG2RAD : angle.doubleValue() * GISUtils.DEG2RAD;
+    }
+    
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();

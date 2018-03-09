@@ -58,12 +58,15 @@ public class SLDSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
         ScaleRange scale = new ScaleRange(range.getMinimum(), range.getMaximum(),
                 range.getSpacing() == Spacing.LOGARITHMIC);
 
-        ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.METEOROLOGICAL;
-        String arrowDirectionConventionText = (String) xPath.evaluate("./resc:ArrowDirectionConvention",
-                symbolizerNode, XPathConstants.STRING);
+        ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.DEFAULT;
+        if(arrowStyle.equals(ArrowStyle.FAT_ARROW) || arrowStyle.equals(ArrowStyle.THIN_ARROW)
+            || arrowStyle.equals(ArrowStyle.TRI_ARROW)) {
+            String arrowDirectionConventionText = (String) xPath.evaluate("./resc:ArrowDirectionConvention",
+    				symbolizerNode, XPathConstants.STRING);
 
-        if (arrowDirectionConventionText != null && !(arrowDirectionConventionText.equals(""))) {
-            arrowDirectionConvention = ArrowDirectionConvention.valueOf(arrowDirectionConventionText);
+            if (arrowDirectionConventionText != null && !(arrowDirectionConventionText.equals(""))) {
+                arrowDirectionConvention = ArrowDirectionConvention.valueOf(arrowDirectionConventionText);
+            }        	
         }
 
         // instantiate a new arrow layer and add it to the image
