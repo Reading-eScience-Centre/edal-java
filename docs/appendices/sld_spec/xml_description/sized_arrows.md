@@ -10,6 +10,7 @@ Whilst the most common way of representing vectors is to use a raster layer for 
 | `<resc:ArrowColour>` | String | #FF000000 (Black) | Colour of arrows |
 | `<resc:ArrowBackground>` | String | transparent | Colour of the background |
 | `<resc:ArrowStyle>` | String | THIN_ARROW | Style of the arrows to plot.  Accepts the values "THIN_ARROW" (a normal arrow), "FAT_ARROW" (a wider version), "TRI_ARROW" (a long isosceles triangle), "UPSTREAM" (dots with a line pointing in the desired direction) |
+| `<resc:ArrowDirectionConvention>` | String | METEOROLOGICAL | Convention for the arrows direction. Accepts the values "METEOROLOGICAL", "OCEANOGRAPHIC" |
 | `<resc:Range>` | XML element | Must be specified | Specifies the range of the data used to scale the arrows |
 
 For example:
@@ -21,6 +22,7 @@ For example:
     <resc:ArrowMaxSize>12</resc:ArrowMaxSize>
     <resc:ArrowColour>#FF000000</resc:ArrowColour>
     <resc:ArrowStyle>FAT_ARROW</resc:ArrowStyle>
+    <resc:ArrowDirectionConvention>METEOROLOGICAL</resc:ArrowDirectionConvention>
     <resc:Range>
         <resc:Minimum>0</resc:Minimum>
         <resc:Maximum>5</resc:Maximum>

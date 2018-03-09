@@ -51,6 +51,7 @@ import uk.ac.rdg.resc.edal.feature.MapFeature;
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
 import uk.ac.rdg.resc.edal.geometry.BoundingBoxImpl;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
+import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowDirectionConvention;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme2D;
@@ -251,7 +252,7 @@ public class PlotsTest {
     @Test
     public void testArrow() throws EdalException {
         ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black, new Color(0, true),
-                ArrowStyle.UPSTREAM);
+                ArrowStyle.UPSTREAM, ArrowDirectionConvention.METEOROLOGICAL);
         MapImage mapImage = new MapImage();
         mapImage.getLayers().add(arrowLayer);
         BufferedImage image = mapImage.drawImage(params, catalogue);
@@ -259,6 +260,17 @@ public class PlotsTest {
         compareImages(comparisonImage, image);
     }
 
+    @Test
+    public void testOceonagraphicArrow() throws EdalException, IOException {
+        ArrowLayer arrowLayer = new ArrowLayer("thetatest", 8, Color.black, new Color(0, true),
+                ArrowStyle.UPSTREAM, ArrowDirectionConvention.OCEANOGRAPHIC);
+        MapImage mapImage = new MapImage();
+        mapImage.getLayers().add(arrowLayer);
+        BufferedImage image = mapImage.drawImage(params, catalogue);
+        BufferedImage comparisonImage = getComparisonImage("oceonagraphic_upstream_dots");
+        compareImages(comparisonImage, image);
+    }
+    
     /*
      * Static arrays defined at the bottom to stay out of the way
      */

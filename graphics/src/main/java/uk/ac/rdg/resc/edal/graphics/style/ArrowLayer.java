@@ -55,15 +55,22 @@ public class ArrowLayer extends GriddedImageLayer {
         UPSTREAM, THIN_ARROW, FAT_ARROW, TRI_ARROW, WIND_BARBS
     }
 
+    public enum ArrowDirectionConvention {
+    	OCEANOGRAPHIC, METEOROLOGICAL
+    }
+    
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
 
+    private ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.METEOROLOGICAL;
+
     public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour,
-            Color arrowBackground, ArrowStyle arrowStyle) {
+            Color arrowBackground, ArrowStyle arrowStyle, ArrowDirectionConvention arrowDirectionConvention) {
         this.directionFieldName = directionFieldName;
         this.arrowColour = arrowColour;
         this.arrowBackground = arrowBackground;
         setArrowSize(arrowSize);
         this.arrowStyle = arrowStyle;
+        this.arrowDirectionConvention = arrowDirectionConvention;
     }
 
     public void setArrowSize(Integer arrowSize) {
@@ -131,17 +138,18 @@ public class ArrowLayer extends GriddedImageLayer {
                         Double angle = GISUtils.transformWgs84Heading(values.get(j, i),
                                 domainObjects.get(j, i));
                         if (angle != null && !Float.isNaN(angle.floatValue())) {
+                            double radAngle = arrowDirectionConvention.equals(ArrowDirectionConvention.OCEANOGRAPHIC) ?
+                        		(angle.doubleValue() + 180.0) * GISUtils.DEG2RAD : angle.doubleValue() * GISUtils.DEG2RAD;
+
                             switch (arrowStyle) {
                             case UPSTREAM:
-                                /* Convert from degrees to radians */
-                                angle = angle * GISUtils.DEG2RAD;
                                 /* Calculate the end point of the arrow */
-                                double iEnd = i + arrowSize * Math.sin(angle);
+                                double iEnd = i + arrowSize * Math.sin(radAngle);
                                 /*
                                  * Screen coordinates go down, but north is up,
                                  * hence the minus sign
                                  */
-                                double jEnd = j - arrowSize * Math.cos(angle);
+                                double jEnd = j - arrowSize * Math.cos(radAngle);
                                 /* Draw a dot representing the data location */
                                 g.fillOval(i - 2, j - 2, 4, 4);
                                 /* Draw a line representing the vector direction */
@@ -150,12 +158,10 @@ public class ArrowLayer extends GriddedImageLayer {
 
                                 break;
                             case FAT_ARROW:
-                                VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("STUMPVEC", radAngle, i, j, arrowSize / 11f, g);
                                 break;
                             case TRI_ARROW:
-                                VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("TRIVEC", radAngle, i, j, arrowSize / 11f, g);
                                 break;
                             case THIN_ARROW:
                             default:
@@ -164,8 +170,7 @@ public class ArrowLayer extends GriddedImageLayer {
                                  * returned from the VectorFactory, so we divide
                                  * the arrow size by 11 to get the scale factor.
                                  */
-                                VectorFactory.renderVector("LINEVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("LINEVEC", radAngle, i, j, arrowSize / 11f, g);
                                 break;
                             }
                         }

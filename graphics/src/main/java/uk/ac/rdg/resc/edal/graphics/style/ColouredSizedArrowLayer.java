@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowDirectionConvention;
 import uk.ac.rdg.resc.edal.util.Array2D;
 
 /**
@@ -35,11 +36,13 @@ public class ColouredSizedArrowLayer extends SizedArrowLayer {
      *            The {@link ColourScheme} used to determine arrow colour
      * @param arrowStyle
      *            The style of arrow to plot
+     * @param arrowDirectionConvention
+     *            The direction convention of arrow to plot      
      */
     public ColouredSizedArrowLayer(String directionField, String arrowSizeField,
             String arrowColourField, Integer arrowMinSize, Integer arrowMaxSize, ScaleRange scale,
-            ColourScheme arrowColourScheme, ArrowLayer.ArrowStyle arrowStyle) {
-        super(directionField, arrowSizeField, arrowMinSize, arrowMaxSize, scale, null, arrowStyle);
+            ColourScheme arrowColourScheme, ArrowLayer.ArrowStyle arrowStyle,  ArrowDirectionConvention arrowDirectionConvention) {
+        super(directionField, arrowSizeField, arrowMinSize, arrowMaxSize, scale, null, arrowStyle, arrowDirectionConvention);
         this.arrowColourField = arrowColourField;
         this.colourScheme = arrowColourScheme;
     }

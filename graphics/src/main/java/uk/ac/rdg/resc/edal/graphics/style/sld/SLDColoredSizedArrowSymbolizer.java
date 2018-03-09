@@ -1,6 +1,7 @@
 package uk.ac.rdg.resc.edal.graphics.style.sld;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
+import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowDirectionConvention;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ColourScheme;
 import uk.ac.rdg.resc.edal.graphics.style.ColouredSizedArrowLayer;
@@ -61,9 +62,17 @@ public class SLDColoredSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
         ScaleRange scale = new ScaleRange(range.getMinimum(), range.getMaximum(),
                 range.getSpacing() == Spacing.LOGARITHMIC);
 
+        ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.METEOROLOGICAL;
+        String arrowDirectionConventionText = (String) xPath.evaluate("./resc:ArrowDirectionConvention",
+				symbolizerNode, XPathConstants.STRING);
+
+        if (arrowDirectionConventionText != null && !(arrowDirectionConventionText.equals(""))) {
+            arrowDirectionConvention = ArrowDirectionConvention.valueOf(arrowDirectionConventionText);
+        }
+
         // instantiate a new arrow layer and add it to the image
         ColouredSizedArrowLayer arrowLayer = new ColouredSizedArrowLayer(layerName, arrowSizeField,
-                arrowColourField, arrowMinSize, arrowMaxSize, scale, arrowColourScheme, arrowStyle);
+                arrowColourField, arrowMinSize, arrowMaxSize, scale, arrowColourScheme, arrowStyle, arrowDirectionConvention);
         return arrowLayer;
     }
 }
