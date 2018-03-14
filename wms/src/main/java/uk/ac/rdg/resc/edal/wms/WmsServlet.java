@@ -1188,8 +1188,11 @@ public class WmsServlet extends HttpServlet {
          * Now create local variables containing the relevant details needed
          */
         String units = variableMetadata.getParameter().getUnits();
+        /*
+         * Converts to CRS:84 and also constrains to (-180:180]
+         */
         BoundingBox boundingBox = GISUtils
-                .constrainBoundingBox(variableMetadata.getHorizontalDomain().getBoundingBox());
+                .toWGS84BoundingBox(variableMetadata.getHorizontalDomain().getBoundingBox());
 
         Integer numColorBands = defaultProperties.getNumColorBands();
         if (numColorBands == null) {
@@ -1511,8 +1514,9 @@ public class WmsServlet extends HttpServlet {
                 double exactDelta = (zExtent.getHigh() - zExtent.getLow()) / nLevels;
                 double delta = 0.0005;
                 Stack<Double> deltas = new Stack<>();
-                deltas.addAll(Arrays.asList(new Double[] { 10000.0, 5000.0, 1000.0, 500.0, 200.0, 100.0,
-                        50.0, 20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001 }));
+                deltas.addAll(Arrays
+                        .asList(new Double[] { 10000.0, 5000.0, 1000.0, 500.0, 200.0, 100.0, 50.0,
+                                20.0, 10.0, 5.0, 2.0, 1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001 }));
 
                 while (delta < exactDelta && !deltas.isEmpty()) {
                     /*
