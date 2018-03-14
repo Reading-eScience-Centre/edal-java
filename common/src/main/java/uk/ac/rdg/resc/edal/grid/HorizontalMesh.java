@@ -586,6 +586,52 @@ public class HorizontalMesh implements DiscreteHorizontalDomain<HorizontalCell>,
 //        }
 //        return index;
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((bbox == null) ? 0 : bbox.hashCode());
+        result = prime * result + ((cellBounds == null) ? 0 : cellBounds.hashCode());
+        result = prime * result + ((positions == null) ? 0 : positions.hashCode());
+        result = prime * result
+                + ((topLevelBoundaries == null) ? 0 : topLevelBoundaries.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        HorizontalMesh other = (HorizontalMesh) obj;
+        if (bbox == null) {
+            if (other.bbox != null)
+                return false;
+        } else if (!bbox.equals(other.bbox))
+            return false;
+        if (cellBounds == null) {
+            if (other.cellBounds != null)
+                return false;
+        } else if (!cellBounds.equals(other.cellBounds))
+            return false;
+        if (positions == null) {
+            if (other.positions != null)
+                return false;
+        } else if (!positions.equals(other.positions))
+            return false;
+        if (topLevelBoundaries == null) {
+            if (other.topLevelBoundaries != null)
+                return false;
+        } else if (!topLevelBoundaries.equals(other.topLevelBoundaries))
+            return false;
+        return true;
+    }
+
+
 
     /**
      * Definition of an edge between 2 vertices.
