@@ -71,56 +71,52 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     private final ProjectionImpl proj;
     private final ReferenceableAxis<Double> xAxis;
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((bbox == null) ? 0 : bbox.hashCode());
-        result = prime * result + ((proj == null) ? 0 : proj.hashCode());
-        result = prime * result + ((xAxis == null) ? 0 : xAxis.hashCode());
-        result = prime * result + ((yAxis == null) ? 0 : yAxis.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        CdmTransformedGrid other = (CdmTransformedGrid) obj;
-        if (bbox == null) {
-            if (other.bbox != null)
-                return false;
-        } else if (!bbox.equals(other.bbox))
-            return false;
-        if (proj == null) {
-            if (other.proj != null)
-                return false;
-        } else if (!proj.getName().equals(other.proj.getName())) {
-            return false;
-        } else if (!proj.getProjectionParameters().equals(other.proj.getProjectionParameters())) {
-            return false;
-        }
-        if (xAxis == null) {
-            if (other.xAxis != null)
-                return false;
-        } else if (!xAxis.equals(other.xAxis))
-            return false;
-        if (yAxis == null) {
-            if (other.yAxis != null)
-                return false;
-        } else if (!yAxis.equals(other.yAxis))
-            return false;
-        return true;
-    }
-
     private final ReferenceableAxis<Double> yAxis;
     private final BoundingBox bbox;
 
     private transient Array2D<GridCell2D> domainObjs = null;
+
+    /**
+     * Create a new {@link CdmTransformedGrid} from a defined
+     * {@link ProjectionImpl} and a pair of axes
+     * 
+     * @param proj
+     *            The {@link ProjectionImpl} which defines the transforms to and
+     *            from lat-lon
+     * @param xAxis
+     *            The x {@link ReferenceableAxis} of the non-lat-lon grid
+     * @param yAxis
+     *            The y {@link ReferenceableAxis} of the non-lat-lon grid
+     */
+    public CdmTransformedGrid(ProjectionImpl proj, ReferenceableAxis<Double> xAxis,
+            ReferenceableAxis<Double> yAxis) {
+        this.proj = proj;
+        this.xAxis = xAxis;
+        this.yAxis = yAxis;
+
+        /*
+         * Calculate the bounding box from all of the points on the perimeter
+         */
+        List<HorizontalPosition> perimeter = new ArrayList<>();
+        List<Double> xVals = xAxis.getCoordinateValues();
+        List<Double> yVals = yAxis.getCoordinateValues();
+        for (Double x : xVals) {
+            LatLonPoint llp = proj.projToLatLon(x, yVals.get(0));
+            perimeter.add(new HorizontalPosition(llp.getLongitude(), llp.getLatitude()));
+
+            llp = proj.projToLatLon(x, yVals.get(yVals.size() - 1));
+            perimeter.add(new HorizontalPosition(llp.getLongitude(), llp.getLatitude()));
+        }
+        for (Double y : yVals) {
+            LatLonPoint llp = proj.projToLatLon(xVals.get(0), y);
+            perimeter.add(new HorizontalPosition(llp.getLongitude(), llp.getLatitude()));
+
+            llp = proj.projToLatLon(xVals.get(xVals.size() - 1), y);
+            perimeter.add(new HorizontalPosition(llp.getLongitude(), llp.getLatitude()));
+        }
+
+        this.bbox = GISUtils.getBoundingBox(perimeter);
+    }
 
     /**
      * @param coordSys
@@ -163,7 +159,8 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
             /*
              * The normal situation - use the bounds to create the bounding box
              */
-            bbox = new BoundingBoxImpl(lonMin, latMin, lonMax, latMax, GISUtils.defaultGeographicCRS());
+            bbox = new BoundingBoxImpl(lonMin, latMin, lonMax, latMax,
+                    GISUtils.defaultGeographicCRS());
         } else {
             /*
              * Some projections (MSGnavigation as returned by GRIB is the only
@@ -246,9 +243,8 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
                              * The x,y coordinates are in the external CRS of
                              * this grid
                              */
-                            GridCoordinates2D posCoords = CdmTransformedGrid.this
-                                    .findIndexOf(new HorizontalPosition(x, y,
-                                            GISUtils.defaultGeographicCRS()));
+                            GridCoordinates2D posCoords = CdmTransformedGrid.this.findIndexOf(
+                                    new HorizontalPosition(x, y, GISUtils.defaultGeographicCRS()));
                             if (posCoords == null)
                                 return false;
                             return (posCoords.getX() == coords[1] && posCoords.getY() == coords[0]);
@@ -285,7 +281,8 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     }
 
     @Override
-    public double transformNativeHeadingToWgs84(double xComp, double yComp, double lon, double lat) {
+    public double transformNativeHeadingToWgs84(double xComp, double yComp, double lon,
+            double lat) {
         double dxy = 1e-8;
         ProjectionPoint centre = proj.latLonToProj(lat, lon);
         LatLonPoint xPlus = proj.projToLatLon(centre.getX() + dxy, centre.getY());
@@ -322,6 +319,52 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     @Override
     public int getYSize() {
         return yAxis.size();
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((bbox == null) ? 0 : bbox.hashCode());
+        result = prime * result + ((proj == null) ? 0 : proj.hashCode());
+        result = prime * result + ((xAxis == null) ? 0 : xAxis.hashCode());
+        result = prime * result + ((yAxis == null) ? 0 : yAxis.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CdmTransformedGrid other = (CdmTransformedGrid) obj;
+        if (bbox == null) {
+            if (other.bbox != null)
+                return false;
+        } else if (!bbox.equals(other.bbox))
+            return false;
+        if (proj == null) {
+            if (other.proj != null)
+                return false;
+        } else if (!proj.getName().equals(other.proj.getName())) {
+            return false;
+        } else if (!proj.getProjectionParameters().equals(other.proj.getProjectionParameters())) {
+            return false;
+        }
+        if (xAxis == null) {
+            if (other.xAxis != null)
+                return false;
+        } else if (!xAxis.equals(other.xAxis))
+            return false;
+        if (yAxis == null) {
+            if (other.yAxis != null)
+                return false;
+        } else if (!yAxis.equals(other.yAxis))
+            return false;
+        return true;
     }
 
 }
