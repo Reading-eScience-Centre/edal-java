@@ -269,6 +269,14 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
                 position.getCoordinateReferenceSystem())) {
             position = GISUtils.transformPosition(position, getCoordinateReferenceSystem());
         }
+        
+        if(!this.bbox.contains(position)) {
+            /*
+             * The position is definitely outside the domain of this grid
+             */
+            return null;
+        }
+        
         /*
          * Now transform from CRS84 to the local CRS
          */
@@ -276,8 +284,15 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
         /*
          * and find the indices along both axes
          */
-        return new GridCoordinates2D(xAxis.findIndexOf(transformed.getX()),
-                yAxis.findIndexOf(transformed.getY()));
+        int xi = xAxis.findIndexOf(transformed.getX());
+        if(xi < 0) {
+            return null;
+        }
+        int yi = yAxis.findIndexOf(transformed.getY());
+        if(yi < 0) {
+            return null;
+        }
+        return new GridCoordinates2D(xi, yi);
     }
 
     @Override
