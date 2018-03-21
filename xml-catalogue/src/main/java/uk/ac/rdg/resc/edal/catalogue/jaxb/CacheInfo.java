@@ -46,9 +46,9 @@ import uk.ac.rdg.resc.edal.graphics.utils.FeatureCatalogue;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CacheInfo {
     @XmlAttribute(name = "enabled")
-    private boolean enabled = false;
+    private boolean enabled = true;
     @XmlElement(name = "inMemorySizeMB")
-    private int inMemorySizeMB = 256;
+    private int inMemorySizeMB = 512;
     @XmlElement(name = "elementLifetimeMinutes")
     private float elementLifetimeMinutes = 0;
 

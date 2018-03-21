@@ -95,14 +95,14 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
     private static final String WMS_CACHE_CONFIG = "ehcache.config";
     private static final String CACHE_NAME = "featureCache";
     private static final String CACHE_MANAGER = "EDAL-CacheManager";
-    private static final int CACHE_SIZE = 512;
+    private static final long CACHE_SIZE_MB = 512;
     private static final int LIFETIME_SECONDS = 0;
     private static final int MAX_CACHE_DEPTH = 4_000_000;
     final MemoryStoreEvictionPolicy EVICTION_POLICY = MemoryStoreEvictionPolicy.LFU;
     private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
     private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
 
-    private boolean cachingEnabled = true;
+    private boolean cachingEnabled;
     protected static CacheManager cacheManager;
     private Cache featureCache = null;
     private static MBeanServer mBeanServer;
@@ -137,87 +137,103 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
 
         this.layerNameMapper = layerNameMapper;
 
-        /*
-         * We are using an in-memory cache with a configured memory size (as
-         * opposed to a configured number of items in memory). This has the
-         * advantage that we will get a hard limit on the amount of memory the
-         * cache consumes. The disadvantage is that the size of each object
-         * needs to be calculated prior to inserting it into the cache.
-         * 
-         * The maxDepth property specified the maximum number of object
-         * references to count before a warning is given.
-         * 
-         * Now, we are generally caching 2 things:
-         * 
-         * 1) Gridded map features which will generally have 256*256 ~= 65,000
-         * values, but could easily be bigger
-         * 
-         * 2) Collections of point features. A year's worth of EN3 data could
-         * typically contain >15,000 features, each with a number of properties
-         * 
-         * These can need to count a very large number of object references.
-         * However, this calculation is actually pretty quick. Setting the max
-         * depth to 4,000,000 seems to suppress the vast majority of warnings,
-         * and doesn't impact performance noticeably.
-         * 
-         * Cache configuration specified in resources/ehcache.xml
-         */
+        this.cachingEnabled = config.getCacheSettings().isEnabled();
+        long cacheLifetimeSeconds = (long) (config.getCacheSettings().getElementLifetimeMinutes()
+                * 60);
+
         String ehcache_file = System.getProperty(WMS_CACHE_CONFIG);
+        boolean externalCacheConfig;
         if (ehcache_file != null && !ehcache_file.isEmpty()) {
             cacheManager = CacheManager.create(System.getProperty(WMS_CACHE_CONFIG));
+            externalCacheConfig = true;
         } else {
             cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER)
                     .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(MAX_CACHE_DEPTH)));
+            externalCacheConfig = false;
         }
 
-        if (cacheManager.cacheExists(CACHE_NAME) == false) {
+        if (cachingEnabled) {
             /*
-             * Configure cache
+             * We are using an in-memory cache with a configured memory size (as
+             * opposed to a configured number of items in memory). This has the
+             * advantage that we will get a hard limit on the amount of memory
+             * the cache consumes. The disadvantage is that the size of each
+             * object needs to be calculated prior to inserting it into the
+             * cache.
+             * 
+             * The maxDepth property specified the maximum number of object
+             * references to count before a warning is given.
+             * 
+             * Now, we are generally caching 2 things:
+             * 
+             * 1) Gridded map features which will generally have 256*256 ~=
+             * 65,000 values, but could easily be bigger
+             * 
+             * 2) Collections of point features. A year's worth of EN3 data
+             * could typically contain >15,000 features, each with a number of
+             * properties
+             * 
+             * These can need to count a very large number of object references.
+             * However, this calculation is actually pretty quick. Setting the
+             * max depth to 4,000,000 seems to suppress the vast majority of
+             * warnings, and doesn't impact performance noticeably.
+             * 
+             * Cache configuration specified in resources/ehcache.xml
              */
-            CacheConfiguration cacheConfig = new CacheConfiguration(CACHE_NAME, 0).eternal(true)
-                    .maxBytesLocalHeap(CACHE_SIZE, MemoryUnit.MEGABYTES)
-                    .memoryStoreEvictionPolicy(EVICTION_POLICY)
-                    .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
-                    .transactionalMode(TRANSACTIONAL_MODE);
 
-            featureCache = new Cache(cacheConfig);
-            cacheManager.addCache(featureCache);
-        } else {
+            if (externalCacheConfig && cacheManager.cacheExists(CACHE_NAME)) {
+                /*
+                 * Use parameters for featureCache from ehcache.xml config file
+                 * if passed in as JVM parameter wmsCache.config - Update cache
+                 * params in NwcmsConfig
+                 */
+                featureCache = cacheManager.getCache(CACHE_NAME);
+                CacheInfo catalogueCacheInfo = config.getCacheSettings();
+                CacheConfiguration featureCacheConfiguration = featureCache.getCacheConfiguration();
+                catalogueCacheInfo.setInMemorySizeMB(
+                        (int) (featureCacheConfiguration.getMaxBytesLocalHeap() / (1024 * 1024)));
+                catalogueCacheInfo.setElementLifetimeMinutes(
+                        featureCacheConfiguration.getTimeToLiveSeconds() / 60);
+                catalogueCacheInfo.setEnabled(true);
+            } else {
+                /*
+                 * Either no ehcache.xml file is available, or it does not
+                 * define "featureCache". In this case, configure with values
+                 * from config.xml
+                 */
+                CacheConfiguration cacheConfig = new CacheConfiguration(CACHE_NAME, 0)
+                        .eternal(cacheLifetimeSeconds == 0).timeToLiveSeconds(cacheLifetimeSeconds)
+                        .maxBytesLocalHeap(config.getCacheSettings().getInMemorySizeMB(),
+                                MemoryUnit.MEGABYTES)
+                        .memoryStoreEvictionPolicy(EVICTION_POLICY)
+                        .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
+                        .transactionalMode(TRANSACTIONAL_MODE);
+
+                featureCache = new Cache(cacheConfig);
+                cacheManager.addCache(featureCache);
+            }
+
             /*
-             * Use parameters for featureCache from ehcache.xml config file if
-             * passed in as JVM parameter wmsCache.config - Update cache params
-             * in NwcmsConfig
+             * Used to gather statistics about Ehcache
              */
-            featureCache = cacheManager.getCache(CACHE_NAME);
-            CacheInfo catalogueCacheInfo = config.getCacheSettings();
-            CacheConfiguration featureCacheConfiguration = featureCache.getCacheConfiguration();
-            catalogueCacheInfo.setInMemorySizeMB((int) (featureCacheConfiguration
-                    .getMaxBytesLocalHeap() / (1024 * 1024)));
-            catalogueCacheInfo.setElementLifetimeMinutes(featureCacheConfiguration
-                    .getTimeToLiveSeconds() / 60);
-            catalogueCacheInfo.setEnabled(true);
-        }
+            mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            try {
+                cacheManagerObjectName = new ObjectName(
+                        "net.sf.ehcache:type=CacheManager,name=" + cacheManager.getName());
+            } catch (MalformedObjectNameException e) {
+                throw new EdalException("unable to form cacheManager ObjectName", e);
+            }
 
-        /*
-         * Used to gather statistics about Ehcache
-         */
-        mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        try {
-            cacheManagerObjectName = new ObjectName("net.sf.ehcache:type=CacheManager,name="
-                            + cacheManager.getName());
-        } catch (MalformedObjectNameException e) {
-            throw new EdalException("unable to form cacheManager ObjectName", e);
-        }
-
-        if (!mBeanServer.isRegistered(cacheManagerObjectName)){
-            ManagementService.registerMBeans(cacheManager, mBeanServer, true, true, true, true);
+            if (!mBeanServer.isRegistered(cacheManagerObjectName)) {
+                ManagementService.registerMBeans(cacheManager, mBeanServer, true, true, true, true);
+            }
         }
     }
 
     public CatalogueConfig getConfig() {
         return config;
     }
-    
+
     public void shutdown() {
         CatalogueConfig.shutdown();
     }
@@ -238,8 +254,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         long lifetimeSeconds;
         long configLifetimeSeconds = (long) (cacheConfig.getElementLifetimeMinutes() * 60);
 
-        if (featureCache != null
-                && cachingEnabled == cacheConfig.isEnabled()
+        if (featureCache != null && cachingEnabled == cacheConfig.isEnabled()
                 && configCacheSizeMB == featureCache.getCacheConfiguration().getMaxBytesLocalHeap()
                         / (1024 * 1024)
                 && configLifetimeSeconds == featureCache.getCacheConfiguration()
@@ -271,7 +286,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                 /*
                  * Default values
                  */
-                cacheSizeMB = CACHE_SIZE;
+                cacheSizeMB = CACHE_SIZE_MB;
                 lifetimeSeconds = LIFETIME_SECONDS;
                 memoryStoreEviction = EVICTION_POLICY;
                 persistenceStrategy = PERSISTENCE_STRATEGY;
@@ -447,7 +462,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
             return null;
         }
     }
-    
+
     public DatasetConfig getDatasetInfo(String datasetId) {
         return config.getDatasetInfo(datasetId);
     }
@@ -460,9 +475,9 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         if (layerMetadata.containsKey(key)) {
             return layerMetadata.get(key);
         } else {
-            throw new EdalLayerNotFoundException("No layer exists for the variable: "
-                    + variableMetadata.getId() + " in the dataset: "
-                    + variableMetadata.getDataset().getId());
+            throw new EdalLayerNotFoundException(
+                    "No layer exists for the variable: " + variableMetadata.getId()
+                            + " in the dataset: " + variableMetadata.getDataset().getId());
         }
     }
 
