@@ -45,6 +45,13 @@ import uk.ac.rdg.resc.edal.util.GISUtils;
  * CRS. This does not support all of the methods of {@link Projection}, but
  * rather only those which are required by {@link CdmTransformedGrid}.
  * 
+ * To clarify, coordinates in this projection need to be rotated clockwise by an
+ * angle and then shifted by an offset before they are then in the correct
+ * geographic position in the supplied CRS. They therefore need to be
+ * transformed from that CRS to CRS:84 to give a lat-lon position.
+ * 
+ * 
+ * 
  * @author Guy Griffiths
  */
 public class RotatedOffsetProjection extends ProjectionImpl {
@@ -53,7 +60,7 @@ public class RotatedOffsetProjection extends ProjectionImpl {
     private final double originY;
     private final double angle;
     private final CoordinateReferenceSystem crs;
-    
+
     /*
      * Cached sin/cos of angle/negative angle
      */
@@ -82,7 +89,7 @@ public class RotatedOffsetProjection extends ProjectionImpl {
         this.originY = originY;
         this.angle = GISUtils.DEG2RAD * angle;
         this.crs = crs;
-        
+
         this.sa = Math.sin(angle);
         this.ca = Math.cos(angle);
         this.sna = Math.sin(-angle);
@@ -118,7 +125,8 @@ public class RotatedOffsetProjection extends ProjectionImpl {
         double xRot = x * cna + y * sna;
         double yRot = -x * sna + y * cna;
 
-        HorizontalPosition pos = GISUtils.transformPosition(new HorizontalPosition(xRot + originX, yRot + originY, crs),
+        HorizontalPosition pos = GISUtils.transformPosition(
+                new HorizontalPosition(xRot + originX, yRot + originY, crs),
                 GISUtils.defaultGeographicCRS());
 
         if (destPoint == null) {
