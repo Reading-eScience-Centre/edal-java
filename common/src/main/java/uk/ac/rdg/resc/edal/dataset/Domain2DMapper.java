@@ -31,14 +31,13 @@ package uk.ac.rdg.resc.edal.dataset;
 import java.util.List;
 
 import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
-import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+import uk.ac.rdg.resc.edal.cache.EdalCache;
 import uk.ac.rdg.resc.edal.grid.GridCell2D;
 import uk.ac.rdg.resc.edal.grid.HorizontalGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
@@ -69,8 +68,6 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
 public class Domain2DMapper extends DomainMapper<int[]> {
     private int targetXSize;
     private int targetYSize;
-
-
 
     private Domain2DMapper(HorizontalGrid sourceGrid, int targetXSize, int targetYSize) {
         super(sourceGrid, targetXSize * targetYSize);
@@ -227,30 +224,29 @@ public class Domain2DMapper extends DomainMapper<int[]> {
      * Cache management
      */
     private static final String CACHE_NAME = "domainMapperCache";
-    private static final String CACHE_MANAGER = "EDAL-CacheManager";
     private static final int MAX_HEAP_ENTRIES = 100;
     private static final MemoryStoreEvictionPolicy EVICTION_POLICY = MemoryStoreEvictionPolicy.LFU;
     private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
     private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
     private static Cache domainMapperCache;
-    protected static final CacheManager cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER));
 
     static {
-        if (cacheManager.cacheExists(CACHE_NAME) == false) {
+        if (EdalCache.cacheManager.cacheExists(CACHE_NAME) == false) {
             /*
              * Configure cache
              */
+            log.debug("Creating domainMapperCache, with maximum "+MAX_HEAP_ENTRIES+" entries");
             CacheConfiguration config = new CacheConfiguration(CACHE_NAME, MAX_HEAP_ENTRIES)
                     .eternal(true)
                     .memoryStoreEvictionPolicy(EVICTION_POLICY)
                     .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
                     .transactionalMode(TRANSACTIONAL_MODE);
             domainMapperCache = new Cache(config);
-            cacheManager.addCache(domainMapperCache);
+            EdalCache.cacheManager.addCache(domainMapperCache);
         } else {
-            domainMapperCache = cacheManager.getCache(CACHE_NAME);
+            log.debug("Loading existing domainMapperCache");
+            domainMapperCache = EdalCache.cacheManager.getCache(CACHE_NAME);
         }
-
     }
 
     public static class Domain2DMapperCacheKey {

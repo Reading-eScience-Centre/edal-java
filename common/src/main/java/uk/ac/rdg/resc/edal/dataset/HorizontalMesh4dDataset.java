@@ -28,21 +28,23 @@
 
 package uk.ac.rdg.resc.edal.dataset;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.io.Serializable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
-import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+import uk.ac.rdg.resc.edal.cache.EdalCache;
 import uk.ac.rdg.resc.edal.dataset.HZTDataSource.MeshCoordinates3D;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
 import uk.ac.rdg.resc.edal.exceptions.VariableNotFoundException;
@@ -70,6 +72,7 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
 public abstract class HorizontalMesh4dDataset extends
         DiscreteLayeredDataset<HZTDataSource, HorizontalMesh4dVariableMetadata> implements Serializable {
     private static final long serialVersionUID = 1L;
+    private static Logger log = LoggerFactory.getLogger(HorizontalMesh4dDataset.class);
 
     public HorizontalMesh4dDataset(String id, Collection<HorizontalMesh4dVariableMetadata> vars) {
         super(id, vars);
@@ -223,28 +226,28 @@ public abstract class HorizontalMesh4dDataset extends
      * - 50 maps of in-out coordinate mappings
      */
     private static final String CACHE_NAME ="meshDatasetCache";
-    private static final String CACHE_MANAGER = "EDAL-CacheManager";
     private static final int MAX_HEAP_ENTRIES = 50;
     private static final MemoryStoreEvictionPolicy EVICTION_POLICY = MemoryStoreEvictionPolicy.LFU;
     private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
     private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
     private static Cache meshDatasetCache = null;
-    protected static final CacheManager cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER));
 
     static {
-        if (cacheManager.cacheExists(CACHE_NAME) == false) {
+        if (EdalCache.cacheManager.cacheExists(CACHE_NAME) == false) {
             /*
              * Configure cache
              */
+            log.debug("Creating meshDatasetCache, with maximum "+MAX_HEAP_ENTRIES+" entries");
             CacheConfiguration config = new CacheConfiguration(CACHE_NAME, MAX_HEAP_ENTRIES)
                     .eternal(true)
                     .memoryStoreEvictionPolicy(EVICTION_POLICY)
                     .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
                     .transactionalMode(TRANSACTIONAL_MODE);
             meshDatasetCache = new Cache(config);
-            cacheManager.addCache(meshDatasetCache);
+            EdalCache.cacheManager.addCache(meshDatasetCache);
         } else {
-            meshDatasetCache = cacheManager.getCache(CACHE_NAME);
+            log.debug("Loading existing meshDatasetCache");
+            meshDatasetCache = EdalCache.cacheManager.getCache(CACHE_NAME);
         }
     }
 }

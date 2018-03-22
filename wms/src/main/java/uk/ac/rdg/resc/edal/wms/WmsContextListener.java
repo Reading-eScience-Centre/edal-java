@@ -36,11 +36,10 @@ import java.util.Enumeration;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import net.sf.ehcache.CacheManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.rdg.resc.edal.cache.EdalCache;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
 public class WmsContextListener implements ServletContextListener {
@@ -55,7 +54,7 @@ public class WmsContextListener implements ServletContextListener {
         /*
          * Shut down all cache threads
          */
-        CacheManager.getInstance().shutdown();
+        EdalCache.cacheManager.shutdown();
         
         /*
          * TODO Close any DB connections

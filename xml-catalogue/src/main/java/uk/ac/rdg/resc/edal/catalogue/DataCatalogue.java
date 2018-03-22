@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.catalogue;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,29 +39,26 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.Serializable;
 
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.CacheConfiguration.TransactionalMode;
-import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.MemoryUnit;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
-import net.sf.ehcache.config.SizeOfPolicyConfiguration;
 import net.sf.ehcache.management.ManagementService;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import uk.ac.rdg.resc.edal.cache.EdalCache;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.CacheInfo;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.CatalogueConfig;
 import uk.ac.rdg.resc.edal.catalogue.jaxb.CatalogueConfig.DatasetStorage;
@@ -94,16 +92,13 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
 
     private static final String WMS_CACHE_CONFIG = "ehcache.config";
     private static final String CACHE_NAME = "featureCache";
-    private static final String CACHE_MANAGER = "EDAL-CacheManager";
     private static final long CACHE_SIZE_MB = 512;
     private static final int LIFETIME_SECONDS = 0;
-    private static final int MAX_CACHE_DEPTH = 4_000_000;
     final MemoryStoreEvictionPolicy EVICTION_POLICY = MemoryStoreEvictionPolicy.LFU;
     private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
     private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
 
     private boolean cachingEnabled;
-    protected static CacheManager cacheManager;
     private Cache featureCache = null;
     private static MBeanServer mBeanServer;
     private static ObjectName cacheManagerObjectName;
@@ -117,7 +112,6 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
     private DateTime lastUpdateTime = new DateTime();
 
     public DataCatalogue() {
-        cacheManager = null;
         config = null;
         layerMetadata = null;
         layerNameMapper = null;
@@ -142,52 +136,33 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                 * 60);
 
         String ehcache_file = System.getProperty(WMS_CACHE_CONFIG);
-        boolean externalCacheConfig;
         if (ehcache_file != null && !ehcache_file.isEmpty()) {
-            cacheManager = CacheManager.create(System.getProperty(WMS_CACHE_CONFIG));
-            externalCacheConfig = true;
-        } else {
-            cacheManager = CacheManager.create(new Configuration().name(CACHE_MANAGER)
-                    .sizeOfPolicy(new SizeOfPolicyConfiguration().maxDepth(MAX_CACHE_DEPTH)));
-            externalCacheConfig = false;
+            /*
+             * We want to load the caches from the XML file into the EDAL cache
+             * manager
+             */
+            log.debug("Loading cache definitions from file");
+            CacheManager cacheManager = CacheManager.newInstance(System.getProperty(WMS_CACHE_CONFIG));
+            for (String cacheName : cacheManager.getCacheNames()) {
+                if(EdalCache.cacheManager.cacheExists(cacheName)) {
+                    /*
+                     * Remove any existing cache
+                     */
+                    EdalCache.cacheManager.removeCache(cacheName);
+                }
+                EdalCache.cacheManager.addCache(new Cache(cacheManager.getCache(cacheName).getCacheConfiguration()));
+            }
+            cacheManager.shutdown();
         }
 
         if (cachingEnabled) {
-            /*
-             * We are using an in-memory cache with a configured memory size (as
-             * opposed to a configured number of items in memory). This has the
-             * advantage that we will get a hard limit on the amount of memory
-             * the cache consumes. The disadvantage is that the size of each
-             * object needs to be calculated prior to inserting it into the
-             * cache.
-             * 
-             * The maxDepth property specified the maximum number of object
-             * references to count before a warning is given.
-             * 
-             * Now, we are generally caching 2 things:
-             * 
-             * 1) Gridded map features which will generally have 256*256 ~=
-             * 65,000 values, but could easily be bigger
-             * 
-             * 2) Collections of point features. A year's worth of EN3 data
-             * could typically contain >15,000 features, each with a number of
-             * properties
-             * 
-             * These can need to count a very large number of object references.
-             * However, this calculation is actually pretty quick. Setting the
-             * max depth to 4,000,000 seems to suppress the vast majority of
-             * warnings, and doesn't impact performance noticeably.
-             * 
-             * Cache configuration specified in resources/ehcache.xml
-             */
-
-            if (externalCacheConfig && cacheManager.cacheExists(CACHE_NAME)) {
+            if (EdalCache.cacheManager.cacheExists(CACHE_NAME)) {
                 /*
                  * Use parameters for featureCache from ehcache.xml config file
                  * if passed in as JVM parameter wmsCache.config - Update cache
                  * params in NwcmsConfig
                  */
-                featureCache = cacheManager.getCache(CACHE_NAME);
+                featureCache = EdalCache.cacheManager.getCache(CACHE_NAME);
                 CacheInfo catalogueCacheInfo = config.getCacheSettings();
                 CacheConfiguration featureCacheConfiguration = featureCache.getCacheConfiguration();
                 catalogueCacheInfo.setInMemorySizeMB(
@@ -210,7 +185,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                         .transactionalMode(TRANSACTIONAL_MODE);
 
                 featureCache = new Cache(cacheConfig);
-                cacheManager.addCache(featureCache);
+                EdalCache.cacheManager.addCache(featureCache);
             }
 
             /*
@@ -218,14 +193,15 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
              */
             mBeanServer = ManagementFactory.getPlatformMBeanServer();
             try {
-                cacheManagerObjectName = new ObjectName(
-                        "net.sf.ehcache:type=CacheManager,name=" + cacheManager.getName());
+                cacheManagerObjectName = new ObjectName("net.sf.ehcache:type=CacheManager,name="
+                        + EdalCache.cacheManager.getName());
             } catch (MalformedObjectNameException e) {
                 throw new EdalException("unable to form cacheManager ObjectName", e);
             }
 
             if (!mBeanServer.isRegistered(cacheManagerObjectName)) {
-                ManagementService.registerMBeans(cacheManager, mBeanServer, true, true, true, true);
+                ManagementService.registerMBeans(EdalCache.cacheManager, mBeanServer, true, true,
+                        true, true);
             }
         }
     }
@@ -268,7 +244,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         cachingEnabled = cacheConfig.isEnabled();
 
         if (cachingEnabled) {
-            if (cacheManager.cacheExists(CACHE_NAME)) {
+            if (EdalCache.cacheManager.cacheExists(CACHE_NAME)) {
                 /*
                  * Update cache configuration
                  */
@@ -297,7 +273,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                  */
                 String ehcache_file = System.getProperty("ehcache.config");
                 if (ehcache_file != null && !ehcache_file.isEmpty()) {
-                    Cache tmpfeatureCache = cacheManager.getCache(CACHE_NAME);
+                    Cache tmpfeatureCache = EdalCache.cacheManager.getCache(CACHE_NAME);
                     cacheSizeMB = tmpfeatureCache.getCacheConfiguration().getMaxBytesLocalHeap()
                             / (1024 * 1024);
                     lifetimeSeconds = tmpfeatureCache.getCacheConfiguration()
@@ -332,13 +308,13 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                         .transactionalMode(transactionalMode);
 
                 featureCache = new Cache(config);
-                cacheManager.addCache(featureCache);
+                EdalCache.cacheManager.addCache(featureCache);
             }
         } else {
             /*
              * Remove existing cache to free up memory
              */
-            cacheManager.removeCache(CACHE_NAME);
+            EdalCache.cacheManager.removeCache(CACHE_NAME);
         }
     }
 
