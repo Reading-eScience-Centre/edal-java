@@ -1724,7 +1724,7 @@ public class WmsServlet extends HttpServlet {
                 Iterator<Number> iterator = values.iterator();
                 while (iterator.hasNext()) {
                     Number value = iterator.next();
-                    if (value != null) {
+                    if (value != null && !Double.isNaN(value.doubleValue())) {
                         max = Math.max(max, value.doubleValue());
                         min = Math.min(min, value.doubleValue());
                     }
