@@ -74,8 +74,10 @@ public class KmzFormat extends ImageFormat {
                 kml.append("<visibility>1</visibility>");
                 kml.append("<name>" + name + "</name>");
                 kml.append("<description>" + description + "</description>");
-                double meanLon = (bbox.getEastBoundLongitude() + bbox.getWestBoundLongitude()) / 2.0;
-                double meanLat = (bbox.getNorthBoundLatitude() + bbox.getSouthBoundLatitude()) / 2.0;
+                double meanLon = (bbox.getEastBoundLongitude() + bbox.getWestBoundLongitude())
+                        / 2.0;
+                double meanLat = (bbox.getNorthBoundLatitude() + bbox.getSouthBoundLatitude())
+                        / 2.0;
                 kml.append("<LookAt><latitude>" + meanLat + "</latitude><longitude>" + meanLon
                         + "</longitude><range>10000000</range></LookAt>");
                 /* Add the screen overlay containing the colour scale */
@@ -134,30 +136,28 @@ public class KmzFormat extends ImageFormat {
         kml.append("</Folder>");
         kml.append("</kml>");
 
-        ZipOutputStream zipOut = new ZipOutputStream(out);
+        try (ZipOutputStream zipOut = new ZipOutputStream(out)) {
+            /* Write the KML file: todo get filename properly */
+            ZipEntry kmlEntry = new ZipEntry(name + ".kml");
+            kmlEntry.setTime(System.currentTimeMillis());
+            zipOut.putNextEntry(kmlEntry);
+            zipOut.write(kml.toString().getBytes());
 
-        /* Write the KML file: todo get filename properly */
-        ZipEntry kmlEntry = new ZipEntry(name + ".kml");
-        kmlEntry.setTime(System.currentTimeMillis());
-        zipOut.putNextEntry(kmlEntry);
-        zipOut.write(kml.toString().getBytes());
+            /* Now write all the images */
+            int frameIndex = 0;
+            for (BufferedImage frame : frames) {
+                ZipEntry picEntry = new ZipEntry(getPicFileName(frameIndex));
+                frameIndex++;
+                zipOut.putNextEntry(picEntry);
+                ImageIO.write(frame, PICEXT, zipOut);
+            }
 
-        /* Now write all the images */
-        int frameIndex = 0;
-        for (BufferedImage frame : frames) {
-            ZipEntry picEntry = new ZipEntry(getPicFileName(frameIndex));
-            frameIndex++;
-            zipOut.putNextEntry(picEntry);
-            ImageIO.write(frame, PICEXT, zipOut);
+            /* Finally, write the colour scale */
+            ZipEntry scaleEntry = new ZipEntry(COLOUR_SCALE_FILENAME);
+            zipOut.putNextEntry(scaleEntry);
+            /* Write the colour scale bar to the KMZ file */
+            ImageIO.write(legend, PICEXT, zipOut);
         }
-
-        /* Finally, write the colour scale */
-        ZipEntry scaleEntry = new ZipEntry(COLOUR_SCALE_FILENAME);
-        zipOut.putNextEntry(scaleEntry);
-        /* Write the colour scale bar to the KMZ file */
-        ImageIO.write(legend, PICEXT, zipOut);
-
-        zipOut.close();
     }
 
     /**

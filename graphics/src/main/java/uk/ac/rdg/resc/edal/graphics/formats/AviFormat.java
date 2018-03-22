@@ -42,40 +42,45 @@ import org.monte.media.avi.AVIWriter;
 import org.monte.media.math.Rational;
 
 /**
- * "Image" format for outputting to AVI.  Uses the
- * <a href="http://www.randelshofer.ch/monte/">Monte Media Library</a>
- * by Werner Randelshofer to do the rendering to AVI.
+ * "Image" format for outputting to AVI. Uses the
+ * <a href="http://www.randelshofer.ch/monte/">Monte Media Library</a> by Werner
+ * Randelshofer to do the rendering to AVI.
  * 
  * @author Guy Griffiths
  *
  */
 public class AviFormat extends SimpleFormat {
-    
+
     @Override
-    public void writeImage(List<BufferedImage> frames, OutputStream out, Integer frameRate) throws IOException {
+    public void writeImage(List<BufferedImage> frames, OutputStream out, Integer frameRate)
+            throws IOException {
         if (frames == null || frames.size() == 0) {
             throw new IllegalArgumentException("Cannot create an animation with no images");
         }
-        try{
         int width = frames.get(0).getWidth();
         int height = frames.get(0).getHeight();
         Format format = new Format(VideoFormatKeys.EncodingKey, VideoFormatKeys.ENCODING_AVI_DIB,
                 VideoFormatKeys.DepthKey, 24, VideoFormatKeys.MediaTypeKey, MediaType.VIDEO,
-                VideoFormatKeys.FrameRateKey, new Rational(frameRate), VideoFormatKeys.WidthKey, width,
-                VideoFormatKeys.HeightKey, height);
+                VideoFormatKeys.FrameRateKey, new Rational(frameRate), VideoFormatKeys.WidthKey,
+                width, VideoFormatKeys.HeightKey, height);
+        
+        AVIWriter writer = null;
+        try {
+            writer = new AVIWriter(new MemoryCacheImageOutputStream(out));
+            writer.addTrack(format);
+            writer.setPalette(0, frames.get(0).getColorModel());
 
-        AVIWriter writer = new AVIWriter(new MemoryCacheImageOutputStream(out));
-        writer.addTrack(format);
-        writer.setPalette(0, frames.get(0).getColorModel());
-        
-        for(BufferedImage frame : frames){
-            writer.write(0, frame, 1);
-        }
-        writer.write(0, frames.get(frames.size()-1), 1);
-        writer.close();
-        
-        } catch(Exception e){
+            for (BufferedImage frame : frames) {
+                writer.write(0, frame, 1);
+            }
+            writer.write(0, frames.get(frames.size() - 1), 1);
+
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                writer.close();
+            }
         }
     }
 

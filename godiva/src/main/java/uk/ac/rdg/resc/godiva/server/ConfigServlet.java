@@ -63,12 +63,12 @@ public class ConfigServlet extends HttpServlet {
         Map<String, Object> returnMap = new HashMap<>();
         Object configDir = context.getAttribute("configDir");
         if (configDir != null && configDir instanceof String) {
-            Properties props = new Properties();
-            try {
-                configFile = new File(((String) configDir) + "/godiva3.properties");
-                if (configFile.exists()) {
-                    lastModified = configFile.lastModified();
-                    props.load(new FileInputStream(configFile));
+            configFile = new File(((String) configDir) + "/godiva3.properties");
+            if (configFile.exists()) {
+                lastModified = configFile.lastModified();
+                try (FileInputStream fis = new FileInputStream(configFile)) {
+                    Properties props = new Properties();
+                    props.load(fis);
                     for (Object key : props.keySet()) {
                         Object value = props.getProperty((String) key);
                         if (value instanceof String) {
@@ -81,13 +81,18 @@ public class ConfigServlet extends HttpServlet {
                             returnMap.put((String) key, value);
                         }
                     }
-                } else {
-                    log.info("No godiva3.properties file found.  Defaults will be used.");
-                    /*
-                     * Now write out a default config file, for easier
-                     * configuration in future.
-                     */
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(configFile));
+                } catch (IOException e) {
+                    log.error(
+                            "Problem reading config file for Godiva3 config.  Defaults will be used",
+                            e);
+                }
+            } else {
+                log.info("No godiva3.properties file found.  Defaults will be used.");
+                /*
+                 * Now write out a default config file, for easier configuration
+                 * in future.
+                 */
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(configFile))) {
 
                     writer.write("#mapHeight=512\n");
                     writer.write("#mapWidth=1024\n");
@@ -115,10 +120,9 @@ public class ConfigServlet extends HttpServlet {
                     writer.write("#userIsOverlay=true\n");
 
                     writer.close();
+                } catch (IOException e) {
+                    log.error("Problem writing default godiva3.config");
                 }
-            } catch (IOException e) {
-                log.error("Problem reading config file for Godiva3 config.  Defaults will be used",
-                        e);
             }
         } else {
             /*

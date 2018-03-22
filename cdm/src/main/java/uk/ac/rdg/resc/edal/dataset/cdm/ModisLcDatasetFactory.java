@@ -57,20 +57,29 @@ import uk.ac.rdg.resc.edal.util.ValuesArray4D;
 public class ModisLcDatasetFactory extends DatasetFactory {
 
     @Override
-    public Dataset createDataset(String id, String location, boolean forceRefresh) throws IOException, EdalException {
+    public Dataset createDataset(String id, String location, boolean forceRefresh)
+            throws IOException, EdalException {
         File file = new File(location);
-        BufferedReader reader = new BufferedReader(new FileReader(file));
 
-        int rows = Integer.parseInt(reader.readLine().split("\\s+")[1]);
-        int cols = Integer.parseInt(reader.readLine().split("\\s+")[1]);
+        int rows;
+        int cols;
+        double xstart;
+        double ystart;
+        double inc;
+        int nodata;
+        String[] data;
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            rows = Integer.parseInt(reader.readLine().split("\\s+")[1]);
+            cols = Integer.parseInt(reader.readLine().split("\\s+")[1]);
 
-        double xstart = Double.parseDouble(reader.readLine().split("\\s+")[1]);
-        double ystart = Double.parseDouble(reader.readLine().split("\\s+")[1]);
-        double inc = Double.parseDouble(reader.readLine().split("\\s+")[1]);
-        int nodata = Integer.parseInt(reader.readLine().split("\\s+")[1]);
+            xstart = Double.parseDouble(reader.readLine().split("\\s+")[1]);
+            ystart = Double.parseDouble(reader.readLine().split("\\s+")[1]);
+            inc = Double.parseDouble(reader.readLine().split("\\s+")[1]);
+            nodata = Integer.parseInt(reader.readLine().split("\\s+")[1]);
 
-        String[] data = reader.readLine().split("\\s+");
-        reader.close();
+            data = reader.readLine().split("\\s+");
+        }
 
         ValuesArray4D vals = new ValuesArray4D(1, 1, rows, cols);
         for (int r = 0; r < rows; r++) {
@@ -92,25 +101,35 @@ public class ModisLcDatasetFactory extends DatasetFactory {
 
         Map<Integer, Category> categories = new HashMap<>();
         categories.put(0, new Category("Water", "Water", "#000080", null));
-        categories.put(1, new Category("Evergreen Needleleaf Forest", "Evergreen Needleleaf Forest", "#008000", null));
-        categories.put(2, new Category("Evergreen Broadleaf Forest", "Evergreen Broadleaf Forest", "#00FF00", null));
-        categories.put(3, new Category("Deciduous Needleleaf forest", "Deciduous Needleleaf forest", "#99CC00", null));
-        categories.put(4, new Category("Deciduous Broadleaf forest", "Deciduous Broadleaf forest", "#99FF99", null));
+        categories.put(1, new Category("Evergreen Needleleaf Forest", "Evergreen Needleleaf Forest",
+                "#008000", null));
+        categories.put(2, new Category("Evergreen Broadleaf Forest", "Evergreen Broadleaf Forest",
+                "#00FF00", null));
+        categories.put(3, new Category("Deciduous Needleleaf forest", "Deciduous Needleleaf forest",
+                "#99CC00", null));
+        categories.put(4, new Category("Deciduous Broadleaf forest", "Deciduous Broadleaf forest",
+                "#99FF99", null));
         categories.put(5, new Category("Mixed forest", "Mixed forest", "#339966", null));
         categories.put(6, new Category("Closed shrublands", "Closed shrublands", "#993366", null));
         categories.put(7, new Category("Open shrublands", "Open shrublands", "#FFCC99", null));
         categories.put(8, new Category("Woody savannas", "Woody savannas", "#CCFFCC", null));
         categories.put(9, new Category("Savannas", "Savannas", "#FFCC00", null));
         categories.put(10, new Category("Grasslands", "Grasslands", "#FF9900", null));
-        categories.put(11, new Category("Permanent wetlands", "Permanent wetlands", "#006699", null));
+        categories.put(11,
+                new Category("Permanent wetlands", "Permanent wetlands", "#006699", null));
         categories.put(12, new Category("Croplands", "Croplands", "#FFFF00", null));
-        categories.put(13, new Category("Urban and built-up", "Urban and built-up", "#FF0000", null));
-        categories.put(14, new Category("Cropland/Natural vegetation mosaic", "Cropland/Natural vegetation mosaic", "#999966", null));
+        categories.put(13,
+                new Category("Urban and built-up", "Urban and built-up", "#FF0000", null));
+        categories.put(14, new Category("Cropland/Natural vegetation mosaic",
+                "Cropland/Natural vegetation mosaic", "#999966", null));
         categories.put(15, new Category("Snow and ice", "Snow and ice", "#FFFFFF", null));
-        categories.put(16, new Category("Barren or sparsely vegetated", "Barren or sparsely vegetated", "#808080", null));
-        GridVariableMetadata metadata = new GridVariableMetadata(new Parameter("land_cover",
-                "Land Cover", "MODIS land cover", "MODIS", "", categories), new RegularGridImpl(
-                xAxis, yAxis, GISUtils.defaultGeographicCRS()), null, null, true);
+        categories.put(16, new Category("Barren or sparsely vegetated",
+                "Barren or sparsely vegetated", "#808080", null));
+        GridVariableMetadata metadata = new GridVariableMetadata(
+                new Parameter("land_cover", "Land Cover", "MODIS land cover", "MODIS", "",
+                        categories),
+                new RegularGridImpl(xAxis, yAxis, GISUtils.defaultGeographicCRS()), null, null,
+                true);
 
         List<GridVariableMetadata> metadataCollection = Arrays.asList(metadata);
         return new ModisGridDataset(id, metadataCollection, vals);
@@ -120,7 +139,8 @@ public class ModisLcDatasetFactory extends DatasetFactory {
         private static final long serialVersionUID = 1L;
         private ValuesArray4D data;
 
-        public ModisGridDataset(String id, Collection<GridVariableMetadata> vars, ValuesArray4D data) {
+        public ModisGridDataset(String id, Collection<GridVariableMetadata> vars,
+                ValuesArray4D data) {
             super(id, vars);
             this.data = data;
         }

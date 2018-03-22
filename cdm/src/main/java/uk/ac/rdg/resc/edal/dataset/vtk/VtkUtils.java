@@ -130,15 +130,17 @@ public class VtkUtils {
             Inflater decompresser = new Inflater();
             decompresser.setInput(decodeBase64);
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream(decodeBase64.length);
-            byte[] buffer = new byte[1024];
-            while (!decompresser.finished()) {
-                int count = decompresser.inflate(buffer);
-                outputStream.write(buffer, 0, count);
+            byte[] output;
+            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(
+                    decodeBase64.length)) {
+                byte[] buffer = new byte[1024];
+                while (!decompresser.finished()) {
+                    int count = decompresser.inflate(buffer);
+                    outputStream.write(buffer, 0, count);
+                }
+                output = outputStream.toByteArray();
             }
-            outputStream.close();
-            byte[] output = outputStream.toByteArray();
-
+            
             /*
              * ...each set of 4 of which represent a 32-bit float stored in
              * little endian form.
@@ -149,8 +151,8 @@ public class VtkUtils {
                 byte[] valBytes = { output[i], output[i + 1], output[i + 2], output[i + 3] };
                 ByteBuffer value = ByteBuffer.wrap(valBytes).order(ByteOrder.LITTLE_ENDIAN);
                 Float floatVal = value.getFloat();
-                for(float fill : fillVals) {
-                    if(fill == floatVal.floatValue()) {
+                for (float fill : fillVals) {
+                    if (fill == floatVal.floatValue()) {
                         floatVal = Float.NaN;
                         break;
                     }

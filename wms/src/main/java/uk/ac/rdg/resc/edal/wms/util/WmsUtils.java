@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Collection;
@@ -157,44 +156,25 @@ public class WmsUtils {
                 fullURL.append(urlParamName + "=" + request.getParameter(urlParamName));
             }
         }
-        InputStream in = null;
-        OutputStream out = null;
+        URLConnection conn;
         try {
-            /* TODO: better error handling */
-            URLConnection conn = new URL(fullURL.toString()).openConnection();
+            conn = new URL(fullURL.toString()).openConnection();
             /* Set header information */
             for (int i = 0; i < conn.getHeaderFields().size(); i++) {
                 response.setHeader(conn.getHeaderFieldKey(i), conn.getHeaderField(i));
             }
-            in = conn.getInputStream();
-            out = response.getOutputStream();
-            byte[] buf = new byte[8192];
-            int len;
-            while ((len = in.read(buf)) >= 0) {
-                out.write(buf, 0, len);
+            try (InputStream in = conn.getInputStream();
+                    OutputStream out = response.getOutputStream()) {
+                byte[] buf = new byte[8192];
+                int len;
+                while ((len = in.read(buf)) >= 0) {
+                    out.write(buf, 0, len);
+                }
+            } catch (IOException e) {
+                log.error("Problem proxying request to: " + url, e);
             }
-        } catch (MalformedURLException e) {
-            log.error("Problem proxying request to: " + url, e);
         } catch (IOException e) {
             log.error("Problem proxying request to: " + url, e);
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    log.error(
-                            "Problem with closing input stream while proxying request to: " + url,
-                            e);
-                }
-            }
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    log.error("Problem with closing output stream while proxying request to: "
-                            + url, e);
-                }
-            }
         }
     }
 
@@ -236,8 +216,8 @@ public class WmsUtils {
      */
     public static Dataset getDatasetFromLayerName(String layerName, WmsCatalogue catalogue)
             throws EdalLayerNotFoundException {
-        return catalogue.getDatasetFromId(catalogue.getLayerNameMapper().getDatasetIdFromLayerName(
-                layerName));
+        return catalogue.getDatasetFromId(
+                catalogue.getLayerNameMapper().getDatasetIdFromLayerName(layerName));
     }
 
     /**
@@ -259,8 +239,8 @@ public class WmsUtils {
         String varId = catalogue.getLayerNameMapper().getVariableIdFromLayerName(layerName);
         Dataset dataset = catalogue.getDatasetFromId(datasetId);
         if (dataset == null) {
-            throw new EdalLayerNotFoundException("The layer " + layerName
-                    + " was not found on this server");
+            throw new EdalLayerNotFoundException(
+                    "The layer " + layerName + " was not found on this server");
         }
         return dataset.getVariableMetadata(varId);
     }
@@ -299,8 +279,8 @@ public class WmsUtils {
      *             If the given layer name doesn't map to an available
      *             {@link Dataset} and Variable combination
      */
-    public static EnhancedVariableMetadata getLayerMetadata(String layerName, WmsCatalogue catalogue)
-            throws EdalLayerNotFoundException {
+    public static EnhancedVariableMetadata getLayerMetadata(String layerName,
+            WmsCatalogue catalogue) throws EdalLayerNotFoundException {
         return catalogue.getLayerMetadata(getVariableMetadataFromLayerName(layerName, catalogue));
     }
 }

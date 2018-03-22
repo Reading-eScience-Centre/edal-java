@@ -48,11 +48,15 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils.ColorAdapter;
 
 public class ColourPalette {
+    private static final Logger log = LoggerFactory.getLogger(ColourPalette.class);
+
     /**
      * The name of the default palette that will be used if the user doesn't
      * request a specific palette.
@@ -98,17 +102,17 @@ public class ColourPalette {
             String[] paletteFileNames = getResourceListing(ColourPalette.class, "palettes/");
             for (String paletteFileName : paletteFileNames) {
                 if (paletteFileName.endsWith(".pal")) {
-                    try {
-                        String paletteName = paletteFileName.substring(0,
-                                paletteFileName.lastIndexOf("."));
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                                ColourPalette.class.getResource("/palettes/" + paletteFileName)
-                                        .openStream()));
+                    String paletteName = paletteFileName.substring(0,
+                            paletteFileName.lastIndexOf("."));
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(ColourPalette.class
+                                    .getResource("/palettes/" + paletteFileName).openStream()))) {
                         addPaletteFile(paletteName, reader);
                     } catch (IOException e) {
                         /*
                          * If we can't add this palette, don't add it
                          */
+                        log.warn("Couldn't add palette: " + paletteName, e);
                     }
                 }
             }
@@ -148,16 +152,16 @@ public class ColourPalette {
         if (paletteDir.isDirectory()) {
             for (String paletteFileName : paletteDir.list()) {
                 if (paletteFileName.endsWith(".pal")) {
-                    try {
-                        String paletteName = paletteFileName.substring(0,
-                                paletteFileName.lastIndexOf("."));
-                        BufferedReader reader = new BufferedReader(new FileReader(new File(
-                                paletteDir.getAbsolutePath() + "/" + paletteFileName)));
+                    String paletteName = paletteFileName.substring(0,
+                            paletteFileName.lastIndexOf("."));
+                    try (BufferedReader reader = new BufferedReader(new FileReader(
+                            new File(paletteDir.getAbsolutePath() + "/" + paletteFileName)))) {
                         addPaletteFile(paletteName, reader);
                     } catch (IOException e) {
                         /*
                          * If we can't add this palette, don't add it
                          */
+                        log.warn("Couldn't add palette: " + paletteName, e);
                     }
                 }
             }
@@ -240,8 +244,8 @@ public class ColourPalette {
         } else {
             Color[] colours = colourSetFromString(paletteString);
             if (colours == null) {
-                throw new EdalException(paletteString
-                        + " is not an existing palette name or a palette definition");
+                throw new EdalException(
+                        paletteString + " is not an existing palette name or a palette definition");
             }
             return new ColourPalette(colours, nColourBands);
         }
@@ -288,8 +292,8 @@ public class ColourPalette {
      * @throws IOException
      */
     @SuppressWarnings("rawtypes")
-    private static String[] getResourceListing(Class clazz, String path) throws URISyntaxException,
-            IOException {
+    private static String[] getResourceListing(Class clazz, String path)
+            throws URISyntaxException, IOException {
         URL dirURL = clazz.getClassLoader().getResource(path);
         /*
          * GG Modification:
@@ -314,29 +318,29 @@ public class ColourPalette {
             /* A JAR path */
             /* strip out only the JAR file */
             String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!"));
-            JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
-            /* gives ALL entries in jar */
-            Enumeration<JarEntry> entries = jar.entries();
-            Set<String> result = new HashSet<String>();
-            /* avoid duplicates in case it is a subdirectory */
-            while (entries.hasMoreElements()) {
-                String name = entries.nextElement().getName();
-                /* filter according to the path */
-                if (name.startsWith(path)) {
-                    String entry = name.substring(path.length());
-                    int checkSubdir = entry.indexOf("/");
-                    if (checkSubdir >= 0) {
-                        /*
-                         * if it is a subdirectory, we just return the directory
-                         * name
-                         */
-                        entry = entry.substring(0, checkSubdir);
+            try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"))) {
+                /* gives ALL entries in jar */
+                Enumeration<JarEntry> entries = jar.entries();
+                Set<String> result = new HashSet<String>();
+                /* avoid duplicates in case it is a subdirectory */
+                while (entries.hasMoreElements()) {
+                    String name = entries.nextElement().getName();
+                    /* filter according to the path */
+                    if (name.startsWith(path)) {
+                        String entry = name.substring(path.length());
+                        int checkSubdir = entry.indexOf("/");
+                        if (checkSubdir >= 0) {
+                            /*
+                             * if it is a subdirectory, we just return the
+                             * directory name
+                             */
+                            entry = entry.substring(0, checkSubdir);
+                        }
+                        result.add(entry);
                     }
-                    result.add(entry);
                 }
+                jarList = result.toArray(new String[result.size()]);
             }
-            jar.close();
-            jarList = result.toArray(new String[result.size()]);
         }
 
         String[] retList = new String[fileList.length + jarList.length];

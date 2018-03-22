@@ -106,219 +106,219 @@ public class CdmGridFeatureWrite {
         /*
          * By default, this includes reasonable compression
          */
-        NetcdfFileWriter fileWriter = NetcdfFileWriter.createNew(Version.netcdf4,
-                outFile.getAbsolutePath());
+        try (NetcdfFileWriter fileWriter = NetcdfFileWriter.createNew(Version.netcdf4,
+                outFile.getAbsolutePath())) {
 
-        fileWriter.setFill(true);
+            fileWriter.setFill(true);
 
-        Set<String> outputVariables = new LinkedHashSet<>();
-        outputVariables.addAll(f.getVariableIds());
+            Set<String> outputVariables = new LinkedHashSet<>();
+            outputVariables.addAll(f.getVariableIds());
 
-        Map<Variable, Array> coordVarsToWrite = new HashMap<>();
-        ArrayList<Dimension> dims = null;
+            Map<Variable, Array> coordVarsToWrite = new HashMap<>();
+            ArrayList<Dimension> dims = null;
 
-        GridDomain domain = f.getDomain();
+            GridDomain domain = f.getDomain();
 
-        if (!GISUtils
-                .isDefaultGeographicCRS(domain.getHorizontalGrid().getCoordinateReferenceSystem())
-                || !(domain.getHorizontalGrid() instanceof RectilinearGrid)) {
-            throw new UnsupportedOperationException(
-                    "Currently, writing only supports GridFeatures in CRS:84/EPSG:4326 with a RectlinearGrid");
-        }
-        RectilinearGrid hGrid = (RectilinearGrid) domain.getHorizontalGrid();
-        int xSize = hGrid.getXSize();
-        int ySize = hGrid.getYSize();
-        int zSize = 1;
-        int tSize = 1;
-        boolean zPresent = false;
-        boolean tPresent = false;
-        VerticalAxis zAxis = domain.getVerticalAxis();
-        TimeAxis tAxis = domain.getTimeAxis();
-
-        /*
-         * Define dimensions, adding z and t if required
-         */
-        dims = new ArrayList<Dimension>();
-        if (tAxis != null) {
-            tSize = tAxis.size();
-            Dimension tDim = fileWriter.addDimension(null, "time", tAxis.size());
-            dims.add(tDim);
-            tPresent = true;
-        }
-
-        if (zAxis != null) {
-            zSize = zAxis.size();
-            Dimension zDim = fileWriter.addDimension(null, "z", zSize);
-            dims.add(zDim);
-            zPresent = true;
-        }
-
-        Dimension yDim = fileWriter.addDimension(null, "lat", ySize);
-        Dimension xDim = fileWriter.addDimension(null, "lon", xSize);
-        dims.add(yDim);
-        dims.add(xDim);
-
-        /*
-         * Write coordinate variables
-         */
-        Variable latVar = fileWriter.addVariable(null, "lat", DataType.FLOAT, "lat");
-        latVar.addAttribute(new Attribute("units", "degrees_north"));
-        ArrayFloat.D1 latVals = new ArrayFloat.D1(ySize);
-        int i = 0;
-        for (Double latVal : hGrid.getYAxis().getCoordinateValues()) {
-            latVals.set(i++, latVal.floatValue());
-        }
-        coordVarsToWrite.put(latVar, latVals);
-
-        Variable lonVar = fileWriter.addVariable(null, "lon", DataType.FLOAT, "lon");
-        lonVar.addAttribute(new Attribute("units", "degrees_east"));
-        ArrayFloat.D1 lonVals = new ArrayFloat.D1(xSize);
-        i = 0;
-        for (Double lonVal : hGrid.getXAxis().getCoordinateValues()) {
-            lonVals.set(i++, lonVal.floatValue());
-        }
-        coordVarsToWrite.put(lonVar, lonVals);
-
-        if (zPresent) {
-            Variable zVar = fileWriter.addVariable(null, "z", DataType.FLOAT, "z");
-            zVar.addAttribute(new Attribute("units", zAxis.getVerticalCrs().getUnits()));
-            zVar.addAttribute(new Attribute("positive",
-                    zAxis.getVerticalCrs().isPositiveUpwards() ? "up" : "down"));
-            ArrayFloat.D1 zVals = new ArrayFloat.D1(zSize);
-            i = 0;
-            for (Double zVal : zAxis.getCoordinateValues()) {
-                zVals.set(i++, zVal.floatValue());
+            if (!GISUtils.isDefaultGeographicCRS(
+                    domain.getHorizontalGrid().getCoordinateReferenceSystem())
+                    || !(domain.getHorizontalGrid() instanceof RectilinearGrid)) {
+                throw new UnsupportedOperationException(
+                        "Currently, writing only supports GridFeatures in CRS:84/EPSG:4326 with a RectlinearGrid");
             }
-            coordVarsToWrite.put(zVar, zVals);
-        }
-
-        if (tPresent) {
-            Variable tVar = fileWriter.addVariable(null, "time", DataType.LONG, "time");
-            tVar.addAttribute(new Attribute("units", "seconds since 1970-1-1 0:0"));
-            ArrayLong.D1 tVals = new ArrayLong.D1(tSize, false);
-            i = 0;
-            for (DateTime tVal : tAxis.getCoordinateValues()) {
-                tVals.set(i++, tVal.toDate().getTime() / 1000L);
-            }
-            coordVarsToWrite.put(tVar, tVals);
-        }
-
-        /*
-         * Now write all data variables
-         */
-        for (String varId : outputVariables) {
-            Variable variable = fileWriter.addVariable(null, varId, DataType.FLOAT, dims);
-
-            fileWriter.addVariableAttribute(variable,
-                    new Attribute("units", f.getParameter(varId).getUnits()));
-            fileWriter.addVariableAttribute(variable,
-                    new Attribute("standard_name", f.getParameter(varId).getStandardName()));
-            fileWriter.addVariableAttribute(variable,
-                    new Attribute("long_name", f.getParameter(varId).getDescription()));
-            fileWriter.addVariableAttribute(variable, new Attribute("_FillValue", FILL_VALUE));
-
-            for (Entry<Object, Object> entry : f.getFeatureProperties().entrySet()) {
-                /*
-                 * This is pretty unlikely to be called...
-                 */
-                if (!(entry.getKey() instanceof String)) {
-                    continue;
-                }
-                Object value = entry.getValue();
-                if (value instanceof String) {
-                    fileWriter.addVariableAttribute(variable,
-                            new Attribute((String) entry.getKey(), (String) value));
-                } else if (value instanceof Number) {
-                    fileWriter.addVariableAttribute(variable,
-                            new Attribute((String) entry.getKey(), (Number) value));
-                }
-            }
-
-        }
-
-        /*
-         * Add some global attributes
-         */
-        fileWriter.addGlobalAttribute("Conventions", "CF-1.6");
-        fileWriter.addGlobalAttribute("CreatedBy", "EDAL Libraries");
-        fileWriter.addGlobalAttribute("MoreInfo",
-                "https://github.com/Reading-eScience-Centre/edal-java");
-
-        /*
-         * Finally actually create the file and write data to it
-         */
-        fileWriter.create();
-
-        /*
-         * First write out the coordinate variables
-         */
-        for (Entry<Variable, Array> entry : coordVarsToWrite.entrySet()) {
-            fileWriter.write(entry.getKey(), entry.getValue());
-        }
-
-        /*
-         * Next we write the variable data. To avoid OutOfMemoryErrors, we write
-         * it in 2D slices.
-         */
-
-        /*
-         * Pick the appropriately dimensioned array.
-         * 
-         * Regardless of the actual z/t sizes, we create arrays where their
-         * sizes are 1, since we are writing in 2D slices.
-         */
-        ArrayFloat values;
-        if (!zPresent && !tPresent) {
-            values = new ArrayFloat.D2(ySize, xSize);
-        } else if (zPresent && tPresent) {
-            values = new ArrayFloat.D4(1, 1, ySize, xSize);
-        } else {
-            values = new ArrayFloat.D3(1, ySize, xSize);
-        }
-        Index index = values.getIndex();
-        for (String varId : outputVariables) {
-            Array4D<Number> array4d = f.getValues(varId);
+            RectilinearGrid hGrid = (RectilinearGrid) domain.getHorizontalGrid();
+            int xSize = hGrid.getXSize();
+            int ySize = hGrid.getYSize();
+            int zSize = 1;
+            int tSize = 1;
+            boolean zPresent = false;
+            boolean tPresent = false;
+            VerticalAxis zAxis = domain.getVerticalAxis();
+            TimeAxis tAxis = domain.getTimeAxis();
 
             /*
-             * Loop over all 4 possible dimensions. If z/t are not present,
-             * their respective loops will only execute once.
+             * Define dimensions, adding z and t if required
              */
-            for (int t = 0; t < tSize; t++) {
-                for (int z = 0; z < zSize; z++) {
-                    for (int y = 0; y < ySize; y++) {
-                        for (int x = 0; x < xSize; x++) {
+            dims = new ArrayList<Dimension>();
+            if (tAxis != null) {
+                tSize = tAxis.size();
+                Dimension tDim = fileWriter.addDimension(null, "time", tAxis.size());
+                dims.add(tDim);
+                tPresent = true;
+            }
 
-                            /*
-                             * Again, always set the z/t values to 0, since these slices are
-                             */
-                            if (!zPresent && !tPresent) {
-                                index.set(y, x);
-                            } else if (zPresent && tPresent) {
-                                index.set(0, 0, y, x);
-                            } else {
-                                index.set(0, y, x);
-                            }
+            if (zAxis != null) {
+                zSize = zAxis.size();
+                Dimension zDim = fileWriter.addDimension(null, "z", zSize);
+                dims.add(zDim);
+                zPresent = true;
+            }
 
-                            Number number = array4d.get(t, z, y, x);
-                            if (number == null ||
-                            // If we have no data, or we wish to mask the data
-                                    (cellsToMask != null
-                                            && cellsToMask.contains(new GridCoordinates2D(x, y)))) {
-                                // We use the fill value
-                                number = FILL_VALUE;
-                            }
-                            values.set(index, number.floatValue());
-                        }
-                    }
-                    
+            Dimension yDim = fileWriter.addDimension(null, "lat", ySize);
+            Dimension xDim = fileWriter.addDimension(null, "lon", xSize);
+            dims.add(yDim);
+            dims.add(xDim);
+
+            /*
+             * Write coordinate variables
+             */
+            Variable latVar = fileWriter.addVariable(null, "lat", DataType.FLOAT, "lat");
+            latVar.addAttribute(new Attribute("units", "degrees_north"));
+            ArrayFloat.D1 latVals = new ArrayFloat.D1(ySize);
+            int i = 0;
+            for (Double latVal : hGrid.getYAxis().getCoordinateValues()) {
+                latVals.set(i++, latVal.floatValue());
+            }
+            coordVarsToWrite.put(latVar, latVals);
+
+            Variable lonVar = fileWriter.addVariable(null, "lon", DataType.FLOAT, "lon");
+            lonVar.addAttribute(new Attribute("units", "degrees_east"));
+            ArrayFloat.D1 lonVals = new ArrayFloat.D1(xSize);
+            i = 0;
+            for (Double lonVal : hGrid.getXAxis().getCoordinateValues()) {
+                lonVals.set(i++, lonVal.floatValue());
+            }
+            coordVarsToWrite.put(lonVar, lonVals);
+
+            if (zPresent) {
+                Variable zVar = fileWriter.addVariable(null, "z", DataType.FLOAT, "z");
+                zVar.addAttribute(new Attribute("units", zAxis.getVerticalCrs().getUnits()));
+                zVar.addAttribute(new Attribute("positive",
+                        zAxis.getVerticalCrs().isPositiveUpwards() ? "up" : "down"));
+                ArrayFloat.D1 zVals = new ArrayFloat.D1(zSize);
+                i = 0;
+                for (Double zVal : zAxis.getCoordinateValues()) {
+                    zVals.set(i++, zVal.floatValue());
+                }
+                coordVarsToWrite.put(zVar, zVals);
+            }
+
+            if (tPresent) {
+                Variable tVar = fileWriter.addVariable(null, "time", DataType.LONG, "time");
+                tVar.addAttribute(new Attribute("units", "seconds since 1970-1-1 0:0"));
+                ArrayLong.D1 tVals = new ArrayLong.D1(tSize, false);
+                i = 0;
+                for (DateTime tVal : tAxis.getCoordinateValues()) {
+                    tVals.set(i++, tVal.toDate().getTime() / 1000L);
+                }
+                coordVarsToWrite.put(tVar, tVals);
+            }
+
+            /*
+             * Now write all data variables
+             */
+            for (String varId : outputVariables) {
+                Variable variable = fileWriter.addVariable(null, varId, DataType.FLOAT, dims);
+
+                fileWriter.addVariableAttribute(variable,
+                        new Attribute("units", f.getParameter(varId).getUnits()));
+                fileWriter.addVariableAttribute(variable,
+                        new Attribute("standard_name", f.getParameter(varId).getStandardName()));
+                fileWriter.addVariableAttribute(variable,
+                        new Attribute("long_name", f.getParameter(varId).getDescription()));
+                fileWriter.addVariableAttribute(variable, new Attribute("_FillValue", FILL_VALUE));
+
+                for (Entry<Object, Object> entry : f.getFeatureProperties().entrySet()) {
                     /*
-                     * Write slice with the appropriate offset
+                     * This is pretty unlikely to be called...
                      */
-                    fileWriter.write(varId, new int[] { t, z, 0, 0 }, values);
+                    if (!(entry.getKey() instanceof String)) {
+                        continue;
+                    }
+                    Object value = entry.getValue();
+                    if (value instanceof String) {
+                        fileWriter.addVariableAttribute(variable,
+                                new Attribute((String) entry.getKey(), (String) value));
+                    } else if (value instanceof Number) {
+                        fileWriter.addVariableAttribute(variable,
+                                new Attribute((String) entry.getKey(), (Number) value));
+                    }
+                }
+
+            }
+
+            /*
+             * Add some global attributes
+             */
+            fileWriter.addGlobalAttribute("Conventions", "CF-1.6");
+            fileWriter.addGlobalAttribute("CreatedBy", "EDAL Libraries");
+            fileWriter.addGlobalAttribute("MoreInfo",
+                    "https://github.com/Reading-eScience-Centre/edal-java");
+
+            /*
+             * Finally actually create the file and write data to it
+             */
+            fileWriter.create();
+
+            /*
+             * First write out the coordinate variables
+             */
+            for (Entry<Variable, Array> entry : coordVarsToWrite.entrySet()) {
+                fileWriter.write(entry.getKey(), entry.getValue());
+            }
+
+            /*
+             * Next we write the variable data. To avoid OutOfMemoryErrors, we
+             * write it in 2D slices.
+             */
+
+            /*
+             * Pick the appropriately dimensioned array.
+             * 
+             * Regardless of the actual z/t sizes, we create arrays where their
+             * sizes are 1, since we are writing in 2D slices.
+             */
+            ArrayFloat values;
+            if (!zPresent && !tPresent) {
+                values = new ArrayFloat.D2(ySize, xSize);
+            } else if (zPresent && tPresent) {
+                values = new ArrayFloat.D4(1, 1, ySize, xSize);
+            } else {
+                values = new ArrayFloat.D3(1, ySize, xSize);
+            }
+            Index index = values.getIndex();
+            for (String varId : outputVariables) {
+                Array4D<Number> array4d = f.getValues(varId);
+
+                /*
+                 * Loop over all 4 possible dimensions. If z/t are not present,
+                 * their respective loops will only execute once.
+                 */
+                for (int t = 0; t < tSize; t++) {
+                    for (int z = 0; z < zSize; z++) {
+                        for (int y = 0; y < ySize; y++) {
+                            for (int x = 0; x < xSize; x++) {
+
+                                /*
+                                 * Again, always set the z/t values to 0, since
+                                 * these slices are
+                                 */
+                                if (!zPresent && !tPresent) {
+                                    index.set(y, x);
+                                } else if (zPresent && tPresent) {
+                                    index.set(0, 0, y, x);
+                                } else {
+                                    index.set(0, y, x);
+                                }
+
+                                Number number = array4d.get(t, z, y, x);
+                                if (number == null ||
+                                // If we have no data, or we wish to mask the data
+                                        (cellsToMask != null && cellsToMask
+                                                .contains(new GridCoordinates2D(x, y)))) {
+                                    // We use the fill value
+                                    number = FILL_VALUE;
+                                }
+                                values.set(index, number.floatValue());
+                            }
+                        }
+
+                        /*
+                         * Write slice with the appropriate offset
+                         */
+                        fileWriter.write(varId, new int[] { t, z, 0, 0 }, values);
+                    }
                 }
             }
         }
-
-        fileWriter.close();
     }
 }

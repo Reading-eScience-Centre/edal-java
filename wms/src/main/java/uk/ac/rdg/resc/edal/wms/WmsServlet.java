@@ -564,8 +564,7 @@ public class WmsServlet extends HttpServlet {
         }
 
         ImageFormat imageFormat = getMapParams.getImageFormat();
-        try {
-            ServletOutputStream outputStream = httpServletResponse.getOutputStream();
+        try (ServletOutputStream outputStream = httpServletResponse.getOutputStream()) {
             if (imageFormat instanceof SimpleFormat) {
                 /*
                  * We have a normal image format
@@ -602,7 +601,6 @@ public class WmsServlet extends HttpServlet {
                 imageFormat.writeImage(frames, outputStream, name, description, gbbox, timeValues,
                         zValue, legend, getMapParams.getFrameRate());
             }
-            outputStream.close();
         } catch (SocketException e) {
             /*
              * The client can quite often cancel requests when loading tiled
@@ -2122,9 +2120,8 @@ public class WmsServlet extends HttpServlet {
             if (timeseriesFeatures.size() > 1) {
                 throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }
-            try {
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(httpServletResponse.getOutputStream()));
+            try (BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(httpServletResponse.getOutputStream()))) {
                 PointSeriesFeature feature = timeseriesFeatures.get(0);
                 Set<String> parameterIds = feature.getVariableIds();
                 HorizontalPosition pos = feature.getHorizontalPosition();
@@ -2167,7 +2164,6 @@ public class WmsServlet extends HttpServlet {
                     }
                     writer.write(dataLine.substring(0, dataLine.length() - 1) + "\n");
                 }
-                writer.close();
             } catch (IOException e) {
                 log.error("Cannot write to output stream", e);
                 throw new EdalException("Problem writing data to output stream", e);
@@ -2538,9 +2534,8 @@ public class WmsServlet extends HttpServlet {
             if (profileFeatures.size() > 1) {
                 throw new IncorrectDomainException("CSV export is only supported for gridded data");
             }
-            try {
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(httpServletResponse.getOutputStream()));
+            try (BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(httpServletResponse.getOutputStream()))) {
                 ProfileFeature feature = profileFeatures.get(0);
                 Set<String> parameterIds = feature.getVariableIds();
                 HorizontalPosition pos = feature.getHorizontalPosition();
@@ -2583,7 +2578,6 @@ public class WmsServlet extends HttpServlet {
                     }
                     writer.write(dataLine.substring(0, dataLine.length() - 1) + "\n");
                 }
-                writer.close();
             } catch (IOException e) {
                 log.error("Cannot write to output stream", e);
                 throw new EdalException("Problem writing data to output stream", e);

@@ -114,10 +114,7 @@ public abstract class GriddedDataset extends
         }
         GridVariableMetadata gridVariableMetadata = (GridVariableMetadata) variableMetadata;
 
-        GridDataSource gridDataSource = null;
-        try {
-            gridDataSource = openDataSource();
-
+        try (GridDataSource gridDataSource = openDataSource()) {
             /*
              * Create a GridDomain from the GridVariableMetadata
              */
@@ -168,16 +165,8 @@ public abstract class GriddedDataset extends
                     "The entire range of data for the variable: " + featureId, domain, parameters,
                     values);
         } catch (Throwable e) {
-            e.printStackTrace();
+            log.error("Problem reading data", e);
             throw new DataReadingException("Problem reading the data from underlying storage", e);
-        } finally {
-            if (gridDataSource != null) {
-                try {
-                    gridDataSource.close();
-                } catch (DataReadingException e) {
-                    log.error("Problem closing data source");
-                }
-            }
         }
     }
 

@@ -206,14 +206,9 @@ public class ScreenshotServlet extends HttpServlet {
         URL url = createWmsUrl(params, false, minLon, minLat, maxLon, maxLat, 50, mapHeight,
                 servletUrl, time, true);
         if (url != null) {
-            InputStream in = null;
-            try {
-                URLConnection conn = url.openConnection();
-                in = conn.getInputStream();
+            URLConnection conn = url.openConnection();
+            try (InputStream in = conn.getInputStream()) {
                 colorBar = ImageIO.read(in);
-            } finally {
-                if (in != null)
-                    in.close();
             }
         }
 

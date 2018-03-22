@@ -142,13 +142,7 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
          */
         List<String> variableIds = new ArrayList<String>(varIds);
 
-        DS dataSource = null;
-        try {
-            /*
-             * Open the source of data
-             */
-            dataSource = openDataSource();
-
+        try (DS dataSource = openDataSource()) {
             Map<String, Array2D<Number>> values = new HashMap<String, Array2D<Number>>();
 
             StringBuilder name = new StringBuilder("Map of ");
@@ -204,14 +198,6 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
         } catch (IOException e) {
             log.error("Problem reading data", e);
             throw new DataReadingException("Problem reading map feature", e);
-        } finally {
-            if (dataSource != null) {
-                try {
-                    dataSource.close();
-                } catch (DataReadingException e) {
-                    log.error("Problem closing data source");
-                }
-            }
         }
     }
 
@@ -406,13 +392,7 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
             }
         }
 
-        DS dataSource = null;
-        try {
-            /*
-             * Open the source of data
-             */
-            dataSource = openDataSource();
-
+        try (DS dataSource = openDataSource()) {
             /*
              * Store a map of unique profile locations to a variable IDs/values
              */
@@ -490,20 +470,6 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
                                 GISUtils.getDistSquared(o2.getHorizontalPosition(), targetPos));
                     }
                 });
-            }
-        } catch (DataReadingException e) {
-            /*
-             * Rethrow. Catch is just here to ensure that finally part gets
-             * executed
-             */
-            throw e;
-        } finally {
-            if (dataSource != null) {
-                try {
-                    dataSource.close();
-                } catch (DataReadingException e) {
-                    log.error("Problem closing data source");
-                }
             }
         }
 
@@ -780,13 +746,10 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
             }
         }
 
-        DS dataSource = null;
         /*
          * Open the source of data
          */
-        try {
-            dataSource = openDataSource();
-
+        try (DS dataSource = openDataSource()) {
             /*
              * Store a map of unique point series locations to a variable
              * IDs/values
@@ -870,16 +833,6 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
                                 GISUtils.getDistSquared(o2.getHorizontalPosition(), targetPos));
                     }
                 });
-            }
-        } catch (DataReadingException e) {
-            throw e;
-        } finally {
-            if (dataSource != null) {
-                try {
-                    dataSource.close();
-                } catch (DataReadingException e) {
-                    log.error("Problem closing data source");
-                }
             }
         }
 
@@ -1171,13 +1124,7 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
     private Map<String, Array1D<Number>> readMultiplePoints(Set<String> varIds,
             final List<GeoPosition> positions) throws DataReadingException,
             VariableNotFoundException {
-        DS dataSource = null;
-        try {
-            /*
-             * Open the source of data
-             */
-            dataSource = openDataSource();
-
+        try (DS dataSource = openDataSource()) {
             Map<String, Array1D<Number>> values = new HashMap<String, Array1D<Number>>();
             Map<String, Parameter> parameters = new HashMap<String, Parameter>();
 
@@ -1279,16 +1226,6 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
             }
 
             return values;
-        } catch (DataReadingException e) {
-            throw e;
-        } finally {
-            if (dataSource != null) {
-                try {
-                    dataSource.close();
-                } catch (DataReadingException e) {
-                    log.error("Problem closing data source");
-                }
-            }
         }
     }
 
@@ -1298,20 +1235,8 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
      */
     public final Number readSinglePoint(String variableId, HorizontalPosition position,
             Double zVal, DateTime time) throws DataReadingException, VariableNotFoundException {
-        DS dataSource = null;
-        try {
-            dataSource = openDataSource();
+        try (DS dataSource = openDataSource()) {
             return readPointData(variableId, position, zVal, time, dataSource);
-        } catch (DataReadingException e) {
-            throw e;
-        } finally {
-            if (dataSource != null) {
-                try {
-                    dataSource.close();
-                } catch (DataReadingException e) {
-                    log.error("Problem closing data source");
-                }
-            }
         }
     }
 

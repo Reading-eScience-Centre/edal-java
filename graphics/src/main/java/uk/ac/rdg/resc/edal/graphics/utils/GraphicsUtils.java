@@ -87,19 +87,17 @@ public class GraphicsUtils implements Serializable {
     private static Map<String, Color> namedColors = new HashMap<>();
 
     static {
-        try {
-            URL resource = GraphicsUtils.class.getResource("/colors.csv");
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(resource.openStream()));
+        URL resource = GraphicsUtils.class.getResource("/colors.csv");
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(resource.openStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] split = line.split(",");
                 namedColors.put(split[0], new Color(Integer.parseInt(split[1]),
                         Integer.parseInt(split[2]), Integer.parseInt(split[3])));
             }
-            reader.close();
         } catch (Throwable e) {
-            e.printStackTrace();
+            log.error("Problem reading CSV colours list - named colours may not be available");
         }
     }
 
