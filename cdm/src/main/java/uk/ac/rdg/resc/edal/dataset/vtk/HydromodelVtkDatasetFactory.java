@@ -184,7 +184,7 @@ public class HydromodelVtkDatasetFactory extends DatasetFactory {
          */
         float[] fillValues;
         if (fill1 != null) {
-            if (fill1.equals(fill2)) {
+            if (fill1.equals(fill2) || fill2 == null) {
                 fillValues = new float[] { fill1 };
             } else {
                 fillValues = new float[] { fill1, fill2 };
