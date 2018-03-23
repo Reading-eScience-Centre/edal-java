@@ -7,6 +7,7 @@ import javax.xml.xpath.XPathExpressionException;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer;
+import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowDirectionConvention;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.utils.GraphicsUtils;
@@ -47,9 +48,20 @@ public class SLDArrowSymbolizer extends AbstractSLDSymbolizer1D {
             arrowStyle = ArrowStyle.valueOf(arrowStyleText);
         }
 
+        ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.DEFAULT;
+        if(arrowStyle.equals(ArrowStyle.FAT_ARROW) || arrowStyle.equals(ArrowStyle.THIN_ARROW)
+            || arrowStyle.equals(ArrowStyle.TRI_ARROW)) {
+            String arrowDirectionConventionText = (String) xPath.evaluate("./resc:ArrowDirectionConvention",
+    				symbolizerNode, XPathConstants.STRING);
+
+            if (arrowDirectionConventionText != null && !(arrowDirectionConventionText.equals(""))) {
+                arrowDirectionConvention = ArrowDirectionConvention.valueOf(arrowDirectionConventionText);
+            }        	
+        }
+
         // instantiate a new arrow layer and add it to the image
         ArrowLayer arrowLayer = new ArrowLayer(layerName, arrowSize, arrowColour, arrowBackground,
-                arrowStyle);
+                arrowStyle, arrowDirectionConvention);
         return arrowLayer;
     }
 

@@ -6,6 +6,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalParseException;
+import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowDirectionConvention;
 import uk.ac.rdg.resc.edal.graphics.style.ArrowLayer.ArrowStyle;
 import uk.ac.rdg.resc.edal.graphics.style.ImageLayer;
 import uk.ac.rdg.resc.edal.graphics.style.ScaleRange;
@@ -57,9 +58,20 @@ public class SLDSizedArrowSymbolizer extends AbstractSLDSymbolizer1D {
         ScaleRange scale = new ScaleRange(range.getMinimum(), range.getMaximum(),
                 range.getSpacing() == Spacing.LOGARITHMIC);
 
+        ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.DEFAULT;
+        if(arrowStyle.equals(ArrowStyle.FAT_ARROW) || arrowStyle.equals(ArrowStyle.THIN_ARROW)
+            || arrowStyle.equals(ArrowStyle.TRI_ARROW)) {
+            String arrowDirectionConventionText = (String) xPath.evaluate("./resc:ArrowDirectionConvention",
+    				symbolizerNode, XPathConstants.STRING);
+
+            if (arrowDirectionConventionText != null && !(arrowDirectionConventionText.equals(""))) {
+                arrowDirectionConvention = ArrowDirectionConvention.valueOf(arrowDirectionConventionText);
+            }        	
+        }
+
         // instantiate a new arrow layer and add it to the image
         SizedArrowLayer arrowLayer = new SizedArrowLayer(layerName, arrowSizeField, arrowMinSize,
-                arrowMaxSize, scale, arrowColour, arrowStyle);
+                arrowMaxSize, scale, arrowColour, arrowStyle, arrowDirectionConvention);
         return arrowLayer;
     }
 }

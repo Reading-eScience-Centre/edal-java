@@ -55,7 +55,13 @@ public class ArrowLayer extends GriddedImageLayer {
         UPSTREAM, THIN_ARROW, FAT_ARROW, TRI_ARROW, WIND_BARBS
     }
 
+    public enum ArrowDirectionConvention {
+    	DEFAULT, METEOROLOGICAL
+    }
+    
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
+
+    private ArrowDirectionConvention arrowDirectionConvention = ArrowDirectionConvention.DEFAULT;
 
     public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour,
             Color arrowBackground, ArrowStyle arrowStyle) {
@@ -64,6 +70,12 @@ public class ArrowLayer extends GriddedImageLayer {
         this.arrowBackground = arrowBackground;
         setArrowSize(arrowSize);
         this.arrowStyle = arrowStyle;
+    }
+    
+    public ArrowLayer(String directionFieldName, Integer arrowSize, Color arrowColour,
+            Color arrowBackground, ArrowStyle arrowStyle, ArrowDirectionConvention arrowDirectionConvention) {
+        this(directionFieldName, arrowSize, arrowColour, arrowBackground, arrowStyle);
+        this.arrowDirectionConvention = arrowDirectionConvention;
     }
 
     public void setArrowSize(Integer arrowSize) {
@@ -150,12 +162,12 @@ public class ArrowLayer extends GriddedImageLayer {
 
                                 break;
                             case FAT_ARROW:
-                                VectorFactory.renderVector("STUMPVEC", angle.doubleValue()
-                                        * Math.PI / 180.0, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("STUMPVEC", convertAngle(angle, arrowDirectionConvention),
+                                        i, j, arrowSize / 11f, g);
                                 break;
                             case TRI_ARROW:
-                                VectorFactory.renderVector("TRIVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("TRIVEC", convertAngle(angle, arrowDirectionConvention),
+                                        i, j, arrowSize / 11f, g);
                                 break;
                             case THIN_ARROW:
                             default:
@@ -164,8 +176,8 @@ public class ArrowLayer extends GriddedImageLayer {
                                  * returned from the VectorFactory, so we divide
                                  * the arrow size by 11 to get the scale factor.
                                  */
-                                VectorFactory.renderVector("LINEVEC", angle.doubleValue() * Math.PI
-                                        / 180.0, i, j, arrowSize / 11f, g);
+                                VectorFactory.renderVector("LINEVEC", convertAngle(angle, arrowDirectionConvention),
+                                        i, j, arrowSize / 11f, g);
                                 break;
                             }
                         }
@@ -176,7 +188,19 @@ public class ArrowLayer extends GriddedImageLayer {
             yLoc += 1.0;
         }
     }
-
+    
+    /**
+     * Convert angle to radians according to the direction convention.
+     * 
+     * @param angle Angle in degrees
+     * @param arrowDirectionConvention
+     * @return Angle in radians
+     */
+    private double convertAngle(Double angle, ArrowDirectionConvention arrowDirectionConvention) {
+        return arrowDirectionConvention.equals(ArrowDirectionConvention.METEOROLOGICAL) ?
+    		(angle.doubleValue() + 180.0) * GISUtils.DEG2RAD : angle.doubleValue() * GISUtils.DEG2RAD;
+    }
+    
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();

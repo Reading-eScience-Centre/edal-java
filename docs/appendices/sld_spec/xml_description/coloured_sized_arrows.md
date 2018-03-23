@@ -10,6 +10,7 @@ The [sized arrows](sized_arrows.md) style provides a means of representing the m
 | `<resc:ArrowMaxSize>` | Integer | 12 | The maximum size (in pixels) of the arrows |
 | `<resc:ArrowBackground>` | String | transparent | Colour of the background |
 | `<resc:ArrowStyle>` | String | THIN_ARROW | Style of the arrows to plot.  Accepts the values "THIN_ARROW" (a normal arrow), "FAT_ARROW" (a wider version), "TRI_ARROW" (a long isosceles triangle), "UPSTREAM" (dots with a line pointing in the desired direction) |
+| `<resc:ArrowDirectionConvention>` | String | DEFAULT | Convention for the arrows direction. Accepts the values "DEFAULT", "METEOROLOGICAL" (not supported for styles "UPSTREAM", "WIND_BARBS") |
 | `<resc:Range>` | XML element | Must be specified | Specifies the range of the data used to scale the arrows |
 | `<se:ColorMap>` | XML element | Must be specified | Specifies the colour mapping between data values and arrow colour |
 
@@ -22,6 +23,7 @@ For example:
     <resc:ArrowMinSize>4</resc:ArrowMinSize>
     <resc:ArrowMaxSize>12</resc:ArrowMaxSize>
     <resc:ArrowStyle>FAT_ARROW</resc:ArrowStyle>
+    <resc:ArrowDirectionConvention>DEFAULT</resc:ArrowDirectionConvention>
     <resc:Range>
         <resc:Minimum>0</resc:Minimum>
         <resc:Maximum>50</resc:Maximum>

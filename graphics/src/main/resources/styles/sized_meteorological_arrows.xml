@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<StyledLayerDescriptor version="1.1.0" xsi:schemaLocation="http://www.opengis.net/sld
+StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc"
+xmlns:se="http://www.opengis.net/se" xmlns:xlink="http://www.w3.org/1999/xlink"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:resc="http://www.resc.reading.ac.uk">
+  <NamedLayer>
+    <se:Name>$layerName-dir</se:Name>
+    <UserStyle>
+      <se:CoverageStyle>
+        <se:Rule>
+          <resc:SizedArrowSymbolizer>
+            <se:Opacity>$opacity</se:Opacity>
+            <resc:ArrowSizeField>$layerName-mag</resc:ArrowSizeField>
+            <resc:ArrowMinSize>4</resc:ArrowMinSize>
+            <resc:ArrowMaxSize>12</resc:ArrowMaxSize>
+            <resc:ArrowColour>#FF000000</resc:ArrowColour>
+            <resc:ArrowStyle>FAT_ARROW</resc:ArrowStyle>
+            <resc:ArrowDirectionConvention>METEOROLOGICAL</resc:ArrowDirectionConvention>
+            <resc:Range>
+              <resc:Minimum>$scaleMin</resc:Minimum>
+              <resc:Maximum>$scaleMax</resc:Maximum>
+              <resc:Spacing>$logarithmic</resc:Spacing>
+            </resc:Range>
+          </resc:SizedArrowSymbolizer>
+        </se:Rule>
+      </se:CoverageStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>
