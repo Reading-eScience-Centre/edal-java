@@ -153,6 +153,24 @@ public class RequestParams {
         }
         return version;
     }
+    
+    /**
+     * Returns the value of the parameter with the given name as a positive
+     * integer, or the provided default if no parameter with the given name has
+     * been supplied. Throws a WmsException if the parameter does not exist or
+     * if the value is not a valid positive integer. Zero is counted as a
+     * positive integer.
+     */
+    public int getInt(String paramName, int defaultValue) throws EdalException {
+        String value = this.getString(paramName);
+        if (value == null)
+            return defaultValue;
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new EdalException("Problem parsing integer: "+value, e);
+        }
+    }
 
     /**
      * Returns the value of the parameter with the given name as a positive
@@ -216,7 +234,7 @@ public class RequestParams {
      *             if the value is not a valid boolean string ("true" or
      *             "false", case-insensitive).
      */
-    public Boolean getBoolean(String paramName, Boolean defaultValue) throws EdalException {
+    public boolean getBoolean(String paramName, boolean defaultValue) throws EdalException {
         String value = this.getString(paramName);
         if (value == null)
             return defaultValue;
