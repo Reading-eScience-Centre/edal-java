@@ -258,8 +258,14 @@ public class ColouredTrajectoryLayer extends ImageLayer {
 
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
-        return CollectionUtils.setOf(new NameAndRange(dataFieldName,
-                Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax())));
+        if (colourScheme instanceof EnumeratedColourScheme) {
+            return CollectionUtils.setOf(new NameAndRange(dataFieldName,
+                    Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax()),
+                    ((EnumeratedColourScheme) colourScheme).getEnumeratedPoints()));
+        } else {
+            return CollectionUtils.setOf(new NameAndRange(dataFieldName,
+                    Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax())));
+        }
     }
 
 }

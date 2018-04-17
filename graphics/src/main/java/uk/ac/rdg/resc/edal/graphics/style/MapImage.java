@@ -38,6 +38,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -259,6 +260,7 @@ public class MapImage extends Drawable {
             float extraAmountOutOfRangeLow, float extraAmountOutOfRangeHigh, float fontProportion)
             throws EdalException {
         BufferedImage finalImage;
+
         Set<NameAndRange> fieldsWithScales = getFieldsWithScales();
         int noOfIndependentFields = fieldsWithScales.size();
 
@@ -382,10 +384,12 @@ public class MapImage extends Drawable {
                     graphics.setColor(textColour);
                     graphics.drawRect(xStart, yStart, colourbar2d.getWidth() - 1,
                             colourbar2d.getHeight() - 1);
-                    graphics.drawRect(xStart - 2, yStart - 2, borderSize + colourbar2d.getWidth()
-                            - 2, borderSize + colourbar2d.getHeight() - 2);
-                    graphics.drawRect(xStart - 1, yStart - 1, borderSize + colourbar2d.getWidth()
-                            - 2, borderSize + colourbar2d.getHeight() - 2);
+                    graphics.drawRect(xStart - 2, yStart - 2,
+                            borderSize + colourbar2d.getWidth() - 2,
+                            borderSize + colourbar2d.getHeight() - 2);
+                    graphics.drawRect(xStart - 1, yStart - 1,
+                            borderSize + colourbar2d.getWidth() - 2,
+                            borderSize + colourbar2d.getHeight() - 2);
                     /*
                      * Now draw the labels
                      */
@@ -397,8 +401,8 @@ public class MapImage extends Drawable {
                             extraAmountOutOfRangeHigh, componentWidth, textColour, layerNameLabels,
                             fontSize);
                     BufferedImage yLabel = getLegendLabels(fields.get(i), extraAmountOutOfRangeLow,
-                            extraAmountOutOfRangeHigh, componentHeight, textColour,
-                            layerNameLabels, fontSize);
+                            extraAmountOutOfRangeHigh, componentHeight, textColour, layerNameLabels,
+                            fontSize);
 
                     graphics.drawImage(xLabel, at, null);
                     graphics.drawImage(yLabel, xStart + componentWidth, yStart, null);
@@ -425,36 +429,72 @@ public class MapImage extends Drawable {
             Color textColor, boolean layerNameLabels, int fontHeight) {
         String fieldName = nameAndRange.getFieldLabel();
 
-        int textBorder = 4;
-
-        /*
-         * Find the values to use for the labels and the minimum difference
-         * between adjacent values. The latter and the maximum value are used to
-         * calculate the number of significant figures required.
-         */
-        Float lowVal = nameAndRange.getScaleRange().getLow();
-        Float highVal = nameAndRange.getScaleRange().getHigh();
-        float vals[] = new float[4];
-        for (int i = 0; i < 4; i++) {
-            vals[i] = lowVal + (float) i * (highVal - lowVal) / 3.0F;
+        List<Float> definedPoints = nameAndRange.getDefinedPoints();
+        if (definedPoints != null) {
+            /*
+             * We are using a scale with defined points (e.g. a threshold colour
+             * scheme). We want the labelled values to correspond with the
+             * defined points.
+             */
+            return drawLegendLabels(definedPoints, fieldName, extraAmountOutOfRangeLow,
+                    extraAmountOutOfRangeHigh, componentSize, textColor, layerNameLabels,
+                    fontHeight);
+        } else {
+            /*
+             * We have a general scale - generate 5 evenly spaced points
+             */
+            Float lowVal = nameAndRange.getScaleRange().getLow();
+            Float highVal = nameAndRange.getScaleRange().getHigh();
+            int n = 5;
+            List<Float> vals = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                vals.add(lowVal + i * (highVal - lowVal) / (n - 1));
+            }
+            return drawLegendLabels(vals, fieldName, extraAmountOutOfRangeLow,
+                    extraAmountOutOfRangeHigh, componentSize, textColor, layerNameLabels,
+                    fontHeight);
         }
-        // Find the order of magnitude of the maximum value
-        float max = Math.max(Math.abs(lowVal), Math.abs(highVal));
-        int sigfigs = (int) (max < 1 ? 0 : Math.floor(Math.log10(max)));
-        // Convert values to BigDecimals with correct number of significant figures
-        BigDecimal[] bds = new BigDecimal[4];
-        for (int i = 0; i < 4; i++) {
-            bds[i] = new BigDecimal(vals[i], new java.math.MathContext(sigfigs + 1));
-        } 
 
-        String lowStr = String.valueOf(bds[0].doubleValue());
-        String medLowStr = String.valueOf(bds[1].doubleValue());
-        String medHighStr = String.valueOf(bds[2].doubleValue());
-        String highStr = String.valueOf(bds[3].doubleValue());
+    }
+
+    private final static int TEXT_BORDER = 4;
+
+    private static BufferedImage drawLegendLabels(List<Float> values, String fieldName,
+            float extraAmountOutOfRangeLow, float extraAmountOutOfRangeHigh, int componentSize,
+            Color textColor, boolean layerNameLabels, int fontHeight) {
+        Collections.sort(values);
+        float[] vals = new float[values.size()];
+        for (int i = 0; i < vals.length; i++) {
+            if (values.get(i) == null) {
+                throw new IllegalArgumentException(
+                        "Cannot create a legend where one of the labelled values is null");
+            }
+            vals[i] = values.get(i);
+        }
 
         /*
-         * Create a temporary image so that we can get some metrics about the
-         * font. We can use these to determine the size of the final image.
+         * Find the order of magnitude of the maximum value to determine number
+         * of sig figs.
+         */
+        float max = Math.max(Math.abs(vals[0]), Math.abs(vals[vals.length - 1]));
+        int sigfigs = (int) (max < 1 ? 0 : Math.floor(Math.log10(max)));
+
+        /*
+         * Generate the text strings for the labels
+         */
+        String[] strings = new String[vals.length];
+        for (int i = 0; i < vals.length; i++) {
+            BigDecimal val = new BigDecimal(vals[i], new java.math.MathContext(sigfigs + 1));
+            strings[i] = String.valueOf(val.doubleValue());
+        }
+
+        /*
+         * The following section calculates the required sizes to use, based on
+         * the strings we need to render, the desired size of the resulting
+         * image, etc.
+         * 
+         * First, create a temporary image so that we can get some metrics about
+         * the font. We can use these to determine the size of the final image.
          */
         BufferedImage tempImage = new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_BINARY);
         Graphics2D graphics = tempImage.createGraphics();
@@ -472,10 +512,13 @@ public class MapImage extends Drawable {
             textFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize++);
             height = graphics.getFontMetrics(textFont).getHeight();
         }
+        /*
+         * This is the font we actually want to use
+         */
         textFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize - 1);
 
         /*
-         * Rotate the font for the labels
+         * Rotate the font for the field name label
          */
         AffineTransform at = new AffineTransform();
         at.rotate(-Math.PI / 2.0);
@@ -491,17 +534,16 @@ public class MapImage extends Drawable {
          * refers to the position of the baseline, not the centre
          */
         int textHeightOffset = lineHeight / 3;
+
         /*
          * This is how much of an offset we need so that the high/low scale
          * labels are in the right place
          */
-        int outOfRangeLowOffset = (int) ((componentSize * extraAmountOutOfRangeLow) / (1 + extraAmountOutOfRangeLow + extraAmountOutOfRangeHigh));
-        int outOfRangeHighOffset = (int) ((componentSize * extraAmountOutOfRangeHigh) / (1 + extraAmountOutOfRangeLow + extraAmountOutOfRangeHigh));
+        int outOfRangeLowOffset = (int) ((componentSize * extraAmountOutOfRangeLow)
+                / (1 + extraAmountOutOfRangeLow + extraAmountOutOfRangeHigh));
+        int outOfRangeHighOffset = (int) ((componentSize * extraAmountOutOfRangeHigh)
+                / (1 + extraAmountOutOfRangeLow + extraAmountOutOfRangeHigh));
 
-        int lowYPos = componentSize - outOfRangeLowOffset + textHeightOffset;
-        int highYPos = outOfRangeHighOffset + textHeightOffset;
-        int medLowYPos = (int) (highYPos + 2.0 * (lowYPos - highYPos) / 3.0);
-        int medHighYPos = (int) (highYPos + 1.0 * (lowYPos - highYPos) / 3.0);
         int fieldLength = 0;
         int nLines = 0;
         if (layerNameLabels) {
@@ -529,9 +571,8 @@ public class MapImage extends Drawable {
                 if (i == nLines - 1) {
                     newFieldName.append(fieldName.substring(i * charsPerLine));
                 } else {
-                    newFieldName.append(fieldName.substring(i * charsPerLine, (i + 1)
-                            * charsPerLine)
-                            + "-\n-");
+                    newFieldName.append(
+                            fieldName.substring(i * charsPerLine, (i + 1) * charsPerLine) + "-\n-");
                 }
             }
             fieldName = newFieldName.toString();
@@ -540,42 +581,60 @@ public class MapImage extends Drawable {
         /*
          * Space needed for labels
          */
-        int numberSpace = fontMetrics.stringWidth(lowStr);
-        if (fontMetrics.stringWidth(medLowStr) > numberSpace) {
-            numberSpace = fontMetrics.stringWidth(medLowStr);
+        int numberSpace = fontMetrics.stringWidth(strings[0]);
+        for (int i = 1; i < strings.length; i++) {
+            if (fontMetrics.stringWidth(strings[i]) > numberSpace) {
+                numberSpace = fontMetrics.stringWidth(strings[i]);
+            }
         }
-        if (fontMetrics.stringWidth(medHighStr) > numberSpace) {
-            numberSpace = fontMetrics.stringWidth(medHighStr);
-        }
-        if (fontMetrics.stringWidth(highStr) > numberSpace) {
-            numberSpace = fontMetrics.stringWidth(highStr);
-        }
+
         /*
          * Total space needed for all text
          */
-        int sideSpace = numberSpace + lineHeight * nLines + 2 * textBorder;
-        // Dispose of the unused graphics context.
+        int sideSpace = numberSpace + lineHeight * nLines + 2 * TEXT_BORDER;
+        /*
+         * We have now calculated all of the required sizes, and are ready to
+         * use this to calculate the position of the text and render it.
+         * 
+         * Dispose of the unused graphics context.
+         */
         graphics.dispose();
 
-        BufferedImage ret = new BufferedImage(sideSpace, componentSize, BufferedImage.TYPE_INT_ARGB);
-        graphics = ret.createGraphics();
         /*
-         * Now draw text for the scale limits
+         * Calculate y-positions of text labels
          */
+        int[] tPosns = new int[vals.length];
+
+        int lowPos = componentSize - outOfRangeLowOffset + textHeightOffset;
+        int highPos = outOfRangeHighOffset + textHeightOffset;
+        float minV = vals[0];
+        float maxV = vals[vals.length - 1];
+        for (int i = 0; i < vals.length; i++) {
+            tPosns[i] = (int) (lowPos - ((vals[i] - minV) / (maxV - minV)) * (lowPos - highPos));
+        }
+
+        /*
+         * All positions calculated, render the final image
+         */
+        BufferedImage ret = new BufferedImage(sideSpace, componentSize,
+                BufferedImage.TYPE_INT_ARGB);
+        graphics = ret.createGraphics();
         graphics.setColor(textColor);
         graphics.setFont(textFont);
-        graphics.drawString(highStr, textBorder, highYPos);
-        graphics.drawString(medHighStr, textBorder, medHighYPos);
-        graphics.drawString(medLowStr, textBorder, medLowYPos);
-        graphics.drawString(lowStr, textBorder, lowYPos);
+        for (int i = 0; i < vals.length; i++) {
+            graphics.drawString(strings[i], TEXT_BORDER, tPosns[i]);
+        }
 
+        /*
+         * Use the sideways for for the field label
+         */
         graphics.setFont(sidewaysFont);
 
         int offset = 0;
         if (layerNameLabels) {
             for (String line : fieldName.split("\n")) {
-                graphics.drawString(line, textBorder + numberSpace + lineHeight + offset,
-                        componentSize - textBorder);
+                graphics.drawString(line, TEXT_BORDER + numberSpace + lineHeight + offset,
+                        componentSize - TEXT_BORDER);
                 offset += lineHeight;
             }
         }

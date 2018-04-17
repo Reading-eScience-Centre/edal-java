@@ -1,6 +1,7 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.Color;
+import java.util.AbstractList;
 import java.util.List;
 
 /**
@@ -12,7 +13,7 @@ import java.util.List;
  * 
  * @author Charles Roberts
  */
-public class InterpolateColourScheme extends ColourScheme {
+public class InterpolateColourScheme extends EnumeratedColourScheme {
 
 	private List<InterpolationPoint<Color>> points;
 	
@@ -60,6 +61,21 @@ public class InterpolateColourScheme extends ColourScheme {
 	@Override
 	public Float getScaleMax() {
 		return points.get(points.size() - 1).getData();
+	}
+	
+	@Override
+	public List<Float> getEnumeratedPoints() {
+	    return new AbstractList<Float>() {
+            @Override
+            public Float get(int index) {
+                return points.get(index).getData();
+            }
+
+            @Override
+            public int size() {
+                return points.size();
+            }
+        };
 	}
 	
     private void initializeColours() {

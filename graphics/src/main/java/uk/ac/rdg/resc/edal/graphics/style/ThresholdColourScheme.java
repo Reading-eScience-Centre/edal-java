@@ -33,7 +33,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class ThresholdColourScheme extends ColourScheme {
+public class ThresholdColourScheme extends EnumeratedColourScheme {
     /*
      * These hold lists of colours and the value which marks the lower boundary
      * of their threshold, IN REVERSE ORDER OF VALUES. It is supplied in
@@ -106,5 +106,10 @@ public class ThresholdColourScheme extends ColourScheme {
     @Override
     public Float getScaleMax() {
         return thresholds.get(0);
+    }
+    
+    @Override
+    public List<Float> getEnumeratedPoints() {
+        return thresholds;
     }
 }

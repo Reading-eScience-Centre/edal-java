@@ -29,12 +29,12 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
-import java.util.HashSet;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
 import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array2D;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 
 public class RasterLayer extends GriddedImageLayer {
@@ -86,10 +86,14 @@ public class RasterLayer extends GriddedImageLayer {
 
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
-        Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
-        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(colourScheme.getScaleMin(),
-                colourScheme.getScaleMax())));
-        return ret;
+        if (colourScheme instanceof EnumeratedColourScheme) {
+            return CollectionUtils.setOf(new NameAndRange(dataFieldName,
+                    Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax()),
+                    ((EnumeratedColourScheme) colourScheme).getEnumeratedPoints()));
+        } else {
+            return CollectionUtils.setOf(new NameAndRange(dataFieldName,
+                    Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax())));
+        }
     }
 
     @Override

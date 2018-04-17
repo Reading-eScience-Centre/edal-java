@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.graphics.style;
 
 import java.awt.image.BufferedImage;
+import java.util.List;
 import java.util.Set;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
@@ -40,11 +41,17 @@ public abstract class Drawable {
     public static class NameAndRange {
         private String fieldLabel;
         private Extent<Float> scaleRange;
+        private List<Float> definedPoints;
 
         public NameAndRange(String fieldLabel, Extent<Float> scaleRange) {
+            this(fieldLabel, scaleRange, null);
+        }
+
+        public NameAndRange(String fieldLabel, Extent<Float> scaleRange, List<Float> definedPoints) {
             super();
             this.fieldLabel = fieldLabel;
             this.scaleRange = scaleRange;
+            this.definedPoints = definedPoints;
         }
 
         public String getFieldLabel() {
@@ -53,6 +60,13 @@ public abstract class Drawable {
 
         public Extent<Float> getScaleRange() {
             return scaleRange;
+        }
+
+        /**
+         * @return A set of points at which specific values are defined
+         */
+        public List<Float> getDefinedPoints() {
+            return definedPoints;
         }
     }
 

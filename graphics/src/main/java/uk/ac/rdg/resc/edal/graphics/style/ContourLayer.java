@@ -35,6 +35,7 @@ import gov.noaa.pmel.sgt.ContourLineAttribute;
 import gov.noaa.pmel.sgt.GridAttribute;
 import gov.noaa.pmel.sgt.JPane;
 import gov.noaa.pmel.sgt.Layer;
+import gov.noaa.pmel.sgt.LineAttribute;
 import gov.noaa.pmel.sgt.LinearTransform;
 import gov.noaa.pmel.sgt.dm.SGTData;
 import gov.noaa.pmel.sgt.dm.SGTGrid;
@@ -65,21 +66,21 @@ public class ContourLayer extends GriddedImageLayer {
         HEAVY {
             @Override
             public int getLineStyleInteger() {
-                return ContourLineAttribute.HEAVY;
+                return LineAttribute.HEAVY;
             }
         },
 
         HIGHLIGHT {
             @Override
             public int getLineStyleInteger() {
-                return ContourLineAttribute.HIGHLIGHT;
+                return LineAttribute.HIGHLIGHT;
             }
         },
 
         STROKE {
             @Override
             public int getLineStyleInteger() {
-                return ContourLineAttribute.STROKE;
+                return LineAttribute.STROKE;
             }
         };
 

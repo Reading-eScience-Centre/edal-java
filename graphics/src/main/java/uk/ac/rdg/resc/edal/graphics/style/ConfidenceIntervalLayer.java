@@ -105,10 +105,19 @@ public class ConfidenceIntervalLayer extends GriddedImageLayer {
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
-        ret.add(new NameAndRange(lowerFieldName, Extents.newExtent(colourScheme.getScaleMin(),
-                colourScheme.getScaleMax())));
-        ret.add(new NameAndRange(upperFieldName, Extents.newExtent(colourScheme.getScaleMin(),
-                colourScheme.getScaleMax())));
+        if (colourScheme instanceof EnumeratedColourScheme) {
+            ret.add(new NameAndRange(lowerFieldName,
+                    Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax()),
+                    ((EnumeratedColourScheme) colourScheme).getEnumeratedPoints()));
+            ret.add(new NameAndRange(upperFieldName,
+                    Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax()),
+                    ((EnumeratedColourScheme) colourScheme).getEnumeratedPoints()));
+        } else {
+            ret.add(new NameAndRange(lowerFieldName, Extents.newExtent(colourScheme.getScaleMin(),
+                    colourScheme.getScaleMax())));
+            ret.add(new NameAndRange(upperFieldName, Extents.newExtent(colourScheme.getScaleMin(),
+                    colourScheme.getScaleMax())));
+        }
         return ret;
     }
 

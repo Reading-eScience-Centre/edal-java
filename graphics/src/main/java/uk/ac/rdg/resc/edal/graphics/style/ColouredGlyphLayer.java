@@ -36,7 +36,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +55,7 @@ import uk.ac.rdg.resc.edal.graphics.utils.PlottingDomainParams;
 import uk.ac.rdg.resc.edal.grid.RegularAxis;
 import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
+import uk.ac.rdg.resc.edal.util.CollectionUtils;
 import uk.ac.rdg.resc.edal.util.Extents;
 import uk.ac.rdg.resc.edal.util.GISUtils;
 
@@ -222,9 +222,13 @@ public class ColouredGlyphLayer extends ImageLayer {
 
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
-        Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
-        ret.add(new NameAndRange(dataFieldName, Extents.newExtent(colourScheme.getScaleMin(),
-                colourScheme.getScaleMax())));
-        return ret;
+        if (colourScheme instanceof EnumeratedColourScheme) {
+            return CollectionUtils.setOf(new NameAndRange(dataFieldName,
+                    Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax()),
+                    ((EnumeratedColourScheme) colourScheme).getEnumeratedPoints()));
+        } else {
+            return CollectionUtils.setOf(new NameAndRange(dataFieldName,
+                    Extents.newExtent(colourScheme.getScaleMin(), colourScheme.getScaleMax())));
+        }
     }
 }
