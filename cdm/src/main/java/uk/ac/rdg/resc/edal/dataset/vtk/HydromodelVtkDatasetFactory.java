@@ -157,7 +157,7 @@ public class HydromodelVtkDatasetFactory extends DatasetFactory {
                                 + " refers to a mixture of unstructured and rectlinear grid definitions");
                     }
                 } else if (gridType.equals("RectilinearGrid")) {
-                    file2fileData.put(file, createRectilinearDataset(node));
+                    file2fileData.put(file, processRectilinearFile(node));
                     if (isGrid == null) {
                         isGrid = true;
                     } else if (!isGrid) {
@@ -379,7 +379,7 @@ public class HydromodelVtkDatasetFactory extends DatasetFactory {
         return parseVariableData(mesh, zVals, vars);
     }
 
-    private FileData createRectilinearDataset(Node node)
+    private FileData processRectilinearFile(Node node)
             throws XPathExpressionException, FactoryException, DataFormatException, IOException {
         NodeList coords = (NodeList) xpath.evaluate("Piece/Coordinates/DataArray", node,
                 XPathConstants.NODESET);

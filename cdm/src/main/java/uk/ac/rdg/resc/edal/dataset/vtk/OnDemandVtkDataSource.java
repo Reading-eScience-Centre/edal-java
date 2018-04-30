@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.zip.DataFormatException;
 
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
@@ -84,7 +85,7 @@ public class OnDemandVtkDataSource implements DataSource {
                  */
                 while (xmlr.hasNext()) {
                     int elType = xmlr.next();
-                    if (elType == XMLStreamReader.START_ELEMENT) {
+                    if (elType == XMLStreamConstants.START_ELEMENT) {
                         /*
                          * We have a start element
                          */

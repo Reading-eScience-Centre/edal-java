@@ -78,7 +78,6 @@ public class HydromodelVtkGridDataset extends GriddedDataset {
         public OnDemandVtkGridDataSource(TimestepInfo[] timesteps) {
             super();
             this.timesteps = timesteps;
-            
         }
 
         @Override
