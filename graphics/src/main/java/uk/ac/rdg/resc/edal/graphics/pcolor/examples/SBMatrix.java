@@ -46,17 +46,17 @@ public class SBMatrix {
 		// table header - same as inner loop plus start column
 		out.write("<th>Start color</th>");
 		for (int i = 5; i >= 1; i -= 1) {
-			float S = (float)i/5.0F;
+			float S = i/5.0F;
 			out.write(String.format("<th>(S = %.1f)</th>\r\n", S));
 		}
 		// color table
 		for (int i = 100; i >= 1; i--) {
-			float B = (float)i/100.0F;
+			float B = i/100.0F;
 			out.write("<tr>\n");
 			out.write(String.format("<td>(B = %.2f)</td>\n", B));
 			xmlOut.write(String.format("                <!-- B = %.2f -->\r\n", B));
 			for (int j = 5; j >= 1; j -= 1) {
-				float S = (float)j/5.0F;
+				float S = j/5.0F;
 				Color col = Color.getHSBColor(theH, S, B);
 				String hex = String.format("#%02x%02x%02x", col.getRed(), col.getGreen(), col.getBlue());
 				out.write(String.format("    <td bgcolor=%s>%s</td>\n", hex, hex));

@@ -134,13 +134,13 @@ public class RegularAxisImplTest {
          * a value is between two indices on the axis, the value's index is the
          * one that the value is more closed to it.
          */
-        for (int i = 0; i < (int) LONGSIZE * SPACE / step; i++) {
+        for (int i = 0; i < LONGSIZE * SPACE / step; i++) {
             double value = 100 + i * step;
             int index = longitudeAxis.findIndexOf(value);
             int expectedIndex = (int) Math.round(i * step / SPACE);
             assertEquals(expectedIndex, index);
         }
-        for (int i = 0; i < (int) LATSIZE * SPACE / step; i++) {
+        for (int i = 0; i < LATSIZE * SPACE / step; i++) {
             int index = latitudeAxis.findIndexOf(20 + i * step);
             int expectedIndex = (int) Math.round(i * step / SPACE);
             assertEquals(expectedIndex, index);

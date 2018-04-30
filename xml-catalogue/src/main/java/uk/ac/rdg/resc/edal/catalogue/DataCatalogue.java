@@ -250,7 +250,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                  */
                 CacheConfiguration featureCacheConfig = featureCache.getCacheConfiguration();
                 featureCacheConfig.setTimeToLiveSeconds(configLifetimeSeconds);
-                featureCacheConfig.setMaxBytesLocalHeap((long) configCacheSizeMB * 1024 * 1024);
+                featureCacheConfig.setMaxBytesLocalHeap(configCacheSizeMB * 1024 * 1024);
             } else {
                 /*-
                  * Precedence:

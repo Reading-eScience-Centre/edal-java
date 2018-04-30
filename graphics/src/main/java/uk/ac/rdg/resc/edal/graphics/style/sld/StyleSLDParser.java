@@ -196,7 +196,7 @@ public class StyleSLDParser {
                 Class<? extends SLDSymbolizer> symbolizerClass = entry.getValue();
 
                 if (symbolizerNode.getLocalName().equals(symbolizerTag)) {
-                    sldSymbolizer = (SLDSymbolizer) symbolizerClass.newInstance();
+                    sldSymbolizer = symbolizerClass.newInstance();
                 }
             }
             if (symbolizerNode == null) {

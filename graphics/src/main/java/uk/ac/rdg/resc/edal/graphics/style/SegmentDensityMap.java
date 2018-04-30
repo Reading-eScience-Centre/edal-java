@@ -64,18 +64,18 @@ public class SegmentDensityMap implements DensityMap {
         // handle values within range
         int level;
         if (range.getSpacing() == Spacing.LINEAR) {
-        	float interval = (range.getMaximum() - range.getMinimum())/(float)nLevels;
+        	float interval = (range.getMaximum() - range.getMinimum())/nLevels;
         	level = (int) ((value.floatValue() - range.getMinimum())/interval);
         } else if (range.getSpacing() == Spacing.LOGARITHMIC) {
-        	double logInterval = (Math.log10(range.getMaximum()) - Math.log10(range.getMinimum()))/(double)nLevels;
+        	double logInterval = (Math.log10(range.getMaximum()) - Math.log10(range.getMinimum()))/nLevels;
         	level = (int) ((Math.log10(value.floatValue()) - Math.log10(range.getMinimum()))/logInterval);
         } else {
         	throw new OperationNotSupportedException("Spacing of range not recognized.");
         }
         float density;
     	if (minDensity < maxDensity) {
-    		float densityInterval = (maxDensity - minDensity)/(float)(nLevels - 1);
-    		density = minDensity + densityInterval*(float)level;
+    		float densityInterval = (maxDensity - minDensity)/(nLevels - 1);
+    		density = minDensity + densityInterval*level;
         	
         	// correct density for possible rounding errors
         	if (density > maxDensity) {
@@ -84,8 +84,8 @@ public class SegmentDensityMap implements DensityMap {
         		density = minDensity;
         	}
     	} else {
-    		float densityInterval = (minDensity - maxDensity)/(float)(nLevels - 1);
-    		density =  minDensity - densityInterval*(float)level;
+    		float densityInterval = (minDensity - maxDensity)/(nLevels - 1);
+    		density =  minDensity - densityInterval*level;
     		
         	// correct density for possible rounding errors
         	if (density < maxDensity) {

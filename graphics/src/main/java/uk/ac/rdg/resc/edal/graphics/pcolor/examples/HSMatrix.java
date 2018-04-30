@@ -39,16 +39,16 @@ import java.nio.file.Paths;
 		// table header - same as inner loop plus start column
 		out.write("<th>Start color</th>");
 		for (int i = 10; i >= 0; i--) {
-			float S = (float)i/10.0F;
+			float S = i/10.0F;
 			out.write(String.format("<th>(S = %.1f)</th>\r\n", S));
 		}
 		// color table
 		for (int i = 10; i >= 0; i--) {
-			float H = (float)i/10.0F;
+			float H = i/10.0F;
 			out.write("<tr>\n");
 			out.write(String.format("<td>(H = %.1f)</td>\n", H));			
 			for (int j = 10; j >= 0; j--) {
-				float S = (float)j/10.0F;
+				float S = j/10.0F;
 				Color col = Color.getHSBColor(H, S, theB);
 				String hex = String.format("#%02x%02x%02x", col.getRed(), col.getGreen(), col.getBlue());
 				out.write(String.format("    <td bgcolor=%s>%s</td>\n", hex, hex));

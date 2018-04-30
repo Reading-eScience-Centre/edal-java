@@ -50,14 +50,14 @@ public class BVector {
 		// color table
 		out.write("<tr>\n");
 		for (int i = 40; i >= 1; i--) {
-			float B = (float)i/40.0F;
+			float B = i/40.0F;
 			out.write(String.format("<td>(B = %.3f)</td>\n", B));
 			Color col = Color.getHSBColor(theH, theS, B);
 			String hex = String.format("#%02x%02x%02x", col.getRed(), col.getGreen(), col.getBlue());
 			out.write(String.format("    <td bgcolor=%s>%s</td>\n", hex, hex));
 			xmlOut.write("                  <se:Value>" + hex.toUpperCase() + "</se:Value>\r\n");
 			if (i > 1) {
-				float t = 312.0F - (float)i;
+				float t = 312.0F - i;
 				xmlOut.write(String.format("                  <se:Threshold>%.1f</se:Threshold>\r\n", t));
 			}
 			out.write("</tr>\n");

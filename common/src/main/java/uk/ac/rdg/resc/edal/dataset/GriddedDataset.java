@@ -466,7 +466,7 @@ public abstract class GriddedDataset extends
              * We have a non-derived variable - this means that
              * getVariableMetadata will return GridVariableMetadata
              */
-            GridVariableMetadata variableMetadata = (GridVariableMetadata) getVariableMetadata(varId);
+            GridVariableMetadata variableMetadata = getVariableMetadata(varId);
 
             /*
              * Find the grid size and read the data
