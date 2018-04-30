@@ -190,6 +190,10 @@ public class MapDomain implements RectilinearGrid, Serializable {
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return hGrid.getCoordinateReferenceSystem();
     }
+    
+    public RectilinearGrid getHorizontalGrid() {
+        return hGrid;
+    }
 
     @Override
     public int hashCode() {

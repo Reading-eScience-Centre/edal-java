@@ -97,7 +97,7 @@ public abstract class DiscreteLayeredDataset<DS extends DataSource, VM extends D
         int tIndex = getTimeIndex(domain.getTime(), tAxis, varId);
         int zIndex = getVerticalIndex(domain.getZ(), zAxis, varId);
 
-        return extractHorizontalData(metadata, tIndex, zIndex, domain, dataSource);
+        return extractHorizontalData(metadata, tIndex, zIndex, domain.getHorizontalGrid(), dataSource);
     }
 
     @Override
