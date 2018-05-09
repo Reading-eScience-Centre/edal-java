@@ -178,8 +178,8 @@ public class TimeUtils {
     }
 
     /**
-     * Formats a DateTime as the time only in the format "HH:mm:ss", e.g.
-     * "14:53:03". Time zone offset is zero (UTC).
+     * Formats a DateTime as the date only in the format "yyyy-MM-dd", e.g.
+     * "2018-01-01". Time zone offset is zero (UTC).
      */
     public static String formatUtcDateOnly(DateTime dateTime) {
         return ISO_DATE_FORMATTER.print(dateTime);
