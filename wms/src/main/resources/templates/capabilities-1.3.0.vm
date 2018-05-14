@@ -230,7 +230,7 @@
         </Dimension>
 #else
 ## Continuous temporal domain
-        <Dimension name="time" units="$WmsUtils.getTimeAxisUnits($tDomain.chronology)}" multipleValues="true" current="true" default="$TimeUtils.dateTimeToISO8601($tDomain.extent.high)}">
+        <Dimension name="time" units="$WmsUtils.getTimeAxisUnits($tDomain.chronology)" multipleValues="true" current="true" default="$TimeUtils.dateTimeToISO8601($tDomain.extent.high)">
             $TimeUtils.dateTimeToISO8601($tDomain.extent.low)/$TimeUtils.dateTimeToISO8601($tDomain.extent.high)/0
         </Dimension>
 #end                    

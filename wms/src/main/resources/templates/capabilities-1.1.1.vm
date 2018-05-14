@@ -141,7 +141,7 @@
         </Extent>
 #else
 ## Continuous temporal domain
-        <Extent name="time" multipleValues="1" current="1" default="$TimeUtils.dateTimeToISO8601($tDomain.extent.high)}">
+        <Extent name="time" multipleValues="1" current="1" default="$TimeUtils.dateTimeToISO8601($tDomain.extent.high)">
             $TimeUtils.dateTimeToISO8601($tDomain.extent.low)/$TimeUtils.dateTimeToISO8601($tDomain.extent.high)/0
         </Extent>
 #end                    
