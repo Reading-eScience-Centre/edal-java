@@ -1,4 +1,5 @@
 org.khelekore.prtree
+uk.ac.rdg.resc.edal.cache
 uk.ac.rdg.resc.edal.catalogue
 uk.ac.rdg.resc.edal.catalogue.jaxb
 uk.ac.rdg.resc.edal.covjson
@@ -6,6 +7,7 @@ uk.ac.rdg.resc.edal.covjson.writers
 uk.ac.rdg.resc.edal.dataset
 uk.ac.rdg.resc.edal.dataset.cdm
 uk.ac.rdg.resc.edal.dataset.plugins
+uk.ac.rdg.resc.edal.dataset.vtk
 uk.ac.rdg.resc.edal.domain
 uk.ac.rdg.resc.edal.examples
 uk.ac.rdg.resc.edal.exceptions
