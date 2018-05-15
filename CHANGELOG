@@ -1,3 +1,12 @@
+1.4.1
+=====
+Improved data writing / reading efficiency
+Better handling for transformed grids
+Added styles for different arrow conventions
+Better legends from GetLegendGraphic
+Better cache handling
+Minor bugfixes
+
 1.4.0
 =====
 Reverted to GeoTK for reprojection
