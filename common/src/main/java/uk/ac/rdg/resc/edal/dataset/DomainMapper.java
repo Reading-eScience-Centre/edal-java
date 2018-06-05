@@ -70,7 +70,7 @@ import uk.ac.rdg.resc.edal.util.RUShortArray;
  * @author Guy
  * @see DataReadingStrategy
  */
-abstract class DomainMapper<T> implements Iterable<DomainMapper.DomainMapperEntry<T>> {
+public abstract class DomainMapper<T> implements Iterable<DomainMapper.DomainMapperEntry<T>> {
     protected static Logger log = LoggerFactory.getLogger(DomainMapper.class);
 
     /* Stores the source grid indices */
