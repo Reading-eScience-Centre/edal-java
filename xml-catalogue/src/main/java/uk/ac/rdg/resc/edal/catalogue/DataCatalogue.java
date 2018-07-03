@@ -349,6 +349,20 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
     @Override
     public synchronized void datasetLoaded(Dataset dataset, Collection<VariableConfig> variables) {
         /*
+         * If we have any tiles in the cache with this dataset ID, we want to remove them.
+         */
+        if(cachingEnabled) {
+            @SuppressWarnings("rawtypes")
+            List keys = featureCache.getKeys();
+            for(Object key : keys) {
+                CacheKey cacheKey = (CacheKey) key;
+                String datasetId = layerNameMapper.getDatasetIdFromLayerName(cacheKey.layerName);
+                if(dataset.getId().equals(datasetId)) {
+                    featureCache.remove(cacheKey);
+                }
+            }
+        }
+        /*
          * If we already have a dataset with this ID, it will be replaced. This
          * is exactly what we want.
          */
@@ -495,12 +509,12 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
 
     private static class CacheKey implements Serializable {
         private static final long serialVersionUID = 1L;
-        final String id;
+        final String layerName;
         final PlottingDomainParams params;
 
-        public CacheKey(String id, PlottingDomainParams params) {
+        public CacheKey(String layerName, PlottingDomainParams params) {
             super();
-            this.id = id;
+            this.layerName = layerName;
             this.params = params;
         }
 
@@ -508,7 +522,7 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + ((id == null) ? 0 : id.hashCode());
+            result = prime * result + ((layerName == null) ? 0 : layerName.hashCode());
             result = prime * result + ((params == null) ? 0 : params.hashCode());
             return result;
         }
@@ -522,10 +536,10 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
             if (getClass() != obj.getClass())
                 return false;
             CacheKey other = (CacheKey) obj;
-            if (id == null) {
-                if (other.id != null)
+            if (layerName == null) {
+                if (other.layerName != null)
                     return false;
-            } else if (!id.equals(other.id))
+            } else if (!layerName.equals(other.layerName))
                 return false;
             if (params == null) {
                 if (other.params != null)
