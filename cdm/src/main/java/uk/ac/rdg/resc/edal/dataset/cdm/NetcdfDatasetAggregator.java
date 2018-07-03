@@ -181,6 +181,7 @@ public class NetcdfDatasetAggregator {
 
         if (datasetCache.containsKey(location) && !forceRefresh) {
             nc = datasetCache.get(location);
+            log.debug("Reading "+location+" from NetcdfDataset cache");
         } else {
             if (datasetCache.containsKey(location)) {
                 /*
@@ -192,6 +193,7 @@ public class NetcdfDatasetAggregator {
                 nc = datasetCache.get(location);
                 datasetCache.remove(location);
                 nc.close();
+                log.debug("Removing "+location+" from NetcdfDataset cache");
             }
             if (isRemote(location)) {
                 /*
@@ -517,11 +519,12 @@ public class NetcdfDatasetAggregator {
                         /*
                          * Standard NcML
                          */
-                        nc = NcMLReader.readNcML(new StringReader(ncmlString.ncml), null);
+                        nc = NcMLReader.readNcML(new StringReader(ncmlString.ncml), location, null);
                     }
                 }
             }
             datasetCache.put(location, nc);
+            log.debug("Adding "+location+" to the NetcdfDataset cache");
         }
         /*
          * Mark this dataset as active. It will not be removed from the cache
