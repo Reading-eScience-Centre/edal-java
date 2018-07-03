@@ -78,7 +78,7 @@ public class CatalogueConfig {
 
     /* Included in XML - see setDatasets for details */
     private Map<String, DatasetConfig> datasets = new LinkedHashMap<>();
-    @XmlElement(name = "cache")
+    @XmlElement(name = "cache", required=false)
     private CacheInfo cacheInfo = new CacheInfo();
     @XmlTransient
     private DatasetStorage datasetStorage = null;
@@ -295,7 +295,7 @@ public class CatalogueConfig {
              */
             log.warn("No config file exists in the given location (" + configFile.getAbsolutePath()
                     + ").  Creating one with defaults");
-            config = new CatalogueConfig(new DatasetConfig[0], new CacheInfo());
+            config = new CatalogueConfig();
             config.configFile = configFile;
             config.save();
         } else {
