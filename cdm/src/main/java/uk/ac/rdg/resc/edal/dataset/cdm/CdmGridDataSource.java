@@ -297,12 +297,14 @@ final class CdmGridDataSource implements GridDataSource {
          */
         final boolean needsEnhance;
         Set<Enhance> enhanceMode = var.getEnhanceMode();
-        if (enhanceMode.contains(Enhance.ScaleMissingDefer)) {
+        // ScaleMissingDefer has been removed. It's functionality can be achieved by simply not enhancing with ApplyScaleOffset.
+        if (!enhanceMode.contains(Enhance.ApplyScaleOffset)) {
             /*
              * Values read from the array are not enhanced, but need to be
              */
             needsEnhance = true;
-        } else if (enhanceMode.contains(Enhance.ScaleMissing)) {
+        // ScaleMissing has been removed. Its functionality can be achieved by combining ApplyScaleOffset and ConvertMissing.
+        } else if (enhanceMode.contains(Enhance.ApplyScaleOffset) && enhanceMode.contains(Enhance.ConvertMissing)) {
             /*
              * We only need to enhance if we read data from the plain Variable
              */
@@ -352,7 +354,8 @@ final class CdmGridDataSource implements GridDataSource {
             this.rangesList = rangesList;
 
             if (needsEnhance && arr != null) {
-                this.arr = var.convertScaleOffsetMissing(arr);
+                this.arr = var.convertMissing(arr);
+                this.arr = var.applyScaleOffset(this.arr);
             } else {
                 this.arr = arr;
             }
@@ -413,7 +416,8 @@ final class CdmGridDataSource implements GridDataSource {
                     try {
                         arrLocal = var.read(rangesList.getRanges());
                         if (this.needsEnhance) {
-                            arrLocal = var.convertScaleOffsetMissing(arrLocal);
+                            arrLocal = var.convertMissing(arrLocal);
+                            arrLocal = var.applyScaleOffset(arrLocal);
                         }
                     } catch (IOException | InvalidRangeException e) {
                         log.error("Problem reading underlying data", e);
@@ -503,7 +507,7 @@ final class CdmGridDataSource implements GridDataSource {
          * the floating point form is 1.0, which is greater than the valid max,
          * even if in the underlying data they are equal.
          * 
-         * @param val
+         * @param num
          *            The value to check
          * @return Whether or not this should be considered missing data
          */
@@ -515,7 +519,7 @@ final class CdmGridDataSource implements GridDataSource {
                 if (var.hasFillValue() && var.isFillValue(val)
                         || var.hasMissingValue() && var.isMissingValue(val) || Double.isNaN(val)) {
                     return true;
-                } else if (var.hasInvalidData()) {
+                } else if (var.hasValidData()) {
                     if (var.getValidMax() != -Double.MAX_VALUE) {
                         if (val > var.getValidMax() && (val - var.getValidMax()) > 1e-7) {
                             return true;
