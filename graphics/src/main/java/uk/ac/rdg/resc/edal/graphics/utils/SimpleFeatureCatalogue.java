@@ -29,9 +29,11 @@
 package uk.ac.rdg.resc.edal.graphics.utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.HorizontallyDiscreteDataset;
@@ -47,16 +49,30 @@ import uk.ac.rdg.resc.edal.util.CollectionUtils;
 public class SimpleFeatureCatalogue<D extends Dataset> implements FeatureCatalogue {
     protected boolean cacheEnabled = false;
     private Map<String, Map<PlottingDomainParams, List<? extends DiscreteFeature<?, ?>>>> features = null;
-    private D dataset;
+    private Map<String, D> var2Dataset = new HashMap<>();
 
     public SimpleFeatureCatalogue(D dataset, boolean cacheEnabled) {
-        this.dataset = dataset;
+        Set<String> variableIds = dataset.getVariableIds();
+        for (String varId : variableIds) {
+            var2Dataset.put(varId, dataset);
+        }
         this.cacheEnabled = cacheEnabled;
         features = new HashMap<>();
     }
 
-    public D getDataset() {
-        return dataset;
+    public SimpleFeatureCatalogue(Collection<D> datasets, boolean cacheEnabled) {
+        for (D dataset : datasets) {
+            Set<String> variableIds = dataset.getVariableIds();
+            for (String varId : variableIds) {
+                if (var2Dataset.containsKey(varId)) {
+                    throw new IllegalArgumentException(
+                            "You can only create SimpleFeatureCatalogues with multiple datasets if they do not have identical variables in them");
+                }
+                var2Dataset.put(varId, dataset);
+            }
+        }
+        this.cacheEnabled = cacheEnabled;
+        features = new HashMap<>();
     }
 
     @Override
@@ -89,19 +105,19 @@ public class SimpleFeatureCatalogue<D extends Dataset> implements FeatureCatalog
             return varCache.get(params);
         } else {
             List<? extends DiscreteFeature<?, ?>> extractedFeatures = new ArrayList<>();
+            D dataset = var2Dataset.get(varId);
             if (dataset instanceof HorizontallyDiscreteDataset<?>) {
                 HorizontallyDiscreteDataset<?> discreteDataset = (HorizontallyDiscreteDataset<?>) dataset;
-                extractedFeatures = discreteDataset
-                        .extractMapFeatures(
-                                CollectionUtils.setOf(varId),
-                                new MapDomain(new RegularGridImpl(params.getBbox(), params
-                                        .getWidth(), params.getHeight()), params.getTargetZ(),
-                                        null, params.getTargetT()));
+                extractedFeatures = discreteDataset.extractMapFeatures(CollectionUtils.setOf(varId),
+                        new MapDomain(
+                                new RegularGridImpl(params.getBbox(), params.getWidth(),
+                                        params.getHeight()),
+                                params.getTargetZ(), null, params.getTargetT()));
             } else if (dataset instanceof PointDataset<?>) {
                 PointDataset<?> pointDataset = (PointDataset<?>) dataset;
                 extractedFeatures = pointDataset.extractMapFeatures(CollectionUtils.setOf(varId),
-                        params.getBbox(), params.getZExtent(), params.getTargetZ(), params.getTExtent(),
-                        params.getTargetT());
+                        params.getBbox(), params.getZExtent(), params.getTargetZ(),
+                        params.getTExtent(), params.getTargetT());
 
             }
             if (cache) {
