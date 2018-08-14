@@ -354,8 +354,8 @@ final class CdmGridDataSource implements GridDataSource {
             this.rangesList = rangesList;
 
             if (needsEnhance && arr != null) {
-                this.arr = var.convertMissing(arr);
-                this.arr = var.applyScaleOffset(this.arr);
+                // convert(array, convertUnsigned, applyScaleOffset, convertMissing)
+                this.arr = var.convert(arr, false, true, true);
             } else {
                 this.arr = arr;
             }
@@ -416,8 +416,8 @@ final class CdmGridDataSource implements GridDataSource {
                     try {
                         arrLocal = var.read(rangesList.getRanges());
                         if (this.needsEnhance) {
-                            arrLocal = var.convertMissing(arrLocal);
-                            arrLocal = var.applyScaleOffset(arrLocal);
+                            // convert(array, convertUnsigned, applyScaleOffset, convertMissing)
+                            arrLocal = var.convert(arrLocal, false, true, true);
                         }
                     } catch (IOException | InvalidRangeException e) {
                         log.error("Problem reading underlying data", e);
