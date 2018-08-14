@@ -493,6 +493,10 @@ public class ArgoDatasetFactory extends DatasetFactory {
                 fileId++;
                 NetcdfDatasetAggregator.releaseDataset(nc);
             }
+            if(totalProfiles == 0) {
+                throw new DataReadingException("There are no profiles in the location: "+location);
+            }
+            
             log.debug("Read " + totalProfiles + " features.  Starting indexing...");
             /*
              * The domain of this dataset. Since all variables are valid for the
@@ -613,6 +617,74 @@ public class ArgoDatasetFactory extends DatasetFactory {
                 DateTime targetT) {
             log.debug("Converting ProfileFeature to PointFeature");
             return convertProfileFeature(feature, targetZ);
+        }
+
+        @Override
+        public List<PointFeature> extractMapFeatures(Set<String> varIds, BoundingBox hExtent,
+                Extent<Double> zExtent, Double targetZ, Extent<DateTime> tExtent, DateTime targetT)
+                throws DataReadingException {
+            List<PointFeature> mapFeatures = super.extractMapFeatures(varIds, hExtent, zExtent,
+                    targetZ, tExtent, targetT);
+            /*
+             * Ensure that we only include each unique profile once. The profile
+             * ID is stored in the feature name.
+             */
+            Map<String, FeatureAndDeltaT> nearestFeatures = new HashMap<>();
+            for (PointFeature feature : mapFeatures) {
+                String profId = feature.getName();
+                if (!nearestFeatures.containsKey(profId)) {
+                    nearestFeatures.put(profId, new FeatureAndDeltaT(feature, Math.abs(
+                            feature.getGeoPosition().getTime().getMillis() - targetT.getMillis())));
+                } else {
+                    long deltaT = Math.abs(feature.getGeoPosition().getTime().getMillis() - targetT.getMillis());
+                    if(deltaT < nearestFeatures.get(profId).deltaT) {
+                        nearestFeatures.put(profId, new FeatureAndDeltaT(feature, deltaT));
+                    }
+                }
+            }
+            List<PointFeature> features = new ArrayList<>();
+            for(FeatureAndDeltaT f : nearestFeatures.values()) {
+                features.add(f.feature);
+            }
+            return features;
+        }
+    }
+
+    private static class FeatureAndDeltaT {
+        PointFeature feature;
+        long deltaT;
+
+        public FeatureAndDeltaT(PointFeature feature, long deltaT) {
+            this.feature = feature;
+            this.deltaT = deltaT;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + (int) (deltaT ^ (deltaT >>> 32));
+            result = prime * result + ((feature == null) ? 0 : feature.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            FeatureAndDeltaT other = (FeatureAndDeltaT) obj;
+            if (deltaT != other.deltaT)
+                return false;
+            if (feature == null) {
+                if (other.feature != null)
+                    return false;
+            } else if (!feature.equals(other.feature))
+                return false;
+            return true;
         }
     }
 
@@ -916,9 +988,9 @@ public class ArgoDatasetFactory extends DatasetFactory {
             /*
              * Create the ProfileFeature
              */
-            ProfileFeature ret = new ProfileFeature(id, "EN platform " + platformIdStr,
-                    "Profile data from platform " + platformIdStr + " in the EN3/4 database",
-                    domain, hPos, time, parameters, values);
+            ProfileFeature ret = new ProfileFeature(id, platformIdStr,
+                    "Profile data from platform " + platformIdStr, domain, hPos, time, parameters,
+                    values);
 
             /*
              * Read the quality control flags and store in the properties of the
