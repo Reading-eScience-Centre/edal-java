@@ -132,11 +132,12 @@ public abstract class PointDataset<F extends DiscreteFeature<?, ?>>
     }
 
     @Override
-    public List<? extends DiscreteFeature<?, ?>> extractMapFeatures(Set<String> varIds,
+    public List<PointFeature> extractMapFeatures(Set<String> varIds,
             BoundingBox hExtent, Extent<Double> zExtent, Double targetZ, Extent<DateTime> tExtent,
             DateTime targetT) throws DataReadingException {
         List<? extends DiscreteFeature<?, ?>> extractedMapFeatures = super.extractMapFeatures(
                 varIds, hExtent, zExtent, targetZ, tExtent, targetT);
+
         List<PointFeature> pointFeatures = new ArrayList<>();
         for (DiscreteFeature<?, ?> feature : extractedMapFeatures) {
             /*
