@@ -493,10 +493,11 @@ public class ArgoDatasetFactory extends DatasetFactory {
                 fileId++;
                 NetcdfDatasetAggregator.releaseDataset(nc);
             }
-            if(totalProfiles == 0) {
-                throw new DataReadingException("There are no profiles in the location: "+location);
+            if (totalProfiles == 0) {
+                throw new DataReadingException(
+                        "There are no profiles in the location: " + location);
             }
-            
+
             log.debug("Read " + totalProfiles + " features.  Starting indexing...");
             /*
              * The domain of this dataset. Since all variables are valid for the
@@ -636,14 +637,15 @@ public class ArgoDatasetFactory extends DatasetFactory {
                     nearestFeatures.put(profId, new FeatureAndDeltaT(feature, Math.abs(
                             feature.getGeoPosition().getTime().getMillis() - targetT.getMillis())));
                 } else {
-                    long deltaT = Math.abs(feature.getGeoPosition().getTime().getMillis() - targetT.getMillis());
-                    if(deltaT < nearestFeatures.get(profId).deltaT) {
+                    long deltaT = Math.abs(
+                            feature.getGeoPosition().getTime().getMillis() - targetT.getMillis());
+                    if (deltaT < nearestFeatures.get(profId).deltaT) {
                         nearestFeatures.put(profId, new FeatureAndDeltaT(feature, deltaT));
                     }
                 }
             }
             List<PointFeature> features = new ArrayList<>();
-            for(FeatureAndDeltaT f : nearestFeatures.values()) {
+            for (FeatureAndDeltaT f : nearestFeatures.values()) {
                 features.add(f.feature);
             }
             return features;
@@ -1000,55 +1002,62 @@ public class ArgoDatasetFactory extends DatasetFactory {
             Variable qcPotmCorrectedVar = nc.findVariable(TEMP_QC);
             Variable qcPsalCorrectedVar = nc.findVariable(PSAL_QC);
 
-            Array qcPos = qcPosVar.read();
-            Array qcPotmCorrected = qcPotmCorrectedVar.read();
-            Array qcPsalCorrected = qcPsalCorrectedVar.read();
+            try {
+                Array qcPos = qcPosVar.read();
+                Array qcPotmCorrected = qcPotmCorrectedVar.read();
+                Array qcPsalCorrected = qcPsalCorrectedVar.read();
+                Properties props = new Properties();
 
-            Properties props = new Properties();
-            String key;
-            String value;
+                String key;
+                String value;
 
-            key = "Position QC";
-            if (qcPos.getChar(profNum) == '1') {
-                value = "Accept";
-            } else if (qcPos.getChar(profNum) == '4') {
-                value = "Reject";
-            } else if (qcPos.getChar(profNum) == '0') {
-                value = "No QC data";
-            } else {
-                value = "N/A";
-            }
-            props.put(key, value);
-
-            if (variableIds.contains(TEMP_PARAMETER.getVariableId())) {
-                key = "Potential temperature QC";
-                if (qcPotmCorrected.getChar(profNum) == '1') {
+                key = "Position QC";
+                if (qcPos.getChar(profNum) == '1') {
                     value = "Accept";
-                } else if (qcPotmCorrected.getChar(profNum) == '4') {
+                } else if (qcPos.getChar(profNum) == '4') {
                     value = "Reject";
-                } else if (qcPotmCorrected.getChar(profNum) == '0') {
+                } else if (qcPos.getChar(profNum) == '0') {
                     value = "No QC data";
                 } else {
                     value = "N/A";
                 }
                 props.put(key, value);
-            }
 
-            if (variableIds.contains(PSAL_PARAMETER.getVariableId())) {
-                key = "Practical salinity QC";
-                if (qcPsalCorrected.getChar(profNum) == '1') {
-                    value = "Accept";
-                } else if (qcPsalCorrected.getChar(profNum) == '4') {
-                    value = "Reject";
-                } else if (qcPsalCorrected.getChar(profNum) == '0') {
-                    value = "No QC data";
-                } else {
-                    value = "N/A";
+                if (variableIds.contains(TEMP_PARAMETER.getVariableId())) {
+                    key = "Potential temperature QC";
+                    if (qcPotmCorrected.getChar(profNum) == '1') {
+                        value = "Accept";
+                    } else if (qcPotmCorrected.getChar(profNum) == '4') {
+                        value = "Reject";
+                    } else if (qcPotmCorrected.getChar(profNum) == '0') {
+                        value = "No QC data";
+                    } else {
+                        value = "N/A";
+                    }
+                    props.put(key, value);
                 }
-                props.put(key, value);
+
+                if (variableIds.contains(PSAL_PARAMETER.getVariableId())) {
+                    key = "Practical salinity QC";
+                    if (qcPsalCorrected.getChar(profNum) == '1') {
+                        value = "Accept";
+                    } else if (qcPsalCorrected.getChar(profNum) == '4') {
+                        value = "Reject";
+                    } else if (qcPsalCorrected.getChar(profNum) == '0') {
+                        value = "No QC data";
+                    } else {
+                        value = "N/A";
+                    }
+                    props.put(key, value);
+                }
+                ret.getFeatureProperties().putAll(props);
+            } catch (Exception e) {
+                /*
+                 * Sometimes QC variables are not present.
+                 */
+                log.warn("Problem reading QC data", e);
             }
 
-            ret.getFeatureProperties().putAll(props);
             return ret;
         }
     }
