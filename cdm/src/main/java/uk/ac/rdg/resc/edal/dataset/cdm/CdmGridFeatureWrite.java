@@ -67,7 +67,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  * @author Guy Griffiths
  */
 public class CdmGridFeatureWrite {
-    private static final Float FILL_VALUE = Float.NEGATIVE_INFINITY;
+    private static final Float DEFAULT_FILL_VALUE = Float.NEGATIVE_INFINITY;
 
     /**
      * Writes a {@link GridFeature} to file
@@ -84,7 +84,7 @@ public class CdmGridFeatureWrite {
      */
     public static void gridFeatureToNetCDF(GridFeature f, File outFile)
             throws IOException, InvalidRangeException {
-        gridFeatureToNetCDF(f, outFile, null);
+        gridFeatureToNetCDF(f, outFile, null, null);
     }
 
     /**
@@ -102,7 +102,11 @@ public class CdmGridFeatureWrite {
      *             - Usually indicative of a bug...
      */
     public static void gridFeatureToNetCDF(GridFeature f, File outFile,
-            Set<GridCoordinates2D> cellsToMask) throws IOException, InvalidRangeException {
+            Set<GridCoordinates2D> cellsToMask, Float fillValue) throws IOException, InvalidRangeException {
+        if(fillValue == null) {
+            fillValue = DEFAULT_FILL_VALUE;
+        }
+        
         /*
          * By default, this includes reasonable compression
          */
@@ -215,7 +219,7 @@ public class CdmGridFeatureWrite {
                         new Attribute("standard_name", f.getParameter(varId).getStandardName()));
                 fileWriter.addVariableAttribute(variable,
                         new Attribute("long_name", f.getParameter(varId).getDescription()));
-                fileWriter.addVariableAttribute(variable, new Attribute("_FillValue", FILL_VALUE));
+                fileWriter.addVariableAttribute(variable, new Attribute("_FillValue", fillValue));
 
                 for (Entry<Object, Object> entry : f.getFeatureProperties().entrySet()) {
                     /*
@@ -306,7 +310,7 @@ public class CdmGridFeatureWrite {
                                         (cellsToMask != null && cellsToMask
                                                 .contains(new GridCoordinates2D(x, y)))) {
                                     // We use the fill value
-                                    number = FILL_VALUE;
+                                    number = fillValue;
                                 }
                                 values.set(index, number.floatValue());
                             }
