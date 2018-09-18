@@ -62,8 +62,36 @@ public class PlottingDomainParams implements Serializable {
         return new PlottingDomainParams(width, height, bbox, null, null, null, targetZ, targetT);
     }
 
+    public PlottingDomainParams(RegularGrid imageGrid, Extent<Double> zExtent,
+            Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ,
+            DateTime targetT) {
+        super();
+        this.width = imageGrid.getXSize();
+        this.height = imageGrid.getYSize();
+        this.bbox = imageGrid.getBoundingBox();
+        this.imageGrid = imageGrid;
+        this.targetPos = targetPos;
+        this.zExtent = zExtent;
+        this.targetZ = targetZ;
+        this.tExtent = tExtent;
+        this.targetT = targetT;
+
+        if (zExtent == null && targetZ != null) {
+            zExtent = Extents.newExtent(targetZ, targetZ);
+        }
+
+        if (tExtent == null) {
+            if (targetT != null) {
+                tExtent = Extents.newExtent(targetT, targetT);
+            } else {
+                tExtent = Extents.emptyExtent();
+            }
+        }
+    }
+
     public PlottingDomainParams(int width, int height, BoundingBox bbox, Extent<Double> zExtent,
-            Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ, DateTime targetT) {
+            Extent<DateTime> tExtent, HorizontalPosition targetPos, Double targetZ,
+            DateTime targetT) {
         super();
         this.width = width;
         this.height = height;
