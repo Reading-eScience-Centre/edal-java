@@ -49,7 +49,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.geotoolkit.referencing.CRS;
+import org.apache.sis.referencing.CRS;
 import org.joda.time.DateTime;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
@@ -305,7 +305,7 @@ public class HydromodelVtkDatasetFactory extends DatasetFactory {
          * First we get the CRS for the mesh
          */
         String wkt = xpath.evaluate("Projection", node);
-        CoordinateReferenceSystem crs = CRS.parseWKT(wkt);
+        CoordinateReferenceSystem crs = CRS.fromWKT(wkt);
 
         /*
          * Now we construct the horizontal domain
@@ -427,7 +427,7 @@ public class HydromodelVtkDatasetFactory extends DatasetFactory {
          * to get them into a particular projection, defined by a WKT string.
          */
         String wkt = xpath.evaluate("Projection", node);
-        CoordinateReferenceSystem crs = CRS.parseWKT(wkt);
+        CoordinateReferenceSystem crs = CRS.fromWKT(wkt);
 
         double xOff = Double.parseDouble(xpath.evaluate("Projection/@origin_x", node));
         double yOff = Double.parseDouble(xpath.evaluate("Projection/@origin_y", node));

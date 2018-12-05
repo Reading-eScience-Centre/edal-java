@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.geotoolkit.referencing.CRS;
+import org.apache.sis.referencing.CRS;
 import org.opengis.geometry.Envelope;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -121,7 +121,11 @@ public final class BoundingBoxImpl extends AbstractPolygon implements BoundingBo
      * @param crs
      */
     public BoundingBoxImpl(CoordinateReferenceSystem crs) {
-        Envelope envelope = CRS.getEnvelope(crs);
+        Envelope envelope = CRS.getDomainOfValidity(crs);
+        if (envelope == null) {
+            throw new IllegalArgumentException(
+                    "The given CRS does not specify a domain of validity.");
+        }
         this.minx = envelope.getMinimum(0);
         this.maxx = envelope.getMaximum(0);
         this.miny = envelope.getMinimum(1);

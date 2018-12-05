@@ -28,8 +28,8 @@
 
 package uk.ac.rdg.resc.edal.dataset.plugins;
 
-import org.geotoolkit.geometry.DirectPosition2D;
-import org.geotoolkit.referencing.CRS;
+import org.apache.sis.geometry.DirectPosition2D;
+import org.apache.sis.referencing.CRS;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
@@ -173,7 +173,7 @@ public class VectorPlugin extends VariablePlugin {
         if (!eastNorthComps) {
             CoordinateReferenceSystem sourceCrs = xDomain.getCoordinateReferenceSystem();
             try {
-                trans = CRS.findMathTransform(sourceCrs, GISUtils.defaultGeographicCRS());
+                trans = CRS.findOperation(sourceCrs, GISUtils.defaultGeographicCRS(), null).getMathTransform();
             } catch (FactoryException e) {
                 throw new EdalException("Cannot calculate transform between 2 CRSs", e);
             }

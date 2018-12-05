@@ -32,12 +32,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.sis.distance.DistanceUtils;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
 import uk.ac.rdg.resc.edal.exceptions.InvalidLineStringException;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
-import uk.ac.rdg.resc.edal.util.GISUtils;
 
 /**
  * Represents a path through a coordinate system. The path consists of a set of
@@ -57,8 +57,8 @@ public final class LineString {
      * Constructs a {@link LineString} from a line string in the form.
      * 
      * @param lineStringSpec
-     *            the line string as specified in the form
-     *            "x1 y1, x2 y2, x3 y3".
+     *            the line string as specified in the form "x1 y1, x2 y2, x3
+     *            y3".
      * @param crs
      *            The coordinate reference system for the line string's
      *            coordinates
@@ -80,7 +80,9 @@ public final class LineString {
         }
         this.crs = crs;
 
-        /* The control points along the transect as specified by the line string */
+        /*
+         * The control points along the transect as specified by the line string
+         */
         final List<HorizontalPosition> ctlPoints = new ArrayList<HorizontalPosition>();
         for (String s : pointsStr) {
             /*
@@ -91,8 +93,8 @@ public final class LineString {
                 throw new InvalidLineStringException("Coordinates format error");
             }
             try {
-                ctlPoints.add(new HorizontalPosition(Double.parseDouble(coords[0].trim()), Double
-                        .parseDouble(coords[1].trim()), crs));
+                ctlPoints.add(new HorizontalPosition(Double.parseDouble(coords[0].trim()),
+                        Double.parseDouble(coords[1].trim()), crs));
             } catch (NumberFormatException nfe) {
                 throw new InvalidLineStringException("Coordinates format error");
             }
@@ -110,7 +112,7 @@ public final class LineString {
         for (int i = 1; i < this.controlPoints.size(); i++) {
             HorizontalPosition p1 = controlPoints.get(i - 1);
             HorizontalPosition p2 = controlPoints.get(i);
-            pathLength += GISUtils.getHaversineDistance(p1.getY(), p1.getX(), p2.getY(),
+            pathLength += DistanceUtils.getHaversineDistance(p1.getY(), p1.getX(), p2.getY(),
                     p2.getX());
             controlPointDistances[i] = pathLength;
         }
