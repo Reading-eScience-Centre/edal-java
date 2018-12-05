@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.sis.distance.DistanceUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
@@ -484,7 +485,7 @@ final public class Charting {
                     if (i != 0) {
                         HorizontalPosition lastPoint = hPoints.get(i - 1);
                         HorizontalPosition currentPoint = hPoints.get(i);
-                        distAlongPath += GISUtils.getHaversineDistance(lastPoint.getY(),
+                        distAlongPath += DistanceUtils.getHaversineDistance(lastPoint.getY(),
                                 lastPoint.getX(), currentPoint.getY(), currentPoint.getX());
                     }
                     series.add(distAlongPath, values.get(i));
@@ -822,7 +823,7 @@ final public class Charting {
             HorizontalPosition lastPoint = features.get(0).getHorizontalPosition();
             for (int i = 1; i < features.size(); i++) {
                 HorizontalPosition currentPoint = features.get(i).getHorizontalPosition();
-                double dist = GISUtils.getHaversineDistance(lastPoint.getY(), lastPoint.getX(),
+                double dist = DistanceUtils.getHaversineDistance(lastPoint.getY(), lastPoint.getX(),
                         currentPoint.getY(), currentPoint.getX());
                 lastPoint = currentPoint;
                 this.distanceValues.add(this.distanceValues.get(i - 1) + dist);

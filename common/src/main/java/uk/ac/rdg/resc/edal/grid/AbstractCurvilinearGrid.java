@@ -27,7 +27,7 @@
  *******************************************************************************/
 package uk.ac.rdg.resc.edal.grid;
 
-import org.geotoolkit.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 
 import uk.ac.rdg.resc.edal.geometry.BoundingBox;
