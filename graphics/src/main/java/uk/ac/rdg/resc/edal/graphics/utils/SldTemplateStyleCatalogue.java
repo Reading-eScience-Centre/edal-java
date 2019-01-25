@@ -1004,12 +1004,15 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
             if (layerNameToMatch.equals(layerName)) {
                 return true;
             } else {
+                boolean found = false;
                 for (VariableMetadata childMetadata : variableMetadata.getChildren()) {
-                    return recursiveCheckMetadataMatchesName(childMetadata, layerNameMapper,
-                            layerNameToMatch);
+                    if(recursiveCheckMetadataMatchesName(childMetadata, layerNameMapper,
+                            layerNameToMatch)) {
+                        found = true;
+                    }
                 }
+                return found;
             }
-            return false;
         }
 
         /**
