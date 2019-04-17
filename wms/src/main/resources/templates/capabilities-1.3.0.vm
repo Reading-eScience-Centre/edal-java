@@ -114,11 +114,11 @@
             </edal:ExtendedRequest>
             <edal:ExtendedRequest>
                 <edal:Request>GetTimeseries</edal:Request>
-                <edal:RequestDescription>This produces either a timeseries graph or, if downloading is enabled, a CSV file containing the data. The URL parameters are identical to those of a GetFeatureInfo request. The TIME parameter should specify a range of times in the form starttime/endtime, and the supported formats are: image/png,image/jpg,image/jpeg,text/csv</edal:RequestDescription>
+                <edal:RequestDescription>This produces either a timeseries graph or, if downloading is enabled, a CSV file containing the data. The URL parameters are identical to those of a GetFeatureInfo request. The TIME parameter should specify a range of times in the form starttime/endtime, and the supported formats are: image/png,image/jpg,image/jpeg,text/csv,text/json,application/prs.coverage+json,application/prs.coverage json</edal:RequestDescription>
             </edal:ExtendedRequest>
             <edal:ExtendedRequest>
                 <edal:Request>GetVerticalProfile</edal:Request>
-                <edal:RequestDescription>This produces either a vertical profile graph or, if downloading is enabled, a CSV file containing the data. The URL parameters are identical to those of a GetFeatureInfo request. The ELEVATION parameter should specify a range of elevations in the form startelevation/endelevation, and the supported formats are: image/png,image/jpg,image/jpeg,text/csv</edal:RequestDescription>
+                <edal:RequestDescription>This produces either a vertical profile graph or, if downloading is enabled, a CSV file containing the data. The URL parameters are identical to those of a GetFeatureInfo request. The ELEVATION parameter should specify a range of elevations in the form startelevation/endelevation, and the supported formats are: image/png,image/jpg,image/jpeg,text/csv,text/json,application/prs.coverage+json,application/prs.coverage json</edal:RequestDescription>
             </edal:ExtendedRequest>
             <edal:ExtendedRequest>
                 <edal:Request>GetTransect</edal:Request>
