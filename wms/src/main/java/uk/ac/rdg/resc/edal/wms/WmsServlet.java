@@ -1670,30 +1670,30 @@ public class WmsServlet extends HttpServlet {
          */
         List<String> scaledLayerRoles = catalogue.getStyleCatalogue()
                 .getScaledRoleForStyle(styleName);
-        String scaledLayerRole = null;
         if (scaledLayerRoles.size() > 0) {
-            scaledLayerRole = scaledLayerRoles.get(0);
-        }
-        if (scaledLayerRole == null) {
+            String scaledLayerRole = scaledLayerRoles.get(0);
+            
+            if ("".equals(scaledLayerRole)) {
+                /*
+                 * The named (possibly parent) layer is scaled.
+                 */
+                layerName = layerNames[0];
+            } else {
+                /*
+                 * A child layer is being scaled. Get the WMS layer name
+                 * corresponding to this child variable
+                 */
+                String variableId = variableMetadata.getChildWithRole(scaledLayerRole).getId();
+                layerName = catalogue.getLayerNameMapper().getLayerName(datasetId, variableId);
+            }
+        } else {
             /*
              * No layer has scaling - we can return anything
              */
             minmax.put("min", 0);
             minmax.put("max", 100);
             return minmax.toString();
-        } else if ("".equals(scaledLayerRole)) {
-            /*
-             * The named (possibly parent) layer is scaled.
-             */
-            layerName = layerNames[0];
-        } else {
-            /*
-             * A child layer is being scaled. Get the WMS layer name
-             * corresponding to this child variable
-             */
-            String variableId = variableMetadata.getChildWithRole(scaledLayerRole).getId();
-            layerName = catalogue.getLayerNameMapper().getLayerName(datasetId, variableId);
-        }
+        } 
 
         /*
          * Now read the required features
