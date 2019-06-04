@@ -645,7 +645,12 @@ public class NetcdfDatasetAggregator {
                  * handles, in which case the server admin will need to increase
                  * the number of available handles on the server.
                  */
-                nc = NetcdfDataset.openDataset(location);
+                if(location.endsWith("ncml")) {
+                    ServiceType serviceType = isRemote(location) ? ServiceType.OPENDAP : ServiceType.NCML;
+                    nc = NetcdfDataset.acquireDataset(new DatasetUrl(serviceType, location), null);
+                } else {
+                    nc = NetcdfDataset.openDataset(location);
+                }
             }
         } catch (IOException e) {
             throw new DataReadingException("Problem reading underlying NetCDF dataset", e);

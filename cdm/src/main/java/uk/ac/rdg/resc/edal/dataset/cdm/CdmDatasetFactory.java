@@ -34,6 +34,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Set;
 
 import ucar.nc2.Attribute;
@@ -43,6 +47,7 @@ import uk.ac.rdg.resc.edal.dataset.DataSource;
 import uk.ac.rdg.resc.edal.dataset.Dataset;
 import uk.ac.rdg.resc.edal.dataset.DatasetFactory;
 import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
+import uk.ac.rdg.resc.edal.dataset.plugins.ArbitraryGroupPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.ValueErrorPlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VariablePlugin;
 import uk.ac.rdg.resc.edal.dataset.plugins.VectorPlugin;
@@ -66,6 +71,8 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
  * @author Guy Griffiths
  */
 public abstract class CdmDatasetFactory extends DatasetFactory {
+    private static final Logger log = LoggerFactory.getLogger(CdmDatasetFactory.class);
+    
     @Override
     public DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> createDataset(
             String id, String location) throws IOException, EdalException {
@@ -103,6 +110,15 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              */
             List<ValueErrorPlugin> uncerts = processUncertainty(nc);
             for (ValueErrorPlugin plugin : uncerts) {
+                dataset.addVariablePlugin(plugin);
+            }
+
+            /*
+             * Scans the NetcdfDataset for variables which are logically
+             * grouped, and adds the grouping plugin
+             */
+            List<ArbitraryGroupPlugin> groups = processGroups(nc);
+            for (ArbitraryGroupPlugin plugin : groups) {
                 dataset.addVariablePlugin(plugin);
             }
 
@@ -181,8 +197,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                 coloursArray = ((String) flagColours.getValue(0)).split("\\s+");
                 if (coloursArray.length != flagValues.getLength()) {
                     throw new DataReadingException("Categorical data detected, but there are "
-                            + flagValues.getLength() + " category values and "
-                            + coloursArray.length + " category colours.");
+                            + flagValues.getLength() + " category values and " + coloursArray.length
+                            + " category colours.");
                 }
             }
             /*
@@ -211,8 +227,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                     id = flagNamespace + id;
                 }
                 String colour = coloursArray == null ? null : coloursArray[i];
-                catMap.put(flagValues.getNumericValue(i).intValue(), new Category(id, label,
-                        colour, null));
+                catMap.put(flagValues.getNumericValue(i).intValue(),
+                        new Category(id, label, colour, null));
             }
         }
 
@@ -265,8 +281,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
             String commonName = componentData.getKey();
             String[] comps = componentData.getValue();
             if (comps[0] != null && comps[1] != null) {
-                ret.add(new VectorPlugin(comps[0], comps[1], commonName, xyNameToTrueEN
-                        .get(commonName)));
+                ret.add(new VectorPlugin(comps[0], comps[1], commonName,
+                        xyNameToTrueEN.get(commonName)));
             }
         }
         return ret;
@@ -324,8 +340,8 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              */
             for (Attribute attr : variable.getAttributes()) {
                 if (attr.getFullName().equalsIgnoreCase("ancillary_variables")) {
-                    varId2AncillaryVars.put(variable.getFullName(), attr.getStringValue()
-                            .split(" "));
+                    varId2AncillaryVars.put(variable.getFullName(),
+                            attr.getStringValue().split(" "));
                     continue;
                 }
             }
@@ -371,18 +387,17 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
             String errorId = null;
             for (String statsVarIds : ids) {
                 String uncertRef = varId2UncertMLRefs.get(statsVarIds);
-                if (valueId == null
-                        && ("http://www.uncertml.org/statistics/mean".equalsIgnoreCase(uncertRef)
-                                || "http://www.uncertml.org/statistics/median"
-                                        .equalsIgnoreCase(uncertRef)
-                                || "http://www.uncertml.org/statistics/mode"
-                                        .equalsIgnoreCase(uncertRef) || "http://www.uncertml.org/statistics/moment"
-                                    .equalsIgnoreCase(uncertRef))) {
+                if (valueId == null && ("http://www.uncertml.org/statistics/mean"
+                        .equalsIgnoreCase(uncertRef)
+                        || "http://www.uncertml.org/statistics/median".equalsIgnoreCase(uncertRef)
+                        || "http://www.uncertml.org/statistics/mode".equalsIgnoreCase(uncertRef)
+                        || "http://www.uncertml.org/statistics/moment"
+                                .equalsIgnoreCase(uncertRef))) {
                     valueId = statsVarIds;
                 }
-                if (errorId == null
-                        && ("http://www.uncertml.org/statistics/standard-deviation"
-                                .equalsIgnoreCase(uncertRef) || "http://www.uncertml.org/statistics/variance"
+                if (errorId == null && ("http://www.uncertml.org/statistics/standard-deviation"
+                        .equalsIgnoreCase(uncertRef)
+                        || "http://www.uncertml.org/statistics/variance"
                                 .equalsIgnoreCase(uncertRef))) {
                     errorId = statsVarIds;
                 }
@@ -391,6 +406,40 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                 ValueErrorPlugin meanSDPlugin = new ValueErrorPlugin(valueId, errorId,
                         parentVarId2Title.get(statsCollectionId));
                 ret.add(meanSDPlugin);
+            }
+        }
+        return ret;
+    }
+
+    private List<ArbitraryGroupPlugin> processGroups(NetcdfDataset nc) {
+        /*
+         * We look for the tag "logical_group" and group variables with a common
+         * group together
+         */
+        Map<String, List<String>> groupId2Vars = new HashMap<>();
+        for (Variable variable : nc.getVariables()) {
+            /*
+             * Just look for parent variables, since these may not have a grid
+             * directly associated with them
+             */
+            for (Attribute attr : variable.getAttributes()) {
+                if (attr.getFullName().equalsIgnoreCase("logical_group")) {
+                    String groupName = attr.getStringValue();
+                    if (!groupId2Vars.containsKey(groupName)) {
+                        groupId2Vars.put(groupName, new ArrayList<>());
+                    }
+                    groupId2Vars.get(groupName).add(variable.getFullName());
+                }
+            }
+        }
+
+        List<ArbitraryGroupPlugin> ret = new ArrayList<>();
+        for (Entry<String, List<String>> entry : groupId2Vars.entrySet()) {
+            List<String> groupedVars = entry.getValue();
+            if (groupedVars.size() < 2) {
+                log.warn("The group: "+entry.getKey()+" has fewer than 2 variables.  It will not be added");
+            } else {
+                ret.add(new ArbitraryGroupPlugin(entry.getKey(), groupedVars.toArray(new String[0])));
             }
         }
         return ret;
