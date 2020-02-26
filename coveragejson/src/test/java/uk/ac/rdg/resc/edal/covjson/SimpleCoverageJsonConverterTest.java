@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,7 +57,7 @@ public class SimpleCoverageJsonConverterTest {
         int ySize = 19;
         HorizontalGrid hGrid = new RegularGridImpl(-180.5, -90.5, 179.5, 90.5,
                 GISUtils.defaultGeographicCRS(), xSize, ySize);
-        DateTime time = new DateTime(2000, 01, 01, 00, 00);
+        DateTime time = new DateTime(2000, 01, 01, 00, 00, DateTimeZone.UTC);
         mapFeature = dataset.extractMapFeatures(dataset.getVariableIds(),
                 new MapDomain(hGrid.getBoundingBox(), xSize, ySize, 0.0, time)).get(0);
     }
