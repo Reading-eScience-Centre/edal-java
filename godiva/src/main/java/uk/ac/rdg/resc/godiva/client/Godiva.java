@@ -893,7 +893,7 @@ public class Godiva extends BaseWmsClient implements AviExportHandler {
         }
 
         String godivaPath = Window.Location.getPath();
-        screenshot.setHref(Window.Location.getProtocol() + "//" + Window.Location.getHost() + "/"
+        screenshot.setHref(Window.Location.getProtocol() + "//" + Window.Location.getHost()
                 + godivaPath.substring(0, godivaPath.lastIndexOf('/'))
                 + "/screenshots/createScreenshot?" + urlParams);
     }
