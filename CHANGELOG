@@ -1,3 +1,8 @@
+1.4.2
+=====
+Lots of small changes + updates
+Compatibility with Java 11
+
 1.4.1
 =====
 Improved data writing / reading efficiency
