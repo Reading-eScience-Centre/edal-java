@@ -182,8 +182,9 @@ public class WmsUtils {
      * <p>
      * Returns the string to be used to display units for the TIME dimension in
      * Capabilities documents. For standard (ISO) chronologies, this will return
-     * "ISO8601". For 360-day chronologies this will return "360_day". For other
-     * chronologies this will return "unknown".
+     * "ISO8601". Some other chronologies (Julian, 360 day, no leap years, all
+     * leap years) will an appropriate string. For other chronologies this will
+     * return "unknown".
      * </p>
      */
     public static String getTimeAxisUnits(Chronology chronology) {
