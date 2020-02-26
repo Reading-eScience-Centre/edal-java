@@ -69,8 +69,9 @@ import uk.ac.rdg.resc.edal.util.ValuesArray2D;
  *
  * @author Guy Griffiths
  */
-public abstract class HorizontalMesh4dDataset extends
-        DiscreteLayeredDataset<HZTDataSource, HorizontalMesh4dVariableMetadata> implements Serializable {
+public abstract class HorizontalMesh4dDataset
+        extends DiscreteLayeredDataset<HZTDataSource, HorizontalMesh4dVariableMetadata>
+        implements Serializable {
     private static final long serialVersionUID = 1L;
     private static Logger log = LoggerFactory.getLogger(HorizontalMesh4dDataset.class);
 
@@ -93,8 +94,8 @@ public abstract class HorizontalMesh4dDataset extends
     }
 
     @Override
-    public Feature<?> readFeature(String featureId) throws DataReadingException,
-            VariableNotFoundException {
+    public Feature<?> readFeature(String featureId)
+            throws DataReadingException, VariableNotFoundException {
         throw new UnsupportedOperationException("Feature reading is not yet supported");
     }
 
@@ -112,8 +113,11 @@ public abstract class HorizontalMesh4dDataset extends
         List<GridCoordinates2D> outputCoords;
         List<MeshCoordinates3D> coordsToRead;
         MeshDatasetCacheElement meshDatasetCacheElement;
-        if (meshDatasetCache.isKeyInCache(targetGrid)) {
-            meshDatasetCacheElement = (MeshDatasetCacheElement) meshDatasetCache.get(targetGrid).getObjectValue();
+
+        MeshCacheKey key = new MeshCacheKey(targetGrid, grid);
+        if (meshDatasetCache.isKeyInCache(key)) {
+            meshDatasetCacheElement = (MeshDatasetCacheElement) meshDatasetCache.get(targetGrid)
+                    .getObjectValue();
             outputCoords = meshDatasetCacheElement.getOutputCoords();
             coordsToRead = meshDatasetCacheElement.getCoordsToRead();
         } else {
@@ -128,7 +132,7 @@ public abstract class HorizontalMesh4dDataset extends
                 coordsToRead.add(meshCoords);
             }
             meshDatasetCacheElement = new MeshDatasetCacheElement(outputCoords, coordsToRead);
-            meshDatasetCache.put(new Element(targetGrid, meshDatasetCacheElement));
+            meshDatasetCache.put(new Element(key, meshDatasetCacheElement));
         }
 
         /*
@@ -222,25 +226,65 @@ public abstract class HorizontalMesh4dDataset extends
     }
 
     /*
-     * Cache management
-     * - 50 maps of in-out coordinate mappings
+     * Cache management - 50 maps of in-out coordinate mappings
      */
-    private static final String CACHE_NAME ="meshDatasetCache";
+    private static final String CACHE_NAME = "meshDatasetCache";
     private static final int MAX_HEAP_ENTRIES = 50;
     private static final MemoryStoreEvictionPolicy EVICTION_POLICY = MemoryStoreEvictionPolicy.LFU;
     private static final Strategy PERSISTENCE_STRATEGY = Strategy.NONE;
     private static final TransactionalMode TRANSACTIONAL_MODE = TransactionalMode.OFF;
     private static Cache meshDatasetCache = null;
 
+    private static class MeshCacheKey {
+        private HorizontalGrid target;
+        private HorizontalMesh source;
+
+        public MeshCacheKey(HorizontalGrid target, HorizontalMesh source) {
+            super();
+            this.target = target;
+            this.source = source;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((source == null) ? 0 : source.hashCode());
+            result = prime * result + ((target == null) ? 0 : target.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            MeshCacheKey other = (MeshCacheKey) obj;
+            if (source == null) {
+                if (other.source != null)
+                    return false;
+            } else if (!source.equals(other.source))
+                return false;
+            if (target == null) {
+                if (other.target != null)
+                    return false;
+            } else if (!target.equals(other.target))
+                return false;
+            return true;
+        }
+    }
+
     static {
         if (EdalCache.cacheManager.cacheExists(CACHE_NAME) == false) {
             /*
              * Configure cache
              */
-            log.debug("Creating meshDatasetCache, with maximum "+MAX_HEAP_ENTRIES+" entries");
+            log.debug("Creating meshDatasetCache, with maximum " + MAX_HEAP_ENTRIES + " entries");
             CacheConfiguration config = new CacheConfiguration(CACHE_NAME, MAX_HEAP_ENTRIES)
-                    .eternal(true)
-                    .memoryStoreEvictionPolicy(EVICTION_POLICY)
+                    .eternal(true).memoryStoreEvictionPolicy(EVICTION_POLICY)
                     .persistence(new PersistenceConfiguration().strategy(PERSISTENCE_STRATEGY))
                     .transactionalMode(TRANSACTIONAL_MODE);
             meshDatasetCache = new Cache(config);
