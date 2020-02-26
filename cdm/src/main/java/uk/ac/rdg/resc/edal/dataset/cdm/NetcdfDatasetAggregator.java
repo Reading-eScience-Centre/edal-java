@@ -287,9 +287,9 @@ public class NetcdfDatasetAggregator {
                          */
                         Map<String, Map<String, Number>> varname2Attributes = new HashMap<>();
                         /*
-                         * If some variables have problems (e.g.
-                         * inconsistent attributes), we will exclude
-                         * them from the aggregation
+                         * If some variables have problems (e.g. inconsistent
+                         * attributes), we will exclude them from the
+                         * aggregation
                          */
                         Set<String> varsToExclude = new HashSet<>();
                         String timeUnitsTest = null;
@@ -408,12 +408,17 @@ public class NetcdfDatasetAggregator {
                                                                         + attr.getFullName()
                                                                         + " without a numeric value.  In a previous file, this was seen to have the value "
                                                                         + previousValue
-                                                                        + "This variable attribute must match across all files in the aggregation.  " 
+                                                                        + "This variable attribute must match across all files in the aggregation.  "
                                                                         + "This variable will not appear in the dataset");
                                                     } else if (previousValue.doubleValue() != value
-                                                            .doubleValue()) {
+                                                            .doubleValue()
+                                                            && !(Double.isNaN(
+                                                                    previousValue.doubleValue())
+                                                                    && Double.isNaN(
+                                                                            value.doubleValue()))
+                                                            ) {
                                                         varsToExclude.add(varName);
-                                                      log.error(
+                                                        log.error(
                                                                 "Trying to aggregate NetCDF files, but the variable "
                                                                         + varName + " in the file "
                                                                         + file.getAbsolutePath()
@@ -504,12 +509,13 @@ public class NetcdfDatasetAggregator {
                                             + TimeUtils.dateTimeToISO8601(new DateTime(time))
                                             + "\"");
                                 }
-                                if(varsToExclude.isEmpty()) {
+                                if (varsToExclude.isEmpty()) {
                                     ncmlStringBuffer.append("/>");
                                 } else {
                                     ncmlStringBuffer.append(">");
-                                    for(String var : varsToExclude) {
-                                        ncmlStringBuffer.append("<remove name=\""+var+"\" type=\"variable\" />");
+                                    for (String var : varsToExclude) {
+                                        ncmlStringBuffer.append("<remove name=\"" + var
+                                                + "\" type=\"variable\" />");
                                     }
                                     ncmlStringBuffer.append("</netcdf>");
                                 }
@@ -645,8 +651,9 @@ public class NetcdfDatasetAggregator {
                  * handles, in which case the server admin will need to increase
                  * the number of available handles on the server.
                  */
-                if(location.endsWith("ncml")) {
-                    ServiceType serviceType = isRemote(location) ? ServiceType.OPENDAP : ServiceType.NCML;
+                if (location.endsWith("ncml")) {
+                    ServiceType serviceType = isRemote(location) ? ServiceType.OPENDAP
+                            : ServiceType.NCML;
                     nc = NetcdfDataset.acquireDataset(new DatasetUrl(serviceType, location), null);
                 } else {
                     nc = NetcdfDataset.openDataset(location);
