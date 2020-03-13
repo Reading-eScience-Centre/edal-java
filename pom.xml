@@ -52,11 +52,11 @@
     <build>
         <plugins>
             <plugin>
-                <!-- Sets the source version to 1.7 -->
+                <!-- Sets the source version to Java 11 -->
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>1.11</source>
+                    <target>1.11</target>
                 </configuration>
                 <version>2.5.1</version>
             </plugin>

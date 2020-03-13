@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.dataset;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,8 +55,7 @@ public abstract class DatasetFactory {
     private static String defaultDatasetFactoryName = null;
 
     /**
-     * @param clazz
-     *            The default {@link DatasetFactory} class for reading data
+     * @param clazz The default {@link DatasetFactory} class for reading data
      */
     public static void setDefaultDatasetFactoryClass(Class<?> clazz) {
         defaultDatasetFactoryName = clazz.getName();
@@ -64,10 +64,9 @@ public abstract class DatasetFactory {
     protected static File workingDir = null;
 
     /**
-     * @param workingDir
-     *            A default working directory which {@link DatasetFactory}
-     *            subclasses can use to store data (e.g. to write spatial
-     *            indices to disk)
+     * @param workingDir A default working directory which {@link DatasetFactory}
+     *                   subclasses can use to store data (e.g. to write spatial
+     *                   indices to disk)
      * 
      */
     public static void setWorkingDirectory(File workingDir) {
@@ -77,23 +76,26 @@ public abstract class DatasetFactory {
     /**
      * Gets a {@link DatasetFactory} from the class name
      * 
-     * @param clazz
-     *            The qualified name of the {@link DatasetFactory} class
-     * @return Either an instance of the requested class, or of the default
-     *         dataset factory class if <code>null</code> or an empty string is
-     *         supplied
+     * @param clazz The qualified name of the {@link DatasetFactory} class
+     * @return Either an instance of the requested class, or of the default dataset
+     *         factory class if <code>null</code> or an empty string is supplied
      * 
-     * @throws InstantiationException
-     *             If there is a problem instantiating the class (e.g it is an
-     *             abstract class or an interface)
-     * @throws IllegalAccessException
-     *             If the requested class has no public no-argument constructor
-     * @throws ClassNotFoundException
-     *             If the class is not found on the classpath, or if the default
-     *             has been requested but no default class has been set
+     * @throws InstantiationException    If there is a problem instantiating the
+     *                                   class (e.g it is an abstract class or an
+     *                                   interface)
+     * @throws IllegalAccessException    If the requested class has no public
+     *                                   no-argument constructor
+     * @throws ClassNotFoundException    If the class is not found on the classpath,
+     *                                   or if the default has been requested but no
+     *                                   default class has been set
+     * @throws SecurityException
+     * @throws NoSuchMethodException
+     * @throws InvocationTargetException
+     * @throws IllegalArgumentException
      */
-    public synchronized static DatasetFactory forName(String clazz) throws InstantiationException,
-            IllegalAccessException, ClassNotFoundException {
+    public synchronized static DatasetFactory forName(String clazz)
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException, IllegalArgumentException,
+            InvocationTargetException, NoSuchMethodException, SecurityException {
         if ((clazz == null || clazz.trim().equals(""))) {
             if (defaultDatasetFactoryName == null) {
                 throw new ClassNotFoundException(
@@ -104,10 +106,9 @@ public abstract class DatasetFactory {
         }
         if (!readers.containsKey(clazz)) {
             /* Create the DatasetFactory object */
-            Object dfObj = Class.forName(clazz).newInstance();
+            Object dfObj = Class.forName(clazz).getDeclaredConstructor().newInstance();
             /*
-             * This will throw a ClassCastException if dfObj is not a
-             * DatasetFactory
+             * This will throw a ClassCastException if dfObj is not a DatasetFactory
              */
             readers.put(clazz, (DatasetFactory) dfObj);
         }
@@ -117,13 +118,10 @@ public abstract class DatasetFactory {
     /**
      * Returns a Dataset object representing the data at the given location.
      * 
-     * @param id
-     *            The ID to assign to this dataset
-     * @param location
-     *            The location of the source data: this may be a file, database
-     *            connection string or a remote server address.
-     * @throws EdalException
-     *             If there is a problem creating the dataset
+     * @param id       The ID to assign to this dataset
+     * @param location The location of the source data: this may be a file, database
+     *                 connection string or a remote server address.
+     * @throws EdalException If there is a problem creating the dataset
      */
     public Dataset createDataset(String id, String location) throws IOException, EdalException {
         return createDataset(id, location, false);
@@ -132,16 +130,12 @@ public abstract class DatasetFactory {
     /**
      * Returns a Dataset object representing the data at the given location.
      * 
-     * @param id
-     *            The ID to assign to this dataset
-     * @param location
-     *            The location of the source data: this may be a file, database
-     *            connection string or a remote server address.
-     * @param forceRefresh
-     *            Set to <code>true</code> to ensure that any cached information
-     *            is not used
-     * @throws EdalException
-     *             If there is a problem creating the dataset
+     * @param id           The ID to assign to this dataset
+     * @param location     The location of the source data: this may be a file,
+     *                     database connection string or a remote server address.
+     * @param forceRefresh Set to <code>true</code> to ensure that any cached
+     *                     information is not used
+     * @throws EdalException If there is a problem creating the dataset
      */
     public abstract Dataset createDataset(String id, String location, boolean forceRefresh)
             throws IOException, EdalException;

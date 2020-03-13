@@ -18,6 +18,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +60,8 @@ public class StyleSLDParser {
         registerSymbolizer("SizedArrowSymbolizer", SLDSizedArrowSymbolizer.class);
         registerSymbolizer("ColoredSizedArrowSymbolizer", SLDColoredSizedArrowSymbolizer.class);
         registerSymbolizer("ColoredGlyphSymbolizer", SLDColoredGlyphSymbolizer.class);
-        //		registerSymbolizer("SubsampledIconSymbolizer", SLDSubsampledIconSymbolizer.class);
+        // registerSymbolizer("SubsampledIconSymbolizer",
+        // SLDSubsampledIconSymbolizer.class);
         registerSymbolizer("ConfidenceIntervalSymbolizer", SLDConfidenceIntervalSymbolizer.class);
         registerSymbolizer("TrajectorySymbolizer", SLDTrajectorySymbolizer.class);
     }
@@ -105,15 +107,13 @@ public class StyleSLDParser {
     /**
      * Register a new symbolizer class on a map of symbolizers.
      * 
-     * @param symbolizerTag
-     *            - the symbolizer tag as a string.
-     * @param symbolizerClass
-     *            - the class type of the new symbolizer.
-     * @throws IllegalArgumentException
-     *             - if either argument is null this exception is thrown.
+     * @param symbolizerTag   - the symbolizer tag as a string.
+     * @param symbolizerClass - the class type of the new symbolizer.
+     * @throws IllegalArgumentException - if either argument is null this exception
+     *                                  is thrown.
      */
-    public static void registerSymbolizer(String symbolizerTag,
-            Class<? extends SLDSymbolizer> symbolizerClass) throws IllegalArgumentException {
+    public static void registerSymbolizer(String symbolizerTag, Class<? extends SLDSymbolizer> symbolizerClass)
+            throws IllegalArgumentException {
         if (symbolizerTag == null) {
             throw new IllegalArgumentException("The symbolizer tag cannot be null.");
         }
@@ -126,8 +126,9 @@ public class StyleSLDParser {
     /*
      * Parse the document using XPath and create a corresponding image
      */
-    private static MapImage parseSLD(Document xmlDocument) throws XPathExpressionException,
-            SLDException, InstantiationException, IllegalAccessException {
+    private static MapImage parseSLD(Document xmlDocument)
+            throws XPathExpressionException, SLDException, InstantiationException, IllegalAccessException,
+            IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
         XPath xPath = XPathFactory.newInstance().newXPath();
         xPath.setNamespaceContext(new SLDNamespaceResolver());
 
@@ -135,8 +136,8 @@ public class StyleSLDParser {
         MapImage image = new MapImage();
 
         // Get all the layers in the document and loop through each one
-        NodeList layers = (NodeList) xPath.evaluate(
-                "/sld:StyledLayerDescriptor/sld:*", xmlDocument, XPathConstants.NODESET);
+        NodeList layers = (NodeList) xPath.evaluate("/sld:StyledLayerDescriptor/sld:*", xmlDocument,
+                XPathConstants.NODESET);
         if (!(layers.getLength() > 0)) {
             throw new SLDException("There must be at least one layer in an SLD document.");
         }
@@ -144,11 +145,11 @@ public class StyleSLDParser {
 
             // get each layer node and extract the variable names
             Node layerNode = layers.item(i);
-            List<String> varNames = new ArrayList<String>(); 
+            List<String> varNames = new ArrayList<String>();
             if (layerNode.getLocalName().equals("NamedLayer")) {
-            	if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
-            		throw new SLDException("Named layer is not an element node.");
-            	}
+                if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
+                    throw new SLDException("Named layer is not an element node.");
+                }
                 // get the name of the layer
                 Node nameNode = (Node) xPath.evaluate("./se:Name", layerNode, XPathConstants.NODE);
                 if (nameNode == null) {
@@ -160,30 +161,29 @@ public class StyleSLDParser {
                 }
                 varNames.add(layerName);
             } else if (layerNode.getLocalName().equals("UserLayer")) {
-            	if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
-            		throw new SLDException("User layer is not an element node.");
-            	}
-            	NodeList nameNodes = (NodeList) xPath.evaluate(
-            			"./sld:LayerCoverageConstraints/sld:CoverageConstraint/se:CoverageName",
-            			layerNode, XPathConstants.NODESET);
+                if (layerNode.getNodeType() != Node.ELEMENT_NODE) {
+                    throw new SLDException("User layer is not an element node.");
+                }
+                NodeList nameNodes = (NodeList) xPath.evaluate(
+                        "./sld:LayerCoverageConstraints/sld:CoverageConstraint/se:CoverageName", layerNode,
+                        XPathConstants.NODESET);
                 if (nameNodes == null || nameNodes.getLength() == 0) {
                     throw new SLDException("A user layer must specify the coverage constraints.");
                 }
-                for(int j = 0; j < nameNodes.getLength(); j++) {
-                	String coverageName = nameNodes.item(j).getTextContent();
+                for (int j = 0; j < nameNodes.getLength(); j++) {
+                    String coverageName = nameNodes.item(j).getTextContent();
                     if (coverageName == null || coverageName.equals("")) {
                         throw new SLDException("The name of the coverage must be specified.");
                     }
                     varNames.add(coverageName);
                 }
             } else {
-            	continue;
+                continue;
             }
 
             // get the children of the first rule and check that there is exactly one child
-            NodeList symbolizers = (NodeList) xPath.evaluate(
-            		"./sld:UserStyle/se:CoverageStyle/se:Rule/*", layerNode,
-            		XPathConstants.NODESET);
+            NodeList symbolizers = (NodeList) xPath.evaluate("./sld:UserStyle/se:CoverageStyle/se:Rule/*", layerNode,
+                    XPathConstants.NODESET);
             if (symbolizers.getLength() != 1) {
                 throw new SLDException("There must be exactly one symbolizer per layer.");
             }
@@ -196,7 +196,7 @@ public class StyleSLDParser {
                 Class<? extends SLDSymbolizer> symbolizerClass = entry.getValue();
 
                 if (symbolizerNode.getLocalName().equals(symbolizerTag)) {
-                    sldSymbolizer = symbolizerClass.newInstance();
+                    sldSymbolizer = symbolizerClass.getDeclaredConstructor().newInstance();
                 }
             }
             if (symbolizerNode == null) {
@@ -220,10 +220,10 @@ public class StyleSLDParser {
     }
 
     /**
-     * Read in and parse an XML file to a Document object. The builder factory
-     * is configured to be namespace aware and validating. The class
-     * SAXErrorHandler is used to handle validation errors. The schema is forced
-     * to be the SLD schema v1.1.0.
+     * Read in and parse an XML file to a Document object. The builder factory is
+     * configured to be namespace aware and validating. The class SAXErrorHandler is
+     * used to handle validation errors. The schema is forced to be the SLD schema
+     * v1.1.0.
      * 
      * @param xmlFile
      * @return
@@ -233,18 +233,17 @@ public class StyleSLDParser {
      * @throws IOException
      * @throws IllegalArgumentException
      */
-    private static Document readXMLFile(File xmlFile) throws ParserConfigurationException,
-            FileNotFoundException, SAXException, IOException, IllegalArgumentException {
+    private static Document readXMLFile(File xmlFile) throws ParserConfigurationException, FileNotFoundException,
+            SAXException, IOException, IllegalArgumentException {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
-        //	Uncomment to turn on schema validation
-        //	builderFactory.setValidating(true);
+        // Uncomment to turn on schema validation
+        // builderFactory.setValidating(true);
         try {
             builderFactory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
         } catch (IllegalArgumentException iae) {
-            throw new IllegalArgumentException("Error: JAXP DocumentBuilderFactory "
-                    + "attribute not recognized: " + JAXP_SCHEMA_LANGUAGE + "\n"
-                    + "Check to see if parser conforms to JAXP spec.");
+            throw new IllegalArgumentException("Error: JAXP DocumentBuilderFactory " + "attribute not recognized: "
+                    + JAXP_SCHEMA_LANGUAGE + "\n" + "Check to see if parser conforms to JAXP spec.");
         }
         builderFactory.setAttribute(JAXP_SCHEMA_SOURCE, SLD_SCHEMA);
         DocumentBuilder builder = builderFactory.newDocumentBuilder();
@@ -255,10 +254,10 @@ public class StyleSLDParser {
     }
 
     /**
-     * Read in and parse an XML string to a Document object. The builder factory
-     * is configured to be namespace aware and validating. The class
-     * SAXErrorHandler is used to handle validation errors. The schema is forced
-     * to be the SLD schema v1.1.0.
+     * Read in and parse an XML string to a Document object. The builder factory is
+     * configured to be namespace aware and validating. The class SAXErrorHandler is
+     * used to handle validation errors. The schema is forced to be the SLD schema
+     * v1.1.0.
      * 
      * @param xmlString
      * @return
@@ -268,18 +267,17 @@ public class StyleSLDParser {
      * @throws IOException
      * @throws IllegalArgumentException
      */
-    private static Document readXMLString(String xmlString) throws ParserConfigurationException,
-            FileNotFoundException, SAXException, IOException, IllegalArgumentException {
+    private static Document readXMLString(String xmlString) throws ParserConfigurationException, FileNotFoundException,
+            SAXException, IOException, IllegalArgumentException {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
-        //	Uncomment to turn on schema validation
-        //	builderFactory.setValidating(true);
+        // Uncomment to turn on schema validation
+        // builderFactory.setValidating(true);
         try {
             builderFactory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
         } catch (IllegalArgumentException iae) {
-            throw new IllegalArgumentException("Error: JAXP DocumentBuilderFactory "
-                    + "attribute not recognized: " + JAXP_SCHEMA_LANGUAGE + "\n"
-                    + "Check to see if parser conforms to JAXP spec.");
+            throw new IllegalArgumentException("Error: JAXP DocumentBuilderFactory " + "attribute not recognized: "
+                    + JAXP_SCHEMA_LANGUAGE + "\n" + "Check to see if parser conforms to JAXP spec.");
         }
         builderFactory.setAttribute(JAXP_SCHEMA_SOURCE, SLD_SCHEMA);
         DocumentBuilder builder = builderFactory.newDocumentBuilder();
