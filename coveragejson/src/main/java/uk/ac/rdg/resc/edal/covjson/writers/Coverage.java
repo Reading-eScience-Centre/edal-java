@@ -50,37 +50,38 @@ import uk.ac.rdg.resc.edal.util.Array1D;
  *
  */
 public class Coverage {
-	
-	final DiscreteFeature<?,?> feature;
-	
+
+	final DiscreteFeature<?, ?> feature;
+
 	Domain domain;
 	Map<String, Parameter> parameters = new HashMap<>();
 	Map<String, NdArray> ranges = new HashMap<>();
-	
+
 	static class Domain {
 		String domainType;
 		Map<String, Axis> axes;
 		Set<ReferenceSystemConnection> refSystemConnections;
+
 		public Domain(Map<String, Axis> axes, Set<ReferenceSystemConnection> refSystemConnections, String domainType) {
 			this.axes = axes;
 			this.refSystemConnections = refSystemConnections;
 			this.domainType = domainType;
 		}
 	}
-	
+
 	static class Axis {
 		/**
 		 * Either ReferenceableAxis or TupleAxis.
 		 */
 		Object wrappedAxis;
-		
+
 		List<String> coordinateIds;
-		
+
 		public Axis(Object wrappedAxis, List<String> coordinateIds) {
 			this.wrappedAxis = wrappedAxis;
 			this.coordinateIds = coordinateIds;
 		}
-		
+
 		int size() {
 			if (this.wrappedAxis instanceof ReferenceableAxis<?>) {
 				return ((ReferenceableAxis<?>) this.wrappedAxis).size();
@@ -91,39 +92,41 @@ public class Coverage {
 			}
 		}
 	}
-	
+
 	static class TupleAxis {
 		/**
-		 * A list of ReferenceableAxis objects.
-		 * For example [t, x, y] which would be [TimeAxis, ReferenceableAxis, ReferenceableAxis].  
+		 * A list of ReferenceableAxis objects. For example [t, x, y] which would be
+		 * [TimeAxis, ReferenceableAxis, ReferenceableAxis].
 		 */
 		List<ReferenceableAxis<?>> nestedAxes;
 		int size;
+
 		public TupleAxis(List<ReferenceableAxis<?>> nestedAxes, int size) {
 			this.nestedAxes = nestedAxes;
 			this.size = size;
 		}
 	}
-	
+
 	static class ReferenceSystemConnection {
 		List<String> coordinates;
 		Object system;
+
 		public ReferenceSystemConnection(List<String> coordinateIds, Object system) {
 			this.coordinates = coordinateIds;
 			this.system = system;
 		}
 	}
-		
+
 	static class NdArray implements Iterable<Number> {
 		static final List<String> axisOrder = Arrays.asList(Keys.T, Keys.Z, Keys.Y, Keys.X, Keys.COMPOSITE);
-		
+
 		List<String> axisNames = new LinkedList<>();
 		List<Integer> shape = new LinkedList<>();
 		int size = 0;
 		DataType dataType;
 		private Array<Number> values;
-		
-		public NdArray(DiscreteFeature<?,?> feature, String paramId, Domain domain) {
+
+		public NdArray(DiscreteFeature<?, ?> feature, String paramId, Domain domain) {
 			int totalSize = 1;
 			for (String axisKey : axisOrder) {
 				if (domain.axes.containsKey(axisKey)) {
@@ -134,26 +137,27 @@ public class Coverage {
 				}
 			}
 			this.size = totalSize;
-			
+
 			Parameter param = feature.getParameter(paramId);
 			boolean isCategorical = param.getCategories() != null;
 			this.dataType = isCategorical ? DataType.Integer : DataType.Float;
-			
+
 			this.values = feature.getValues(paramId);
 		}
-		
+
 		@Override
 		public Iterator<Number> iterator() {
-			// this relies on the fact that Array4D iterates in the order TZYX, otherwise we would have to wrap that
+			// this relies on the fact that Array4D iterates in the order TZYX, otherwise we
+			// would have to wrap that
 			// TODO add unit test to check that the order is not changed in some new release
 			return this.values.iterator();
 		}
 	}
-	
+
 	enum DataType {
 		Integer, Float
 	}
-	
+
 	public Coverage(Feature<?> feature) {
 		if (!(feature instanceof DiscreteFeature)) {
 			throw new EdalException("Only discrete-type features are supported");
@@ -164,7 +168,7 @@ public class Coverage {
 
 	private void init() {
 		this.domain = getDomain(this.feature);
-		
+
 		for (Parameter param : Util.withoutParameterGroups(this.feature.getParameterMap().values(), this.feature)) {
 			String key = param.getVariableId();
 			this.parameters.put(key, param);
@@ -180,7 +184,7 @@ public class Coverage {
 		} else if (feature instanceof ProfileFeature) {
 			return doGetDomain((ProfileFeature) feature);
 		} else if (feature instanceof PointSeriesFeature) {
-		    return doGetDomain((PointSeriesFeature) feature);
+			return doGetDomain((PointSeriesFeature) feature);
 		} else if (feature instanceof PointFeature) {
 			return doGetDomain((PointFeature) feature);
 		} else if (feature instanceof TrajectoryFeature) {
@@ -189,7 +193,7 @@ public class Coverage {
 			throw new EdalException("Unsupported feature type: " + feature.getClass().getSimpleName());
 		}
 	}
-	
+
 	private static Domain doGetDomain(MapFeature feature) {
 		return doGetDomain(Util.convertToGridFeature(feature));
 	}
@@ -199,7 +203,7 @@ public class Coverage {
 		VerticalAxis z = domain.getVerticalAxis();
 		HorizontalGrid xy = domain.getHorizontalGrid();
 		TimeAxis t = domain.getTimeAxis();
-		
+
 		RectilinearGrid rectGrid;
 		if (xy instanceof RectilinearGrid) {
 			rectGrid = (RectilinearGrid) xy;
@@ -208,80 +212,83 @@ public class Coverage {
 		}
 		ReferenceableAxis<?> x = rectGrid.getXAxis();
 		ReferenceableAxis<?> y = rectGrid.getYAxis();
-		
-		Map<String, Axis> axes = getAxes(x, y, t, z);		
-		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(
-				 xy.getCoordinateReferenceSystem(), t != null ? t.getChronology() : null, z != null ? z.getVerticalCrs() : null);
-				
+
+		Map<String, Axis> axes = getAxes(x, y, t, z);
+		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(xy.getCoordinateReferenceSystem(),
+				t != null ? t.getChronology() : null, z != null ? z.getVerticalCrs() : null);
+
 		return new Domain(axes, refSysConnections, Vals.GRID);
 	}
-	
+
 	private static Domain doGetDomain(ProfileFeature feature) {
 		VerticalAxis z = feature.getDomain();
 		HorizontalPosition xy = feature.getHorizontalPosition();
 		DateTime time = feature.getTime();
-		
+
 		TimeAxis t = time != null ? new TimeAxisImpl(Keys.T, Arrays.asList(time)) : null;
 		ReferenceableAxis<?> x = new ReferenceableAxisImpl(Keys.X, Arrays.asList(xy.getX()), false);
 		ReferenceableAxis<?> y = new ReferenceableAxisImpl(Keys.Y, Arrays.asList(xy.getY()), false);
-		
-		Map<String, Axis> axes = getAxes(x, y, t, z);		
-		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(
-				 xy.getCoordinateReferenceSystem(), t != null ? t.getChronology() : null, z != null ? z.getVerticalCrs() : null);
-		
+
+		Map<String, Axis> axes = getAxes(x, y, t, z);
+		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(xy.getCoordinateReferenceSystem(),
+				t != null ? t.getChronology() : null, z != null ? z.getVerticalCrs() : null);
+
 		return new Domain(axes, refSysConnections, Vals.VERTICALPROFILE);
 	}
-	
-    private static Domain doGetDomain(PointSeriesFeature feature) {
-        TimeAxis tAxis = feature.getDomain();
-        HorizontalPosition xy = feature.getHorizontalPosition();
-        VerticalPosition z = feature.getVerticalPosition();
 
-        VerticalAxis zAxis = z != null ? new VerticalAxisImpl(Keys.Z, Arrays.asList(z.getZ()),
-                z.getCoordinateReferenceSystem()) : null;
-        ReferenceableAxis<?> x = new ReferenceableAxisImpl(Keys.X, Arrays.asList(xy.getX()), false);
-        ReferenceableAxis<?> y = new ReferenceableAxisImpl(Keys.Y, Arrays.asList(xy.getY()), false);
+	private static Domain doGetDomain(PointSeriesFeature feature) {
+		TimeAxis tAxis = feature.getDomain();
+		HorizontalPosition xy = feature.getHorizontalPosition();
+		VerticalPosition z = feature.getVerticalPosition();
 
-        Map<String, Axis> axes = getAxes(x, y, tAxis, zAxis);
-        Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(
-                xy.getCoordinateReferenceSystem(), tAxis != null ? tAxis.getChronology() : null,
-                z != null ? z.getCoordinateReferenceSystem() : null);
+		VerticalAxis zAxis = z != null
+				? new VerticalAxisImpl(Keys.Z, Arrays.asList(z.getZ()), z.getCoordinateReferenceSystem())
+				: null;
+		ReferenceableAxis<?> x = xy != null ? new ReferenceableAxisImpl(Keys.X, Arrays.asList(xy.getX()), false) : null;
+		ReferenceableAxis<?> y = xy != null ? new ReferenceableAxisImpl(Keys.Y, Arrays.asList(xy.getY()), false) : null;
 
-        return new Domain(axes, refSysConnections, Vals.POINTSERIES);
-    }
-	
+		Map<String, Axis> axes = getAxes(x, y, tAxis, zAxis);
+		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(
+				xy != null ? xy.getCoordinateReferenceSystem() : null, tAxis != null ? tAxis.getChronology() : null,
+				z != null ? z.getCoordinateReferenceSystem() : null);
+
+		return new Domain(axes, refSysConnections, Vals.POINTSERIES);
+	}
+
 	private static Domain doGetDomain(PointFeature feature) {
 		GeoPosition domain = feature.getGeoPosition();
 		VerticalPosition zpos = domain.getVerticalPosition();
 		HorizontalPosition xy = domain.getHorizontalPosition();
 		DateTime time = domain.getTime();
-		
-		VerticalAxis z = new VerticalAxisImpl(Keys.Z, 
-				Arrays.asList(zpos.getZ()), zpos.getCoordinateReferenceSystem());
+
+		VerticalAxis z = new VerticalAxisImpl(Keys.Z, Arrays.asList(zpos.getZ()), zpos.getCoordinateReferenceSystem());
 		TimeAxis t = time != null ? new TimeAxisImpl(Keys.T, Arrays.asList(domain.getTime())) : null;
 		ReferenceableAxis<?> x = new ReferenceableAxisImpl(Keys.X, Arrays.asList(xy.getX()), false);
 		ReferenceableAxis<?> y = new ReferenceableAxisImpl(Keys.Y, Arrays.asList(xy.getY()), false);
 
 		Map<String, Axis> axes = getAxes(x, y, t, z);
-		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(
-				 xy.getCoordinateReferenceSystem(), t != null ? t.getChronology() : null, z != null ? z.getVerticalCrs() : null);
-		
+		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(xy.getCoordinateReferenceSystem(),
+				t != null ? t.getChronology() : null, z != null ? z.getVerticalCrs() : null);
+
 		return new Domain(axes, refSysConnections, Vals.POINT);
 	}
-	
+
 	private static Domain doGetDomain(TrajectoryFeature feature) {
 		TrajectoryDomain domain = feature.getDomain();
 
 		Map<String, Axis> axes = getAxes(domain);
-		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(
-				 domain.getHorizontalCrs(), domain.getChronology(), domain.getVerticalCrs());
-		
+		Set<ReferenceSystemConnection> refSysConnections = getRefSysConnections(domain.getHorizontalCrs(),
+				domain.getChronology(), domain.getVerticalCrs());
+
 		return new Domain(axes, refSysConnections, Vals.TRAJECTORY);
 	}
-	
-	private static Set<ReferenceSystemConnection> getRefSysConnections(CoordinateReferenceSystem xy, Chronology t, VerticalCrs z) {
+
+	private static Set<ReferenceSystemConnection> getRefSysConnections(CoordinateReferenceSystem xy, Chronology t,
+			VerticalCrs z) {
 		Set<ReferenceSystemConnection> refSysConnections = new HashSet<>();
-		refSysConnections.add(new ReferenceSystemConnection(Arrays.asList(Keys.X, Keys.Y), xy));
+		if(xy != null) {
+			refSysConnections.add(new ReferenceSystemConnection(Arrays.asList(Keys.X, Keys.Y), xy));
+		}
 		if (t != null) {
 			refSysConnections.add(new ReferenceSystemConnection(Arrays.asList(Keys.T), t));
 		}
@@ -290,11 +297,16 @@ public class Coverage {
 		}
 		return refSysConnections;
 	}
-	
-	private static Map<String, Axis> getAxes(ReferenceableAxis<?> x, ReferenceableAxis<?> y, TimeAxis t, VerticalAxis z) {
+
+	private static Map<String, Axis> getAxes(ReferenceableAxis<?> x, ReferenceableAxis<?> y, TimeAxis t,
+			VerticalAxis z) {
 		Map<String, Axis> axes = new HashMap<>();
-		axes.put(Keys.X, new Axis(x, null));
-		axes.put(Keys.Y, new Axis(y, null));
+		if(x != null) {
+			axes.put(Keys.X, new Axis(x, null));
+		}
+		if( y != null) {
+			axes.put(Keys.Y, new Axis(y, null));
+		}
 		if (t != null) {
 			axes.put(Keys.T, new Axis(t, null));
 		}
@@ -303,7 +315,7 @@ public class Coverage {
 		}
 		return axes;
 	}
-	
+
 	private static Map<String, Axis> getAxes(TrajectoryDomain trajectoryDomain) {
 		List<String> coordinateIds = new LinkedList<>();
 		coordinateIds.add(Keys.T);
@@ -313,27 +325,27 @@ public class Coverage {
 		if (hasZ) {
 			coordinateIds.add(Keys.Z);
 		}
-		
+
 		int size = trajectoryDomain.size();
 		List<DateTime> ts = new ArrayList<>(size);
 		List<Double> xs = new ArrayList<>(size);
 		List<Double> ys = new ArrayList<>(size);
 		List<Double> zs = hasZ ? new ArrayList<Double>(size) : null;
-		
+
 		Array1D<GeoPosition> positions = trajectoryDomain.getDomainObjects();
 		for (GeoPosition pos : positions) {
 			ts.add(pos.getTime());
 			xs.add(pos.getHorizontalPosition().getX());
 			ys.add(pos.getHorizontalPosition().getY());
 			if (hasZ) {
-				zs.add(pos.getVerticalPosition().getZ());	
+				zs.add(pos.getVerticalPosition().getZ());
 			}
 		}
-		
+
 		TimeAxis t = new TimeAxisImpl(Keys.T, ts);
 		ReferenceableAxis<Double> x = new ReferenceableAxisImpl(Keys.X, xs, false);
 		ReferenceableAxis<Double> y = new ReferenceableAxisImpl(Keys.Y, ys, false);
-				
+
 		List<ReferenceableAxis<?>> nestedAxes = new LinkedList<>();
 		nestedAxes.add(t);
 		nestedAxes.add(x);
@@ -342,9 +354,9 @@ public class Coverage {
 			ReferenceableAxis<Double> z = new ReferenceableAxisImpl(Keys.Z, zs, false);
 			nestedAxes.add(z);
 		}
-		
+
 		TupleAxis tupleAxis = new TupleAxis(nestedAxes, size);
-		
+
 		Map<String, Axis> axes = new HashMap<>();
 		axes.put(Keys.COMPOSITE, new Axis(tupleAxis, coordinateIds));
 		return axes;
