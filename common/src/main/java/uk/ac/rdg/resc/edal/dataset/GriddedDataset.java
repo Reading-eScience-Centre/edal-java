@@ -561,6 +561,7 @@ public abstract class GriddedDataset extends
             data = getDataReadingStrategy().readMapData(dataSource, metadata.getId(), tIndex,
                     zIndex, domainMapper);
         } catch (IOException e) {
+            log.warn("Problem reading data", e);
             throw new DataReadingException("Could not read underlying data", e);
         }
         return data;
