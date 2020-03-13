@@ -58,7 +58,7 @@ public class CoverageJsonWriter {
 		encoder.end();
 	}
 	
-	void write(Collection<Feature<?>> features) throws IOException {
+	void write(Collection<? extends Feature<?>> features) throws IOException {
 		MapEncoder<StreamingEncoder> map = encoder.startMap();
 		Collection<Coverage> coverages = new LinkedList<>();
 		for (Feature<?> feature : features) {

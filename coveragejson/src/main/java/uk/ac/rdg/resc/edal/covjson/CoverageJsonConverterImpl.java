@@ -56,7 +56,7 @@ public class CoverageJsonConverterImpl implements CoverageJsonConverter {
 	}
 
 	@Override
-	public void convertFeaturesToJson(OutputStream os, Collection<Feature<?>> features) {
+	public void convertFeaturesToJson(OutputStream os, Collection<? extends Feature<?>> features) {
 		StreamingEncoder encoder;
 		try {
 			encoder = new JsonStreamingEncoder(os);

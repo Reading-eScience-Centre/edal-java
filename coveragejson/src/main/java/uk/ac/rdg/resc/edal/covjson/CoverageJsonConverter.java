@@ -60,7 +60,7 @@ public interface CoverageJsonConverter {
 	 * @param out The stream to write to.
 	 * @param feature The features to serialize.
 	 */
-    public void convertFeaturesToJson(OutputStream out, Collection<Feature<?>> features);
+    public void convertFeaturesToJson(OutputStream out, Collection<? extends Feature<?>> features);
     
     /**
      * Checks whether the converter will be able to convert the given features successfully.
