@@ -36,6 +36,7 @@ import java.util.List;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 
 import org.monte.media.Format;
+import org.monte.media.FormatKeys;
 import org.monte.media.FormatKeys.MediaType;
 import org.monte.media.VideoFormatKeys;
 import org.monte.media.avi.AVIWriter;
@@ -59,9 +60,9 @@ public class AviFormat extends SimpleFormat {
         }
         int width = frames.get(0).getWidth();
         int height = frames.get(0).getHeight();
-        Format format = new Format(VideoFormatKeys.EncodingKey, VideoFormatKeys.ENCODING_AVI_DIB,
-                VideoFormatKeys.DepthKey, 24, VideoFormatKeys.MediaTypeKey, MediaType.VIDEO,
-                VideoFormatKeys.FrameRateKey, new Rational(frameRate), VideoFormatKeys.WidthKey,
+        Format format = new Format(FormatKeys.EncodingKey, VideoFormatKeys.ENCODING_AVI_DIB,
+                VideoFormatKeys.DepthKey, 24, FormatKeys.MediaTypeKey, MediaType.VIDEO,
+                FormatKeys.FrameRateKey, new Rational(frameRate), VideoFormatKeys.WidthKey,
                 width, VideoFormatKeys.HeightKey, height);
         
         AVIWriter writer = null;

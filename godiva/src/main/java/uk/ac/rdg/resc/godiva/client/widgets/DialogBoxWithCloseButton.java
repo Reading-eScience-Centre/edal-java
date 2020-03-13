@@ -168,8 +168,8 @@ public class DialogBoxWithCloseButton extends DialogBox {
     protected boolean isWidgetEvent(NativeEvent event, Widget w) {
         EventTarget target = event.getEventTarget();
 
-        if (Element.is(target)) {
-            boolean t = w.getElement().isOrHasChild(Element.as(target));
+        if (com.google.gwt.dom.client.Element.is(target)) {
+            boolean t = w.getElement().isOrHasChild(com.google.gwt.dom.client.Element.as(target));
             // GWT.log("isWidgetEvent:" + w + ':' + target + ':' + t);
             return t;
         }

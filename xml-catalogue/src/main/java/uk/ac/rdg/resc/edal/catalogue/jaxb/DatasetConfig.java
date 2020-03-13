@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.catalogue.jaxb;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -100,8 +101,7 @@ public class DatasetConfig {
     private boolean downloadable = false;
 
     /*
-     * We'll use a default data reader unless this is overridden in the config
-     * file
+     * We'll use a default data reader unless this is overridden in the config file
      */
     @XmlAttribute(name = "dataReaderClass")
     private String dataReaderClass = "";
@@ -130,9 +130,9 @@ public class DatasetConfig {
     private String metadataMimetype = null;
 
     /*
-     * The VariableConfigs are part of the XML definition, but the annotations
-     * are on the setter, so that we can set each one's DatasetConfig to this
-     * after deserialisation, and add them to a Map with the IDs as keys
+     * The VariableConfigs are part of the XML definition, but the annotations are
+     * on the setter, so that we can set each one's DatasetConfig to this after
+     * deserialisation, and add them to a Map with the IDs as keys
      */
     @XmlTransient
     private Map<String, VariableConfig> variables = new LinkedHashMap<>();
@@ -151,14 +151,13 @@ public class DatasetConfig {
     @XmlTransient
     private Throwable err;
     /*
-     * The number of consecutive times we've seen an error when loading a
-     * dataset
+     * The number of consecutive times we've seen an error when loading a dataset
      */
     @XmlTransient
     private int numErrorsInARow = 0;
     /*
-     * Used to express progress with loading the metadata for this dataset, one
-     * line at a time
+     * Used to express progress with loading the metadata for this dataset, one line
+     * at a time
      */
     @XmlTransient
     private List<String> loadingProgress = new ArrayList<String>();
@@ -169,8 +168,8 @@ public class DatasetConfig {
     @XmlTransient
     private DateTime lastSuccessfulUpdateTime = null;
     /*
-     * The time at which we last got an error when updating the dataset's
-     * metadata, or null if we've never seen an error
+     * The time at which we last got an error when updating the dataset's metadata,
+     * or null if we've never seen an error
      */
     @XmlTransient
     private DateTime lastFailedUpdateTime = null;
@@ -185,10 +184,9 @@ public class DatasetConfig {
     /**
      * Refreshes the dataset if required.
      * 
-     * @param datasetStorage
-     *            The {@link DatasetStorage} object to send {@link Dataset}s and
-     *            {@link EnhancedVariableMetadata} back to once a refresh is
-     *            completed
+     * @param datasetStorage The {@link DatasetStorage} object to send
+     *                       {@link Dataset}s and {@link EnhancedVariableMetadata}
+     *                       back to once a refresh is completed
      */
     public void refresh(DatasetStorage datasetStorage) {
         if (!needsRefresh()) {
@@ -196,25 +194,22 @@ public class DatasetConfig {
         }
         loadingProgress = new ArrayList<String>();
         /*
-         * Include the id of the dataset in the thread for debugging purposes
-         * Comment this out to use the default thread names (e.g.
-         * "pool-2-thread-1")
+         * Include the id of the dataset in the thread for debugging purposes Comment
+         * this out to use the default thread names (e.g. "pool-2-thread-1")
          */
         Thread.currentThread().setName("load-metadata-" + id);
 
         /* Now load the layers and manage the state of the dataset */
         try {
             /*
-             * if lastUpdateTime == null, this dataset has never previously been
-             * loaded.
+             * if lastUpdateTime == null, this dataset has never previously been loaded.
              */
             state = lastSuccessfulUpdateTime == null ? DatasetState.LOADING : DatasetState.UPDATING;
 
             createDataset(datasetStorage, true);
 
             /*
-             * Update the state of this dataset. If we've got this far there
-             * were no errors.
+             * Update the state of this dataset. If we've got this far there were no errors.
              */
             err = null;
             numErrorsInARow = 0;
@@ -225,8 +220,8 @@ public class DatasetConfig {
             numErrorsInARow++;
             lastFailedUpdateTime = new DateTime();
             /*
-             * Reduce logging volume by only logging the error if it's a new
-             * type of exception.
+             * Reduce logging volume by only logging the error if it's a new type of
+             * exception.
              */
             if (err == null || err.getClass() != e.getClass()) {
                 log.error(e.getClass().getName() + " loading metadata for dataset " + id, e);
@@ -236,8 +231,8 @@ public class DatasetConfig {
     }
 
     public void createDataset(DatasetStorage datasetStorage, boolean forceRefresh)
-            throws InstantiationException, IllegalAccessException, ClassNotFoundException,
-            IOException, EdalException {
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, EdalException,
+            IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
         loadingProgress.add("Starting loading");
 
         /*
@@ -255,8 +250,8 @@ public class DatasetConfig {
 
         loadingProgress.add("Dataset created");
         /*
-         * Loop through existing variables and check that they are still there,
-         * removing them if not
+         * Loop through existing variables and check that they are still there, removing
+         * them if not
          */
         Set<String> variableIds = dataset.getVariableIds();
         List<String> variablesToRemove = new ArrayList<String>();
@@ -279,10 +274,10 @@ public class DatasetConfig {
                  */
                 Extent<Float> colorScaleRange = GraphicsUtils.estimateValueRange(dataset, varId);
                 VariableMetadata variableMetadata = dataset.getVariableMetadata(varId);
-                VariableConfig variable = new VariableConfig(varId, variableMetadata.getParameter()
-                        .getTitle(), variableMetadata.getParameter().getDescription(),
-                        colorScaleRange, ColourPalette.DEFAULT_PALETTE_NAME, Color.black,
-                        Color.black, new Color(0, true), "linear", ColourPalette.MAX_NUM_COLOURS);
+                VariableConfig variable = new VariableConfig(varId, variableMetadata.getParameter().getTitle(),
+                        variableMetadata.getParameter().getDescription(), colorScaleRange,
+                        ColourPalette.DEFAULT_PALETTE_NAME, Color.black, Color.black, new Color(0, true), "linear",
+                        ColourPalette.MAX_NUM_COLOURS);
                 variable.setParentDataset(this);
                 variables.put(varId, variable);
             }
@@ -301,23 +296,23 @@ public class DatasetConfig {
             return true;
         } else if (state == DatasetState.ERROR) {
             /*
-             * We implement an exponential backoff for reloading datasets that
-             * have errors, which saves repeatedly hammering remote servers
+             * We implement an exponential backoff for reloading datasets that have errors,
+             * which saves repeatedly hammering remote servers
              */
             double delaySeconds = Math.pow(2, numErrorsInARow);
             /* The maximum interval between refreshes is 10 minutes */
             delaySeconds = Math.min(delaySeconds, 10 * 60);
             /* lastFailedUpdateTime should never be null: this is defensive */
-            boolean needsRefresh = lastFailedUpdateTime == null ? true : new DateTime()
-                    .isAfter(lastFailedUpdateTime.plusSeconds((int) delaySeconds));
+            boolean needsRefresh = lastFailedUpdateTime == null ? true
+                    : new DateTime().isAfter(lastFailedUpdateTime.plusSeconds((int) delaySeconds));
             return needsRefresh;
         } else if (this.updateInterval < 0) {
             /* We never update this dataset */
             return false;
         } else {
             /*
-             * State = READY. Check the age of the metadata Return true if we
-             * are after the next scheduled update
+             * State = READY. Check the age of the metadata Return true if we are after the
+             * next scheduled update
              */
             return new DateTime().isAfter(lastSuccessfulUpdateTime.plusMinutes(updateInterval));
         }
@@ -343,8 +338,8 @@ public class DatasetConfig {
     }
 
     /**
-     * @return The location (on disk/network/internet) of the {@link Dataset}
-     *         being configured
+     * @return The location (on disk/network/internet) of the {@link Dataset} being
+     *         configured
      */
     public String getLocation() {
         return location;
@@ -401,8 +396,7 @@ public class DatasetConfig {
     }
 
     /**
-     * @return Arbitrary additional information associated with this
-     *         {@link Dataset}
+     * @return Arbitrary additional information associated with this {@link Dataset}
      */
     public String getMoreInfo() {
         return moreInfo;
@@ -425,8 +419,7 @@ public class DatasetConfig {
     }
 
     /**
-     * @return The mimetype of further metadata associated with this
-     *         {@link Dataset}
+     * @return The mimetype of further metadata associated with this {@link Dataset}
      */
     public String getMetadataMimetype() {
         return metadataMimetype;
@@ -439,33 +432,33 @@ public class DatasetConfig {
      */
 
     /**
-     * @return An array of {@link VariableConfig} objects representing the
-     *         available variables in the represented {@link Dataset}
+     * @return An array of {@link VariableConfig} objects representing the available
+     *         variables in the represented {@link Dataset}
      */
     public VariableConfig[] getVariables() {
         return variables.values().toArray(new VariableConfig[0]);
     }
 
     /**
-     * @return The {@link VariableConfig} objects representing the variables
-     *         with the given ID in the represented {@link Dataset}, or
-     *         <code>null</code> if the specified variable ID doesn't exist
+     * @return The {@link VariableConfig} objects representing the variables with
+     *         the given ID in the represented {@link Dataset}, or <code>null</code>
+     *         if the specified variable ID doesn't exist
      */
     public VariableConfig getVariableById(String variableId) {
         return variables.get(variableId);
     }
 
     /**
-     * @return The {@link DatasetState} which the {@link Dataset} being
-     *         configured is in
+     * @return The {@link DatasetState} which the {@link Dataset} being configured
+     *         is in
      */
     public DatasetState getState() {
         return state;
     }
 
     /**
-     * @return A {@link List} of {@link String}s representing the completed
-     *         stages of the dataset loading
+     * @return A {@link List} of {@link String}s representing the completed stages
+     *         of the dataset loading
      */
     public List<String> getLoadingProgress() {
         return loadingProgress;
@@ -479,12 +472,11 @@ public class DatasetConfig {
     }
 
     /**
-     * @return <code>true</code> if this dataset is not ready because it is
-     *         being loaded
+     * @return <code>true</code> if this dataset is not ready because it is being
+     *         loaded
      */
     public synchronized boolean isLoading() {
-        return !isDisabled()
-                && (state == DatasetState.NEEDS_REFRESH || state == DatasetState.LOADING);
+        return !isDisabled() && (state == DatasetState.NEEDS_REFRESH || state == DatasetState.LOADING);
     }
 
     /**
@@ -493,9 +485,9 @@ public class DatasetConfig {
      */
     public boolean hasError() {
         /*
-         * Note that we don't use state == ERROR here because it's possible for
-         * a dataset to be loading and have an error from a previous loading
-         * attempt that an admin might want to see
+         * Note that we don't use state == ERROR here because it's possible for a
+         * dataset to be loading and have an error from a previous loading attempt that
+         * an admin might want to see
          */
         return err != null;
     }

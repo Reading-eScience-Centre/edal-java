@@ -186,7 +186,7 @@ public class LegendDataGenerator {
         missingBits = new boolean[width][height];
         if (backgroundMask != null) {
             Image scaledInstance = backgroundMask.getScaledInstance(width, height,
-                    BufferedImage.SCALE_FAST);
+                    Image.SCALE_FAST);
             BufferedImage bufferedImage = new BufferedImage(width, height,
                     BufferedImage.TYPE_BYTE_GRAY);
             bufferedImage.createGraphics().drawImage(scaledInstance, 0, 0, null);

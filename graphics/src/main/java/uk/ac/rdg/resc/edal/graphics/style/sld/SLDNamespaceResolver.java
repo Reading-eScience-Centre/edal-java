@@ -37,7 +37,7 @@ public class SLDNamespaceResolver implements NamespaceContext {
         return null;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Iterator getPrefixes(String namespaceURI) {
         // Not needed in this context.

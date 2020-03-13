@@ -108,8 +108,8 @@ public class PRTreeFeatureIndexerTest {
         while (yIndex.hasNext()) {
             double yvalue = yIndex.next();
             while (xIndex.hasNext()) {
-                String featureID = "x" + (new Integer(counterX++)).toString() + "y"
-                        + (new Integer(counterY)).toString();
+                String featureID = "x" + (Integer.valueOf(counterX++)).toString() + "y"
+                        + (Integer.valueOf(counterY)).toString();
                 HorizontalPosition hPos = new HorizontalPosition(xIndex.next(), yvalue, crs);
                 FeatureIndexer.FeatureBounds featurebounds = new FeatureIndexer.FeatureBounds(
                         featureID, hPos, verticalExtent, timeExtent, varIDs);
@@ -130,8 +130,8 @@ public class PRTreeFeatureIndexerTest {
         HashSet<String> expectedIDs = new HashSet<>();
         for (int i = 0; i < ySize; i++) {
             for (int j = 0; j < xSize; j++) {
-                String featureID = "x" + (new Integer(j)).toString() + "y"
-                        + (new Integer(i)).toString();
+                String featureID = "x" + (Integer.valueOf(j)).toString() + "y"
+                        + (Integer.valueOf(i)).toString();
                 expectedIDs.add(featureID);
             }
         }
@@ -217,7 +217,7 @@ public class PRTreeFeatureIndexerTest {
         Collection<String> expectedResults = new HashSet<>();
         for (int x = xIndexStartFrom; x < xIndexEndAt; x++) {
             for (int y = yIndexStartFrom; y < yIndexEndAt; y++) {
-                String s = "x" + (new Integer(x)).toString() + "y" + (new Integer(y)).toString();
+                String s = "x" + (Integer.valueOf(x)).toString() + "y" + (Integer.valueOf(y)).toString();
                 expectedResults.add(s);
             }
         }
@@ -230,8 +230,8 @@ public class PRTreeFeatureIndexerTest {
             xIndexEndAt = longitudePoints.headSet(bbox.getMaxX() - 360.0).size();
             for (int x = xIndexStartFrom; x < xIndexEndAt; x++) {
                 for (int y = yIndexStartFrom; y < yIndexEndAt; y++) {
-                    String s = "x" + (new Integer(x)).toString() + "y"
-                            + (new Integer(y)).toString();
+                    String s = "x" + (Integer.valueOf(x)).toString() + "y"
+                            + (Integer.valueOf(y)).toString();
                     expectedResults.add(s);
                 }
             }
