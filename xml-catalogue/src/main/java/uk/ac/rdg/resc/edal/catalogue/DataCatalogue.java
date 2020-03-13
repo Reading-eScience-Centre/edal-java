@@ -489,7 +489,14 @@ public class DataCatalogue implements DatasetCatalogue, DatasetStorage, FeatureC
                         .getObjectValue();
             } else {
                 mapFeatures = doExtraction(layerName, variable, params);
-                featureCache.put(new Element(key, mapFeatures));
+                try {
+                    featureCache.put(new Element(key, mapFeatures));
+                } catch (Exception e) {
+                    log.error("Problem adding features to cache", e);
+                    /*
+                     * Just log and carry on - not caching isn't the end of the world
+                     */
+                }
             }
         } else {
             mapFeatures = doExtraction(layerName, variable, params);
