@@ -31,6 +31,7 @@ package uk.ac.rdg.resc.edal.util;
 import uk.ac.rdg.resc.edal.exceptions.ArrayAccessException;
 
 public class ImmutableArray1D<T> extends Array1D<T> {
+    private static final long serialVersionUID = 1L;
     private final T[] data;
 
     /**

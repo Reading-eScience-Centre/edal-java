@@ -28,11 +28,20 @@
 
 package uk.ac.rdg.resc.edal.util;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
-public abstract class Array1D<T> implements Array<T> {
+public abstract class Array1D<T> implements Array<T>, Serializable {
 
+    private static final long serialVersionUID = 1L;
     private int size;
+    
+    @SuppressWarnings("unused")
+    private Array1D() {
+        /*
+         * For Serialization
+         */
+    }
 
     public Array1D(int size) {
         if (size < 1) {

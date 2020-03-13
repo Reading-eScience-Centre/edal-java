@@ -34,6 +34,7 @@ package uk.ac.rdg.resc.edal.util;
  * @author Guy Griffiths
  */
 public class SingleValueImmutableArray1D extends Array1D<Number> {
+    private static final long serialVersionUID = 1L;
     private Number value;
 
     public SingleValueImmutableArray1D(Number value) {

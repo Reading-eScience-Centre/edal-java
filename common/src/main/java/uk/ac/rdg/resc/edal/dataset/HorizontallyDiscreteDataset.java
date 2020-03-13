@@ -642,6 +642,7 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
                 for (int i = 0; i < nSourceVars; i++) {
                     pluginSource[i] = pluginSourceData.get(i).get(location);
                 }
+                @SuppressWarnings("serial")
                 Array1D<Number> values = plugin.generateArray1D(varId,
                         new Array1D<HorizontalPosition>(nSourceVars) {
                             @Override
@@ -1010,6 +1011,7 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
                 for (int i = 0; i < nSourceVars; i++) {
                     pluginSource[i] = pluginSourceData.get(i).get(location);
                 }
+                @SuppressWarnings("serial")
                 Array1D<Number> values = plugin.generateArray1D(varId,
                         new Array1D<HorizontalPosition>(nSourceVars) {
                             @Override
@@ -1121,6 +1123,7 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
      * maybe we can re-introduce a minimal GridDataset type which has this
      * method. Depends what we want to do with transects.
      */
+    @SuppressWarnings("serial")
     private Map<String, Array1D<Number>> readMultiplePoints(Set<String> varIds,
             final List<GeoPosition> positions) throws DataReadingException,
             VariableNotFoundException {

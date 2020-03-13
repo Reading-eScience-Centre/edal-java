@@ -28,7 +28,6 @@
 
 package uk.ac.rdg.resc.edal.util;
 
-
 /**
  * Implementation of an {@link Array1D} which uses an array of {@link Double}s
  * for storage.
@@ -36,7 +35,7 @@ package uk.ac.rdg.resc.edal.util;
  * @author Guy Griffiths
  */
 public class ValuesArray1D extends Array1D<Number> {
-
+    private static final long serialVersionUID = 1L;
     private Number[] data;
 
     public ValuesArray1D(int size) {

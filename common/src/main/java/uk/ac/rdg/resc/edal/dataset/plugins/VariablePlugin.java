@@ -132,6 +132,7 @@ public abstract class VariablePlugin {
      *            An {@link Array1D} containing the source values
      * @return An {@link Array1D} containing the generated values
      */
+    @SuppressWarnings("serial")
     public Array1D<Number> generateArray1D(final String varId,
             final Array1D<HorizontalPosition> positions,
             @SuppressWarnings("unchecked") final Array1D<Number>... sourceArrays) {
