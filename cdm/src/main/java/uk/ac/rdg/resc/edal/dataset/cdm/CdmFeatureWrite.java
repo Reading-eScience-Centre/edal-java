@@ -66,7 +66,7 @@ import uk.ac.rdg.resc.edal.util.GridCoordinates2D;
  *
  * @author Guy Griffiths
  */
-public class CdmGridFeatureWrite {
+public class CdmFeatureWrite {
     private static final Float DEFAULT_FILL_VALUE = Float.NEGATIVE_INFINITY;
 
     /**
