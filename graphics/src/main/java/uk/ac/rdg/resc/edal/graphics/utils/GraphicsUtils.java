@@ -374,7 +374,8 @@ public class GraphicsUtils implements Serializable {
                 Array<Number> values = feature.getValues(varId);
                 if (values != null) {
                     for (Number value : values) {
-                        if (value != null && !Double.isNaN(value.doubleValue())) {
+                        if (value != null && !Double.isNaN(value.doubleValue())
+                                && !Double.isInfinite(value.doubleValue())) {
                             min = (float) Math.min(value.doubleValue(), min);
                             max = (float) Math.max(value.doubleValue(), max);
                         }
