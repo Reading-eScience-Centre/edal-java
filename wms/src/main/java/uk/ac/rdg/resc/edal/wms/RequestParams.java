@@ -118,7 +118,8 @@ public class RequestParams {
     public String getMandatoryString(String paramName) throws EdalException {
         String value = this.getString(paramName);
         if (value == null) {
-            throw new EdalException("Must provide a value for parameter " + paramName.toUpperCase());
+            throw new EdalException(
+                    "Must provide a value for parameter " + paramName.toUpperCase());
         }
         return value;
     }
@@ -153,7 +154,7 @@ public class RequestParams {
         }
         return version;
     }
-    
+
     /**
      * Returns the value of the parameter with the given name as a positive
      * integer, or the provided default if no parameter with the given name has
@@ -168,7 +169,7 @@ public class RequestParams {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            throw new EdalException("Problem parsing integer: "+value, e);
+            throw new EdalException("Problem parsing integer: " + value, e);
         }
     }
 
@@ -195,7 +196,8 @@ public class RequestParams {
     public int getMandatoryPositiveInt(String paramName) throws EdalException {
         String value = this.getString(paramName);
         if (value == null) {
-            throw new EdalException("Must provide a value for parameter " + paramName.toUpperCase());
+            throw new EdalException(
+                    "Must provide a value for parameter " + paramName.toUpperCase());
         }
         return parsePositiveInt(paramName, value);
     }
@@ -209,8 +211,8 @@ public class RequestParams {
             }
             return i;
         } catch (NumberFormatException nfe) {
-            throw new EdalException("Parameter " + paramName.toUpperCase()
-                    + " must be a valid positive integer");
+            throw new EdalException(
+                    "Parameter " + paramName.toUpperCase() + " must be a valid positive integer");
         }
     }
 
@@ -258,6 +260,28 @@ public class RequestParams {
         String value = this.getString(paramName);
         if (value == null) {
             return defaultValue;
+        }
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException nfe) {
+            throw new EdalException("Parameter " + paramName.toUpperCase()
+                    + " must be a valid floating-point number");
+        }
+    }
+
+    /**
+     * Returns the value of the parameter with the given name, or throws an
+     * exception if the parameter is not available
+     * 
+     * @throws EdalException
+     *             if the value of the parameter is not a valid floating-point
+     *             number, or is not available
+     */
+    public float getMandatoryFloat(String paramName) throws EdalException {
+        String value = this.getString(paramName);
+        if (value == null) {
+            throw new EdalException(
+                    "Must provide a value for parameter " + paramName.toUpperCase());
         }
         try {
             return Float.parseFloat(value);
