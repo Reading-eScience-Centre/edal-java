@@ -28,16 +28,22 @@
 
 package uk.ac.rdg.resc.edal.feature;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 
 import uk.ac.rdg.resc.edal.domain.Extent;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
+import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.metadata.Parameter;
 import uk.ac.rdg.resc.edal.position.HorizontalPosition;
 import uk.ac.rdg.resc.edal.position.VerticalPosition;
 import uk.ac.rdg.resc.edal.util.Array1D;
+import uk.ac.rdg.resc.edal.util.ValuesArray1D;
 
 /**
  * A measurement of a time series at a point
@@ -51,12 +57,54 @@ public class PointSeriesFeature extends AbstractDiscreteFeature<DateTime, Extent
     private final HorizontalPosition hPos;
     private final VerticalPosition zPos;
 
-    public PointSeriesFeature(String id, String name, String description, TimeAxis domain,
-            HorizontalPosition hPos, VerticalPosition zPos, Map<String, Parameter> parameters,
-            Map<String, Array1D<Number>> values) {
+    public PointSeriesFeature(String id, String name, String description, TimeAxis domain, HorizontalPosition hPos,
+            VerticalPosition zPos, Map<String, Parameter> parameters, Map<String, Array1D<Number>> values) {
         super(id, name, description, domain, parameters, values);
         this.hPos = hPos;
         this.zPos = zPos;
+    }
+
+    public PointSeriesFeature subsetPointSeriesFeature(Set<String> varIds, Extent<DateTime> timeExtent) {
+        if (varIds == null) {
+            varIds = this.getVariableIds();
+        }
+
+        if (timeExtent == null) {
+            timeExtent = this.getDomain().getCoordinateExtent();
+        }
+
+        int firstIndex = -1;
+        List<DateTime> tVals = new ArrayList<>();
+        int lastIndex = getDomain().size() - 1;
+        for (int t = 0; t < getDomain().size(); t++) {
+            DateTime time = getDomain().getCoordinateValue(t);
+            if ((time.isAfter(timeExtent.getLow()) || time.isEqual(timeExtent.getLow()))
+                    && (time.isBefore(timeExtent.getHigh()) || time.isEqual(timeExtent.getHigh()))) {
+                if (firstIndex < 0) {
+                    firstIndex = t;
+                }
+                lastIndex = t;
+                tVals.add(time);
+            }
+        }
+        int newSize = lastIndex - firstIndex + 1;
+
+        TimeAxis tAxis = new TimeAxisImpl(this.getDomain().getName(), tVals);
+
+        Map<String, Parameter> parameters = new HashMap<>();
+        Map<String, Array1D<Number>> values = new HashMap<>();
+        for (String varId : varIds) {
+            Array1D<Number> existingVals = getValues(varId);
+            Array1D<Number> newVals = new ValuesArray1D(newSize);
+            for (int i = 0; i < newSize; i++) {
+                newVals.set(existingVals.get(firstIndex + i), i);
+            }
+            values.put(varId, newVals);
+            parameters.put(varId, getParameter(varId));
+        }
+
+        return new PointSeriesFeature(getId() + "-subset", getName(), getDescription(), tAxis, getHorizontalPosition(),
+                getVerticalPosition(), parameters, values);
     }
 
     /**
@@ -80,7 +128,7 @@ public class PointSeriesFeature extends AbstractDiscreteFeature<DateTime, Extent
     public TimeAxis getDomain() {
         return (TimeAxis) super.getDomain();
     }
-    
+
     @Override
     public Array1D<Number> getValues(String paramId) {
         return (Array1D<Number>) super.getValues(paramId);
