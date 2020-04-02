@@ -104,7 +104,7 @@ public class GetMapStyleParams {
              * Support optional "LAYER" parameter for single layer
              */
             String layerStr = params.getString("layer");
-            if (layerStr != null && !layersStr.trim().isEmpty()) {
+            if (layerStr != null && !layerStr.trim().isEmpty()) {
                 layers = new String[] { layerStr };
             }
         }

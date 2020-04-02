@@ -1962,6 +1962,7 @@ public class WmsServlet extends HttpServlet {
                 throw new MetadataException(
                         "Requested layer is either not present, disabled, or not yet loaded.");
             } catch (Exception e) {
+                log.warn("Problem getting legend", e);
                 throw new MetadataException(
                         "You must specify either SLD, SLD_BODY, LAYERS and STYLES, or LAYER and STYLE for a full legend.  You may set COLORBARONLY=true to just generate a colour bar");
             }
