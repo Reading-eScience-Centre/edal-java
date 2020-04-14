@@ -32,7 +32,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.sis.distance.DistanceUtils;
+import org.apache.sis.geometry.DirectPosition2D;
+import org.apache.sis.referencing.GeodeticCalculator;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import uk.ac.rdg.resc.edal.exceptions.InvalidCrsException;
@@ -56,24 +57,20 @@ public final class LineString {
     /**
      * Constructs a {@link LineString} from a line string in the form.
      * 
-     * @param lineStringSpec
-     *            the line string as specified in the form "x1 y1, x2 y2, x3
-     *            y3".
-     * @param crs
-     *            The coordinate reference system for the line string's
-     *            coordinates
-     * @throws InvalidLineStringException
-     *             if the line string is not correctly specified.
+     * @param lineStringSpec the line string as specified in the form "x1 y1, x2 y2,
+     *                       x3 y3".
+     * @param crs            The coordinate reference system for the line string's
+     *                       coordinates
+     * @throws InvalidLineStringException if the line string is not correctly
+     *                                    specified.
      * @throws InvalidCrsException
-     * @throws NullPointerException
-     *             if crsHelper == null
+     * @throws NullPointerException       if crsHelper == null
      */
     public LineString(String lineStringSpec, CoordinateReferenceSystem crs)
             throws InvalidLineStringException, InvalidCrsException {
         String[] pointsStr = lineStringSpec.split(",");
         if (pointsStr.length < 2) {
-            throw new InvalidLineStringException(
-                    "At least two points are required to generate a line string");
+            throw new InvalidLineStringException("At least two points are required to generate a line string");
         }
         if (crs == null) {
             throw new NullPointerException("CRS cannot be null");
@@ -102,18 +99,19 @@ public final class LineString {
         controlPoints = Collections.unmodifiableList(ctlPoints);
 
         /*
-         * Calculate the total length of the path in units of the CRS. While
-         * we're doing this we'll calculate the total length of the path up to
-         * each waypoint
+         * Calculate the total length of the path in units of the CRS. While we're doing
+         * this we'll calculate the total length of the path up to each waypoint
          */
         controlPointDistances = new double[controlPoints.size()];
         pathLength = 0.0;
         controlPointDistances[0] = pathLength;
+        GeodeticCalculator calc = GeodeticCalculator.create(controlPoints.get(0).getCoordinateReferenceSystem());
         for (int i = 1; i < this.controlPoints.size(); i++) {
             HorizontalPosition p1 = controlPoints.get(i - 1);
             HorizontalPosition p2 = controlPoints.get(i);
-            pathLength += DistanceUtils.getHaversineDistance(p1.getY(), p1.getX(), p2.getY(),
-                    p2.getX());
+            calc.setStartPoint(new DirectPosition2D(p1.getX(), p1.getY()));
+            calc.setEndPoint(new DirectPosition2D(p2.getX(), p2.getY()));
+            pathLength += calc.getGeodesicDistance() / 1000;
             controlPointDistances[i] = pathLength;
         }
     }
@@ -128,16 +126,14 @@ public final class LineString {
     }
 
     /**
-     * Returns the fractional distance along the line string to the control
-     * point with the given index.
+     * Returns the fractional distance along the line string to the control point
+     * with the given index.
      * 
-     * @param index
-     *            The index of the control point. An index of zero represents
-     *            the start of the line string.
-     * @return the distance in km along the whole line string to the control
-     *         point
-     * @throws IndexOutOfBoundsException
-     *             if {@code index < 0 || index >= number of control points}
+     * @param index The index of the control point. An index of zero represents the
+     *              start of the line string.
+     * @return the distance in km along the whole line string to the control point
+     * @throws IndexOutOfBoundsException if
+     *                                   {@code index < 0 || index >= number of control points}
      */
     public double getControlPointDistanceKm(int index) {
         if (index < 0 || index >= controlPointDistances.length) {
@@ -154,19 +150,17 @@ public final class LineString {
     }
 
     /**
-     * Returns a list of <i>n</i> points along the path defined by this line
-     * string. The first point will be the first control point; the last point
-     * will be the last control point. Intermediate points are linearly
-     * interpolated between the control points. Note that it is not guaranteed
-     * that the intermediate control points will be contained in this list.
+     * Returns a list of <i>n</i> points along the path defined by this line string.
+     * The first point will be the first control point; the last point will be the
+     * last control point. Intermediate points are linearly interpolated between the
+     * control points. Note that it is not guaranteed that the intermediate control
+     * points will be contained in this list.
      * 
      * TODO Add the control points to this list, in the correct location.
      * 
-     * @param n
-     *            The number of points to return
+     * @param n The number of points to return
      * @return an unmodifiable list of {@code n} points that lie on this path.
-     * @throws IllegalArgumentException
-     *             if {@code numPoints < 2}
+     * @throws IllegalArgumentException if {@code numPoints < 2}
      * 
      */
     public List<HorizontalPosition> getPointsOnPath(int n) {
@@ -191,14 +185,12 @@ public final class LineString {
 
     /**
      * Given a length <i>s</i> along the path defined by this line string, this
-     * method returns a {@link HorizontalPosition} that represents this point on
-     * the path.
+     * method returns a {@link HorizontalPosition} that represents this point on the
+     * path.
      * 
-     * @param s
-     *            the distance along the path
+     * @param s the distance along the path
      * @return a HorizontalPosition representing this point on the path.
-     * @throws IllegalArgumentException
-     *             if s < 0 or s > pathLength
+     * @throws IllegalArgumentException if s < 0 or s > pathLength
      */
     private HorizontalPosition interpolatePoint(double s) {
         if (s < 0.0 || s > pathLength) {
@@ -211,8 +203,7 @@ public final class LineString {
         /* Find the distance to the next control point */
         double dnext = controlPointDistances[i + 1] - s;
         /*
-         * Find the fraction of the distance between the last and next control
-         * points
+         * Find the fraction of the distance between the last and next control points
          */
         double dfrac = dlast / (dlast + dnext);
 
@@ -226,14 +217,13 @@ public final class LineString {
     }
 
     /**
-     * If we walk a distance <i>s</i> along the path defined by this line
-     * string, this method returns the index <i>i</i> of the last control point
-     * we passed. I.e. the point at distance <i>s</i> lies between control point
-     * <i>i</i> and control point <i>i</i> + 1.
+     * If we walk a distance <i>s</i> along the path defined by this line string,
+     * this method returns the index <i>i</i> of the last control point we passed.
+     * I.e. the point at distance <i>s</i> lies between control point <i>i</i> and
+     * control point <i>i</i> + 1.
      * 
-     * @param s
-     *            The distance along the path, which must lie between 0 and
-     *            pathLength (checked before this method is called).
+     * @param s The distance along the path, which must lie between 0 and pathLength
+     *          (checked before this method is called).
      * @return the index of the previous control point, where 0 <= i <
      *         numControlPoints - 1.
      */

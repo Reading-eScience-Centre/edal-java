@@ -45,7 +45,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.sis.distance.DistanceUtils;
+import org.apache.sis.geometry.DirectPosition2D;
+import org.apache.sis.referencing.GeodeticCalculator;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
@@ -117,8 +118,7 @@ final public class Charting {
         NUMBER_FORMAT.setMaximumFractionDigits(4);
     }
 
-    private static String getTitle(String type, Collection<String> varList,
-            HorizontalPosition hPos) {
+    private static String getTitle(String type, Collection<String> varList, HorizontalPosition hPos) {
         StringBuilder title = new StringBuilder();
 
         String posString = null;
@@ -173,9 +173,8 @@ final public class Charting {
         return title.toString();
     }
 
-    public static JFreeChart createVerticalProfilePlot(
-            Collection<? extends ProfileFeature> features, String plottedQuantity,
-            HorizontalPosition hPos, String copyrightStatement) throws MismatchedCrsException {
+    public static JFreeChart createVerticalProfilePlot(Collection<? extends ProfileFeature> features,
+            String plottedQuantity, HorizontalPosition hPos, String copyrightStatement) throws MismatchedCrsException {
 
         Map<Parameter, XYDataset> param2SeriesCollection = new HashMap<>();
         Set<String> varList = new HashSet<String>();
@@ -190,8 +189,7 @@ final public class Charting {
                 }
             } else {
                 if (!vCrs.equals(feature.getDomain().getVerticalCrs())) {
-                    throw new MismatchedCrsException(
-                            "All vertical CRSs must match to plot multiple profile plots");
+                    throw new MismatchedCrsException("All vertical CRSs must match to plot multiple profile plots");
                 }
             }
             for (String varId : feature.getVariableIds()) {
@@ -243,8 +241,8 @@ final public class Charting {
             }
         }
 
-        return getChart("Vertical profile", param2SeriesCollection, varList, hPos,
-                copyrightStatement, "Depth", PlotOrientation.HORIZONTAL, invertYAxis);
+        return getChart("Vertical profile", param2SeriesCollection, varList, hPos, copyrightStatement, "Depth",
+                PlotOrientation.HORIZONTAL, invertYAxis);
     }
 
     /**
@@ -253,10 +251,10 @@ final public class Charting {
      */
     private static NumberAxis getZAxis(VerticalCrs vCrs) {
         /*
-         * We can deal with three types of vertical axis: Height, Depth and
-         * Pressure. The code for this is very messy in ncWMS, sorry about
-         * that... We should improve this but there are possible knock-on
-         * effects, so it's not a very easy job.
+         * We can deal with three types of vertical axis: Height, Depth and Pressure.
+         * The code for this is very messy in ncWMS, sorry about that... We should
+         * improve this but there are possible knock-on effects, so it's not a very easy
+         * job.
          */
         final String zAxisLabel;
         final boolean invertYAxis;
@@ -293,8 +291,7 @@ final public class Charting {
                 chronology = feature.getDomain().getChronology();
             } else {
                 if (!chronology.equals(feature.getDomain().getChronology())) {
-                    throw new MismatchedCrsException(
-                            "All chronologies must match to plot multiple time series plots");
+                    throw new MismatchedCrsException("All chronologies must match to plot multiple time series plots");
                 }
             }
 
@@ -340,8 +337,7 @@ final public class Charting {
                          */
                         continue;
                     }
-                    series.addOrUpdate(new Millisecond(new Date(timeValues.get(i).getMillis())),
-                            val);
+                    series.addOrUpdate(new Millisecond(new Date(timeValues.get(i).getMillis())), val);
                     hasValues = true;
                 }
 
@@ -352,13 +348,12 @@ final public class Charting {
             }
         }
 
-        return getChart("Timeseries", param2SeriesCollection, varList, hPos, copyrightStatement,
-                "Time", PlotOrientation.VERTICAL, false);
+        return getChart("Timeseries", param2SeriesCollection, varList, hPos, copyrightStatement, "Time",
+                PlotOrientation.VERTICAL, false);
     }
 
-    private static JFreeChart getChart(String type,
-            Map<Parameter, XYDataset> parameter2SeriesCollection, Collection<String> varList,
-            HorizontalPosition hPos, String copyrightStatement, String domainLabel,
+    private static JFreeChart getChart(String type, Map<Parameter, XYDataset> parameter2SeriesCollection,
+            Collection<String> varList, HorizontalPosition hPos, String copyrightStatement, String domainLabel,
             PlotOrientation orientation, boolean invertDomainAxis) {
 
         String title = getTitle(type, varList, hPos);
@@ -434,24 +429,22 @@ final public class Charting {
     }
 
     /**
-     * Creates a plot of {@link TrajectoryFeature}s which have been extracted
-     * along a transect.
+     * Creates a plot of {@link TrajectoryFeature}s which have been extracted along
+     * a transect.
      * 
      * All {@link TrajectoryFeature}s must have been extracted along the same
      * {@link LineString} for this graph to be correctly displayed.
      * 
-     * @param pointCollectionFeatures2Labels
-     *            A {@link List} of {@link TrajectoryFeature}s to plot
-     * @param transectDomain
-     *            The transect domain along which *all* features must have been
-     *            extracted.
+     * @param pointCollectionFeatures2Labels A {@link List} of
+     *                                       {@link TrajectoryFeature}s to plot
+     * @param transectDomain                 The transect domain along which *all*
+     *                                       features must have been extracted.
      * @param hasVerticalAxis
-     * @param copyrightStatement
-     *            A copyright notice to display under the graph
+     * @param copyrightStatement             A copyright notice to display under the
+     *                                       graph
      * @return The plot
      */
-    public static JFreeChart createTransectPlot(
-            Map<PointCollectionFeature, String> pointCollectionFeatures2Labels,
+    public static JFreeChart createTransectPlot(Map<PointCollectionFeature, String> pointCollectionFeatures2Labels,
             LineString transectDomain, boolean hasVerticalAxis, String copyrightStatement) {
         JFreeChart chart;
         XYPlot plot;
@@ -467,8 +460,7 @@ final public class Charting {
         }
         VerticalPosition verticalPosition = null;
         DateTime time = null;
-        for (Entry<PointCollectionFeature, String> entry : pointCollectionFeatures2Labels
-                .entrySet()) {
+        for (Entry<PointCollectionFeature, String> entry : pointCollectionFeatures2Labels.entrySet()) {
             PointCollectionFeature feature = entry.getKey();
             if (feature.getVariableIds().size() > 1) {
                 multiplePlots = true;
@@ -481,12 +473,14 @@ final public class Charting {
                 double distAlongPath = 0.0;
                 Array1D<Number> values = feature.getValues(paramId);
                 size = (int) values.size();
+                GeodeticCalculator calc = GeodeticCalculator.create(hPoints.get(0).getCoordinateReferenceSystem());
                 for (int i = 0; i < size; i++) {
                     if (i != 0) {
                         HorizontalPosition lastPoint = hPoints.get(i - 1);
                         HorizontalPosition currentPoint = hPoints.get(i);
-                        distAlongPath += DistanceUtils.getHaversineDistance(lastPoint.getY(),
-                                lastPoint.getX(), currentPoint.getY(), currentPoint.getX());
+                        calc.setStartPoint(new DirectPosition2D(currentPoint.getX(), currentPoint.getY()));
+                        calc.setEndPoint(new DirectPosition2D(lastPoint.getX(), lastPoint.getY()));
+                        distAlongPath += calc.getGeodesicDistance() / 1000;
                     }
                     series.add(distAlongPath, values.get(i));
                 }
@@ -507,8 +501,7 @@ final public class Charting {
             title.deleteCharAt(title.length() - 1);
         }
         if (verticalPosition != null) {
-            title.append(" at " + verticalPosition.getZ()
-                    + verticalPosition.getCoordinateReferenceSystem().getUnits());
+            title.append(" at " + verticalPosition.getZ() + verticalPosition.getCoordinateReferenceSystem().getUnits());
             if (verticalPosition.getCoordinateReferenceSystem().isPositiveUpwards()) {
                 title.append(" elevation");
             } else {
@@ -520,9 +513,9 @@ final public class Charting {
         }
 
         /*
-         * If we have a layer with more than one elevation value, we create a
-         * transect chart using standard XYItem Renderer to keep the plot
-         * renderer consistent with that of vertical section plot
+         * If we have a layer with more than one elevation value, we create a transect
+         * chart using standard XYItem Renderer to keep the plot renderer consistent
+         * with that of vertical section plot
          */
         if (hasVerticalAxis) {
             final XYItemRenderer renderer1 = new StandardXYItemRenderer();
@@ -539,12 +532,11 @@ final public class Charting {
             chart = new JFreeChart(null, null, plot, multiplePlots);
         } else {
             /*
-             * If we have a layer which only has one elevation value, we simply
-             * create XY Line chart
+             * If we have a layer which only has one elevation value, we simply create XY
+             * Line chart
              */
-            chart = ChartFactory.createXYLineChart(title.toString(), "Distance along transect (km)",
-                    yLabel.toString(), xySeriesColl, PlotOrientation.VERTICAL, multiplePlots, false,
-                    false);
+            chart = ChartFactory.createXYLineChart(title.toString(), "Distance along transect (km)", yLabel.toString(),
+                    xySeriesColl, PlotOrientation.VERTICAL, multiplePlots, false, false);
             plot = chart.getXYPlot();
             for (int i = 0; i < xySeriesColl.getSeriesCount(); i++) {
                 plot.getRenderer().setSeriesShape(i, new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0));
@@ -569,20 +561,14 @@ final public class Charting {
             double ctrlPointDistance = transectDomain.getControlPointDistanceKm(i);
             if (prevCtrlPointDistance != null) {
                 /*
-                 * Determine start end end value for marker based on index of
-                 * ctrl point
+                 * Determine start end end value for marker based on index of ctrl point
                  */
-                IntervalMarker target = new IntervalMarker(prevCtrlPointDistance,
-                        ctrlPointDistance);
-                target.setLabel("["
-                        + printTwoDecimals(transectDomain.getControlPoints().get(i - 1).getY())
-                        + ","
-                        + printTwoDecimals(transectDomain.getControlPoints().get(i - 1).getX())
-                        + "]");
+                IntervalMarker target = new IntervalMarker(prevCtrlPointDistance, ctrlPointDistance);
+                target.setLabel("[" + printTwoDecimals(transectDomain.getControlPoints().get(i - 1).getY()) + ","
+                        + printTwoDecimals(transectDomain.getControlPoints().get(i - 1).getX()) + "]");
                 target.setLabelFont(new Font("SansSerif", Font.ITALIC, 11));
                 /*
-                 * Alter colour of segment and position of label based on
-                 * odd/even index
+                 * Alter colour of segment and position of label based on odd/even index
                  */
                 if (i % 2 == 0) {
                     target.setPaint(new Color(222, 222, 255, 128));
@@ -605,31 +591,24 @@ final public class Charting {
     /**
      * Plot a vertical section chart
      * 
-     * @param features
-     *            A {@link List} of evenly-spaced {@link ProfileFeature}s making
-     *            up this vertical section. All features <i>must</i> have been
-     *            extracted onto the same {@link VerticalAxis}. They must each
-     *            only contain a single parameter.
-     * @param horizPath
-     *            The {@link LineString} along which the {@link ProfileFeature}s
-     *            have been extracted
-     * @param colourScheme
-     *            The {@link ColourScheme} to use for the plot
-     * @param zValue
-     *            The elevation at which a matching transect is plotted (will be
-     *            marked on the chart) - can be <code>null</code>
-     * @param zExtent
-     *            The range of elevations to include on the vertical section
-     *            chart. If this is <code>null</code> the entire available range
-     *            will be used
+     * @param features     A {@link List} of evenly-spaced {@link ProfileFeature}s
+     *                     making up this vertical section. All features <i>must</i>
+     *                     have been extracted onto the same {@link VerticalAxis}.
+     *                     They must each only contain a single parameter.
+     * @param horizPath    The {@link LineString} along which the
+     *                     {@link ProfileFeature}s have been extracted
+     * @param colourScheme The {@link ColourScheme} to use for the plot
+     * @param zValue       The elevation at which a matching transect is plotted
+     *                     (will be marked on the chart) - can be <code>null</code>
+     * @param zExtent      The range of elevations to include on the vertical
+     *                     section chart. If this is <code>null</code> the entire
+     *                     available range will be used
      * @return The resulting chart
      */
-    public static JFreeChart createVerticalSectionChart(List<ProfileFeature> features,
-            LineString horizPath, ColourScheme colourScheme, Double zValue,
-            Extent<Double> zExtent) {
+    public static JFreeChart createVerticalSectionChart(List<ProfileFeature> features, LineString horizPath,
+            ColourScheme colourScheme, Double zValue, Extent<Double> zExtent) {
         if (features == null || features.size() == 0) {
-            throw new IllegalArgumentException(
-                    "You need at least one profile to plot a vertical section.");
+            throw new IllegalArgumentException("You need at least one profile to plot a vertical section.");
         }
 
         VerticalSectionDataset dataset = new VerticalSectionDataset(features, horizPath);
@@ -668,11 +647,9 @@ final public class Charting {
             double ctrlPointDistance = horizPath.getControlPointDistanceKm(i);
             if (prevCtrlPointDistance != null) {
                 /*
-                 * Determine start end end value for marker based on index of
-                 * ctrl point
+                 * Determine start end end value for marker based on index of ctrl point
                  */
-                IntervalMarker target = new IntervalMarker(prevCtrlPointDistance,
-                        ctrlPointDistance);
+                IntervalMarker target = new IntervalMarker(prevCtrlPointDistance, ctrlPointDistance);
                 target.setPaint(TRANSPARENT);
                 /* Add marker to plot */
                 plot.addDomainMarker(target);
@@ -698,14 +675,11 @@ final public class Charting {
         return chart;
     }
 
-    public static JFreeChart addVerticalSectionChart(JFreeChart transectChart,
-            JFreeChart verticalSectionChart) {
+    public static JFreeChart addVerticalSectionChart(JFreeChart transectChart, JFreeChart verticalSectionChart) {
         /*
-         * Create the combined chart with both the transect and the vertical
-         * section
+         * Create the combined chart with both the transect and the vertical section
          */
-        CombinedDomainXYPlot plot = new CombinedDomainXYPlot(
-                new NumberAxis("Distance along path (km)"));
+        CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis("Distance along path (km)"));
         plot.setGap(20.0);
         plot.add(transectChart.getXYPlot(), 1);
         plot.add(verticalSectionChart.getXYPlot(), 1);
@@ -720,17 +694,15 @@ final public class Charting {
             }
         }
 
-        JFreeChart combinedChart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot,
-                false);
+        JFreeChart combinedChart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
 
         /* Set left margin to 10 to avoid number wrap at color bar */
         RectangleInsets r = new RectangleInsets(0, 10, 0, 0);
         transectChart.setPadding(r);
 
         /*
-         * This is not ideal. We have already added the copyright label to the
-         * first chart, but then we extract the actual plot, so we need to add
-         * it again here
+         * This is not ideal. We have already added the copyright label to the first
+         * chart, but then we extract the actual plot, so we need to add it again here
          */
         if (copyright != null) {
             final TextTitle textTitle = new TextTitle(copyright);
@@ -755,16 +727,15 @@ final public class Charting {
     /**
      * Prints a double-precision number to 2 decimal places
      * 
-     * @param d
-     *            the double
+     * @param d the double
      * @return rounded value to 2 places, as a String
      */
     private static String printTwoDecimals(double d) {
         DecimalFormat twoDForm = new DecimalFormat("#.##");
         /*
-         * We need to set the Locale properly, otherwise the DecimalFormat
-         * doesn't work in locales that use commas instead of points. Thanks to
-         * Justino Martinez for this fix!
+         * We need to set the Locale properly, otherwise the DecimalFormat doesn't work
+         * in locales that use commas instead of points. Thanks to Justino Martinez for
+         * this fix!
          */
         DecimalFormatSymbols decSym = DecimalFormatSymbols.getInstance(US_LOCALE);
         twoDForm.setDecimalFormatSymbols(decSym);
@@ -772,8 +743,8 @@ final public class Charting {
     }
 
     /**
-     * An {@link XYZDataset} that is created by interpolating a set of values
-     * from a discrete set of elevations.
+     * An {@link XYZDataset} that is created by interpolating a set of values from a
+     * discrete set of elevations.
      */
     private static class VerticalSectionDataset extends AbstractXYZDataset {
         private static final long serialVersionUID = 1L;
@@ -811,8 +782,7 @@ final public class Charting {
 
             double minGap = Double.MAX_VALUE;
             for (int i = 1; i < vAxis.size(); i++) {
-                minGap = Math.min(minGap,
-                        Math.abs(vAxis.getCoordinateValue(i) - vAxis.getCoordinateValue(i - 1)));
+                minGap = Math.min(minGap, Math.abs(vAxis.getCoordinateValue(i) - vAxis.getCoordinateValue(i - 1)));
             }
             this.numElevations = (int) ((maxElValue - minElValue) / minGap);
             this.elevationResolution = (maxElValue - minElValue) / numElevations;
@@ -821,10 +791,12 @@ final public class Charting {
             this.distanceValues = new ArrayList<>();
             this.distanceValues.add(0.0);
             HorizontalPosition lastPoint = features.get(0).getHorizontalPosition();
+            GeodeticCalculator calc = GeodeticCalculator.create(lastPoint.getCoordinateReferenceSystem());
             for (int i = 1; i < features.size(); i++) {
                 HorizontalPosition currentPoint = features.get(i).getHorizontalPosition();
-                double dist = DistanceUtils.getHaversineDistance(lastPoint.getY(), lastPoint.getX(),
-                        currentPoint.getY(), currentPoint.getX());
+                calc.setStartPoint(new DirectPosition2D(currentPoint.getX(), currentPoint.getY()));
+                calc.setEndPoint(new DirectPosition2D(lastPoint.getX(), lastPoint.getY()));
+                double dist = calc.getGeodesicDistance() / 1000;
                 lastPoint = currentPoint;
                 this.distanceValues.add(this.distanceValues.get(i - 1) + dist);
                 maxGap = Math.max(maxGap, dist);
@@ -866,15 +838,14 @@ final public class Charting {
         public Double getX(int series, int item) {
             checkSeries(series);
             /*
-             * The x coordinate is just the integer index of the point along the
-             * horizontal path
+             * The x coordinate is just the integer index of the point along the horizontal
+             * path
              */
             return distanceValues.get(item % horizPathLength);
         }
 
         /**
-         * Gets the value of elevation, assuming linear variation between min
-         * and max.
+         * Gets the value of elevation, assuming linear variation between min and max.
          */
         @Override
         public Double getY(int series, int item) {
@@ -884,9 +855,8 @@ final public class Charting {
         }
 
         /**
-         * Gets the data value corresponding with the given item, interpolating
-         * between the recorded data values using nearest-neighbour
-         * interpolation
+         * Gets the data value corresponding with the given item, interpolating between
+         * the recorded data values using nearest-neighbour interpolation
          */
         @Override
         public Float getZ(int series, int item) {
@@ -894,8 +864,8 @@ final public class Charting {
             int xIndex = item % horizPathLength;
             double elevation = getY(series, item);
             /*
-             * What is the index of the nearest elevation in the list of
-             * elevations for which we have data?
+             * What is the index of the nearest elevation in the list of elevations for
+             * which we have data?
              */
             int nearestElevationIndex = -1;
             double minDiff = Double.MAX_VALUE;
@@ -917,8 +887,7 @@ final public class Charting {
         }
 
         /**
-         * @throws IllegalArgumentException
-         *             if the argument is not zero.
+         * @throws IllegalArgumentException if the argument is not zero.
          */
         private static void checkSeries(int series) {
             if (series != 0) {
@@ -928,8 +897,8 @@ final public class Charting {
     }
 
     /**
-     * Creates and returns a JFreeChart {@link PaintScale} that converts data
-     * values to {@link Color}s.
+     * Creates and returns a JFreeChart {@link PaintScale} that converts data values
+     * to {@link Color}s.
      */
     public static PaintScale createPaintScale(final ColourScheme colourScheme) {
         return new PaintScale() {
