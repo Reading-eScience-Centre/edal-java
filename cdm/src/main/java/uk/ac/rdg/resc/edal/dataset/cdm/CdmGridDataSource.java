@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -47,8 +48,14 @@ import ucar.nc2.dataset.NetcdfDataset.Enhance;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridDataset;
 import ucar.nc2.dt.GridDatatype;
+import uk.ac.rdg.resc.edal.dataset.DataSource;
+import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
+import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
+import uk.ac.rdg.resc.edal.exceptions.EdalException;
+import uk.ac.rdg.resc.edal.feature.GridFeature;
+import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 
@@ -70,39 +77,35 @@ final class CdmGridDataSource implements GridDataSource {
     private Map<String, RangesList> rangeListCache = new HashMap<>();
 
     /*
-     * This is used to synchronize the actual reading. This is necessary because
-     * we have the following model:
+     * This is used to synchronize the actual reading. This is necessary because we
+     * have the following model:
      * 
-     * There is a single NetcdfDataset object per dataset, which gets cached,
-     * and closed when the cache becomes full. This is because the overhead of
-     * creating a NetcdfDataset is high.
+     * There is a single NetcdfDataset object per dataset, which gets cached, and
+     * closed when the cache becomes full. This is because the overhead of creating
+     * a NetcdfDataset is high.
      * 
      * Each time CdmGridDataset.openGridDataSource() is called, a *new*
-     * CdmGridDataSource is created. We can't keep the individual
-     * CdmGridDataSource objects in memory because it's not predictable as to
-     * when the underlying NetcdfDataset will be closed. The overhead of
-     * creating a new CdmGridDataSource is very low compared to the creation of
-     * a NetcdfDataset.
+     * CdmGridDataSource is created. We can't keep the individual CdmGridDataSource
+     * objects in memory because it's not predictable as to when the underlying
+     * NetcdfDataset will be closed. The overhead of creating a new
+     * CdmGridDataSource is very low compared to the creation of a NetcdfDataset.
      * 
-     * When read() is called on separate instances of CdmGridDataSource which
-     * refer to the same location, something happens which causes the array
-     * indices to be set incorrectly, and we get an
-     * ArrayIndexOutOfBoundsException. We can't synchronize on a non-static
-     * object, because these are all separate instances.
+     * When read() is called on separate instances of CdmGridDataSource which refer
+     * to the same location, something happens which causes the array indices to be
+     * set incorrectly, and we get an ArrayIndexOutOfBoundsException. We can't
+     * synchronize on a non-static object, because these are all separate instances.
      * 
-     * This could also have been solved by removing NetcdfDataset caching. I
-     * think that this would have a bigger effect on the speed, although that
-     * may depend on the use case.
+     * This could also have been solved by removing NetcdfDataset caching. I think
+     * that this would have a bigger effect on the speed, although that may depend
+     * on the use case.
      */
     private static Object syncObj = new Object();
 
     /**
      * Instantiate a {@link CdmGridDataSource} from a {@link NetcdfDataset}
      * 
-     * @param nc
-     *            The {@link NetcdfDataset} to read data from
-     * @throws IOException
-     *             If there is a problem opening the dataset
+     * @param nc The {@link NetcdfDataset} to read data from
+     * @throws IOException If there is a problem opening the dataset
      */
     public CdmGridDataSource(NetcdfDataset nc) throws IOException {
         this.gridDataset = CdmUtils.getGridDataset(nc);
@@ -113,35 +116,30 @@ final class CdmGridDataSource implements GridDataSource {
      * Instantiate a {@link CdmGridDataSource} from a {@link NetcdfDataset},
      * manually specifying the {@link RangesList}s to use
      * 
-     * @param nc
-     *            The {@link NetcdfDataset} to read data from
-     * @param rangeList
-     *            A {@link Map} of variable IDs to {@link RangesList}s. Does not
-     *            need to be complete.
-     * @throws IOException
-     *             If there is a problem opening the dataset
+     * @param nc        The {@link NetcdfDataset} to read data from
+     * @param rangeList A {@link Map} of variable IDs to {@link RangesList}s. Does
+     *                  not need to be complete.
+     * @throws IOException If there is a problem opening the dataset
      */
-    public CdmGridDataSource(NetcdfDataset nc, Map<String, RangesList> rangeList)
-            throws IOException {
+    public CdmGridDataSource(NetcdfDataset nc, Map<String, RangesList> rangeList) throws IOException {
         this.gridDataset = CdmUtils.getGridDataset(nc);
         this.nc = nc;
         /*
-         * OK, this is necessary because if we just *use* the supplied rangeList
-         * as the rangeListCache it can end up getting shared across multiple
-         * instances of this class. And that causes problems.
+         * OK, this is necessary because if we just *use* the supplied rangeList as the
+         * rangeListCache it can end up getting shared across multiple instances of this
+         * class. And that causes problems.
          * 
          * Previously I had this:
          * 
          * this.rangeListCache = new HashMap<>(rangeList);
          * 
-         * But that means that the objects in the cache (the RangesList ones)
-         * just get a shallow copy and so problems still happen. This code does
-         * a full deep-copy of the RangesList objects which then works.
+         * But that means that the objects in the cache (the RangesList ones) just get a
+         * shallow copy and so problems still happen. This code does a full deep-copy of
+         * the RangesList objects which then works.
          * 
-         * Note: We could just accept an argument of Map<String, int[]> which
-         * would save a little time on initially creating the Map (in
-         * CdmGridDatasetFactory) and would be slightly more memory-efficient.
-         * But this way is clearer.
+         * Note: We could just accept an argument of Map<String, int[]> which would save
+         * a little time on initially creating the Map (in CdmGridDatasetFactory) and
+         * would be slightly more memory-efficient. But this way is clearer.
          */
         if (rangeList != null) {
             for (Entry<String, RangesList> entry : rangeList.entrySet()) {
@@ -155,8 +153,8 @@ final class CdmGridDataSource implements GridDataSource {
     }
 
     @Override
-    public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax, int ymin,
-            int ymax, int xmin, int xmax) throws IOException, DataReadingException {
+    public Array4D<Number> read(String variableId, int tmin, int tmax, int zmin, int zmax, int ymin, int ymax, int xmin,
+            int xmax) throws IOException, DataReadingException {
         /*
          * Get hold of the variable from which we want to read data
          */
@@ -164,14 +162,14 @@ final class CdmGridDataSource implements GridDataSource {
         VariableDS var;
         if (gridDatatype != null) {
             /*
-             * This is the ideal option, but in the case of staggered grids, we
-             * may not have any grid datatypes
+             * This is the ideal option, but in the case of staggered grids, we may not have
+             * any grid datatypes
              */
             var = gridDatatype.getVariable();
         } else {
             /*
-             * In this case, just find the original variable and either cast it
-             * or create a new VariableDS, as required
+             * In this case, just find the original variable and either cast it or create a
+             * new VariableDS, as required
              */
             Variable origVar = nc.findVariable(variableId);
             if (origVar instanceof VariableDS) {
@@ -182,12 +180,12 @@ final class CdmGridDataSource implements GridDataSource {
         }
 
         /*
-         * Create RangesList object from GridDatatype object This will lead to
-         * many RangesList objects being created during data extraction for
-         * PIXEL_BY_PIXEL and SCANLINE strategies.
+         * Create RangesList object from GridDatatype object This will lead to many
+         * RangesList objects being created during data extraction for PIXEL_BY_PIXEL
+         * and SCANLINE strategies.
          * 
-         * Therefore we cache it - it doesn't give a huge increase in speed, but
-         * it is noticeable
+         * Therefore we cache it - it doesn't give a huge increase in speed, but it is
+         * noticeable
          */
         RangesList rangesList;
         if (rangeListCache.containsKey(variableId)) {
@@ -201,8 +199,8 @@ final class CdmGridDataSource implements GridDataSource {
         }
 
         /*
-         * If we are extracting a chunk of data which is 3- or 4-dimensional,
-         * there is a good chance that we may have memory issues.
+         * If we are extracting a chunk of data which is 3- or 4-dimensional, there is a
+         * good chance that we may have memory issues.
          */
         int tSize = tmax - tmin + 1;
         int zSize = zmax - zmin + 1;
@@ -216,8 +214,8 @@ final class CdmGridDataSource implements GridDataSource {
          */
         long freeBytes = Runtime.getRuntime().freeMemory();
         /*
-         * This is actually the amount of storage needed to store an array of
-         * floats * 2. The factor of 2 is to cover additional overheads.
+         * This is actually the amount of storage needed to store an array of floats *
+         * 2. The factor of 2 is to cover additional overheads.
          */
         long requiredBytes = (long) xSize * ySize * zSize * tSize * 4 * 2;
 
@@ -225,8 +223,8 @@ final class CdmGridDataSource implements GridDataSource {
         Variable origVar = var.getOriginalVariable();
 
         /*
-         * Set the ranges for t,z,y and x. This can be done without raising
-         * exceptions even if some axes are missing.
+         * Set the ranges for t,z,y and x. This can be done without raising exceptions
+         * even if some axes are missing.
          */
         rangesList.setTRange(tmin, tmax);
         rangesList.setZRange(zmin, zmax);
@@ -234,8 +232,8 @@ final class CdmGridDataSource implements GridDataSource {
         rangesList.setXRange(xmin, xmax);
 
         /*
-         * If we have no t or z data, or we definitely have enough memory, read
-         * all data at once.
+         * If we have no t or z data, or we definitely have enough memory, read all data
+         * at once.
          * 
          * If not, we will read in 2D slices.
          */
@@ -252,16 +250,15 @@ final class CdmGridDataSource implements GridDataSource {
                 } else {
                     synchronized (syncObj) {
                         /*
-                         * We read from the original variable to avoid enhancing
-                         * data values that we won't use
+                         * We read from the original variable to avoid enhancing data values that we
+                         * won't use
                          */
                         arr = origVar.read(rangesList.getRanges());
                     }
                 }
             } catch (InvalidRangeException ire) {
-                log.error("Problem reading data - invalid range:\n" + "x: " + xmin + " -> " + xmax
-                        + "y: " + ymin + " -> " + ymax + "z: " + zmin + " -> " + zmax + "t: " + tmin
-                        + " -> " + tmax);
+                log.error("Problem reading data - invalid range:\n" + "x: " + xmin + " -> " + xmax + "y: " + ymin
+                        + " -> " + ymax + "z: " + zmin + " -> " + zmax + "t: " + tmin + " -> " + tmax);
                 throw new DataReadingException("Cannot read data - invalid range specified", ire);
             } catch (ArrayIndexOutOfBoundsException e) {
                 log.error(this + " caused out of bounds");
@@ -269,41 +266,45 @@ final class CdmGridDataSource implements GridDataSource {
             }
         } else {
             /*
-             * Reading this section into memory may cause an OutOfMemoryError.
-             * Instead, we will read it in 2D xy slices.
+             * Reading this section into memory may cause an OutOfMemoryError. Instead, we
+             * will read it in 2D xy slices.
              * 
-             * This is actually fine for many use cases (e.g. extracting map
-             * data, writing to file), but will become a massive issue if
-             * profile / timeseries data is extracted. Warn about this.
+             * This is actually fine for many use cases (e.g. extracting map data, writing
+             * to file), but will become a massive issue if profile / timeseries data is
+             * extracted. Warn about this.
              * 
-             * When applications know it's fine, they can lower the log
-             * threshold for this class.
+             * When applications know it's fine, they can lower the log threshold for this
+             * class.
              */
             log.warn(
                     "Not enough free memory to read entire data structure into memory. Data will be read in 2D x-y slices. "
                             + "This will be very inefficient if you are extracting profiles / timeseries. "
                             + "In that case, consider using a higher-level method to extract the profile / timeseries, or increase the heap size");
             /*
-             * Simply setting the array to null will cause the WrappedArray to
-             * read 2D slices whenever get() is called. If the same 2D slice is
-             * accessed on subsequent calls, it is cached.
+             * Simply setting the array to null will cause the WrappedArray to read 2D
+             * slices whenever get() is called. If the same 2D slice is accessed on
+             * subsequent calls, it is cached.
              */
             arr = null;
         }
 
         /*
-         * Decide whether or not we need to enhance any data values we read from
-         * this array
+         * Decide whether or not we need to enhance any data values we read from this
+         * array
          */
         final boolean needsEnhance;
         Set<Enhance> enhanceMode = var.getEnhanceMode();
-        // ScaleMissingDefer has been removed. It's functionality can be achieved by simply not enhancing with ApplyScaleOffset.
+        // ScaleMissingDefer has been removed. It's functionality can be
+        // achieved by
+        // simply not enhancing with ApplyScaleOffset.
         if (!enhanceMode.contains(Enhance.ApplyScaleOffset)) {
             /*
              * Values read from the array are not enhanced, but need to be
              */
             needsEnhance = true;
-        // ScaleMissing has been removed. Its functionality can be achieved by combining ApplyScaleOffset and ConvertMissing.
+            // ScaleMissing has been removed. Its functionality can be achieved
+            // by combining
+            // ApplyScaleOffset and ConvertMissing.
         } else if (enhanceMode.contains(Enhance.ApplyScaleOffset) && enhanceMode.contains(Enhance.ConvertMissing)) {
             /*
              * We only need to enhance if we read data from the plain Variable
@@ -345,8 +346,7 @@ final class CdmGridDataSource implements GridDataSource {
         private int cachedZ = -1;
         private int cachedT = -1;
 
-        public WrappedArray(VariableDS var, Array arr, boolean needsEnhance, int[] shape,
-                RangesList rangesList) {
+        public WrappedArray(VariableDS var, Array arr, boolean needsEnhance, int[] shape, RangesList rangesList) {
             super(shape[0], shape[1], shape[2], shape[3]);
             this.var = var;
             this.shape = shape;
@@ -354,7 +354,8 @@ final class CdmGridDataSource implements GridDataSource {
             this.rangesList = rangesList;
 
             if (needsEnhance && arr != null) {
-                // convert(array, convertUnsigned, applyScaleOffset, convertMissing)
+                // convert(array, convertUnsigned, applyScaleOffset,
+                // convertMissing)
                 this.arr = var.convert(arr, false, true, true);
             } else {
                 this.arr = arr;
@@ -385,8 +386,8 @@ final class CdmGridDataSource implements GridDataSource {
             Index index;
             if (this.arr != null) {
                 /*
-                 * We have already read all of the data into memory. Set the
-                 * correct indices ready to read
+                 * We have already read all of the data into memory. Set the correct indices
+                 * ready to read
                  */
                 arrLocal = this.arr;
                 index = arrLocal.getIndex();
@@ -399,8 +400,8 @@ final class CdmGridDataSource implements GridDataSource {
                     index.setDim(zAxisIndex, z);
             } else {
                 /*
-                 * We do not want to read all of the data at once. That means we
-                 * are going to read 2D slices on request.
+                 * We do not want to read all of the data at once. That means we are going to
+                 * read 2D slices on request.
                  */
                 if (t == cachedT && z == cachedZ) {
                     /*
@@ -416,7 +417,8 @@ final class CdmGridDataSource implements GridDataSource {
                     try {
                         arrLocal = var.read(rangesList.getRanges());
                         if (this.needsEnhance) {
-                            // convert(array, convertUnsigned, applyScaleOffset, convertMissing)
+                            // convert(array, convertUnsigned, applyScaleOffset,
+                            // convertMissing)
                             arrLocal = var.convert(arrLocal, false, true, true);
                         }
                     } catch (IOException | InvalidRangeException e) {
@@ -431,8 +433,8 @@ final class CdmGridDataSource implements GridDataSource {
                     cachedZ = z;
                 }
                 /*
-                 * Set z/t indices - they will always be 0, since the data is 1D
-                 * in these directions.
+                 * Set z/t indices - they will always be 0, since the data is 1D in these
+                 * directions.
                  */
                 index = arrLocal.getIndex();
                 if (tAxisIndex >= 0)
@@ -442,8 +444,8 @@ final class CdmGridDataSource implements GridDataSource {
             }
 
             /*
-             * Set x/y indices. These are the same whether we're reading from a
-             * slice or the whole data chunk.
+             * Set x/y indices. These are the same whether we're reading from a slice or the
+             * whole data chunk.
              */
             if (yAxisIndex >= 0)
                 index.setDim(yAxisIndex, y);
@@ -457,6 +459,9 @@ final class CdmGridDataSource implements GridDataSource {
             switch (arrLocal.getDataType()) {
             case BYTE:
                 val = arrLocal.getByte(index);
+                while (val.doubleValue() < var.getValidMin()) {
+                    val = val.intValue() + 256;
+                }
                 break;
             case DOUBLE:
                 val = arrLocal.getDouble(index);
@@ -495,20 +500,19 @@ final class CdmGridDataSource implements GridDataSource {
         }
 
         /**
-         * Performs the same checks as {@link VariableDS#isMissing(double)}, but
-         * allows a tolerance of 1e-7 on the maximum and minimum values. This is
-         * because when using aggregations we have no underlying original
-         * variable. In these cases, the valid min/max get automatically
-         * enhanced as doubles, but the value gets enhanced as its underlying
-         * data type. If this is a float, then rounding errors can occur.
+         * Performs the same checks as {@link VariableDS#isMissing(double)}, but allows
+         * a tolerance of 1e-7 on the maximum and minimum values. This is because when
+         * using aggregations we have no underlying original variable. In these cases,
+         * the valid min/max get automatically enhanced as doubles, but the value gets
+         * enhanced as its underlying data type. If this is a float, then rounding
+         * errors can occur.
          * 
-         * e.g. the valid max may be 1.0f, but 0.9999999776482582. The valid max
-         * is represented in the double form, but the value is represented in
-         * the floating point form is 1.0, which is greater than the valid max,
-         * even if in the underlying data they are equal.
+         * e.g. the valid max may be 1.0f, but 0.9999999776482582. The valid max is
+         * represented in the double form, but the value is represented in the floating
+         * point form is 1.0, which is greater than the valid max, even if in the
+         * underlying data they are equal.
          * 
-         * @param num
-         *            The value to check
+         * @param num The value to check
          * @return Whether or not this should be considered missing data
          */
         private boolean isMissing(Number num) {
@@ -516,8 +520,8 @@ final class CdmGridDataSource implements GridDataSource {
                 return true;
             } else {
                 double val = num.doubleValue();
-                if (var.hasFillValue() && var.isFillValue(val)
-                        || var.hasMissingValue() && var.isMissingValue(val) || Double.isNaN(val)) {
+                if (var.hasFillValue() && var.isFillValue(val) || var.hasMissingValue() && var.isMissingValue(val)
+                        || Double.isNaN(val)) {
                     return true;
                 } else if (var.hasValidData()) {
                     if (var.getValidMax() != -Double.MAX_VALUE) {
