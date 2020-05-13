@@ -407,6 +407,7 @@ public final class GISUtils implements ObjectFactory {
             throw new InvalidCrsException(crsCode, e);
         }
     }
+    
 
     /**
      * Converts a string of the form "a1,b1,a2,b2" into a {@link BoundingBox}
@@ -1496,9 +1497,5 @@ public final class GISUtils implements ObjectFactory {
                 || units.equalsIgnoreCase("degreesE") || units.equalsIgnoreCase("degreeE"))
             return true;
         return false;
-    }
-
-    public static void main(String[] args) {
-        System.out.println(getCrs("EPSG:3857"));
     }
 }

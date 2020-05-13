@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>uk.ac.rdg.resc</groupId>
-    <version>1.4.3-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
     <artifactId>edal</artifactId>
     <name>Environmental Data Abstraction Library</name>
 
@@ -13,7 +13,7 @@
         <!-- Enables auto-insertion of licence in new source code files. 
             Could be extracted to a separate settings file, as per http://mevenide.codehaus.org/m2-site/mevenide2-netbeans/customizations.html -->
         <netbeans.hint.license>bsd-3clause</netbeans.hint.license>
-        <gwtversion>2.7.0</gwtversion>
+        <gwtversion>2.8.2</gwtversion>
     </properties>
 
     <packaging>pom</packaging>
@@ -55,8 +55,8 @@
                 <!-- Sets the source version to Java 11 -->
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.11</source>
-                    <target>1.11</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
                 <version>2.5.1</version>
             </plugin>

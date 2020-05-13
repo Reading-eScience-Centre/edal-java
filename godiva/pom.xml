@@ -7,7 +7,7 @@
     <parent>
         <artifactId>edal</artifactId>
         <groupId>uk.ac.rdg.resc</groupId>
-        <version>1.4.3-SNAPSHOT</version>
+        <version>1.5.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
     <artifactId>edal-godiva</artifactId>
@@ -47,6 +47,9 @@
                     </executions>
                     <configuration>
                         <inplace>true</inplace>
+                        <modules>
+                            <module>uk.ac.rdg.resc.godiva.Godiva</module>
+                        </modules>
                     </configuration>
                 </plugin>
             </plugins>
