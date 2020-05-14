@@ -38,7 +38,7 @@ import com.google.gwt.resources.client.TextResource;
  *
  * @author Guy Griffiths
  */
-public  interface JavascriptDependencies extends ClientBundle {
+public interface JavascriptDependencies extends ClientBundle {
     JavascriptDependencies INSTANCE = GWT.create(JavascriptDependencies.class);
 
     @Source("uk/ac/rdg/resc/godiva/public/js/OpenLayers-2.13.js")

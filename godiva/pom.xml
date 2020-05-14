@@ -32,12 +32,27 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.java</include>
+                    <include>**/*.gwt.xml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
+                    <groupId>net.ltgt.gwt.maven</groupId>
                     <artifactId>gwt-maven-plugin</artifactId>
-                    <version>${gwtversion}</version>
+                    <version>1.0.0</version>
                     <executions>
                         <execution>
                             <goals>
@@ -47,9 +62,6 @@
                     </executions>
                     <configuration>
                         <inplace>true</inplace>
-                        <modules>
-                            <module>uk.ac.rdg.resc.godiva.Godiva</module>
-                        </modules>
                     </configuration>
                 </plugin>
             </plugins>
