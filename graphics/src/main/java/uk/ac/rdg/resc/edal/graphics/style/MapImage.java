@@ -464,20 +464,25 @@ public class MapImage extends Drawable {
             Color textColor, boolean layerNameLabels, int fontHeight) {
         Collections.sort(values);
         float[] vals = new float[values.size()];
+        float minDiff = Float.MAX_VALUE;
         for (int i = 0; i < vals.length; i++) {
             if (values.get(i) == null) {
                 throw new IllegalArgumentException(
                         "Cannot create a legend where one of the labelled values is null");
             }
             vals[i] = values.get(i);
+            
+            if(i > 0) {
+                minDiff = Math.min(minDiff, vals[i] - vals[i-1]);
+            }
         }
 
         /*
-         * Find the order of magnitude of the maximum value to determine number
-         * of sig figs.
+         * Find how many times the minimum difference between values divides into the maximum value.
+         * This will give the number of significant figures we need to represent all values properly
          */
         float max = Math.max(Math.abs(vals[0]), Math.abs(vals[vals.length - 1]));
-        int sigfigs = (int) (max < 1 ? 0 : Math.floor(Math.log10(max)));
+        int sigfigs = (int) Math.ceil(Math.log10(max/minDiff));
 
         /*
          * Generate the text strings for the labels
