@@ -116,7 +116,7 @@ public abstract class HorizontalMesh4dDataset
 
         MeshCacheKey key = new MeshCacheKey(targetGrid, grid);
         if (meshDatasetCache.isKeyInCache(key)) {
-            meshDatasetCacheElement = (MeshDatasetCacheElement) meshDatasetCache.get(targetGrid)
+            meshDatasetCacheElement = (MeshDatasetCacheElement) meshDatasetCache.get(key)
                     .getObjectValue();
             outputCoords = meshDatasetCacheElement.getOutputCoords();
             coordsToRead = meshDatasetCacheElement.getCoordsToRead();
