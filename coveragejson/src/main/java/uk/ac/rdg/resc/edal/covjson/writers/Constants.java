@@ -1,7 +1,5 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
-import java.util.Locale;
-
 import org.apache.sis.referencing.IdentifiedObjects;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.FactoryException;
@@ -110,7 +108,7 @@ public final class Constants {
             }
             if (crsUri != null && crsUri.startsWith("urn:ogc:")) {
                 crsUri = "http://www.opengis.net/"
-                        + crsUri.substring(8).replace(':', '/').toLowerCase(Locale.US);
+                        + crsUri.substring(8).replace(':', '/');
             }
             return crsUri;
         }
