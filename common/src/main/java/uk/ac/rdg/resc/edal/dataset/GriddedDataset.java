@@ -272,6 +272,13 @@ public abstract class GriddedDataset extends
                     }
                 }
 
+                if(hBox == null) {
+                    /*
+                     * If no bounding box specified, use the entire grid
+                     */
+                    hBox = grid.getBoundingBox();
+                }
+                
                 if (outputDomain == null) {
                     /*
                      * We only need to set the min/max vars once.

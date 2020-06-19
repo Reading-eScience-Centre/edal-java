@@ -159,7 +159,7 @@ public abstract class BaseWmsClient
             @Override
             public void onResponseReceived(Request request, Response response) {
                 try {
-                    JSONValue jsonMap = JSONParser.parseLenient(response.getText());
+                    JSONValue jsonMap = JSONParser.parseStrict(response.getText());
                     JSONObject parentObj = jsonMap.isObject();
                     JSONValue proxyJson = parentObj.get("proxy");
                     if (proxyJson != null) {
@@ -703,7 +703,7 @@ public abstract class BaseWmsClient
                  */
                 try {
                     if (response.getText() != null && !response.getText().isEmpty()) {
-                        JSONValue jsonMap = JSONParser.parseLenient(response.getText());
+                        JSONValue jsonMap = JSONParser.parseStrict(response.getText());
                         JSONObject parentObj = jsonMap.isObject();
                         JSONNumber minNum = parentObj.get("min").isNumber();
                         JSONNumber maxNum = parentObj.get("max").isNumber();

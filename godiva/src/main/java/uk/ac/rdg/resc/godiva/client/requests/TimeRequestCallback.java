@@ -54,7 +54,7 @@ public abstract class TimeRequestCallback implements RequestCallback {
 
     @Override
     public void onResponseReceived(Request request, Response response) {
-        JSONValue jsonMap = JSONParser.parseLenient(response.getText());
+        JSONValue jsonMap = JSONParser.parseStrict(response.getText());
         JSONObject parentObj = jsonMap.isObject();
 
         JSONValue timestepsJson = parentObj.get("timesteps");

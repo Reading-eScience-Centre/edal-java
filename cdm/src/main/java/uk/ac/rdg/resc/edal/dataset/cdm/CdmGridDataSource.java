@@ -30,14 +30,12 @@ package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
 
 import ucar.ma2.Array;
 import ucar.ma2.Index;
@@ -48,14 +46,8 @@ import ucar.nc2.dataset.NetcdfDataset.Enhance;
 import ucar.nc2.dataset.VariableDS;
 import ucar.nc2.dt.GridDataset;
 import ucar.nc2.dt.GridDatatype;
-import uk.ac.rdg.resc.edal.dataset.DataSource;
-import uk.ac.rdg.resc.edal.dataset.DiscreteLayeredDataset;
 import uk.ac.rdg.resc.edal.dataset.GridDataSource;
-import uk.ac.rdg.resc.edal.dataset.GriddedDataset;
 import uk.ac.rdg.resc.edal.exceptions.DataReadingException;
-import uk.ac.rdg.resc.edal.exceptions.EdalException;
-import uk.ac.rdg.resc.edal.feature.GridFeature;
-import uk.ac.rdg.resc.edal.metadata.DiscreteLayeredVariableMetadata;
 import uk.ac.rdg.resc.edal.util.Array4D;
 import uk.ac.rdg.resc.edal.util.cdm.CdmUtils;
 

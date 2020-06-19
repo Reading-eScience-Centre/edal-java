@@ -263,7 +263,7 @@ public class AnimationButton extends ToggleButton {
                          * available, we populate a selector and then set it to
                          * gather further details
                          */
-                        JSONValue jsonMap = JSONParser.parseLenient(response.getText());
+                        JSONValue jsonMap = JSONParser.parseStrict(response.getText());
                         JSONObject parentObj = jsonMap.isObject();
 
                         JSONValue timesJson = parentObj.get("timeStrings");
