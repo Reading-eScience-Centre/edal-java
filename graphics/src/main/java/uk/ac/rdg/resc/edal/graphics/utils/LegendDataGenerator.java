@@ -88,89 +88,74 @@ public class LegendDataGenerator {
     /**
      * Instantiate a new {@link LegendDataGenerator}
      *
-     * @param width
-     *            The width of the domain (which will translate to the final
-     *            image width in pixels)
-     * @param height
-     *            The height of the domain (which will translate to the final
-     *            image height in pixels)
-     * @param backgroundMask
-     *            An image to use as a background mask - i.e. where the missing
-     *            data should be generated. Pixels with value 0 (usually black)
-     *            are interpreted as missing data
-     * @param fractionExtra
-     *            The fraction of the total data which should be counted as out
-     *            of range data in both directions (both above the max and below
-     *            the min)
+     * @param width          The width of the domain (which will translate to the
+     *                       final image width in pixels)
+     * @param height         The height of the domain (which will translate to the
+     *                       final image height in pixels)
+     * @param backgroundMask An image to use as a background mask - i.e. where the
+     *                       missing data should be generated. Pixels with value 0
+     *                       (usually black) are interpreted as missing data
+     * @param fractionExtra  The fraction of the total data which should be counted
+     *                       as out of range data in both directions (both above the
+     *                       max and below the min)
      */
-    public LegendDataGenerator(int width, int height, BufferedImage backgroundMask,
-            float fractionExtra) {
+    public LegendDataGenerator(int width, int height, BufferedImage backgroundMask, float fractionExtra) {
         this(width, height, backgroundMask, fractionExtra, fractionExtra);
     }
 
     /**
      * Instantiate a new {@link LegendDataGenerator}
      *
-     * @param width
-     *            The width of the domain (which will translate to the final
-     *            image width in pixels)
-     * @param height
-     *            The height of the domain (which will translate to the final
-     *            image height in pixels)
-     * @param backgroundMask
-     *            An image to use as a background mask - i.e. where the missing
-     *            data should be generated. Pixels with value 0 (usually black)
-     *            are interpreted as missing data
-     * @param fractionExtraX
-     *            The fraction of the total data which should be counted as out
-     *            of range data in the x-direction (both above the max and below
-     *            the min)
-     * @param fractionExtraY
-     *            The fraction of the total data which should be counted as out
-     *            of range data in the y-direction (both above the max and below
-     *            the min)
+     * @param width          The width of the domain (which will translate to the
+     *                       final image width in pixels)
+     * @param height         The height of the domain (which will translate to the
+     *                       final image height in pixels)
+     * @param backgroundMask An image to use as a background mask - i.e. where the
+     *                       missing data should be generated. Pixels with value 0
+     *                       (usually black) are interpreted as missing data
+     * @param fractionExtraX The fraction of the total data which should be counted
+     *                       as out of range data in the x-direction (both above the
+     *                       max and below the min)
+     * @param fractionExtraY The fraction of the total data which should be counted
+     *                       as out of range data in the y-direction (both above the
+     *                       max and below the min)
      */
-    public LegendDataGenerator(int width, int height, BufferedImage backgroundMask,
-            float fractionExtraX, float fractionExtraY) {
-        this(width, height, backgroundMask, fractionExtraX, fractionExtraX, fractionExtraY,
-                fractionExtraY);
+    public LegendDataGenerator(int width, int height, BufferedImage backgroundMask, float fractionExtraX,
+            float fractionExtraY) {
+        this(width, height, backgroundMask, fractionExtraX, fractionExtraX, fractionExtraY, fractionExtraY);
     }
 
     /**
      * Instantiate a new {@link LegendDataGenerator}
      *
-     * @param width
-     *            The width of the domain (which will translate to the final
-     *            image width in pixels)
-     * @param height
-     *            The height of the domain (which will translate to the final
-     *            image height in pixels)
-     * @param backgroundMask
-     *            An image to use as a background mask - i.e. where the missing
-     *            data should be generated. Pixels with value 0 (usually black)
-     *            are interpreted as missing data
-     * @param fractionExtraXLow
-     *            The fraction of the total data which should be counted as out
-     *            of range data in the x-direction below the minimum
-     * @param fractionExtraXHigh
-     *            The fraction of the total data which should be counted as out
-     *            of range data in the x-direction above the maximum
-     * @param fractionExtraYLow
-     *            The fraction of the total data which should be counted as out
-     *            of range data in the y-direction below the minimum
-     * @param fractionExtraYHigh
-     *            The fraction of the total data which should be counted as out
-     *            of range data in the y-direction above the maximum
+     * @param width              The width of the domain (which will translate to
+     *                           the final image width in pixels)
+     * @param height             The height of the domain (which will translate to
+     *                           the final image height in pixels)
+     * @param backgroundMask     An image to use as a background mask - i.e. where
+     *                           the missing data should be generated. Pixels with
+     *                           value 0 (usually black) are interpreted as missing
+     *                           data
+     * @param fractionExtraXLow  The fraction of the total data which should be
+     *                           counted as out of range data in the x-direction
+     *                           below the minimum
+     * @param fractionExtraXHigh The fraction of the total data which should be
+     *                           counted as out of range data in the x-direction
+     *                           above the maximum
+     * @param fractionExtraYLow  The fraction of the total data which should be
+     *                           counted as out of range data in the y-direction
+     *                           below the minimum
+     * @param fractionExtraYHigh The fraction of the total data which should be
+     *                           counted as out of range data in the y-direction
+     *                           above the maximum
      */
-    public LegendDataGenerator(int width, int height, BufferedImage backgroundMask,
-            float fractionExtraXLow, float fractionExtraXHigh, float fractionExtraYLow,
-            float fractionExtraYHigh) {
+    public LegendDataGenerator(int width, int height, BufferedImage backgroundMask, float fractionExtraXLow,
+            float fractionExtraXHigh, float fractionExtraYLow, float fractionExtraYHigh) {
         /*
-         * We use 0.001 as the spacing. Since we're working in WGS84 (for
-         * convenience - it doesn't matter what CRS we use, but we need to work
-         * in one) - anything outside normal lat/lon range will not be rendered.
-         * 0.001 spacing allows us to have each legend component be sized up to
-         * (90 / 0.001) pixels.
+         * We use 0.001 as the spacing. Since we're working in WGS84 (for convenience -
+         * it doesn't matter what CRS we use, but we need to work in one) - anything
+         * outside normal lat/lon range will not be rendered. 0.001 spacing allows us to
+         * have each legend component be sized up to (90 / 0.001) pixels.
          */
         xAxis = new RegularAxisImpl("", 0, 0.001, width, false);
         yAxis = new RegularAxisImpl("", 0, 0.001, height, false);
@@ -185,10 +170,8 @@ public class LegendDataGenerator {
 
         missingBits = new boolean[width][height];
         if (backgroundMask != null) {
-            Image scaledInstance = backgroundMask.getScaledInstance(width, height,
-                    Image.SCALE_FAST);
-            BufferedImage bufferedImage = new BufferedImage(width, height,
-                    BufferedImage.TYPE_BYTE_GRAY);
+            Image scaledInstance = backgroundMask.getScaledInstance(width, height, Image.SCALE_FAST);
+            BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
             bufferedImage.createGraphics().drawImage(scaledInstance, 0, 0, null);
             byte[] data = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
             for (int i = 0; i < width; i++) {
@@ -204,44 +187,44 @@ public class LegendDataGenerator {
     }
 
     /**
-     * @return A set of {@link PlottingDomainParams} which correspond to the
-     *         entire range and given of the domain of the data returned by
+     * @return A set of {@link PlottingDomainParams} which correspond to the entire
+     *         range and given of the domain of the data returned by
      *         {@link LegendDataGenerator#getFeatureCatalogue(NameAndRange, NameAndRange)}
      */
     public PlottingDomainParams getPlottingDomainParams() {
-        return PlottingDomainParams.paramsForGriddedDataset(xAxis.size(), yAxis.size(),
-                domain.getBoundingBox(), null, null);
+        return PlottingDomainParams.paramsForGriddedDataset(xAxis.size(), yAxis.size(), domain.getBoundingBox(), null,
+                null);
     }
 
     /**
-     * Gets a {@link FeatureCatalogue} to generate features with
-     * linearly-varying numerical data and the correct members
+     * Gets a {@link FeatureCatalogue} to generate features with linearly-varying
+     * numerical data and the correct members
      *
-     * @param xField
-     *            A {@link NameAndRange} object for the field which should vary
-     *            linearly in the x-direction. Set to <code>null</code> for no x
-     *            variation
-     * @param yField
-     *            A {@link NameAndRange} object for the field which should vary
-     *            linearly in the y-direction. Set to <code>null</code> for no y
-     *            variation
+     * @param xField A {@link NameAndRange} object for the field which should vary
+     *               linearly in the x-direction. Set to <code>null</code> for no x
+     *               variation
+     * @param yField A {@link NameAndRange} object for the field which should vary
+     *               linearly in the y-direction. Set to <code>null</code> for no y
+     *               variation
+     * @param values A {@link Map} of other field names to desired values. This will
+     *               allow a particular field to generate non NaN values. For
+     *               example, a direction fields should never return NaN, so this
+     *               allows a predefined value to be used instead
      * @return A {@link FeatureCatalogue} which when the
      *         {@link FeatureCatalogue#getFeaturesForLayer(String, PlottingDomainParams)}
      *         method is called will return a set of features containing both
-     *         {@link MapFeature}s and {@link PointFeature}s suitable for
-     *         plotting. Note that the {@link PlottingDomainParams} argument is
-     *         ignored here, and the {@link PlottingDomainParams}s which should
-     *         be used in the
+     *         {@link MapFeature}s and {@link PointFeature}s suitable for plotting.
+     *         Note that the {@link PlottingDomainParams} argument is ignored here,
+     *         and the {@link PlottingDomainParams}s which should be used in the
      *         {@link MapImage#drawImage(PlottingDomainParams, FeatureCatalogue)}
      *         method are those returned by
      *         {@link LegendDataGenerator#getPlottingDomainParams()}
      */
-    public FeatureCatalogue getFeatureCatalogue(final NameAndRange xField,
-            final NameAndRange yField) {
+    public FeatureCatalogue getFeatureCatalogue(final NameAndRange xField, final NameAndRange yField,
+            Map<String, Float> values) {
         return new FeatureCatalogue() {
             @Override
-            public FeaturesAndMemberName getFeaturesForLayer(String id,
-                    PlottingDomainParams params) {
+            public FeaturesAndMemberName getFeaturesForLayer(String id, PlottingDomainParams params) {
                 final Set<DiscreteFeature<?, ?>> features = new LinkedHashSet<>();
                 String xLabel = null;
                 String yLabel = null;
@@ -259,6 +242,10 @@ public class LegendDataGenerator {
                     features.add(getMapFeature(yField, MatrixType.Y));
                     features.add(getTrajectoryFeature(yField, MatrixType.Y));
                     features.addAll(getPointFeatures(yField, MatrixType.Y));
+                } else if (values != null && values.containsKey(id)) {
+                    features.add(getMapFeature(new NameAndRange(id, null), MatrixType.FIXED, values.get(id)));
+                    features.add(getTrajectoryFeature(new NameAndRange(id, null), MatrixType.NAN));
+                    features.addAll(getPointFeatures(new NameAndRange(id, null), MatrixType.FIXED, values.get(id)));
                 } else {
                     features.add(getMapFeature(new NameAndRange(id, null), MatrixType.NAN));
                     features.add(getTrajectoryFeature(new NameAndRange(id, null), MatrixType.NAN));
@@ -272,19 +259,31 @@ public class LegendDataGenerator {
     /**
      * Generates a {@link MapFeature} containing the correctly named variables
      *
-     * @param field
-     *            The variable to vary linearly
-     * @param type
-     *            The way to vary the variable - in the x-direction, the
-     *            y-direction, or to only return NaNs
-     * @return A {@link MapFeature} containing the correctly named variable with
-     *         the correct linearly-varying data
+     * @param field The variable to vary linearly
+     * @param type  The way to vary the variable - in the x-direction, the
+     *              y-direction, or to only return NaNs
+     * @return A {@link MapFeature} containing the correctly named variable with the
+     *         correct linearly-varying data
      */
     protected MapFeature getMapFeature(NameAndRange field, MatrixType type) {
+        return getMapFeature(field, type, null);
+    }
+
+    /**
+     * Generates a {@link MapFeature} containing the correctly named variables
+     *
+     * @param field The variable to vary linearly
+     * @param type  The way to vary the variable - in the x-direction, the
+     *              y-direction, or to only return NaNs
+     * @param fixed The fixed value to return if type is {@link MatrixType} FIXED
+     * @return A {@link MapFeature} containing the correctly named variable with the
+     *         correct linearly-varying data
+     */
+    protected MapFeature getMapFeature(NameAndRange field, MatrixType type, Float fixed) {
         Map<String, Array2D<Number>> values = new HashMap<String, Array2D<Number>>();
 
         if (field != null) {
-            values.put(field.getFieldLabel(), new XYNan(type, field.getScaleRange()));
+            values.put(field.getFieldLabel(), new XYNan(type, field.getScaleRange(), fixed));
         }
         MapFeature feature = new MapFeature("", "", "", domain, null, values);
         return feature;
@@ -293,26 +292,37 @@ public class LegendDataGenerator {
     /**
      * Generates {@link PointFeature}s spread across the given ranges
      *
-     * @param field
-     *            The variable to vary linearly
-     * @param type
-     *            The way to vary the variable - in the x-direction, the
-     *            y-direction, or to only return NaNs
-     * @return A {@link MapFeature} containing the correctly named variable with
-     *         the correct linearly-varying data
-     * @return A {@link Collection} of randomly-distributed (but consistent -
-     *         i.e. not random...) {@link PointFeature}s whose values vary
-     *         linearly over the given direction
+     * @param field The variable to vary linearly
+     * @param type  The way to vary the variable - in the x-direction, the
+     *              y-direction, or to only return NaNs
+     * @return A {@link Collection} of randomly-distributed (but consistent - i.e.
+     *         not random...) {@link PointFeature}s whose values vary linearly over
+     *         the given direction
      */
     protected Collection<PointFeature> getPointFeatures(NameAndRange field, MatrixType type) {
+        return getPointFeatures(field, type, null);
+    }
+
+    /**
+     * Generates {@link PointFeature}s spread across the given ranges
+     *
+     * @param field The variable to vary linearly
+     * @param type  The way to vary the variable - in the x-direction, the
+     *              y-direction, or to only return NaNs
+     * @param fixed The fixed value to return if type is {@link MatrixType} FIXED
+     * @return A {@link Collection} of randomly-distributed (but consistent - i.e.
+     *         not random...) {@link PointFeature}s whose values vary linearly over
+     *         the given direction
+     */
+    protected Collection<PointFeature> getPointFeatures(NameAndRange field, MatrixType type, Float fixed) {
         List<PointFeature> features = new ArrayList<>();
 
         Random r = new Random(35L);
 
         /*
-         * Add 500 points "randomly" with values which vary in the required
-         * directions. The points are random, but the same seed is used each
-         * time so we get a consistent result.
+         * Add 500 points "randomly" with values which vary in the required directions.
+         * The points are random, but the same seed is used each time so we get a
+         * consistent result.
          */
         if (field != null) {
             for (int i = 0; i < 500; i++) {
@@ -321,27 +331,23 @@ public class LegendDataGenerator {
 
                 Map<String, Array1D<Number>> values = new HashMap<>();
                 if (type == MatrixType.NAN) {
-                    values.put(field.getFieldLabel(),
-                            new ImmutableArray1D<>(new Number[] { Float.NaN }));
+                    values.put(field.getFieldLabel(), new ImmutableArray1D<>(new Number[] { Float.NaN }));
+                } else if (type == MatrixType.FIXED) {
+                    values.put(field.getFieldLabel(), new ImmutableArray1D<>(new Number[] { fixed }));
                 } else if (type == MatrixType.X) {
                     values.put(field.getFieldLabel(),
-                            new ImmutableArray1D<>(
-                                    new Number[] { getLinearInterpolatedValue(xIndex,
-                                            extendScaleRange(field.getScaleRange(),
-                                                    fractionExtraXLow, fractionExtraXHigh),
-                                            xAxis.size()) }));
+                            new ImmutableArray1D<>(new Number[] { getLinearInterpolatedValue(xIndex,
+                                    extendScaleRange(field.getScaleRange(), fractionExtraXLow, fractionExtraXHigh),
+                                    xAxis.size()) }));
                 } else if (type == MatrixType.Y) {
                     values.put(field.getFieldLabel(),
-                            new ImmutableArray1D<>(
-                                    new Number[] { getLinearInterpolatedValue(yIndex,
-                                            extendScaleRange(field.getScaleRange(),
-                                                    fractionExtraYLow, fractionExtraYHigh),
-                                            yAxis.size()) }));
+                            new ImmutableArray1D<>(new Number[] { getLinearInterpolatedValue(yIndex,
+                                    extendScaleRange(field.getScaleRange(), fractionExtraYLow, fractionExtraYHigh),
+                                    yAxis.size()) }));
                 }
                 PointFeature feature = new PointFeature("", "", "",
-                        new GeoPosition(domain.getDomainObjects().get(yIndex, xIndex).getCentre(),
-                                null, null),
-                        null, values);
+                        new GeoPosition(domain.getDomainObjects().get(yIndex, xIndex).getCentre(), null, null), null,
+                        values);
                 features.add(feature);
             }
         }
@@ -365,23 +371,21 @@ public class LegendDataGenerator {
                 double p = (double) n / N;
                 double r = Math.sin(f * n * 2 * Math.PI / N);
                 double frac;
-                if(p <= 0.5)
+                if (p <= 0.5)
                     frac = p;
                 else
-                    frac = (1-p);
+                    frac = (1 - p);
                 int i = (int) (xAxis.size() * p + r * frac * xAxis.size() * 0.98);
                 int j = (int) (yAxis.size() * p - r * frac * yAxis.size() * 0.98);
-                
-                positions.add(new GeoPosition(
-                        new HorizontalPosition(xAxis.getCoordinateValue(i),
-                                yAxis.getCoordinateValue(j), domain.getCoordinateReferenceSystem()),
-                        null, time));
+
+                positions.add(new GeoPosition(new HorizontalPosition(xAxis.getCoordinateValue(i),
+                        yAxis.getCoordinateValue(j), domain.getCoordinateReferenceSystem()), null, time));
                 time = time.plus(1L);
                 vals[n] = (values.get(j, i));
             }
             trajValsMap.put(field.getFieldLabel(), new ImmutableArray1D<Number>(vals));
-            TrajectoryFeature feature = new TrajectoryFeature("", "", "",
-                    new TrajectoryDomain(positions), null, trajValsMap);
+            TrajectoryFeature feature = new TrajectoryFeature("", "", "", new TrajectoryDomain(positions), null,
+                    trajValsMap);
             return feature;
         }
         /*
@@ -391,7 +395,7 @@ public class LegendDataGenerator {
     }
 
     protected enum MatrixType {
-        X, Y, NAN
+        X, Y, FIXED, NAN
     }
 
     /**
@@ -404,8 +408,13 @@ public class LegendDataGenerator {
         private static final long serialVersionUID = 1L;
         private MatrixType type;
         private Extent<Float> scaleRange = null;
+        private Float fixed;
 
         public XYNan(MatrixType type, Extent<Float> scaleRange) {
+            this(type, scaleRange, null);
+        }
+
+        public XYNan(MatrixType type, Extent<Float> scaleRange, Float fixed) {
             super(yAxis.size(), xAxis.size());
             this.type = type;
             /*
@@ -426,6 +435,7 @@ public class LegendDataGenerator {
                 }
                 this.scaleRange = extendScaleRange(scaleRange, fractionExtraLow, fractionExtraHigh);
             }
+            this.fixed = fixed;
         }
 
         @Override
@@ -438,6 +448,8 @@ public class LegendDataGenerator {
                 return getLinearInterpolatedValue(coords[X_IND], scaleRange, xAxis.size());
             case Y:
                 return getLinearInterpolatedValue(coords[Y_IND], scaleRange, yAxis.size());
+            case FIXED:
+                return this.fixed;
             case NAN:
             default:
                 return Float.NaN;
@@ -453,16 +465,13 @@ public class LegendDataGenerator {
     /**
      * Extends a scale range by a specified amount
      *
-     * @param scaleRange
-     *            The scale range to extend
-     * @param fractionExtraLow
-     *            The fraction to extend it by on the low end
-     * @param fractionExtraHigh
-     *            The fraction to extend it by on the high end
+     * @param scaleRange        The scale range to extend
+     * @param fractionExtraLow  The fraction to extend it by on the low end
+     * @param fractionExtraHigh The fraction to extend it by on the high end
      * @return The resulting scale range
      */
-    protected static Extent<Float> extendScaleRange(Extent<Float> scaleRange,
-            float fractionExtraLow, float fractionExtraHigh) {
+    protected static Extent<Float> extendScaleRange(Extent<Float> scaleRange, float fractionExtraLow,
+            float fractionExtraHigh) {
         if (scaleRange == null) {
             return null;
         }
@@ -474,18 +483,13 @@ public class LegendDataGenerator {
     /**
      * Linearly interpolates a value based on its index along an axis
      *
-     * @param value
-     *            The index within the axis
-     * @param scaleRange
-     *            The scale range to interpolate onto
-     * @param axisSize
-     *            The size of the axis
-     * @return A value which represents the supplied index within the given
-     *         scale range
+     * @param value      The index within the axis
+     * @param scaleRange The scale range to interpolate onto
+     * @param axisSize   The size of the axis
+     * @return A value which represents the supplied index within the given scale
+     *         range
      */
-    protected static Number getLinearInterpolatedValue(int value, Extent<Float> scaleRange,
-            int axisSize) {
-        return scaleRange.getLow()
-                + value * (scaleRange.getHigh() - scaleRange.getLow()) / axisSize;
+    protected static Number getLinearInterpolatedValue(int value, Extent<Float> scaleRange, int axisSize) {
+        return scaleRange.getLow() + value * (scaleRange.getHigh() - scaleRange.getLow()) / axisSize;
     }
 }

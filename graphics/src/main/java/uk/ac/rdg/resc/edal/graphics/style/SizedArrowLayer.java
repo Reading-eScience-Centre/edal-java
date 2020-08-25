@@ -59,9 +59,8 @@ public class SizedArrowLayer extends GriddedImageLayer {
     private ArrowStyle arrowStyle = ArrowStyle.UPSTREAM;
     private ScaleRange arrowSizeScaleRange;
 
-    public SizedArrowLayer(String directionFieldName, String magnitudeFieldName,
-            Integer minArrowSize, Integer maxArrowSize, ScaleRange magnitudeScaleRange,
-            Color arrowColour, ArrowStyle arrowStyle) {
+    public SizedArrowLayer(String directionFieldName, String magnitudeFieldName, Integer minArrowSize,
+            Integer maxArrowSize, ScaleRange magnitudeScaleRange, Color arrowColour, ArrowStyle arrowStyle) {
         this.directionFieldName = directionFieldName;
         this.arrowSizeFieldName = magnitudeFieldName;
 
@@ -73,11 +72,12 @@ public class SizedArrowLayer extends GriddedImageLayer {
         this.arrowColour = arrowColour;
         this.arrowStyle = arrowStyle;
     }
-    
-    public SizedArrowLayer(String directionFieldName, String magnitudeFieldName,
-            Integer minArrowSize, Integer maxArrowSize, ScaleRange magnitudeScaleRange,
-            Color arrowColour, ArrowStyle arrowStyle, ArrowDirectionConvention arrowDirectionConvention) {
-        this(directionFieldName, magnitudeFieldName, minArrowSize, maxArrowSize, magnitudeScaleRange, arrowColour, arrowStyle);
+
+    public SizedArrowLayer(String directionFieldName, String magnitudeFieldName, Integer minArrowSize,
+            Integer maxArrowSize, ScaleRange magnitudeScaleRange, Color arrowColour, ArrowStyle arrowStyle,
+            ArrowDirectionConvention arrowDirectionConvention) {
+        this(directionFieldName, magnitudeFieldName, minArrowSize, maxArrowSize, magnitudeScaleRange, arrowColour,
+                arrowStyle);
         this.arrowDirectionConvention = arrowDirectionConvention;
     }
 
@@ -86,15 +86,14 @@ public class SizedArrowLayer extends GriddedImageLayer {
     }
 
     @Override
-    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader)
-            throws EdalException {
+    protected void drawIntoImage(BufferedImage image, MapFeatureDataReader dataReader) throws EdalException {
         Array2D<Number> directions = dataReader.getDataForLayerName(directionFieldName);
         Array2D<Number> magnitudes = dataReader.getDataForLayerName(arrowSizeFieldName);
         drawArrows(image, dataReader, directions, magnitudes, magnitudes);
     }
 
-    protected void drawArrows(BufferedImage image, MapFeatureDataReader dataReader,
-            Array2D<Number> directions, Array2D<Number> sizeData, Array2D<Number> colourData) {
+    protected void drawArrows(BufferedImage image, MapFeatureDataReader dataReader, Array2D<Number> directions,
+            Array2D<Number> sizeData, Array2D<Number> colourData) {
         Graphics2D g = image.createGraphics();
 
         int width = image.getWidth();
@@ -104,17 +103,15 @@ public class SizedArrowLayer extends GriddedImageLayer {
          * Calculate the (floating point) number of pixels per arrow. In ideal
          * situations, this will be an integer equal to the sample spacing
          * 
-         * For non-ideal situations it means that the arrows will not be evenly
-         * spaced (they will be either n or n+1 pixels apart). They will tile
-         * perfectly though.
+         * For non-ideal situations it means that the arrows will not be evenly spaced
+         * (they will be either n or n+1 pixels apart). They will tile perfectly though.
          */
         double xPixelsPerArrow = ((double) width) / (width / (maxArrowSize * 2));
         double yPixelsPerArrow = ((double) height) / (height / (maxArrowSize * 2));
         double xLoc = xPixelsPerArrow / 2;
         double yLoc = yPixelsPerArrow / 2;
 
-        Array<HorizontalPosition> domainObjects = dataReader
-                .getMapDomainObjects(directionFieldName);
+        Array<HorizontalPosition> domainObjects = dataReader.getMapDomainObjects(directionFieldName);
 
         for (int j = 0; j < height; j++) {
             if (yLoc > yPixelsPerArrow) {
@@ -128,10 +125,9 @@ public class SizedArrowLayer extends GriddedImageLayer {
                          * We are at a point where we need to draw an arrow
                          */
                         Number sizeValue = sizeData.get(j, i);
-                        Double angle = GISUtils.transformWgs84Heading(directions.get(j, i),
-                                domainObjects.get(j, i));
-                        if (sizeValue != null && !Float.isNaN(sizeValue.floatValue())
-                                && angle != null && !Float.isNaN(angle.floatValue())) {
+                        Double angle = GISUtils.transformWgs84Heading(directions.get(j, i), domainObjects.get(j, i));
+                        if (sizeValue != null && !Float.isNaN(sizeValue.floatValue()) && angle != null
+                                && !Float.isNaN(angle.floatValue())) {
                             double scaleZeroToOne = arrowSizeScaleRange.scaleZeroToOne(sizeValue);
                             if (scaleZeroToOne < 0) {
                                 scaleZeroToOne = 0.0;
@@ -140,8 +136,7 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                 scaleZeroToOne = 1.0;
                             }
 
-                            int arrowSize = (int) (minArrowSize + scaleZeroToOne
-                                    * (maxArrowSize - minArrowSize));
+                            int arrowSize = (int) (minArrowSize + scaleZeroToOne * (maxArrowSize - minArrowSize));
 
                             /*
                              * get colour depending on size
@@ -155,8 +150,7 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                 /* Calculate the end point of the arrow */
                                 double iEnd = i + arrowSize * Math.sin(angle);
                                 /*
-                                 * Screen coordinates go down, but north is up,
-                                 * hence the minus sign
+                                 * Screen coordinates go down, but north is up, hence the minus sign
                                  */
                                 double jEnd = j - arrowSize * Math.cos(angle);
                                 /* Draw a dot representing the data location */
@@ -168,48 +162,44 @@ public class SizedArrowLayer extends GriddedImageLayer {
                                 g.drawLine(i, j, (int) Math.round(iEnd), (int) Math.round(jEnd));
                                 break;
                             case FAT_ARROW:
-                                VectorFactory.renderVector("STUMPVEC", convertAngle(angle, arrowDirectionConvention),
-                                        i, j, arrowSize * 0.1f, g);
+                                VectorFactory.renderVector("STUMPVEC", convertAngle(angle, arrowDirectionConvention), i,
+                                        j, arrowSize * 0.1f, g);
                                 break;
                             case TRI_ARROW:
-                                VectorFactory.renderVector("TRIVEC", convertAngle(angle, arrowDirectionConvention),
-                                        i, j, arrowSize * 0.1f, g);
+                                VectorFactory.renderVector("TRIVEC", convertAngle(angle, arrowDirectionConvention), i,
+                                        j, arrowSize * 0.1f, g);
                                 break;
                             case WIND_BARBS:
                                 HorizontalPosition horizontalPosition = domainObjects.get(j, i);
                                 boolean isSouthern = false;
-                                if (GISUtils.isWgs84LonLat(horizontalPosition
-                                        .getCoordinateReferenceSystem())) {
+                                if (GISUtils.isWgs84LonLat(horizontalPosition.getCoordinateReferenceSystem())) {
                                     if (horizontalPosition.getY() < 0) {
                                         isSouthern = true;
                                     }
                                 } else {
                                     HorizontalPosition transformPosition = GISUtils
-                                            .transformPosition(horizontalPosition,
-                                                    GISUtils.defaultGeographicCRS());
+                                            .transformPosition(horizontalPosition, GISUtils.defaultGeographicCRS());
                                     if (transformPosition.getY() < 0) {
                                         isSouthern = true;
                                     }
                                 }
                                 /*
-                                 * If we give the scale as maxArrowSize, we
-                                 * guarantee that no two barbs ever collide
+                                 * If we give the scale as maxArrowSize, we guarantee that no two barbs ever
+                                 * collide
                                  */
                                 BarbFactory.renderWindBarbForSpeed(sizeValue.doubleValue(),
                                         angle.doubleValue() * Math.PI / 180.0, i, j,
-                                        dataReader.getUnitsForLayerName(arrowSizeFieldName),
-                                        maxArrowSize, isSouthern, g);
+                                        dataReader.getUnitsForLayerName(arrowSizeFieldName), maxArrowSize, isSouthern,
+                                        g);
                                 break;
                             case THIN_ARROW:
                             default:
                                 /*
-                                 * The overall arrow size is 10 for things
-                                 * returned from the VectorFactory, so we
-                                 * multiply the arrow size by 0.1 to get the
-                                 * scale factor.
+                                 * The overall arrow size is 10 for things returned from the VectorFactory, so
+                                 * we multiply the arrow size by 0.1 to get the scale factor.
                                  */
-                                VectorFactory.renderVector("LINEVEC", convertAngle(angle, arrowDirectionConvention),
-                                        i, j, arrowSize * 0.1f, g);
+                                VectorFactory.renderVector("LINEVEC", convertAngle(angle, arrowDirectionConvention), i,
+                                        j, arrowSize * 0.1f, g);
                                 break;
 
                             }
@@ -221,22 +211,25 @@ public class SizedArrowLayer extends GriddedImageLayer {
             yLoc += 1.0;
         }
     }
-    
+
     /**
      * Convert angle to radians according to the direction convention.
      * 
-     * @param angle Angle in degrees
+     * @param angle                    Angle in degrees
      * @param arrowDirectionConvention
      * @return Angle in radians
      */
     private double convertAngle(Double angle, ArrowDirectionConvention arrowDirectionConvention) {
-        return arrowDirectionConvention.equals(ArrowDirectionConvention.METEOROLOGICAL) ?
-    		(angle.doubleValue() + 180.0) * GISUtils.DEG2RAD : angle.doubleValue() * GISUtils.DEG2RAD;
+        return arrowDirectionConvention.equals(ArrowDirectionConvention.METEOROLOGICAL)
+                ? (angle.doubleValue() + 180.0) * GISUtils.DEG2RAD
+                : angle.doubleValue() * GISUtils.DEG2RAD;
     }
 
     @Override
     public Set<NameAndRange> getFieldsWithScales() {
         Set<NameAndRange> ret = new HashSet<Drawable.NameAndRange>();
+        ret.add(new NameAndRange(arrowSizeFieldName,
+                Extents.newExtent(arrowSizeScaleRange.getScaleMin(), arrowSizeScaleRange.getScaleMax())));
         ret.add(new NameAndRange(directionFieldName, Extents.newExtent(0f, 360f)));
         return ret;
     }
