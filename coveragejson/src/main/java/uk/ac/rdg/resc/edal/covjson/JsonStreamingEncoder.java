@@ -30,6 +30,7 @@ package uk.ac.rdg.resc.edal.covjson;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -40,6 +41,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  *
  */
 public class JsonStreamingEncoder implements StreamingEncoder {
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
 	private final JsonGenerator generator;
 	
@@ -88,6 +90,7 @@ public class JsonStreamingEncoder implements StreamingEncoder {
 			return this;
 		}
 
+		
 		@Override
 		public MapEncoder<T> put(String key, long value) throws IOException {
 			generator.writeNumberField(key, value);
@@ -96,13 +99,17 @@ public class JsonStreamingEncoder implements StreamingEncoder {
 
 		@Override
 		public MapEncoder<T> put(String key, float value) throws IOException {
-			generator.writeNumberField(key, value);
+//			generator.writeNumberField(key, value);
+			generator.writeFieldName(key);
+			generator.writeNumber(FORMAT.format(value));
 			return this;
 		}
 
 		@Override
 		public MapEncoder<T> put(String key, double value) throws IOException {
-			generator.writeNumberField(key, value);
+//			generator.writeNumberField(key, value);
+			generator.writeFieldName(key);
+			generator.writeNumber(FORMAT.format(value));
 			return this;
 		}
 
@@ -169,13 +176,15 @@ public class JsonStreamingEncoder implements StreamingEncoder {
 
 		@Override
 		public ArrayEncoder<T> add(float value) throws IOException {
-			generator.writeNumber(value);
+//			generator.writeNumber(value);
+            generator.writeNumber(FORMAT.format(value));
 			return this;
 		}
 
 		@Override
 		public ArrayEncoder<T> add(double value) throws IOException {
-			generator.writeNumber(value);
+//			generator.writeNumber(value);
+			generator.writeNumber(FORMAT.format(value));
 			return this;
 		}
 

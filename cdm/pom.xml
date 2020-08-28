@@ -9,7 +9,7 @@
         <relativePath>..</relativePath>
     </parent>
     <properties>
-        <netcdfversion>5.1.0</netcdfversion>
+        <netcdfversion>5.3.2</netcdfversion>
     </properties>
     <artifactId>edal-cdm</artifactId>
     <packaging>jar</packaging>
@@ -22,7 +22,7 @@
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
-            <artifactId>cdm</artifactId>
+            <artifactId>cdm-core</artifactId>
             <version>${netcdfversion}</version>
         </dependency>
         <dependency>
