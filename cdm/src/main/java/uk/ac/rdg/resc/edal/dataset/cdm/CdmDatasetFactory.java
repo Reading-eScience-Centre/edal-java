@@ -34,12 +34,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-
+import net.ricecode.similarity.JaroWinklerStrategy;
+import net.ricecode.similarity.StringSimilarityService;
+import net.ricecode.similarity.StringSimilarityServiceImpl;
 import ucar.nc2.Attribute;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
@@ -248,6 +250,11 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         Map<String, Boolean> xyNameToTrueEN = new HashMap<String, Boolean>();
 
         Set<String> variableIds = ds.getVariableIds();
+        
+        /*
+         * Include a check to see if multiple vector variables have the same standard name
+         */
+        Map<String, Integer> stdNameToCount = new HashMap<>();
         for (String varId : variableIds) {
             VariableMetadata metadata = ds.getVariableMetadata(varId);
             String stdName = metadata.getParameter().getStandardName();
@@ -262,8 +269,14 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                         cData = new String[2];
                         xyComponentPairs.put(vectorInfo.id, cData);
                         xyNameToTrueEN.put(vectorInfo.id, vectorInfo.isEastNorth);
+                        
+                        stdNameToCount.put(vectorInfo.id, 0);
                     }
                     cData = xyComponentPairs.get(vectorInfo.id);
+                    /*
+                     * This checks whether we've used the same standard name more than twice
+                     */
+                    stdNameToCount.put(vectorInfo.id, stdNameToCount.get(vectorInfo.id) + 1);
                     /*
                      * By doing this, we will end up with the merged coverage
                      */
@@ -272,6 +285,50 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                     } else {
                         cData[1] = varId;
                     }
+                }
+            }
+        }
+        
+        for(Entry<String, Integer> entry : stdNameToCount.entrySet()) {
+            if(entry.getValue() > 2) {
+                /*
+                 * This standard name root has been used more than once
+                 */
+                String stdRoot = entry.getKey();
+                xyComponentPairs.remove(stdRoot);
+                StringSimilarityService similar = new StringSimilarityServiceImpl(new JaroWinklerStrategy());
+                List<String> xVars = new ArrayList<>();
+                List<Boolean> xVarIndexedTrueEN = new ArrayList<>();
+                List<String> yVars = new ArrayList<>();
+                for (String varId : variableIds) {
+                    VariableMetadata metadata = ds.getVariableMetadata(varId);
+                    String stdName = metadata.getParameter().getStandardName();
+                    if (stdName != null && stdName.contains(stdRoot)) {
+                        IdComponentEastNorth vectorInfo = determineVectorIdAndComponent(stdName);
+                        if(vectorInfo.isX) {
+                            xVars.add(varId);
+                            xVarIndexedTrueEN.add(vectorInfo.isEastNorth);
+                        } else {
+                            yVars.add(varId);
+                        }
+                    }
+                }
+                for(String xVar : xVars) {
+                    String closest = yVars.get(0);
+                    double score = 0;
+                    for(String yVar : yVars) {
+                        double currentScore = similar.score(xVar, yVar);
+                        if(currentScore > score) {
+                            closest = yVar;
+                            score = currentScore;
+                        }
+                    }
+                    yVars.remove(closest);
+                    String commonName = stdRoot + " ("+xVar+","+closest+")";
+                    xyComponentPairs.put(commonName, new String[2]);
+                    xyComponentPairs.get(commonName)[0] = xVar;
+                    xyComponentPairs.get(commonName)[1] = closest;
+                    xyNameToTrueEN.put(commonName, xVarIndexedTrueEN.get(xVars.indexOf(xVar)));
                 }
             }
         }
