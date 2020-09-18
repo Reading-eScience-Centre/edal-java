@@ -985,6 +985,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                          * how many of the values are populated with non-fill
                          * values
                          */
+                        nEdgesThisFace = nEdges;
                         for (int j = 0; j < nEdges; j++) {
                             if (!ijSwap) {
                                 index.set(i, j);
@@ -996,7 +997,6 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                                 break;
                             }
                         }
-                        nEdgesThisFace = nEdges;
                     } else {
                         nEdgesThisFace = nEdges;
                     }
