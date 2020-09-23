@@ -130,7 +130,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.10.1</version>
+                        <version>3.2.0</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -201,7 +201,7 @@
                 <!-- Create aggregated javadoc for all modules -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.3</version>
+                <version>3.2.0</version>
                 <configuration>
                     <goal>javadoc:aggregate</goal>
                     <!-- These links really belong in the child POMs but 
@@ -209,7 +209,6 @@
                         javadoc for the aggregated project. Therefore if the versions of any of the 
                         dependencies change these links will also have to be updated. -->
                     <links>
-                        <link>http://java.sun.com/j2se/1.6.0/docs/api/</link>
                         <link>http://joda-time.sourceforge.net/api-2.0/</link>
                         <link>http://www.geoapi.org/3.0/javadoc/</link>
                     </links>
