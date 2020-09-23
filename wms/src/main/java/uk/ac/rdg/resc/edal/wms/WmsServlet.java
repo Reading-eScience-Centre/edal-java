@@ -790,10 +790,17 @@ public class WmsServlet extends HttpServlet {
 
                 Number value = discreteDataset.readSinglePoint(variableId, position,
                         plottingParameters.getTargetZ(), plottingParameters.getTargetT());
+                String valueStr = value != null ? value.toString() : "";
+                if(metadata.getParameter().getCategories() != null) {
+                    Category cat = metadata.getParameter().getCategories().get(value.intValue());
+                    if(cat != null && cat.getLabel() != null) {
+                        valueStr = cat.getLabel();
+                    }
+                }
                 FeatureInfoPoint featureInfoPoint;
                 if (value != null) {
                     featureInfoPoint = new FeatureInfoPoint(layerName, variableId, position,
-                            TimeUtils.dateTimeToISO8601(plottingParameters.getTargetT()), value,
+                            TimeUtils.dateTimeToISO8601(plottingParameters.getTargetT()), valueStr,
                             new Properties());
                     featureInfos.add(featureInfoPoint);
                 }
@@ -805,10 +812,18 @@ public class WmsServlet extends HttpServlet {
                      */
                     value = discreteDataset.readSinglePoint(child.getId(), position,
                             plottingParameters.getTargetZ(), plottingParameters.getTargetT());
+                    valueStr = value != null ? value.toString() : "";
+                    
+                    if(child.getParameter().getCategories() != null) {
+                        Category cat = child.getParameter().getCategories().get(value.intValue());
+                        if(cat != null && cat.getLabel() != null) {
+                            valueStr = cat.getLabel();
+                        }
+                    }
                     if (value != null) {
                         featureInfoPoint = new FeatureInfoPoint(layerNameToSave, child.getId(),
                                 position,
-                                TimeUtils.dateTimeToISO8601(plottingParameters.getTargetT()), value,
+                                TimeUtils.dateTimeToISO8601(plottingParameters.getTargetT()), valueStr,
                                 new Properties());
                         featureInfos.add(featureInfoPoint);
                     }
