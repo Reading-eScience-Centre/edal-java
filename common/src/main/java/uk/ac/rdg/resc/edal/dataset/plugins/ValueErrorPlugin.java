@@ -51,8 +51,6 @@ public class ValueErrorPlugin extends VariablePlugin {
     /**
      * Construct a new {@link ValueErrorPlugin}
      * 
-     * @param parentId
-     *            The ID of the parent group
      * @param valueComponentId
      *            The ID of the variable representing the x-component
      * @param errorComponentId

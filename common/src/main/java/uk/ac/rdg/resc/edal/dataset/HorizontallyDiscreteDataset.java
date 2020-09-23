@@ -1450,10 +1450,6 @@ public abstract class HorizontallyDiscreteDataset<DS extends DataSource> extends
      *            The ID of the variable to read
      * @param domain
      *            The {@link MapDomain} on which to read data
-     * @param zPos
-     *            The z-position to read at
-     * @param time
-     *            The time to read at
      * @param dataSource
      *            The {@link DS} to read data from
      * @return An {@link Array2D} containing the data corresponding to the
