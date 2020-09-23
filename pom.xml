@@ -84,7 +84,7 @@
                 <!-- Create aggregated javadoc for all modules -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.3</version>
+                <version>3.2.0</version>
                 <configuration>
                     <!-- Output the apidocs to the base directory. These 
                         are ignored in .gitignore for most branches, but NOT in the gh-pages branch. 
@@ -209,9 +209,13 @@
                         javadoc for the aggregated project. Therefore if the versions of any of the 
                         dependencies change these links will also have to be updated. -->
                     <links>
-                        <link>http://joda-time.sourceforge.net/api-2.0/</link>
+                        <link>https://docs.oracle.com/en/java/javase/11/docs/api/</link>
+                        <link>https://docs.oracle.com/en/java/javase/11/docs/api/java.desktop/</link>
+                        <link>https://www.joda.org/joda-time/apidocs/</link>
                         <link>http://www.geoapi.org/3.0/javadoc/</link>
                     </links>
+                    <source>8</source>
+                    <detectJavaApiLink>false</detectJavaApiLink>
                 </configuration>
             </plugin>
             <plugin>

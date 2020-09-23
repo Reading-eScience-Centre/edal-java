@@ -180,7 +180,6 @@ public class MapImage extends Drawable {
      * @param bgColour              The {@link Color} of the background
      * @param layerNameLabels       Whether or not to plot the ID of the layers on
      *                              the legend
-     * @param width1d               The width of a 1D colourbar
      * @param background            Whether to draw a background map image for 2D
      *                              legends
      * @param force1D               Force this legend to only use the first field.
@@ -219,7 +218,6 @@ public class MapImage extends Drawable {
      * @param bgColour                  The {@link Color} of the background
      * @param layerNameLabels           Whether or not to plot the ID of the layers
      *                                  on the legend
-     * @param width1d                   The width of a 1D colourbar
      * @param background                Whether to draw a background map image for
      *                                  2D legends
      * @param force1D                   Force this legend to only use the first

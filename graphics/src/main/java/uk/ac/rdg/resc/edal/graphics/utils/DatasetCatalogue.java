@@ -44,38 +44,35 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
  */
 public interface DatasetCatalogue {
     /**
-     * @return All available {@link Dataset}s in this {@link DataCatalogue}.
-     *         Will return <code>null</code> in cases where this information is
-     *         not available (e.g. all {@link Dataset}s are dynamically
-     *         generated)
+     * @return All available {@link Dataset}s in this {@link DatasetCatalogue}. Will
+     *         return <code>null</code> in cases where this information is not
+     *         available (e.g. all {@link Dataset}s are dynamically generated)
      */
     public abstract Collection<Dataset> getAllDatasets();
 
     /**
      * Returns a {@link Dataset} from its ID
      * 
-     * @param datasetId
-     *            The ID of the dataset
-     * @return The desired dataset, or <code>null</code> if it doesn't exist in
-     *         the catalogue
+     * @param datasetId The ID of the dataset
+     * @return The desired dataset, or <code>null</code> if it doesn't exist in the
+     *         catalogue
      */
     public abstract Dataset getDatasetFromId(String datasetId);
 
     /**
-     * Returns {@link EnhancedVariableMetadata} giving for a given layer. This
-     * gives default values for scale range, palette etc., as well as metadata
-     * such as title, description, etc.
+     * Returns {@link EnhancedVariableMetadata} giving for a given layer. This gives
+     * default values for scale range, palette etc., as well as metadata such as
+     * title, description, etc.
      * 
-     * @param layerName
-     *            The full layer name
+     * @param variableMetadata The {@link VariableMetadata} of the desired layer
      * @return Default metadata values for the desired layer
      */
     public EnhancedVariableMetadata getLayerMetadata(VariableMetadata variableMetadata)
             throws EdalLayerNotFoundException;
 
     /**
-     * @return The {@link DateTime} at which this {@link DatasetCatalogue} was
-     *         last updated
+     * @return The {@link DateTime} at which this {@link DatasetCatalogue} was last
+     *         updated
      */
     public DateTime getLastUpdateTime();
 }

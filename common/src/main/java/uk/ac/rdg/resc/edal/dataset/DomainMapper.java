@@ -56,7 +56,7 @@ import uk.ac.rdg.resc.edal.util.RUShortArray;
  *    1. Find the grid cell in the source grid that contains this point
  *    2. Let i and j be the coordinates of this grid cell
  *    3. Let p be the index of this point in the target domain
- *    4. Add the mapping (p -> i,j) to the pixel map
+ *    4. Add the mapping (p to i,j) to the pixel map
  * </pre>
  * 
  * <p>

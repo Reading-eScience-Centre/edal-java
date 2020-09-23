@@ -203,7 +203,7 @@ public interface Dataset {
      *            </code> only profiles matching the time specified by this
      *            parameter will be extracted. In the case of a gridded dataset
      *            a time is considered to match if the method
-     *            {@link TimeAxis#contains(org.joda.time.DateTime)} on its time
+     *            {@link TimeAxis#contains(DateTime)} on its time
      *            axis returns <code>true</code> for the target time. For a
      *            non-gridded dataset, the feature time must exactly match the
      *            target time.</li>

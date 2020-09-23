@@ -259,7 +259,7 @@ public final class CdmUtils {
     }
 
     /**
-     * @param coordSys
+     * @param zAxis
      *            the {@link CoordinateAxis1D} to create a {@link VerticalAxis}
      *            from
      * @param isPositive
@@ -290,7 +290,7 @@ public final class CdmUtils {
     /**
      * Creates a time axis from the given {@link GridCoordSystem}
      *
-     * @param coordSys
+     * @param timeAxis
      *            the {@link CoordinateAxis1DTime} defining the axis
      * @return a new {@link TimeAxis}
      */
