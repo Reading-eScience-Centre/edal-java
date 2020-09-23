@@ -461,7 +461,7 @@ public class MapImage extends Drawable {
          * represent all values properly
          */
         float max = Math.max(Math.abs(vals[0]), Math.abs(vals[vals.length - 1]));
-        int sigfigs = (int) Math.ceil(Math.log10(max / minDiff));
+        int sigfigs = 1 + (int) Math.ceil(Math.log10(max / minDiff));
 
         /*
          * Generate the text strings for the labels
