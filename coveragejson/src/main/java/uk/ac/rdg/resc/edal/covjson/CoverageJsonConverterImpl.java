@@ -30,7 +30,10 @@ package uk.ac.rdg.resc.edal.covjson;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import uk.ac.rdg.resc.edal.covjson.writers.Coverage;
 import uk.ac.rdg.resc.edal.exceptions.EdalException;
@@ -42,42 +45,55 @@ import uk.ac.rdg.resc.edal.feature.Feature;
  *
  */
 public class CoverageJsonConverterImpl implements CoverageJsonConverter {
+    private final Map<String, DecimalFormat> field2dp;
 
-	@Override
-	public void convertFeatureToJson(OutputStream os, Feature<?> feature) {
-		StreamingEncoder encoder;
-		try {
-			encoder = new JsonStreamingEncoder(os);
-			CoverageJsonWriter writer = new CoverageJsonWriter(encoder);
-			writer.write(feature);
-		} catch (IOException e) {
-			throw new EdalException("Error writing CoverageJSON", e);
-		}
-	}
+    public CoverageJsonConverterImpl() {
+        this(null);
+    }
 
-	@Override
-	public void convertFeaturesToJson(OutputStream os, Collection<? extends Feature<?>> features) {
-		StreamingEncoder encoder;
-		try {
-			encoder = new JsonStreamingEncoder(os);
-			CoverageJsonWriter writer = new CoverageJsonWriter(encoder);
-			writer.write(features);
-		} catch (IOException e) {
-			throw new EdalException("Error writing CoverageJSON", e);
-		}
-	}
+    public CoverageJsonConverterImpl(Map<String, DecimalFormat> field2dp) {
+        if (field2dp == null) {
+            this.field2dp = new HashMap<>();
+        } else {
+            this.field2dp = field2dp;
+        }
+    }
 
-	@Override
-	public void checkFeatureSupported(Feature<?> feature) {
-		// wrapping a Feature into a Coverage object will throw exceptions if unsupported
-		new Coverage(feature);
-	}
+    @Override
+    public void convertFeatureToJson(OutputStream os, Feature<?> feature) {
+        StreamingEncoder encoder;
+        try {
+            encoder = new JsonStreamingEncoder(os, field2dp);
+            CoverageJsonWriter writer = new CoverageJsonWriter(encoder);
+            writer.write(feature);
+        } catch (IOException e) {
+            throw new EdalException("Error writing CoverageJSON", e);
+        }
+    }
 
-	@Override
-	public void checkFeaturesSupported(Collection<? extends Feature<?>> features) {
-		for (Feature<?> feature : features) {
-			new Coverage(feature);
-		}
-	}
+    @Override
+    public void convertFeaturesToJson(OutputStream os, Collection<? extends Feature<?>> features) {
+        StreamingEncoder encoder;
+        try {
+            encoder = new JsonStreamingEncoder(os, field2dp);
+            CoverageJsonWriter writer = new CoverageJsonWriter(encoder);
+            writer.write(features);
+        } catch (IOException e) {
+            throw new EdalException("Error writing CoverageJSON", e);
+        }
+    }
 
+    @Override
+    public void checkFeatureSupported(Feature<?> feature) {
+        // wrapping a Feature into a Coverage object will throw exceptions if
+        // unsupported
+        new Coverage(feature);
+    }
+
+    @Override
+    public void checkFeaturesSupported(Collection<? extends Feature<?>> features) {
+        for (Feature<?> feature : features) {
+            new Coverage(feature);
+        }
+    }
 }

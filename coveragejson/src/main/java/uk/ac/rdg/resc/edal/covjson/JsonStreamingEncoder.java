@@ -31,6 +31,8 @@ package uk.ac.rdg.resc.edal.covjson;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -41,176 +43,243 @@ import com.fasterxml.jackson.core.JsonGenerator;
  *
  */
 public class JsonStreamingEncoder implements StreamingEncoder {
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
+    private final JsonGenerator generator;
+    private final Map<String, DecimalFormat> field2dp;
 
-	private final JsonGenerator generator;
-	
-	public JsonStreamingEncoder(OutputStream os) throws IOException {
-		JsonFactory jsonFactory = new JsonFactory();
-		generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8);
-		generator.useDefaultPrettyPrinter();
-	}
-	
-	@Override
-	public MapEncoder<StreamingEncoder> startMap() throws IOException {
-		generator.writeStartObject();
-		return new JsonMapEncoder<StreamingEncoder>(this);
-	}
+    /**
+     * 
+     * @param os       The {@link OutputStream} to write to
+     * @param field2dp a mapping of field to the number of decimal places required.
+     */
+    public JsonStreamingEncoder(OutputStream os, Map<String, DecimalFormat> field2dp) throws IOException {
+        JsonFactory jsonFactory = new JsonFactory();
+        generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8);
+        generator.useDefaultPrettyPrinter();
+        if (field2dp == null) {
+            this.field2dp = new HashMap<>();
+        } else {
+            this.field2dp = field2dp;
+        }
+    }
 
-	@Override
-	public void end() throws IOException {
-		generator.flush();
-	}
+    @Override
+    public MapEncoder<StreamingEncoder> startMap() throws IOException {
+        generator.writeStartObject();
+        return new JsonMapEncoder<StreamingEncoder>(this, null);
+    }
 
-	class JsonMapEncoder <T> implements MapEncoder<T> {
-		private final T parent;
-		public JsonMapEncoder(T parent) {
-			this.parent = parent;
-		}
+    @Override
+    public void end() throws IOException {
+        generator.flush();
+    }
 
-		@Override
-		public MapEncoder<T> put(String key, String value) throws IOException {
-			if (value == null) {
-				generator.writeNullField(key);
-			} else {
-				generator.writeStringField(key, value);
-			}
-			return this;
-		}
+    class JsonMapEncoder<T> implements MapEncoder<T> {
+        private final T parent;
+        private DecimalFormat format;
 
-		@Override
-		public MapEncoder<T> put(String key, boolean value) throws IOException {
-			generator.writeBooleanField(key, value);
-			return this;
-		}
+        public JsonMapEncoder(T parent, DecimalFormat format) {
+            this.parent = parent;
+            this.format = format;
+        }
 
-		@Override
-		public MapEncoder<T> put(String key, int value) throws IOException {
-			generator.writeNumberField(key, value);
-			return this;
-		}
+        @Override
+        public MapEncoder<T> put(String key, String value) throws IOException {
+            if (value == null) {
+                generator.writeNullField(key);
+            } else {
+                generator.writeStringField(key, value);
+            }
+            return this;
+        }
 
-		
-		@Override
-		public MapEncoder<T> put(String key, long value) throws IOException {
-			generator.writeNumberField(key, value);
-			return this;
-		}
+        @Override
+        public MapEncoder<T> put(String key, boolean value) throws IOException {
+            generator.writeBooleanField(key, value);
+            return this;
+        }
 
-		@Override
-		public MapEncoder<T> put(String key, float value) throws IOException {
-//			generator.writeNumberField(key, value);
-			generator.writeFieldName(key);
-			generator.writeNumber(FORMAT.format(value));
-			return this;
-		}
+        @Override
+        public MapEncoder<T> put(String key, int value) throws IOException {
+            generator.writeNumberField(key, value);
+            return this;
+        }
 
-		@Override
-		public MapEncoder<T> put(String key, double value) throws IOException {
-//			generator.writeNumberField(key, value);
-			generator.writeFieldName(key);
-			generator.writeNumber(FORMAT.format(value));
-			return this;
-		}
+        @Override
+        public MapEncoder<T> put(String key, long value) throws IOException {
+            generator.writeNumberField(key, value);
+            return this;
+        }
 
-		@Override
-		public ArrayEncoder<MapEncoder<T>> startArray(String key) throws IOException {
-			generator.writeArrayFieldStart(key);
-			return new JsonArrayEncoder<MapEncoder<T>>(this);
-		}
+        @Override
+        public MapEncoder<T> put(String key, float value) throws IOException {
+            if (field2dp.containsKey(key)) {
+                /*
+                 * If this field has a specific format, use it
+                 */
+                generator.writeFieldName(key);
+                generator.writeNumber(field2dp.get(key).format(value));
+            } else if(format != null) {
+                /*
+                 * Otherwise if an ancestor has a format, use that
+                 */
+                generator.writeFieldName(key);
+                generator.writeNumber(format.format(value));
+            } else {
+                /*
+                 * Otherwise use the default format
+                 */
+                generator.writeNumberField(key, value);
+            }
+            return this;
+        }
 
-		@Override
-		public ArrayEncoder<MapEncoder<T>> startArray(String key, ArrayHints hints) throws IOException {
-			generator.writeArrayFieldStart(key);
-			return new JsonArrayEncoder<MapEncoder<T>>(this);
-		}
+        @Override
+        public MapEncoder<T> put(String key, double value) throws IOException {
+            if (field2dp.containsKey(key)) {
+                /*
+                 * If this field has a specific format, use it
+                 */
+                generator.writeFieldName(key);
+                generator.writeNumber(field2dp.get(key).format(value));
+            } else if(format != null) {
+                /*
+                 * Otherwise if an ancestor has a format, use that
+                 */
+                generator.writeFieldName(key);
+                generator.writeNumber(format.format(value));
+            } else {
+                /*
+                 * Otherwise use the default format
+                 */
+                generator.writeNumberField(key, value);
+            }
+            return this;
+        }
 
-		@Override
-		public MapEncoder<MapEncoder<T>> startMap(String key) throws IOException {
-			generator.writeObjectFieldStart(key);
-			return new JsonMapEncoder<MapEncoder<T>>(this);
-		}
+        @Override
+        public ArrayEncoder<MapEncoder<T>> startArray(String key) throws IOException {
+            generator.writeArrayFieldStart(key);
+            final DecimalFormat format;
+            if(field2dp.containsKey(key)) {
+                format = field2dp.get(key);
+            } else {
+                format = this.format;
+            }
+            return new JsonArrayEncoder<MapEncoder<T>>(this, format);
+        }
 
-		@Override
-		public T end() throws IOException {
-			generator.writeEndObject();
-			return parent;
-		}
-		
-	}
-	
-	class JsonArrayEncoder<T> implements ArrayEncoder<T> {
-		private final T parent;
-		
-		public JsonArrayEncoder(T parent) {
-			this.parent = parent;
-		}
-		
-		@Override
-		public ArrayEncoder<T> add(String value) throws IOException {
-			if (value == null) {
-				generator.writeNull();
-			} else {
-				generator.writeString(value);
-			}
-			return this;
-		}
+        @Override
+        public ArrayEncoder<MapEncoder<T>> startArray(String key, ArrayHints hints) throws IOException {
+            generator.writeArrayFieldStart(key);
+            final DecimalFormat format;
+            if(field2dp.containsKey(key)) {
+                format = field2dp.get(key);
+            } else {
+                format = this.format;
+            }
+            return new JsonArrayEncoder<MapEncoder<T>>(this, format);
+        }
 
-		@Override
-		public ArrayEncoder<T> add(boolean value) throws IOException {
-			generator.writeBoolean(value);
-			return this;
-		}
+        @Override
+        public MapEncoder<MapEncoder<T>> startMap(String key) throws IOException {
+            generator.writeObjectFieldStart(key);
+            final DecimalFormat format;
+            if(field2dp.containsKey(key)) {
+                format = field2dp.get(key);
+            } else {
+                format = this.format;
+            }
+            return new JsonMapEncoder<MapEncoder<T>>(this, format);
+        }
 
-		@Override
-		public ArrayEncoder<T> add(int value) throws IOException {
-			generator.writeNumber(value);
-			return this;
-		}
+        @Override
+        public T end() throws IOException {
+            generator.writeEndObject();
+            return parent;
+        }
 
-		@Override
-		public ArrayEncoder<T> add(long value) throws IOException {
-			generator.writeNumber(value);
-			return this;
-		}
+    }
 
-		@Override
-		public ArrayEncoder<T> add(float value) throws IOException {
-//			generator.writeNumber(value);
-            generator.writeNumber(FORMAT.format(value));
-			return this;
-		}
+    class JsonArrayEncoder<T> implements ArrayEncoder<T> {
+        private final T parent;
+        private DecimalFormat format;
 
-		@Override
-		public ArrayEncoder<T> add(double value) throws IOException {
-//			generator.writeNumber(value);
-			generator.writeNumber(FORMAT.format(value));
-			return this;
-		}
+        public JsonArrayEncoder(T parent, DecimalFormat format) {
+            this.parent = parent;
+            this.format = format;
+        }
 
-		@Override
-		public ArrayEncoder<ArrayEncoder<T>> startArray() throws IOException {
-			generator.writeStartArray();
-			return new JsonArrayEncoder<ArrayEncoder<T>>(this);
-		}
+        @Override
+        public ArrayEncoder<T> add(String value) throws IOException {
+            if (value == null) {
+                generator.writeNull();
+            } else {
+                generator.writeString(value);
+            }
+            return this;
+        }
 
-		@Override
-		public ArrayEncoder<ArrayEncoder<T>> startArray(ArrayHints hints) throws IOException {
-			return startArray();
-		}
+        @Override
+        public ArrayEncoder<T> add(boolean value) throws IOException {
+            generator.writeBoolean(value);
+            return this;
+        }
 
-		@Override
-		public MapEncoder<ArrayEncoder<T>> startMap() throws IOException {
-			generator.writeStartObject();
-			return new JsonMapEncoder<ArrayEncoder<T>>(this);
-		}
+        @Override
+        public ArrayEncoder<T> add(int value) throws IOException {
+            generator.writeNumber(value);
+            return this;
+        }
 
-		@Override
-		public T end() throws IOException {
-			generator.writeEndArray();
-			return parent;
-		}
-		
-	}
-	
+        @Override
+        public ArrayEncoder<T> add(long value) throws IOException {
+            generator.writeNumber(value);
+            return this;
+        }
+
+        @Override
+        public ArrayEncoder<T> add(float value) throws IOException {
+            if (format != null) {
+                generator.writeNumber(format.format(value));
+            } else {
+                generator.writeNumber(value);
+            }
+            return this;
+        }
+
+        @Override
+        public ArrayEncoder<T> add(double value) throws IOException {
+            if (format != null) {
+                generator.writeNumber(format.format(value));
+            } else {
+                generator.writeNumber(value);
+            }
+            return this;
+        }
+
+        @Override
+        public ArrayEncoder<ArrayEncoder<T>> startArray() throws IOException {
+            generator.writeStartArray();
+            return new JsonArrayEncoder<ArrayEncoder<T>>(this, format);
+        }
+
+        @Override
+        public ArrayEncoder<ArrayEncoder<T>> startArray(ArrayHints hints) throws IOException {
+            return startArray();
+        }
+
+        @Override
+        public MapEncoder<ArrayEncoder<T>> startMap() throws IOException {
+            generator.writeStartObject();
+            return new JsonMapEncoder<ArrayEncoder<T>>(this, format);
+        }
+
+        @Override
+        public T end() throws IOException {
+            generator.writeEndArray();
+            return parent;
+        }
+
+    }
+
 }
