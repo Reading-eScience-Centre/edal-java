@@ -43,65 +43,76 @@ import uk.ac.rdg.resc.edal.metadata.Parameter.Category;
  * 
  * @author Maik Riechert
  */
-public class ParametersWriter <T> {
+public class ParametersWriter<T> {
 
-	private final MapEncoder<T> map;
+    private final MapEncoder<T> map;
 
-	public ParametersWriter(MapEncoder<T> encoder) {
-		this.map = encoder;
-	}
+    public ParametersWriter(MapEncoder<T> encoder) {
+        this.map = encoder;
+    }
 
-	public void write(Collection<Parameter> parameters) throws IOException {
-		for (Parameter parameter : parameters) {
-			MapEncoder<?> paramMap = map.startMap(parameter.getVariableId());
-			write(paramMap, parameter);
-			paramMap.end();
-		}
-	}
-	
-	private void write(MapEncoder<?> paramMap, Parameter parameter) throws IOException {
-		paramMap
-		  .put(Keys.TYPE, Vals.PARAMETER);
-		
-		if (parameter.getDescription() != null) {
-			paramMap.startMap(Keys.DESCRIPTION).put(Keys.EN, parameter.getDescription()).end();
-		}
-		  
-		if (parameter.getCategories() != null) {
-		  paramMap.startMap(Keys.UNIT).put(Keys.SYMBOL, parameter.getUnits()).end();
-		}
-		
-		String observedPropertyUri = null;
-		if (parameter.getStandardName() != null) {
-			observedPropertyUri = Vals.getStandardNameUri(parameter.getStandardName());
-		}
-		MapEncoder<?> obsProp = paramMap.startMap(Keys.OBSERVEDPROPERTY);
-		obsProp.startMap(Keys.LABEL).put(Keys.EN, parameter.getTitle()).end();
-		if (observedPropertyUri != null) {
-			obsProp.put(Keys.ID, observedPropertyUri);
-		}
-		if (parameter.getCategories() != null) {
-			ArrayEncoder<?> cats = obsProp.startArray(Keys.CATEGORIES);
-			for (Category category : parameter.getCategories().values()) {
-				MapEncoder<?> catMap = cats.startMap()
-				  .put(Keys.ID, category.getId())
-				  .startMap(Keys.LABEL).put(Keys.EN, category.getLabel()).end();
-				if (category.getColour() != null) {
-					catMap.put(Keys.PREFERREDCOLOR, category.getColour());
-				}
-				catMap.end();
-			}
-			cats.end();
-		}
-		obsProp.end();
-		
-		if (parameter.getCategories() != null) {
-			MapEncoder<?> catEnc = map.startMap(Keys.CATEGORYENCODING);
-			for (Entry<Integer,Category> entry : parameter.getCategories().entrySet()) {
-				catEnc.put(entry.getValue().getId(), entry.getKey());
-			}
-			catEnc.end();
-		}
-	}
+    public void write(Collection<Parameter> parameters) throws IOException {
+        for (Parameter parameter : parameters) {
+            MapEncoder<?> paramMap = map.startMap(parameter.getVariableId());
+            write(paramMap, parameter);
+            paramMap.end();
+        }
+    }
+
+    private void write(MapEncoder<?> paramMap, Parameter parameter) throws IOException {
+        paramMap.put(Keys.TYPE, Vals.PARAMETER);
+
+        if (parameter.getDescription() != null) {
+            paramMap.startMap(Keys.DESCRIPTION).put(Keys.EN, parameter.getDescription()).end();
+        }
+
+        if (parameter.getCategories() != null) {
+            paramMap.startMap(Keys.UNIT).put(Keys.SYMBOL, parameter.getUnits()).end();
+        }
+
+        String observedPropertyUri = null;
+        if (parameter.getStandardName() != null) {
+            observedPropertyUri = Vals.getStandardNameUri(parameter.getStandardName());
+        }
+        MapEncoder<?> obsProp = paramMap.startMap(Keys.OBSERVEDPROPERTY);
+        obsProp.startMap(Keys.LABEL);
+        obsProp.put(Keys.EN, parameter.getTitle());
+        for (Entry<String, String> title : parameter.getForeignTitles().entrySet()) {
+            obsProp.put(title.getKey(), title.getValue());
+        }
+        obsProp.end();
+        if (observedPropertyUri != null) {
+            obsProp.put(Keys.ID, observedPropertyUri);
+        }
+        if (parameter.getCategories() != null) {
+            ArrayEncoder<?> cats = obsProp.startArray(Keys.CATEGORIES);
+            for (Category category : parameter.getCategories().values()) {
+                MapEncoder<?> catMap = cats.startMap();
+
+                catMap.put(Keys.ID, category.getId());
+
+                catMap.startMap(Keys.LABEL);
+                catMap.put(Keys.EN, category.getLabel());
+                for (Entry<String, String> title : category.getForeignLabels().entrySet()) {
+                    catMap.put(title.getKey(), title.getValue());
+                }
+                catMap.end();
+                if (category.getColour() != null) {
+                    catMap.put(Keys.PREFERREDCOLOR, category.getColour());
+                }
+                catMap.end();
+            }
+            cats.end();
+        }
+        obsProp.end();
+
+        if (parameter.getCategories() != null) {
+            MapEncoder<?> catEnc = map.startMap(Keys.CATEGORYENCODING);
+            for (Entry<Integer, Category> entry : parameter.getCategories().entrySet()) {
+                catEnc.put(entry.getValue().getId(), entry.getKey());
+            }
+            catEnc.end();
+        }
+    }
 
 }

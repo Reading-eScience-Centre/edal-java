@@ -29,6 +29,7 @@
 package uk.ac.rdg.resc.edal.metadata;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 import uk.ac.rdg.resc.edal.dataset.Dataset;
@@ -49,6 +50,7 @@ public class Parameter implements Serializable {
         private final String label;
         private final String colour;
         private final String description;
+        private final Map<String, String> foreignLabels;
 
         public Category(String id, String label, String colour, String description) {
             if (id == null) {
@@ -62,6 +64,22 @@ public class Parameter implements Serializable {
             }
             this.colour = colour;
             this.description = description;
+            this.foreignLabels = new HashMap<>();
+        }
+        
+        public Category(String id, String label, String colour, String description, Map<String, String> foreignLabels) {
+            if (id == null) {
+                throw new IllegalArgumentException("The ID of a Category may not be null");
+            }
+            this.id = id;
+            if (label != null) {
+                this.label = label;
+            } else {
+                this.label = "Category for " + id;
+            }
+            this.colour = colour;
+            this.description = description;
+            this.foreignLabels = foreignLabels;
         }
 
         /**
@@ -78,6 +96,13 @@ public class Parameter implements Serializable {
          */
         public String getLabel() {
             return label;
+        }
+        
+        /**
+         * @return A {@link Map} of language code to the category label in that language 
+         */
+        public Map<String, String> getForeignLabels() {
+            return foreignLabels;
         }
 
         /**
@@ -99,6 +124,7 @@ public class Parameter implements Serializable {
 
     private String varId;
     private String title;
+    private Map<String, String> foreignTitles = new HashMap<>();
     private String description;
     /* TODO: This will probably end up as something more complex than a string */
     private String units;
@@ -171,6 +197,13 @@ public class Parameter implements Serializable {
      */
     public String getTitle() {
         return title;
+    }
+    
+    /**
+     * @return A Map of langauge code to title in that language
+     */
+    public Map<String, String> getForeignTitles() {
+        return foreignTitles;
     }
 
     /**
