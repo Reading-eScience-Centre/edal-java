@@ -59,6 +59,9 @@ import uk.ac.rdg.resc.edal.grid.RectilinearGrid;
 import uk.ac.rdg.resc.edal.grid.RectilinearGridImpl;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxis;
 import uk.ac.rdg.resc.edal.grid.ReferenceableAxisImpl;
+import uk.ac.rdg.resc.edal.grid.RegularAxis;
+import uk.ac.rdg.resc.edal.grid.RegularAxisImpl;
+import uk.ac.rdg.resc.edal.grid.RegularGrid;
 import uk.ac.rdg.resc.edal.grid.TimeAxis;
 import uk.ac.rdg.resc.edal.grid.TimeAxisImpl;
 import uk.ac.rdg.resc.edal.grid.VerticalAxis;
@@ -343,7 +346,21 @@ public abstract class GriddedDataset extends DiscreteLayeredDataset<GridDataSour
                      */
                     final HorizontalGrid outputGrid;
 
-                    if (grid instanceof RectilinearGrid) {
+                    if (grid instanceof RegularGrid) {
+                        RegularAxis xAxis = ((RegularGrid)grid).getXAxis();
+                        double minXVal = xAxis.getCoordinateValue(minX);
+                        double xSpacing = xAxis.getCoordinateSpacing();
+                        int xSize = maxX-minX + 1;
+                        RegularAxis outputXAxis = new RegularAxisImpl(xAxis.getName(), minXVal, xSpacing, xSize, xAxis.wraps());
+                        
+                        RegularAxis yAxis = ((RegularGrid)grid).getYAxis();
+                        double minYVal = yAxis.getCoordinateValue(minY);
+                        double ySpacing = yAxis.getCoordinateSpacing();
+                        int ySize = maxY - minY + 1;
+                        RegularAxis outputYAxis = new RegularAxisImpl(yAxis.getName(), minYVal, ySpacing, ySize, yAxis.wraps());
+                        
+                        outputGrid = new RectilinearGridImpl(outputXAxis, outputYAxis, grid.getCoordinateReferenceSystem());
+                    }else if (grid instanceof RectilinearGrid) {
                         ReferenceableAxis<Double> xAxis = ((RectilinearGrid) grid).getXAxis();
                         ReferenceableAxis<Double> yAxis = ((RectilinearGrid) grid).getYAxis();
 
