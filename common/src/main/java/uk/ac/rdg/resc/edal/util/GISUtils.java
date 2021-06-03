@@ -28,6 +28,7 @@
 
 package uk.ac.rdg.resc.edal.util;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -1389,6 +1390,9 @@ public final class GISUtils implements ObjectFactory {
             } else {
                 path = EpsgDatabasePath.DB_PATH;
             }
+            // Ensure path is suitable for a URI, especially on Windows machines
+            File fp = new File(path);
+            path = fp.toURI().toString();
             /*
              * AUTO_SERVER=TRUE means that this DB will run in embedded mode on
              * the first JVM. However, if a second JVM tries to access it, it
