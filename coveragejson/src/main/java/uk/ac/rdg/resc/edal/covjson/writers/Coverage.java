@@ -1,6 +1,5 @@
 package uk.ac.rdg.resc.edal.covjson.writers;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,7 +85,7 @@ public class Coverage {
 			if (this.wrappedAxis instanceof ReferenceableAxis<?>) {
 				return ((ReferenceableAxis<?>) this.wrappedAxis).size();
 			} else if (this.wrappedAxis instanceof TupleAxis) {
-				return ((TupleAxis) this.wrappedAxis).size;
+				return (int) ((TupleAxis) this.wrappedAxis).positions.size();
 			} else {
 				throw new RuntimeException("should not happen");
 			}
@@ -98,12 +97,12 @@ public class Coverage {
 		 * A list of ReferenceableAxis objects. For example [t, x, y] which would be
 		 * [TimeAxis, ReferenceableAxis, ReferenceableAxis].
 		 */
-		List<ReferenceableAxis<?>> nestedAxes;
-		int size;
+		Array1D<GeoPosition> positions;
+		boolean hasZ;
 
-		public TupleAxis(List<ReferenceableAxis<?>> nestedAxes, int size) {
-			this.nestedAxes = nestedAxes;
-			this.size = size;
+		public TupleAxis(Array1D<GeoPosition> positions, boolean hasZ) {
+			this.positions = positions;
+			this.hasZ = hasZ;
 		}
 	}
 
@@ -326,36 +325,7 @@ public class Coverage {
 			coordinateIds.add(Keys.Z);
 		}
 
-		int size = trajectoryDomain.size();
-		List<DateTime> ts = new ArrayList<>(size);
-		List<Double> xs = new ArrayList<>(size);
-		List<Double> ys = new ArrayList<>(size);
-		List<Double> zs = hasZ ? new ArrayList<Double>(size) : null;
-
-		Array1D<GeoPosition> positions = trajectoryDomain.getDomainObjects();
-		for (GeoPosition pos : positions) {
-			ts.add(pos.getTime());
-			xs.add(pos.getHorizontalPosition().getX());
-			ys.add(pos.getHorizontalPosition().getY());
-			if (hasZ) {
-				zs.add(pos.getVerticalPosition().getZ());
-			}
-		}
-
-		TimeAxis t = new TimeAxisImpl(Keys.T, ts);
-		ReferenceableAxis<Double> x = new ReferenceableAxisImpl(Keys.X, xs, false);
-		ReferenceableAxis<Double> y = new ReferenceableAxisImpl(Keys.Y, ys, false);
-
-		List<ReferenceableAxis<?>> nestedAxes = new LinkedList<>();
-		nestedAxes.add(t);
-		nestedAxes.add(x);
-		nestedAxes.add(y);
-		if (hasZ) {
-			ReferenceableAxis<Double> z = new ReferenceableAxisImpl(Keys.Z, zs, false);
-			nestedAxes.add(z);
-		}
-
-		TupleAxis tupleAxis = new TupleAxis(nestedAxes, size);
+		TupleAxis tupleAxis = new TupleAxis(trajectoryDomain.getDomainObjects(), hasZ);
 
 		Map<String, Axis> axes = new HashMap<>();
 		axes.put(Keys.COMPOSITE, new Axis(tupleAxis, coordinateIds));
