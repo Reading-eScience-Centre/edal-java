@@ -282,7 +282,7 @@ public final class GISUtils implements ObjectFactory {
                     .getMathTransform();
             if (transform.isIdentity())
                 return pos;
-            double[] point = new double[] { pos.getX(), pos.getY() };
+            double[] point = new double[] { pos.getX(), pos.getY(), 0 };
             transform.transform(point, 0, point, 0, 1);
             return new HorizontalPosition(point[0], point[1], targetCrs);
         } catch (Exception e) {
