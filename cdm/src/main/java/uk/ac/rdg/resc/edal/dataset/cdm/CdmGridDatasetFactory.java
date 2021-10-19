@@ -131,14 +131,14 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
          * This is factored out since it is also used for extracting metadata
          * from the non-staggered parts of staggered grid datasets
          */
-        List<GridVariableMetadata> vars = getNonStaggeredGriddedVariableMetadata(nc);
+        List<GridVariableMetadata> vars = getNonStaggeredGriddedVariableMetadata(nc, false);
 
         CdmGridDataset cdmGridDataset = new CdmGridDataset(id, location, vars,
                 CdmUtils.getOptimumDataReadingStrategy(nc));
         return cdmGridDataset;
     }
 
-    private List<GridVariableMetadata> getNonStaggeredGriddedVariableMetadata(NetcdfDataset nc)
+    private List<GridVariableMetadata> getNonStaggeredGriddedVariableMetadata(NetcdfDataset nc, boolean ignoreStaggered)
             throws DataReadingException, IOException {
         ucar.nc2.dt.GridDataset gridDataset = CdmUtils.getGridDataset(nc);
         List<GridVariableMetadata> vars = new ArrayList<>();
@@ -157,7 +157,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
                 VariableDS variable = grid.getVariable();
                 Attribute gridAttribute = variable.findAttribute("grid");
                 Attribute locationAttribute = variable.findAttribute("location");
-                if (gridAttribute != null && locationAttribute != null) {
+                if (ignoreStaggered && gridAttribute != null && locationAttribute != null) {
                     /*
                      * We have a staggered grid variable. We don't want to
                      * return this, since we're specifically looking for
@@ -186,7 +186,7 @@ public class CdmGridDatasetFactory extends CdmDatasetFactory implements Serializ
          */
         List<GridVariableMetadata> varMetadata;
         try {
-            varMetadata = getNonStaggeredGriddedVariableMetadata(nc);
+            varMetadata = getNonStaggeredGriddedVariableMetadata(nc, true);
         } catch (DataReadingException e) {
             /*
              * The most likely cause here is that we don't have any "grids" (in
