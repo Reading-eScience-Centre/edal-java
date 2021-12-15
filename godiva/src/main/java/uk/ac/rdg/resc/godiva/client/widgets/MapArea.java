@@ -1112,18 +1112,18 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
          * ReSC naturalearth
          */
         String rescMapServerUrl = "http://godiva.reading.ac.uk/geoserver/ReSC/wms?";
-        wmsOptions = new WMSOptions();
-        wmsOptions.setProjection("CRS:84");
-        wmsOptions.setWrapDateLine(true);
-        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("naturalearth");
-        wmsParams.setFormat("image/png");
-        wmsParams.setParameter("version", "1.3.0");
-        WMS naturalEarth = new WMS("NaturalEarth WMS", rescMapServerUrl, wmsParams, wmsOptions);
-        naturalEarth.addLayerLoadStartListener(loadStartListener);
-        naturalEarth.addLayerLoadEndListener(loadEndListener);
-        naturalEarth.setIsBaseLayer(true);
+//        wmsOptions = new WMSOptions();
+//        wmsOptions.setProjection("CRS:84");
+//        wmsOptions.setWrapDateLine(true);
+//        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
+//        wmsParams = new WMSParams();
+//        wmsParams.setLayers("naturalearth");
+//        wmsParams.setFormat("image/png");
+//        wmsParams.setParameter("version", "1.3.0");
+//        WMS naturalEarth = new WMS("NaturalEarth WMS", rescMapServerUrl, wmsParams, wmsOptions);
+//        naturalEarth.addLayerLoadStartListener(loadStartListener);
+//        naturalEarth.addLayerLoadEndListener(loadEndListener);
+//        naturalEarth.setIsBaseLayer(true);
 
         /*
          * ReSC Bluemarble
@@ -1241,6 +1241,25 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         gebco.setIsBaseLayer(true);
         gebco.addLayerLoadStartListener(loadStartListener);
         gebco.addLayerLoadEndListener(loadEndListener);
+        
+        /*
+         * Natural Earth basemap from OpenLayers
+         */
+        String olMapServerUrl = "https://ahocevar.com/geoserver/wms?";
+        wmsOptions = new WMSOptions();
+        wmsOptions.setProjection("CRS:84");
+        wmsOptions.setWrapDateLine(true);
+        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
+        wmsParams = new WMSParams();
+        wmsParams.setLayers("ne:NE1_HR_LC_SR_W_DR");
+        wmsParams.setFormat("image/png");
+        wmsParams.setParameter("version", "1.3.0");
+        WMS naturalEarth = new WMS("NaturalEarth WMS", olMapServerUrl, wmsParams, wmsOptions);
+        naturalEarth.addLayerLoadStartListener(loadStartListener);
+        naturalEarth.addLayerLoadEndListener(loadEndListener);
+        naturalEarth.setIsBaseLayer(true);
+
+        
 
         /*
          * Add all of the layers in the order we want them displayed
