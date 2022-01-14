@@ -53,7 +53,8 @@
         <plugins>
             <plugin>
                 <!-- Sets the source version to Java 11 -->
-                <artifactId>maven-compiler-plugin</artifactId>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>11</source>
                     <target>11</target>
