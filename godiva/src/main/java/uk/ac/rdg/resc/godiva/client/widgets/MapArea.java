@@ -1098,7 +1098,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         wmsParams.setFormat("image/png");
         wmsParams.setParameter("version", "1.3.0");
 
-        String nasaMapServerUrl = "http://neowms.sci.gsfc.nasa.gov/wms/wms?";
+        String nasaMapServerUrl = "https://neo.gsfc.nasa.gov/wms/wms?";
         nasaBlueMarble = new WMS("NASA Blue Marble WMS", nasaMapServerUrl, wmsParams, wmsOptions);
         nasaBlueMarble.addLayerLoadStartListener(loadStartListener);
         nasaBlueMarble.addLayerLoadEndListener(loadEndListener);
