@@ -1111,7 +1111,7 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         /*
          * ReSC naturalearth
          */
-        String rescMapServerUrl = "http://godiva.reading.ac.uk/geoserver/ReSC/wms?";
+//        String rescMapServerUrl = "http://godiva.reading.ac.uk/geoserver/ReSC/wms?";
 //        wmsOptions = new WMSOptions();
 //        wmsOptions.setProjection("CRS:84");
 //        wmsOptions.setWrapDateLine(true);
@@ -1128,84 +1128,84 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
         /*
          * ReSC Bluemarble
          */
-        wmsOptions = new WMSOptions();
-        wmsOptions.setProjection("CRS:84");
-        wmsOptions.setWrapDateLine(true);
-        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("bluemarble");
-        wmsParams.setFormat("image/png");
-        WMS blueMarble = new WMS("BlueMarble WMS", rescMapServerUrl, wmsParams, wmsOptions);
-        blueMarble.addLayerLoadStartListener(loadStartListener);
-        blueMarble.addLayerLoadEndListener(loadEndListener);
-        blueMarble.setIsBaseLayer(true);
+//        wmsOptions = new WMSOptions();
+//        wmsOptions.setProjection("CRS:84");
+//        wmsOptions.setWrapDateLine(true);
+//        wmsOptions.setTransitionEffect(TransitionEffect.MAP_RESIZE);
+//        wmsParams = new WMSParams();
+//        wmsParams.setLayers("bluemarble");
+//        wmsParams.setFormat("image/png");
+//        WMS blueMarble = new WMS("BlueMarble WMS", rescMapServerUrl, wmsParams, wmsOptions);
+//        blueMarble.addLayerLoadStartListener(loadStartListener);
+//        blueMarble.addLayerLoadEndListener(loadEndListener);
+//        blueMarble.setIsBaseLayer(true);
 
         /*
          * These are the bounds of ALL OF the polar layers (i.e. North AND
          * South) on the ReSC server
          */
-        Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
-        float polarMaxResolution = (float) ((polarMaxExtent.getUpperRightX()
-                - polarMaxExtent.getLowerLeftX()) / 512.0);
-
-        /*
-         * ReSC Natural Earth North Pole
-         */
-        wmsNorthPolarOptions = new WMSOptions();
-        wmsNorthPolarOptions.setProjection("EPSG:5041");
-        wmsNorthPolarOptions.setMaxExtent(polarMaxExtent);
-        wmsNorthPolarOptions.setMaxResolution(polarMaxResolution);
-        wmsNorthPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
-        wmsNorthPolarOptions.setWrapDateLine(false);
-
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("naturalearth-np");
-        wmsParams.setFormat("image/png");
-        wmsParams.setParameter("version", "1.3.0");
-        WMS naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", rescMapServerUrl,
-                wmsParams, wmsNorthPolarOptions);
-        naturalEarthNP.setIsBaseLayer(true);
-
-        /*
-         * ReSC Blue Marble North Pole
-         */
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("bluemarble-np");
-        wmsParams.setFormat("image/png");
-        wmsParams.setParameter("version", "1.3.0");
-        WMS blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", rescMapServerUrl,
-                wmsParams, wmsNorthPolarOptions);
-        blueMarbleNP.setIsBaseLayer(true);
-        blueMarbleNP.setSingleTile(true);
-
-        /*
-         * ReSC Natural Earth South Pole
-         */
-        wmsSouthPolarOptions = new WMSOptions();
-        wmsSouthPolarOptions.setProjection("EPSG:5042");
-        wmsSouthPolarOptions.setMaxExtent(polarMaxExtent);
-        wmsSouthPolarOptions.setMaxResolution(polarMaxResolution);
-        wmsSouthPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
-        wmsSouthPolarOptions.setWrapDateLine(false);
-
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("naturalearth-sp");
-        wmsParams.setFormat("image/png");
-        wmsParams.setParameter("version", "1.3.0");
-        WMS naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", rescMapServerUrl,
-                wmsParams, wmsSouthPolarOptions);
-        naturalEarthSP.setIsBaseLayer(true);
-
-        /*
-         * ReSC Blue Marble South Pole
-         */
-        wmsParams = new WMSParams();
-        wmsParams.setLayers("bluemarble-sp");
-        wmsParams.setFormat("image/png");
-        wmsParams.setParameter("version", "1.3.0");
-        WMS blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", rescMapServerUrl,
-                wmsParams, wmsSouthPolarOptions);
-        blueMarbleSP.setIsBaseLayer(true);
+//        Bounds polarMaxExtent = new Bounds(-4000000, -4000000, 8000000, 8000000);
+//        float polarMaxResolution = (float) ((polarMaxExtent.getUpperRightX()
+//                - polarMaxExtent.getLowerLeftX()) / 512.0);
+//
+//        /*
+//         * ReSC Natural Earth North Pole
+//         */
+//        wmsNorthPolarOptions = new WMSOptions();
+//        wmsNorthPolarOptions.setProjection("EPSG:5041");
+//        wmsNorthPolarOptions.setMaxExtent(polarMaxExtent);
+//        wmsNorthPolarOptions.setMaxResolution(polarMaxResolution);
+//        wmsNorthPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
+//        wmsNorthPolarOptions.setWrapDateLine(false);
+//
+//        wmsParams = new WMSParams();
+//        wmsParams.setLayers("naturalearth-np");
+//        wmsParams.setFormat("image/png");
+//        wmsParams.setParameter("version", "1.3.0");
+//        WMS naturalEarthNP = new WMS("North polar stereographic (NaturalEarth)", rescMapServerUrl,
+//                wmsParams, wmsNorthPolarOptions);
+//        naturalEarthNP.setIsBaseLayer(true);
+//
+//        /*
+//         * ReSC Blue Marble North Pole
+//         */
+//        wmsParams = new WMSParams();
+//        wmsParams.setLayers("bluemarble-np");
+//        wmsParams.setFormat("image/png");
+//        wmsParams.setParameter("version", "1.3.0");
+//        WMS blueMarbleNP = new WMS("North polar stereographic (BlueMarble)", rescMapServerUrl,
+//                wmsParams, wmsNorthPolarOptions);
+//        blueMarbleNP.setIsBaseLayer(true);
+//        blueMarbleNP.setSingleTile(true);
+//
+//        /*
+//         * ReSC Natural Earth South Pole
+//         */
+//        wmsSouthPolarOptions = new WMSOptions();
+//        wmsSouthPolarOptions.setProjection("EPSG:5042");
+//        wmsSouthPolarOptions.setMaxExtent(polarMaxExtent);
+//        wmsSouthPolarOptions.setMaxResolution(polarMaxResolution);
+//        wmsSouthPolarOptions.setTransitionEffect(TransitionEffect.RESIZE);
+//        wmsSouthPolarOptions.setWrapDateLine(false);
+//
+//        wmsParams = new WMSParams();
+//        wmsParams.setLayers("naturalearth-sp");
+//        wmsParams.setFormat("image/png");
+//        wmsParams.setParameter("version", "1.3.0");
+//        WMS naturalEarthSP = new WMS("South polar stereographic (NaturalEarth)", rescMapServerUrl,
+//                wmsParams, wmsSouthPolarOptions);
+//        naturalEarthSP.setIsBaseLayer(true);
+//
+//        /*
+//         * ReSC Blue Marble South Pole
+//         */
+//        wmsParams = new WMSParams();
+//        wmsParams.setLayers("bluemarble-sp");
+//        wmsParams.setFormat("image/png");
+//        wmsParams.setParameter("version", "1.3.0");
+//        WMS blueMarbleSP = new WMS("South polar stereographic (BlueMarble)", rescMapServerUrl,
+//                wmsParams, wmsSouthPolarOptions);
+//        blueMarbleSP.setIsBaseLayer(true);
 
         /*
          * Basemap from demis.nl
@@ -1265,14 +1265,14 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
          * Add all of the layers in the order we want them displayed
          */
         map.addLayer(naturalEarth);
-        map.addLayer(blueMarble);
+//        map.addLayer(blueMarble);
         map.addLayer(nasaBlueMarble);
         map.addLayer(demis);
         map.addLayer(gebco);
-        map.addLayer(naturalEarthNP);
-        map.addLayer(blueMarbleNP);
-        map.addLayer(naturalEarthSP);
-        map.addLayer(blueMarbleSP);
+//        map.addLayer(naturalEarthNP);
+//        map.addLayer(blueMarbleNP);
+//        map.addLayer(naturalEarthSP);
+//        map.addLayer(blueMarbleSP);
 
         /*
          * Now global setup stuff. Store the current projection, add the layer
@@ -1288,8 +1288,8 @@ public class MapArea extends MapWidget implements OpacitySelectionHandler, Centr
          * But it doesn't work, probably due to something weird. Meh, this works
          * too.
          */
-        baseUrlForExport = rescMapServerUrl;
-        layersForExport = "naturalearth";
+        baseUrlForExport = olMapServerUrl;
+        layersForExport = "ne:NE1_HR_LC_SR_W_DR";
         map.setBaseLayer(naturalEarth);
 
         map.addMapBaseLayerChangedListener(new MapBaseLayerChangedListener() {
