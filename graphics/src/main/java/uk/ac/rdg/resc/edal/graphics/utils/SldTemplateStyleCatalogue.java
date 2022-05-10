@@ -145,8 +145,6 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
          * XML style templates
          */
         velocityEngine = new VelocityEngine();
-        velocityEngine.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS,
-                "org.apache.velocity.runtime.log.Log4JLogChute");
         velocityEngine.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
         /*
          * We add a classpath resource loader and a file resource loader. The
