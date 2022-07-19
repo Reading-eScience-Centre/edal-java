@@ -124,6 +124,7 @@ public final class CurvilinearCoords {
         if (maxLon < minLon || maxLat < minLat) {
             throw new IllegalStateException("Invalid bounding box");
         }
+        System.out.println("Curvilinear coords "+minLon+"'"+maxLon);
 
         lonLatBbox = new BoundingBoxImpl(minLon, minLat, maxLon, maxLat, GISUtils.defaultGeographicCRS());
 
