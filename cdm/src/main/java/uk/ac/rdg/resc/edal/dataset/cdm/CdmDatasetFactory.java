@@ -305,6 +305,9 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                     String stdName = metadata.getParameter().getStandardName();
                     if (stdName != null && stdName.contains(stdRoot)) {
                         IdComponentEastNorth vectorInfo = determineVectorIdAndComponent(stdName);
+                        if (vectorInfo == null) {
+                          continue;
+                        }
                         if(vectorInfo.isX) {
                             xVars.add(varId);
                             xVarIndexedTrueEN.add(vectorInfo.isEastNorth);
