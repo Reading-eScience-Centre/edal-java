@@ -153,6 +153,10 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         velocityEngine.setProperty(RuntimeConstants.RESOURCE_LOADER, "class,file");
         velocityEngine.setProperty("class.resource.loader.class",
                 "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        /*
+         * Newer velocity versions do not allow hyphens in variable names by default
+         */
+        velocityEngine.setProperty("parser.allow_hyphen_in_identifiers", true);
 
         /*
          * We want the catalogue to read the styles which are packaged with the
@@ -1079,3 +1083,4 @@ public class SldTemplateStyleCatalogue implements StyleCatalogue {
         }
     }
 }
+
