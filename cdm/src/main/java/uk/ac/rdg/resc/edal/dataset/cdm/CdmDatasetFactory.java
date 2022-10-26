@@ -130,7 +130,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
              */
             return dataset;
         } catch (Throwable e) {
-            throw new EdalException("Problem creating dataset " + id + " at " + location, e);
+            throw new EdalException("Problem creating dataset " + id, e);
         } finally {
             NetcdfDatasetAggregator.releaseDataset(nc);
         }
