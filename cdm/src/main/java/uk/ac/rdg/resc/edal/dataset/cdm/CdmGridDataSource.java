@@ -276,10 +276,12 @@ final class CdmGridDataSource implements GridDataSource {
          */
         final boolean needsEnhance;
         Set<Enhance> enhanceMode = var.getEnhanceMode();
+        if (arr != null) {
+            needsEnhance = false;
         // ScaleMissingDefer has been removed. It's functionality can be
         // achieved by
         // simply not enhancing with ApplyScaleOffset.
-        if (!enhanceMode.contains(Enhance.ApplyScaleOffset)) {
+        } else if (!enhanceMode.contains(Enhance.ApplyScaleOffset)) {
             /*
              * Values read from the array are not enhanced, but need to be
              */
