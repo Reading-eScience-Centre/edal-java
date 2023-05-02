@@ -234,10 +234,10 @@ final class CdmGridDataSource implements GridDataSource {
                 /*
                  * See definition of syncObj for explanation of synchronization
                  */
-              synchronized (syncObj) {
-                /* We read from the enhanced variable */
-                arr = var.read(rangesList.getRanges());
-              }
+                synchronized (syncObj) {
+                    /* We read from the enhanced variable */
+                    arr = var.read(rangesList.getRanges());
+                }
             } catch (InvalidRangeException ire) {
                 log.error("Problem reading data - invalid range:\n" + "x: " + xmin + " -> " + xmax + "y: " + ymin
                         + " -> " + ymax + "z: " + zmin + " -> " + zmax + "t: " + tmin + " -> " + tmax);
