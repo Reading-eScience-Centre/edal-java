@@ -53,12 +53,6 @@
             <version>2.0.8</version>
         </dependency>
         <dependency>
-            <!-- Berkeley DB implementation needed for NcML aggregations -->
-            <groupId>com.sleepycat</groupId>
-            <artifactId>je</artifactId>
-            <version>4.0.92</version>
-        </dependency>
-        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.10</version>
