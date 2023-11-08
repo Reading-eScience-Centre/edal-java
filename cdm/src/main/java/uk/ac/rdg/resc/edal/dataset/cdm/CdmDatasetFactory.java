@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2013 The University of Reading
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  * 3. Neither the name of the University of Reading, nor the names of the
  *    authors or contributors may be used to endorse or promote products
  *    derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -63,18 +63,18 @@ import uk.ac.rdg.resc.edal.metadata.VariableMetadata;
 /**
  * {@link DatasetFactory} that creates {@link Dataset}s representing gridded
  * data read through the Unidata Common Data Model.
- * 
+ *
  * Although multiple instances of this {@link DatasetFactory} can be created,
  * all share a common cache of NetcdfDataset objects to speed up operations
  * where the same dataset is accessed multiple times. To avoid excess file
  * handles being open, this is a LRU cache which closes the datasets when they
  * expire.
- * 
+ *
  * @author Guy Griffiths
  */
 public abstract class CdmDatasetFactory extends DatasetFactory {
     private static final Logger log = LoggerFactory.getLogger(CdmDatasetFactory.class);
-    
+
     @Override
     public DiscreteLayeredDataset<? extends DataSource, ? extends DiscreteLayeredVariableMetadata> createDataset(
             String id, String location) throws IOException, EdalException {
@@ -145,7 +145,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
      * Generates a {@link Parameter} object, correctly parsing categorical flags
      * and creating the {@link Category}s associated with the {@link Parameter}.
      * Subclasses should use this method to generate {@link Parameter}s.
-     * 
+     *
      * @param variable
      *            The {@link Variable} object representing the variable in the
      *            NetCDF file
@@ -242,7 +242,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         /*
          * Store a map of component names. Key is the compound name, value is a
          * 2-element String array with x, y component IDs
-         * 
+         *
          * Also store a map of whether these components are really
          * eastward/northward, or whether they are locally u/v
          */
@@ -250,7 +250,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         Map<String, Boolean> xyNameToTrueEN = new HashMap<String, Boolean>();
 
         Set<String> variableIds = ds.getVariableIds();
-        
+
         /*
          * Include a check to see if multiple vector variables have the same standard name
          */
@@ -269,7 +269,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                         cData = new String[2];
                         xyComponentPairs.put(vectorInfo.id, cData);
                         xyNameToTrueEN.put(vectorInfo.id, vectorInfo.isEastNorth);
-                        
+
                         stdNameToCount.put(vectorInfo.id, 0);
                     }
                     cData = xyComponentPairs.get(vectorInfo.id);
@@ -281,20 +281,23 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                      * By doing this, we will end up with the merged coverage
                      */
                     if (vectorInfo.isX) {
+                        log.debug("Variable '" + varId + "' with standard name '" + stdName + "' is the X-component of a vector");
                         cData[0] = varId;
                     } else {
+                        log.debug("Variable '" + varId + "' with standard name '" + stdName + "' is the Y-component of a vector");
                         cData[1] = varId;
                     }
                 }
             }
         }
-        
+
         for(Entry<String, Integer> entry : stdNameToCount.entrySet()) {
             if(entry.getValue() > 2) {
                 /*
                  * This standard name root has been used more than once
                  */
                 String stdRoot = entry.getKey();
+                log.debug("standard name root '" + stdRoot + " is used " + entry.getValue() + " times in this dataset");
                 xyComponentPairs.remove(stdRoot);
                 StringSimilarityService similar = new StringSimilarityServiceImpl(new JaroWinklerStrategy());
                 List<String> xVars = new ArrayList<>();
@@ -305,11 +308,13 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
                     String stdName = metadata.getParameter().getStandardName();
                     if (stdName != null && stdName.contains(stdRoot)) {
                         IdComponentEastNorth vectorInfo = determineVectorIdAndComponent(stdName);
-                        if(vectorInfo.isX) {
-                            xVars.add(varId);
-                            xVarIndexedTrueEN.add(vectorInfo.isEastNorth);
-                        } else {
-                            yVars.add(varId);
+                        if (vectorInfo != null) {
+                            if(vectorInfo.isX) {
+                                xVars.add(varId);
+                                xVarIndexedTrueEN.add(vectorInfo.isEastNorth);
+                            } else {
+                                yVars.add(varId);
+                            }
                         }
                     }
                 }
@@ -385,7 +390,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
     private List<ValueErrorPlugin> processUncertainty(NetcdfDataset nc) {
         /*
          * We look for NetCDF-U variables to group mean/standard-deviation.
-         * 
+         *
          * We need to do this here because we want to subsequently ignore parent
          * variables
          */
@@ -407,7 +412,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
         /*
          * Store a map of variable IDs to UncertML URLs. This will be used to
          * determine which components are mean/std/etc.
-         * 
+         *
          * TODO implement more than just Mean/SD
          */
         Map<String, String> varId2UncertMLRefs = new HashMap<String, String>();
@@ -508,7 +513,7 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
      * {@link DiscreteLayeredDataset} - i.e. one with no additional plugins etc.
      * All required {@link VariablePlugin}s will be detected and handled by this
      * class.
-     * 
+     *
      * @param id
      *            The ID of the {@link Dataset}
      * @param location
@@ -525,13 +530,13 @@ public abstract class CdmDatasetFactory extends DatasetFactory {
 
     /**
      * @return the name of the phenomenon that the given variable represents.
-     * 
+     *
      *         This name will be, in order of preference:
-     * 
+     *
      *         The long name
-     * 
+     *
      *         The standard name
-     * 
+     *
      *         The variable name
      */
     protected static String getVariableName(Variable var) {
