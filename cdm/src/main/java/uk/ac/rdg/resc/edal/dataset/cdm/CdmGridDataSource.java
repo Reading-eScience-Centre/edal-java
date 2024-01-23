@@ -331,6 +331,9 @@ final class CdmGridDataSource implements GridDataSource {
         private final boolean needsEnhance;
         private final RangesList rangesList;
 
+        private final int tOffset;
+        private final int zOffset;
+
         /*
          * Used for caching in the case where we read in slices
          */
@@ -357,6 +360,9 @@ final class CdmGridDataSource implements GridDataSource {
             yAxisIndex = rangesList.getYAxisIndex();
             zAxisIndex = rangesList.getZAxisIndex();
             tAxisIndex = rangesList.getTAxisIndex();
+
+            zOffset = rangesList.getZRange() != null ? rangesList.getZRange().first() : 0;
+            tOffset = rangesList.getTRange() != null ? rangesList.getTRange().first() : 0;
         }
 
         @Override
@@ -404,8 +410,8 @@ final class CdmGridDataSource implements GridDataSource {
                     /*
                      * Need to do a read on the underlying data
                      */
-                    rangesList.setTRange(t, t);
-                    rangesList.setZRange(z, z);
+                    rangesList.setTRange(tOffset+t, tOffset+t);
+                    rangesList.setZRange(zOffset+z, zOffset+z);
                     try {
                         arrLocal = var.read(rangesList.getRanges());
                         if (this.needsEnhance) {
