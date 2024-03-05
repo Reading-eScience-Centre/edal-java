@@ -211,7 +211,6 @@ public class WmsServlet extends HttpServlet {
         props.put("class.resource.loader.class",
                 "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
         velocityEngine = new VelocityEngine();
-        velocityEngine.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
         velocityEngine.init(props);
     }
 
