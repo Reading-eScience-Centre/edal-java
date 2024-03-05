@@ -293,7 +293,7 @@ public abstract class VariablePlugin {
     protected abstract Number generateValue(String varSuffix, HorizontalPosition pos,
             Number... sourceValues);
 
-    private String combinedName = null;
+    protected String combinedName = null;
 
     /**
      * Provides a convenience method for mangling several IDs into one new one.
