@@ -234,14 +234,7 @@ public class VectorPlugin extends VariablePlugin {
          */
         return new VariableMetadata[] { containerMetadata, magMetadata, dirMetadata };
     }
-    
-    protected String combineIds(String... partsToUse) {
-        if (combinedName == null) {
-            return super.combineIds(partsToUse)+this.title;
-        }
-        return combinedName;
-    }
-    
+
     private String getMagnitudeStandardName(String xCompStandardName) {
         if ("eastward_sea_water_velocity".equalsIgnoreCase(xCompStandardName)
                 || "x_sea_water_velocity".equalsIgnoreCase(xCompStandardName)
