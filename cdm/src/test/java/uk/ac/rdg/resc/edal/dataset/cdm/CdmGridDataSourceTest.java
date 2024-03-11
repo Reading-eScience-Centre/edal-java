@@ -1,6 +1,7 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.net.URL;
@@ -80,6 +81,20 @@ public class CdmGridDataSourceTest {
         }
     }
 
+    @Test
+    public void testReadUnisgnedVariables() throws IOException, DataReadingException {
+        URL url = this.getClass().getResource("/testUnsignedTypes.nc");
+        NetcdfDataset nc = NetcdfDatasetAggregator.getDataset(url.getPath());
+
+        try (CdmGridDataSource datasource = new CdmGridDataSource(nc)) {
+            float[] expectedValues = new float[]{0, 1, 2, 3, 4, 5, 6, 7, 8};
+
+            checkVariable(datasource, "variableUbyte", expectedValues);
+            checkVariable(datasource, "variableUshort", expectedValues);
+            checkVariable(datasource, "variableUint", expectedValues);
+        }
+    }
+
     private void checkVariable(CdmGridDataSource datasource, String variableName, float[] expectedValues)
             throws IOException {
         int xmin = 0;
@@ -91,6 +106,7 @@ public class CdmGridDataSourceTest {
         int i = 0;
 
         for (Number number : variable) {
+            assertNotNull(number);
             assertEquals(expectedValues[i++], number.floatValue(), delta);
         }
     }
