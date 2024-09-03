@@ -1,10 +1,10 @@
 package uk.ac.rdg.resc.edal.dataset.cdm;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Iterator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -74,25 +74,40 @@ public class CdmGridDataSourceTest {
         NetcdfDataset nc = NetcdfDatasetAggregator.getDataset(url.getPath());
 
         try (CdmGridDataSource datasource = new CdmGridDataSource(nc)) {
-            int xmin = 0;
-            int xmax = 2;
-            int ymin = 0;
-            int ymax = 2;
+            float[] expectedValues = new float[] {0f, 1.25f, 2.5f, 3.75f, 5f, 6.25f, 7.5f, 8.75f, 10f};
 
-            Array4D<Number> variableWithOffset =
-                  datasource.read("variableWithOffset", 0, 0, 0, 0, ymin, ymax, xmin, xmax);
-            Array4D<Number> variableWithoutOffset =
-                  datasource.read("variableWithoutOffset", 0, 0, 0, 0, ymin, ymax, xmin, xmax);
+            checkVariable(datasource, "variableWithOffset", expectedValues);
+            checkVariable(datasource, "variableWithoutOffset", expectedValues);
+        }
+    }
 
-            int i = 0;
-            Iterator<Number> variableWithOffsetIterator = variableWithOffset.iterator();
-            Iterator<Number> variableWithoutOffsetIterator = variableWithoutOffset.iterator();
+    @Test
+    public void testReadUnisgnedVariables() throws IOException, DataReadingException {
+        URL url = this.getClass().getResource("/testUnsignedTypes.nc");
+        NetcdfDataset nc = NetcdfDatasetAggregator.getDataset(url.getPath());
 
-            while (variableWithOffsetIterator.hasNext()) {
-                float expectedValue = i++ * 1.25f;
-                assertEquals(expectedValue, variableWithOffsetIterator.next().floatValue(), delta);
-                assertEquals(expectedValue, variableWithoutOffsetIterator.next().floatValue(), delta);
-            }
+        try (CdmGridDataSource datasource = new CdmGridDataSource(nc)) {
+            float[] expectedValues = new float[]{0, 1, 2, 3, 4, 5, 6, 7, 8};
+
+            checkVariable(datasource, "variableUbyte", expectedValues);
+            checkVariable(datasource, "variableUshort", expectedValues);
+            checkVariable(datasource, "variableUint", expectedValues);
+        }
+    }
+
+    private void checkVariable(CdmGridDataSource datasource, String variableName, float[] expectedValues)
+            throws IOException {
+        int xmin = 0;
+        int xmax = 2;
+        int ymin = 0;
+        int ymax = 2;
+
+        Array4D<Number> variable = datasource.read(variableName, 0, 0, 0, 0, ymin, ymax, xmin, xmax);
+        int i = 0;
+
+        for (Number number : variable) {
+            assertNotNull(number);
+            assertEquals(expectedValues[i++], number.floatValue(), delta);
         }
     }
 }

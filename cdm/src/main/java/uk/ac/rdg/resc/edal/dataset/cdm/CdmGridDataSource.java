@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ucar.ma2.Array;
+import ucar.ma2.DataType;
 import ucar.ma2.Index;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Variable;
@@ -446,30 +447,13 @@ final class CdmGridDataSource implements GridDataSource {
              * Do the actual data read.
              */
             Number val = null;
-            switch (arrLocal.getDataType()) {
-            case BYTE:
+            if (arrLocal.getDataType() == DataType.BYTE) {
                 val = arrLocal.getByte(index);
                 while (val.doubleValue() < var.getValidMin()) {
                     val = val.intValue() + 256;
                 }
-                break;
-            case DOUBLE:
-                val = arrLocal.getDouble(index);
-                break;
-            case FLOAT:
-                val = arrLocal.getFloat(index);
-                break;
-            case INT:
-                val = arrLocal.getInt(index);
-                break;
-            case LONG:
-                val = arrLocal.getLong(index);
-                break;
-            case SHORT:
-                val = arrLocal.getShort(index);
-                break;
-            default:
-                break;
+            } else if (arrLocal.getDataType().isNumeric()) {
+                val = (Number) arrLocal.getObject(index);
             }
 
             if (isMissing(val)) {
