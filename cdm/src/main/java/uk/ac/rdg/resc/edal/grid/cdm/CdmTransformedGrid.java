@@ -133,25 +133,34 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
         xAxis = CdmUtils.createReferenceableAxis((CoordinateAxis1D) coordSys.getXHorizAxis(),
                 xAxisIsLongitude);
         yAxis = CdmUtils.createReferenceableAxis((CoordinateAxis1D) coordSys.getYHorizAxis());
-        LatLonRect latLonBoundingBox = coordSys.getLatLonBoundingBox();
+        
+        List<HorizontalPosition> gridPoints = new ArrayList<>();
+        for(Double x : xAxis.getCoordinateValues()) {
+            for(Double y : yAxis.getCoordinateValues() ) {
+                LatLonPoint ll = proj.projToLatLon(x,  y);
+                gridPoints.add(new HorizontalPosition(ll.getLongitude(), ll.getLatitude()));
+            }
+        }
+
+        BoundingBox latLonBoundingBox = GISUtils.getBoundingBox(gridPoints);
         /*
          * Some projections do not have a well-defined lat-lon bounding box and
          * return NaNs. In these cases, we fall back to using global limits
          */
-        double lonMin = latLonBoundingBox.getLonMin();
-        double lonMax = latLonBoundingBox.getLonMax();
-        double latMin = latLonBoundingBox.getLatMin();
-        double latMax = latLonBoundingBox.getLatMax();
+        double lonMin = latLonBoundingBox.getMinX();
+        double lonMax = latLonBoundingBox.getMaxX();
+        double latMin = latLonBoundingBox.getMinY();
+        double latMax = latLonBoundingBox.getMaxY();
         if (Double.isNaN(lonMin)) {
             lonMin = -180.0;
         }
         if (Double.isNaN(lonMax)) {
             lonMax = 180.0;
         }
-        if (Double.isNaN(latMin)) {
+        if (Double.isNaN(latMin) || Math.abs(latMin + 90) < 1) {
             latMin = -90.0;
         }
-        if (Double.isNaN(latMax)) {
+        if (Double.isNaN(latMax) || Math.abs(latMax - 90) < 1) {
             latMax = 90.0;
         }
 
@@ -383,3 +392,4 @@ public class CdmTransformedGrid extends AbstractTransformedGrid {
     }
 
 }
+

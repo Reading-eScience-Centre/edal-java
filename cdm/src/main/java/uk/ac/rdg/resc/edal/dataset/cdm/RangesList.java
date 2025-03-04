@@ -173,16 +173,32 @@ final class RangesList {
         setRange(xAxisIndex, xmin, xmax);
     }
 
+    public Range getXRange() {
+        return getRange(xAxisIndex);
+    }
+
     public void setYRange(int ymin, int ymax) {
         setRange(yAxisIndex, ymin, ymax);
+    }
+
+    public Range getYRange() {
+        return getRange(yAxisIndex);
     }
 
     public void setZRange(int zmin, int zmax) {
         setRange(zAxisIndex, zmin, zmax);
     }
 
+    public Range getZRange() {
+        return getRange(zAxisIndex);
+    }
+
     public void setTRange(int tmin, int tmax) {
         setRange(tAxisIndex, tmin, tmax);
+    }
+
+    public Range getTRange() {
+        return getRange(tAxisIndex);
     }
 
     private void setRange(int index, int min, int max) {

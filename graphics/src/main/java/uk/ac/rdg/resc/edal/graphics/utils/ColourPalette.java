@@ -94,7 +94,7 @@ public class ColourPalette {
         cParser = ColorAdapter.getInstance();
 
         loadedColourSets.put(DEFAULT_PALETTE_NAME, DEFAULT_COLOURS);
-        Color[] invColourSet = (Color[]) ArrayUtils.clone(DEFAULT_COLOURS);
+        Color[] invColourSet = ArrayUtils.clone(DEFAULT_COLOURS);
         ArrayUtils.reverse(invColourSet);
         loadedColourSets.put(DEFAULT_PALETTE_NAME + INVERSE_SUFFIX, invColourSet);
 
@@ -140,7 +140,7 @@ public class ColourPalette {
         }
         if (colourSet != null) {
             loadedColourSets.put(DEFAULT_PALETTE_NAME, colourSet);
-            Color[] invColourSet = (Color[]) ArrayUtils.clone(colourSet);
+            Color[] invColourSet = ArrayUtils.clone(colourSet);
             ArrayUtils.reverse(invColourSet);
             loadedColourSets.put(DEFAULT_PALETTE_NAME + INVERSE_SUFFIX, invColourSet);
             return true;
@@ -184,7 +184,7 @@ public class ColourPalette {
         Color[] colourSet = colourSetFromString(paletteString.toString());
         if (colourSet != null) {
             loadedColourSets.put(paletteName, colourSet);
-            Color[] invColourSet = (Color[]) ArrayUtils.clone(colourSet);
+            Color[] invColourSet = ArrayUtils.clone(colourSet);
             ArrayUtils.reverse(invColourSet);
             loadedColourSets.put(paletteName + INVERSE_SUFFIX, invColourSet);
         }

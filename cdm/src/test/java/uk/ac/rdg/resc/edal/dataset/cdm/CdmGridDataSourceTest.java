@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Iterator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -67,4 +68,31 @@ public class CdmGridDataSourceTest {
         datasource.close();
     }
 
+    @Test
+    public void testReadVariableWithOffset() throws IOException, DataReadingException {
+        URL url = this.getClass().getResource("/testOffset.nc");
+        NetcdfDataset nc = NetcdfDatasetAggregator.getDataset(url.getPath());
+
+        try (CdmGridDataSource datasource = new CdmGridDataSource(nc)) {
+            int xmin = 0;
+            int xmax = 2;
+            int ymin = 0;
+            int ymax = 2;
+
+            Array4D<Number> variableWithOffset =
+                  datasource.read("variableWithOffset", 0, 0, 0, 0, ymin, ymax, xmin, xmax);
+            Array4D<Number> variableWithoutOffset =
+                  datasource.read("variableWithoutOffset", 0, 0, 0, 0, ymin, ymax, xmin, xmax);
+
+            int i = 0;
+            Iterator<Number> variableWithOffsetIterator = variableWithOffset.iterator();
+            Iterator<Number> variableWithoutOffsetIterator = variableWithoutOffset.iterator();
+
+            while (variableWithOffsetIterator.hasNext()) {
+                float expectedValue = i++ * 1.25f;
+                assertEquals(expectedValue, variableWithOffsetIterator.next().floatValue(), delta);
+                assertEquals(expectedValue, variableWithoutOffsetIterator.next().floatValue(), delta);
+            }
+        }
+    }
 }

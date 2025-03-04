@@ -234,19 +234,9 @@ final class CdmGridDataSource implements GridDataSource {
                 /*
                  * See definition of syncObj for explanation of synchronization
                  */
-                if (origVar == null) {
-                    synchronized (syncObj) {
-                        /* We read from the enhanced variable */
-                        arr = var.read(rangesList.getRanges());
-                    }
-                } else {
-                    synchronized (syncObj) {
-                        /*
-                         * We read from the original variable to avoid enhancing data values that we
-                         * won't use
-                         */
-                        arr = origVar.read(rangesList.getRanges());
-                    }
+                synchronized (syncObj) {
+                    /* We read from the enhanced variable */
+                    arr = var.read(rangesList.getRanges());
                 }
             } catch (InvalidRangeException ire) {
                 log.error("Problem reading data - invalid range:\n" + "x: " + xmin + " -> " + xmax + "y: " + ymin
@@ -286,10 +276,12 @@ final class CdmGridDataSource implements GridDataSource {
          */
         final boolean needsEnhance;
         Set<Enhance> enhanceMode = var.getEnhanceMode();
+        if (arr != null) {
+            needsEnhance = false;
         // ScaleMissingDefer has been removed. It's functionality can be
         // achieved by
         // simply not enhancing with ApplyScaleOffset.
-        if (!enhanceMode.contains(Enhance.ApplyScaleOffset)) {
+        } else if (!enhanceMode.contains(Enhance.ApplyScaleOffset)) {
             /*
              * Values read from the array are not enhanced, but need to be
              */
@@ -331,6 +323,9 @@ final class CdmGridDataSource implements GridDataSource {
         private final boolean needsEnhance;
         private final RangesList rangesList;
 
+        private final int tOffset;
+        private final int zOffset;
+
         /*
          * Used for caching in the case where we read in slices
          */
@@ -357,6 +352,9 @@ final class CdmGridDataSource implements GridDataSource {
             yAxisIndex = rangesList.getYAxisIndex();
             zAxisIndex = rangesList.getZAxisIndex();
             tAxisIndex = rangesList.getTAxisIndex();
+
+            zOffset = rangesList.getZRange() != null ? rangesList.getZRange().first() : 0;
+            tOffset = rangesList.getTRange() != null ? rangesList.getTRange().first() : 0;
         }
 
         @Override
@@ -404,8 +402,8 @@ final class CdmGridDataSource implements GridDataSource {
                     /*
                      * Need to do a read on the underlying data
                      */
-                    rangesList.setTRange(t, t);
-                    rangesList.setZRange(z, z);
+                    rangesList.setTRange(tOffset+t, tOffset+t);
+                    rangesList.setZRange(zOffset+z, zOffset+z);
                     try {
                         arrLocal = var.read(rangesList.getRanges());
                         if (this.needsEnhance) {
